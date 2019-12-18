@@ -1,0 +1,103 @@
+{
+   "ActiveEmotionalView":"Color Coded",
+   "Color Coded_ExpandedHierarchyInLayout":"",
+   "Color Coded_Layout":"# # String gsaved with Nlview 7.0.21  2019-05-29 bk=1.5064 VDI=41 GEI=36 GUI=JA:9.0 non-TLS-threadsafe
+#  -string -flagsOSRD
+preplace port A7_CONFIG_QSPI -pg 1 -lvl 8 -x 1890 -y 390 -defaultsOSRD
+preplace port FPGA_MCU_INTR -pg 1 -lvl 8 -x 1890 -y 230 -defaultsOSRD
+preplace port FPGA_RST -pg 1 -lvl 0 -x -10 -y 130 -defaultsOSRD
+preplace port A7_GCLK -pg 1 -lvl 0 -x -10 -y 380 -defaultsOSRD
+preplace inst jtag_axi -pg 1 -lvl 3 -x 660 -y 80 -defaultsOSRD
+preplace inst axi_interconnect -pg 1 -lvl 5 -x 1140 -y 200 -defaultsOSRD
+preplace inst axi_quad_spi -pg 1 -lvl 6 -x 1470 -y 410 -defaultsOSRD
+preplace inst clk_wiz -pg 1 -lvl 1 -x 110 -y 380 -swap {0 1 3 2} -defaultsOSRD
+preplace inst pro_rst_50 -pg 1 -lvl 2 -x 390 -y 170 -swap {1 0 4 2 3 5 6 7 9 8} -defaultsOSRD
+preplace inst axi_intc -pg 1 -lvl 6 -x 1470 -y 230 -defaultsOSRD
+preplace inst blk_mem_gen_0 -pg 1 -lvl 7 -x 1740 -y 80 -defaultsOSRD
+preplace inst axi_bram_ctrl_0 -pg 1 -lvl 6 -x 1470 -y 80 -defaultsOSRD
+preplace inst axi_vip -pg 1 -lvl 4 -x 870 -y 100 -defaultsOSRD
+preplace netloc clk_wiz_clk_out1 1 1 5 200 70 560 10 760 20 980 30 1320
+preplace netloc clk_wiz_locked 1 1 1 210 190n
+preplace netloc ARESETN_1 1 2 3 N 210 760 190 990
+preplace netloc reset_rtl_0_1 1 0 2 NJ 130 NJ
+preplace netloc A7_GCLK_1 1 0 1 NJ 380
+preplace netloc clk_wiz_clk_out2 1 1 5 NJ 400 NJ 400 NJ 400 NJ 400 N
+preplace netloc axi_quad_spi_0_ip2intc_irpt 1 5 2 1330 320 1610
+preplace netloc pro_rst_50_peripheral_aresetn 1 2 4 560 180 NJ 180 970J 40 1290
+preplace netloc axi_quad_spi_0_SPI_0 1 6 2 NJ 390 NJ
+preplace netloc axi_interconnect_0_M00_AXI 1 5 1 1300 180n
+preplace netloc axi_bram_ctrl_0_BRAM_PORTB 1 6 1 N 90
+preplace netloc axi_bram_ctrl_0_BRAM_PORTA 1 6 1 N 70
+preplace netloc jtag_axi_M_AXI 1 3 1 N 80
+preplace netloc axi_interconnect_M02_AXI 1 5 1 1310 60n
+preplace netloc axi_interconnect_0_M01_AXI 1 5 1 N 200
+preplace netloc axi_intc_0_interrupt 1 6 2 NJ 230 NJ
+preplace netloc axi_vip_0_M_AXI 1 4 1 N 100
+preplace cgraphic comment_0 place bot -46 -18 textcolor 4 linecolor 3 linewidth 2
+levelinfo -pg 1 -10 110 390 660 870 1140 1470 1740 1890
+pagesize -pg 1 -db -bbox -sgen -140 0 2070 500
+",
+   "Color Coded_ScaleFactor":"0.408015",
+   "Color Coded_TopLeft":"-135,-360",
+   "Default View_ScaleFactor":"0.528497",
+   "Default View_TopLeft":"-125,-97",
+   "DisplayPinAutomationMissing":"1",
+   "DisplayPinsOfHiddenNets":"1",
+   "DisplayTieOff":"1",
+   "ExpandedHierarchyInLayout":"",
+   "Grouping and No Loops_ScaleFactor":"0.567718",
+   "Grouping and No Loops_TopLeft":"-123,-176",
+   "No Loops_ScaleFactor":"0.547406",
+   "No Loops_TopLeft":"-124,-194",
+   "PinnedBlocks":"",
+   "Reduced Jogs_ScaleFactor":"0.5625",
+   "Reduced Jogs_TopLeft":"-124,-165",
+   "comment_0":"50 MHz single end clock from external",
+   "commentid":"comment_0|",
+   "font_comment_0":"14",
+   "guistr":"# # String gsaved with Nlview 7.0.21  2019-05-29 bk=1.5064 VDI=41 GEI=36 GUI=JA:9.0 non-TLS-threadsafe
+#  -string -flagsOSRD
+preplace port A7_CONFIG_QSPI -pg 1 -lvl 8 -x 2020 -y 390 -defaultsOSRD
+preplace port FPGA_MCU_INTR -pg 1 -lvl 8 -x 2020 -y 230 -defaultsOSRD
+preplace port FPGA_RST -pg 1 -lvl 0 -x 0 -y 150 -defaultsOSRD
+preplace port A7_GCLK -pg 1 -lvl 0 -x 0 -y 400 -defaultsOSRD
+preplace inst jtag_axi -pg 1 -lvl 3 -x 660 -y 80 -defaultsOSRD
+preplace inst axi_interconnect -pg 1 -lvl 5 -x 1250 -y 200 -defaultsOSRD
+preplace inst axi_quad_spi -pg 1 -lvl 6 -x 1598 -y 410 -defaultsOSRD
+preplace inst clk_wiz -pg 1 -lvl 1 -x 110 -y 400 -defaultsOSRD
+preplace inst pro_rst_50 -pg 1 -lvl 2 -x 390 -y 170 -defaultsOSRD
+preplace inst axi_intc -pg 1 -lvl 6 -x 1598 -y 230 -defaultsOSRD
+preplace inst blk_mem_gen_0 -pg 1 -lvl 7 -x 1870 -y 80 -defaultsOSRD
+preplace inst axi_bram_ctrl_0 -pg 1 -lvl 6 -x 1598 -y 80 -defaultsOSRD
+preplace inst axi_vip -pg 1 -lvl 4 -x 870 -y 100 -defaultsOSRD
+preplace netloc clk_wiz_clk_out1 1 1 5 200 70 560 10 760 20 970 360 1420
+preplace netloc clk_wiz_locked 1 1 1 210 190n
+preplace netloc ARESETN_1 1 2 3 N 190 770 10 980
+preplace netloc reset_rtl_0_1 1 0 2 NJ 150 NJ
+preplace netloc A7_GCLK_1 1 0 1 NJ 400
+preplace netloc clk_wiz_clk_out2 1 1 5 NJ 400 NJ 400 NJ 400 NJ 400 N
+preplace netloc axi_quad_spi_0_ip2intc_irpt 1 5 2 1440 320 1740
+preplace netloc pro_rst_50_peripheral_aresetn 1 2 4 560 370 NJ 370 NJ 370 1430
+preplace netloc axi_interconnect_0_M00_AXI 1 5 1 1410 180n
+preplace netloc axi_quad_spi_0_SPI_0 1 6 2 NJ 390 NJ
+preplace netloc axi_interconnect_M02_AXI 1 5 1 1400 60n
+preplace netloc axi_interconnect_0_M01_AXI 1 5 1 N 200
+preplace netloc axi_bram_ctrl_0_BRAM_PORTB 1 6 1 N 90
+preplace netloc axi_bram_ctrl_0_BRAM_PORTA 1 6 1 N 70
+preplace netloc axi_intc_0_interrupt 1 6 2 NJ 230 NJ
+preplace netloc axi_vip_0_M_AXI 1 4 1 N 100
+preplace netloc jtag_axi_M_AXI 1 3 1 N 80
+preplace cgraphic comment_0 place bot -46 -18 textcolor 4 linecolor 3 linewidth 2
+levelinfo -pg 1 0 110 390 660 870 1250 1598 1870 2020
+pagesize -pg 1 -db -bbox -sgen -130 0 2200 690
+"
+}
+{
+   """""""da_axi4_cnt""""""":"3",
+   """""""da_board_cnt""""""":"5",
+   """""""da_bram_cntlr_cnt""""""":"2",
+   """""""da_clkrst_cnt""""""":"2"
+}
+{
+   "/comment_0":"comment_0"
+}
