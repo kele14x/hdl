@@ -27,31 +27,34 @@ All rights reserved.
 // rising edge of SCK, and will sample SI at failing edge of SCK.
 //==============================================================================
 
-module spi2raw (
+module spi_axi_spiif (
     // SPI
     //=====
-    input  wire         SCK_I        ,
-    output logic        SCK_O        ,
-    output logic        SCK_T        ,
-    input  wire         SS_I         ,
-    output logic        SS_O         ,
-    output logic        SS_T         ,
-    input  wire         IO0_I        , // SI
-    output logic        IO0_O        ,
-    output logic        IO0_T        ,
-    input  wire         IO1_I        , // SO
-    output logic        IO1_O        ,
-    output logic        IO1_T        ,
+    input  wire        SCK_I   ,
+    output wire        SCK_O   ,
+    output wire        SCK_T   ,
+    input  wire        SS_I    ,
+    output wire        SS_O    ,
+    output wire        SS_T    ,
+    input  wire        IO0_I   , // SI
+    output wire        IO0_O   ,
+    output wire        IO0_T   ,
+    input  wire        IO1_I   , // SO
+    output wire        IO1_O   ,
+    output wire        IO1_T   ,
     // RAW
-    //=======
-    input  wire         clk ,
-    input  wire         rst ,
+    //======
+    input  wire        clk     ,
+    input  wire        rst     ,
     // AXI4 Stream Master, Rx
-    output logic [7:0] rx_data ,
-    output logic       rx_valid,
+    output wire  [7:0] rx_data ,
+    output reg         rx_first,
+    output wire        rx_valid,
     // AXI4 Stream Slave, Tx
-    input  wire  [7:0] tx_data
+    input  wire  [7:0] tx_data ,
+    output reg         tx_load
 );
+
 
     // SPI Interface
     //==============
@@ -74,66 +77,51 @@ module spi2raw (
     assign IO1_O = SO_r;
     assign IO1_T = SS_I;
 
-    // SPI CDC
-    //---------
-
-    (* ASYNC_REG="true" *)
-    logic SCK_cdc_reg1, SCK_cdc_reg2;
-    (* ASYNC_REG="true" *)
-    logic SS_cdc_reg1, SS_cdc_reg2;
-    (* ASYNC_REG="true" *)
-    logic SI_cdc_reg1, SI_cdc_reg2;
-
-    always_ff @ (posedge clk) begin
-        SCK_cdc_reg1 <= SCK_I;
-        SCK_cdc_reg2 <= SCK_cdc_reg1;
-    end
-
-    always_ff @ (posedge clk) begin
-        SS_cdc_reg1 <= SS_I;
-        SS_cdc_reg2 <= SS_cdc_reg1;
-    end
-
-    always_ff @ (posedge clk) begin
-        SI_cdc_reg1 <= IO0_I;
-        SI_cdc_reg2 <= SI_cdc_reg1;
-    end
-
-    assign SCK_s = SCK_cdc_reg2;
-    assign SS_s = SS_cdc_reg2;
-    assign SI_s = SI_cdc_reg2;
-
+    spi_axi_spi_cdc #(.C_DATA_WIDTH(3)) i_spi_cdc (
+        .clk (aclk                ),
+        .din ({SCK_I, SS_I, IO0_I}),
+        .dout({SCK_s, SS_s, SI_s })
+    );
 
     // SPI Event
-    //===========
+    //----------
 
     logic SCK_d, SS_d;
 
     logic capture_edge, output_edge;
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge aclk) begin
         SCK_d <= SCK_s;
         SS_d  <= SS_s;
     end
 
-    assign capture_edge = ({SCK_cdc_reg2, SCK_d}  == 2'b01); // failing edge
-    assign output_edge  = ({SCK_cdc_reg2, SCK_d}  == 2'b10); // rising edge
+    assign capture_edge = ({SCK_s, SCK_d}  == 2'b01); // failing edge
+    assign output_edge  = ({SS_s , SCK_d}  == 2'b10); // rising edge
 
     // RX Logic
     //----------
 
-    logic [6:0] rx_shift;
-    logic [2:0] rx_cnt;
+    reg  [6:0] rx_shift;
+    reg  [2:0] rx_bitcnt;  // 0 ~ 15 bits
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge aclk) begin
         if (SS_s) begin
-            rx_cnt <= 8'd0;
+            rx_bitcnt <= 4'd0;
         end else if (capture_edge) begin
-            rx_cnt <= rx_cnt + 1;
+            rx_bitcnt <= rx_bitcnt + 1;
         end
     end
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge aclk) begin
+        if (SS_s) begin
+            rx_first <= 1'd1;
+        end else if (capture_edge && (&rx_bitcnt)) begin
+            rx_first <= 1'b0;
+        end
+    end
+
+    // Shift into rx_shift at LSB
+    always_ff @ (posedge aclk) begin
         if (capture_edge) begin
             rx_shift <= {rx_shift[5:0], SI_s};
         end
@@ -141,25 +129,31 @@ module spi2raw (
 
     assign rx_data = {rx_shift, SI_s};
 
-    assign rx_valid = (capture_edge && (rx_cnt == 7));
-
     // TX Logic
     //---------
 
-    logic [6:0] tx_shift;
-    logic [2:0] tx_cnt;
+    reg [6:0] tx_shift;
+    reg [2:0] tx_bitcnt;
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge aclk) begin
         if (SS_s) begin
-            tx_cnt <= 3'd0;
+            tx_bitcnt <= 4'd0;
         end else if (output_edge) begin
-            tx_cnt <= tx_cnt + 1;
+            tx_bitcnt <= tx_bitcnt + 1;
         end
     end
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge aclk) begin
+        if (SS_s) begin
+            tx_load <= 4'd0;
+        end else begin
+            tx_load <= output_edge && (tx_bitcnt == 3'd0);
+        end
+    end
+
+    always_ff @ (posedge aclk) begin
         if (output_edge) begin
-            if (tx_cnt == 0) begin
+            if (tx_bitcnt == 0) begin
                 {SO_r, tx_shift} <= tx_data;
             end else begin
                 {SO_r, tx_shift} <= {tx_shift, 1'b0};
