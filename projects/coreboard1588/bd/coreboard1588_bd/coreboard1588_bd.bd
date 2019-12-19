@@ -5,8 +5,7 @@
       "device": "xc7a35tcsg324-2",
       "name": "coreboard1588_bd",
       "synth_flow_mode": "Hierarchical",
-      "tool_version": "2019.2",
-      "validated": "true"
+      "tool_version": "2019.2"
     },
     "design_tree": {
       "jtag_axi": "",
@@ -32,17 +31,11 @@
       },
       "FPGA_MCU_INTR": {
         "mode": "Master",
-        "vlnv": "xilinx.com:interface:mbinterrupt_rtl:1.0",
-        "parameters": {
-          "SENSITIVITY": {
-            "value": "LEVEL_HIGH",
-            "value_src": "default"
-          },
-          "LOW_LATENCY": {
-            "value": "0",
-            "value_src": "default"
-          }
-        }
+        "vlnv": "xilinx.com:interface:mbinterrupt_rtl:1.0"
+      },
+      "FPGA_MCU_SPI": {
+        "mode": "Slave",
+        "vlnv": "xilinx.com:interface:spi_rtl:1.0"
       }
     },
     "ports": {
@@ -50,10 +43,6 @@
         "type": "rst",
         "direction": "I",
         "parameters": {
-          "INSERT_VIP": {
-            "value": "0",
-            "value_src": "default"
-          },
           "POLARITY": {
             "value": "ACTIVE_LOW"
           }
@@ -68,14 +57,6 @@
           },
           "FREQ_HZ": {
             "value": "50000000"
-          },
-          "INSERT_VIP": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "PHASE": {
-            "value": "0.000",
-            "value_src": "default"
           }
         }
       }
@@ -447,16 +428,16 @@
               "m00_couplers/S_AXI"
             ]
           },
-          "m01_couplers_to_axi_interconnect": {
-            "interface_ports": [
-              "M01_AXI",
-              "m01_couplers/M_AXI"
-            ]
-          },
           "xbar_to_m01_couplers": {
             "interface_ports": [
               "xbar/M01_AXI",
               "m01_couplers/S_AXI"
+            ]
+          },
+          "m01_couplers_to_axi_interconnect": {
+            "interface_ports": [
+              "M01_AXI",
+              "m01_couplers/M_AXI"
             ]
           },
           "m02_couplers_to_axi_interconnect": {
@@ -621,22 +602,10 @@
           "axi_bram_ctrl_0/S_AXI"
         ]
       },
-      "axi_interconnect_0_M00_AXI": {
+      "axi_quad_spi_0_SPI_0": {
         "interface_ports": [
-          "axi_interconnect/M00_AXI",
-          "axi_quad_spi/AXI_LITE"
-        ]
-      },
-      "axi_bram_ctrl_0_BRAM_PORTB": {
-        "interface_ports": [
-          "blk_mem_gen_0/BRAM_PORTB",
-          "axi_bram_ctrl_0/BRAM_PORTB"
-        ]
-      },
-      "axi_vip_0_M_AXI": {
-        "interface_ports": [
-          "axi_vip/M_AXI",
-          "axi_interconnect/S00_AXI"
+          "A7_CONFIG_QSPI",
+          "axi_quad_spi/SPI_0"
         ]
       },
       "axi_intc_0_interrupt": {
@@ -645,16 +614,16 @@
           "axi_intc/interrupt"
         ]
       },
-      "axi_interconnect_0_M01_AXI": {
+      "axi_interconnect_0_M00_AXI": {
         "interface_ports": [
-          "axi_interconnect/M01_AXI",
-          "axi_intc/s_axi"
+          "axi_interconnect/M00_AXI",
+          "axi_quad_spi/AXI_LITE"
         ]
       },
-      "axi_quad_spi_0_SPI_0": {
+      "axi_vip_0_M_AXI": {
         "interface_ports": [
-          "A7_CONFIG_QSPI",
-          "axi_quad_spi/SPI_0"
+          "axi_vip/M_AXI",
+          "axi_interconnect/S00_AXI"
         ]
       },
       "axi_bram_ctrl_0_BRAM_PORTA": {
@@ -663,10 +632,22 @@
           "axi_bram_ctrl_0/BRAM_PORTA"
         ]
       },
+      "axi_bram_ctrl_0_BRAM_PORTB": {
+        "interface_ports": [
+          "blk_mem_gen_0/BRAM_PORTB",
+          "axi_bram_ctrl_0/BRAM_PORTB"
+        ]
+      },
       "jtag_axi_M_AXI": {
         "interface_ports": [
           "jtag_axi/M_AXI",
           "axi_vip/S_AXI"
+        ]
+      },
+      "axi_interconnect_0_M01_AXI": {
+        "interface_ports": [
+          "axi_interconnect/M01_AXI",
+          "axi_intc/s_axi"
         ]
       }
     },

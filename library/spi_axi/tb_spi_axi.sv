@@ -48,6 +48,11 @@ module tb_spi_axi ();
     logic [ 1:0] m_axi_rresp  ;
     logic        m_axi_rvalid ;
     logic        m_axi_rready ;
+    
+    logic stat_axi_awoverrun;
+    logic stat_axi_woverrun ;
+    logic stat_axi_wrerror  ;
+    logic stat_axi_aroverrun;
 
     localparam SPI_PERIOD = 100;
 
@@ -56,7 +61,7 @@ module tb_spi_axi ();
     task spi_send(input [47:0] sid, output [47:0] sod);
         SS_I = 0;
         #(SPI_PERIOD/2);
-        for (int i = 47; i > 0; i--) begin
+        for (int i = 47; i >= 0; i--) begin
             SCK_I = 1;
             IO0_I = sid[i];
             #(SPI_PERIOD/2);
@@ -80,11 +85,11 @@ module tb_spi_axi ();
     initial begin
         $display("Simulation starts");
         wait(aresetn);
-        repeat(10) begin
-            spi_send(48'h5A5A01020304, spi_sod);
-            #1000;
-        end
-        #100000;
+        #100;
+        spi_send({2'b11 , 14'h00AA, 32'hA1B2C3D4}, spi_sod);
+        #100;
+        spi_send({2'b10 , 14'h00AA, 32'hA1B2C3D4}, spi_sod);
+        #1000;
         $finish();
     end
 
