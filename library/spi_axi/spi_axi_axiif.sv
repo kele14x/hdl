@@ -15,7 +15,7 @@ module spi_axi_axiff (
     // Read
     input  wire [11:0] axi_rd_addr       ,
     input  wire        axi_rd_en         ,
-    output wire [31:0] axi_rd_data       ,
+    output reg  [31:0] axi_rd_data       ,
     // AXI
     //======
     input  wire        aclk              ,
@@ -52,6 +52,7 @@ module spi_axi_axiff (
     output reg         stat_axi_aroverrun
 );
 
+
     localparam C_AXI_RESP_OKAY   = 2'b00;
     localparam C_AXI_RESP_EXOKAY = 2'b01;
     localparam C_AXI_RESP_SLVERR = 2'b10;
@@ -66,16 +67,11 @@ module spi_axi_axiff (
     // Write Address Channel
     //----------------------
 
-    wire axi_wr;
-
-    assign axi_wr = (capture_edge && (rx_bitcnt == 4'd13) &&
-         (rx_wordcnt == 4'd0) && (rx_word[13:12] == 2'b11));
-
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             m_axi_awaddr <= 32'h00000000;
-        end else if (axi_wr && !(m_axi_awvalid && !m_axi_awready)) begin
-            m_axi_awaddr <= {high_addr, rx_word[11:0], 2'b00};
+        end else if (axi_wr_en && !(m_axi_awvalid && !m_axi_awready)) begin
+            m_axi_awaddr <= {high_addr, axi_wr_addr};
         end
     end
 
@@ -84,7 +80,7 @@ module spi_axi_axiff (
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             m_axi_awvalid <= 1'b0;
-        end else if (axi_wr) begin
+        end else if (axi_wr_en) begin
             m_axi_awvalid <= 1'b1;
         end else if (m_axi_awready) begin
             m_axi_awvalid <= 1'b0;
@@ -95,32 +91,18 @@ module spi_axi_axiff (
         if (!aresetn) begin
             stat_axi_awoverrun <= 1'b0;
         end else begin
-            stat_axi_awoverrun <= axi_wr && (m_axi_awvalid && !m_axi_awready);
+            stat_axi_awoverrun <= axi_wr_en && (m_axi_awvalid && !m_axi_awready);
         end
     end
 
     // Write Data Channel
     //-------------------
 
-    reg [15:0] axi_wr_temp;
-    wire axi_wr_dh, axi_wr_dl;
-
-    assign axi_wr_dh = (capture_edge && (rx_bitcnt == 4'd15) &&
-        (rx_wordcnt == 4'd1));
-    assign axi_wr_dl = (capture_edge && (rx_bitcnt == 4'd15) &&
-        (rx_wordcnt == 4'd2));
-
-    always_ff @ (posedge aclk) begin
-        if (axi_wr_dh && !(m_axi_wvalid && !m_axi_wready)) begin
-            axi_wr_temp <= rx_word;
-        end
-    end
-
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             m_axi_wdata <= 32'h00000000;
-        end else if (axi_wr_dl && !(m_axi_wvalid && !m_axi_wready)) begin
-            m_axi_wdata <= {axi_wr_temp, rx_word};
+        end else if (axi_wr_en && !(m_axi_wvalid && !m_axi_wready)) begin
+            m_axi_wdata <= axi_wr_data;
         end
     end
 
@@ -129,7 +111,7 @@ module spi_axi_axiff (
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             m_axi_wvalid <= 1'b0;
-        end else if (axi_wr_dl) begin
+        end else if (axi_wr_en) begin
             m_axi_wvalid <= 1'b1;
         end else if (m_axi_wready) begin
             m_axi_wvalid <= 1'b0;
@@ -140,7 +122,7 @@ module spi_axi_axiff (
         if (!aresetn) begin
             stat_axi_woverrun <= 1'b0;
         end else begin
-            stat_axi_woverrun <= axi_wr_dl && (m_axi_awvalid && !m_axi_awready);
+            stat_axi_woverrun <= axi_wr_en && (m_axi_awvalid && !m_axi_awready);
         end
     end
 
@@ -163,17 +145,12 @@ module spi_axi_axiff (
     // Read Address Channel
     //---------------------
 
-    wire axi_rd;
-
-    assign axi_rd = (capture_edge && (rx_bitcnt == 4'd13) &&
-        (rx_wordcnt == 4'd0) && (rx_word[13:12] == 2'b10));
-
     // m_axi_araddr
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             m_axi_araddr <= 32'd0;
-        end else if (axi_rd && !(m_axi_arvalid && !m_axi_arready)) begin
-            m_axi_araddr <= {high_addr, rx_word[11:0], 2'b00};
+        end else if (axi_rd_en && !(m_axi_arvalid && !m_axi_arready)) begin
+            m_axi_araddr <= {high_addr, axi_rd_addr};
         end
     end
 
@@ -184,7 +161,7 @@ module spi_axi_axiff (
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             m_axi_arvalid <= 1'b0;
-        end else if (axi_rd) begin
+        end else if (axi_rd_en) begin
             m_axi_arvalid <= 1'b1;
         end else if (m_axi_arready) begin
             m_axi_arvalid <= 1'b0;
@@ -197,7 +174,7 @@ module spi_axi_axiff (
         if (!aresetn) begin
             stat_axi_aroverrun <= 1'b0;
         end else begin
-            stat_axi_aroverrun <= axi_rd && (m_axi_arvalid && !m_axi_arready);
+            stat_axi_aroverrun <= axi_rd_en && (m_axi_arvalid && !m_axi_arready);
         end
     end
 
@@ -206,9 +183,9 @@ module spi_axi_axiff (
 
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
-            axi_rdata_r <= 32'hDEADBEEF;
+            axi_rd_data <= 32'hDEADBEEF;
         end else if (m_axi_rvalid) begin
-            axi_rdata_r <= (m_axi_rresp == C_AXI_RESP_OKAY ||
+            axi_rd_data <= (m_axi_rresp == C_AXI_RESP_OKAY ||
                 m_axi_rresp == C_AXI_RESP_EXOKAY) ? m_axi_rdata : 32'hDEADBEEF;
         end
     end

@@ -148,7 +148,7 @@ module spi_axi (
         //
         .rd_addr    (sfr_rd_addr),
         .rd_en      (sfr_rd_en  ),
-        .rd_data    (sfr_data   ),
+        .rd_data    (sfr_rd_data),
         //
         .sfr_SRR_RST(sfr_SRR_RST)
     );
