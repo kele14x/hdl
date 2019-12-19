@@ -16,9 +16,9 @@ module spi_axis_sfr (
     // Read
     input  wire [11:0] rd_addr    ,
     input  wire        rd_en      ,
-    output reg  [15:0] tx_data    ,
+    output reg  [15:0] rd_data    ,
     // SFRs
-    output wire        sfr_SRR_RST
+    output reg         sfr_SRR_RST
 );
 
     localparam C_ADDR_SRR = 12'b01;
@@ -26,7 +26,7 @@ module spi_axis_sfr (
     always_ff @ (posedge clk) begin
         if (wr_en && wr_addr == C_ADDR_SRR) begin
             if (wr_data == 16'h000A) begin
-                sft_SRR_RST = 1'b1;
+                sfr_SRR_RST = 1'b1;
             end
         end
     end

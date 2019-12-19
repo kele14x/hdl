@@ -78,7 +78,7 @@ module spi_axi_spiif (
     assign IO1_T = SS_I;
 
     spi_axi_spi_cdc #(.C_DATA_WIDTH(3)) i_spi_cdc (
-        .clk (aclk                ),
+        .clk (clk                 ),
         .din ({SCK_I, SS_I, IO0_I}),
         .dout({SCK_s, SS_s, SI_s })
     );
@@ -90,7 +90,7 @@ module spi_axi_spiif (
 
     logic capture_edge, output_edge;
 
-    always_ff @ (posedge aclk) begin
+    always_ff @ (posedge clk ) begin
         SCK_d <= SCK_s;
         SS_d  <= SS_s;
     end
@@ -104,7 +104,7 @@ module spi_axi_spiif (
     reg  [6:0] rx_shift;
     reg  [2:0] rx_bitcnt;  // 0 ~ 15 bits
 
-    always_ff @ (posedge aclk) begin
+    always_ff @ (posedge clk ) begin
         if (SS_s) begin
             rx_bitcnt <= 4'd0;
         end else if (capture_edge) begin
@@ -112,7 +112,7 @@ module spi_axi_spiif (
         end
     end
 
-    always_ff @ (posedge aclk) begin
+    always_ff @ (posedge clk ) begin
         if (SS_s) begin
             rx_first <= 1'd1;
         end else if (capture_edge && (&rx_bitcnt)) begin
@@ -121,7 +121,7 @@ module spi_axi_spiif (
     end
 
     // Shift into rx_shift at LSB
-    always_ff @ (posedge aclk) begin
+    always_ff @ (posedge clk ) begin
         if (capture_edge) begin
             rx_shift <= {rx_shift[5:0], SI_s};
         end
@@ -129,13 +129,15 @@ module spi_axi_spiif (
 
     assign rx_data = {rx_shift, SI_s};
 
+    assign rx_valid = capture_edge && (&rx_bitcnt);
+
     // TX Logic
     //---------
 
     reg [6:0] tx_shift;
     reg [2:0] tx_bitcnt;
 
-    always_ff @ (posedge aclk) begin
+    always_ff @ (posedge clk ) begin
         if (SS_s) begin
             tx_bitcnt <= 4'd0;
         end else if (output_edge) begin
@@ -143,7 +145,7 @@ module spi_axi_spiif (
         end
     end
 
-    always_ff @ (posedge aclk) begin
+    always_ff @ (posedge clk ) begin
         if (SS_s) begin
             tx_load <= 4'd0;
         end else begin
@@ -151,7 +153,7 @@ module spi_axi_spiif (
         end
     end
 
-    always_ff @ (posedge aclk) begin
+    always_ff @ (posedge clk ) begin
         if (output_edge) begin
             if (tx_bitcnt == 0) begin
                 {SO_r, tx_shift} <= tx_data;
