@@ -20,6 +20,7 @@ module tb_spi_axi ();
     logic        IO1_I         = 0; // SO
     logic        IO1_O         = 0;
     logic        IO1_T         = 0;
+
     // AXI4 Lite Master
     //=================
     logic        aclk          = 0;
@@ -49,30 +50,59 @@ module tb_spi_axi ();
     logic        m_axi_rvalid ;
     logic        m_axi_rready ;
     
-    logic stat_axi_awoverrun;
-    logic stat_axi_woverrun ;
-    logic stat_axi_wrerror  ;
-    logic stat_axi_aroverrun;
+    logic ctrl_softreset;
+
+    // Basic SPI Operations
+    //=====================
 
     localparam SPI_PERIOD = 100;
 
-    logic [47:0] spi_sod;
+    logic [7:0] txbuffer [0:100], rxbuffer[0:100];
 
-    task spi_send(input [47:0] sid, output [47:0] sod);
+    task spi_send(input int nbytes);
         SS_I = 0;
         #(SPI_PERIOD/2);
-        for (int i = 47; i >= 0; i--) begin
-            SCK_I = 1;
-            IO0_I = sid[i];
-            #(SPI_PERIOD/2);
-            SCK_I = 0;
-            sod[i] = IO1_O;
-            #(SPI_PERIOD/2);
+        for (int nb = 0; nb < nbytes; nb++) begin
+            for (int i = 7; i >= 0; i--) begin
+                SCK_I = 1;
+                IO0_I = txbuffer[nb][i];
+                #(SPI_PERIOD/2);
+                SCK_I = 0;
+                rxbuffer[nb][i] = IO1_O;
+                #(SPI_PERIOD/2);
+            end
         end
         IO0_I = 0;
         SS_I = 1;
         #(SPI_PERIOD/2);
+        $write("%t, SPI Tx:", $time);
+        for (int i = 0; i < nbytes; i++)
+            $write("%x, ", txbuffer[i]);
+        $write("\n");
+        $write("%t, SPI Rx:", $time);
+        for (int i = 0; i < nbytes; i++)
+            $write("%x, ", rxbuffer[i]);
+        $write("\n");
     endtask
+
+    task spi_read_sfr(input [11:0] addr, output [15:0] data);
+        txbuffer[0] = {4'b0000, addr[11:8]};
+        txbuffer[1] = addr[7:0];
+        txbuffer[2] = 8'd0;
+        txbuffer[3] = 8'd0;
+        spi_send(4);
+    endtask
+
+    task spi_write_sfr(input [11:0] addr, input [15:0] data);
+        txbuffer[0] = {4'b0001, addr[11:8]};
+        txbuffer[1] = addr[7:0];
+        txbuffer[2] = data[15:8];
+        txbuffer[3] = data[7:0];
+        spi_send(4);
+    endtask
+
+
+    //=========================================================================
 
     always begin
         #5 aclk = ~aclk;
@@ -83,12 +113,22 @@ module tb_spi_axi ();
     end
     
     initial begin
+        reg [11:0] addr;
+        reg [15:0] sfr_wr;
+        reg [15:0] sfr_rd;
+        
         $display("Simulation starts");
         wait(aresetn);
+        
         #100;
-        spi_send({2'b11 , 14'h00AA, 32'hA1B2C3D4}, spi_sod);
-        #100;
-        spi_send({2'b10 , 14'h00AA, 32'hA1B2C3D4}, spi_sod);
+        for (int i = 0; i < 256; i++) begin
+            addr = i;
+            sfr_wr = 100 + i;
+            spi_write_sfr(addr, sfr_wr);
+            #100;
+            spi_read_sfr(addr, sfr_rd);
+        end
+        
         #1000;
         $finish();
     end
