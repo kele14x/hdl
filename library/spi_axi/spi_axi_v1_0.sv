@@ -49,12 +49,9 @@ module spi_axi_v1_0 (
     input  wire [ 1:0] m_axi_rresp       ,
     input  wire        m_axi_rvalid      ,
     output wire        m_axi_rready      ,
-    // Status
+    // Control
     //========
-    output wire        stat_axi_awoverrun,
-    output wire        stat_axi_woverrun ,
-    output wire        stat_axi_wrerror  ,
-    output wire        stat_axi_aroverrun
+    output wire        ctrl_softreset
 );
 
 	spi_axi inst(.*);

@@ -46,11 +46,11 @@ module spi_axi_spiif (
     //======
     input  wire        clk     ,
     input  wire        rst     ,
-    // AXI4 Stream Master, Rx
-    output wire  [7:0] rx_data ,
+    // Rx i/f, beat at each byte
+    output wire  [7:0] rx_byte ,
     output reg         rx_first,
     output wire        rx_valid,
-    // AXI4 Stream Slave, Tx
+    // Tx i/f, beat at each byte 
     input  wire  [7:0] tx_data ,
     output reg         tx_load
 );
@@ -86,25 +86,24 @@ module spi_axi_spiif (
     // SPI Event
     //----------
 
-    logic SCK_d, SS_d;
+    logic SCK_d;
 
     logic capture_edge, output_edge;
 
     always_ff @ (posedge clk ) begin
         SCK_d <= SCK_s;
-        SS_d  <= SS_s;
     end
 
     assign capture_edge = ({SCK_s, SCK_d}  == 2'b01); // failing edge
-    assign output_edge  = ({SS_s , SCK_d}  == 2'b10); // rising edge
+    assign output_edge  = ({SCK_s, SCK_d}  == 2'b10); // rising edge
 
     // RX Logic
     //----------
 
     reg  [6:0] rx_shift;
-    reg  [2:0] rx_bitcnt;  // 0 ~ 15 bits
-
-    always_ff @ (posedge clk ) begin
+    reg  [2:0] rx_bitcnt;
+    
+    always_ff @ (posedge clk) begin
         if (SS_s) begin
             rx_bitcnt <= 4'd0;
         end else if (capture_edge) begin
@@ -112,7 +111,7 @@ module spi_axi_spiif (
         end
     end
 
-    always_ff @ (posedge clk ) begin
+    always_ff @ (posedge clk) begin
         if (SS_s) begin
             rx_first <= 1'd1;
         end else if (capture_edge && (&rx_bitcnt)) begin
@@ -121,13 +120,13 @@ module spi_axi_spiif (
     end
 
     // Shift into rx_shift at LSB
-    always_ff @ (posedge clk ) begin
+    always_ff @ (posedge clk) begin
         if (capture_edge) begin
             rx_shift <= {rx_shift[5:0], SI_s};
         end
     end
 
-    assign rx_data = {rx_shift, SI_s};
+    assign rx_byte = {rx_shift, SI_s};
 
     assign rx_valid = capture_edge && (&rx_bitcnt);
 
@@ -137,7 +136,7 @@ module spi_axi_spiif (
     reg [6:0] tx_shift;
     reg [2:0] tx_bitcnt;
 
-    always_ff @ (posedge clk ) begin
+    always_ff @ (posedge clk) begin
         if (SS_s) begin
             tx_bitcnt <= 4'd0;
         end else if (output_edge) begin
@@ -145,7 +144,7 @@ module spi_axi_spiif (
         end
     end
 
-    always_ff @ (posedge clk ) begin
+    always_ff @ (posedge clk) begin
         if (SS_s) begin
             tx_load <= 4'd0;
         end else begin
@@ -153,7 +152,7 @@ module spi_axi_spiif (
         end
     end
 
-    always_ff @ (posedge clk ) begin
+    always_ff @ (posedge clk) begin
         if (output_edge) begin
             if (tx_bitcnt == 0) begin
                 {SO_r, tx_shift} <= tx_data;

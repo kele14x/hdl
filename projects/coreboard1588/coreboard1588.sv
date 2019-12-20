@@ -53,18 +53,26 @@ module coreboard1588 (
     coreboard1588_bd_wrapper i_coreboard1588_bd_wrapper (
         // QSPI
         //======
-        .A7_CONFIG_QSPI_io0_io  (A7_CONFIG_DQ0  ),
-        .A7_CONFIG_QSPI_io1_io  (A7_CONFIG_DQ1  ),
-        .A7_CONFIG_QSPI_io2_io  (A7_CONFIG_DQ2  ),
-        .A7_CONFIG_QSPI_io3_io  (A7_CONFIG_DQ3  ),
-        .A7_CONFIG_QSPI_ss_io   (A7_CONFIG_FCS_B),
+        .A7_CONFIG_QSPI_io0_io  (A7_CONFIG_DQ0    ),
+        .A7_CONFIG_QSPI_io1_io  (A7_CONFIG_DQ1    ),
+        .A7_CONFIG_QSPI_io2_io  (A7_CONFIG_DQ2    ),
+        .A7_CONFIG_QSPI_io3_io  (A7_CONFIG_DQ3    ),
+        .A7_CONFIG_QSPI_ss_io   (A7_CONFIG_FCS_B  ),
         // FPGA Global Clock
         //===================
-        .A7_GCLK                (A7_GCLK        ),
+        .A7_GCLK                (A7_GCLK          ),
         // MCU
         //=====
-        .FPGA_RST               (FPGA_RST       ),
-        .FPGA_MCU_INTR_interrupt(/* Open */     )
+        // SPI
+        //------
+        .FPGA_MCU_SPI_io0_io    (FPGA_MCU_SPI_MOSI),
+        .FPGA_MCU_SPI_io1_io    (FPGA_MCU_SPI_MISO),
+        .FPGA_MCU_SPI_sck_io    (FPGA_MCU_SPI_CS  ),
+        .FPGA_MCU_SPI_ss_io     (FPGA_MCU_SPI_CLK ),
+        // GPIO
+        //-----
+        .FPGA_RST               (FPGA_RST         ),
+        .FPGA_MCU_INTR_interrupt(/* Open */       )
     );
 
 endmodule

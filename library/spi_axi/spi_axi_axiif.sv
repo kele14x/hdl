@@ -44,12 +44,16 @@ module spi_axi_axiff (
     input  wire [ 1:0] m_axi_rresp       ,
     input  wire        m_axi_rvalid      ,
     output wire        m_axi_rready      ,
+    // Conrol
+    //=======
+    input  wire [19:0] ctrl_axi_highaddr ,
     // Status
     //========
     output reg         stat_axi_awoverrun,
     output reg         stat_axi_woverrun ,
-    output reg         stat_axi_wrerror  ,
-    output reg         stat_axi_aroverrun
+    output reg         stat_axi_bresperr ,
+    output reg         stat_axi_aroverrun,
+    output reg         stat_axi_rresperr
 );
 
 
@@ -62,8 +66,6 @@ module spi_axi_axiff (
     // AXI
     //============
 
-    reg [17:0] high_addr = 18'd0;
-
     // Write Address Channel
     //----------------------
 
@@ -71,7 +73,7 @@ module spi_axi_axiff (
         if (!aresetn) begin
             m_axi_awaddr <= 32'h00000000;
         end else if (axi_wr_en && !(m_axi_awvalid && !m_axi_awready)) begin
-            m_axi_awaddr <= {high_addr, axi_wr_addr};
+            m_axi_awaddr <= {ctrl_axi_highaddr, axi_wr_addr};
         end
     end
 
@@ -106,7 +108,7 @@ module spi_axi_axiff (
         end
     end
 
-    assign m_axi_wstrb  = 4'b1; // Always write all 4-byte
+    assign m_axi_wstrb  = 4'b1111; // Always write all 4-byte
 
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
@@ -132,9 +134,9 @@ module spi_axi_axiff (
     // Indicate previous write tansaction is not successful
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
-            stat_axi_wrerror <= 1'b0;
+            stat_axi_bresperr <= 1'b0;
         end else begin
-            stat_axi_wrerror <= m_axi_bvalid &&
+            stat_axi_bresperr <= m_axi_bvalid &&
                 (m_axi_bresp == C_AXI_RESP_SLVERR ||
                  m_axi_bresp == C_AXI_RESP_DECERR);
         end
@@ -150,7 +152,7 @@ module spi_axi_axiff (
         if (!aresetn) begin
             m_axi_araddr <= 32'd0;
         end else if (axi_rd_en && !(m_axi_arvalid && !m_axi_arready)) begin
-            m_axi_araddr <= {high_addr, axi_rd_addr};
+            m_axi_araddr <= {ctrl_axi_highaddr, axi_rd_addr};
         end
     end
 
@@ -191,5 +193,15 @@ module spi_axi_axiff (
     end
 
     assign m_axi_rready = 1'b1; // always be ready
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            stat_axi_rresperr <= 1'b0;
+        end else begin
+            stat_axi_rresperr <= m_axi_rvalid &&
+                (m_axi_rresp == C_AXI_RESP_SLVERR ||
+                 m_axi_rresp == C_AXI_RESP_DECERR);
+        end
+    end
 
 endmodule

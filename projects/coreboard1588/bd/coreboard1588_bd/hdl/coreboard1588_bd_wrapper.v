@@ -1,7 +1,7 @@
 //Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2019.2 (win64) Build 2700185 Thu Oct 24 18:46:05 MDT 2019
-//Date        : Wed Dec 18 15:33:55 2019
+//Date        : Fri Dec 20 17:12:01 2019
 //Host        : CN-00002823 running 64-bit major release  (build 9200)
 //Command     : generate_target coreboard1588_bd_wrapper.bd
 //Design      : coreboard1588_bd_wrapper
@@ -17,6 +17,10 @@ module coreboard1588_bd_wrapper
     A7_CONFIG_QSPI_ss_io,
     A7_GCLK,
     FPGA_MCU_INTR_interrupt,
+    FPGA_MCU_SPI_io0_io,
+    FPGA_MCU_SPI_io1_io,
+    FPGA_MCU_SPI_sck_io,
+    FPGA_MCU_SPI_ss_io,
     FPGA_RST);
   inout A7_CONFIG_QSPI_io0_io;
   inout A7_CONFIG_QSPI_io1_io;
@@ -25,6 +29,10 @@ module coreboard1588_bd_wrapper
   inout [0:0]A7_CONFIG_QSPI_ss_io;
   input A7_GCLK;
   output FPGA_MCU_INTR_interrupt;
+  inout FPGA_MCU_SPI_io0_io;
+  inout FPGA_MCU_SPI_io1_io;
+  inout FPGA_MCU_SPI_sck_io;
+  inout FPGA_MCU_SPI_ss_io;
   input FPGA_RST;
 
   wire A7_CONFIG_QSPI_io0_i;
@@ -49,6 +57,22 @@ module coreboard1588_bd_wrapper
   wire A7_CONFIG_QSPI_ss_t;
   wire A7_GCLK;
   wire FPGA_MCU_INTR_interrupt;
+  wire FPGA_MCU_SPI_io0_i;
+  wire FPGA_MCU_SPI_io0_io;
+  wire FPGA_MCU_SPI_io0_o;
+  wire FPGA_MCU_SPI_io0_t;
+  wire FPGA_MCU_SPI_io1_i;
+  wire FPGA_MCU_SPI_io1_io;
+  wire FPGA_MCU_SPI_io1_o;
+  wire FPGA_MCU_SPI_io1_t;
+  wire FPGA_MCU_SPI_sck_i;
+  wire FPGA_MCU_SPI_sck_io;
+  wire FPGA_MCU_SPI_sck_o;
+  wire FPGA_MCU_SPI_sck_t;
+  wire FPGA_MCU_SPI_ss_i;
+  wire FPGA_MCU_SPI_ss_io;
+  wire FPGA_MCU_SPI_ss_o;
+  wire FPGA_MCU_SPI_ss_t;
   wire FPGA_RST;
 
   IOBUF A7_CONFIG_QSPI_io0_iobuf
@@ -76,6 +100,26 @@ module coreboard1588_bd_wrapper
         .IO(A7_CONFIG_QSPI_ss_io[0]),
         .O(A7_CONFIG_QSPI_ss_i_0),
         .T(A7_CONFIG_QSPI_ss_t));
+  IOBUF FPGA_MCU_SPI_io0_iobuf
+       (.I(FPGA_MCU_SPI_io0_o),
+        .IO(FPGA_MCU_SPI_io0_io),
+        .O(FPGA_MCU_SPI_io0_i),
+        .T(FPGA_MCU_SPI_io0_t));
+  IOBUF FPGA_MCU_SPI_io1_iobuf
+       (.I(FPGA_MCU_SPI_io1_o),
+        .IO(FPGA_MCU_SPI_io1_io),
+        .O(FPGA_MCU_SPI_io1_i),
+        .T(FPGA_MCU_SPI_io1_t));
+  IOBUF FPGA_MCU_SPI_sck_iobuf
+       (.I(FPGA_MCU_SPI_sck_o),
+        .IO(FPGA_MCU_SPI_sck_io),
+        .O(FPGA_MCU_SPI_sck_i),
+        .T(FPGA_MCU_SPI_sck_t));
+  IOBUF FPGA_MCU_SPI_ss_iobuf
+       (.I(FPGA_MCU_SPI_ss_o),
+        .IO(FPGA_MCU_SPI_ss_io),
+        .O(FPGA_MCU_SPI_ss_i),
+        .T(FPGA_MCU_SPI_ss_t));
   coreboard1588_bd coreboard1588_bd_i
        (.A7_CONFIG_QSPI_io0_i(A7_CONFIG_QSPI_io0_i),
         .A7_CONFIG_QSPI_io0_o(A7_CONFIG_QSPI_io0_o),
@@ -94,5 +138,17 @@ module coreboard1588_bd_wrapper
         .A7_CONFIG_QSPI_ss_t(A7_CONFIG_QSPI_ss_t),
         .A7_GCLK(A7_GCLK),
         .FPGA_MCU_INTR_interrupt(FPGA_MCU_INTR_interrupt),
+        .FPGA_MCU_SPI_io0_i(FPGA_MCU_SPI_io0_i),
+        .FPGA_MCU_SPI_io0_o(FPGA_MCU_SPI_io0_o),
+        .FPGA_MCU_SPI_io0_t(FPGA_MCU_SPI_io0_t),
+        .FPGA_MCU_SPI_io1_i(FPGA_MCU_SPI_io1_i),
+        .FPGA_MCU_SPI_io1_o(FPGA_MCU_SPI_io1_o),
+        .FPGA_MCU_SPI_io1_t(FPGA_MCU_SPI_io1_t),
+        .FPGA_MCU_SPI_sck_i(FPGA_MCU_SPI_sck_i),
+        .FPGA_MCU_SPI_sck_o(FPGA_MCU_SPI_sck_o),
+        .FPGA_MCU_SPI_sck_t(FPGA_MCU_SPI_sck_t),
+        .FPGA_MCU_SPI_ss_i(FPGA_MCU_SPI_ss_i),
+        .FPGA_MCU_SPI_ss_o(FPGA_MCU_SPI_ss_o),
+        .FPGA_MCU_SPI_ss_t(FPGA_MCU_SPI_ss_t),
         .FPGA_RST(FPGA_RST));
 endmodule
