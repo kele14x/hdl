@@ -24,10 +24,18 @@ module tb_axis_spi_master ();
 
     parameter CLK_RATIO   = 2;
 
-    logic SCK   ;
-    logic SS_N  ;
-    logic MOSI_Z;
-    logic MISO  ;
+    logic       SCK_I           ;
+    logic       SCK_O           ;
+    logic       SCK_T           ;
+    logic       SS_I            ;
+    logic       SS_O            ;
+    logic       SS_T            ;
+    logic       IO0_I           ;
+    logic       IO0_O           ; // MO
+    logic       IO0_T           ;
+    logic       IO1_I           ; // MI
+    logic       IO1_O           ;
+    logic       IO1_T           ;
 
     logic aclk   ;
     logic aresetn;
@@ -64,7 +72,8 @@ module tb_axis_spi_master ();
         #4;
     end
 
-    assign MISO = MOSI_Z;
+    // Loopback test
+    assign IO1_I = IO0_O;
 
     initial begin
         $display("Simulation starts");

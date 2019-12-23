@@ -59,7 +59,7 @@ module axis_spi_master #(parameter CLK_RATIO   = 8) (
     //-------------
     input  wire [7:0] s_axis_tdata    ,
     input  wire       s_axis_tvalid   ,
-    output reg        s_axis_tready   ,
+    output wire       s_axis_tready   ,
     // AXIS RX Data
     //-------------
     output reg  [7:0] m_axis_tdata    ,
@@ -84,7 +84,7 @@ module axis_spi_master #(parameter CLK_RATIO   = 8) (
     assign SS_T = 0;
     assign SS_O = SS;
 
-    assign IO0_T = 0;
+    assign IO0_T = SS;
     assign IO0_O = MOSI;
 
     assign IO1_T = 1;
@@ -120,7 +120,6 @@ module axis_spi_master #(parameter CLK_RATIO   = 8) (
     STATE_T state_next, state;
 
     reg [3:0] state_cnt;
-    reg tx_cache_v;
 
     // `stat_cnt` state machine
     always_ff @ (posedge aclk) begin : p_state
@@ -134,13 +133,13 @@ module axis_spi_master #(parameter CLK_RATIO   = 8) (
     always_comb begin : c_state_next
         case(state)
             S_RST  : state_next = S_IDLE;
-            S_IDLE : state_next = !tx_cache_v   ? S_IDLE :         // Wait for tx data at axis i/f
+            S_IDLE : state_next = !s_axis_tvalid? S_IDLE :         // Wait for tx data at axis i/f
                                   !falling_edge ? S_SYNC : S_PRE;  // if at falling edge, skip S_SYNC stage
             S_SYNC : state_next = !falling_edge ? S_SYNC : S_PRE;
             S_PRE  : state_next = !rising_edge  ? S_PRE  : S_BITX;
             S_BITX : state_next = !rising_edge  ? S_BITX :
                                   (state_cnt != 15) ? S_BITX :     // This is not last bit of a byte
-                                   tx_cache_v   ? S_BITX : S_IDLE; // When last bit is send, see if we have more byte
+                                   s_axis_tvalid   ? S_BITX : S_IDLE; // When last bit is send, see if we have more byte
             default: state_next = S_RST;
         endcase
     end
@@ -161,56 +160,23 @@ module axis_spi_master #(parameter CLK_RATIO   = 8) (
     // Slave (TX) AXIS Interface
     //==========================
 
-    reg [7:0] tx_data, tx_cache, rx_data;
-    wire tx_load;
-    reg rx_valid;
+    reg [7:0] tx_data;
 
-    // When the core try to load a byte from tx_cache to tx_data
-    assign tx_load = (state == S_IDLE || (state == S_BITX && state_cnt == 15 && rising_edge))
-        && tx_cache_v;
+    // s_axis_tready combine
+    assign s_axis_tready = (state == S_IDLE || (state == S_BITX && state_cnt == 15 && rising_edge));
 
+    // When there is a valid transfer on s_axis_* bus, move the data into tx_data
     always_ff @ (posedge aclk) begin
-        if (tx_load) begin
-            tx_data <= tx_cache;
+        if (s_axis_tready & s_axis_tvalid) begin
+            tx_data <= s_axis_tdata;
         end
     end
-
-    // s_axis_tready state machine
-    always_ff @ (posedge aclk) begin
-        if (!aresetn) begin
-            s_axis_tready <= 1'b0;
-        end else if (s_axis_tready && s_axis_tvalid) begin
-            s_axis_tready <= 1'b0;
-        end else if (tx_load) begin
-            s_axis_tready <= 1'b1;
-        end else begin
-            s_axis_tready <= !tx_cache_v;
-        end
-    end
-
-    // When there is a valid transfer on s_axis_* bus, move the data into
-    // tx_cache
-    always_ff @ (posedge aclk) begin
-        if (s_axis_tready && s_axis_tvalid) begin
-            tx_cache <= s_axis_tdata;
-        end
-    end
-
-    // tx_cache_v indicate tx_cache is valid, it will keep valid until core
-    // load it into tx_data
-    always_ff @ (posedge aclk) begin
-        if (!aresetn) begin
-            tx_cache_v <= 1'b0;
-        end else if (s_axis_tready && s_axis_tvalid) begin
-            tx_cache_v <= 1'b1;
-        end else if (tx_load) begin
-            tx_cache_v <= 1'b0;
-        end
-    end
-
 
     // Master (RX) AXIS I/F
     //=====================
+
+    reg [7:0] rx_data;
+    reg rx_valid;
 
     always_ff @ (posedge aclk) begin : p_rx_axis_tvalid
         if (!aresetn) begin
@@ -242,7 +208,7 @@ module axis_spi_master #(parameter CLK_RATIO   = 8) (
 
     always_ff @ (posedge aclk) begin
         MOSI <= (state == S_PRE)  ? 1'b0 :
-                  (state == S_BITX) ? (tx_data[state_cnt[3:1]]) : 1'bZ;
+            (state == S_BITX) ? (7-tx_data[state_cnt[3:1]]) : 1'b0;
     end
 
 
@@ -257,7 +223,7 @@ module axis_spi_master #(parameter CLK_RATIO   = 8) (
 
     always_ff @ (posedge aclk) begin
         if (rx_sample_edge) begin
-            rx_data[state_cnt[3:1]] <= MISO;
+            rx_data[7-state_cnt[3:1]] <= MISO;
         end
     end
 
