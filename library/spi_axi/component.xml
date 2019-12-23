@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <spirit:component xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <spirit:vendor>ericsson.se</spirit:vendor>
+  <spirit:vendor>jzhl.com</spirit:vendor>
   <spirit:library>user</spirit:library>
-  <spirit:name>spi_axi_v1_0</spirit:name>
+  <spirit:name>spi_axi</spirit:name>
   <spirit:version>1.0</spirit:version>
   <spirit:busInterfaces>
     <spirit:busInterface>
@@ -185,7 +185,7 @@
       <spirit:parameters>
         <spirit:parameter>
           <spirit:name>POLARITY</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.ARESETN.POLARITY" spirit:choiceRef="choice_list_74b5137e">ACTIVE_LOW</spirit:value>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.ARESETN.POLARITY" spirit:choiceRef="choice_list_9d8b0d81">ACTIVE_LOW</spirit:value>
         </spirit:parameter>
       </spirit:parameters>
     </spirit:busInterface>
@@ -898,7 +898,7 @@
   </spirit:model>
   <spirit:choices>
     <spirit:choice>
-      <spirit:name>choice_list_74b5137e</spirit:name>
+      <spirit:name>choice_list_9d8b0d81</spirit:name>
       <spirit:enumeration>ACTIVE_HIGH</spirit:enumeration>
       <spirit:enumeration>ACTIVE_LOW</spirit:enumeration>
     </spirit:choice>
@@ -990,14 +990,14 @@
     <spirit:fileSet>
       <spirit:name>xilinx_xpgui_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>xgui/spi_axi_v1_0_v1_0.tcl</spirit:name>
+        <spirit:name>xgui/spi_axi_v1_0.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
         <spirit:userFileType>CHECKSUM_f64a5dae</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
   </spirit:fileSets>
-  <spirit:description>spi_axi_v1_0</spirit:description>
+  <spirit:description>SPI Slave to AXI4 Lite Master bridge</spirit:description>
   <spirit:parameters>
     <spirit:parameter>
       <spirit:name>Component_Name</spirit:name>
@@ -1034,10 +1034,11 @@
       <xilinx:taxonomies>
         <xilinx:taxonomy>/UserIP</xilinx:taxonomy>
       </xilinx:taxonomies>
-      <xilinx:displayName>spi_axi_v1_0</xilinx:displayName>
+      <xilinx:displayName>SPI to AXI4 Lite Bridge</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
+      <xilinx:vendorDisplayName>Chengdu JinZhiLi Technology Co., Ltd.</xilinx:vendorDisplayName>
       <xilinx:coreRevision>2</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-12-20T09:04:25Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2019-12-20T09:49:39Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@9a3aaf2_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@d23dcb6_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
@@ -1050,11 +1051,37 @@
         <xilinx:tag xilinx:name="ui.data.coregen.dd@2e060e4f_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@25efa860_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@54e4efd_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@632308d2_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6555c3b2_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3ffcefdf_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1da368b8_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2df84d35_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@36f30d63_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2ecad214_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4801c128_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@79e2e00f_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@21645678_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1c19147b_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5e7bc9a_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3db28b84_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7fdcb5a1_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7360dd1f_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@211fc405_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@20fe1d51_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@54ca3f63_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5596a94a_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2e646058_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6080acda_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@fddeaeb_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@41692049_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@97e6989_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1487bb9b_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@a1860f3_ARCHIVE_LOCATION">c:/users/eniandu/workspace/git/hdl/library/spi_axi</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2019.2</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="47faafca"/>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="f278cffd"/>
       <xilinx:checksum xilinx:scope="addressSpaces" xilinx:value="1387f2f3"/>
       <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="faae9032"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="38e537e9"/>
