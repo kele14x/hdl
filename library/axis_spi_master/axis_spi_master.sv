@@ -1,20 +1,8 @@
-//=============================================================================
-//
-// Copyright (C) 2019 Kele
-//
-// This program is free software: you can redistribute it and/or modify it
-// under the terms of the GNU General Public License as published by the Free
-// Software Foundation, either version 3 of the License, or (at your option)
-// any later version.
-//
-// This program is distributed in the hope that it will be useful, but WITHOUT
-// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-// more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-//
+/*
+Copyright (c) 2019 Chengdu JinZhiLi Technology Co., Ltd.
+All rights reserved.
+*/
+
 //=============================================================================
 //
 // Filename: axis_spi_master.sv
@@ -50,11 +38,19 @@
 
 module axis_spi_master #(parameter CLK_RATIO   = 8) (
     // SPI
-    //====
-    output reg        SCK             ,
-    output reg        SS_N            ,
-    output reg        MOSI_Z          ,
-    input  wire       MISO            ,
+    //=====
+    input  wire       SCK_I           ,
+    output wire       SCK_O           ,
+    output wire       SCK_T           ,
+    input  wire       SS_I            ,
+    output wire       SS_O            ,
+    output wire       SS_T            ,
+    input  wire       IO0_I           ,
+    output wire       IO0_O           , // MO
+    output wire       IO0_T           ,
+    input  wire       IO1_I           , // MI
+    output wire       IO1_O           ,
+    output wire       IO1_T           ,
     // Fabric
     //=======
     input  wire       aclk            ,
@@ -79,6 +75,21 @@ module axis_spi_master #(parameter CLK_RATIO   = 8) (
             else $error("CLK_RATIO must be an positive even number.");
     end
 
+    reg SCK, SS, MOSI;
+    wire MISO;
+
+    assign SCK_T = 0;
+    assign SCK_O = SCK;
+
+    assign SS_T = 0;
+    assign SS_O = SS;
+
+    assign IO0_T = 0;
+    assign IO0_O = MOSI;
+
+    assign IO1_T = 1;
+    assign IO1_O = 0;
+    assign MISO = IO1_I;
 
     // SCK edge generator
     //===================
@@ -222,7 +233,7 @@ module axis_spi_master #(parameter CLK_RATIO   = 8) (
     //============
 
     always_ff @ (posedge aclk) begin
-        SS_N <= !(state == S_BITX || state == S_PRE);
+        SS <= !(state == S_BITX || state == S_PRE);
     end
 
     always_ff @ (posedge aclk) begin
@@ -230,14 +241,14 @@ module axis_spi_master #(parameter CLK_RATIO   = 8) (
     end
 
     always_ff @ (posedge aclk) begin
-        MOSI_Z <= (state == S_PRE)  ? 1'b0 : 
+        MOSI <= (state == S_PRE)  ? 1'b0 :
                   (state == S_BITX) ? (tx_data[state_cnt[3:1]]) : 1'bZ;
     end
 
 
     // SPI Tx Side
     //============
-    
+
     reg rx_sample_edge;
 
     always_ff @ (posedge aclk) begin
@@ -292,3 +303,5 @@ module axis_spi_master #(parameter CLK_RATIO   = 8) (
 `endif
 
 endmodule
+
+`default_nettype wire
