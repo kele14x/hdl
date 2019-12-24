@@ -92,6 +92,7 @@ module axi_ads124x (
     wire stat_rx_overflow;
 
     // AXI Slave
+    (* keep_hierarchy="yes" *)
     axi_ads124x_ipif i_ipif (
         .aclk         (s_axi_aclk   ),
         .aresetn      (s_axi_aresetn),
@@ -121,6 +122,7 @@ module axi_ads124x (
         .s_axi_rready (s_axi_rready )
     );
 
+    (* keep_hierarchy="yes" *)
     axi_ads124x_ctrl i_ctrl (
         /* AXIS */
         .aclk             (m_axis_aclk      ),
@@ -147,7 +149,8 @@ module axi_ads124x (
         .ctrl_op_mod      (1'b1             )
         
     );
-
+    
+    (* keep_hierarchy="yes" *)
     axis_spi_master #(.CLK_RATIO(64)) i_axis_spi_master (
         // SPI
         //=====
