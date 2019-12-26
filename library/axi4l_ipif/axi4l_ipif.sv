@@ -8,41 +8,55 @@ All rights reserved.
 
 // Note: AxPROT not supported (not connected)
 
+(* keep_hierarchy="yes" *)
 module axi4l_ipif #(
-    parameter C_DATA_WIDTH = 32,
-    parameter [31:0] C_REG_ADDR_LIST [0:1] = {
+    parameter int    C_DATA_WIDTH = 32,
+    parameter int    C_NUM_REGS   = 8 ,
+    parameter [31:0] C_ADDR_LIST [0:C_NUM_REGS-1] = {
         32'h0000_0000,
-        32'h0000_0004
+        32'h0000_0004,
+        32'h0000_0008,
+        32'h0000_000C,
+        32'h0000_0010,
+        32'h0000_0014,
+        32'h0000_0018,
+        32'h0000_001C
     }
-    ) (
+) (
     // AXI4-Lite Slave
     //=================
-    input  wire                      aclk         ,
-    input  wire                      aresetn      ,
+    input  wire                      aclk                          ,
+    input  wire                      aresetn                       ,
     //
-    input  wire [              31:0] s_axi_awaddr ,
-    input  wire [               2:0] s_axi_awprot ,
-    input  wire                      s_axi_awvalid,
-    output reg                       s_axi_awready,
+    input  wire [              31:0] s_axi_awaddr                  ,
+    input  wire [               2:0] s_axi_awprot                  ,
+    input  wire                      s_axi_awvalid                 ,
+    output reg                       s_axi_awready                 ,
     //
-    input  wire [  C_DATA_WIDTH-1:0] s_axi_wdata  ,
-    input  wire [C_DATA_WIDTH/8-1:0] s_axi_wstrb  ,
-    input  wire                      s_axi_wvalid ,
-    output reg                       s_axi_wready ,
+    input  wire [  C_DATA_WIDTH-1:0] s_axi_wdata                   ,
+    input  wire [C_DATA_WIDTH/8-1:0] s_axi_wstrb                   ,
+    input  wire                      s_axi_wvalid                  ,
+    output reg                       s_axi_wready                  ,
     //
-    output reg  [               1:0] s_axi_bresp  ,
-    output reg                       s_axi_bvalid ,
-    input  wire                      s_axi_bready ,
+    output reg  [               1:0] s_axi_bresp                   ,
+    output reg                       s_axi_bvalid                  ,
+    input  wire                      s_axi_bready                  ,
     //
-    input  wire [              31:0] s_axi_araddr ,
-    input  wire [               2:0] s_axi_arprot ,
-    input  wire                      s_axi_arvalid,
-    output reg                       s_axi_arready,
+    input  wire [              31:0] s_axi_araddr                  ,
+    input  wire [               2:0] s_axi_arprot                  ,
+    input  wire                      s_axi_arvalid                 ,
+    output reg                       s_axi_arready                 ,
     //
-    output reg  [  C_DATA_WIDTH-1:0] s_axi_rdata  ,
-    output reg  [               1:0] s_axi_rresp  ,
-    output reg                       s_axi_rvalid ,
-    input  wire                      s_axi_rready
+    output reg  [  C_DATA_WIDTH-1:0] s_axi_rdata                   ,
+    output reg  [               1:0] s_axi_rresp                   ,
+    output reg                       s_axi_rvalid                  ,
+    input  wire                      s_axi_rready                  ,
+    //
+    output reg  [  C_DATA_WIDTH-1:0] reg_out       [0:C_NUM_REGS-1],
+    output reg                       reg_out_strb  [0:C_NUM_REGS-1],
+    //
+    input  wire [  C_DATA_WIDTH-1:0] reg_in        [0:C_NUM_REGS-1],
+    input  wire                      reg_in_strb   [0:C_NUM_REGS-1]
 );
 
     // RRESP/BRESP
@@ -51,20 +65,15 @@ module axi4l_ipif #(
     localparam C_RESP_SLVERR = 2'b10; // SLVERR, slave error
     localparam C_RESP_DECERR = 2'b11; // DECERR, decoder error
 
-    localparam C_NUM_REGS = $size(C_REG_ADDR_LIST);
-
-    reg [C_DATA_WIDTH-1:0] reg_array [0:C_NUM_REGS-1];
-
-
     function addr_in_range(input [31:0] addr);
         for (int i = 0; i < C_NUM_REGS; i++)
-            if (addr == C_REG_ADDR_LIST[i]) return 1'b1;
+            if (addr == C_ADDR_LIST[i]) return 1'b1;
         return 1'b0;
     endfunction
 
-    function [31:0] output_mux (input [31:0] addr);
+    function [31:0] reg_in_mux (input [31:0] addr);
         for (int i = 0; i < C_NUM_REGS; i++)
-            if (addr == C_REG_ADDR_LIST[i]) return reg_array[i];
+            if (addr == C_ADDR_LIST[i]) return reg_in[i];
          return 32'h00000000;
     endfunction
 
@@ -181,9 +190,9 @@ module axi4l_ipif #(
 
                 always_ff @ (posedge aclk) begin
                     if (!aresetn) begin
-                        reg_array[i][j*8+7-:8] <= 'd0;
-                    end else if (wr_valid && awaddr_s == C_REG_ADDR_LIST[i] && wstrb_s[j]) begin
-                        reg_array[i][j*8+7-:8] <= wdata_s[j*8+7-:8];
+                        reg_out[i][j*8+7-:8] <= 'd0;
+                    end else if (wr_valid && awaddr_s == C_ADDR_LIST[i] && wstrb_s[j]) begin
+                        reg_out[i][j*8+7-:8] <= wdata_s[j*8+7-:8];
                     end
                 end
 
@@ -268,7 +277,7 @@ module axi4l_ipif #(
         if (!aresetn) begin
             s_axi_rdata <= 0;
         end else if (rd_valid) begin
-            s_axi_rdata <= output_mux(s_axi_araddr);
+            s_axi_rdata <= reg_in_mux(s_axi_araddr);
         end
     end
 
