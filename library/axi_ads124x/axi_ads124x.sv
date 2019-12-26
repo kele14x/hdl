@@ -79,6 +79,21 @@ module axi_ads124x (
     input  wire        DRDY
 );
 
+    wire [31:0] reg_out      [0:5];
+    wire        reg_out_strb [0:5];
+
+    wire [31:0] reg_in       [0:5];
+    wire        reg_in_strb  [0:5];
+
+    wire up_op_mode;
+    
+    wire up_ad_start, up_ad_reset, up_ad_drdy;
+
+    wire [31:0] up_spi_send;
+    wire [ 1:0] up_spi_nbytes;
+    wire        up_spi_valid;
+    wire [31:0] up_spi_recv;
+
     // TX
     wire [7:0] spitx_axis_tdata ;
     wire       spitx_axis_tvalid;
@@ -91,9 +106,26 @@ module axi_ads124x (
 
     wire stat_rx_overflow;
 
+    // Address        Detail
+    // 0x0000_0000    VERSION
+    // 0x0000_0004    CTRL
+    // 0x0000_0008    STAT
+    // 0x0000_000C    SPICTRL
+    // 0x0000_0010    SPISEND
+    // 0x0000_0014    SPIRECV
+
     // AXI Slave
-    (* keep_hierarchy="yes" *)
-    axi_ads124x_ipif i_ipif (
+    axi4l_ipif #(
+        .C_NUM_REGS (6),
+        .C_ADDR_LIST({
+            32'h0000_0000,
+            32'h0000_0004,
+            32'h0000_0008,
+            32'h0000_000C,
+            32'h0000_0010,
+            32'h0000_0014
+        })
+    ) i_ipif (
         .aclk         (s_axi_aclk   ),
         .aresetn      (s_axi_aresetn),
         //
@@ -119,10 +151,52 @@ module axi_ads124x (
         .s_axi_rdata  (s_axi_rdata  ),
         .s_axi_rresp  (s_axi_rresp  ),
         .s_axi_rvalid (s_axi_rvalid ),
-        .s_axi_rready (s_axi_rready )
+        .s_axi_rready (s_axi_rready ),
+        //
+        .reg_out      (reg_out      ),
+        .reg_out_strb (reg_out_strb ),
+        //
+        .reg_in       (reg_in       ),
+        .reg_in_strb  (reg_in_strb  )
     );
 
-    (* keep_hierarchy="yes" *)
+    // Reg 0x0000_0000
+
+    assign reg_in[0] = 32'h20191226;
+
+    // Reg 0x0000_0004
+
+    assign up_op_mode   = reg_out[1][8];
+    assign up_ad_reset  = reg_out[1][4];
+    assign up_ad_start  = reg_out[1][0];
+
+    assign reg_in[1][0] = reg_out[1][0];
+    assign reg_in[1][4] = reg_out[1][4];
+    assign reg_in[1][8] = reg_out[1][8];
+
+    // Reg 0x0000_0008
+
+    assign reg_in[2][0] = up_ad_drdy;
+
+    // Reg 0x0000_000C
+    
+    assign up_spi_nbytes = reg_out[3][1:0];
+    
+    assign reg_in[3][1:0] = reg_out[3][1:0];
+
+
+    // Reg 0x0000_0010
+    
+    assign up_spi_send = reg_out[4];
+    
+    assign reg_in[4] = reg_out[4];
+    
+    // Reg 0x0000_0014
+    
+    assign reg_in[5] = up_spi_recv;
+
+
+
     axi_ads124x_ctrl i_ctrl (
         /* AXIS */
         .aclk             (m_axis_aclk      ),
@@ -146,11 +220,21 @@ module axi_ads124x (
         .START            (START            ),
         .DRDY             (DRDY             ),
         //
-        .ctrl_op_mod      (1'b1             )
-        
+        .up_clk           (s_axi_aclk       ),
+        .up_rst           (!s_axi_aresetn   ),
+        //
+        .up_op_mode       (up_op_mode       ),
+        //
+        .up_ad_start      (up_ad_start      ),
+        .up_ad_reset      (up_ad_reset      ),
+        .up_ad_drdy       (up_ad_drdy       ),
+        //
+        .up_spi_send      (up_spi_send      ),
+        .up_spi_nbytes    (up_spi_nbytes    ),
+        .up_spi_valid     (up_spi_valid     ),
+        .up_spi_recv      (up_spi_recv      )
     );
     
-    (* keep_hierarchy="yes" *)
     axis_spi_master #(.CLK_RATIO(64)) i_axis_spi_master (
         // SPI
         //=====

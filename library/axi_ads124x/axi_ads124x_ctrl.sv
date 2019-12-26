@@ -9,8 +9,6 @@ All rights reserved.
 module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
     input  wire        aclk             ,
     input  wire        aresetn          ,
-    //
-    input  wire        pps              ,
     // SPI send
     output reg  [ 7:0] spitx_axis_tdata ,
     output reg         spitx_axis_tvalid,
@@ -23,6 +21,8 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
     output reg  [31:0] adc_axis_tdata   ,
     output reg         adc_axis_tvalid  ,
     input  wire        adc_axis_tready  ,
+    //
+    input  wire        pps              ,
     //
     output wire        RESET            ,
     output wire        START            , // At least 732 ns width
