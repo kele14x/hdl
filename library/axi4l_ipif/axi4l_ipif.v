@@ -67,10 +67,6 @@ module axi4l_ipif #(
     localparam C_RESP_DECERR = 2'b11; // DECERR, decoder error
 
 
-    wire wr_valid, wr_addr_valid, wr_data_valid;
-
-    wire rd_valid;
-
     // Write State Machine
     //=====================
 
@@ -82,6 +78,8 @@ module axi4l_ipif #(
     localparam S_WRRESP = 3'd5; // `wr_ack` is assert, response to axi master
 
     reg [2:0] wr_state, wr_state_next;
+
+    wire wr_valid, wr_addr_valid, wr_data_valid;
 
     always @ (posedge aclk) begin
         if (!aresetn) begin
@@ -174,7 +172,7 @@ module axi4l_ipif #(
         if (!aresetn) begin
             wr_req <= 1'b0;
         end else begin
-            wr_req <= (wr_state_next == S_WRWAIT);
+            wr_req <= wr_valid;
         end
     end
 
@@ -207,6 +205,8 @@ module axi4l_ipif #(
     localparam S_RDRESP = 2'd3;
 
     reg [1:0] rd_state, rd_state_next;
+
+    wire rd_valid;
 
     always @ (posedge aclk) begin
         if (!aresetn) begin
@@ -252,7 +252,7 @@ module axi4l_ipif #(
         if (!aresetn) begin
             rd_req <= 1'b0;
         end else begin
-            rd_req <= (rd_state_next == S_RDWAIT);
+            rd_req <= rd_valid;
         end
     end
 
