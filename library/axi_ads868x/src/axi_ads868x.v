@@ -6,7 +6,7 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module axi_ads868x_v1_0 (
+module axi_ads868x (
     // AXI4-Lite
     //===========
     input  wire        s_axi_aclk    ,
@@ -73,7 +73,7 @@ module axi_ads868x_v1_0 (
     output wire        EN_PCH_B
 );
 
-    axi_ads868x inst (
+    axi_ads868x_top inst (
         //
         .s_axi_aclk    (s_axi_aclk    ),
         .s_axi_aresetn (s_axi_aresetn ),
