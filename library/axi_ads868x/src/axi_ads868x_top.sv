@@ -6,7 +6,7 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module axi_ads868x (
+module axi_ads868x_top (
     // AXI4-Lite
     //===========
     input  wire        s_axi_aclk    ,
