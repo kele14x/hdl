@@ -92,7 +92,7 @@ module tb_axi4l_ipif ();
     //-------------------------------------------------------------------------
 
     task test_single_write_same_time();
-        reg awok, wok, bok, wreqok;
+        logic awok, wok, bok, wreqok;
         awok = 0;
         wok = 0;
         bok = 0;
@@ -177,7 +177,7 @@ module tb_axi4l_ipif ();
     //-------------------------------------------------------------------------
 
     task test_single_write_address_before_data();
-        reg awok, wok, bok;
+        logic awok, wok, bok;
         awok = 0;
         wok = 0;
         bok = 0;
@@ -253,7 +253,7 @@ module tb_axi4l_ipif ();
         $display("%t, simulation ends.", $time());
     end
 
-    axi4l_ipif #(
+    axi4l_ipif_v1_0 #(
         .C_ADDR_WIDTH(C_ADDR_WIDTH),
         .C_DATA_WIDTH(C_DATA_WIDTH)
     ) UUT (.*);
