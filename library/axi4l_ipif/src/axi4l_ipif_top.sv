@@ -8,56 +8,56 @@ All rights reserved.
 
 // Note: AxPROT not supported (not connected)
 
-module axi4l_ipif #(
+module axi4l_ipif_top #(
     parameter C_ADDR_WIDTH = 12,
     parameter C_DATA_WIDTH = 32
 ) (
     // AXI4-Lite Slave
     //=================
-    input  wire                      aclk         ,
-    input  wire                      aresetn      ,
+    input  var logic                      aclk         ,
+    input  var logic                      aresetn      ,
     //
-    input  wire [              31:0] s_axi_awaddr ,
-    input  wire [               2:0] s_axi_awprot ,
-    input  wire                      s_axi_awvalid,
-    output reg                       s_axi_awready,
+    input  var logic [              31:0] s_axi_awaddr ,
+    input  var logic [               2:0] s_axi_awprot ,
+    input  var logic                      s_axi_awvalid,
+    output var logic                      s_axi_awready,
     //
-    input  wire [  C_DATA_WIDTH-1:0] s_axi_wdata  ,
-    input  wire [C_DATA_WIDTH/8-1:0] s_axi_wstrb  ,
-    input  wire                      s_axi_wvalid ,
-    output reg                       s_axi_wready ,
+    input  var logic [  C_DATA_WIDTH-1:0] s_axi_wdata  ,
+    input  var logic [C_DATA_WIDTH/8-1:0] s_axi_wstrb  ,
+    input  var logic                      s_axi_wvalid ,
+    output var logic                      s_axi_wready ,
     //
-    output reg  [               1:0] s_axi_bresp  ,
-    output reg                       s_axi_bvalid ,
-    input  wire                      s_axi_bready ,
+    output var logic [               1:0] s_axi_bresp  ,
+    output var logic                      s_axi_bvalid ,
+    input  var logic                      s_axi_bready ,
     //
-    input  wire [              31:0] s_axi_araddr ,
-    input  wire [               2:0] s_axi_arprot ,
-    input  wire                      s_axi_arvalid,
-    output reg                       s_axi_arready,
+    input  var logic [              31:0] s_axi_araddr ,
+    input  var logic [               2:0] s_axi_arprot ,
+    input  var logic                      s_axi_arvalid,
+    output var logic                      s_axi_arready,
     //
-    output reg  [  C_DATA_WIDTH-1:0] s_axi_rdata  ,
-    output reg  [               1:0] s_axi_rresp  ,
-    output reg                       s_axi_rvalid ,
-    input  wire                      s_axi_rready ,
+    output var logic [  C_DATA_WIDTH-1:0] s_axi_rdata  ,
+    output var logic [               1:0] s_axi_rresp  ,
+    output var logic                      s_axi_rvalid ,
+    input  var logic                      s_axi_rready ,
     // Write i/f
     //-----------
-    output reg  [  C_ADDR_WIDTH-3:0] wr_addr      ,
-    output reg                       wr_req       ,
-    output reg  [               3:0] wr_be        ,
-    output reg  [  C_DATA_WIDTH-1:0] wr_data      ,
-    input  wire                      wr_ack       ,
+    output var logic [  C_ADDR_WIDTH-3:0] wr_addr      ,
+    output var logic                      wr_req       ,
+    output var logic [               3:0] wr_be        ,
+    output var logic [  C_DATA_WIDTH-1:0] wr_data      ,
+    input  var logic                      wr_ack       ,
     // Read i/f
     //----------
-    output reg  [  C_ADDR_WIDTH-3:0] rd_addr      ,
-    output reg                       rd_req       ,
-    input  wire [  C_DATA_WIDTH-1:0] rd_data      ,
-    input  wire                      rd_ack
+    output var logic [  C_ADDR_WIDTH-3:0] rd_addr      ,
+    output var logic                      rd_req       ,
+    input  var logic [  C_DATA_WIDTH-1:0] rd_data      ,
+    input  var logic                      rd_ack
 );
 
     initial begin
-        if (!(C_DATA_WIDTH == 32 || C_DATA_WIDTH == 64))
-            $error();
+        assert ((C_DATA_WIDTH == 32) || (C_DATA_WIDTH == 64)) else
+            $error("AXI-4 Lite interface only support C_DATA_WIDTH=32 or 64");
     end
 
     // RRESP/BRESP
@@ -70,16 +70,17 @@ module axi4l_ipif #(
     // Write State Machine
     //=====================
 
-    localparam S_WRRST  = 3'd0; // in reset
-    localparam S_WRIDLE = 3'd1; // idle, waiting for both write address and write data
-    localparam S_WRADDR = 3'd2; // write data is provided, waiting for write address
-    localparam S_WRDATA = 3'd3; // write address is provided, waiting for write data
-    localparam S_WRWAIT = 3'd4; // both write data and address is provided, wait `wr_ack`
-    localparam S_WRRESP = 3'd5; // `wr_ack` is assert, response to axi master
+    enum {
+        S_WRRST , // in reset
+        S_WRIDLE, // idle, waiting for both write address and write data
+        S_WRADDR, // write data is provided, waiting for write address
+        S_WRDATA, // write address is provided, waiting for write data
+        S_WRWAIT, // both write data and address is provided, wait `wr_ack`
+        S_WRRESP  // `wr_ack` is assert, response to axi master
+    } wr_state, wr_state_next;
 
-    reg [2:0] wr_state, wr_state_next;
-
-    wire wr_valid, wr_addr_valid, wr_data_valid;
+    var logic wr_valid, wr_addr_valid, wr_data_valid;
+    var logic [4:0] wr_cnt;
 
     always @ (posedge aclk) begin
         if (!aresetn) begin
@@ -98,7 +99,7 @@ module axi4l_ipif #(
                                         S_WRIDLE;
             S_WRADDR : wr_state_next = !s_axi_wvalid  ? S_WRADDR : S_WRWAIT;
             S_WRDATA : wr_state_next = !s_axi_awvalid ? S_WRDATA : S_WRWAIT;
-            S_WRWAIT : wr_state_next = !wr_ack        ? S_WRWAIT : S_WRRESP;
+            S_WRWAIT : wr_state_next = !(wr_ack || wr_cnt[4]) ? S_WRWAIT : S_WRRESP;
             S_WRRESP : wr_state_next = !s_axi_bready  ? S_WRRESP : S_WRIDLE;
             default  : wr_state_next = S_WRRST;
         endcase
@@ -176,6 +177,17 @@ module axi4l_ipif #(
         end
     end
 
+    // Time out counter of waiting for `wr_ack`
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            wr_cnt <= 5'h1F;
+        end else if (wr_state_next == S_WRWAIT) begin
+            wr_cnt <= wr_cnt + 1;
+        end else begin
+            wr_cnt <= 5'h1F;
+        end
+    end
+
     always @ (posedge aclk) begin
         if (!aresetn) begin
             s_axi_bvalid <= 1'b0;
@@ -188,7 +200,9 @@ module axi4l_ipif #(
         if (!aresetn) begin
             s_axi_bresp <= 0;
         end else if (wr_state == S_WRWAIT && wr_ack) begin
-            s_axi_bresp <= C_RESP_OKAY; // TODO: This is logic seems problem
+            s_axi_bresp <= C_RESP_OKAY;
+        end else if (wr_state == S_WRWAIT && wr_cnt[4]) begin
+            s_axi_bresp <= C_RESP_SLVERR; // Time out, response a error
         end
     end
 
@@ -199,14 +213,15 @@ module axi4l_ipif #(
     // Read Iteration Interval = 2 (back-to-back read transaction)
     // Read Latency = 2 (from AWADDR transaction to RDATA transaction)
 
-    localparam S_RDRST  = 2'd0;
-    localparam S_RDIDLE = 2'd1;
-    localparam S_RDWAIT = 2'd2;
-    localparam S_RDRESP = 2'd3;
+    enum {
+        S_RDRST ,
+        S_RDIDLE,
+        S_RDWAIT,
+        S_RDRESP
+    } rd_state, rd_state_next;
 
-    reg [1:0] rd_state, rd_state_next;
-
-    wire rd_valid;
+    var logic rd_valid;
+    var logic [4:0] rd_cnt;
 
     always @ (posedge aclk) begin
         if (!aresetn) begin
@@ -220,7 +235,7 @@ module axi4l_ipif #(
         case(rd_state)
             S_RDRST  : rd_state_next = S_RDIDLE;
             S_RDIDLE : rd_state_next = !s_axi_arvalid ? S_RDIDLE : S_RDWAIT;
-            S_RDWAIT : rd_state_next = !rd_ack        ? S_RDWAIT : S_RDRESP;
+            S_RDWAIT : rd_state_next = !(rd_ack || rd_cnt[4]) ? S_RDWAIT : S_RDRESP;
             S_RDRESP : rd_state_next = !s_axi_rready  ? S_RDRESP : S_RDIDLE;
             default  : rd_state_next = S_RDRST;
         endcase
@@ -257,7 +272,7 @@ module axi4l_ipif #(
     end
 
 
-    // Read Data Channel
+    // Read Data/Response Channel
     //-------------------
 
     always @ (posedge aclk) begin
@@ -268,11 +283,24 @@ module axi4l_ipif #(
         end
     end
 
+    // Time out counter of waiting for `rd_ack`
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            rd_cnt <= 5'h1F;
+        end else if (rd_state_next == S_RDWAIT) begin
+            rd_cnt <= rd_cnt + 1;
+        end else begin
+            rd_cnt <= 5'h1F;
+        end
+    end
+
     always @ (posedge aclk) begin
         if (!aresetn) begin
             s_axi_rdata <= 0;
         end else if (rd_state == S_RDWAIT && rd_ack) begin
             s_axi_rdata <= rd_data;
+        end else if (rd_state == S_RDWAIT && rd_cnt[4]) begin
+            s_axi_rdata <= 'd0; // Read time out, give master default value
         end
     end
 
@@ -281,6 +309,8 @@ module axi4l_ipif #(
             s_axi_rresp <= 0;
         end else if (rd_state == S_RDWAIT && rd_ack) begin
             s_axi_rresp <= C_RESP_OKAY;
+        end else if (rd_state == S_RDWAIT && rd_cnt[4]) begin
+            s_axi_rresp <= C_RESP_SLVERR; // Read time out, response a error
         end
     end
 
