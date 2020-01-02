@@ -71,12 +71,13 @@ module tb_spi_master ();
 
     initial begin
         $display("Simulation starts");
-        #1000;
+        wait (rst == 0);
+        #100;
         // Send one frame
         axis_send(8'h55);
+
+        #2000;
         axis_send(8'hA3);
-        
-        #600;
         axis_send(8'hAA);
 
         #10000;
