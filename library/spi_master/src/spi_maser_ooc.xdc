@@ -17,4 +17,4 @@
 #
 #=============================================================================
 
-create_clock -name aclk -period 8 [get_ports aclk]
+create_clock -name clk -period 8 [get_ports clk]

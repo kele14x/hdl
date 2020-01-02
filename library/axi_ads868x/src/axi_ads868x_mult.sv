@@ -7,24 +7,24 @@ All rights reserved.
 `default_nettype none
 
 module axi_ads868x_mult (
-    input  wire        aclk         ,
-    input  wire        aresetn      ,
+    input  var logic        aclk         ,
+    input  var logic        aresetn      ,
     //
-    input  wire [15:0] s_axis_tdata ,
-    input  wire        s_axis_tvalid,
-    output reg         s_axis_tready,
+    input  var logic [15:0] s_axis_tdata ,
+    input  var logic        s_axis_tvalid,
+    output var logic        s_axis_tready,
     //
-    output reg  [31:0] m_axis_tdata ,
-    output reg         m_axis_tvalid,
-    input  wire        m_axis_tready,
+    output var logic [31:0] m_axis_tdata ,
+    output var logic        m_axis_tvalid,
+    input  var logic        m_axis_tready,
     //
-    input  wire [15:0] ctrl_mult_coe
+    input  var logic [15:0] ctrl_mult_coe
 );
 
-    reg signed [15:0] a, b;
-    reg signed [31:0] m, p;
+    var logic signed [15:0] a, b;
+    var logic signed [31:0] m, p;
 
-    reg vd, vdd, vd3;
+    var logic vd, vdd, vd3;
 
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin

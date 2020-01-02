@@ -107,6 +107,11 @@ module axi_ads868x_top (
 
     wire [15:0] ctrl_mult_coe;
 
+    logic [31:0] ctrl_spi_txdata;
+    logic [ 1:0] ctrl_spi_txbyte;
+    logic        ctrl_spi_txvalid;
+    logic [31:0] ctrl_spi_rxdata;
+    
     axi4l_ipif i_ipif (
         .aclk         (s_axi_aclk   ),
         .aresetn      (s_axi_aresetn),
@@ -168,7 +173,14 @@ module axi_ads868x_top (
         //
         .ctrl_soft_reset(ctrl_soft_reset),
         //
-        .ctrl_ext_mux_en(ctrl_ext_mux_en)
+        .ctrl_ext_mux_en(ctrl_ext_mux_en),
+        .ctrl_rst_pd_n  (RST_PD_N       ),
+        //
+        .ctrl_spi_txdata(ctrl_spi_txdata),
+        .ctrl_spi_txbyte(ctrl_spi_txbyte),
+        .ctrl_spi_txvalid(ctrl_spi_txvalid),
+        //
+        .ctrl_spi_rxdata(ctrl_spi_rxdata)
     );
 
 
