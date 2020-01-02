@@ -20,9 +20,9 @@
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module tb_axis_spi_master ();
+module tb_spi_master ();
 
-    parameter CLK_RATIO   = 2;
+    parameter CLK_RATIO   = 16;
 
     logic       SCK_I           ;
     logic       SCK_O           ;
@@ -37,54 +37,40 @@ module tb_axis_spi_master ();
     logic       IO1_O           ;
     logic       IO1_T           ;
 
-    logic aclk   ;
-    logic aresetn;
+    logic clk = 0;
+    logic rst = 1;
 
-    logic [7:0] s_axis_tdata ;
-    logic                  s_axis_tvalid;
-    logic                   s_axis_tready;
+    logic [7:0] spi_tx_data  = 0;
+    logic       spi_tx_valid = 0;
+    logic       spi_tx_ready = 0;
 
-    logic [7:0] m_axis_tdata ;
-    logic                   m_axis_tvalid;
-    logic                   m_axis_tready;
-
-    logic stat_rx_overflow;
+    logic [7:0] spi_rx_data  = 0;
+    logic       spi_rx_valid = 0;
 
     task axis_send (input [7:0] tdata);
-        @(posedge aclk);
+        @(posedge clk);
         // Send byte
-        s_axis_tdata  <= tdata;
-        s_axis_tvalid <= 1'b1;
+        spi_tx_data  <= tdata;
+        spi_tx_valid <= 1'b1;
         // wait byte is received
         forever begin
-            @(posedge aclk);
-            if (s_axis_tvalid && s_axis_tready) break;
+            @(posedge clk);
+            if (spi_tx_ready) break;
         end
         // Reset bus
-        s_axis_tdata  <= 0;
-        s_axis_tvalid <= 0;
+        spi_tx_data  <= 0;
+        spi_tx_valid <= 0;
     endtask
 
-    always begin
-        aclk = 0;
-        #4;
-        aclk = 1;
-        #4;
-    end
+    always #4 clk = !clk;
+
+    initial #100 rst = 0;
 
     // Loopback test
     assign IO1_I = IO0_O;
 
     initial begin
         $display("Simulation starts");
-        aresetn = 0;
-        s_axis_tdata = 0;
-        s_axis_tvalid = 0;
-        m_axis_tready = 1;
-        #1000;
-        aresetn = 1;
-        $display("%t: Reset done",$time());
-
         #1000;
         // Send one frame
         axis_send(8'h55);
@@ -97,21 +83,11 @@ module tb_axis_spi_master ();
         $finish;
     end
 
-    always @ (posedge aclk) begin
-        if (s_axis_tvalid && s_axis_tready) begin
-            $display("%t, TX AXIS I/F send: 0x%X", $time, s_axis_tdata);
-        end
-        if (m_axis_tvalid && m_axis_tready) begin
-            $display("%t, RX AXIS I/F got: 0x%X",  $time, m_axis_tdata);
-        end
-    end
-
     final begin
         $display("Simulation ends");
     end
 
-`define SIMULATION
-    axis_spi_master #(
+    spi_master #(
         .CLK_RATIO  (CLK_RATIO  )
     ) UUT ( .* );
 
