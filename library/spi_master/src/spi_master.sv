@@ -156,7 +156,15 @@ module spi_master #(parameter CLK_RATIO   = 8) (
     // TX Interface
     //==============
 
-    var logic [7:0] tx_data;
+    // rising_edge -> rising_edge_d -> MOSI
+    // state_next  -> state         ->
+
+    var logic [7:0] tx_buffer;
+    var logic rising_edge_d;
+
+    always_ff @ (posedge clk) begin
+        rising_edge_d <= rising_edge;
+    end
 
     // spi_tx_ready combine
     always_ff @ (posedge clk) begin
@@ -167,11 +175,14 @@ module spi_master #(parameter CLK_RATIO   = 8) (
         end
     end
 
-
-    // When there is a valid transfer on s_axis_* bus, move the data into tx_data
+    // When there is a valid transfer on tx interface, move the data into tx_data
     always_ff @ (posedge clk) begin
-        if ((state == S_IDLE || state == S_LOAD) && spi_tx_valid) begin
-            tx_data <= spi_tx_data;
+        if ((state == S_IDLE) && spi_tx_valid) begin
+            {MOSI, tx_buffer} <= {1'b0, spi_tx_data};
+        end else if (state == S_LOAD && spi_tx_valid) begin
+            {MOSI, tx_buffer} <= {spi_tx_data, 1'b0};
+        end else if (rising_edge_d) begin
+            {MOSI, tx_buffer}  <= {tx_buffer, 1'b0};
         end
     end
 
@@ -207,8 +218,8 @@ module spi_master #(parameter CLK_RATIO   = 8) (
     end
 
 
-    // SPI TX Side
-    //============
+    // SPI SS & SCK
+    //==============
 
     always_ff @ (posedge clk) begin
         SS <= !(state == S_BITX || state == S_PRE);
@@ -216,11 +227,6 @@ module spi_master #(parameter CLK_RATIO   = 8) (
 
     always_ff @ (posedge clk) begin
         SCK <= !state_cnt[0] && state == S_BITX;
-    end
-
-    always_ff @ (posedge clk) begin
-        MOSI <= (state == S_PRE)  ? 1'b0 :
-            (state == S_BITX) ? (7-tx_data[state_cnt[3:1]]) : 1'b0;
     end
 
 endmodule
