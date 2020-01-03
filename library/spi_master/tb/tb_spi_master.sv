@@ -22,20 +22,20 @@
 
 module tb_spi_master ();
 
-    parameter CLK_RATIO   = 16;
+    parameter CLK_RATIO   = 2;
 
-    logic       SCK_I           ;
-    logic       SCK_O           ;
-    logic       SCK_T           ;
-    logic       SS_I            ;
-    logic       SS_O            ;
-    logic       SS_T            ;
-    logic       IO0_I           ;
-    logic       IO0_O           ; // MO
-    logic       IO0_T           ;
-    logic       IO1_I           ; // MI
-    logic       IO1_O           ;
-    logic       IO1_T           ;
+    logic SCK_I = 0;
+    logic SCK_O = 0;
+    logic SCK_T = 0;
+    logic SS_I  = 0;
+    logic SS_O  = 0;
+    logic SS_T  = 0;
+    logic IO0_I = 0;
+    logic IO0_O = 0; // MO
+    logic IO0_T = 0;
+    logic IO1_I;     // MI
+    logic IO1_O = 0;
+    logic IO1_T = 0;
 
     logic clk = 0;
     logic rst = 1;
