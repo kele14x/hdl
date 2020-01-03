@@ -22,7 +22,7 @@
 
 module tb_spi_master ();
 
-    parameter CLK_RATIO   = 2;
+    parameter CLK_RATIO   = 16;
 
     logic SCK_I = 0;
     logic SCK_O = 0;
