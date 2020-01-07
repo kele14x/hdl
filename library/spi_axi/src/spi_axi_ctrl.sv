@@ -11,34 +11,26 @@ module spi_axi_ctrl (
     input  wire        rst         ,
     // SPI
     //=====
+    input  wire        spi_rx_ss   ,
     input  wire [ 7:0] spi_rx_byte ,
-    input  wire        spi_rx_first,
+    input  wire [ 2:0] spi_rx_bitcnt,
     input  wire        spi_rx_valid,
     //
     output reg  [ 7:0] spi_tx_data ,
     input  reg         spi_tx_load ,
-    // SFR
-    //======
-    output wire [11:0] sfr_addr   ,
-    output wire [15:0] sfr_din    ,
-    output wire        sfr_wren   ,
-    output wire        sfr_rden   ,
-    input  wire [15:0] sfr_dout   ,
     // AXI
     //=====
-    output wire [11:0] axi_wr_addr ,
+    output wire [14:0] axi_wr_addr ,
     output wire [31:0] axi_wr_data ,
     output wire        axi_wr_en   ,
     // Read
-    output wire [11:0] axi_rd_addr ,
+    output wire [14:0] axi_rd_addr ,
     output wire        axi_rd_en   ,
     input  wire [31:0] axi_rd_data
 );
 
-    localparam C_OP_RDSFR = 4'b0000;
-    localparam C_OP_WRSFR = 4'b0001;
-    localparam C_OP_RDAXI = 4'b0010;
-    localparam C_OP_WRAXI = 4'b0011;
+    localparam C_OP_RD = 1'b0;
+    localparam C_OP_WR = 1'b1;
 
     reg [3:0] mode_r;
     reg [3:0] addr_r0;
@@ -46,28 +38,29 @@ module spi_axi_ctrl (
     reg [7:0] data_temp0, data_temp1, data_temp2;
 
     typedef enum {
-        S_RD_SFR_ADDR, S_RD_SFR_BYTE0, S_RD_SFR_BYTE1,
-        S_WR_SFR_ADDR, S_WR_SFR_BYTE0, S_WR_SFR_BYTE1,
-        S_RD_AXI_ADDR, S_RD_AXI_BYTE0, S_RD_AXI_BYTE1, S_RD_AXI_BYTE2, S_RD_AXI_BYTE3,
-        S_WR_AXI_ADDR, S_WR_AXI_BYTE0, S_WR_AXI_BYTE1, S_WR_AXI_BYTE2, S_WR_AXI_BYTE3,
-        S_DISCARD
+        S_RST, S_IDLE,
+        S_RW_ADDR0, S_ADDR1,
+        S_RD_BYTE0, S_RD_BYTE1, S_RD_BYTE2, S_RD_BYTE3,
+        S_WR_BYTE0, S_WR_BYTE1, S_WR_BYTE2, S_WR_BYTE3
     } STATE_T;
 
     STATE_T state, state_next;
 
     always_ff @ (posedge clk) begin
         if (rst) begin
-            state <= S_DISCARD;
+            state <= S_RST;
         end else begin
             state <= state_next;
         end
     end
 
     always_comb begin
-        if (!spi_rx_valid) begin
+        if (spi_rx_ss) begin
+            state_next = S_IDLE;
+        end else if (!spi_rx_valid) begin
             // Do not move to next state when rx is not valid
             state_next = state;
-        end else if (spi_rx_first) begin
+        end else if (spi_rx_bitcnt) begin
             state_next = spi_rx_byte[7:4] == C_OP_RDSFR ? S_RD_SFR_ADDR :
                                               spi_rx_byte[7:4] == C_OP_WRSFR ? S_WR_SFR_ADDR :
                                               spi_rx_byte[7:4] == C_OP_RDAXI ? S_RD_AXI_ADDR :
