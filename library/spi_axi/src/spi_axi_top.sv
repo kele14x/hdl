@@ -51,21 +51,13 @@ module spi_axi_top (
     output wire        m_axi_rready
 );
 
-    wire        spi_rx_ss   ;
-    wire [7:0]  spi_rx_byte ;
-    wire        spi_rx_first;
-    wire        spi_rx_valid;
+    wire        spi_rx_ss_s    ;
+    wire [15:0] spi_rx_byte_s  ;
+    wire [ 3:0] spi_rx_bitcnt_s;
+    wire        spi_rx_valid_s ;
 
-    wire [7:0]  spi_tx_data;
-    wire        spi_tx_load;
-
-    wire [11:0] axi_wr_addr;
-    wire [31:0] axi_wr_data;
-    wire        axi_wr_en  ;
-
-    wire [11:0] axi_rd_addr;
-    wire        axi_rd_en  ;
-    wire [31:0] axi_rd_data ;
+    wire [15:0] spi_tx_data_s;
+    wire        spi_tx_load_s;
 
     wire        stat_axi_awoverrun ;
     wire        stat_axi_woverrun  ;
@@ -74,14 +66,14 @@ module spi_axi_top (
     wire        stat_axi_rresperr  ;
 
 
-    spi_axi_spiif i_spi_axi_spiif (
+    spi_slave #(.WIDTH(16)) i_spi_slave (
         // SPI
-        .SCK_I   (SCK_I       ),
-        .SCK_O   (SCK_O       ),
-        .SCK_T   (SCK_T       ),
         .SS_I    (SS_I        ),
         .SS_O    (SS_O        ),
         .SS_T    (SS_T        ),
+        .SCK_I   (SCK_I       ),
+        .SCK_O   (SCK_O       ),
+        .SCK_T   (SCK_T       ),
         .IO0_I   (IO0_I       ),
         .IO0_O   (IO0_O       ),
         .IO0_T   (IO0_T       ),
@@ -92,45 +84,26 @@ module spi_axi_top (
         .clk     (aclk        ),
         .rst     (!aresetn    ),
         //
-        .rx_ss   (spi_rx_ss   ),
-        .rx_byte (spi_rx_byte ),
-        .rx_first(spi_rx_first),
-        .rx_valid(spi_rx_valid),
+        .rx_ss   (spi_rx_ss_s   ),
+        .rx_data (spi_rx_byte_s ),
+        .rx_bitcnt(spi_rx_bitcnt_s),
+        .rx_valid(spi_rx_valid_s),
         //
-        .tx_data (spi_tx_data ),
-        .tx_load (spi_tx_load )
+        .tx_data (spi_tx_data_s ),
+        .tx_load (spi_tx_load_s )
     );
 
     spi_axi_ctrl i_spi_axi_ctrl (
-        .clk         (aclk        ),
-        .rst         (!aresetn    ),
         //
-        .spi_rx_byte (spi_rx_byte ),
-        .spi_rx_first(spi_rx_first),
-        .spi_rx_valid(spi_rx_valid),
+        .spi_rx_ss   (spi_rx_ss_s),
+        .spi_rx_data (spi_rx_byte_s ),
+        .spi_rx_bitcnt(spi_rx_bitcnt_s),
+        .spi_rx_valid(spi_rx_valid_s),
         //
-        .spi_tx_data (spi_tx_data ),
-        .spi_tx_load (spi_tx_load ),
-        //
-        .axi_wr_addr (axi_wr_addr ),
-        .axi_wr_data (axi_wr_data ),
-        .axi_wr_en   (axi_wr_en   ),
-        //
-        .axi_rd_addr (axi_rd_addr ),
-        .axi_rd_en   (axi_rd_en   ),
-        .axi_rd_data (axi_rd_data )
-    );
-
-    spi_axi_axiff i_spi_axi_axiff (
-        //
-        .axi_wr_addr       (axi_wr_addr       ),
-        .axi_wr_data       (axi_wr_data       ),
-        .axi_wr_en         (axi_wr_en         ),
-        //
-        .axi_rd_addr       (axi_rd_addr       ),
-        .axi_rd_en         (axi_rd_en         ),
-        .axi_rd_data       (axi_rd_data       ),
-        //
+        .spi_tx_data (spi_tx_data_s ),
+        .spi_tx_load (spi_tx_load_s ),
+        // AXI
+        //=====
         .aclk              (aclk              ),
         .aresetn           (aresetn           ),
         //

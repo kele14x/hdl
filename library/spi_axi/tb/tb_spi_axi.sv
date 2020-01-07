@@ -29,28 +29,27 @@ module tb_spi_axi ();
     logic [31:0] m_axi_awaddr ;
     logic [ 2:0] m_axi_awprot ;
     logic        m_axi_awvalid;
-    logic        m_axi_awready;
+    logic        m_axi_awready = 1;
     //
     logic [31:0] m_axi_wdata  ;
     logic [ 3:0] m_axi_wstrb  ;
     logic        m_axi_wvalid ;
-    logic        m_axi_wready ;
+    logic        m_axi_wready  = 1;
     //
-    logic [ 1:0] m_axi_bresp  ;
-    logic        m_axi_bvalid ;
+    logic [ 1:0] m_axi_bresp   = 0;
+    logic        m_axi_bvalid  = 0;
     logic        m_axi_bready ;
     //
     logic [31:0] m_axi_araddr ;
     logic [ 2:0] m_axi_arprot ;
     logic        m_axi_arvalid;
-    logic        m_axi_arready;
+    logic        m_axi_arready = 1;
     //
-    logic [31:0] m_axi_rdata  ;
-    logic [ 1:0] m_axi_rresp  ;
-    logic        m_axi_rvalid ;
+    logic [31:0] m_axi_rdata   = 0;
+    logic [ 1:0] m_axi_rresp   = 0;
+    logic        m_axi_rvalid  = 0;
     logic        m_axi_rready ;
-    
-    logic ctrl_softreset;
+
 
     // Basic SPI Operations
     //=====================
@@ -85,59 +84,48 @@ module tb_spi_axi ();
         $write("\n");
     endtask
 
-    task spi_read_sfr(input [11:0] addr, output [15:0] data);
-        txbuffer[0] = {4'b0000, addr[11:8]};
+    task spi_read(input [14:0] addr);
+        txbuffer[0] = {1'b0, addr[14:8]};
         txbuffer[1] = addr[7:0];
         txbuffer[2] = 8'd0;
         txbuffer[3] = 8'd0;
-        spi_send(4);
+        txbuffer[4] = 8'd0;
+        txbuffer[5] = 8'd0;
+        spi_send(6);
     endtask
 
-    task spi_write_sfr(input [11:0] addr, input [15:0] data);
-        txbuffer[0] = {4'b0001, addr[11:8]};
+    task spi_write(input [14:0] addr, input [31:0] data);
+        txbuffer[0] = {1'b1, addr[14:8]};
         txbuffer[1] = addr[7:0];
-        txbuffer[2] = data[15:8];
-        txbuffer[3] = data[7:0];
-        spi_send(4);
+        txbuffer[2] = data[31:24];
+        txbuffer[3] = data[23:16];
+        txbuffer[4] = data[15: 8];
+        txbuffer[5] = data[ 7: 0];
+        spi_send(6);
     endtask
 
 
     //=========================================================================
 
-    always begin
-        #5 aclk = ~aclk;
-    end
+    always #5 aclk = ~aclk;
+    
+    initial #1000 aresetn = 1;
     
     initial begin
-        #1000 aresetn = 1;
-    end
-    
-    initial begin
-        reg [11:0] addr;
-        reg [15:0] sfr_wr;
-        reg [15:0] sfr_rd;
-        
         $display("Simulation starts");
         wait(aresetn);
         
         #100;
-        for (int i = 0; i < 256; i++) begin
-            addr = i;
-            sfr_wr = 100 + i;
-            spi_write_sfr(addr, sfr_wr);
-            #100;
-            spi_read_sfr(addr, sfr_rd);
-        end
-        
+        spi_write(15'h0A,32'h55AA55AA);
+        #1000;
+        spi_read(15'h0A);
         #1000;
         $finish();
     end
 
-    final begin
-        $display("Simulation ends");
-    end
+    final $display("Simulation ends");
 
-    spi_axi_v1_0 DUT ( .* );
+    spi_axi DUT ( .* );
 
 endmodule
 

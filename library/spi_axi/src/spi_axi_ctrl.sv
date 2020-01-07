@@ -7,26 +7,50 @@ All rights reserved.
 `default_nettype none
 
 module spi_axi_ctrl (
-    input  wire        clk         ,
-    input  wire        rst         ,
+    // AXI
+    //======
+    input  wire        aclk              ,
+    input  wire        aresetn           ,
+    //
+    output reg  [31:0] m_axi_awaddr      ,
+    output wire [ 2:0] m_axi_awprot      ,
+    output reg         m_axi_awvalid     ,
+    input  wire        m_axi_awready     ,
+    //
+    output reg  [31:0] m_axi_wdata       ,
+    output wire [ 3:0] m_axi_wstrb       ,
+    output reg         m_axi_wvalid      ,
+    input  wire        m_axi_wready      ,
+    //
+    input  wire [ 1:0] m_axi_bresp       ,
+    input  wire        m_axi_bvalid      ,
+    output wire        m_axi_bready      ,
+    //
+    output reg  [31:0] m_axi_araddr      ,
+    output wire [ 2:0] m_axi_arprot      ,
+    output reg         m_axi_arvalid     ,
+    input  wire        m_axi_arready     ,
+    //
+    input  wire [31:0] m_axi_rdata       ,
+    input  wire [ 1:0] m_axi_rresp       ,
+    input  wire        m_axi_rvalid      ,
+    output wire        m_axi_rready      ,
     // SPI
     //=====
-    input  wire        spi_rx_ss   ,
-    input  wire [ 7:0] spi_rx_byte ,
-    input  wire [ 2:0] spi_rx_bitcnt,
-    input  wire        spi_rx_valid,
+    input  wire        spi_rx_ss         ,
+    input  wire [15:0] spi_rx_data       ,
+    input  wire [ 3:0] spi_rx_bitcnt     ,
+    input  wire        spi_rx_valid      ,
     //
-    output reg  [ 7:0] spi_tx_data ,
-    input  reg         spi_tx_load ,
-    // AXI
-    //=====
-    output wire [14:0] axi_wr_addr ,
-    output wire [31:0] axi_wr_data ,
-    output wire        axi_wr_en   ,
-    // Read
-    output wire [14:0] axi_rd_addr ,
-    output wire        axi_rd_en   ,
-    input  wire [31:0] axi_rd_data
+    output wire [15:0] spi_tx_data       ,
+    input  wire        spi_tx_load       ,
+    // Status
+    //========
+    output reg         stat_axi_awoverrun,
+    output reg         stat_axi_woverrun ,
+    output reg         stat_axi_bresperr ,
+    output reg         stat_axi_aroverrun,
+    output reg         stat_axi_rresperr
 );
 
     localparam C_OP_RD = 1'b0;
@@ -38,16 +62,13 @@ module spi_axi_ctrl (
     reg [7:0] data_temp0, data_temp1, data_temp2;
 
     typedef enum {
-        S_RST, S_IDLE,
-        S_RW_ADDR0, S_ADDR1,
-        S_RD_BYTE0, S_RD_BYTE1, S_RD_BYTE2, S_RD_BYTE3,
-        S_WR_BYTE0, S_WR_BYTE1, S_WR_BYTE2, S_WR_BYTE3
+        S_RST, S_IDLE, S_RD_WAIT, S_RD_HIGH, S_RD_LOW, S_WR_HIGH, S_WR_LOW
     } STATE_T;
 
     STATE_T state, state_next;
 
-    always_ff @ (posedge clk) begin
-        if (rst) begin
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
             state <= S_RST;
         end else begin
             state <= state_next;
@@ -55,83 +76,201 @@ module spi_axi_ctrl (
     end
 
     always_comb begin
-        if (spi_rx_ss) begin
-            state_next = S_IDLE;
-        end else if (!spi_rx_valid) begin
-            // Do not move to next state when rx is not valid
-            state_next = state;
-        end else if (spi_rx_bitcnt) begin
-            state_next = spi_rx_byte[7:4] == C_OP_RDSFR ? S_RD_SFR_ADDR :
-                                              spi_rx_byte[7:4] == C_OP_WRSFR ? S_WR_SFR_ADDR :
-                                              spi_rx_byte[7:4] == C_OP_RDAXI ? S_RD_AXI_ADDR :
-                                              spi_rx_byte[7:4] == C_OP_RDSFR ? S_RD_SFR_ADDR :
-                                              S_DISCARD;
+        case (state)
+            S_RST     : state_next = S_IDLE;
+            S_IDLE    : state_next = spi_rx_ss ? S_IDLE :
+                (spi_rx_valid && spi_rx_bitcnt == 13 && spi_rx_data[13] == C_OP_RD) ? S_RD_WAIT :
+                (spi_rx_valid && spi_rx_bitcnt == 15) ? S_WR_HIGH : S_IDLE;
+            S_RD_WAIT : state_next = spi_rx_ss ? S_IDLE :
+                (spi_rx_valid && spi_rx_bitcnt == 15) ? S_RD_HIGH : S_RD_WAIT;
+            S_RD_HIGH : state_next = spi_rx_ss ? S_IDLE :
+                (spi_rx_valid && spi_rx_bitcnt == 15) ? S_RD_LOW : S_RD_HIGH;
+            S_RD_LOW  : state_next = spi_rx_ss ? S_IDLE :
+                (spi_rx_valid && spi_rx_bitcnt == 15) ? S_IDLE : S_RD_LOW;
+            S_WR_HIGH : state_next = spi_rx_ss ? S_IDLE :
+                (spi_rx_valid && spi_rx_bitcnt == 15) ? S_WR_LOW : S_WR_HIGH;
+            S_WR_LOW  : state_next = spi_rx_ss ? S_IDLE :
+                (spi_rx_valid && spi_rx_bitcnt == 15) ? S_IDLE : S_WR_LOW;
+            default   : state_next = S_RST;
+        endcase
+    end
+
+    wire        axi_wr_en;
+    wire [14:0] axi_wr_addr;
+    wire [31:0] axi_wr_data;
+
+    wire        axi_rd_en;
+    wire [12:0] axi_rd_addr;
+    reg  [31:0] axi_rd_data;
+
+    reg [15:0] temp0, temp1;
+
+    always_ff @ (posedge aclk) begin
+        if (state == S_IDLE && spi_rx_valid && spi_rx_bitcnt == 15) begin
+            temp0 <= spi_rx_data;
+        end
+    end
+
+    always_ff @ (posedge aclk) begin
+        if (state == S_WR_HIGH && spi_rx_valid && spi_rx_bitcnt == 15) begin
+            temp1 <= spi_rx_data;
+        end
+    end
+
+    assign spi_tx_data = state == S_RD_LOW ? axi_rd_data[31:16] : axi_rd_data[15:0];
+
+    assign axi_wr_en = state == S_WR_LOW && !spi_rx_ss && spi_rx_valid && spi_rx_bitcnt == 15;
+    assign axi_wr_addr = temp0;
+    assign axi_wr_data = {temp1, spi_rx_data};
+
+    assign axi_rd_en = state == S_IDLE && !spi_rx_ss && spi_rx_valid && spi_rx_bitcnt == 13 && spi_rx_data[13] == C_OP_RD;
+    assign axi_rd_addr = spi_rx_data[12:0];
+
+    // AXI
+    //============
+
+    localparam C_AXI_RESP_OKAY   = 2'b00;
+    localparam C_AXI_RESP_EXOKAY = 2'b01;
+    localparam C_AXI_RESP_SLVERR = 2'b10;
+    localparam C_AXI_RESP_DECERR = 2'b11;
+
+
+    // Write Address Channel
+    //----------------------
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            m_axi_awaddr <= 32'h00000000;
+        end else if (axi_wr_en && !(m_axi_awvalid && !m_axi_awready)) begin
+            m_axi_awaddr <= {17'd0, axi_wr_addr};
+        end
+    end
+
+    assign m_axi_awprot  = 3'b0; // Not supported
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            m_axi_awvalid <= 1'b0;
+        end else if (axi_wr_en) begin
+            m_axi_awvalid <= 1'b1;
+        end else if (m_axi_awready) begin
+            m_axi_awvalid <= 1'b0;
+        end
+    end
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            stat_axi_awoverrun <= 1'b0;
         end else begin
-            case (state)
-                S_RD_SFR_ADDR : state_next = S_RD_SFR_BYTE0;
-                S_RD_SFR_BYTE0: state_next = S_RD_SFR_BYTE1;
-                S_RD_SFR_BYTE1: state_next = S_DISCARD;
-                S_WR_SFR_ADDR : state_next = S_WR_SFR_BYTE0;
-                S_WR_SFR_BYTE0: state_next = S_WR_SFR_BYTE1;
-                S_WR_SFR_BYTE1: state_next = S_DISCARD;
-
-                default       : state_next = state;
-            endcase
+            stat_axi_awoverrun <= axi_wr_en && (m_axi_awvalid && !m_axi_awready);
         end
     end
 
-    always_ff @ (posedge clk) begin
-        if (spi_rx_first && spi_rx_valid) begin
-            mode_r <= spi_rx_byte[7:4];
+    // Write Data Channel
+    //-------------------
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            m_axi_wdata <= 32'h00000000;
+        end else if (axi_wr_en && !(m_axi_wvalid && !m_axi_wready)) begin
+            m_axi_wdata <= axi_wr_data;
         end
     end
 
-    always_ff @ (posedge clk) begin
-        if (spi_rx_first && spi_rx_valid) begin
-            addr_r0 <= spi_rx_byte[3:0];
-        end
-        if (spi_rx_valid && state == S_WR_SFR_ADDR) begin
-            addr_r1 <= spi_rx_byte;
-        end
-    end
+    assign m_axi_wstrb  = 4'b1111; // Always write all 4-byte
 
-    always_ff @ (posedge clk) begin
-        if (spi_rx_valid && (state == S_WR_SFR_BYTE0)) begin
-            data_temp0 <= spi_rx_byte;
-        end
-        if (spi_rx_valid && (state == S_WR_AXI_BYTE0)) begin
-            data_temp0 <= spi_rx_byte;
-        end
-        if (spi_rx_valid && (state == S_WR_AXI_BYTE1)) begin
-            data_temp1 <= spi_rx_byte;
-        end
-        if (spi_rx_valid && (state == S_WR_AXI_BYTE2)) begin
-            data_temp2 <= spi_rx_byte;
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            m_axi_wvalid <= 1'b0;
+        end else if (axi_wr_en) begin
+            m_axi_wvalid <= 1'b1;
+        end else if (m_axi_wready) begin
+            m_axi_wvalid <= 1'b0;
         end
     end
 
-    assign sfr_addr = mode_r[0] ? {addr_r0, addr_r1} : {addr_r0, spi_rx_byte};
-    assign sfr_din  = {data_temp0, spi_rx_byte};
-    assign sfr_wren = spi_rx_valid && (state == S_WR_SFR_BYTE1);
-    assign sfr_rden = spi_rx_valid && state == S_RD_SFR_ADDR;
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            stat_axi_woverrun <= 1'b0;
+        end else begin
+            stat_axi_woverrun <= axi_wr_en && (m_axi_awvalid && !m_axi_awready);
+        end
+    end
 
+    // Write Response Channel
+    //------------------------
 
-    assign axi_wr_addr = {addr_r0, spi_rx_byte};
-    assign axi_wr_data = {data_temp0, spi_rx_byte};
-    assign axi_wr_en   = spi_rx_valid && (state == S_RD_AXI_BYTE3);
+    // Indicate previous write transaction is not successful
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            stat_axi_bresperr <= 1'b0;
+        end else begin
+            stat_axi_bresperr <= m_axi_bvalid &&
+                (m_axi_bresp == C_AXI_RESP_SLVERR ||
+                 m_axi_bresp == C_AXI_RESP_DECERR);
+        end
+    end
 
-    assign axi_rd_addr = {addr_r0, spi_rx_byte};
-    assign axi_rd_en   = spi_rx_valid && state == S_RD_AXI_ADDR;
+    assign m_axi_bready = 1'b1; // Always be ready
 
+    // Read Address Channel
+    //---------------------
 
-    always_comb begin
-        spi_tx_data = (state == S_RD_SFR_BYTE0) ? sfr_dout[15:8] :
-                      (state == S_RD_SFR_BYTE1) ? sfr_dout[ 7:0] :
-                      (state == S_RD_AXI_BYTE0) ? sfr_dout[15:8] :
-                      (state == S_RD_AXI_BYTE0) ? sfr_dout[15:8] :
-                      (state == S_RD_AXI_BYTE0) ? sfr_dout[15:8] :
-                      (state == S_RD_AXI_BYTE0) ? sfr_dout[15:8] :
-                      8'h00;
+    // m_axi_araddr
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            m_axi_araddr <= 32'd0;
+        end else if (axi_rd_en && !(m_axi_arvalid && !m_axi_arready)) begin
+            m_axi_araddr <= {17'd0, axi_rd_addr, 2'd0};
+        end
+    end
+
+    // m_axi_arprot
+    assign m_axi_arprot = 3'd0; // Not supported
+
+    // m_axi_arvalid
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            m_axi_arvalid <= 1'b0;
+        end else if (axi_rd_en) begin
+            m_axi_arvalid <= 1'b1;
+        end else if (m_axi_arready) begin
+            m_axi_arvalid <= 1'b0;
+        end
+    end
+
+    // Indicates SPI side want to issue a AXI read transaction, but previous
+    // read transaction still struck at AXI read address channel
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            stat_axi_aroverrun <= 1'b0;
+        end else begin
+            stat_axi_aroverrun <= axi_rd_en && (m_axi_arvalid && !m_axi_arready);
+        end
+    end
+
+    // Read Data Channel
+    //------------------
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            axi_rd_data <= 32'hDEADBEEF;
+        end else if (m_axi_rvalid) begin
+            axi_rd_data <= (m_axi_rresp == C_AXI_RESP_OKAY ||
+                m_axi_rresp == C_AXI_RESP_EXOKAY) ? m_axi_rdata : 32'hDEADBEEF;
+        end
+    end
+
+    assign m_axi_rready = 1'b1; // always be ready
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            stat_axi_rresperr <= 1'b0;
+        end else begin
+            stat_axi_rresperr <= m_axi_rvalid &&
+                (m_axi_rresp == C_AXI_RESP_SLVERR ||
+                 m_axi_rresp == C_AXI_RESP_DECERR);
+        end
     end
 
 endmodule
