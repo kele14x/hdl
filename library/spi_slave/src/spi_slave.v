@@ -10,7 +10,6 @@ All rights reserved.
 //
 // SPI Interface timing:
 //
-
 //                ____                                             __________
 //  SS                \___________________________________________/
 //                         ___     ___     ___     ___     ___
@@ -23,142 +22,72 @@ All rights reserved.
 // rising edge of SCK, and will sample SI at failing edge of SCK.
 //==============================================================================
 
-module spi_slave #(
-    parameter WIDTH = 8 // 8, 16, 24, 32
+module spi_slave #(parameter WIDTH = 8 // 8, 16, 24, 32
 ) (
     // SPI
     //=====
+    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SS_I" *)
     input  wire                       SS_I     ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SS_O" *)
     output wire                       SS_O     ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SS_T" *)
     output wire                       SS_T     ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SCK_I" *)
     input  wire                       SCK_I    ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SCK_O" *)
     output wire                       SCK_O    ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SCK_T" *)
     output wire                       SCK_T    ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI IO0_I" *)
     input  wire                       IO0_I    , // SI
+    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI IO0_O" *)
     output wire                       IO0_O    ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI IO0_T" *)
     output wire                       IO0_T    ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI IO1_I" *)
     input  wire                       IO1_I    , // SO
+    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI IO1_O" *)
     output wire                       IO1_O    ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI IO1_T" *)
     output wire                       IO1_T    ,
-    // RAW
     //=====
     input  wire                       clk      ,
     input  wire                       rst      ,
     // Rx i/f, beat at each bit
     output wire                       rx_ss    ,
     output wire [          WIDTH-1:0] rx_data  ,
-    output reg  [$clog2(WIDTH-1)-1:0] rx_bitcnt,
+    output wire [$clog2(WIDTH-1)-1:0] rx_bitcnt,
     output wire                       rx_valid ,
     // Tx i/f, beat at each word
     input  wire [          WIDTH-1:0] tx_data  ,
-    output reg                        tx_load
+    output wire                       tx_load
 );
 
-
-    initial 
-        if (!(WIDTH == 8 || WIDTH == 16 || WIDTH == 16 || WIDTH == 32))
-            $error("WIDTH must be 8, 16, 32 or 64.");
-
-
-    // SPI Interface
-    //==============
-
-    wire SCK_s, SS_s, SI_s;
-    reg  SO_r;
-
-    // Slave license to SCK, SS, IO0 only
-
-    assign SCK_T = 1;
-    assign SCK_O = 0;
-
-    assign SS_T = 1;
-    assign SS_O = 0;
-
-    assign IO0_T = 1;
-    assign IO0_O = 0;
-
-    // Slave output to IO1 when SS is selected
-
-    assign IO1_O = SO_r;
-    assign IO1_T = SS_I;
-
-    spi_slave_cdc #(.C_DATA_WIDTH(3)) i_spi_cdc (
-        .clk (clk                 ),
-        .din ({SCK_I, SS_I, IO0_I}),
-        .dout({SCK_s, SS_s, SI_s })
+    spi_slave_top #(.WIDTH(WIDTH)) inst (
+        .SS_I     (SS_I     ),
+        .SS_O     (SS_O     ),
+        .SS_T     (SS_T     ),
+        .SCK_I    (SCK_I    ),
+        .SCK_O    (SCK_O    ),
+        .SCK_T    (SCK_T    ),
+        .IO0_I    (IO0_I    ),
+        .IO0_O    (IO0_O    ),
+        .IO0_T    (IO0_T    ),
+        .IO1_I    (IO1_I    ),
+        .IO1_O    (IO1_O    ),
+        .IO1_T    (IO1_T    ),
+        //
+        .clk      (clk      ),
+        .rst      (rst      ),
+        //
+        .rx_ss    (rx_ss    ),
+        .rx_data  (rx_data  ),
+        .rx_bitcnt(rx_bitcnt),
+        .rx_valid (rx_valid ),
+        //
+        .tx_data  (tx_data  ),
+        .tx_load  (tx_load  )
     );
-
-    // SPI Event
-    //----------
-
-    reg SCK_d;
-
-    wire capture_edge, output_edge;
-
-    always @ (posedge clk) begin
-        SCK_d <= SCK_s;
-    end
-
-    assign capture_edge = ({SCK_s, SCK_d}  == 2'b01) && !SS_s; // failing edge
-    assign output_edge  = ({SCK_s, SCK_d}  == 2'b10) && !SS_s; // rising edge
-
-    // RX Logic
-    //----------
-
-    reg  [WIDTH-2:0] rx_shift;
-
-    always @ (posedge clk) begin
-        if (SS_s) begin
-            rx_bitcnt <= 'd0;
-        end else if (capture_edge) begin
-            rx_bitcnt <= rx_bitcnt + 1;
-        end
-    end
-
-    // Shift into rx_shift at LSB
-    always @ (posedge clk) begin
-        if (capture_edge) begin
-            rx_shift <= {rx_shift[WIDTH-3:0], SI_s};
-        end
-    end
-
-    assign rx_ss = SS_s;
-
-    assign rx_data = {rx_shift, SI_s};
-
-    assign rx_valid = capture_edge;
-
-    // TX Logic
-    //---------
-
-    reg [          WIDTH-2:0] tx_shift;
-    reg [$clog2(WIDTH-1)-1:0] tx_bitcnt;
-
-    always @ (posedge clk) begin
-        if (SS_s) begin
-            tx_bitcnt <= 'd0;
-        end else if (output_edge) begin
-            tx_bitcnt <= tx_bitcnt + 1;
-        end
-    end
-
-    always @ (posedge clk) begin
-        if (SS_s) begin
-            tx_load <= 1'd0;
-        end else begin
-            tx_load <= output_edge && (tx_bitcnt == 'd0);
-        end
-    end
-
-    always @ (posedge clk) begin
-        if (output_edge) begin
-            if (tx_bitcnt == 0) begin
-                {SO_r, tx_shift} <= tx_data;
-            end else begin
-                {SO_r, tx_shift} <= {tx_shift, 1'b0};
-            end
-        end
-    end
 
 endmodule
 
