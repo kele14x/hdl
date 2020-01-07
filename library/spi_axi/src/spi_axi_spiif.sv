@@ -10,50 +10,52 @@ All rights reserved.
 //
 // SPI Interface timing:
 //
-//                         ___     ___     ___     ___     ___
-//  SCK   CPOL=0  ________/   \___/   \___/   \___/   \___/   \______________
-//                ________     ___     ___     ___     ___     ______________
-//        CPOL=1          \___/   \___/   \___/   \___/   \___/
-//
+
 //                ____                                             __________
 //  SS                \___________________________________________/
+//                         ___     ___     ___     ___     ___
+//  SCK   CPOL=0  ________/   \___/   \___/   \___/   \___/   \______________
 //
-//                     _______ _______ _______ _______ _______
-//  MOSI  CPHA=0  zzzzX___0___X___1___X__...__X___6___X___7___X---Xzzzzzzzzzz
-//  MISO                   _______ _______ _______ _______ _______
-//        CPHA=1  zzzz----X___0___X___1___X__...__X___6___X___7___Xzzzzzzzzzz
+//  MOSI                   _______ _______ _______ _______ _______
+//  MISO  CPHA=1  zzzzxxxxX___0___X___1___X__...__X___6___X___7___Xzzzzzzzzzz
 //
 // This core is fixed CPOL = 0 and CPHA = 1. That is FPGA will drive SO at
 // rising edge of SCK, and will sample SI at failing edge of SCK.
 //==============================================================================
 
-module spi_axi_spiif (
+module spi_axi_spiif #(parameter WIDTH = 8 // 8, 16, 24, 32
+) (
     // SPI
     //=====
-    input  wire        SCK_I   ,
-    output wire        SCK_O   ,
-    output wire        SCK_T   ,
-    input  wire        SS_I    ,
-    output wire        SS_O    ,
-    output wire        SS_T    ,
-    input  wire        IO0_I   , // SI
-    output wire        IO0_O   ,
-    output wire        IO0_T   ,
-    input  wire        IO1_I   , // SO
-    output wire        IO1_O   ,
-    output wire        IO1_T   ,
+    input  wire                       SS_I     ,
+    output wire                       SS_O     ,
+    output wire                       SS_T     ,
+    input  wire                       SCK_I    ,
+    output wire                       SCK_O    ,
+    output wire                       SCK_T    ,
+    input  wire                       IO0_I    , // SI
+    output wire                       IO0_O    ,
+    output wire                       IO0_T    ,
+    input  wire                       IO1_I    , // SO
+    output wire                       IO1_O    ,
+    output wire                       IO1_T    ,
     // RAW
-    //======
-    input  wire        clk     ,
-    input  wire        rst     ,
-    // Rx i/f, beat at each byte
-    output wire  [7:0] rx_byte ,
-    output reg         rx_first,
-    output wire        rx_valid,
-    // Tx i/f, beat at each byte 
-    input  wire  [7:0] tx_data ,
-    output reg         tx_load
+    //=====
+    input  wire                       clk      ,
+    input  wire                       rst      ,
+    // Rx i/f, beat at each bit
+    output wire                       rx_ss    ,
+    output wire [          WIDTH-1:0] rx_byte  ,
+    output reg  [$clog2(WIDTH-1)-1:0] rx_bitcnt,
+    output wire                       rx_valid ,
+    // Tx i/f, beat at each word
+    input  wire [          WIDTH-1:0] tx_data  ,
+    output reg                        tx_load
 );
+
+
+    initial assert (WIDTH == 8 || WIDTH == 8 || WIDTH == 8 || WIDTH == 8) else
+        $error("WIDTH must be 8, 16, 32 or 64.");
 
 
     // SPI Interface
@@ -94,28 +96,19 @@ module spi_axi_spiif (
         SCK_d <= SCK_s;
     end
 
-    assign capture_edge = ({SCK_s, SCK_d}  == 2'b01); // failing edge
-    assign output_edge  = ({SCK_s, SCK_d}  == 2'b10); // rising edge
+    assign capture_edge = ({SCK_s, SCK_d}  == 2'b01) && !SS_s; // failing edge
+    assign output_edge  = ({SCK_s, SCK_d}  == 2'b10) && !SS_s; // rising edge
 
     // RX Logic
     //----------
 
     reg  [6:0] rx_shift;
-    reg  [2:0] rx_bitcnt;
-    
+
     always_ff @ (posedge clk) begin
         if (SS_s) begin
             rx_bitcnt <= 4'd0;
         end else if (capture_edge) begin
             rx_bitcnt <= rx_bitcnt + 1;
-        end
-    end
-
-    always_ff @ (posedge clk) begin
-        if (SS_s) begin
-            rx_first <= 1'd1;
-        end else if (capture_edge && (&rx_bitcnt)) begin
-            rx_first <= 1'b0;
         end
     end
 
@@ -126,9 +119,11 @@ module spi_axi_spiif (
         end
     end
 
+    assign rx_ss = SS_s;
+
     assign rx_byte = {rx_shift, SI_s};
 
-    assign rx_valid = capture_edge && (&rx_bitcnt);
+    assign rx_valid = capture_edge;
 
     // TX Logic
     //---------
@@ -138,7 +133,7 @@ module spi_axi_spiif (
 
     always_ff @ (posedge clk) begin
         if (SS_s) begin
-            tx_bitcnt <= 4'd0;
+            tx_bitcnt <= 'd0;
         end else if (output_edge) begin
             tx_bitcnt <= tx_bitcnt + 1;
         end
@@ -146,7 +141,7 @@ module spi_axi_spiif (
 
     always_ff @ (posedge clk) begin
         if (SS_s) begin
-            tx_load <= 4'd0;
+            tx_load <= 1'd0;
         end else begin
             tx_load <= output_edge && (tx_bitcnt == 3'd0);
         end
