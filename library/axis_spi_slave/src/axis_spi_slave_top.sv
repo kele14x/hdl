@@ -6,7 +6,10 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module axis_spi_slave_top #(parameter C_DATA_WIDTH = 8 // 8, 16, 24, 32
+module axis_spi_slave_top #(
+    parameter C_DATA_WIDTH     = 8, // 8, 16, 24, 32
+    parameter C_CLOCK_POLARITY = 0,
+    parameter C_CLOCK_PHASE    = 1
 ) (
     // SPI
     //=====
@@ -76,13 +79,17 @@ module axis_spi_slave_top #(parameter C_DATA_WIDTH = 8 // 8, 16, 24, 32
     reg SCK_d;
 
     wire capture_edge, output_edge;
+    wire failing_edge, rising_edge;
 
     always_ff @ (posedge aclk) begin
         SCK_d <= SCK_s;
     end
 
-    assign capture_edge = ({SCK_s, SCK_d}  == 2'b01) && !SS_s; // failing edge
-    assign output_edge  = ({SCK_s, SCK_d}  == 2'b10) && !SS_s; // rising edge
+    assign failing_edge = ({SCK_s, SCK_d}  == 2'b01) && !SS_s; // failing edge
+    assign rising_edge  = ({SCK_s, SCK_d}  == 2'b10) && !SS_s; // rising edge
+
+    assign capture_edge = (C_CLOCK_PHASE ^ C_CLOCK_POLARITY) ? failing_edge : rising_edge;
+    assign output_edge  = (C_CLOCK_PHASE ^ C_CLOCK_POLARITY) ? rising_edge  : failing_edge;
 
     // RX Logic
     //----------
@@ -139,6 +146,11 @@ module axis_spi_slave_top #(parameter C_DATA_WIDTH = 8 // 8, 16, 24, 32
     reg [          C_DATA_WIDTH-2:0] tx_shift;
     reg [$clog2(C_DATA_WIDTH-1)-1:0] tx_bitcnt;
 
+    wire                    tx_load;
+    wire [C_DATA_WIDTH-1:0] tx_data;
+
+    assign tx_data = {SO_r, tx_shift};
+
     always_ff @ (posedge aclk) begin
         if (SS_s) begin
             tx_bitcnt <= 'd0;
@@ -147,17 +159,64 @@ module axis_spi_slave_top #(parameter C_DATA_WIDTH = 8 // 8, 16, 24, 32
         end
     end
 
-    assign axis_tx_tready = output_edge && (tx_bitcnt == 'd0);
 
-    always_ff @ (posedge aclk) begin
-        if (output_edge) begin
-            if (tx_bitcnt == 0) begin
-                {SO_r, tx_shift} <= axis_tx_tvalid ? axis_tx_tdata : 'd0;
-            end else begin
-                {SO_r, tx_shift} <= {tx_shift, 1'b0};
+    generate
+        if (C_CLOCK_PHASE) begin : g_pha1
+
+            always_ff @ (posedge aclk) begin
+                if (!aresetn) begin
+                    {SO_r, tx_shift} <= 'd0;
+                end else if (output_edge) begin
+                    if (tx_bitcnt == 0) begin
+                        {SO_r, tx_shift} <= axis_tx_tvalid ? axis_tx_tdata : 'd0;
+                    end else begin
+                        {SO_r, tx_shift} <= {tx_shift, 1'b0};
+                    end
+                end
             end
+
+            assign tx_load = output_edge && (tx_bitcnt == 'd0);
+
+            assign axis_tx_tready = tx_load;
+
+        end else begin : g_pha0
+
+            typedef enum {S_TX_RST, S_TX_UNLOADED, S_TX_LOADED} TX_STATE_T;
+
+            TX_STATE_T tx_state, tx_state_next;
+
+            assign tx_load = output_edge && (tx_bitcnt == 'd7);
+
+            always_ff @ (posedge aclk) begin
+                if (!aresetn) begin
+                    tx_state <= S_TX_RST;
+                end else begin
+                    tx_state <= tx_state_next;
+                end
+            end
+
+            always_comb begin
+                case(tx_state)
+                    S_TX_RST     : tx_state_next = S_TX_UNLOADED;
+                    S_TX_LOADED  : tx_state_next = (!tx_load || axis_rx_tvalid) ? S_TX_LOADED : S_TX_UNLOADED;
+                    S_TX_UNLOADED: tx_state_next = (axis_tx_tready && axis_tx_tvalid) ? S_TX_LOADED : S_TX_UNLOADED;
+                endcase
+            end
+
+            assign axis_tx_tready = ((tx_state == S_TX_UNLOADED) && SS_s) || tx_load;
+            
+            always_ff @ (posedge aclk) begin
+                if (!aresetn) begin
+                    {SO_r, tx_shift} <= 'd0;
+                end else if (axis_tx_tready && axis_tx_tvalid) begin
+                    {SO_r, tx_shift} <= axis_tx_tdata;
+                end else if (output_edge) begin
+                    {SO_r, tx_shift} <= {tx_shift, 1'b0};
+                end
+            end
+            
         end
-    end
+    endgenerate
 
 endmodule
 

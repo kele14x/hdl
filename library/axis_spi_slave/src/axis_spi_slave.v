@@ -22,7 +22,10 @@ All rights reserved.
 // rising edge of SCK, and will sample SI at failing edge of SCK.
 //==============================================================================
 
-module axis_spi_slave #(parameter C_DATA_WIDTH = 8 // 8, 16, 24, 32
+module axis_spi_slave #(
+    parameter C_DATA_WIDTH     = 8, // 8, 16, 24, 32
+    parameter C_CLOCK_POLARITY = 0,
+    parameter C_CLOCK_PHASE    = 1
 ) (
     // SPI
     //=====
@@ -73,7 +76,11 @@ module axis_spi_slave #(parameter C_DATA_WIDTH = 8 // 8, 16, 24, 32
     output wire                    axis_tx_tready
 );
 
-    axis_spi_slave_top #(.C_DATA_WIDTH(C_DATA_WIDTH)) inst (
+    axis_spi_slave_top #(
+        .C_DATA_WIDTH    (C_DATA_WIDTH    ),
+        .C_CLOCK_POLARITY(C_CLOCK_POLARITY),
+        .C_CLOCK_PHASE   (C_CLOCK_PHASE   )
+    ) inst (
         .SS_I          (SS_I          ),
         .SS_O          (SS_O          ),
         .SS_T          (SS_T          ),
