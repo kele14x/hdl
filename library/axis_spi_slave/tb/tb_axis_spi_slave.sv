@@ -9,6 +9,10 @@ All rights reserved.
 module tb_axis_spi_slave;
 
     parameter SPI_PERIOD = 60;
+    
+    parameter C_DATA_WIDTH     = 8; // 8, 16, 24, 32
+    parameter C_CLOCK_POLARITY = 0;
+    parameter C_CLOCK_PHASE    = 0;
 
     logic SS_I  = 0;
     logic SS_O  = 0;
@@ -152,7 +156,10 @@ module tb_axis_spi_slave;
         $display("Simulation ends");
     end
 
-`define SIMULATION
-    axis_spi_slave DUT ( .* );
+    axis_spi_slave #(
+        .C_DATA_WIDTH    (C_DATA_WIDTH    ),
+        .C_CLOCK_POLARITY(C_CLOCK_POLARITY),
+        .C_CLOCK_PHASE   (C_CLOCK_PHASE   )
+    ) DUT ( .* );
 
 endmodule
