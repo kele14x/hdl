@@ -6,42 +6,32 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module spi_axi (
-    // SPI
-    //=====
-    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SS_I" *)
-    input  wire        SS_I         ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SS_O" *)
-    output wire        SS_O         ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SS_T" *)
-    output wire        SS_T         ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SCK_I" *)
-    input  wire        SCK_I        ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SCK_O" *)
-    output wire        SCK_O        ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SCK_T" *)
-    output wire        SCK_T        ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI IO0_I" *)
-    input  wire        IO0_I        , // SI
-    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI IO0_O" *)
-    output wire        IO0_O        ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI IO0_T" *)
-    output wire        IO0_T        ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI IO1_I" *)
-    input  wire        IO1_I        , // SO
-    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI IO1_O" *)
-    output wire        IO1_O        ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI IO1_T" *)
-    output wire        IO1_T        ,
-    // AXI4 Lite Master
-    //=================
+module axis_axi_master (
+    // Clock & Reset
+    //==============
     (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 aclk CLK" *)
-    (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF M_AXI_LITE, ASSOCIATED_RESET aresetn" *)
+    (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF M_AXI_LITE:S_AXIS:M_AXIS, ASSOCIATED_RESET aresetn" *)
     input  wire        aclk         ,
     (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 aresetn RST" *)
     (* X_INTERFACE_PARAMETER = "POLARITY ACTIVE_LOW" *)
     input  wire        aresetn      ,
+    // AXI4-Stream
+    //============
+    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TDATA" *)
+    input  wire [15:0] s_axis_tdata      ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TVALID" *)
+    input  wire        s_axis_tvalid     ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TREADY" *)
+    output wire        s_axis_tready     ,
     //
+    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TDATA" *)
+    output wire [15:0] m_axis_tdata      ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TVALID" *)
+    output wire        m_axis_tvalid     ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TREADY" *)
+    input  wire        m_axis_tready     ,
+    // AXI4 Lite Master
+    //=================
     (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 M_AXI_LITE AWADDR" *)
     output wire [31:0] m_axi_awaddr ,
     (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 M_AXI_LITE AWPROT" *)
@@ -86,26 +76,22 @@ module spi_axi (
     output wire        m_axi_rready
 );
 
-    spi_axi_top inst (
-        // SPI
-        //=====
-        .SS_I          (SS_I          ),
-        .SS_O          (SS_O          ),
-        .SS_T          (SS_T          ),
-        .SCK_I         (SCK_I         ),
-        .SCK_O         (SCK_O         ),
-        .SCK_T         (SCK_T         ),
-        .IO0_I         (IO0_I         ),
-        .IO0_O         (IO0_O         ),
-        .IO0_T         (IO0_T         ),
-        .IO1_I         (IO1_I         ),
-        .IO1_O         (IO1_O         ),
-        .IO1_T         (IO1_T         ),
-        // AXI
-        //=====
+    axis_axi_master_top inst (
+        // Clock & Reset
+        //==============
         .aclk          (aclk          ),
         .aresetn       (aresetn       ),
+        // AXI4-Stream
+        //============
+        .s_axis_tdata  (s_axis_tdata  ),
+        .s_axis_tvalid (s_axis_tvalid ),
+        .s_axis_tready (s_axis_tready ),
         //
+        .m_axis_tdata  (m_axis_tdata  ),
+        .m_axis_tvalid (m_axis_tvalid ),
+        .m_axis_tready (m_axis_tready ),
+        // AXI4-Lite Master
+        //=================
         .m_axi_awaddr  (m_axi_awaddr  ),
         .m_axi_awprot  (m_axi_awprot  ),
         .m_axi_awvalid (m_axi_awvalid ),
