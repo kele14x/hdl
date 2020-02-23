@@ -18,18 +18,18 @@ module axis_axi_master (
     // AXI4-Stream
     //============
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TDATA" *)
-    input  wire [15:0] s_axis_tdata      ,
+    input  wire [ 7:0] s_axis_tdata ,
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TVALID" *)
-    input  wire        s_axis_tvalid     ,
+    input  wire        s_axis_tvalid,
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_AXIS TREADY" *)
-    output wire        s_axis_tready     ,
+    output wire        s_axis_tready,
     //
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TDATA" *)
-    output wire [15:0] m_axis_tdata      ,
+    output wire [ 7:0] m_axis_tdata ,
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TVALID" *)
-    output wire        m_axis_tvalid     ,
+    output wire        m_axis_tvalid,
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TREADY" *)
-    input  wire        m_axis_tready     ,
+    input  wire        m_axis_tready,
     // AXI4 Lite Master
     //=================
     (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 M_AXI_LITE AWADDR" *)

@@ -69,15 +69,38 @@ module tb_axis_axi_master ();
                     @(posedge aclk);
                     if (s_axis_tready) break;
                 end
+                s_axis_tdata  <= 8'd0;
+                s_axis_tvalid <= 1'b0;
+                #80;
+                @(posedge aclk);
             end
-            s_axis_tdata  <= 8'd0;
-            s_axis_tvalid <= 1'b0;
-
         end
     endtask
 
     task axi_write(input [14:0] addr, input [31:0] data);
+        reg [7:0] txd [0:5];
+        begin
+            txd[0] = {1'b1, addr[14:8]};
+            txd[1] = addr[7:0];
+            txd[2] = data[31:24];
+            txd[3] = data[23:16];
+            txd[4] = data[15:8];
+            txd[5] = data[7:0];
 
+            @(posedge aclk);
+            for(int i = 0; i < 6; i++) begin
+                s_axis_tdata  <= txd[i];
+                s_axis_tvalid <= 1'b1;
+                while(1) begin
+                    @(posedge aclk);
+                    if (s_axis_tready) break;
+                end
+                s_axis_tdata  <= 8'd0;
+                s_axis_tvalid <= 1'b0;
+                #80;
+                @(posedge aclk);
+            end
+        end
     endtask
 
     always #5 aclk = ~aclk;
@@ -89,13 +112,47 @@ module tb_axis_axi_master ();
         aresetn = 1'b1;
         #100;
 
+        axi_write(15'h55, 32'hABCD0123);
+        #100;
         axi_read(15'h55);
+
         #1000;
         $display("Simulation ends");
         $finish();
     end
 
     axis_axi_master DUT ( .* );
+
+
+    blk_mem_gen_0 your_instance_name (
+        .s_aclk       (aclk         ),
+        .s_aresetn    (aresetn      ),
+        //
+        .s_axi_awaddr (m_axi_awaddr ),
+        .s_axi_awvalid(m_axi_awvalid),
+        .s_axi_awready(m_axi_awready),
+        //
+        .s_axi_wdata  (m_axi_wdata  ),
+        .s_axi_wstrb  (m_axi_wstrb  ),
+        .s_axi_wvalid (m_axi_wvalid ),
+        .s_axi_wready (m_axi_wready ),
+        //
+        .s_axi_bresp  (m_axi_bresp  ),
+        .s_axi_bvalid (m_axi_bvalid ),
+        .s_axi_bready (m_axi_bready ),
+        //
+        .s_axi_araddr (m_axi_araddr ),
+        .s_axi_arvalid(m_axi_arvalid),
+        .s_axi_arready(m_axi_arready),
+        //
+        .s_axi_rdata  (m_axi_rdata  ),
+        .s_axi_rresp  (m_axi_rresp  ),
+        .s_axi_rvalid (m_axi_rvalid ),
+        .s_axi_rready (m_axi_rready ),
+        //
+        .rsta_busy    (             ),
+        .rstb_busy    (             )
+    );
 
 endmodule
 

@@ -64,8 +64,8 @@ module axis_spi_slave_top #(
 
     // Slave output to IO1 when SS is selected
 
-    assign IO1_O = SO_r;
     assign IO1_T = SS_I;
+    assign IO1_O = SO_r;
 
     axis_spi_slave_cdc #(.C_DATA_WIDTH(3)) i_spi_cdc (
         .clk (aclk                ),
@@ -121,7 +121,7 @@ module axis_spi_slave_top #(
 
     // RX AXIS
     //--------
-    
+
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             axis_rx_tdata <= 'd0;
@@ -204,7 +204,7 @@ module axis_spi_slave_top #(
             end
 
             assign axis_tx_tready = ((tx_state == S_TX_UNLOADED) && SS_s) || tx_load;
-            
+
             always_ff @ (posedge aclk) begin
                 if (!aresetn) begin
                     {SO_r, tx_shift} <= 'd0;
@@ -214,7 +214,7 @@ module axis_spi_slave_top #(
                     {SO_r, tx_shift} <= {tx_shift, 1'b0};
                 end
             end
-            
+
         end
     endgenerate
 
