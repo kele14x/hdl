@@ -108,8 +108,8 @@ module axis_spi_slave2_top #(
     //--------
 
     (* ASYNC_REG="true" *)
-    reg rx_valid_d, rx_valid_dd;
-    reg rx_valid_d3;
+    reg rx_valid_d = 0, rx_valid_dd = 0;
+    reg rx_valid_d3 = 0;
 
     wire rx_valid_aclk;
 
@@ -146,7 +146,7 @@ module axis_spi_slave2_top #(
     reg [          C_DATA_WIDTH-2:0] tx_shift;
     reg [$clog2(C_DATA_WIDTH-1)-1:0] tx_bitcnt;
 
-    reg                    tx_load;
+    reg                    tx_load = 0;
     reg                    tx_valid;
     reg [C_DATA_WIDTH-1:0] tx_data;
 
@@ -181,8 +181,8 @@ module axis_spi_slave2_top #(
     TX_STATE_T tx_state, tx_state_next;
 
     (* ASYNC_REG="true" *)
-    reg tx_load_d, tx_load_dd;
-    reg tx_load_d3;
+    reg tx_load_d = 0, tx_load_dd = 0;
+    reg tx_load_d3 = 0;
 
     wire tx_load_aclk;
 
@@ -193,7 +193,6 @@ module axis_spi_slave2_top #(
     end
 
     assign tx_load_aclk = ({tx_load_dd, tx_load_d3} == 2'b01);
-
 
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
@@ -217,6 +216,22 @@ module axis_spi_slave2_top #(
         end else begin
             axis_tx_tready <= (tx_state_next == S_TX_UNLOADED);
         end
+    end
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            tx_data <= 'd0;
+        end else if ((tx_state == S_TX_UNLOADED) && axis_tx_tvalid) begin
+            tx_data <= axis_tx_tdata;
+        end
+    end
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            tx_valid <= 1'b0;
+        end else begin
+            tx_valid <= (tx_state == S_TX_LOADED);
+        end 
     end
 
 endmodule
