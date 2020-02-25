@@ -159,7 +159,7 @@ module axis_spi_slave2_top #(
         end
     end
 
-
+    // TODO: Unstable CDC here
     always_ff @ (posedge SCK_s) begin
         if (tx_bitcnt == 0) begin
             {SO_r, tx_shift} <= tx_valid ? tx_data : 'd0;
