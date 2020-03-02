@@ -17,23 +17,13 @@ module tb_pps_receiver #(parameter C_CLOCK_FREQUENCY = 125000)();
     var logic pps_in = 0;
     // 1PPS to Fabric
     var logic pps_out;
-    // Monitor Clock domain (Maybe asynchronous with core clock)
-    //----------------------------------------------------------
-    var logic aclk    = 0;
-    var logic aresetn = 0;
     // Status
-    var logic [31:0] stat_pps_phase ;
-    var logic        stat_pps_status;
-    // IQR
-    var logic irq_pps_posedge;
+    var logic [31:0] pps_phase ;
+    var logic        pps_status;
 
     always #4 clk = !clk;
 
     initial #100 rst = 0;
-
-    always #5 aclk = !aclk;
-
-    initial #100 aresetn = 1;
 
     const int taget_interval = 1000000;
 
@@ -51,11 +41,8 @@ module tb_pps_receiver #(parameter C_CLOCK_FREQUENCY = 125000)();
             interval = taget_interval + $itor(-last_jitter + jitter) /1000;
             #(interval - 100);
             last_jitter = jitter;
-            
-            
         end
     end
-
 
     pps_receiver #(.C_CLOCK_FREQUENCY(C_CLOCK_FREQUENCY)) UUT (.*);
 

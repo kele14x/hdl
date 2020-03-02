@@ -10,21 +10,15 @@ module pps_receiver_top #(parameter C_CLOCK_FREQUENCY = 125000000) (
     // Core clock domain
     //----------------------
     // Clock & Reset
-    input  var logic        clk            ,
-    input  var logic        rst            ,
+    input  var logic                                   clk       ,
+    input  var logic                                   rst       ,
     // External 1PPS in
-    input  var logic        pps_in         ,
+    input  var logic                                   pps_in    ,
     // 1PPS to Fabric
-    output var logic        pps_out        ,
-    // Monitor Clock domain (Maybe asynchronous with core clock)
-    //----------------------------------------------------------
-    input  var logic        aclk           ,
-    input  var logic        aresetn        ,
-    // Status
-    output var logic [31:0] stat_pps_phase ,
-    output var logic        stat_pps_status,
-    // IQR
-    output var logic        irq_pps_posedge
+    output var logic                                   pps_out   ,
+    //
+    output var logic                                   pps_status,
+    output var logic [$clog2(C_CLOCK_FREQUENCY-1)-1:0] pps_phase
 );
 
     initial begin
@@ -89,7 +83,7 @@ module pps_receiver_top #(parameter C_CLOCK_FREQUENCY = 125000000) (
     assign late_by1 = (free_counter - last_pha == 1) ||
         (last_pha - free_counter == C_CLOCK_FREQUENCY - 1);
 
-    // To determine which tick (1 clock advanced tick, current tick, 1 clock 
+    // To determine which tick (1 clock advanced tick, current tick, 1 clock
     // late tick) is the best estimation of PPS time. We counter for if we see
     // PPS's posedge on advanced tick or late tick more time. If any counter
     // reach 15, we adjust the internal PPS. If we see PPS out of the (-1, +1)
@@ -139,7 +133,7 @@ module pps_receiver_top #(parameter C_CLOCK_FREQUENCY = 125000000) (
 
     var logic pps_posedge_d, pps_posedge_dd;
 
-    var logic pps_status, pps_status_next;
+    var logic pps_status_next;
 
     always_ff @ (posedge clk) begin
         pps_posedge_d  <= pps_posedge;
@@ -149,72 +143,27 @@ module pps_receiver_top #(parameter C_CLOCK_FREQUENCY = 125000000) (
     always_ff @ (posedge clk) begin
         if (rst) begin
             pps_status <= 1'b0;
-        end else begin 
+        end else begin
             pps_status <= pps_status_next;
         end
     end
 
     always_comb begin
         case (pps_status)
-            1'b0: pps_status_next = 
+            1'b0: pps_status_next =
                 (pps_posedge && (match || adv_by1 || late_by1)) ? 1'b1 : 1'b0;
-            1'b1: pps_status_next = 
-                ((pps_posedge && !(match || adv_by1 || late_by1)) || 
+            1'b1: pps_status_next =
+                ((pps_posedge && !(match || adv_by1 || late_by1)) ||
                 (late_by1 && !(pps_posedge || pps_posedge_d || pps_posedge_dd))) ? 1'b0 : 1'b1;
             default: pps_status_next = 1'b0;
         endcase
     end
 
-
-    // Status CDC
-    //===========
-
-    var logic pps_posedge_cdc;
-
-    // Move pulse `pps_posedge` to `aclk` domain
-    xpm_cdc_pulse #(
-        .DEST_SYNC_FF  (2),
-        .INIT_SYNC_FF  (1),
-        .REG_OUTPUT    (1),
-        .RST_USED      (0),
-        .SIM_ASSERT_CHK(1)
-    ) xpm_cdc_pulse_inst (
-        .src_clk   (clk            ),
-        .src_rst   (1'b0           ),
-        .src_pulse (pps_posedge    ),
-        .dest_clk  (aclk           ),
-        .dest_rst  (1'b0           ),
-        .dest_pulse(pps_posedge_cdc)
-    );
-
-    // Move `last_pha` to `aclk` domain
-    always_ff @ (posedge aclk) begin
-        if (!aresetn) begin
-            stat_pps_phase <= 32'd0;
-        end else if (pps_posedge_cdc) begin
-            stat_pps_phase <= last_pha;
-        end
-    end
-
-    // Move `pps_status` to `aclk` domain
-    xpm_cdc_single #(
-        .DEST_SYNC_FF  (2),
-        .INIT_SYNC_FF  (1),
-        .SIM_ASSERT_CHK(1),
-        .SRC_INPUT_REG (0)
-    ) i_cdc_pps_status (
-        .src_clk (1'b0           ),
-        .src_in  (pps_status     ),
-        .dest_clk(aclk           ),
-        .dest_out(stat_pps_status)
-    );
-
-    // Generate 1pps arrive IRQ
-    always_ff @ (posedge aclk) begin
-        if (!aresetn) begin
-            irq_pps_posedge <= 1'b0;
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            pps_phase <= 'd0;
         end else begin
-            irq_pps_posedge <= pps_posedge_cdc;
+            pps_phase <= last_pha;
         end
     end
 
