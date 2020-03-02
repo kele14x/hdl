@@ -10,21 +10,23 @@ module pps_receiver #(parameter C_CLOCK_FREQUENCY = 125000000) (
     // Core clock domain
     //----------------------
     // Clock & Reset
-    input  wire        clk            ,
-    input  wire        rst            ,
+    (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 clk CLK" *)
+    (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF pps_in:pps_out:pps_status:pps_phase, ASSOCIATED_RESET rst, FREQ_HZ 1250000000" *)
+    input  wire                                   clk       ,
+    (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 rst RST" *)
+    (* X_INTERFACE_PARAMETER = "POLARITY ACTIVE_HIGH" *)
+    input  wire                                   rst       ,
     // External 1PPS in
-    input  wire        pps_in         ,
+    (* X_INTERFACE_INFO = "xilinx.com:signal:data:1.0 pps_in DATA" *)
+    input  wire                                   pps_in    ,
     // 1PPS to Fabric
-    output wire        pps_out        ,
-    // Monitor Clock domain (Maybe asynchronous with core clock)
-    //----------------------------------------------------------
-    input  wire        aclk           ,
-    input  wire        aresetn        ,
-    // Status
-    output wire [31:0] stat_pps_phase ,
-    output wire        stat_pps_status,
-    // IQR
-    output wire        irq_pps_posedge
+    (* X_INTERFACE_INFO = "xilinx.com:signal:data:1.0 pps_out DATA" *)
+    output wire                                   pps_out   ,
+    //
+    (* X_INTERFACE_INFO = "xilinx.com:signal:data:1.0 pps_status DATA" *)
+    output wire                                   pps_status,
+    (* X_INTERFACE_INFO = "xilinx.com:signal:data:1.0 pps_phase DATA" *)
+    output wire [$clog2(C_CLOCK_FREQUENCY-1)-1:0] pps_phase
 );
 
     pps_receiver_top #(
@@ -32,13 +34,13 @@ module pps_receiver #(parameter C_CLOCK_FREQUENCY = 125000000) (
     ) inst (
         .clk            (clk            ),
         .rst            (rst            ),
+        //
         .pps_in         (pps_in         ),
+        //
         .pps_out        (pps_out        ),
-        .aclk           (aclk           ),
-        .aresetn        (aresetn        ),
-        .stat_pps_phase (stat_pps_phase ),
-        .stat_pps_status(stat_pps_status),
-        .irq_pps_posedge(irq_pps_posedge)
+        //
+        .pps_status     (pps_status     ),
+        .pps_phase      (pps_phase      )
     );
 
 endmodule
