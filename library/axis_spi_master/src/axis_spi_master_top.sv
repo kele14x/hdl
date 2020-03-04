@@ -6,7 +6,7 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module spi_master_top #(parameter CLK_RATIO   = 8) (
+module axis_spi_master_top #(parameter CLK_RATIO   = 8) (
     // SPI
     //=====
     input  var logic       SCK_I       ,
@@ -23,27 +23,27 @@ module spi_master_top #(parameter CLK_RATIO   = 8) (
     output var logic       IO1_T       ,
     // Fabric
     //=======
-    input  var logic       clk         ,
-    input  var logic       rst         ,
+    input  var logic       aclk        ,
+    input  var logic       aresetn     ,
     // Tx interface
     //--------------
-    input  var logic [7:0] spi_tx_data ,
-    input  var logic       spi_tx_valid,
-    output var logic       spi_tx_ready,
+    input  var logic [7:0] s_axis_tdata ,
+    input  var logic       s_axis_tvalid,
+    output var logic       s_axis_tready,
     // Rx interface
     //--------------
-    output var logic [7:0] spi_rx_data ,
-    output var logic       spi_rx_valid
+    output var logic [7:0] m_axis_tdata ,
+    output var logic       m_axis_tvalid,
+    input  var logic       m_axis_tready
 );
 
 
     // Parameter Check
     //------------------
 
-    initial begin
+    initial
         assert (CLK_RATIO / 2 == 0 && CLK_RATIO >= 2)
             else $error("CLK_RATIO must be an positive even number.");
-    end
 
     localparam C_STATE_MAX   = CLK_RATIO / 2 * 17;
 
@@ -66,7 +66,7 @@ module spi_master_top #(parameter CLK_RATIO   = 8) (
     // SPI Interface
     //---------------
 
-    assign SCK_T = 0;
+    assign SCK_T = SS;
     assign SCK_O = SCK;
 
     assign SS_T = 0;
@@ -84,8 +84,8 @@ module spi_master_top #(parameter CLK_RATIO   = 8) (
     //==================
 
     // `stat_cnt` state machine
-    always_ff @ (posedge clk) begin
-        if (rst) begin
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
             state <= C_STATE_MAX;
         end else begin
             state <= state_next;
@@ -104,9 +104,9 @@ module spi_master_top #(parameter CLK_RATIO   = 8) (
     assign s_rxv = (state == 8 * CLK_RATIO);
 
     always_comb begin
-        if (s_idle && spi_tx_valid) begin
+        if (s_idle && s_axis_tvalid) begin
             state_next = 'd0;
-        end else if (s_load && spi_tx_valid) begin
+        end else if (s_load && s_axis_tvalid) begin
             state_next = CLK_RATIO / 2;
         end else if (s_idle) begin
             state_next = state;
@@ -120,18 +120,18 @@ module spi_master_top #(parameter CLK_RATIO   = 8) (
     //==============
 
     // assert `spi_tx_ready` at the same time with S_IDLE and S_LOAD
-    always_ff @ (posedge clk) begin
-        if (rst) begin
-            spi_tx_ready <= 1'b0;
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            s_axis_tready <= 1'b0;
         end else begin
-            spi_tx_ready <= (state_next == C_STATE_MAX || state_next == C_STATE_MAX - 1);
+            s_axis_tready <= (state_next == C_STATE_MAX || state_next == C_STATE_MAX - 1);
         end
     end
 
     // When there is a valid transfer on tx interface, move the data into tx_data
-    always_ff @ (posedge clk) begin
-        if ((s_idle || s_load) && spi_tx_valid) begin
-            tx_buffer <= spi_tx_data;
+    always_ff @ (posedge aclk) begin
+        if ((s_idle || s_load) && s_axis_tvalid) begin
+            tx_buffer <= s_axis_tdata;
         end
     end
 
@@ -140,23 +140,29 @@ module spi_master_top #(parameter CLK_RATIO   = 8) (
     //==============
 
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge aclk) begin
         if (s_in) begin
             rx_buffer <= {rx_buffer[5:0], MISO};
         end
     end
 
-    always_ff @ (posedge clk) begin
-        if (rst) begin
-            spi_rx_valid <= 1'b0;
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            m_axis_tvalid <= 1'b0;
+        end else if (s_rxv) begin
+            m_axis_tvalid <= 1'b1;
+        end else if (m_axis_tready) begin
+            m_axis_tvalid <= 1'b0;
         end else begin
-            spi_rx_valid <= s_rxv;
-        end
+            m_axis_tvalid <= m_axis_tvalid;
+        end 
     end
 
-    always_ff @ (posedge clk) begin
-        if (s_rxv) begin
-            spi_rx_data <= {rx_buffer, MISO};
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            m_axis_tdata <= 'd0;
+        end else if (s_rxv && !(m_axis_tvalid && !m_axis_tready)) begin
+            m_axis_tdata <= {rx_buffer, MISO};
         end
     end
 
@@ -164,15 +170,15 @@ module spi_master_top #(parameter CLK_RATIO   = 8) (
     // SPI SS & SCK
     //==============
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge aclk) begin
         SS <= s_idle;
     end
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge aclk) begin
         SCK <= s_sck1;
     end
 
-    always_ff @ (posedge clk) begin
+    always_ff @ (posedge aclk) begin
         if (s_idle || s_pre) begin
             MOSI <= 1'b0;
         end else begin

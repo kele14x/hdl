@@ -20,7 +20,7 @@
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module tb_spi_master ();
+module tb_axis_spi_master ();
 
     parameter CLK_RATIO   = 16;
 
@@ -37,41 +37,42 @@ module tb_spi_master ();
     logic IO1_O = 0;
     logic IO1_T = 0;
 
-    logic clk = 0;
-    logic rst = 1;
+    logic aclk = 0;
+    logic aresetn = 0;
 
-    logic [7:0] spi_tx_data  = 0;
-    logic       spi_tx_valid = 0;
-    logic       spi_tx_ready = 0;
+    logic [7:0] s_axis_tdata  = 0;
+    logic       s_axis_tvalid = 0;
+    logic       s_axis_tready;
 
-    logic [7:0] spi_rx_data  = 0;
-    logic       spi_rx_valid = 0;
+    logic [7:0] m_axis_tdata     ;
+    logic       m_axis_tvalid    ;
+    logic       m_axis_tready = 1;
 
     task axis_send (input [7:0] tdata);
-        @(posedge clk);
+        @(posedge aclk);
         // Send byte
-        spi_tx_data  <= tdata;
-        spi_tx_valid <= 1'b1;
+        s_axis_tdata  <= tdata;
+        s_axis_tvalid <= 1'b1;
         // wait byte is received
         forever begin
-            @(posedge clk);
-            if (spi_tx_ready) break;
+            @(posedge aclk);
+            if (s_axis_tready) break;
         end
         // Reset bus
-        spi_tx_data  <= 0;
-        spi_tx_valid <= 0;
+        s_axis_tdata  <= 0;
+        s_axis_tvalid <= 0;
     endtask
 
-    always #4 clk = !clk;
+    always #4 aclk = !aclk;
 
-    initial #100 rst = 0;
+    initial #100 aresetn = 1;
 
-    // Loopback test
+    // Loop-back test
     assign IO1_I = IO0_O;
 
     initial begin
         $display("Simulation starts");
-        wait (rst == 0);
+        wait (aresetn == 0);
         #100;
         // Send one frame
         axis_send(8'h55);
@@ -88,7 +89,7 @@ module tb_spi_master ();
         $display("Simulation ends");
     end
 
-    spi_master #(
+    axis_spi_master #(
         .CLK_RATIO  (CLK_RATIO  )
     ) UUT ( .* );
 
