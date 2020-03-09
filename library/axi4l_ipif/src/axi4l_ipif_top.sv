@@ -42,17 +42,17 @@ module axi4l_ipif_top #(
     input  var logic                      s_axi_rready ,
     // Write i/f
     //-----------
-    output var logic [  C_ADDR_WIDTH-3:0] wr_addr      ,
-    output var logic                      wr_req       ,
-    output var logic [               3:0] wr_be        ,
-    output var logic [  C_DATA_WIDTH-1:0] wr_data      ,
-    input  var logic                      wr_ack       ,
+    output var logic [  C_ADDR_WIDTH-3:0] up_wr_addr   ,
+    output var logic                      up_wr_req    ,
+    output var logic [C_DATA_WIDTH/8-1:0] up_wr_be     ,
+    output var logic [  C_DATA_WIDTH-1:0] up_wr_din    ,
+    input  var logic                      up_wr_ack    ,
     // Read i/f
     //----------
-    output var logic [  C_ADDR_WIDTH-3:0] rd_addr      ,
-    output var logic                      rd_req       ,
-    input  var logic [  C_DATA_WIDTH-1:0] rd_data      ,
-    input  var logic                      rd_ack
+    output var logic [  C_ADDR_WIDTH-3:0] up_rd_addr   ,
+    output var logic                      up_rd_req    ,
+    input  var logic [  C_DATA_WIDTH-1:0] up_rd_dout   ,
+    input  var logic                      up_rd_ack
 );
 
     initial begin
@@ -75,11 +75,11 @@ module axi4l_ipif_top #(
         S_WRIDLE, // idle, waiting for both write address and write data
         S_WRADDR, // write data is provided, waiting for write address
         S_WRDATA, // write address is provided, waiting for write data
-        S_WRWAIT, // both write data and address is provided, wait `wr_ack`
-        S_WRRESP  // `wr_ack` is assert, response to axi master
+        S_WRWAIT, // both write data and address is provided, wait `up_wr_ack`
+        S_WRRESP  // `up_wr_ack` is assert, response to axi master
     } wr_state, wr_state_next;
 
-    var logic wr_valid, wr_addr_valid, wr_data_valid;
+    var logic wr_valid, up_wr_addr_valid, up_wr_din_valid;
     var logic [4:0] wr_cnt;
 
     always @ (posedge aclk) begin
@@ -99,7 +99,7 @@ module axi4l_ipif_top #(
                                         S_WRIDLE;
             S_WRADDR : wr_state_next = !s_axi_wvalid  ? S_WRADDR : S_WRWAIT;
             S_WRDATA : wr_state_next = !s_axi_awvalid ? S_WRDATA : S_WRWAIT;
-            S_WRWAIT : wr_state_next = !(wr_ack || wr_cnt[4]) ? S_WRWAIT : S_WRRESP;
+            S_WRWAIT : wr_state_next = !(up_wr_ack || wr_cnt[4]) ? S_WRWAIT : S_WRRESP;
             S_WRRESP : wr_state_next = !s_axi_bready  ? S_WRRESP : S_WRIDLE;
             default  : wr_state_next = S_WRRST;
         endcase
@@ -109,10 +109,10 @@ module axi4l_ipif_top #(
         ((wr_state == S_WRADDR) && s_axi_wvalid) ||
         ((wr_state == S_WRDATA) && s_axi_awvalid);
 
-    assign wr_addr_valid = ((wr_state == S_WRIDLE) && s_axi_awvalid) ||
+    assign up_wr_addr_valid = ((wr_state == S_WRIDLE) && s_axi_awvalid) ||
         ((wr_state == S_WRDATA) && s_axi_awvalid);
 
-    assign wr_data_valid = ((wr_state == S_WRIDLE) && s_axi_wvalid) ||
+    assign up_wr_din_valid = ((wr_state == S_WRIDLE) && s_axi_wvalid) ||
         ((wr_state == S_WRADDR) && s_axi_wvalid);
 
 
@@ -123,9 +123,9 @@ module axi4l_ipif_top #(
     // address is provided. Register it for later use.
     always @ (posedge aclk) begin
         if (!aresetn) begin
-            wr_addr <= 'd0;
-        end else if (wr_addr_valid) begin
-            wr_addr <= s_axi_awaddr[C_ADDR_WIDTH-1:2];
+            up_wr_addr <= 'd0;
+        end else if (up_wr_addr_valid) begin
+            up_wr_addr <= s_axi_awaddr[C_ADDR_WIDTH-1:2];
         end
     end
 
@@ -147,11 +147,11 @@ module axi4l_ipif_top #(
     // data is provided. Register it for later use.
     always @ (posedge aclk) begin
         if (!aresetn) begin
-            wr_data <= 'd0;
-            wr_be   <= 'd0;
-        end if (wr_data_valid) begin
-            wr_data <= s_axi_wdata;
-            wr_be   <= s_axi_wstrb;
+            up_wr_din <= 'd0;
+            up_wr_be   <= 'd0;
+        end if (up_wr_din_valid) begin
+            up_wr_din <= s_axi_wdata;
+            up_wr_be   <= s_axi_wstrb;
         end
     end
 
@@ -171,13 +171,13 @@ module axi4l_ipif_top #(
 
     always @ (posedge aclk) begin
         if (!aresetn) begin
-            wr_req <= 1'b0;
+            up_wr_req <= 1'b0;
         end else begin
-            wr_req <= wr_valid;
+            up_wr_req <= wr_valid;
         end
     end
 
-    // Time out counter of waiting for `wr_ack`
+    // Time out counter of waiting for `up_wr_ack`
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             wr_cnt <= 5'h1F;
@@ -199,7 +199,7 @@ module axi4l_ipif_top #(
     always @ (posedge aclk) begin
         if (!aresetn) begin
             s_axi_bresp <= 0;
-        end else if (wr_state == S_WRWAIT && wr_ack) begin
+        end else if (wr_state == S_WRWAIT && up_wr_ack) begin
             s_axi_bresp <= C_RESP_OKAY;
         end else if (wr_state == S_WRWAIT && wr_cnt[4]) begin
             s_axi_bresp <= C_RESP_SLVERR; // Time out, response a error
@@ -235,7 +235,7 @@ module axi4l_ipif_top #(
         case(rd_state)
             S_RDRST  : rd_state_next = S_RDIDLE;
             S_RDIDLE : rd_state_next = !s_axi_arvalid ? S_RDIDLE : S_RDWAIT;
-            S_RDWAIT : rd_state_next = !(rd_ack || rd_cnt[4]) ? S_RDWAIT : S_RDRESP;
+            S_RDWAIT : rd_state_next = !(up_rd_ack || rd_cnt[4]) ? S_RDWAIT : S_RDRESP;
             S_RDRESP : rd_state_next = !s_axi_rready  ? S_RDRESP : S_RDIDLE;
             default  : rd_state_next = S_RDRST;
         endcase
@@ -249,9 +249,9 @@ module axi4l_ipif_top #(
 
     always @ (posedge aclk) begin
         if (!aresetn) begin
-            rd_addr <= 'd0;
+            up_rd_addr <= 'd0;
         end else if (rd_valid) begin
-            rd_addr <= s_axi_araddr[C_ADDR_WIDTH-1:3];
+            up_rd_addr <= s_axi_araddr[C_ADDR_WIDTH-1:2];
         end
     end
 
@@ -265,9 +265,9 @@ module axi4l_ipif_top #(
 
     always @ (posedge aclk) begin
         if (!aresetn) begin
-            rd_req <= 1'b0;
+            up_rd_req <= 1'b0;
         end else begin
-            rd_req <= rd_valid;
+            up_rd_req <= rd_valid;
         end
     end
 
@@ -283,7 +283,7 @@ module axi4l_ipif_top #(
         end
     end
 
-    // Time out counter of waiting for `rd_ack`
+    // Time out counter of waiting for `up_rd_ack`
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             rd_cnt <= 5'h1F;
@@ -297,8 +297,8 @@ module axi4l_ipif_top #(
     always @ (posedge aclk) begin
         if (!aresetn) begin
             s_axi_rdata <= 0;
-        end else if (rd_state == S_RDWAIT && rd_ack) begin
-            s_axi_rdata <= rd_data;
+        end else if (rd_state == S_RDWAIT && up_rd_ack) begin
+            s_axi_rdata <= up_rd_dout;
         end else if (rd_state == S_RDWAIT && rd_cnt[4]) begin
             s_axi_rdata <= 'd0; // Read time out, give master default value
         end
@@ -307,7 +307,7 @@ module axi4l_ipif_top #(
     always @ (posedge aclk) begin
         if (!aresetn) begin
             s_axi_rresp <= 0;
-        end else if (rd_state == S_RDWAIT && rd_ack) begin
+        end else if (rd_state == S_RDWAIT && up_rd_ack) begin
             s_axi_rresp <= C_RESP_OKAY;
         end else if (rd_state == S_RDWAIT && rd_cnt[4]) begin
             s_axi_rresp <= C_RESP_SLVERR; // Read time out, response a error

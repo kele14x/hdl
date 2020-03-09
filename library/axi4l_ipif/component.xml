@@ -1,16 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <spirit:component xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <spirit:vendor>jzhl.com</spirit:vendor>
-  <spirit:library>user</spirit:library>
+  <spirit:vendor>jzhl</spirit:vendor>
+  <spirit:library>ip</spirit:library>
   <spirit:name>axi4l_ipif</spirit:name>
-  <spirit:version>1.0</spirit:version>
+  <spirit:version>1.1</spirit:version>
   <spirit:busInterfaces>
     <spirit:busInterface>
-      <spirit:name>s_axi</spirit:name>
+      <spirit:name>aclk</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock_rtl" spirit:version="1.0"/>
+      <spirit:slave/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>CLK</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>aclk</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+      <spirit:parameters>
+        <spirit:parameter>
+          <spirit:name>ASSOCIATED_BUSIF</spirit:name>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.ACLK.ASSOCIATED_BUSIF">S_AXI:UP_WR:UP_RD</spirit:value>
+        </spirit:parameter>
+        <spirit:parameter>
+          <spirit:name>ASSOCIATED_RESET</spirit:name>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.ACLK.ASSOCIATED_RESET">aresetn</spirit:value>
+        </spirit:parameter>
+        <spirit:parameter>
+          <spirit:name>FREQ_HZ</spirit:name>
+          <spirit:value spirit:format="long" spirit:id="BUSIFPARAM_VALUE.ACLK.FREQ_HZ">100000000</spirit:value>
+        </spirit:parameter>
+        <spirit:parameter>
+          <spirit:name>PHASE</spirit:name>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.ACLK.PHASE">0.000</spirit:value>
+        </spirit:parameter>
+      </spirit:parameters>
+    </spirit:busInterface>
+    <spirit:busInterface>
+      <spirit:name>aresetn</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="reset" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="reset_rtl" spirit:version="1.0"/>
+      <spirit:slave/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>RST</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>aresetn</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+      <spirit:parameters>
+        <spirit:parameter>
+          <spirit:name>POLARITY</spirit:name>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.ARESETN.POLARITY">ACTIVE_LOW</spirit:value>
+        </spirit:parameter>
+      </spirit:parameters>
+    </spirit:busInterface>
+    <spirit:busInterface>
+      <spirit:name>S_AXI</spirit:name>
       <spirit:busType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="aximm" spirit:version="1.0"/>
       <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="aximm_rtl" spirit:version="1.0"/>
       <spirit:slave>
-        <spirit:memoryMapRef spirit:memoryMapRef="s_axi"/>
+        <spirit:memoryMapRef spirit:memoryMapRef="S_AXI"/>
       </spirit:slave>
       <spirit:portMaps>
         <spirit:portMap>
@@ -168,57 +224,97 @@
       </spirit:portMaps>
     </spirit:busInterface>
     <spirit:busInterface>
-      <spirit:name>aresetn</spirit:name>
-      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="reset" spirit:version="1.0"/>
-      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="reset_rtl" spirit:version="1.0"/>
-      <spirit:slave/>
+      <spirit:name>UP_WR</spirit:name>
+      <spirit:busType spirit:vendor="jzhl" spirit:library="signal" spirit:name="up_ipif" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="jzhl" spirit:library="signal" spirit:name="up_ipif_rtl" spirit:version="1.0"/>
+      <spirit:master/>
       <spirit:portMaps>
         <spirit:portMap>
           <spirit:logicalPort>
-            <spirit:name>RST</spirit:name>
+            <spirit:name>addr</spirit:name>
           </spirit:logicalPort>
           <spirit:physicalPort>
-            <spirit:name>aresetn</spirit:name>
+            <spirit:name>up_wr_addr</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>din</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>up_wr_din</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>req</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>up_wr_req</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>be</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>up_wr_be</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>ack</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>up_wr_ack</spirit:name>
           </spirit:physicalPort>
         </spirit:portMap>
       </spirit:portMaps>
-      <spirit:parameters>
-        <spirit:parameter>
-          <spirit:name>POLARITY</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.ARESETN.POLARITY" spirit:choiceRef="choice_list_9d8b0d81">ACTIVE_LOW</spirit:value>
-        </spirit:parameter>
-      </spirit:parameters>
     </spirit:busInterface>
     <spirit:busInterface>
-      <spirit:name>aclk</spirit:name>
-      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock" spirit:version="1.0"/>
-      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock_rtl" spirit:version="1.0"/>
-      <spirit:slave/>
+      <spirit:name>UP_RD</spirit:name>
+      <spirit:busType spirit:vendor="jzhl" spirit:library="signal" spirit:name="up_ipif" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="jzhl" spirit:library="signal" spirit:name="up_ipif_rtl" spirit:version="1.0"/>
+      <spirit:master/>
       <spirit:portMaps>
         <spirit:portMap>
           <spirit:logicalPort>
-            <spirit:name>CLK</spirit:name>
+            <spirit:name>addr</spirit:name>
           </spirit:logicalPort>
           <spirit:physicalPort>
-            <spirit:name>aclk</spirit:name>
+            <spirit:name>up_rd_addr</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>req</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>up_rd_req</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>ack</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>up_rd_ack</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>dout</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>up_rd_dout</spirit:name>
           </spirit:physicalPort>
         </spirit:portMap>
       </spirit:portMaps>
-      <spirit:parameters>
-        <spirit:parameter>
-          <spirit:name>ASSOCIATED_BUSIF</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.ACLK.ASSOCIATED_BUSIF">s_axi</spirit:value>
-        </spirit:parameter>
-        <spirit:parameter>
-          <spirit:name>ASSOCIATED_RESET</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.ACLK.ASSOCIATED_RESET">aresetn</spirit:value>
-        </spirit:parameter>
-      </spirit:parameters>
     </spirit:busInterface>
   </spirit:busInterfaces>
   <spirit:memoryMaps>
     <spirit:memoryMap>
-      <spirit:name>s_axi</spirit:name>
+      <spirit:name>S_AXI</spirit:name>
       <spirit:addressBlock>
         <spirit:name>reg0</spirit:name>
         <spirit:baseAddress spirit:format="bitString" spirit:resolve="user" spirit:bitStringLength="32">0</spirit:baseAddress>
@@ -234,7 +330,7 @@
         <spirit:name>xilinx_anylanguagesynthesis</spirit:name>
         <spirit:displayName>Synthesis</spirit:displayName>
         <spirit:envIdentifier>:vivado.xilinx.com:synthesis</spirit:envIdentifier>
-        <spirit:language>SystemVerilog</spirit:language>
+        <spirit:language>Verilog</spirit:language>
         <spirit:modelName>axi4l_ipif</spirit:modelName>
         <spirit:fileSetRef>
           <spirit:localName>xilinx_anylanguagesynthesis_view_fileset</spirit:localName>
@@ -242,7 +338,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>e8210b42</spirit:value>
+            <spirit:value>a46d7ccd</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -250,7 +346,7 @@
         <spirit:name>xilinx_anylanguagebehavioralsimulation</spirit:name>
         <spirit:displayName>Simulation</spirit:displayName>
         <spirit:envIdentifier>:vivado.xilinx.com:simulation</spirit:envIdentifier>
-        <spirit:language>SystemVerilog</spirit:language>
+        <spirit:language>Verilog</spirit:language>
         <spirit:modelName>axi4l_ipif</spirit:modelName>
         <spirit:fileSetRef>
           <spirit:localName>xilinx_anylanguagebehavioralsimulation_view_fileset</spirit:localName>
@@ -258,7 +354,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>c84603cf</spirit:value>
+            <spirit:value>02ef60a1</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -266,6 +362,10 @@
         <spirit:name>xilinx_testbench</spirit:name>
         <spirit:displayName>Test Bench</spirit:displayName>
         <spirit:envIdentifier>:vivado.xilinx.com:simulation.testbench</spirit:envIdentifier>
+        <spirit:modelName>tb_axi4l_ipif</spirit:modelName>
+        <spirit:fileSetRef>
+          <spirit:localName>xilinx_testbench_view_fileset</spirit:localName>
+        </spirit:fileSetRef>
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
@@ -283,7 +383,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>fb12ecc8</spirit:value>
+            <spirit:value>2f595623</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -632,7 +732,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>wr_addr</spirit:name>
+        <spirit:name>up_wr_addr</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
@@ -649,7 +749,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>wr_req</spirit:name>
+        <spirit:name>up_wr_req</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:wireTypeDefs>
@@ -662,7 +762,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>wr_be</spirit:name>
+        <spirit:name>up_wr_be</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
@@ -679,7 +779,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>wr_data</spirit:name>
+        <spirit:name>up_wr_din</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
@@ -696,7 +796,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>wr_ack</spirit:name>
+        <spirit:name>up_wr_ack</spirit:name>
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:wireTypeDefs>
@@ -706,10 +806,13 @@
               <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
             </spirit:wireTypeDef>
           </spirit:wireTypeDefs>
+          <spirit:driver>
+            <spirit:defaultValue spirit:format="long">0</spirit:defaultValue>
+          </spirit:driver>
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>rd_addr</spirit:name>
+        <spirit:name>up_rd_addr</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
@@ -726,7 +829,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>rd_req</spirit:name>
+        <spirit:name>up_rd_req</spirit:name>
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:wireTypeDefs>
@@ -739,7 +842,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>rd_data</spirit:name>
+        <spirit:name>up_rd_dout</spirit:name>
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:vector>
@@ -753,10 +856,13 @@
               <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
             </spirit:wireTypeDef>
           </spirit:wireTypeDefs>
+          <spirit:driver>
+            <spirit:defaultValue spirit:format="long">0</spirit:defaultValue>
+          </spirit:driver>
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>rd_ack</spirit:name>
+        <spirit:name>up_rd_ack</spirit:name>
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:wireTypeDefs>
@@ -766,6 +872,9 @@
               <spirit:viewNameRef>xilinx_anylanguagebehavioralsimulation</spirit:viewNameRef>
             </spirit:wireTypeDef>
           </spirit:wireTypeDefs>
+          <spirit:driver>
+            <spirit:defaultValue spirit:format="long">0</spirit:defaultValue>
+          </spirit:driver>
         </spirit:wire>
       </spirit:port>
     </spirit:ports>
@@ -782,67 +891,66 @@
       </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
-  <spirit:choices>
-    <spirit:choice>
-      <spirit:name>choice_list_9d8b0d81</spirit:name>
-      <spirit:enumeration>ACTIVE_HIGH</spirit:enumeration>
-      <spirit:enumeration>ACTIVE_LOW</spirit:enumeration>
-    </spirit:choice>
-    <spirit:choice>
-      <spirit:name>choice_list_a3c0ae87</spirit:name>
-      <spirit:enumeration>32</spirit:enumeration>
-      <spirit:enumeration>64</spirit:enumeration>
-    </spirit:choice>
-  </spirit:choices>
   <spirit:fileSets>
     <spirit:fileSet>
       <spirit:name>xilinx_anylanguagesynthesis_view_fileset</spirit:name>
       <spirit:file>
         <spirit:name>src/axi4l_ipif_ooc.xdc</spirit:name>
         <spirit:userFileType>xdc</spirit:userFileType>
-      </spirit:file>
-      <spirit:file>
-        <spirit:name>src/axi4l_ipif.v</spirit:name>
-        <spirit:fileType>verilogSource</spirit:fileType>
+        <spirit:userFileType>USED_IN_out_of_context</spirit:userFileType>
       </spirit:file>
       <spirit:file>
         <spirit:name>src/axi4l_ipif_top.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_63b4dcf5</spirit:userFileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>src/axi4l_ipif.v</spirit:name>
+        <spirit:fileType>verilogSource</spirit:fileType>
+        <spirit:userFileType>CHECKSUM_df74a6d6</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
       <spirit:name>xilinx_anylanguagebehavioralsimulation_view_fileset</spirit:name>
       <spirit:file>
+        <spirit:name>src/axi4l_ipif_top.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
         <spirit:name>src/axi4l_ipif.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
       </spirit:file>
+    </spirit:fileSet>
+    <spirit:fileSet>
+      <spirit:name>xilinx_testbench_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>src/axi4l_ipif_top.sv</spirit:name>
+        <spirit:name>tb/tb_axi4l_ipif.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
+        <spirit:userFileType>USED_IN_implementation</spirit:userFileType>
+        <spirit:userFileType>USED_IN_simulation</spirit:userFileType>
+        <spirit:userFileType>USED_IN_synthesis</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
       <spirit:name>xilinx_xpgui_view_fileset</spirit:name>
       <spirit:file>
-        <spirit:name>xgui/axi4l_ipif_v1_0.tcl</spirit:name>
+        <spirit:name>xgui/axi4l_ipif_v1_1.tcl</spirit:name>
         <spirit:fileType>tclSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_fb12ecc8</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_2f595623</spirit:userFileType>
         <spirit:userFileType>XGUI_VERSION_2</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
   </spirit:fileSets>
-  <spirit:description>axi4l_ipif_v1_0</spirit:description>
+  <spirit:description>axi4l_ipif_v1_1</spirit:description>
   <spirit:parameters>
     <spirit:parameter>
       <spirit:name>C_ADDR_WIDTH</spirit:name>
-      <spirit:displayName>Addr Width</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_ADDR_WIDTH" spirit:minimum="1" spirit:maximum="32" spirit:rangeType="long">12</spirit:value>
+      <spirit:displayName>C Addr Width</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_ADDR_WIDTH">12</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>C_DATA_WIDTH</spirit:name>
-      <spirit:displayName>Data Width</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_DATA_WIDTH" spirit:choiceRef="choice_list_a3c0ae87">32</spirit:value>
+      <spirit:displayName>C Data Width</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_DATA_WIDTH">32</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Component_Name</spirit:name>
@@ -879,30 +987,47 @@
       <xilinx:taxonomies>
         <xilinx:taxonomy>/UserIP</xilinx:taxonomy>
       </xilinx:taxonomies>
-      <xilinx:displayName>axi4l_ipif_v1_0</xilinx:displayName>
+      <xilinx:displayName>axi4l_ipif_v1_1</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
-      <xilinx:coreRevision>2</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2019-12-31T03:05:17Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>4</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-03-09T06:45:07Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
-        <xilinx:tag xilinx:name="nopcore"/>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@121b013e_ARCHIVE_LOCATION">c:/Users/eniandu/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@7606e00_ARCHIVE_LOCATION">c:/Users/eniandu/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@20619374_ARCHIVE_LOCATION">c:/Users/eniandu/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@78cf8fc8_ARCHIVE_LOCATION">c:/Users/eniandu/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@565d9b49_ARCHIVE_LOCATION">c:/Users/eniandu/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@369b3a88_ARCHIVE_LOCATION">c:/Users/eniandu/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@56925eba_ARCHIVE_LOCATION">c:/Users/eniandu/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@514cd737_ARCHIVE_LOCATION">c:/Users/eniandu/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@215db700_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@78a620ee_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@658a6ee6_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6d541b30_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@71629736_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@377fd376_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@68989f5f_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@b56f815_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@11e96911_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5efe23b8_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7c07acb5_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2725fc95_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@667c0a6_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4574e401_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3172e071_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6b595936_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@430fd3a_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3a95f8da_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@708e32df_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@71480edf_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4b0122f4_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@71570025_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@79886cea_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@689cbd4f_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5b22f996_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3f7b16e_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/axi4l_ipif</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2019.2</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="62ec0641"/>
-      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="80979960"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="63ca6cb5"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="814a5188"/>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="44177a33"/>
+      <xilinx:checksum xilinx:scope="memoryMaps" xilinx:value="21d5a9ab"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="d65d33aa"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="62158fa0"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="c7b190e5"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="fc86d726"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="6b2c1c2b"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>
