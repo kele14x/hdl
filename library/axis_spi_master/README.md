@@ -41,3 +41,4 @@ This core is fixed CPOL = 0 and CPHA = 1. That means both master (this core) and
 ## TODO
 
 * Time out logic for M_AXIS interface
+* Add error status ports
