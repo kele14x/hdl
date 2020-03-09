@@ -104,7 +104,6 @@
           <spirit:isData>true</spirit:isData>
         </spirit:qualifier>
         <spirit:onMaster>
-          <spirit:presence>required</spirit:presence>
           <spirit:direction>in</spirit:direction>
         </spirit:onMaster>
         <spirit:onSlave/>
