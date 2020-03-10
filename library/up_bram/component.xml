@@ -6,25 +6,25 @@
   <spirit:version>1.1</spirit:version>
   <spirit:busInterfaces>
     <spirit:busInterface>
-      <spirit:name>up_rd</spirit:name>
+      <spirit:name>UP_RD</spirit:name>
       <spirit:busType spirit:vendor="jzhl" spirit:library="user" spirit:name="up_ipif" spirit:version="1.0"/>
       <spirit:abstractionType spirit:vendor="jzhl" spirit:library="user" spirit:name="up_ipif_rtl" spirit:version="1.0"/>
       <spirit:slave/>
       <spirit:portMaps>
         <spirit:portMap>
           <spirit:logicalPort>
-            <spirit:name>addr</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>up_rd_addr</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
             <spirit:name>req</spirit:name>
           </spirit:logicalPort>
           <spirit:physicalPort>
             <spirit:name>up_rd_req</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>addr</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>up_rd_addr</spirit:name>
           </spirit:physicalPort>
         </spirit:portMap>
         <spirit:portMap>
@@ -46,17 +46,33 @@
       </spirit:portMaps>
     </spirit:busInterface>
     <spirit:busInterface>
-      <spirit:name>up_wr</spirit:name>
+      <spirit:name>UP_WR</spirit:name>
       <spirit:busType spirit:vendor="jzhl" spirit:library="user" spirit:name="up_ipif" spirit:version="1.0"/>
       <spirit:abstractionType spirit:vendor="jzhl" spirit:library="user" spirit:name="up_ipif_rtl" spirit:version="1.0"/>
       <spirit:slave/>
       <spirit:portMaps>
         <spirit:portMap>
           <spirit:logicalPort>
+            <spirit:name>req</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>up_wr_req</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
             <spirit:name>addr</spirit:name>
           </spirit:logicalPort>
           <spirit:physicalPort>
             <spirit:name>up_wr_addr</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>ack</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>up_wr_ack</spirit:name>
           </spirit:physicalPort>
         </spirit:portMap>
         <spirit:portMap>
@@ -69,26 +85,10 @@
         </spirit:portMap>
         <spirit:portMap>
           <spirit:logicalPort>
-            <spirit:name>req</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>up_wr_req</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
             <spirit:name>be</spirit:name>
           </spirit:logicalPort>
           <spirit:physicalPort>
             <spirit:name>up_wr_be</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>ack</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>up_wr_ack</spirit:name>
           </spirit:physicalPort>
         </spirit:portMap>
       </spirit:portMaps>
@@ -137,7 +137,7 @@
         </spirit:parameter>
         <spirit:parameter>
           <spirit:name>ASSOCIATED_BUSIF</spirit:name>
-          <spirit:value spirit:id="BUSIFPARAM_VALUE.CLK.ASSOCIATED_BUSIF">up_rd:up_wr</spirit:value>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.CLK.ASSOCIATED_BUSIF">UP_RD:UP_WR</spirit:value>
         </spirit:parameter>
         <spirit:parameter>
           <spirit:name>FREQ_HZ</spirit:name>
@@ -164,7 +164,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>2a268838</spirit:value>
+            <spirit:value>0be6c353</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -180,7 +180,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>0f47d461</spirit:value>
+            <spirit:value>2e879f0a</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -202,6 +202,7 @@
         <spirit:name>xilinx_testbench</spirit:name>
         <spirit:displayName>Test Bench</spirit:displayName>
         <spirit:envIdentifier>:vivado.xilinx.com:simulation.testbench</spirit:envIdentifier>
+        <spirit:modelName>tb_up_bram</spirit:modelName>
         <spirit:fileSetRef>
           <spirit:localName>xilinx_testbench_view_fileset</spirit:localName>
         </spirit:fileSetRef>
@@ -424,7 +425,7 @@
       <spirit:file>
         <spirit:name>src/up_bram.v</spirit:name>
         <spirit:fileType>verilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_ca87a362</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_eb47e809</spirit:userFileType>
       </spirit:file>
     </spirit:fileSet>
     <spirit:fileSet>
@@ -477,7 +478,7 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Component_Name</spirit:name>
-      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Component_Name" spirit:order="1">up_bram_v1_0</spirit:value>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Component_Name" spirit:order="1">up_bram_v1_1</spirit:value>
     </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
@@ -512,8 +513,8 @@
       </xilinx:taxonomies>
       <xilinx:displayName>up_bram_v1_1</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
-      <xilinx:coreRevision>8</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-03-09T03:32:36Z</xilinx:coreCreationDateTime>
+      <xilinx:coreRevision>9</xilinx:coreRevision>
+      <xilinx:coreCreationDateTime>2020-03-09T15:21:43Z</xilinx:coreCreationDateTime>
       <xilinx:tags>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@132fce71_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@8b220ab_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
@@ -599,12 +600,29 @@
         <xilinx:tag xilinx:name="ui.data.coregen.dd@dc0b530_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@58a54401_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@1ca0c682_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2fc58265_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@59ba14c7_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@35eff34e_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4bc3522d_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@58dcc95_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1a700b3a_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@44e5f9db_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@10bf927c_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@43027288_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1c5f8dad_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4f0ee12a_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@19d771dd_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3f751801_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@347811ef_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@617fda86_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@167cfad0_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@691226d7_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/up_bram</xilinx:tag>
       </xilinx:tags>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2019.2</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="98061d67"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="7ddec195"/>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="0fc5bd6e"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="baf62db6"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="384bf12c"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="32c80395"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="4c0c13e9"/>
