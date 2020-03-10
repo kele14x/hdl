@@ -65,25 +65,25 @@ module axi4l_ipif #(
     input  wire                      s_axi_rready ,
     // Write i/f
     //-----------
-    (* X_INTERFACE_INFO = "jzhl:user:up_ipif:1.0 UP_WR addr" *)
+    (* X_INTERFACE_INFO = "jzhl:user:up_wr:1.0 UP_WR addr" *)
     output wire [  C_ADDR_WIDTH-3:0] up_wr_addr      ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_ipif:1.0 UP_WR req" *)
+    (* X_INTERFACE_INFO = "jzhl:user:up_wr:1.0 UP_WR req" *)
     output wire                      up_wr_req       ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_ipif:1.0 UP_WR be" *)
+    (* X_INTERFACE_INFO = "jzhl:user:up_wr:1.0 UP_WR be" *)
     output wire [               3:0] up_wr_be        ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_ipif:1.0 UP_WR din" *)
+    (* X_INTERFACE_INFO = "jzhl:user:up_wr:1.0 UP_WR din" *)
     output wire [  C_DATA_WIDTH-1:0] up_wr_din       ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_ipif:1.0 UP_WR ack" *)
+    (* X_INTERFACE_INFO = "jzhl:user:up_wr:1.0 UP_WR ack" *)
     input  wire                      up_wr_ack       ,
     // Read i/f
     //----------
-    (* X_INTERFACE_INFO = "jzhl:user:up_ipif:1.0 UP_RD addr" *)
+    (* X_INTERFACE_INFO = "jzhl:user:up_rd:1.0 UP_RD addr" *)
     output wire [  C_ADDR_WIDTH-3:0] up_rd_addr      ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_ipif:1.0 UP_RD req" *)
+    (* X_INTERFACE_INFO = "jzhl:user:up_rd:1.0 UP_RD req" *)
     output wire                      up_rd_req       ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_ipif:1.0 UP_RD dout" *)
+    (* X_INTERFACE_INFO = "jzhl:user:up_rd:1.0 UP_RD dout" *)
     input  wire [  C_DATA_WIDTH-1:0] up_rd_dout      ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_ipif:1.0 UP_RD ack" *)
+    (* X_INTERFACE_INFO = "jzhl:user:up_rd:1.0 UP_RD ack" *)
     input  wire                      up_rd_ack
 );
 
