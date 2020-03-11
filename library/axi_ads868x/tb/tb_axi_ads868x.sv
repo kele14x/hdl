@@ -10,8 +10,8 @@ module tb_axi_ads868x ();
 
     // AXI4-Lite
     //===========
-    logic s_axi_aclk    = 0;
-    logic s_axi_aresetn = 0;
+    logic aclk    = 0;
+    logic aresetn = 0;
     //
     logic [31:0] s_axi_awaddr  = 0;
     logic [ 2:0] s_axi_awprot  = 0;
@@ -39,8 +39,6 @@ module tb_axi_ads868x ();
 
     // Fabric
     //========
-    logic m_axis_aclk    = 0;
-    logic m_axis_aresetn = 0;
     //
     logic [31:0] m_axis_tdata  = 0;
     logic        m_axis_tvalid = 0;
@@ -76,19 +74,16 @@ module tb_axi_ads868x ();
     logic EN_TCH_B = 0;
     logic EN_PCH_B = 0;
 
-    always #5 s_axi_aclk = !s_axi_aclk;
-
-    always #4 m_axis_aclk = !m_axis_aclk;
-
-    initial #1000 s_axi_aresetn = 1;
-
-    initial #1000 m_axis_aresetn = 1;
+    always #4 aclk = !aclk;
 
     initial begin
         $display("Simulation starts.");
-    end
+        aresetn = 0;
+        #100;
+        aresetn = 1;
+        $display("Resetn donw.");
 
-    final begin
+        #100000;
         $display("Simulation ends.");
     end
 
