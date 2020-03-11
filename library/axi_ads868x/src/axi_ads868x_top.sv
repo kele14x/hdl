@@ -9,8 +9,8 @@ All rights reserved.
 module axi_ads868x_top (
     // AXI4-Lite
     //===========
-    input  wire        s_axi_aclk    ,
-    input  wire        s_axi_aresetn ,
+    input  wire        aclk          ,
+    input  wire        aresetn       ,
     //
     input  wire [31:0] s_axi_awaddr  ,
     input  wire [ 2:0] s_axi_awprot  ,
@@ -37,16 +37,15 @@ module axi_ads868x_top (
     input  wire        s_axi_rready  ,
     // Fabric
     //========
-    input  wire        m_axis_aclk   ,
-    input  wire        m_axis_aresetn,
-    //
-    output wire [31:0] m_axis_tdata  ,
+    output wire [55:0] m_axis_tdata  ,
     output wire        m_axis_tvalid ,
     input  wire        m_axis_tready ,
     //
     input  wire        pps           ,
     // ADS868x
     //=========
+    // SPI
+    //----
     input  wire        SCK_I         ,
     output wire        SCK_O         ,
     output wire        SCK_T         ,
@@ -59,14 +58,18 @@ module axi_ads868x_top (
     input  wire        IO1_I         , // MI
     output wire        IO1_O         ,
     output wire        IO1_T         ,
-    //
+    // GPIO
+    //-----
     output wire        RST_PD_N      ,
-    /* Analog MUX */
-    //=============================
+    // Analog MUX
+    //===========
+    // MUX Select
+    //-----------
     output wire        CH_SEL_A0     ,
     output wire        CH_SEL_A1     ,
     output wire        CH_SEL_A2     ,
-    //
+    // MUX Enable
+    //-----------
     output wire        EN_TCH_A      ,
     output wire        EN_PCH_A      ,
     output wire        EN_TCH_B      ,
@@ -83,11 +86,6 @@ module axi_ads868x_top (
     wire       spi_rx_tvalid;
     wire       spi_rx_tready;
 
-    // ADC
-    wire [15:0] adc_tdata;
-    wire        adc_tvalid;
-    wire        adc_tready;
-
     // AXI Slave
 
     wire [ 9:0] up_wr_addr;
@@ -101,20 +99,25 @@ module axi_ads868x_top (
     wire [31:0] up_rd_data;
     wire        up_rd_ack ;
 
-    wire ctrl_soft_reset;
+    // User control signals
 
+    wire ctrl_soft_reset;
+    wire ctrl_power_down;
+    wire ctrl_auto_spi;
+
+    wire [2:0] ctrl_ext_mux_sel;
     wire [3:0] ctrl_ext_mux_en;
 
-    wire [15:0] ctrl_mult_coe;
+    wire [31:0] ctrl_spi_txdata;
+    wire [ 1:0] ctrl_spi_txbyte;
+    wire        ctrl_spi_txvalid;
 
-    logic [31:0] ctrl_spi_txdata;
-    logic [ 1:0] ctrl_spi_txbyte;
-    logic        ctrl_spi_txvalid;
-    logic [31:0] ctrl_spi_rxdata;
-    
+    wire [31:0] stat_spi_rxdata;
+    wire        stat_spi_rxvalid;
+
     axi4l_ipif i_ipif (
-        .aclk         (s_axi_aclk   ),
-        .aresetn      (s_axi_aresetn),
+        .aclk         (aclk         ),
+        .aresetn      (aresetn      ),
         //
         .s_axi_awaddr (s_axi_awaddr ),
         .s_axi_awprot (s_axi_awprot ),
@@ -140,92 +143,97 @@ module axi_ads868x_top (
         .s_axi_rvalid (s_axi_rvalid ),
         .s_axi_rready (s_axi_rready ),
         //
-        .wr_addr      (up_wr_addr   ),
-        .wr_req       (up_wr_req    ),
-        .wr_be        (up_wr_be     ),
-        .wr_data      (up_wr_data   ),
-        .wr_ack       (up_wr_ack    ),
+        .up_wr_addr   (up_wr_addr   ),
+        .up_wr_req    (up_wr_req    ),
+        .up_wr_be     (up_wr_be     ),
+        .up_wr_din    (up_wr_data   ),
+        .up_wr_ack    (up_wr_ack    ),
         //
-        .rd_addr      (up_rd_addr   ),
-        .rd_req       (up_rd_req    ),
-        .rd_data      (up_rd_data   ),
-        .rd_ack       (up_rd_ack    )
+        .up_rd_addr   (up_rd_addr   ),
+        .up_rd_req    (up_rd_req    ),
+        .up_rd_dout   (up_rd_data   ),
+        .up_rd_ack    (up_rd_ack    )
     );
 
 
     axi_ads868x_regs i_regs (
-        .up_clk         (s_axi_aclk     ),
-        .up_rstn        (s_axi_aresetn  ),
+        .clk             (aclk            ),
+        .rst             (!aresetn        ),
         //
-        .up_wr_addr     (up_wr_addr     ),
-        .up_wr_req      (up_wr_req      ),
-        .up_wr_be       (up_wr_be       ),
-        .up_wr_data     (up_wr_data     ),
-        .up_wr_ack      (up_wr_ack      ),
+        .up_wr_addr      (up_wr_addr      ),
+        .up_wr_req       (up_wr_req       ),
+        .up_wr_be        (up_wr_be        ),
+        .up_wr_data      (up_wr_data      ),
+        .up_wr_ack       (up_wr_ack       ),
         //
-        .up_rd_addr     (up_rd_addr     ),
-        .up_rd_req      (up_rd_req      ),
-        .up_rd_data     (up_rd_data     ),
-        .up_rd_ack      (up_rd_ack      ),
+        .up_rd_addr      (up_rd_addr      ),
+        .up_rd_req       (up_rd_req       ),
+        .up_rd_data      (up_rd_data      ),
+        .up_rd_ack       (up_rd_ack       ),
         //
-        .clk            (m_axis_aclk    ),
-        .rst            (!m_axis_aresetn),
+        .ctrl_soft_reset (ctrl_soft_reset ), // Soft reset chip
+        .ctrl_power_down (ctrl_power_down ), // Power down chip
+        .ctrl_auto_spi   (ctrl_auto_spi   ), // Auto mode or not
         //
-        .ctrl_soft_reset(ctrl_soft_reset),
+        .ctrl_ext_mux_sel(ctrl_ext_mux_sel), // External MUX selection
+        .ctrl_ext_mux_en (ctrl_ext_mux_en ), // External MUX enable
         //
-        .ctrl_ext_mux_en(ctrl_ext_mux_en),
-        .ctrl_rst_pd_n  (RST_PD_N       ),
+        .ctrl_spi_txdata (ctrl_spi_txdata ), // Data send to chip
+        .ctrl_spi_txbyte (ctrl_spi_txbyte ), // Byte send to chip - 1
+        .ctrl_spi_txvalid(ctrl_spi_txvalid), // Send it!
         //
-        .ctrl_spi_txdata(ctrl_spi_txdata),
-        .ctrl_spi_txbyte(ctrl_spi_txbyte),
-        .ctrl_spi_txvalid(ctrl_spi_txvalid),
-        //
-        .ctrl_spi_rxdata(ctrl_spi_rxdata)
+        .stat_spi_rxdata (stat_spi_rxdata ), // Data received from chip
+        .stat_spi_rxvalid(stat_spi_rxvalid)  // Data is valid
     );
 
 
     axi_ads868x_ctrl i_ctrl (
         //
-        .aclk         (m_axis_aclk   ),
-        .aresetn      (m_axis_aresetn),
+        .aclk            (aclk            ),
+        .aresetn         (aresetn         ),
         //
-        .pps          (pps           ),
+        .pps             (pps             ),
         // SPI
         //-----
         // SPI send
-        .spi_tx_tdata (spi_tx_tdata  ),
-        .spi_tx_tvalid(spi_tx_tvalid ),
-        .spi_tx_tready(spi_tx_tready ),
+        .spi_tx_tdata    (spi_tx_tdata    ),
+        .spi_tx_tvalid   (spi_tx_tvalid   ),
+        .spi_tx_tready   (spi_tx_tready   ),
         // SPI recv
-        .spi_rx_tdata (spi_rx_tdata  ),
-        .spi_rx_tvalid(spi_rx_tvalid ),
-        .spi_rx_tready(spi_rx_tready ),
+        .spi_rx_tdata    (spi_rx_tdata    ),
+        .spi_rx_tvalid   (spi_rx_tvalid   ),
+        .spi_rx_tready   (spi_rx_tready   ),
         //
-        .adc_tdata    (adc_tdata     ),
-        .adc_tvalid   (adc_tvalid    ),
-        .adc_tready   (adc_tready    ),
+        .adc_tdata       (m_axis_tdata    ),
+        .adc_tvalid      (m_axis_tvalid   ),
+        .adc_tready      (m_axis_tready   ),
         //
-        .CH_SEL_A0    (CH_SEL_A0     ),
-        .CH_SEL_A1    (CH_SEL_A1     ),
-        .CH_SEL_A2    (CH_SEL_A2     )
+        //
+        .RST_PD_N        (RST_PD_N        ),
+        //
+        .CH_SEL_A0       (CH_SEL_A0       ),
+        .CH_SEL_A1       (CH_SEL_A1       ),
+        .CH_SEL_A2       (CH_SEL_A2       ),
+        //
+        .EN_TCH_A        (EN_TCH_A        ),
+        .EN_PCH_A        (EN_PCH_A        ),
+        .EN_TCH_B        (EN_TCH_B        ),
+        .EN_PCH_B        (EN_PCH_B        ),
+        //
+        .ctrl_soft_reset (ctrl_soft_reset ), // Soft reset chip
+        .ctrl_power_down (ctrl_power_down ), // Power down chip
+        .ctrl_auto_spi   (ctrl_auto_spi   ), // Auto mode or not
+        //
+        .ctrl_ext_mux_sel(ctrl_ext_mux_sel), // External MUX selection
+        .ctrl_ext_mux_en (ctrl_ext_mux_en ), // External MUX enable
+        //
+        .ctrl_spi_txdata (ctrl_spi_txdata ), // Data send to chip
+        .ctrl_spi_txbyte (ctrl_spi_txbyte ), // Byte send to chip - 1
+        .ctrl_spi_txvalid(ctrl_spi_txvalid), // Send it!
+        //
+        .stat_spi_rxdata (stat_spi_rxdata ), // Data received from chip
+        .stat_spi_rxvalid(stat_spi_rxvalid)  // Data is valid
     );
-
-    axi_ads868x_mult i_axi_ads868x_mult (
-        .aclk         (m_axis_aclk   ),
-        .aresetn      (m_axis_aresetn),
-        //
-        .s_axis_tdata (adc_tdata     ),
-        .s_axis_tvalid(adc_tvalid    ),
-        .s_axis_tready(adc_tready    ),
-        //
-        .m_axis_tdata (m_axis_tdata  ),
-        .m_axis_tvalid(m_axis_tvalid ),
-        .m_axis_tready(m_axis_tready ),
-        //
-        .ctrl_mult_coe(ctrl_mult_coe )
-    );
-
-
 
     axis_spi_master #(.CLK_RATIO(8)) i_spi (
         //
@@ -242,8 +250,8 @@ module axi_ads868x_top (
         .IO1_O           (IO1_O         ),
         .IO1_T           (IO1_T         ),
         //
-        .aclk            (m_axis_aclk   ),
-        .aresetn         (m_axis_aresetn),
+        .aclk            (aclk          ),
+        .aresetn         (aresetn       ),
         //
         .s_axis_tdata    (spi_tx_tdata  ),
         .s_axis_tvalid   (spi_tx_tvalid ),
@@ -251,13 +259,8 @@ module axi_ads868x_top (
         //
         .m_axis_tdata    (spi_rx_tdata  ),
         .m_axis_tvalid   (spi_rx_tvalid ),
-        .m_axis_tready   (spi_rx_tready ),
-        //
-        .stat_rx_overflow(              )
+        .m_axis_tready   (spi_rx_tready )
     );
-
-
-    assign {EN_PCH_B, EN_TCH_B, EN_PCH_A, EN_TCH_A} = ctrl_ext_mux_en;
 
 endmodule
 

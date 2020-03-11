@@ -9,8 +9,8 @@ All rights reserved.
 module axi_ads868x (
     // AXI4-Lite
     //===========
-    input  wire        s_axi_aclk    ,
-    input  wire        s_axi_aresetn ,
+    input  wire        aclk          ,
+    input  wire        aresetn       ,
     //
     input  wire [31:0] s_axi_awaddr  ,
     input  wire [ 2:0] s_axi_awprot  ,
@@ -37,10 +37,7 @@ module axi_ads868x (
     input  wire        s_axi_rready  ,
     // Fabric
     //========
-    input  wire        m_axis_aclk   ,
-    input  wire        m_axis_aresetn,
-    //
-    output wire [31:0] m_axis_tdata  ,
+    output wire [55:0] m_axis_tdata  ,
     output wire        m_axis_tvalid ,
     input  wire        m_axis_tready ,
     //
@@ -75,8 +72,8 @@ module axi_ads868x (
 
     axi_ads868x_top inst (
         //
-        .s_axi_aclk    (s_axi_aclk    ),
-        .s_axi_aresetn (s_axi_aresetn ),
+        .aclk          (aclk          ),
+        .aresetn       (aresetn       ),
         //
         .s_axi_awaddr  (s_axi_awaddr  ),
         .s_axi_awprot  (s_axi_awprot  ),
@@ -101,9 +98,6 @@ module axi_ads868x (
         .s_axi_rresp   (s_axi_rresp   ),
         .s_axi_rvalid  (s_axi_rvalid  ),
         .s_axi_rready  (s_axi_rready  ),
-        //
-        .m_axis_aclk   (m_axis_aclk   ),
-        .m_axis_aresetn(m_axis_aresetn),
         //
         .m_axis_tdata  (m_axis_tdata  ),
         .m_axis_tvalid (m_axis_tvalid ),
