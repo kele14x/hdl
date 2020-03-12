@@ -1,77 +1,98 @@
 {
    "ActiveEmotionalView":"Color Coded",
    "Color Coded_ExpandedHierarchyInLayout":"",
-   "Color Coded_Layout":"# # String gsaved with Nlview 7.0.21  2019-05-29 bk=1.5064 VDI=41 GEI=36 GUI=JA:9.0 non-TLS
+   "Color Coded_Layout":"# # String gsaved with Nlview 7.0.21  2019-05-29 bk=1.5064 VDI=41 GEI=36 GUI=JA:9.0 TLS
 #  -string -flagsOSRD
-preplace port A7_CONFIG_QSPI -pg 1 -lvl 8 -x 1970 -y 210 -defaultsOSRD
-preplace port FPGA_MCU_INTR -pg 1 -lvl 8 -x 1970 -y 410 -defaultsOSRD
-preplace port FPGA_MCU_SPI -pg 1 -lvl 0 -x -10 -y 220 -defaultsOSRD
-preplace port FPGA_RST -pg 1 -lvl 0 -x -10 -y 720 -defaultsOSRD
-preplace port A7_GCLK -pg 1 -lvl 0 -x -10 -y 640 -defaultsOSRD
-preplace port PTP_CLK_OUT -pg 1 -lvl 0 -x -10 -y 820 -defaultsOSRD
-preplace port PTP_TRG_FPGA -pg 1 -lvl 0 -x -10 -y 890 -defaultsOSRD
-preplace portBus FPGA_MCU_RST -pg 1 -lvl 8 -x 1970 -y 660 -defaultsOSRD
-preplace portBus FPGA_LED -pg 1 -lvl 8 -x 1970 -y 550 -defaultsOSRD
-preplace portBus FPGA_RUN -pg 1 -lvl 8 -x 1970 -y 910 -defaultsOSRD
-preplace portBus FPGA_TEST -pg 1 -lvl 8 -x 1970 -y 1010 -defaultsOSRD
-preplace inst axi_bram_ctrl_0 -pg 1 -lvl 6 -x 1580 -y 80 -defaultsOSRD
-preplace inst axi_intc -pg 1 -lvl 6 -x 1580 -y 410 -defaultsOSRD
-preplace inst axi_interconnect -pg 1 -lvl 5 -x 1230 -y 220 -defaultsOSRD
-preplace inst axi_quad_spi -pg 1 -lvl 6 -x 1580 -y 230 -defaultsOSRD
-preplace inst blk_mem_gen_0 -pg 1 -lvl 7 -x 1830 -y 80 -defaultsOSRD
-preplace inst clk_wiz_gclk -pg 1 -lvl 1 -x 110 -y 640 -swap {0 1 3 2} -defaultsOSRD
-preplace inst jtag_axi -pg 1 -lvl 4 -x 920 -y 90 -defaultsOSRD
-preplace inst proc_sys_reset_gclk -pg 1 -lvl 2 -x 400 -y 560 -swap {1 0 4 2 3 5 6 7 9 8} -defaultsOSRD
-preplace inst axis_spi_slave2_0 -pg 1 -lvl 3 -x 690 -y 250 -defaultsOSRD
-preplace inst axis_axi_master_0 -pg 1 -lvl 4 -x 920 -y 270 -defaultsOSRD
-preplace inst c_counter_binary_gclk_led -pg 1 -lvl 6 -x 1580 -y 550 -defaultsOSRD
-preplace inst clk_wiz_ptp_clk -pg 1 -lvl 4 -x 920 -y 820 -defaultsOSRD
-preplace inst proc_sys_reset_ptp -pg 1 -lvl 5 -x 1230 -y 790 -defaultsOSRD
-preplace inst c_counter_binary_ptp_led -pg 1 -lvl 6 -x 1580 -y 700 -defaultsOSRD
-preplace inst xlconstant_0 -pg 1 -lvl 7 -x 1830 -y 660 -defaultsOSRD
-preplace inst xlconstant_run -pg 1 -lvl 7 -x 1830 -y 910 -defaultsOSRD
-preplace inst xlconstant_test -pg 1 -lvl 7 -x 1830 -y 1010 -defaultsOSRD
-preplace inst xlconcat_leds -pg 1 -lvl 7 -x 1830 -y 550 -defaultsOSRD
-preplace inst c_counter_binary_pps -pg 1 -lvl 7 -x 1830 -y 800 -defaultsOSRD
-preplace inst pps_receiver_0 -pg 1 -lvl 6 -x 1580 -y 870 -defaultsOSRD
-preplace netloc gclk_100m 1 1 5 200 260 570 150 800 170 1060 30 1410
-preplace netloc clk_wiz_locked 1 1 1 220 580n
-preplace netloc ARESETN_1 1 2 3 580J 550 NJ 550 1050
-preplace netloc fpga_rst_s 1 0 5 NJ 720 230 750 NJ 750 NJ 750 1030J
-preplace netloc a7_gclk_s 1 0 1 NJ 640
-preplace netloc gclk_20m 1 1 5 210J 10 NJ 10 NJ 10 NJ 10 1440
-preplace netloc axi_quad_spi_0_ip2intc_irpt 1 5 2 1440 320 1710
-preplace netloc pro_rst_50_peripheral_aresetn 1 2 4 570 340 790 20 NJ 20 1430
-preplace netloc pro_rst_50_peripheral_reset 1 2 4 NJ 560 NJ 560 NJ 560 N
-preplace netloc ptp_clk_s 1 0 4 NJ 820 NJ 820 NJ 820 NJ
-preplace netloc clk_wiz_ptp_clk_locked 1 4 1 N 830
-preplace netloc clk_wiz_ptp_clk_clk_out1 1 4 3 1050 690 1430 790 N
-preplace netloc proc_sys_reset_ptp_peripheral_reset 1 5 1 1410 710n
-preplace netloc xlconstant_0_dout 1 7 1 NJ 660
-preplace netloc fpga_led_s 1 7 1 NJ 550
+preplace port A7_CONFIG_QSPI -pg 1 -lvl 8 -x 2220 -y 850 -defaultsOSRD
+preplace port FPGA_MCU_INTR -pg 1 -lvl 8 -x 2220 -y 570 -defaultsOSRD
+preplace port FPGA_MCU_SPI -pg 1 -lvl 0 -x 0 -y 370 -defaultsOSRD
+preplace port FPGA_SPI1 -pg 1 -lvl 8 -x 2220 -y 80 -defaultsOSRD
+preplace port FPGA_RST -pg 1 -lvl 0 -x 0 -y 850 -defaultsOSRD
+preplace port A7_GCLK -pg 1 -lvl 0 -x 0 -y 770 -defaultsOSRD
+preplace port PTP_CLK_OUT -pg 1 -lvl 0 -x 0 -y 650 -defaultsOSRD
+preplace port PTP_TRG_FPGA -pg 1 -lvl 0 -x 0 -y 630 -defaultsOSRD
+preplace port CH_SEL_A0 -pg 1 -lvl 8 -x 2220 -y 120 -defaultsOSRD
+preplace port CH_SEL_A1 -pg 1 -lvl 8 -x 2220 -y 140 -defaultsOSRD
+preplace port CH_SEL_A2 -pg 1 -lvl 8 -x 2220 -y 160 -defaultsOSRD
+preplace port EN_TCH_A -pg 1 -lvl 8 -x 2220 -y 180 -defaultsOSRD
+preplace port EN_PCH_A -pg 1 -lvl 8 -x 2220 -y 200 -defaultsOSRD
+preplace port EN_TCH_B -pg 1 -lvl 8 -x 2220 -y 220 -defaultsOSRD
+preplace port EN_PCH_B -pg 1 -lvl 8 -x 2220 -y 240 -defaultsOSRD
+preplace port AD1_RST -pg 1 -lvl 8 -x 2220 -y 100 -defaultsOSRD
+preplace portBus FPGA_MCU_RST -pg 1 -lvl 8 -x 2220 -y 1110 -defaultsOSRD
+preplace portBus FPGA_LED -pg 1 -lvl 8 -x 2220 -y 710 -defaultsOSRD
+preplace portBus FPGA_RUN -pg 1 -lvl 8 -x 2220 -y 910 -defaultsOSRD
+preplace portBus FPGA_TEST -pg 1 -lvl 8 -x 2220 -y 1010 -defaultsOSRD
+preplace inst axi_bram_ctrl_0 -pg 1 -lvl 6 -x 1790 -y 420 -defaultsOSRD
+preplace inst axi_intc -pg 1 -lvl 6 -x 1790 -y 570 -defaultsOSRD
+preplace inst axi_interconnect -pg 1 -lvl 5 -x 1430 -y 390 -defaultsOSRD
+preplace inst axi_quad_spi -pg 1 -lvl 6 -x 1790 -y 870 -defaultsOSRD
+preplace inst blk_mem_gen_0 -pg 1 -lvl 7 -x 2070 -y 420 -defaultsOSRD
+preplace inst clk_wiz_gclk -pg 1 -lvl 1 -x 120 -y 770 -swap {0 1 3 2} -defaultsOSRD
+preplace inst jtag_axi -pg 1 -lvl 4 -x 1040 -y 240 -defaultsOSRD
+preplace inst proc_sys_reset_gclk -pg 1 -lvl 2 -x 410 -y 750 -swap {1 0 4 2 3 5 6 7 9 8} -defaultsOSRD
+preplace inst axis_spi_slave2_0 -pg 1 -lvl 3 -x 730 -y 400 -defaultsOSRD
+preplace inst axis_axi_master_0 -pg 1 -lvl 4 -x 1040 -y 390 -defaultsOSRD
+preplace inst c_counter_binary_gclk_led -pg 1 -lvl 6 -x 1790 -y 1010 -defaultsOSRD
+preplace inst clk_wiz_ptp_clk -pg 1 -lvl 3 -x 730 -y 710 -defaultsOSRD
+preplace inst proc_sys_reset_ptp -pg 1 -lvl 4 -x 1040 -y 740 -defaultsOSRD
+preplace inst c_counter_binary_ptp_led -pg 1 -lvl 6 -x 1790 -y 730 -defaultsOSRD
+preplace inst xlconstant_0 -pg 1 -lvl 7 -x 2070 -y 1110 -defaultsOSRD
+preplace inst xlconstant_run -pg 1 -lvl 7 -x 2070 -y 910 -defaultsOSRD
+preplace inst xlconstant_test -pg 1 -lvl 7 -x 2070 -y 1010 -defaultsOSRD
+preplace inst xlconcat_leds -pg 1 -lvl 7 -x 2070 -y 710 -defaultsOSRD
+preplace inst c_counter_binary_pps -pg 1 -lvl 7 -x 2070 -y 300 -defaultsOSRD
+preplace inst axi_ads868x_0 -pg 1 -lvl 6 -x 1790 -y 150 -defaultsOSRD
+preplace inst pps_receiver_0 -pg 1 -lvl 5 -x 1430 -y 700 -defaultsOSRD
+preplace netloc gclk_100m 1 1 5 220 410 610 300 850 160 1260 160 1610
+preplace netloc clk_wiz_locked 1 1 1 N 770
+preplace netloc ARESETN_1 1 2 3 620J 620 NJ 620 1250
+preplace netloc fpga_rst_s 1 0 4 20J 690 230 640 NJ 640 850J
+preplace netloc a7_gclk_s 1 0 1 NJ 770
+preplace netloc gclk_20m 1 1 5 230J 850 NJ 850 NJ 850 NJ 850 1590
+preplace netloc axi_quad_spi_0_ip2intc_irpt 1 5 2 1650 660 1930
+preplace netloc pro_rst_50_peripheral_aresetn 1 2 4 600 310 860 170 NJ 170 1600
+preplace netloc pro_rst_50_peripheral_reset 1 2 4 590J 840 NJ 840 NJ 840 1580
+preplace netloc ptp_clk_s 1 0 3 NJ 650 NJ 650 610J
+preplace netloc clk_wiz_ptp_clk_locked 1 3 1 840 720n
+preplace netloc clk_wiz_ptp_clk_clk_out1 1 3 4 860 640 1270 180 1630 300 1930J
+preplace netloc proc_sys_reset_ptp_peripheral_reset 1 4 2 1260 780 1650J
+preplace netloc xlconstant_0_dout 1 7 1 NJ 1110
+preplace netloc fpga_led_s 1 7 1 NJ 710
 preplace netloc fpga_run_s 1 7 1 NJ 910
 preplace netloc fpga_test_s 1 7 1 NJ 1010
-preplace netloc pps_in_0_1 1 0 6 NJ 890 NJ 890 NJ 890 NJ 890 NJ 890 NJ
-preplace netloc pps_receiver_0_pps_out 1 6 1 1710 810n
-preplace netloc c_counter_binary_gclk_led_THRESH0 1 6 1 N 540
-preplace netloc c_counter_binary_ptp_led_THRESH0 1 6 1 1710 560n
-preplace netloc SPI_0_1 1 0 3 NJ 220 NJ 220 NJ
-preplace netloc axis_axi_master_0_M_AXI_LITE 1 4 1 1040 110n
-preplace netloc axi_bram_ctrl_0_BRAM_PORTB 1 6 1 N 90
-preplace netloc axi_interconnect_0_M00_AXI 1 5 1 N 200
-preplace netloc axi_intc_0_interrupt 1 6 2 NJ 410 NJ
-preplace netloc axis_spi_slave2_0_axis_rx 1 3 1 N 250
-preplace netloc jtag_axi_M_AXI 1 4 1 N 90
-preplace netloc axi_quad_spi_0_SPI_0 1 6 2 NJ 210 NJ
-preplace netloc axis_axi_master_0_M_AXIS 1 2 3 580 160 NJ 160 1030
-preplace netloc axi_bram_ctrl_0_BRAM_PORTA 1 6 1 N 70
-preplace netloc axi_interconnect_M02_AXI 1 5 1 1400 60n
-preplace netloc axi_interconnect_0_M01_AXI 1 5 1 1420 220n
-levelinfo -pg 1 -10 110 400 690 920 1230 1580 1830 1970
-pagesize -pg 1 -db -bbox -sgen -160 0 2150 1070
+preplace netloc pps_in_0_1 1 0 5 NJ 630 NJ 630 NJ 630 NJ 630 1220J
+preplace netloc pps_receiver_0_pps_out 1 5 2 1640 310 NJ
+preplace netloc c_counter_binary_gclk_led_THRESH0 1 6 1 1940 700n
+preplace netloc c_counter_binary_ptp_led_THRESH0 1 6 1 N 720
+preplace netloc M03_ARESETN_1 1 4 2 1230 150 1620J
+preplace netloc axi_ads868x_0_RST_PD_N 1 6 2 NJ 100 NJ
+preplace netloc axi_ads868x_0_CH_SEL_A0 1 6 2 NJ 120 NJ
+preplace netloc axi_ads868x_0_CH_SEL_A1 1 6 2 NJ 140 NJ
+preplace netloc axi_ads868x_0_CH_SEL_A2 1 6 2 NJ 160 NJ
+preplace netloc axi_ads868x_0_EN_TCH_A 1 6 2 NJ 180 NJ
+preplace netloc axi_ads868x_0_EN_PCH_A 1 6 2 NJ 200 NJ
+preplace netloc axi_ads868x_0_EN_TCH_B 1 6 2 NJ 220 NJ
+preplace netloc axi_ads868x_0_EN_PCH_B 1 6 2 1930J 230 2200J
+preplace netloc axi_intc_0_interrupt 1 6 2 NJ 570 NJ
+preplace netloc axis_spi_slave2_0_axis_rx 1 3 1 840 370n
+preplace netloc jtag_axi_M_AXI 1 4 1 N 240
+preplace netloc axis_axi_master_0_M_AXI_LITE 1 4 1 1240 260n
+preplace netloc axi_interconnect_M03_AXI 1 5 1 1580 120n
+preplace netloc axi_interconnect_0_M00_AXI 1 5 1 1620 360n
+preplace netloc axi_bram_ctrl_0_BRAM_PORTB 1 6 1 N 430
+preplace netloc axi_quad_spi_0_SPI_0 1 6 2 NJ 850 NJ
+preplace netloc axi_interconnect_M02_AXI 1 5 1 N 400
+preplace netloc axis_axi_master_0_M_AXIS 1 2 3 620 490 NJ 490 1220
+preplace netloc axi_interconnect_0_M01_AXI 1 5 1 1650 380n
+preplace netloc SPI_0_1 1 0 3 NJ 370 NJ 370 NJ
+preplace netloc axi_ads868x_0_spi_1 1 6 2 NJ 80 NJ
+preplace netloc axi_bram_ctrl_0_BRAM_PORTA 1 6 1 N 410
+levelinfo -pg 1 0 120 410 730 1040 1430 1790 2070 2220
+pagesize -pg 1 -db -bbox -sgen -160 0 2420 1170
 ",
-   "Color Coded_ScaleFactor":"0.591921",
-   "Color Coded_TopLeft":"167,-83",
+   "Color Coded_ScaleFactor":"1.81119",
+   "Color Coded_TopLeft":"1803,8",
    "Default View_ScaleFactor":"0.528497",
    "Default View_TopLeft":"-125,-97",
    "ExpandedHierarchyInLayout":"",
@@ -121,9 +142,9 @@ pagesize -pg 1 -db -bbox -sgen -130 0 2200 690
 "
 }
 {
-   """""""""""""""""da_axi4_cnt""""""""""""""""":"3",
-   """""""""""""""""da_board_cnt""""""""""""""""":"5",
-   """""""""""""""""da_bram_cntlr_cnt""""""""""""""""":"2",
-   """""""""""""""""da_clkrst_cnt""""""""""""""""":"2",
-   """""""""da_clkrst_cnt""""""""":"1"
+   """"""""""""""""""""da_axi4_cnt"""""""""""""""""""":"3",
+   """"""""""""""""""""da_board_cnt"""""""""""""""""""":"5",
+   """"""""""""""""""""da_bram_cntlr_cnt"""""""""""""""""""":"2",
+   """"""""""""""""""""da_clkrst_cnt"""""""""""""""""""":"2",
+   """"""""""""da_clkrst_cnt"""""""""""":"1"
 }
