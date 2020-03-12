@@ -11,7 +11,7 @@ module pps_receiver #(parameter C_CLOCK_FREQUENCY = 125000000) (
     //----------------------
     // Clock & Reset
     (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 clk CLK" *)
-    (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF pps_in:pps_out:pps_status:pps_phase, ASSOCIATED_RESET rst, FREQ_HZ 1250000000" *)
+    (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF pps_in:pps_out:pps_status:pps_phase, ASSOCIATED_RESET rst, FREQ_HZ 125000000" *)
     input  wire                                   clk       ,
     (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 rst RST" *)
     (* X_INTERFACE_PARAMETER = "POLARITY ACTIVE_HIGH" *)

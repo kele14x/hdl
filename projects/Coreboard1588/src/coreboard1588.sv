@@ -34,22 +34,22 @@ module coreboard1588 (
     // QSPI
     //=====
     inout  wire       A7_CONFIG_FCS_B  ,
-    inout  wire [3:0] A7_CONFIG_DQ     
-//    // ADS868x
-//    //========
-//    output wire       FPGA_SPI1_CLK    ,
-//    output wire       FPGA_SPI1_CS     ,
-//    inout  wire       FPGA_SPI1_MOSI   ,
-//    input  wire       FPGA_SPI1_MISO   ,
-//    //
-//    output wire       AD1_RST          ,
-//    //
-//    output wire [3:0] CH_SEL_A         ,
-//    //
-//    output wire       EN_TCH_A         ,
-//    output wire       EN_PCH_A         ,
-//    output wire       EN_TCH_B         ,
-//    output wire       EN_PCH_B
+    inout  wire [3:0] A7_CONFIG_DQ     ,
+    // ADS868x
+    //========
+    inout  wire       FPGA_SPI1_CLK    ,
+    inout  wire       FPGA_SPI1_CS     ,
+    inout  wire       FPGA_SPI1_MOSI   ,
+    inout  wire       FPGA_SPI1_MISO   ,
+    //
+    output wire       AD1_RST          ,
+    //
+    output wire [2:0] CH_SEL_A         ,
+    //
+    output wire       EN_TCH_A         ,
+    output wire       EN_PCH_A         ,
+    output wire       EN_TCH_B         ,
+    output wire       EN_PCH_B
 );
 
 
@@ -86,7 +86,24 @@ module coreboard1588 (
         .FPGA_TEST              (FPGA_TEST        ),
         // PTP
         //====
-        .PTP_CLK_OUT            (PTP_CLK_OUT      )
+        .PTP_CLK_OUT            (PTP_CLK_OUT      ),
+        // AdS868x
+        //========
+        .FPGA_SPI1_ss_io        (FPGA_SPI1_CS    ),
+        .FPGA_SPI1_sck_io       (FPGA_SPI1_CLK   ),
+        .FPGA_SPI1_io0_io       (FPGA_SPI1_MOSI  ),
+        .FPGA_SPI1_io1_io       (FPGA_SPI1_MISO  ),
+        //
+        .AD1_RST                (AD1_RST         ),
+        //
+        .CH_SEL_A0              (CH_SEL_A[0]     ),
+        .CH_SEL_A1              (CH_SEL_A[1]     ),
+        .CH_SEL_A2              (CH_SEL_A[2]     ),
+        //
+        .EN_TCH_A               (EN_TCH_A        ),
+        .EN_PCH_A               (EN_PCH_A        ),
+        .EN_TCH_B               (EN_TCH_B        ),
+        .EN_PCH_B               (EN_PCH_B        )
     );
 
 endmodule

@@ -41,6 +41,24 @@ set_property PACKAGE_PIN K18 [get_ports A7_CONFIG_DQ[1]]
 set_property PACKAGE_PIN K17 [get_ports A7_CONFIG_DQ[0]]
 set_property PACKAGE_PIN L13 [get_ports A7_CONFIG_FCS_B]
 
+# ADS8684
+
+set_property PACKAGE_PIN J18 [get_ports FPGA_SPI1_CS]
+set_property PACKAGE_PIN G18 [get_ports FPGA_SPI1_CLK]
+set_property PACKAGE_PIN E18 [get_ports FPGA_SPI1_MOSI]
+set_property PACKAGE_PIN F18 [get_ports FPGA_SPI1_MISO]
+
+set_property PACKAGE_PIN B18 [get_ports AD1_RST]
+
+set_property PACKAGE_PIN D18 [get_ports CH_SEL_A[0]]
+set_property PACKAGE_PIN A16 [get_ports CH_SEL_A[1]]
+set_property PACKAGE_PIN A18 [get_ports CH_SEL_A[2]]
+
+set_property PACKAGE_PIN A15 [get_ports EN_TCH_A]
+set_property PACKAGE_PIN A14 [get_ports EN_PCH_A]
+set_property PACKAGE_PIN B14 [get_ports EN_TCH_B]
+set_property PACKAGE_PIN A13 [get_ports EN_PCH_B]
+
 # FPGA Configuration Properties
 set_property CONFIG_VOLTAGE  3.3   [current_design]
 set_property CFGBVS          VCCO  [current_design]
