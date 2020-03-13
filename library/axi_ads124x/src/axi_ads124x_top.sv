@@ -6,25 +6,11 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-//==============================================================================
-//
-//       ____                                                     _____
-//  SS       \___________________________________________________/
-//                ___     ___     ___     ___     ___     ___
-//  SCK  ________/   \___/   \___/   \___/   \___/   \___/   \_________
-//                _______ _______ _______ _______ _______ _______
-//  MOSI zzzz----X___0___X__...__X___15__X__ 16__X__...__X___31__Xzzzzz
-//                                        _______ _______ _______
-//  MISO zzzz----\_______________________X__ 16__X__...__X___31__Xzzzzz
-//
-//==============================================================================
-
-(* keep_hierarchy="yes" *)
-module axi_ads124x (
+module axi_ads124x_top (
     // AXI4-Lite Slave Interface
     //===========================
-    input  wire        s_axi_aclk    ,
-    input  wire        s_axi_aresetn ,
+    input  wire        aclk          ,
+    input  wire        aresetn       ,
     //
     input  wire [31:0] s_axi_awaddr  ,
     input  wire [ 2:0] s_axi_awprot  ,
@@ -51,10 +37,7 @@ module axi_ads124x (
     input  wire        s_axi_rready  ,
     // FPGA Fabric
     //=============
-    input  wire        m_axis_aclk   ,
-    input  wire        m_axis_aresetn,
-    //
-    output wire [31:0] m_axis_tdata  ,
+    output wire [55:0] m_axis_tdata  ,
     output wire        m_axis_tvalid ,
     input  wire        m_axis_tready ,
     //
@@ -79,20 +62,35 @@ module axi_ads124x (
     input  wire        DRDY
 );
 
-    wire [31:0] reg_out      [0:5];
-    wire        reg_out_strb [0:5];
 
-    wire [31:0] reg_in       [0:5];
-    wire        reg_in_strb  [0:5];
+    localparam C_ADDR_WIDTH = 12;
+    localparam C_DATA_WIDTH = 32;
 
-    wire up_op_mode;
-    
-    wire up_ad_start, up_ad_reset, up_ad_drdy;
+    wire [  C_ADDR_WIDTH-3:0] up_wr_addr;
+    wire                      up_wr_req ;
+    wire [C_DATA_WIDTH/8-1:0] up_wr_be  ;
+    wire [  C_DATA_WIDTH-1:0] up_wr_din ;
+    wire                      up_wr_ack ;
 
-    wire [31:0] up_spi_send;
-    wire [ 1:0] up_spi_nbytes;
-    wire        up_spi_valid;
-    wire [31:0] up_spi_recv;
+    wire [  C_ADDR_WIDTH-3:0] up_rd_addr;
+    wire                      up_rd_req ;
+    wire [  C_DATA_WIDTH-1:0] up_rd_dout;
+    wire                      up_rd_ack ;
+
+    wire ctrl_soft_reset;
+
+    wire ctrl_op_mode;
+
+    wire ctrl_ad_start;
+    wire ctrl_ad_reset;
+    wire stat_ad_drdy;
+
+    wire [31:0] ctrl_spi_txdata;
+    wire [ 1:0] ctrl_spi_txbytes;
+    wire        ctrl_spi_txvalid;
+
+    wire [31:0] stat_spi_rxdata;
+    wire        stat_spi_rxvalid;
 
     // TX
     wire [7:0] spitx_axis_tdata ;
@@ -104,30 +102,13 @@ module axi_ads124x (
     wire       spirx_axis_tvalid;
     wire       spirx_axis_tready;
 
-    wire stat_rx_overflow;
-
-    // Address        Detail
-    // 0x0000_0000    VERSION
-    // 0x0000_0004    CTRL
-    // 0x0000_0008    STAT
-    // 0x0000_000C    SPICTRL
-    // 0x0000_0010    SPISEND
-    // 0x0000_0014    SPIRECV
-
     // AXI Slave
     axi4l_ipif #(
-        .C_NUM_REGS (6),
-        .C_ADDR_LIST({
-            32'h0000_0000,
-            32'h0000_0004,
-            32'h0000_0008,
-            32'h0000_000C,
-            32'h0000_0010,
-            32'h0000_0014
-        })
+        .C_ADDR_WIDTH(C_ADDR_WIDTH),
+        .C_DATA_WIDTH(C_DATA_WIDTH)
     ) i_ipif (
-        .aclk         (s_axi_aclk   ),
-        .aresetn      (s_axi_aresetn),
+        .aclk         (aclk   ),
+        .aresetn      (aresetn),
         //
         .s_axi_awaddr (s_axi_awaddr ),
         .s_axi_awprot (s_axi_awprot ),
@@ -153,54 +134,54 @@ module axi_ads124x (
         .s_axi_rvalid (s_axi_rvalid ),
         .s_axi_rready (s_axi_rready ),
         //
-        .reg_out      (reg_out      ),
-        .reg_out_strb (reg_out_strb ),
+        .up_wr_addr   (up_wr_addr   ),
+        .up_wr_req    (up_wr_req    ),
+        .up_wr_be     (up_wr_be     ),
+        .up_wr_din    (up_wr_din    ),
+        .up_wr_ack    (up_wr_ack    ),
         //
-        .reg_in       (reg_in       ),
-        .reg_in_strb  (reg_in_strb  )
+        .up_rd_addr   (up_rd_addr   ),
+        .up_rd_req    (up_rd_req    ),
+        .up_rd_dout   (up_rd_dout   ),
+        .up_rd_ack    (up_rd_ack    )
     );
 
-    // Reg 0x0000_0000
 
-    assign reg_in[0] = 32'h20191226;
-
-    // Reg 0x0000_0004
-
-    assign up_op_mode   = reg_out[1][8];
-    assign up_ad_reset  = reg_out[1][4];
-    assign up_ad_start  = reg_out[1][0];
-
-    assign reg_in[1][0] = reg_out[1][0];
-    assign reg_in[1][4] = reg_out[1][4];
-    assign reg_in[1][8] = reg_out[1][8];
-
-    // Reg 0x0000_0008
-
-    assign reg_in[2][0] = up_ad_drdy;
-
-    // Reg 0x0000_000C
-    
-    assign up_spi_nbytes = reg_out[3][1:0];
-    
-    assign reg_in[3][1:0] = reg_out[3][1:0];
-
-
-    // Reg 0x0000_0010
-    
-    assign up_spi_send = reg_out[4];
-    
-    assign reg_in[4] = reg_out[4];
-    
-    // Reg 0x0000_0014
-    
-    assign reg_in[5] = up_spi_recv;
-
+    axi_ads124x_regs i_regs (
+        .clk             (aclk            ),
+        .rst             (!aresetn        ),
+        //
+        .up_wr_addr      (up_wr_addr      ),
+        .up_wr_req       (up_wr_req       ),
+        .up_wr_din       (up_wr_din       ),
+        .up_wr_ack       (up_wr_ack       ),
+        //
+        .up_rd_addr      (up_rd_addr      ),
+        .up_rd_req       (up_rd_req       ),
+        .up_rd_dout      (up_rd_dout      ),
+        .up_rd_ack       (up_rd_ack       ),
+        //
+        .ctrl_soft_reset (ctrl_soft_reset ),
+        //
+        .ctrl_op_mode    (ctrl_op_mode    ),
+        //
+        .ctrl_ad_start   (ctrl_ad_start   ),
+        .ctrl_ad_reset   (ctrl_ad_reset   ),
+        .stat_ad_drdy    (stat_ad_drdy    ),
+        //
+        .ctrl_spi_txbytes(ctrl_spi_txbytes),
+        .ctrl_spi_txdata (ctrl_spi_txdata ),
+        .ctrl_spi_txvalid(ctrl_spi_txvalid),
+        //
+        .stat_spi_rxdata (stat_spi_rxdata ),
+        .stat_spi_rxvalid(stat_spi_rxvalid)
+    );
 
 
     axi_ads124x_ctrl i_ctrl (
         /* AXIS */
-        .aclk             (m_axis_aclk      ),
-        .aresetn          (m_axis_aresetn   ),
+        .aclk             (aclk             ),
+        .aresetn          (aresetn          ),
         // SPI send
         .spitx_axis_tdata (spitx_axis_tdata ),
         .spitx_axis_tvalid(spitx_axis_tvalid),
@@ -220,21 +201,22 @@ module axi_ads124x (
         .START            (START            ),
         .DRDY             (DRDY             ),
         //
-        .up_clk           (s_axi_aclk       ),
-        .up_rst           (!s_axi_aresetn   ),
+        .ctrl_soft_rest   (ctrl_soft_reset  ),
         //
-        .up_op_mode       (up_op_mode       ),
+        .ctrl_op_mode     (ctrl_op_mode     ),
         //
-        .up_ad_start      (up_ad_start      ),
-        .up_ad_reset      (up_ad_reset      ),
-        .up_ad_drdy       (up_ad_drdy       ),
+        .ctrl_ad_start    (ctrl_ad_start    ),
+        .ctrl_ad_reset    (ctrl_ad_reset    ),
+        .stat_ad_drdy     (stat_ad_drdy     ),
         //
-        .up_spi_send      (up_spi_send      ),
-        .up_spi_nbytes    (up_spi_nbytes    ),
-        .up_spi_valid     (up_spi_valid     ),
-        .up_spi_recv      (up_spi_recv      )
+        .ctrl_spi_txdata  (ctrl_spi_txdata ),
+        .ctrl_spi_txbytes (ctrl_spi_txbytes),
+        .ctrl_spi_txvalid (ctrl_spi_txvalid),
+        //
+        .stat_spi_rxdata  (stat_spi_rxdata  ),
+        .stat_spi_rxvalid (stat_spi_rxvalid )
     );
-    
+
     axis_spi_master #(.CLK_RATIO(64)) i_axis_spi_master (
         // SPI
         //=====
@@ -252,8 +234,8 @@ module axi_ads124x (
         .IO1_T           (IO1_T           ),
         // AXIS
         //======
-        .aclk            (m_axis_aclk     ),
-        .aresetn         (m_axis_aresetn  ),
+        .aclk            (aclk            ),
+        .aresetn         (aresetn         ),
         // Tx, AXI4 Stream Slave
         .s_axis_tdata    (spitx_axis_tdata     ),
         .s_axis_tvalid   (spitx_axis_tvalid    ),
@@ -261,10 +243,7 @@ module axi_ads124x (
         // Rx AXI4 Stream Master
         .m_axis_tdata    (spirx_axis_tdata     ),
         .m_axis_tvalid   (spirx_axis_tvalid    ),
-        .m_axis_tready   (spirx_axis_tready    ),
-        // Status
-        //========
-        .stat_rx_overflow(stat_rx_overflow)
+        .m_axis_tready   (spirx_axis_tready    )
     );
 
 endmodule
