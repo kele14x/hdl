@@ -18,7 +18,7 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
     input  wire        spirx_axis_tvalid,
     output wire        spirx_axis_tready,
     //
-    output reg  [31:0] adc_axis_tdata   ,
+    output reg  [55:0] adc_axis_tdata   ,
     output reg         adc_axis_tvalid  ,
     input  wire        adc_axis_tready  ,
     //
@@ -29,150 +29,180 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
     input  wire        DRDY             ,
     // O&M Interface
     //---------------
-    input  wire        up_clk           ,
-    input  wire        up_rst           ,
+    input  wire        ctrl_soft_reset  ,
     //
-    input  wire        up_op_mode       , // 0 = ctrl i/f control, 1 = auto control
+    input  wire        ctrl_op_mode     , // 0 = ctrl i/f control, 1 = auto control
     //
-    input  wire        up_ad_start      ,
-    input  wire        up_ad_reset      ,
-    output wire        up_ad_drdy       ,
+    input  wire        ctrl_ad_start      ,
+    input  wire        ctrl_ad_reset      ,
+    output wire        stat_ad_drdy       ,
     //
-    input  wire [31:0] up_spi_send      ,
-    input  wire [ 1:0] up_spi_nbytes    ,
-    input  wire        up_spi_valid     ,
-    output reg  [31:0] up_spi_recv
+    input  wire [31:0] ctrl_spi_txdata    ,
+    input  wire [ 1:0] ctrl_spi_txbytes   ,
+    input  wire        ctrl_spi_txvalid   ,
+    
+    //
+    output reg         stat_spi_rxvalid,
+    output reg  [31:0] stat_spi_rxdata
 );
 
     import axi_ads124x_pkg::*;
 
-    localparam C_CNT_WIDTH = $clog2(C_CLK_FREQ-1);
+    // PPS Counter
+    //============
+
+    localparam C_CNT_MAX   = C_CLK_FREQ - 1;
+    localparam C_CNT_WIDTH = $clog2(C_CNT_MAX);
 
     reg [C_CNT_WIDTH-1:0] counter;
-    reg sample_tick;
+
 
     always_ff @ (posedge aclk) begin
-        counter <= (!aresetn || pps || counter == C_CLK_FREQ - 1) ? 0 : counter + 1;
+        if (!aresetn || pps) begin
+            counter <= {C_CNT_WIDTH{1'b1}};
+        end else begin
+            counter <= (counter == C_CNT_MAX) ? 0 : counter + 1;
+        end
     end
+
+    // Sample on some tick
+
+    reg sample_tick;
+
 
     always_ff @ (posedge aclk) begin
         sample_tick = (counter == 100);
     end
 
-    typedef enum {S_RST, S_IDLE,
-        S_AUTO_WAIT, S_AUTO_NOP2, S_AUTO_NOP1, S_AUTO_NOP0,
-        S_CTRL_CMD3, S_CTRL_CMD2, S_CTRL_CMD1, S_CTRL_CMD0} STATE_T;
+    // SPI TX State Machine
+    //=====================
 
-    STATE_T state, state_next;
+    typedef enum {S_TX_RST, S_TX_IDLE, S_TX_BYTE3, S_TX_BYTE2, S_TX_BYTE1, S_TX_BYTE0} TX_STATE;
 
-    wire up_op_mode_cdc;
+    TX_STATE tx_state, tx_state_next;
 
-    reg [6:0] auto_start_cnt;
-    reg auto_start;
+    typedef enum {S_RX_RST, S_RX_IDLE, S_RX_BYTE3, S_RX_BYTE2, S_RX_BYTE1, S_RX_BYTE0} RX_STATE;
 
-    wire drdy_cdc, drdy_negedge;
-    reg drdy_cdc_d;
+    RX_STATE rx_state, rx_state_next;
 
-    // up_clk to aclk CDC
-    //====================
-
-    // up_op_mode = 0 : External control mode, AD124x is controlled by up_*
-    //                  ports from external source.
-    // up_op_mode = 1 : Auto control mode, logic will automatically issue
-    //                  START and read back data.
-    cdc_bits i_cdc_up_op_mode (
-        .din    (up_op_mode    ),
-        .out_clk(aclk          ),
-        .dout   (up_op_mode_cdc)
-    );
-
-    wire up_spi_valid_cdc;
-
-    xpm_cdc_pulse #(
-        .DEST_SYNC_FF  (2),
-        .INIT_SYNC_FF  (1),
-        .REG_OUTPUT    (1),
-        .RST_USED      (0),
-        .SIM_ASSERT_CHK(1)
-    ) xpm_cdc_pulse_inst (
-        .dest_pulse(up_spi_valid_cdc),
-        .dest_clk  (aclk            ),
-        .dest_rst  (1'b0            ),
-        .src_clk   (up_clk          ),
-        .src_pulse (up_spi_valid    ),
-        .src_rst   (1'b0            )
-    );
+    // SPI Send Machine
+    //-----------------
+    
+    reg [31:0] spi_tx_data;
+    reg [ 1:0] spi_tx_nbytes;
+    reg        spi_tx_valid;
+    
+    reg [31:0] spi_rx_buffer;
+    reg        spi_rx_valid;
+    
 
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
-            state <= S_RST;
+            tx_state <= S_TX_RST;
         end else begin
-            state <= state_next;
+            tx_state <= tx_state_next;
         end
     end
 
     always_comb begin
-        case (state)
-            S_RST       : state_next = S_IDLE;
-            S_IDLE      : state_next =
-                // Enter auto control loop
-                (up_op_mode_cdc && sample_tick)   ? S_AUTO_WAIT :
-                // Send SPI command from external source
-                (!up_op_mode_cdc && up_spi_valid_cdc) ? (up_spi_nbytes == 2'b11 ? S_CTRL_CMD3 :
-                                                         up_spi_nbytes == 2'b10 ? S_CTRL_CMD2 :
-                                                         up_spi_nbytes == 2'b01 ? S_CTRL_CMD1 :
-                                                         S_CTRL_CMD0) :  S_IDLE; // TODO:
-            // Automatically send
-            S_AUTO_WAIT : state_next = drdy_negedge        ? S_AUTO_NOP2 : S_AUTO_WAIT;
-            S_AUTO_NOP2 : state_next = (spitx_axis_tready) ? S_AUTO_NOP1 : S_AUTO_NOP1;
-            S_AUTO_NOP1 : state_next = (spitx_axis_tready) ? S_AUTO_NOP0 : S_AUTO_NOP1;
-            S_AUTO_NOP0 : state_next = (spitx_axis_tready) ? S_IDLE      : S_AUTO_NOP0;
-            //
-            S_CTRL_CMD3 : state_next = (spitx_axis_tready) ? S_CTRL_CMD2 : S_CTRL_CMD3;
-            S_CTRL_CMD2 : state_next = (spitx_axis_tready) ? S_CTRL_CMD1 : S_CTRL_CMD2;
-            S_CTRL_CMD1 : state_next = (spitx_axis_tready) ? S_CTRL_CMD0 : S_CTRL_CMD1;
-            S_CTRL_CMD0 : state_next = (spitx_axis_tready) ? S_IDLE      : S_CTRL_CMD0;
-            default     : state_next = S_RST;
+        case (tx_state)
+            S_TX_RST   : tx_state_next = S_TX_IDLE;
+            S_TX_IDLE  : tx_state_next = !spi_tx_valid       ? S_TX_IDLE  :
+                                      spi_tx_nbytes == 2'b11 ? S_TX_BYTE3 :
+                                      spi_tx_nbytes == 2'b10 ? S_TX_BYTE2 :
+                                      spi_tx_nbytes == 2'b01 ? S_TX_BYTE1 : S_TX_BYTE0;
+            S_TX_BYTE3 : tx_state_next = (spitx_axis_tready) ? S_TX_BYTE2 : S_TX_BYTE3;
+            S_TX_BYTE2 : tx_state_next = (spitx_axis_tready) ? S_TX_BYTE1 : S_TX_BYTE2;
+            S_TX_BYTE1 : tx_state_next = (spitx_axis_tready) ? S_TX_BYTE0 : S_TX_BYTE1;
+            S_TX_BYTE0 : tx_state_next = (spitx_axis_tready) ? S_TX_IDLE  : S_TX_BYTE0;
+            default    : tx_state_next = S_TX_RST;
         endcase
     end
 
     always_ff @ (posedge aclk) begin
-        if (state_next == S_AUTO_NOP0) begin
-            spitx_axis_tdata <= SPI_CMD_NOP;
-        end else if (state_next == S_AUTO_NOP1) begin
-            spitx_axis_tdata <= SPI_CMD_NOP;
-        end else if (state_next == S_AUTO_NOP2) begin
-            spitx_axis_tdata <= SPI_CMD_NOP;
-        end else if (state_next == S_CTRL_CMD3) begin
-            spitx_axis_tdata <= up_spi_send[31:24];
-        end else if (state_next == S_CTRL_CMD2) begin
-            spitx_axis_tdata <= up_spi_send[23:16];
-        end else if (state_next == S_CTRL_CMD2) begin
-            spitx_axis_tdata <= up_spi_send[15: 8];
-        end else if (state_next == S_CTRL_CMD2) begin
-            spitx_axis_tdata <= up_spi_send[ 7: 0];
+        if (!aresetn) begin
+            spitx_axis_tdata <= 'd0;
+        end else if (tx_state_next == S_TX_BYTE3) begin
+            spitx_axis_tdata <= spi_tx_data[31:24];
+        end else if (tx_state_next == S_TX_BYTE2) begin
+            spitx_axis_tdata <= spi_tx_data[23:16];
+        end else if (tx_state_next == S_TX_BYTE1) begin
+            spitx_axis_tdata <= spi_tx_data[15: 8];
+        end else if (tx_state_next == S_TX_BYTE0) begin
+            spitx_axis_tdata <= spi_tx_data[ 7: 0];
         end
     end
 
     always_ff @ (posedge aclk) begin
-        spitx_axis_tvalid <= (state_next == S_AUTO_NOP0 ||
-            state_next == S_AUTO_NOP1 || state_next == S_AUTO_NOP2);
+        if (!aresetn) begin
+            spitx_axis_tvalid <= 1'b0;
+        end else begin
+            spitx_axis_tvalid <= (tx_state_next == S_TX_BYTE3 ||
+                tx_state_next == S_TX_BYTE1 || tx_state_next == S_TX_BYTE1 || tx_state_next == S_TX_BYTE0);
+        end
     end
+
+
+    // SPI RX Machine
+    //---------------
 
     assign spirx_axis_tready = 1'b1;
 
     always_ff @ (posedge aclk) begin
-        if (state == S_AUTO_NOP0 && spirx_axis_tvalid) begin
-            adc_axis_tdata[23:16] <= spirx_axis_tdata;
-        end
-        if (state == S_AUTO_NOP1 && spirx_axis_tvalid) begin
-            adc_axis_tdata[15: 8] <= spirx_axis_tdata;
-        end
-        if (state == S_AUTO_NOP2 && spirx_axis_tvalid) begin
-            adc_axis_tdata[ 7: 0] <= spirx_axis_tdata;
+        if (!aresetn) begin
+            rx_state <= S_RX_RST;
+        end else begin
+            rx_state <= rx_state_next;
         end
     end
 
+    always_comb begin
+        case (rx_state)
+            S_RX_RST   : rx_state_next = S_RX_IDLE;
+            S_RX_IDLE  : rx_state_next = !spi_tx_valid       ? S_RX_IDLE : 
+                                      spi_tx_nbytes == 2'b11 ? S_RX_BYTE3 :
+                                      spi_tx_nbytes == 2'b10 ? S_RX_BYTE2 :
+                                      spi_tx_nbytes == 2'b01 ? S_RX_BYTE1 : S_RX_BYTE0;
+            S_RX_BYTE3 : rx_state_next = !spirx_axis_tvalid  ? S_RX_BYTE3 : S_RX_BYTE2;
+            S_RX_BYTE2 : rx_state_next = !spirx_axis_tvalid  ? S_RX_BYTE2 : S_RX_BYTE1;
+            S_RX_BYTE1 : rx_state_next = !spirx_axis_tvalid  ? S_RX_BYTE1 : S_RX_BYTE0;
+            S_RX_BYTE0 : rx_state_next = !spirx_axis_tvalid  ? S_RX_BYTE0 : S_RX_IDLE;
+            default    : rx_state_next = S_RX_RST;
+        endcase
+    end
+
+    always_ff @ (posedge aclk) begin
+        if (rx_state == S_RX_BYTE3 && spirx_axis_tvalid) begin
+            spi_rx_buffer[31:24] <= spirx_axis_tdata;
+        end
+        if (rx_state == S_RX_BYTE2 && spirx_axis_tvalid) begin
+            spi_rx_buffer[23:16] <= spirx_axis_tdata;
+        end
+        if (rx_state == S_RX_BYTE1 && spirx_axis_tvalid) begin
+            spi_rx_buffer[15: 8] <= spirx_axis_tdata;
+        end
+        if (rx_state == S_RX_BYTE0 && spirx_axis_tvalid) begin
+            spi_rx_buffer[ 7: 0] <= spirx_axis_tdata;
+        end
+    end
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            spi_rx_valid <= 1'b0;
+        end else begin
+            spi_rx_valid <= (rx_state == S_RX_BYTE0 && spirx_axis_tvalid);
+        end
+    end
+
+
+    // Auto mode GPIO control
+    //=======================
+    
+    reg [6:0] auto_start_cnt;
+    reg auto_start;
+
+    reg drdy_cdc, drdy_negedge;
+    reg drdy_cdc_d;
 
     // Extend the START pulse for at least 732 ns, this is required by AD124x
     // datasheet (#7.6, page 11, tSTART requirement). We do 128 clocks.
@@ -190,14 +220,9 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
     end
 
 
-    // DRDY pin input CDC
-    cdc_bits i_cdc_drdy (
-        .din    (DRDY    ),
-        .out_clk(aclk    ),
-        .dout   (drdy_cdc)
-    );
-
+    // DRDY PIN CDC
     always_ff @ (posedge aclk) begin
+        drdy_cdc   <= DRDY;
         drdy_cdc_d <= drdy_cdc;
     end
 
@@ -211,17 +236,116 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
     // external source. This allows external source controls AD124x freely.
     // External can use issue command (read/write/sleep/wakeup/etc.) to
     // control AD124x chip.
-    assign START = up_op_mode ? up_ad_start : auto_start;
+    assign START = ctrl_op_mode ? ctrl_ad_start : auto_start;
 
     // If in external control mode, reset pin to AD124x is controlled by
     // external. Else set it high (not reset).
-    assign RESET = up_op_mode ? up_ad_reset : 1'b1;
+    assign RESET = ctrl_op_mode ? ctrl_ad_start : 1'b1;
 
-    cdc_bits i_cdc_drdy2 (
-        .din    (DRDY      ),
-        .out_clk(up_clk    ),
-        .dout   (up_ad_drdy)
-    );
+    assign stat_ad_drdy = drdy_cdc_d;
+
+    // AUTO mode
+    //==========
+
+    typedef enum {S_AUTO_RST, S_AUTO_IDLE, S_AUTO_WAIT} AUTO_STATE;
+
+    AUTO_STATE auto_state, auto_state_next;
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            auto_state <= S_AUTO_RST;
+        end else begin
+            auto_state <= auto_state_next;
+        end
+    end
+    
+    always_comb begin
+        case (auto_state) 
+            S_AUTO_RST  : auto_state_next = S_AUTO_IDLE;
+            S_AUTO_IDLE : auto_state_next = !(ctrl_op_mode && sample_tick) ? S_AUTO_IDLE : S_AUTO_WAIT;
+            S_AUTO_WAIT : auto_state_next = !drdy_negedge ? S_AUTO_WAIT : S_AUTO_IDLE;
+            default     : auto_state_next = S_AUTO_RST;
+        endcase
+    end
+
+    // SPI Control
+    //============
+    
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            spi_tx_data <= 'd0;
+        end else if (ctrl_op_mode && drdy_negedge) begin
+            spi_tx_data <= 'd0;
+        end else if (!ctrl_op_mode && ctrl_spi_txvalid) begin
+            spi_tx_data <= ctrl_spi_txdata;
+        end
+    end
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            spi_tx_nbytes <= 'd0;
+        end else if (ctrl_op_mode && drdy_negedge) begin
+            spi_tx_nbytes <= 2'b10;
+        end else if (!ctrl_op_mode && ctrl_spi_txvalid) begin
+            spi_tx_nbytes <= ctrl_spi_txbytes;
+        end
+    end
+    
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            spi_tx_valid <= 1'b0;
+        end else if (ctrl_op_mode && drdy_negedge) begin
+            spi_tx_valid <= 1'b1;
+        end else if (!ctrl_op_mode && ctrl_spi_txvalid) begin
+            spi_tx_valid <= 1'b1;
+        end else begin
+            spi_tx_valid <= 1'b0;
+        end
+    end
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            stat_spi_rxdata <= 'd0;
+        end else if (!ctrl_op_mode && ctrl_spi_txvalid) begin
+            stat_spi_rxdata <= 'd0;
+        end else if (!ctrl_op_mode && spi_rx_valid) begin
+            stat_spi_rxdata <= spi_rx_buffer;
+        end
+    end
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            stat_spi_rxvalid <= 'd0;
+        end else if (!ctrl_op_mode && ctrl_spi_txvalid) begin
+            stat_spi_rxvalid <= 'd0;
+        end else if (!ctrl_op_mode && spi_rx_valid) begin
+            stat_spi_rxvalid <= 1'b1;
+        end else if (ctrl_op_mode) begin
+            stat_spi_rxvalid <= 1'b0;
+        end
+    end
+
+    // ADC ports
+    //==========
+    
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            adc_axis_tdata <= 'd0;
+        end else if (ctrl_op_mode && spi_rx_valid) begin
+            adc_axis_tdata <= {counter, spi_rx_buffer};
+        end 
+    end
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            adc_axis_tvalid <= 1'b0;
+        end else if (ctrl_op_mode && spi_rx_valid) begin
+            adc_axis_tvalid <= 1'b1;
+        end else if (adc_axis_tready) begin
+            adc_axis_tvalid <= 1'b0;
+        end
+    end
+
 
 endmodule
 
