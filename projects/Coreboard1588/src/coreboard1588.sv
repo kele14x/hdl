@@ -24,6 +24,16 @@ module coreboard1588 (
     inout  wire       FPGA_MCU_SPI_CS  ,
     inout  wire       FPGA_MCU_SPI_MOSI,
     inout  wire       FPGA_MCU_SPI_MISO,
+    //   FMC
+    input  wire [11:0]FMC_A            ,
+    input  wire       FMC_CLK          ,
+    input  wire       FMC_NE           ,
+    input  wire [ 1:0]FMC_NBL          ,
+    output wire       FMC_NWAIT        ,
+    input  wire       FMC_NL           ,
+    input  wire       FMC_NOE          ,
+    input  wire       FMC_NWE          ,
+    inout  wire [15:0]FMC_D            ,
     // FPGA Global Clock
     //==================
     input  wire       A7_GCLK          ,
@@ -81,8 +91,19 @@ module coreboard1588 (
         .FPGA_MCU_INTR_interrupt(/* Open */       ),
         .FPGA_MCU_RST           (FPGA_MCU_RST     ),
         .FPGA_RUN               (FPGA_RUN         ),
+        // FMC
+        //----
+        .FMC_addr               (FMC_A            ),
+        .FMC_adv_ldn            (FMC_NL           ),
+        .FMC_ben                (FMC_NBL          ),
+        .FMC_cre                (FMC_NE           ),
+        .FMC_dq_io              (FMC_D            ),
+        .FMC_oen                (FMC_NOE          ),
+        .FMC_rd_clk             (FMC_CLK          ),
+        .FMC_wait               (FMC_NWAIT        ),
+        .FMC_wen                (FMC_NWE          ),
         // TEST
-        //=====
+            //=====
         .FPGA_TEST              (FPGA_TEST        ),
         // PTP
         //====
