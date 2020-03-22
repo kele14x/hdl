@@ -1,121 +1,144 @@
 `timescale 1 ns / 1 ps
 `default_nettype none
 
+// PSRAM interface
+//----------------
+// FMC clock should be generated at both write and read operation
+// NWAIT is sync wait signal with low polarity (avtive low)
+// BRAM latency should be 2
 module fmc_slv_if_top #(
     parameter C_ADDR_WIDTH = 12,
-    parameter C_DATA_WIDTH = 16
+    parameter C_DATA_WIDTH = 16,
+    parameter C_FMC_DATLAT = 2 
 ) (
-    input  wire                      clk       ,
-    input  wire                      rst       ,
-    // FMC SRAM Interface
-    //===================
+    // FMC PSRAM Interface
+    //====================
+    input  wire                      FMC_CLK   , // Clock
     input  wire [  C_ADDR_WIDTH-1:0] FMC_A     , // Address bus
     input  wire [  C_DATA_WIDTH-1:0] FMC_D_I   , 
     output wire [  C_DATA_WIDTH-1:0] FMC_D_O   , // Write/read data bus
     output wire [  C_DATA_WIDTH-1:0] FMC_D_T   ,
     input  wire [C_DATA_WIDTH/8-1:0] FMC_NBL   , // Write byte enable
     input  wire                      FMC_NE    , // Chip enable
+    input  wire                      FMC_NL    , // Address valid
     input  wire                      FMC_NOE   , // Output enable (read enable)
     input  wire                      FMC_NWE   , // Write enable
-    output wire                      FMC_NWAIT ,
+    output reg                       FMC_NWAIT ,
     // BRAM interface
     //===============
-    output wire                      porta_clk ,
-    output wire                      porta_rst ,
+    output wire                      bram_clk  ,
+    output wire                      bram_rst  ,
     //
-    output reg  [  C_ADDR_WIDTH-1:0] porta_addr,
-    output reg                       porta_en  ,
-    output reg  [  C_DATA_WIDTH-1:0] porta_din ,
-    output reg  [C_DATA_WIDTH/8-1:0] porta_we  ,
-    input  wire [  C_DATA_WIDTH-1:0] porta_dout
+    output reg  [  C_ADDR_WIDTH-1:0] bram_addr ,
+    output reg                       bram_en   ,
+    output reg  [  C_DATA_WIDTH-1:0] bram_din  ,
+    output reg  [C_DATA_WIDTH/8-1:0] bram_we   ,
+    input  wire [  C_DATA_WIDTH-1:0] bram_dout
 );
 
-    assign porta_clk = clk;
-    assign porta_rst = rst;
+    wire FMC_CLK_s;
 
-    var logic [C_ADDR_WIDTH-1:0] fmc_a_s;
-    var logic [C_DATA_WIDTH-1:0] fmc_d_s;
-    var logic [C_DATA_WIDTH/8-1:0] fmc_nbl_s;
-    var logic fmc_ne_s, fmc_noe_s, fmc_nwe_s;
+    // BRAM 
+    //======
 
-    // FMC input signals CDC
-    //----------------------
-    
-    util_cdc_bits # (
-        .C_DATA_WIDTH(C_ADDR_WIDTH + C_DATA_WIDTH + C_DATA_WIDTH/8 + 3)
-    ) i_fmc_cdc (
-        .clk(clk),
-        .din({FMC_A, FMC_D_I, FMC_NBL, FMC_NE, FMC_NOE, FMC_NWE}),
-        .dout({fmc_a_s, fmc_d_s, fmc_nbl_s, fmc_ne_s, fmc_noe_s, fmc_nwe_s})
+    // BRAM clcok
+
+    BUFR #(
+        .BUFR_DIVIDE("BYPASS"),
+        .SIM_DEVICE("7SERIES")
+    ) BUFR_inst (
+        .O  (FMC_CLK_s),
+        .CE (1'b1     ),
+        .CLR(1'b0     ),
+        .I  (FMC_CLK  )
     );
 
-    typedef enum {S_RST, S_IDLE, S_WAIT,
-        S_ADDR, S_WRITE, S_READ, S_WPOST, S_RPOST} FMC_STATE_T;
+    assign bram_clk = FMC_CLK;
 
-    FMC_STATE_T fmc_state, fmc_state_next;
+    // BRAM reset generation
 
-    always_ff @ (posedge clk) begin
-        if (rst) begin
-            fmc_state <= S_RST;
+    localparam C_RST_SRL = 16;
+
+    reg [C_RST_SRL-1:0] bram_rst_srl = {C_RST_SRL{1'b1}};
+
+    always_ff @ (posedge FMC_CLK_s) begin
+        bram_rst_srl <= {bram_rst_srl[C_RST_SRL-2:0], 1'b0};
+    end
+    
+    assign bram_rst = bram_rst_srl[C_RST_SRL-1];
+
+    // Count for FMC transcation ticks
+    // It should be async reset by FMC_NE (Not Enable)
+
+    reg [7:0] fmc_cnt;
+
+    always_ff @ (posedge FMC_CLK_s or posedge FMC_NE) begin
+        if (FMC_NE) begin
+            fmc_cnt <= {8{1'b1}};
+        end else begin // Count how many ticks
+            fmc_cnt <= fmc_cnt + 1;
+        end
+    end
+
+    // BRAM address generation
+    
+    always_ff @ (posedge FMC_CLK_s) begin
+        if (!FMC_NE && !FMC_NL) begin
+            bram_addr <= FMC_A;
+        end else if (!FMC_NE && FMC_NWE) begin // Reading
+            bram_addr <= bram_addr + 1;
+        end else if (!FMC_NE && !FMC_NWE) begin // Writing
+            // Data will be at bus at 4th tick (fmc_cnt shows 2)
+            bram_addr <= (fmc_cnt >= C_FMC_DATLAT) ? bram_addr + 1 : bram_addr;
+        end
+    end
+
+    // BRAM enable generation (for read & write)
+    // Async reset by FMC_NE
+
+    always_ff @ (posedge FMC_CLK_s or posedge FMC_NE) begin
+        if (FMC_NE) begin
+            bram_en <= 1'b0;
         end else begin
-            fmc_state <= fmc_state_next;
+            bram_en <= 1'b1;
         end
     end
 
-    always_comb begin
-        if (fmc_ne_s) begin
-            // Chip is not selected
-            fmc_state_next = S_IDLE;
+    // BRAM write enable 
+    
+    always_ff @ (posedge FMC_CLK_s or posedge FMC_NE) begin
+        if (FMC_NE) begin
+            bram_we <= 'd0;
         end else begin
-            // Chip is selected
-            case (fmc_state) 
-                S_RST  : fmc_state_next = S_IDLE;
-                S_IDLE : fmc_state_next = fmc_ne_s  ? S_IDLE : S_ADDR;
-                S_ADDR : fmc_state_next = fmc_noe_s ? S_WAIT : S_READ;
-                S_WAIT : fmc_state_next = fmc_nwe_s ? S_WAIT : S_WRITE;
-                S_WRITE: fmc_state_next = S_WPOST;
-                S_READ : fmc_state_next = S_RPOST;
-                S_WPOST: fmc_state_next = fmc_ne_s ? S_IDLE : S_WPOST;
-                S_RPOST: fmc_state_next = fmc_ne_s ? S_IDLE : S_RPOST;
-                default: fmc_state_next = S_RST;
-            endcase
+            bram_we <= (!FMC_NWE && fmc_cnt >= C_FMC_DATLAT) ? ~FMC_NBL : 'd0;
         end
     end
 
-    always_ff @ (posedge clk) begin
-        if (rst) begin
-            porta_addr <= 'd0;
-        end else if (fmc_state == S_ADDR) begin
-            porta_addr <= fmc_a_s;
+    // BRAM write data
+    
+    always_ff @ (posedge FMC_CLK_s) begin
+        if (!FMC_NE && !FMC_NWE && fmc_cnt >= C_FMC_DATLAT) begin
+            bram_din <= FMC_D_I;
         end
     end
 
-    always_ff @ (posedge clk) begin
-        if (rst) begin
-            porta_en <= 1'b0;
-        end else if (fmc_state == S_WRITE || fmc_state == S_READ) begin
-            porta_en <= 1'b1;
+    // FMC 
+    //=====
+
+    // FMC data output
+
+    assign FMC_D_T = {C_DATA_WIDTH{FMC_NOE}};
+
+    assign FMC_D_O = bram_dout;
+
+    // FMC NWAIT
+    
+    always_ff @ (posedge FMC_CLK_s or posedge FMC_NE) begin
+        if (FMC_NE) begin
+            FMC_NWAIT <= 1'b0;
         end else begin
-            porta_en <= 1'b0;
+            FMC_NWAIT <= (!FMC_NWE || (FMC_NWE && fmc_cnt >= C_FMC_DATLAT));
         end
     end
-
-    always_ff @ (posedge clk) begin
-        if (rst) begin
-            porta_din <= 'd0;
-        end else if (fmc_state == S_WRITE) begin
-            porta_din <= fmc_d_s;
-        end
-    end
-
-    always_ff @ (posedge clk) begin
-        if (rst) begin
-            porta_we <= 'd0;
-        end else if (fmc_state == S_WRITE) begin
-            porta_we <= ~fmc_nbl_s;
-        end
-    end
-
-    assign FMC_D_O = porta_dout;
 
 endmodule
