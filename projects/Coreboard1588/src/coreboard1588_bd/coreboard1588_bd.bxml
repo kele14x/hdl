@@ -2,10 +2,10 @@
 <Root MajorVersion="0" MinorVersion="39">
   <CompositeFile CompositeFileTopName="coreboard1588_bd" CanBeSetAsTop="false" CanDisplayChildGraph="true">
     <Description>Composite Fileset</Description>
-    <Generation Name="SYNTHESIS" State="RESET" Timestamp="1584033484"/>
-    <Generation Name="IMPLEMENTATION" State="RESET" Timestamp="1584033484"/>
-    <Generation Name="SIMULATION" State="RESET" Timestamp="1584033484"/>
-    <Generation Name="HW_HANDOFF" State="RESET" Timestamp="1584033484"/>
+    <Generation Name="SYNTHESIS" State="RESET" Timestamp="1584875646"/>
+    <Generation Name="IMPLEMENTATION" State="RESET" Timestamp="1584875646"/>
+    <Generation Name="SIMULATION" State="RESET" Timestamp="1584875646"/>
+    <Generation Name="HW_HANDOFF" State="RESET" Timestamp="1584875646"/>
     <FileCollection Name="SOURCES" Type="SOURCES">
       <File Name="ip/coreboard1588_bd_jtag_axi_0_0/coreboard1588_bd_jtag_axi_0_0.xci" Type="IP">
         <Instance HierarchyPath="jtag_axi"/>
@@ -158,14 +158,6 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip/coreboard1588_bd_pps_receiver_0_0/coreboard1588_bd_pps_receiver_0_0.xci" Type="IP">
-        <Instance HierarchyPath="pps_receiver_0"/>
-        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
-        <Library Name="xil_defaultlib"/>
-        <UsedIn Val="SYNTHESIS"/>
-        <UsedIn Val="IMPLEMENTATION"/>
-        <UsedIn Val="SIMULATION"/>
-      </File>
       <File Name="ip/coreboard1588_bd_c_counter_binary_2_0/coreboard1588_bd_c_counter_binary_2_0.xci" Type="IP">
         <Instance HierarchyPath="c_counter_binary_pps"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
@@ -176,6 +168,54 @@
       </File>
       <File Name="ip/coreboard1588_bd_axi_ads868x_0_0/coreboard1588_bd_axi_ads868x_0_0.xci" Type="IP">
         <Instance HierarchyPath="axi_ads868x_0"/>
+        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
+        <Library Name="xil_defaultlib"/>
+        <UsedIn Val="SYNTHESIS"/>
+        <UsedIn Val="IMPLEMENTATION"/>
+        <UsedIn Val="SIMULATION"/>
+      </File>
+      <File Name="ip/coreboard1588_bd_xlconstant_1_1/coreboard1588_bd_xlconstant_1_1.xci" Type="IP">
+        <Instance HierarchyPath="xlconstant_1"/>
+        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
+        <Library Name="xil_defaultlib"/>
+        <UsedIn Val="SYNTHESIS"/>
+        <UsedIn Val="IMPLEMENTATION"/>
+        <UsedIn Val="SIMULATION"/>
+      </File>
+      <File Name="ip/coreboard1588_bd_pps_receiver_1_0/coreboard1588_bd_pps_receiver_1_0.xci" Type="IP">
+        <Instance HierarchyPath="pps_receiver_1"/>
+        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
+        <Library Name="xil_defaultlib"/>
+        <UsedIn Val="SYNTHESIS"/>
+        <UsedIn Val="IMPLEMENTATION"/>
+        <UsedIn Val="SIMULATION"/>
+      </File>
+      <File Name="ip/coreboard1588_bd_xlslice_0_0/coreboard1588_bd_xlslice_0_0.xci" Type="IP">
+        <Instance HierarchyPath="xlslice_0"/>
+        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
+        <Library Name="xil_defaultlib"/>
+        <UsedIn Val="SYNTHESIS"/>
+        <UsedIn Val="IMPLEMENTATION"/>
+        <UsedIn Val="SIMULATION"/>
+      </File>
+      <File Name="ip/coreboard1588_bd_xlslice_0_1/coreboard1588_bd_xlslice_0_1.xci" Type="IP">
+        <Instance HierarchyPath="xlslice_1"/>
+        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
+        <Library Name="xil_defaultlib"/>
+        <UsedIn Val="SYNTHESIS"/>
+        <UsedIn Val="IMPLEMENTATION"/>
+        <UsedIn Val="SIMULATION"/>
+      </File>
+      <File Name="ip/coreboard1588_bd_fmc_slv_if_0_0/coreboard1588_bd_fmc_slv_if_0_0.xci" Type="IP">
+        <Instance HierarchyPath="fmc_slv_if_0"/>
+        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
+        <Library Name="xil_defaultlib"/>
+        <UsedIn Val="SYNTHESIS"/>
+        <UsedIn Val="IMPLEMENTATION"/>
+        <UsedIn Val="SIMULATION"/>
+      </File>
+      <File Name="ip/coreboard1588_bd_blk_mem_gen_1_0/coreboard1588_bd_blk_mem_gen_1_0.xci" Type="IP">
+        <Instance HierarchyPath="blk_mem_gen_1"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
         <UsedIn Val="SYNTHESIS"/>
