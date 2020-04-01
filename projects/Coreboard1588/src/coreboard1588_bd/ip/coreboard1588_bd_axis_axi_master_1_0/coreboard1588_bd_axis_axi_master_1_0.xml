@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <spirit:component xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <spirit:vendor>xilinx.com</spirit:vendor>
+  <spirit:vendor>jzhl</spirit:vendor>
   <spirit:library>customized_ip</spirit:library>
-  <spirit:name>coreboard1588_bd_axis_axi_master_0_0</spirit:name>
+  <spirit:name>coreboard1588_bd_axis_axi_master_1_0</spirit:name>
   <spirit:version>1.0</spirit:version>
   <spirit:busInterfaces>
     <spirit:busInterface>
@@ -1253,18 +1253,18 @@
       </spirit:port>
     </spirit:ports>
   </spirit:model>
-  <spirit:description>axis_axi_master_v1_0</spirit:description>
+  <spirit:description>axis_axi_master_v1_1</spirit:description>
   <spirit:parameters>
     <spirit:parameter>
       <spirit:name>Component_Name</spirit:name>
-      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Component_Name" spirit:order="1">coreboard1588_bd_axis_axi_master_0_0</spirit:value>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Component_Name" spirit:order="1">coreboard1588_bd_axis_axi_master_1_0</spirit:value>
     </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
     <xilinx:coreExtensions>
-      <xilinx:displayName>axis_axi_master_v1_0</xilinx:displayName>
+      <xilinx:displayName>axis_axi_master_v1_1</xilinx:displayName>
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
-      <xilinx:coreRevision>2</xilinx:coreRevision>
+      <xilinx:coreRevision>4</xilinx:coreRevision>
       <xilinx:tags>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@15b9272_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/axis_axi_master</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@28227fc_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/axis_axi_master</xilinx:tag>
@@ -1275,6 +1275,71 @@
         <xilinx:tag xilinx:name="ui.data.coregen.dd@1e83f5fc_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/axis_axi_master</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@3e6523c8_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/axis_axi_master</xilinx:tag>
         <xilinx:tag xilinx:name="ui.data.coregen.dd@694fe558_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4975d492_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6c6577d0_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5f29f1d3_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@494afbe1_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5dd9d7bb_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@66fb8e39_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@282c2eda_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@53fb31a6_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@56a3fb28_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1b6859ae_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6bcfbccf_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@595d0ee7_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@19ce4325_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7d33924a_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7a114f91_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3d190ca4_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2e328c90_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@57dde86e_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@74d17c57_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@78cb48db_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2332497c_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6dac129_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@46995b1e_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@d61da47_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4c10c700_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1be4a5ca_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4ae95d56_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@15ffee7_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6f3ed3af_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@64637242_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5febffc4_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@19048e99_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@388c024_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5223b594_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1d4ffda9_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@350b9e42_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@67787139_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@488d913f_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@adf335c_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@73a72d12_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@793f0f23_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1ec349ca_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@610faaf8_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5600a1f0_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@710981ab_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@15252f5c_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7b9402a5_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6cd247f8_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1e25a72c_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1c7dbc3e_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3e609622_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@317bdfc8_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@45ac7891_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@45e7fe4c_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7e564b13_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2473d182_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7ec77061_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3b05787b_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3db0f8e9_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@605989ca_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3768550c_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2a8c57c8_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@115ffccf_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@39a323e6_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3759c498_ARCHIVE_LOCATION">c:/Users/kelem/Workspace/Git/hdl/library/axis_axi_master</xilinx:tag>
       </xilinx:tags>
       <xilinx:configElementInfos>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.ACLK.ASSOCIATED_BUSIF" xilinx:valuePermission="bd_and_user"/>
@@ -1343,7 +1408,7 @@
       <xilinx:xilinxVersion>2019.2</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="8a213eac"/>
       <xilinx:checksum xilinx:scope="addressSpaces" xilinx:value="6a8e4711"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="8d4bf33f"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="4bdfe118"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="5af11331"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="f6201e80"/>
     </xilinx:packagingInfo>
