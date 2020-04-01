@@ -83,8 +83,8 @@ module coreboard1588 (
         //------
         .FPGA_MCU_SPI_io0_io    (FPGA_MCU_SPI_MOSI),
         .FPGA_MCU_SPI_io1_io    (FPGA_MCU_SPI_MISO),
-        .FPGA_MCU_SPI_sck_io    (FPGA_MCU_SPI_CS  ),
-        .FPGA_MCU_SPI_ss_io     (FPGA_MCU_SPI_CLK ),
+        .FPGA_MCU_SPI_sck_io    (FPGA_MCU_SPI_CLK ),
+        .FPGA_MCU_SPI_ss_io     (FPGA_MCU_SPI_CS  ),
         // GPIO
         //-----
         .FPGA_RST               (FPGA_RST         ),
