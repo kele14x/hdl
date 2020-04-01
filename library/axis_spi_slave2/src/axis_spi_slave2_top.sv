@@ -65,10 +65,19 @@ module axis_spi_slave2_top #(
     assign IO1_T = SS_I;
     assign IO1_O = SO_r;
 
-    assign SCK_s = SCK_I;
     assign SS_s  = SS_I;
     assign SI_s  = IO0_I;
 
+    BUFR #(
+        .BUFR_DIVIDE("BYPASS"),
+        .SIM_DEVICE("7SERIES")
+    )
+    BUFR_inst (
+        .O  (SCK_s),
+        .CE (1'b1 ),
+        .CLR(1'b0 ),
+        .I  (SCK_I)
+    );
 
     // RX Logic
     //----------
