@@ -52,7 +52,7 @@ module tb_axis_axi_master ();
     // tasks
 
     task axi_read(input [14:0] addr);
-        reg [7:0] txd [0:5];
+        reg [7:0] txd [0:6];
         begin
             txd[0] = {1'b0, addr[14:8]};
             txd[1] = addr[7:0];
@@ -60,9 +60,10 @@ module tb_axis_axi_master ();
             txd[3] = 8'h00;
             txd[4] = 8'h00;
             txd[5] = 8'h00;
+            txd[6] = 8'h00;
 
             @(posedge aclk);
-            for(int i = 0; i < 6; i++) begin
+            for(int i = 0; i < 7; i++) begin
                 s_axis_tdata  <= txd[i];
                 s_axis_tvalid <= 1'b1;
                 while(1) begin
@@ -78,17 +79,18 @@ module tb_axis_axi_master ();
     endtask
 
     task axi_write(input [14:0] addr, input [31:0] data);
-        reg [7:0] txd [0:5];
+        reg [7:0] txd [0:6];
         begin
             txd[0] = {1'b1, addr[14:8]};
             txd[1] = addr[7:0];
-            txd[2] = data[31:24];
-            txd[3] = data[23:16];
-            txd[4] = data[15:8];
-            txd[5] = data[7:0];
+            txd[2] = 8'h00;
+            txd[3] = data[31:24];
+            txd[4] = data[23:16];
+            txd[5] = data[15:8];
+            txd[6] = data[7:0];
 
             @(posedge aclk);
-            for(int i = 0; i < 6; i++) begin
+            for(int i = 0; i < 7; i++) begin
                 s_axis_tdata  <= txd[i];
                 s_axis_tvalid <= 1'b1;
                 while(1) begin
@@ -124,7 +126,7 @@ module tb_axis_axi_master ();
     axis_axi_master DUT ( .* );
 
 
-    blk_mem_gen_0 your_instance_name (
+    blk_mem_gen_0 i_blk_mem_gen_0 (
         .s_aclk       (aclk         ),
         .s_aresetn    (aresetn      ),
         //
