@@ -79,10 +79,11 @@ module axis_axi_master_top (
         S_SAXIS_RST,    // Under reset/fault recovery
         S_SAXIS_WRN_A0, // Waiting for WR/N and Address 0
         S_SAXIS_A1,     // Waiting for address 1
-        S_SAXIS_D0,  // Waiting for data 0
-        S_SAXIS_D1,  // Waiting for data 1
-        S_SAXIS_D2,  // Waiting for data 2
-        S_SAXIS_D3   // Waiting for data 3
+        S_SAXIS_DUMMY,  // This byte is ignored 
+        S_SAXIS_D0,     // Waiting for data 0
+        S_SAXIS_D1,     // Waiting for data 1
+        S_SAXIS_D2,     // Waiting for data 2
+        S_SAXIS_D3      // Waiting for data 3
     } SAXIS_STATE_T;
 
     SAXIS_STATE_T saxis_state, saxis_state_next;
@@ -138,8 +139,11 @@ module axis_axi_master_top (
             S_SAXIS_RST    : saxis_state_next = S_SAXIS_WRN_A0;
             //
             S_SAXIS_WRN_A0 : saxis_state_next = s_axis_tvalid ? S_SAXIS_A1     : S_SAXIS_WRN_A0;
-            S_SAXIS_A1     : saxis_state_next = s_axis_tvalid ? S_SAXIS_D0     :
+            S_SAXIS_A1     : saxis_state_next = s_axis_tvalid ? S_SAXIS_DUMMY  :
                                        saxis_state_timeout[9] ? S_SAXIS_WRN_A0 : S_SAXIS_A1;
+            //
+            S_SAXIS_DUMMY  : saxis_state_next = s_axis_tvalid ? S_SAXIS_D0 :
+                                       saxis_state_timeout[9] ? S_SAXIS_WRN_A0 : S_SAXIS_DUMMY;
             //
             S_SAXIS_D0     : saxis_state_next = s_axis_tvalid ? S_SAXIS_D1     :
                                        saxis_state_timeout[9] ? S_SAXIS_WRN_A0 : S_SAXIS_D0;
@@ -155,6 +159,7 @@ module axis_axi_master_top (
     end
 
     assign saxis_state_busy = saxis_state_next == S_SAXIS_A1 ||
+        saxis_state_next == S_SAXIS_DUMMY || 
         saxis_state_next == S_SAXIS_D0 || saxis_state_next == S_SAXIS_D1 ||
         saxis_state_next == S_SAXIS_D2 || saxis_state_next == S_SAXIS_D3;
 
