@@ -1,76 +1,77 @@
 {
    "ActiveEmotionalView":"Color Coded",
    "Color Coded_ExpandedHierarchyInLayout":"",
-   "Color Coded_Layout":"# # String gsaved with Nlview 7.0.21  2019-05-29 bk=1.5064 VDI=41 GEI=36 GUI=JA:9.0 non-TLS
+   "Color Coded_Layout":"# # String gsaved with Nlview 7.0.21  2019-05-29 bk=1.5064 VDI=41 GEI=36 GUI=JA:9.0 non-TLS-threadsafe
 #  -string -flagsOSRD
-preplace port A7_CONFIG_QSPI -pg 1 -lvl 8 -x 2260 -y 720 -defaultsOSRD
-preplace port FPGA_MCU_INTR -pg 1 -lvl 8 -x 2260 -y 560 -defaultsOSRD
-preplace port FPGA_MCU_SPI -pg 1 -lvl 0 -x -10 -y 660 -defaultsOSRD
-preplace port FPGA_SPI1 -pg 1 -lvl 8 -x 2260 -y 80 -defaultsOSRD
-preplace port FMC -pg 1 -lvl 0 -x -10 -y 1200 -defaultsOSRD
-preplace port FPGA_RST -pg 1 -lvl 0 -x -10 -y 940 -defaultsOSRD
-preplace port A7_GCLK -pg 1 -lvl 0 -x -10 -y 780 -defaultsOSRD
-preplace port PTP_CLK_OUT -pg 1 -lvl 0 -x -10 -y 1100 -defaultsOSRD
-preplace port PTP_TRG_FPGA -pg 1 -lvl 0 -x -10 -y 1300 -defaultsOSRD
-preplace port AD1_RST -pg 1 -lvl 8 -x 2260 -y 110 -defaultsOSRD
-preplace port CH_SEL_A0 -pg 1 -lvl 8 -x 2260 -y 140 -defaultsOSRD
-preplace port CH_SEL_A1 -pg 1 -lvl 8 -x 2260 -y 170 -defaultsOSRD
-preplace port CH_SEL_A2 -pg 1 -lvl 8 -x 2260 -y 200 -defaultsOSRD
-preplace port EN_TCH_A -pg 1 -lvl 8 -x 2260 -y 230 -defaultsOSRD
-preplace port EN_PCH_A -pg 1 -lvl 8 -x 2260 -y 260 -defaultsOSRD
-preplace port EN_TCH_B -pg 1 -lvl 8 -x 2260 -y 290 -defaultsOSRD
-preplace port EN_PCH_B -pg 1 -lvl 8 -x 2260 -y 320 -defaultsOSRD
-preplace portBus FPGA_MCU_RST -pg 1 -lvl 8 -x 2260 -y 1820 -defaultsOSRD
-preplace portBus FPGA_LED -pg 1 -lvl 8 -x 2260 -y 1420 -defaultsOSRD
-preplace portBus FPGA_RUN -pg 1 -lvl 8 -x 2260 -y 1620 -defaultsOSRD
-preplace portBus FPGA_TEST -pg 1 -lvl 8 -x 2260 -y 1720 -defaultsOSRD
-preplace inst axi_bram_ctrl_0 -pg 1 -lvl 6 -x 1760 -y 420 -defaultsOSRD -pinDir S_AXI left -pinY S_AXI 0L -pinDir BRAM_PORTA right -pinY BRAM_PORTA 0R -pinDir BRAM_PORTB right -pinY BRAM_PORTB 20R -pinDir s_axi_aclk left -pinY s_axi_aclk 20L -pinDir s_axi_aresetn left -pinY s_axi_aresetn 40L
-preplace inst axi_intc -pg 1 -lvl 6 -x 1760 -y 560 -defaultsOSRD -pinDir s_axi left -pinY s_axi 0L -pinDir interrupt right -pinY interrupt 0R -pinDir s_axi_aclk left -pinY s_axi_aclk 20L -pinDir s_axi_aresetn left -pinY s_axi_aresetn 40L -pinBusDir intr left -pinBusY intr 60L
-preplace inst axi_interconnect -pg 1 -lvl 5 -x 1370 -y 260 -swap {0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 100 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 80 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 60 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 40 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 126 121 127 122 128 123 129 124 130 125 131 133 132} -defaultsOSRD -pinDir S00_AXI left -pinY S00_AXI 60L -pinDir S01_AXI left -pinY S01_AXI 180L -pinDir M00_AXI right -pinY M00_AXI 460R -pinDir M01_AXI right -pinY M01_AXI 300R -pinDir M02_AXI right -pinY M02_AXI 160R -pinDir M03_AXI right -pinY M03_AXI 0R -pinDir ACLK left -pinY ACLK 200L -pinDir ARESETN left -pinY ARESETN 320L -pinDir S00_ACLK left -pinY S00_ACLK 220L -pinDir S00_ARESETN left -pinY S00_ARESETN 340L -pinDir S01_ACLK left -pinY S01_ACLK 240L -pinDir S01_ARESETN left -pinY S01_ARESETN 360L -pinDir M00_ACLK left -pinY M00_ACLK 260L -pinDir M00_ARESETN left -pinY M00_ARESETN 380L -pinDir M01_ACLK left -pinY M01_ACLK 280L -pinDir M01_ARESETN left -pinY M01_ARESETN 400L -pinDir M02_ACLK left -pinY M02_ACLK 300L -pinDir M02_ARESETN left -pinY M02_ARESETN 420L -pinDir M03_ACLK left -pinY M03_ACLK 460L -pinDir M03_ARESETN left -pinY M03_ARESETN 440L
-preplace inst axi_quad_spi -pg 1 -lvl 6 -x 1760 -y 720 -swap {0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 42 40 41 39} -defaultsOSRD -pinDir SPI_0 right -pinY SPI_0 0R -pinDir STARTUP_IO right -pinY STARTUP_IO 20R -pinDir AXI_LITE left -pinY AXI_LITE 0L -pinDir ext_spi_clk left -pinY ext_spi_clk 140L -pinDir s_axi_aclk left -pinY s_axi_aclk 100L -pinDir s_axi_aresetn left -pinY s_axi_aresetn 120L -pinDir ip2intc_irpt left -pinY ip2intc_irpt 20L
-preplace inst blk_mem_gen_0 -pg 1 -lvl 7 -x 2040 -y 420 -defaultsOSRD -pinDir BRAM_PORTA left -pinY BRAM_PORTA 0L -pinDir BRAM_PORTB left -pinY BRAM_PORTB 20L -pinDir rsta_busy right -pinY rsta_busy 0R -pinDir rstb_busy right -pinY rstb_busy 20R
-preplace inst clk_wiz_gclk -pg 1 -lvl 1 -x 110 -y 780 -defaultsOSRD -pinDir clk_in1 left -pinY clk_in1 0L -pinDir clk_out1 right -pinY clk_out1 0R -pinDir clk_out2 right -pinY clk_out2 20R -pinDir locked right -pinY locked 100R
-preplace inst jtag_axi -pg 1 -lvl 4 -x 1000 -y 320 -defaultsOSRD -pinDir M_AXI right -pinY M_AXI 0R -pinDir aclk left -pinY aclk 0L -pinDir aresetn left -pinY aresetn 20L
-preplace inst proc_sys_reset_gclk -pg 1 -lvl 2 -x 380 -y 860 -swap {0 4 2 3 1 7 8 9 5 6} -defaultsOSRD -pinDir slowest_sync_clk left -pinY slowest_sync_clk 0L -pinDir ext_reset_in left -pinY ext_reset_in 80L -pinDir aux_reset_in left -pinY aux_reset_in 40L -pinDir mb_debug_sys_rst left -pinY mb_debug_sys_rst 60L -pinDir dcm_locked left -pinY dcm_locked 20L -pinDir mb_reset right -pinY mb_reset 40R -pinBusDir bus_struct_reset right -pinBusY bus_struct_reset 60R -pinBusDir peripheral_reset right -pinBusY peripheral_reset 80R -pinBusDir interconnect_aresetn right -pinBusY interconnect_aresetn 0R -pinBusDir peripheral_aresetn right -pinBusY peripheral_aresetn 20R
-preplace inst c_counter_binary_gclk_led -pg 1 -lvl 5 -x 1370 -y 920 -defaultsOSRD -pinDir CLK left -pinY CLK 0L -pinDir SCLR left -pinY SCLR 20L -pinBusDir Q right -pinBusY Q 20R
-preplace inst clk_wiz_ptp_clk -pg 1 -lvl 3 -x 690 -y 1100 -swap {0 2 1} -defaultsOSRD -pinDir clk_in1 left -pinY clk_in1 0L -pinDir clk_out1 right -pinY clk_out1 20R -pinDir locked right -pinY locked 0R
-preplace inst proc_sys_reset_ptp -pg 1 -lvl 4 -x 1000 -y 1000 -swap {4 0 1 2 3 5 6 9 8 7} -defaultsOSRD -pinDir slowest_sync_clk left -pinY slowest_sync_clk 120L -pinDir ext_reset_in left -pinY ext_reset_in 0L -pinDir aux_reset_in left -pinY aux_reset_in 20L -pinDir mb_debug_sys_rst left -pinY mb_debug_sys_rst 40L -pinDir dcm_locked left -pinY dcm_locked 100L -pinDir mb_reset right -pinY mb_reset 0R -pinBusDir bus_struct_reset right -pinBusY bus_struct_reset 20R -pinBusDir peripheral_reset right -pinBusY peripheral_reset 120R -pinBusDir interconnect_aresetn right -pinBusY interconnect_aresetn 60R -pinBusDir peripheral_aresetn right -pinBusY peripheral_aresetn 40R
-preplace inst c_counter_binary_ptp_led -pg 1 -lvl 5 -x 1370 -y 1400 -swap {1 0 2} -defaultsOSRD -pinDir CLK left -pinY CLK 20L -pinDir SCLR left -pinY SCLR 0L -pinBusDir Q right -pinBusY Q 120R
-preplace inst xlconstant_0 -pg 1 -lvl 7 -x 2040 -y 1820 -defaultsOSRD -pinBusDir dout right -pinBusY dout 0R
-preplace inst xlconstant_run -pg 1 -lvl 7 -x 2040 -y 1620 -defaultsOSRD -pinBusDir dout right -pinBusY dout 0R
-preplace inst xlconstant_test -pg 1 -lvl 7 -x 2040 -y 1720 -defaultsOSRD -pinBusDir dout right -pinBusY dout 0R
-preplace inst xlconcat_leds -pg 1 -lvl 7 -x 2040 -y 1420 -defaultsOSRD -pinBusDir In0 left -pinBusY In0 0L -pinBusDir In1 left -pinBusY In1 100L -pinBusDir dout right -pinBusY dout 0R
-preplace inst c_counter_binary_pps -pg 1 -lvl 7 -x 2040 -y 1300 -defaultsOSRD -pinDir CLK left -pinY CLK 0L -pinDir SCLR left -pinY SCLR 20L -pinBusDir Q right -pinBusY Q 0R
-preplace inst axi_ads868x_0 -pg 1 -lvl 6 -x 1760 -y 60 -swap {0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 38 37 39 40 41 42 43 44 45 46 47} -defaultsOSRD -pinDir m_axis right -pinY m_axis 0R -pinDir s_axi left -pinY s_axi 200L -pinDir spi_1 right -pinY spi_1 20R -pinDir aclk left -pinY aclk 240L -pinDir aresetn left -pinY aresetn 220L -pinDir pps left -pinY pps 260L -pinDir RST_PD_N right -pinY RST_PD_N 50R -pinDir CH_SEL_A0 right -pinY CH_SEL_A0 80R -pinDir CH_SEL_A1 right -pinY CH_SEL_A1 110R -pinDir CH_SEL_A2 right -pinY CH_SEL_A2 140R -pinDir EN_TCH_A right -pinY EN_TCH_A 170R -pinDir EN_PCH_A right -pinY EN_PCH_A 200R -pinDir EN_TCH_B right -pinY EN_TCH_B 230R -pinDir EN_PCH_B right -pinY EN_PCH_B 260R
-preplace inst pps_receiver_1 -pg 1 -lvl 5 -x 1370 -y 1260 -swap {1 0 2 3 4 5} -defaultsOSRD -pinDir clk left -pinY clk 20L -pinDir rst left -pinY rst 0L -pinDir pps_in left -pinY pps_in 40L -pinDir pps_out right -pinY pps_out 0R -pinDir pps_status right -pinY pps_status 20R -pinBusDir pps_phase right -pinBusY pps_phase 40R
-preplace inst xlslice_0 -pg 1 -lvl 6 -x 1760 -y 1380 -defaultsOSRD -pinBusDir Din left -pinBusY Din 0L -pinBusDir Dout right -pinBusY Dout 40R
-preplace inst xlslice_1 -pg 1 -lvl 6 -x 1760 -y 1520 -defaultsOSRD -pinBusDir Din left -pinBusY Din 0L -pinBusDir Dout right -pinBusY Dout 0R
-preplace inst blk_mem_gen_1 -pg 1 -lvl 7 -x 2040 -y 1100 -swap {7 1 2 3 4 5 6 0 8 9 10 11 12 13} -defaultsOSRD -pinDir BRAM_PORTA left -pinY BRAM_PORTA 100L -pinDir BRAM_PORTB left -pinY BRAM_PORTB 0L
-preplace inst fmc_slv_if_0 -pg 1 -lvl 6 -x 1760 -y 1200 -defaultsOSRD -pinDir bram right -pinY bram 0R -pinDir FMC_NWAIT left -pinY FMC_NWAIT 0L
-preplace inst axis_axi_master_1 -pg 1 -lvl 4 -x 1000 -y 440 -defaultsOSRD -pinDir S_AXIS left -pinY S_AXIS 220L -pinDir M_AXIS left -pinY M_AXIS 240L -pinDir M_AXI_LITE right -pinY M_AXI_LITE 0R -pinDir aclk left -pinY aclk 260L -pinDir aresetn left -pinY aresetn 280L
-preplace inst axis_spi_slave2_0 -pg 1 -lvl 3 -x 690 -y 660 -defaultsOSRD -pinDir SPI left -pinY SPI 0L -pinDir axis_rx right -pinY axis_rx 0R -pinDir axis_tx right -pinY axis_tx 20R -pinDir aclk left -pinY aclk 40L -pinDir aresetn left -pinY aresetn 60L
-preplace inst dds_compiler_0 -pg 1 -lvl 5 -x 1370 -y 1040 -swap {0 1 2 4 3} -defaultsOSRD -pinDir M_AXIS_DATA right -pinY M_AXIS_DATA 0R -pinDir aclk left -pinY aclk 20L -pinDir aresetn left -pinY aresetn 0L
-preplace inst dummy_fmc_0 -pg 1 -lvl 6 -x 1760 -y 1040 -swap {0 1 2 3 4 5 6 7 8 9 10 11 13 12 14} -defaultsOSRD -pinDir s_axis left -pinY s_axis 0L -pinDir bram right -pinY bram 60R -pinDir aclk left -pinY aclk 40L -pinDir aresetn left -pinY aresetn 20L -pinDir pps left -pinY pps 60L
-preplace netloc gclk_100m 1 1 5 200 700 570 560 830 260 1210 200 1590
-preplace netloc clk_wiz_locked 1 1 1 N 880
-preplace netloc ARESETN_1 1 2 3 550 580 790J 780 1170
-preplace netloc fpga_rst_s 1 0 4 NJ 940 200 1000 NJ 1000 NJ
-preplace netloc a7_gclk_s 1 0 1 NJ 780
-preplace netloc gclk_20m 1 1 5 N 800 NJ 800 790J 860 NJ 860 NJ
-preplace netloc axi_quad_spi_0_ip2intc_irpt 1 5 1 1630 620n
-preplace netloc pro_rst_50_peripheral_aresetn 1 2 4 590 600 810 800 NJ 800 1610
+preplace port A7_CONFIG_QSPI -pg 1 -lvl 8 -x 2330 -y 740 -defaultsOSRD
+preplace port FPGA_MCU_INTR -pg 1 -lvl 8 -x 2330 -y 560 -defaultsOSRD
+preplace port FPGA_MCU_SPI -pg 1 -lvl 0 -x -30 -y 580 -defaultsOSRD
+preplace port FPGA_SPI1 -pg 1 -lvl 8 -x 2330 -y 80 -defaultsOSRD
+preplace port FMC -pg 1 -lvl 0 -x -30 -y 1300 -defaultsOSRD
+preplace port FPGA_RST -pg 1 -lvl 0 -x -30 -y 840 -defaultsOSRD
+preplace port A7_GCLK -pg 1 -lvl 0 -x -30 -y 660 -defaultsOSRD
+preplace port PTP_CLK_OUT -pg 1 -lvl 0 -x -30 -y 1000 -defaultsOSRD
+preplace port PTP_TRG_FPGA -pg 1 -lvl 0 -x -30 -y 1200 -defaultsOSRD
+preplace port AD1_RST -pg 1 -lvl 8 -x 2330 -y 110 -defaultsOSRD
+preplace port CH_SEL_A0 -pg 1 -lvl 8 -x 2330 -y 140 -defaultsOSRD
+preplace port CH_SEL_A1 -pg 1 -lvl 8 -x 2330 -y 170 -defaultsOSRD
+preplace port CH_SEL_A2 -pg 1 -lvl 8 -x 2330 -y 200 -defaultsOSRD
+preplace port EN_TCH_A -pg 1 -lvl 8 -x 2330 -y 230 -defaultsOSRD
+preplace port EN_PCH_A -pg 1 -lvl 8 -x 2330 -y 260 -defaultsOSRD
+preplace port EN_TCH_B -pg 1 -lvl 8 -x 2330 -y 290 -defaultsOSRD
+preplace port EN_PCH_B -pg 1 -lvl 8 -x 2330 -y 320 -defaultsOSRD
+preplace port FPGA_DAT_FIN -pg 1 -lvl 8 -x 2330 -y 1180 -defaultsOSRD
+preplace portBus FPGA_MCU_RST -pg 1 -lvl 8 -x 2330 -y 1980 -defaultsOSRD
+preplace portBus FPGA_LED -pg 1 -lvl 8 -x 2330 -y 1580 -defaultsOSRD
+preplace portBus FPGA_RUN -pg 1 -lvl 8 -x 2330 -y 1780 -defaultsOSRD
+preplace portBus FPGA_TEST -pg 1 -lvl 8 -x 2330 -y 1880 -defaultsOSRD
+preplace inst axi_bram_ctrl_0 -pg 1 -lvl 6 -x 1860 -y 420 -defaultsOSRD -pinDir S_AXI left -pinY S_AXI 0L -pinDir BRAM_PORTA right -pinY BRAM_PORTA 0R -pinDir BRAM_PORTB right -pinY BRAM_PORTB 20R -pinDir s_axi_aclk left -pinY s_axi_aclk 20L -pinDir s_axi_aresetn left -pinY s_axi_aresetn 40L
+preplace inst axi_intc -pg 1 -lvl 6 -x 1860 -y 560 -defaultsOSRD -pinDir s_axi left -pinY s_axi 0L -pinDir interrupt right -pinY interrupt 0R -pinDir s_axi_aclk left -pinY s_axi_aclk 20L -pinDir s_axi_aresetn left -pinY s_axi_aresetn 40L -pinBusDir intr left -pinBusY intr 60L
+preplace inst axi_interconnect -pg 1 -lvl 5 -x 1430 -y 260 -swap {0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 100 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 80 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 60 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 40 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 126 120 127 121 128 122 129 123 130 124 131 125 133 132} -defaultsOSRD -pinDir S00_AXI left -pinY S00_AXI 40L -pinDir S01_AXI left -pinY S01_AXI 180L -pinDir M00_AXI right -pinY M00_AXI 460R -pinDir M01_AXI right -pinY M01_AXI 300R -pinDir M02_AXI right -pinY M02_AXI 160R -pinDir M03_AXI right -pinY M03_AXI 0R -pinDir ACLK left -pinY ACLK 320L -pinDir ARESETN left -pinY ARESETN 200L -pinDir S00_ACLK left -pinY S00_ACLK 340L -pinDir S00_ARESETN left -pinY S00_ARESETN 220L -pinDir S01_ACLK left -pinY S01_ACLK 360L -pinDir S01_ARESETN left -pinY S01_ARESETN 240L -pinDir M00_ACLK left -pinY M00_ACLK 380L -pinDir M00_ARESETN left -pinY M00_ARESETN 260L -pinDir M01_ACLK left -pinY M01_ACLK 400L -pinDir M01_ARESETN left -pinY M01_ARESETN 280L -pinDir M02_ACLK left -pinY M02_ACLK 420L -pinDir M02_ARESETN left -pinY M02_ARESETN 300L -pinDir M03_ACLK left -pinY M03_ACLK 460L -pinDir M03_ARESETN left -pinY M03_ARESETN 440L
+preplace inst axi_quad_spi -pg 1 -lvl 6 -x 1860 -y 720 -swap {16 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 0 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 42 40 41 39} -defaultsOSRD -pinDir SPI_0 right -pinY SPI_0 20R -pinDir STARTUP_IO right -pinY STARTUP_IO 0R -pinDir AXI_LITE left -pinY AXI_LITE 0L -pinDir ext_spi_clk left -pinY ext_spi_clk 100L -pinDir s_axi_aclk left -pinY s_axi_aclk 40L -pinDir s_axi_aresetn left -pinY s_axi_aresetn 80L -pinDir ip2intc_irpt left -pinY ip2intc_irpt 20L
+preplace inst blk_mem_gen_0 -pg 1 -lvl 7 -x 2184 -y 420 -defaultsOSRD -pinDir BRAM_PORTA left -pinY BRAM_PORTA 0L -pinDir BRAM_PORTB left -pinY BRAM_PORTB 20L -pinDir rsta_busy right -pinY rsta_busy 0R -pinDir rstb_busy right -pinY rstb_busy 20R
+preplace inst clk_wiz_gclk -pg 1 -lvl 1 -x 110 -y 660 -defaultsOSRD -pinDir clk_in1 left -pinY clk_in1 0L -pinDir clk_out1 right -pinY clk_out1 0R -pinDir clk_out2 right -pinY clk_out2 20R -pinDir locked right -pinY locked 120R
+preplace inst jtag_axi -pg 1 -lvl 4 -x 1020 -y 300 -defaultsOSRD -pinDir M_AXI right -pinY M_AXI 0R -pinDir aclk left -pinY aclk 0L -pinDir aresetn left -pinY aresetn 20L
+preplace inst proc_sys_reset_gclk -pg 1 -lvl 2 -x 400 -y 760 -swap {0 4 2 3 1 7 8 9 5 6} -defaultsOSRD -pinDir slowest_sync_clk left -pinY slowest_sync_clk 0L -pinDir ext_reset_in left -pinY ext_reset_in 80L -pinDir aux_reset_in left -pinY aux_reset_in 40L -pinDir mb_debug_sys_rst left -pinY mb_debug_sys_rst 60L -pinDir dcm_locked left -pinY dcm_locked 20L -pinDir mb_reset right -pinY mb_reset 40R -pinBusDir bus_struct_reset right -pinBusY bus_struct_reset 60R -pinBusDir peripheral_reset right -pinBusY peripheral_reset 180R -pinBusDir interconnect_aresetn right -pinBusY interconnect_aresetn 0R -pinBusDir peripheral_aresetn right -pinBusY peripheral_aresetn 20R
+preplace inst c_counter_binary_gclk_led -pg 1 -lvl 5 -x 1430 -y 920 -defaultsOSRD -pinDir CLK left -pinY CLK 0L -pinDir SCLR left -pinY SCLR 20L -pinBusDir Q right -pinBusY Q 20R
+preplace inst clk_wiz_ptp_clk -pg 1 -lvl 3 -x 710 -y 1000 -swap {0 2 1} -defaultsOSRD -pinDir clk_in1 left -pinY clk_in1 0L -pinDir clk_out1 right -pinY clk_out1 20R -pinDir locked right -pinY locked 0R
+preplace inst proc_sys_reset_ptp -pg 1 -lvl 4 -x 1020 -y 780 -swap {4 2 0 1 3 8 6 9 7 5} -defaultsOSRD -pinDir slowest_sync_clk left -pinY slowest_sync_clk 80L -pinDir ext_reset_in left -pinY ext_reset_in 40L -pinDir aux_reset_in left -pinY aux_reset_in 0L -pinDir mb_debug_sys_rst left -pinY mb_debug_sys_rst 20L -pinDir dcm_locked left -pinY dcm_locked 60L -pinDir mb_reset right -pinY mb_reset 60R -pinBusDir bus_struct_reset right -pinBusY bus_struct_reset 20R -pinBusDir peripheral_reset right -pinBusY peripheral_reset 80R -pinBusDir interconnect_aresetn right -pinBusY interconnect_aresetn 40R -pinBusDir peripheral_aresetn right -pinBusY peripheral_aresetn 0R
+preplace inst c_counter_binary_ptp_led -pg 1 -lvl 5 -x 1430 -y 1040 -swap {1 0 2} -defaultsOSRD -pinDir CLK left -pinY CLK 20L -pinDir SCLR left -pinY SCLR 0L -pinBusDir Q right -pinBusY Q 20R
+preplace inst xlconstant_0 -pg 1 -lvl 7 -x 2184 -y 1980 -defaultsOSRD -pinBusDir dout right -pinBusY dout 0R
+preplace inst xlconstant_run -pg 1 -lvl 7 -x 2184 -y 1780 -defaultsOSRD -pinBusDir dout right -pinBusY dout 0R
+preplace inst xlconstant_test -pg 1 -lvl 7 -x 2184 -y 1880 -defaultsOSRD -pinBusDir dout right -pinBusY dout 0R
+preplace inst xlconcat_leds -pg 1 -lvl 7 -x 2184 -y 1580 -defaultsOSRD -pinBusDir In0 left -pinBusY In0 0L -pinBusDir In1 left -pinBusY In1 100L -pinBusDir dout right -pinBusY dout 0R
+preplace inst c_counter_binary_pps -pg 1 -lvl 7 -x 2184 -y 1460 -defaultsOSRD -pinDir CLK left -pinY CLK 0L -pinDir SCLR left -pinY SCLR 20L -pinBusDir Q right -pinBusY Q 0R
+preplace inst axi_ads868x_0 -pg 1 -lvl 6 -x 1860 -y 60 -swap {0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 38 37 39 40 41 42 43 44 45 46 47} -defaultsOSRD -pinDir m_axis right -pinY m_axis 0R -pinDir s_axi left -pinY s_axi 200L -pinDir spi_1 right -pinY spi_1 20R -pinDir aclk left -pinY aclk 240L -pinDir aresetn left -pinY aresetn 220L -pinDir pps left -pinY pps 260L -pinDir RST_PD_N right -pinY RST_PD_N 50R -pinDir CH_SEL_A0 right -pinY CH_SEL_A0 80R -pinDir CH_SEL_A1 right -pinY CH_SEL_A1 110R -pinDir CH_SEL_A2 right -pinY CH_SEL_A2 140R -pinDir EN_TCH_A right -pinY EN_TCH_A 170R -pinDir EN_PCH_A right -pinY EN_PCH_A 200R -pinDir EN_TCH_B right -pinY EN_TCH_B 230R -pinDir EN_PCH_B right -pinY EN_PCH_B 260R
+preplace inst pps_receiver_1 -pg 1 -lvl 5 -x 1430 -y 1160 -swap {1 0 2 3 4 5} -defaultsOSRD -pinDir clk left -pinY clk 20L -pinDir rst left -pinY rst 0L -pinDir pps_in left -pinY pps_in 40L -pinDir pps_out right -pinY pps_out 0R -pinDir pps_status right -pinY pps_status 20R -pinBusDir pps_phase right -pinBusY pps_phase 40R
+preplace inst xlslice_0 -pg 1 -lvl 6 -x 1860 -y 1360 -defaultsOSRD -pinBusDir Din left -pinBusY Din 0L -pinBusDir Dout right -pinBusY Dout 220R
+preplace inst xlslice_1 -pg 1 -lvl 6 -x 1860 -y 1680 -defaultsOSRD -pinBusDir Din left -pinBusY Din 0L -pinBusDir Dout right -pinBusY Dout 0R
+preplace inst blk_mem_gen_1 -pg 1 -lvl 5 -x 1430 -y 1300 -defaultsOSRD -pinDir BRAM_PORTA left -pinY BRAM_PORTA 0L -pinDir BRAM_PORTB right -pinY BRAM_PORTB 0R
+preplace inst axis_axi_master_1 -pg 1 -lvl 4 -x 1020 -y 440 -defaultsOSRD -pinDir S_AXIS left -pinY S_AXIS 140L -pinDir M_AXIS left -pinY M_AXIS 160L -pinDir M_AXI_LITE right -pinY M_AXI_LITE 0R -pinDir aclk left -pinY aclk 180L -pinDir aresetn left -pinY aresetn 200L
+preplace inst axis_spi_slave2_0 -pg 1 -lvl 3 -x 710 -y 580 -defaultsOSRD -pinDir SPI left -pinY SPI 0L -pinDir axis_rx right -pinY axis_rx 0R -pinDir axis_tx right -pinY axis_tx 20R -pinDir aclk left -pinY aclk 20L -pinDir aresetn left -pinY aresetn 40L
+preplace inst dds_compiler_0 -pg 1 -lvl 6 -x 1860 -y 1160 -swap {0 1 2 4 3} -defaultsOSRD -pinDir M_AXIS_DATA right -pinY M_AXIS_DATA 20R -pinDir aclk left -pinY aclk 20L -pinDir aresetn left -pinY aresetn 0L
+preplace inst dummy_fmc_0 -pg 1 -lvl 7 -x 2184 -y 1180 -swap {0 1 2 3 4 5 6 7 8 9 10 11 12 14 13 15} -defaultsOSRD -pinDir s_axis left -pinY s_axis 0L -pinDir bram left -pinY bram 120L -pinDir aclk left -pinY aclk 140L -pinDir aresetn left -pinY aresetn 180L -pinDir pps left -pinY pps 160L -pinDir ts_irq right -pinY ts_irq 0R
+preplace inst fmc_slv_if_0 -pg 1 -lvl 4 -x 1020 -y 1300 -defaultsOSRD -pinDir bram right -pinY bram 0R -pinDir FMC_NWAIT left -pinY FMC_NWAIT 0L
+preplace netloc gclk_100m 1 1 5 220 600 610 500 810 380 1230 200 1690
+preplace netloc clk_wiz_locked 1 1 1 N 780
+preplace netloc ARESETN_1 1 2 3 570J 240 NJ 240 1270
+preplace netloc fpga_rst_s 1 0 4 NJ 840 220 1000 570J 920 810
+preplace netloc a7_gclk_s 1 0 1 NJ 660
+preplace netloc gclk_20m 1 1 5 NJ 680 NJ 680 810J 720 1190J 840 1650
+preplace netloc axi_quad_spi_0_ip2intc_irpt 1 5 1 1730 620n
+preplace netloc pro_rst_50_peripheral_aresetn 1 2 4 590 520 850 700 1250J 780 1710
 preplace netloc pro_rst_50_peripheral_reset 1 2 3 N 940 NJ 940 NJ
-preplace netloc ptp_clk_s 1 0 3 NJ 1100 NJ 1100 NJ
-preplace netloc clk_wiz_ptp_clk_locked 1 3 1 N 1100
-preplace netloc clk_wiz_ptp_clk_clk_out1 1 3 4 810 1180 1230 840 1550 980 1890J
-preplace netloc proc_sys_reset_ptp_peripheral_reset 1 4 1 1190 1120n
-preplace netloc xlconstant_0_dout 1 7 1 NJ 1820
-preplace netloc fpga_led_s 1 7 1 NJ 1420
-preplace netloc fpga_run_s 1 7 1 NJ 1620
-preplace netloc fpga_test_s 1 7 1 NJ 1720
-preplace netloc pps_in_0_1 1 0 5 NJ 1300 NJ 1300 NJ 1300 NJ 1300 NJ
-preplace netloc pps_receiver_0_pps_out 1 5 2 1570 1320 NJ
-preplace netloc M03_ARESETN_1 1 4 2 1190 820 1530
+preplace netloc ptp_clk_s 1 0 3 NJ 1000 200J 1020 610J
+preplace netloc clk_wiz_ptp_clk_locked 1 3 1 830 840n
+preplace netloc clk_wiz_ptp_clk_clk_out1 1 3 4 850 920 1210 820 1590 1080 2050
+preplace netloc proc_sys_reset_ptp_peripheral_reset 1 4 1 1190 860n
+preplace netloc xlconstant_0_dout 1 7 1 NJ 1980
+preplace netloc fpga_led_s 1 7 1 NJ 1580
+preplace netloc fpga_run_s 1 7 1 NJ 1780
+preplace netloc fpga_test_s 1 7 1 NJ 1880
+preplace netloc pps_in_0_1 1 0 5 NJ 1200 NJ 1200 NJ 1200 NJ 1200 NJ
+preplace netloc pps_receiver_0_pps_out 1 5 2 1630 1100 2010
+preplace netloc M03_ARESETN_1 1 4 3 1270 800 1670 1300 1990J
 preplace netloc axi_ads868x_0_RST_PD_N 1 6 2 NJ 110 NJ
 preplace netloc axi_ads868x_0_CH_SEL_A0 1 6 2 NJ 140 NJ
 preplace netloc axi_ads868x_0_CH_SEL_A1 1 6 2 NJ 170 NJ
@@ -79,33 +80,34 @@ preplace netloc axi_ads868x_0_EN_TCH_A 1 6 2 NJ 230 NJ
 preplace netloc axi_ads868x_0_EN_PCH_A 1 6 2 NJ 260 NJ
 preplace netloc axi_ads868x_0_EN_TCH_B 1 6 2 NJ 290 NJ
 preplace netloc axi_ads868x_0_EN_PCH_B 1 6 2 NJ 320 NJ
-preplace netloc c_counter_binary_gclk_led_Q 1 5 1 1510 940n
-preplace netloc xlslice_0_Dout 1 6 1 NJ 1420
-preplace netloc xlslice_1_Dout 1 6 1 NJ 1520
-preplace netloc c_counter_binary_ptp_led_Q 1 5 1 N 1520
-preplace netloc axi_interconnect_0_M00_AXI 1 5 1 N 720
+preplace netloc c_counter_binary_gclk_led_Q 1 5 1 1610 940n
+preplace netloc xlslice_0_Dout 1 6 1 NJ 1580
+preplace netloc xlslice_1_Dout 1 6 1 NJ 1680
+preplace netloc c_counter_binary_ptp_led_Q 1 5 1 1570 1060n
+preplace netloc dummy_fmc_0_ts_irq 1 7 1 NJ 1180
+preplace netloc FMC_NWAIT_0_1 1 0 4 NJ 1300 NJ 1300 NJ 1300 NJ
+preplace netloc axi_quad_spi_0_SPI_0 1 6 2 NJ 740 NJ
 preplace netloc axi_bram_ctrl_0_BRAM_PORTA 1 6 1 N 420
 preplace netloc axi_intc_0_interrupt 1 6 2 NJ 560 NJ
-preplace netloc axi_quad_spi_0_SPI_0 1 6 2 NJ 720 NJ
-preplace netloc axi_ads868x_0_spi_1 1 6 2 NJ 80 NJ
-preplace netloc axis_spi_slave2_0_axis_rx 1 3 1 N 660
-preplace netloc axi_interconnect_0_M01_AXI 1 5 1 N 560
-preplace netloc axis_axi_master_1_M_AXIS 1 3 1 N 680
-preplace netloc fmc_slv_if_0_bram 1 6 1 NJ 1200
 preplace netloc axi_interconnect_M02_AXI 1 5 1 N 420
-preplace netloc axis_axi_master_1_M_AXI_LITE 1 4 1 N 440
-preplace netloc dummy_fmc_0_bram 1 6 1 N 1100
+preplace netloc jtag_axi_M_AXI 1 4 1 N 300
+preplace netloc axi_ads868x_0_spi_1 1 6 2 NJ 80 NJ
+preplace netloc dds_compiler_0_M_AXIS_DATA 1 6 1 N 1180
+preplace netloc axi_interconnect_0_M01_AXI 1 5 1 N 560
+preplace netloc dummy_fmc_0_bram 1 5 2 1590J 1280 2030J
+preplace netloc axi_interconnect_0_M00_AXI 1 5 1 N 720
 preplace netloc axi_bram_ctrl_0_BRAM_PORTB 1 6 1 N 440
-preplace netloc SPI_0_1 1 0 3 NJ 660 NJ 660 NJ
-preplace netloc jtag_axi_M_AXI 1 4 1 N 320
+preplace netloc SPI_0_1 1 0 3 NJ 580 NJ 580 NJ
+preplace netloc axis_spi_slave2_0_axis_rx 1 3 1 N 580
 preplace netloc axi_interconnect_M03_AXI 1 5 1 N 260
-preplace netloc dds_compiler_0_M_AXIS_DATA 1 5 1 N 1040
-preplace netloc FMC_NWAIT_0_1 1 0 6 NJ 1200 NJ 1200 NJ 1200 NJ 1200 NJ 1200 NJ
-levelinfo -pg 1 -10 110 380 690 1000 1370 1760 2040 2260
-pagesize -pg 1 -db -bbox -sgen -160 0 2440 1880
+preplace netloc axis_axi_master_1_M_AXIS 1 3 1 N 600
+preplace netloc axis_axi_master_1_M_AXI_LITE 1 4 1 N 440
+preplace netloc fmc_slv_if_0_bram 1 4 1 NJ 1300
+levelinfo -pg 1 -30 110 400 710 1020 1430 1860 2184 2330
+pagesize -pg 1 -db -bbox -sgen -180 0 2510 2040
 ",
-   "Color Coded_ScaleFactor":"1.81517",
-   "Color Coded_TopLeft":"444,570",
+   "Color Coded_ScaleFactor":"3.37288",
+   "Color Coded_TopLeft":"768,1197",
    "Default View_ScaleFactor":"0.528497",
    "Default View_TopLeft":"-125,-97",
    "ExpandedHierarchyInLayout":"",
@@ -155,9 +157,9 @@ pagesize -pg 1 -db -bbox -sgen -130 0 2200 690
 "
 }
 {
-   """"""""""""""""""""""""""""""""""da_axi4_cnt"""""""""""""""""""""""""""""""""":"3",
-   """"""""""""""""""""""""""""""""""da_board_cnt"""""""""""""""""""""""""""""""""":"5",
-   """"""""""""""""""""""""""""""""""da_bram_cntlr_cnt"""""""""""""""""""""""""""""""""":"2",
-   """"""""""""""""""""""""""""""""""da_clkrst_cnt"""""""""""""""""""""""""""""""""":"2",
-   """"""""""""""""""""""""""da_clkrst_cnt"""""""""""""""""""""""""":"1"
+   """"""""""""""""""""""""""""""""""""""da_axi4_cnt"""""""""""""""""""""""""""""""""""""":"3",
+   """"""""""""""""""""""""""""""""""""""da_board_cnt"""""""""""""""""""""""""""""""""""""":"5",
+   """"""""""""""""""""""""""""""""""""""da_bram_cntlr_cnt"""""""""""""""""""""""""""""""""""""":"2",
+   """"""""""""""""""""""""""""""""""""""da_clkrst_cnt"""""""""""""""""""""""""""""""""""""":"2",
+   """"""""""""""""""""""""""""""da_clkrst_cnt"""""""""""""""""""""""""""""":"1"
 }

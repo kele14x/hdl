@@ -1,7 +1,7 @@
 //Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-//Date        : Wed Apr  1 23:43:44 2020
+//Date        : Fri Apr  3 02:16:35 2020
 //Host        : Kele19t running 64-bit major release  (build 9200)
 //Command     : generate_target coreboard1588_bd_wrapper.bd
 //Design      : coreboard1588_bd_wrapper
@@ -33,6 +33,7 @@ module coreboard1588_bd_wrapper
     FMC_rd_clk,
     FMC_wait,
     FMC_wen,
+    FPGA_DAT_FIN,
     FPGA_LED,
     FPGA_MCU_INTR_interrupt,
     FPGA_MCU_RST,
@@ -72,6 +73,7 @@ module coreboard1588_bd_wrapper
   input FMC_rd_clk;
   output FMC_wait;
   input FMC_wen;
+  output FPGA_DAT_FIN;
   output [1:0]FPGA_LED;
   output FPGA_MCU_INTR_interrupt;
   output [0:0]FPGA_MCU_RST;
@@ -190,6 +192,7 @@ module coreboard1588_bd_wrapper
   wire FMC_rd_clk;
   wire FMC_wait;
   wire FMC_wen;
+  wire FPGA_DAT_FIN;
   wire [1:0]FPGA_LED;
   wire FPGA_MCU_INTR_interrupt;
   wire [0:0]FPGA_MCU_RST;
@@ -412,6 +415,7 @@ module coreboard1588_bd_wrapper
         .FMC_rd_clk(FMC_rd_clk),
         .FMC_wait(FMC_wait),
         .FMC_wen(FMC_wen),
+        .FPGA_DAT_FIN(FPGA_DAT_FIN),
         .FPGA_LED(FPGA_LED),
         .FPGA_MCU_INTR_interrupt(FPGA_MCU_INTR_interrupt),
         .FPGA_MCU_RST(FPGA_MCU_RST),
