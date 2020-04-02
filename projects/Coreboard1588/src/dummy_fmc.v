@@ -35,8 +35,9 @@ module dummy_fmc (
     (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 bram DIN" *)
     output reg  [15:0] bram_din     ,
     (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 bram WE" *)
-    output reg  [ 1:0] bram_we
+    output reg  [ 1:0] bram_we      ,
     //
+    output reg         ts_irq
 );
 
 	reg [31:0] counter_s;
@@ -47,7 +48,7 @@ module dummy_fmc (
 		if (!aresetn || pps) begin
 			counter_ns <= 'd0;
 		end else begin
-			counter_ns <= (counter_ns == (1**9-8)) ? 0 : counter_ns + 8;
+			counter_ns <= (counter_ns == (10**9-8)) ? 0 : counter_ns + 8;
 		end
 	end
 
@@ -56,12 +57,12 @@ module dummy_fmc (
 		if (!aresetn) begin
 			counter_s <= 'd0;
 		end else begin
-			counter_s <= (counter_ns == (1**9-8)) ? counter_s + 1 : counter_s;
+			counter_s <= (counter_ns == (10**9-8)) ? counter_s + 1 : counter_s;
 		end
 	end
 
 	localparam C_CLOCK_FREQUECNY = 125000000;
-	localparam C_FS_COUNTER_MAX = C_CLOCK_FREQUECNY-1;
+	localparam C_FS_COUNTER_MAX = C_CLOCK_FREQUECNY/1000-1;
 	localparam C_FS_COUNTER_WIDTH = $clog2(C_FS_COUNTER_MAX);
 
 	// Sample point counter
@@ -73,7 +74,7 @@ module dummy_fmc (
 		if (!aresetn || pps) begin
 			counter_fs <= 1'b0;
 		end else begin
-			counter_fs <= counter_fs + 1;
+			counter_fs <= (counter_fs == C_FS_COUNTER_MAX) ? 0 : counter_fs + 1;
 		end
 	end
 
@@ -186,8 +187,18 @@ module dummy_fmc (
         if (!aresetn) begin
             bram_addr <= 'd0;
         end else begin
-            bram_addr <= (counter_s >= 100 && counter_fs <= 139) ? (counter_fs - 100) : 'd0;
+            bram_addr <= (counter_fs >= 100 && counter_fs <= 139) ? (counter_fs - 100) : 'd0;
         end
     end
+
+    // 
+    always @ (posedge aclk) begin
+        if (!aresetn) begin
+            ts_irq <= 1'b0;
+        end else begin
+            ts_irq <= (counter_fs >= 150 && counter_fs <= 400);
+        end
+    end
+            
 
 endmodule

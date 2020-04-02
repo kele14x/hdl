@@ -19,6 +19,7 @@ module coreboard1588 (
     input  wire       FPGA_RST         ,
     output wire       FPGA_RUN         ,
     output wire       FPGA_MCU_RST     ,
+    output wire       FPGA_DAT_FIN     ,
     //   SPI
     inout  wire       FPGA_MCU_SPI_CLK ,
     inout  wire       FPGA_MCU_SPI_CS  ,
@@ -91,6 +92,7 @@ module coreboard1588 (
         .FPGA_MCU_INTR_interrupt(/* Open */       ),
         .FPGA_MCU_RST           (FPGA_MCU_RST     ),
         .FPGA_RUN               (FPGA_RUN         ),
+        .FPGA_DAT_FIN           (FPGA_DAT_FIN     ),
         // FMC
         //----
         .FMC_addr               (FMC_A            ),

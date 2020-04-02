@@ -20,6 +20,7 @@ set_property PACKAGE_PIN T1 [get_ports {FPGA_TEST[3]}]
 set_property PACKAGE_PIN R18 [get_ports FPGA_RST]
 set_property PACKAGE_PIN P18 [get_ports FPGA_MCU_RST]
 set_property PACKAGE_PIN U18 [get_ports FPGA_RUN]
+set_property PACKAGE_PIN C17 [get_ports FPGA_DAT_FIN]
 
 ## SPI
 set_property PACKAGE_PIN C5 [get_ports FPGA_MCU_SPI_CLK]

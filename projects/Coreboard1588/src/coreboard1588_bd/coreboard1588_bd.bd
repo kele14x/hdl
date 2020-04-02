@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x27BC07A3467ED2F2",
+      "boundary_crc": "0x41086B27951E52CB",
       "device": "xc7a100tcsg324-2L",
       "name": "coreboard1588_bd",
       "synth_flow_mode": "Hierarchical",
@@ -41,11 +41,11 @@
       "xlslice_0": "",
       "xlslice_1": "",
       "blk_mem_gen_1": "",
-      "fmc_slv_if_0": "",
       "axis_axi_master_1": "",
       "axis_spi_slave2_0": "",
       "dds_compiler_0": "",
-      "dummy_fmc_0": ""
+      "dummy_fmc_0": "",
+      "fmc_slv_if_0": ""
     },
     "interface_ports": {
       "A7_CONFIG_QSPI": {
@@ -204,6 +204,20 @@
       },
       "EN_PCH_B": {
         "direction": "O"
+      },
+      "FPGA_DAT_FIN": {
+        "type": "intr",
+        "direction": "O",
+        "parameters": {
+          "PortWidth": {
+            "value": "1",
+            "value_src": "default"
+          },
+          "SENSITIVITY": {
+            "value": "LEVEL_HIGH",
+            "value_src": "const_prop"
+          }
+        }
       }
     },
     "components": {
@@ -709,16 +723,16 @@
               }
             },
             "interface_nets": {
-              "auto_cc_to_m03_couplers": {
-                "interface_ports": [
-                  "M_AXI",
-                  "auto_cc/M_AXI"
-                ]
-              },
               "m03_couplers_to_auto_cc": {
                 "interface_ports": [
                   "S_AXI",
                   "auto_cc/S_AXI"
+                ]
+              },
+              "auto_cc_to_m03_couplers": {
+                "interface_ports": [
+                  "M_AXI",
+                  "auto_cc/M_AXI"
                 ]
               }
             },
@@ -751,16 +765,10 @@
           }
         },
         "interface_nets": {
-          "m03_couplers_to_axi_interconnect": {
+          "axi_interconnect_to_s01_couplers": {
             "interface_ports": [
-              "M03_AXI",
-              "m03_couplers/M_AXI"
-            ]
-          },
-          "xbar_to_m03_couplers": {
-            "interface_ports": [
-              "xbar/M03_AXI",
-              "m03_couplers/S_AXI"
+              "S01_AXI",
+              "s01_couplers/S_AXI"
             ]
           },
           "axi_interconnect_to_s00_couplers": {
@@ -775,40 +783,22 @@
               "xbar/S00_AXI"
             ]
           },
-          "axi_interconnect_to_s01_couplers": {
+          "xbar_to_m03_couplers": {
             "interface_ports": [
-              "S01_AXI",
-              "s01_couplers/S_AXI"
+              "xbar/M03_AXI",
+              "m03_couplers/S_AXI"
             ]
           },
-          "m00_couplers_to_axi_interconnect": {
+          "m03_couplers_to_axi_interconnect": {
             "interface_ports": [
-              "M00_AXI",
-              "m00_couplers/M_AXI"
+              "M03_AXI",
+              "m03_couplers/M_AXI"
             ]
           },
-          "s01_couplers_to_xbar": {
+          "xbar_to_m02_couplers": {
             "interface_ports": [
-              "s01_couplers/M_AXI",
-              "xbar/S01_AXI"
-            ]
-          },
-          "m01_couplers_to_axi_interconnect": {
-            "interface_ports": [
-              "M01_AXI",
-              "m01_couplers/M_AXI"
-            ]
-          },
-          "xbar_to_m00_couplers": {
-            "interface_ports": [
-              "xbar/M00_AXI",
-              "m00_couplers/S_AXI"
-            ]
-          },
-          "xbar_to_m01_couplers": {
-            "interface_ports": [
-              "xbar/M01_AXI",
-              "m01_couplers/S_AXI"
+              "xbar/M02_AXI",
+              "m02_couplers/S_AXI"
             ]
           },
           "m02_couplers_to_axi_interconnect": {
@@ -817,10 +807,34 @@
               "m02_couplers/M_AXI"
             ]
           },
-          "xbar_to_m02_couplers": {
+          "xbar_to_m01_couplers": {
             "interface_ports": [
-              "xbar/M02_AXI",
-              "m02_couplers/S_AXI"
+              "xbar/M01_AXI",
+              "m01_couplers/S_AXI"
+            ]
+          },
+          "s01_couplers_to_xbar": {
+            "interface_ports": [
+              "s01_couplers/M_AXI",
+              "xbar/S01_AXI"
+            ]
+          },
+          "m00_couplers_to_axi_interconnect": {
+            "interface_ports": [
+              "M00_AXI",
+              "m00_couplers/M_AXI"
+            ]
+          },
+          "xbar_to_m00_couplers": {
+            "interface_ports": [
+              "xbar/M00_AXI",
+              "m00_couplers/S_AXI"
+            ]
+          },
+          "m01_couplers_to_axi_interconnect": {
+            "interface_ports": [
+              "M01_AXI",
+              "m01_couplers/M_AXI"
             ]
           }
         },
@@ -1331,10 +1345,6 @@
           }
         }
       },
-      "fmc_slv_if_0": {
-        "vlnv": "jzhl:ip:fmc_slv_if:1.0",
-        "xci_name": "coreboard1588_bd_fmc_slv_if_0_0"
-      },
       "axis_axi_master_1": {
         "vlnv": "jzhl:ip:axis_axi_master:1.1",
         "xci_name": "coreboard1588_bd_axis_axi_master_1_0"
@@ -1558,34 +1568,38 @@
                 "value_src": "default_prop"
               }
             }
+          },
+          "ts_irq": {
+            "type": "intr",
+            "direction": "O",
+            "parameters": {
+              "SENSITIVITY": {
+                "value": "LEVEL_HIGH",
+                "value_src": "constant"
+              }
+            }
           }
         }
+      },
+      "fmc_slv_if_0": {
+        "vlnv": "jzhl:ip:fmc_slv_if:1.1",
+        "xci_name": "coreboard1588_bd_fmc_slv_if_0_0"
       }
     },
     "interface_nets": {
-      "axi_quad_spi_0_SPI_0": {
+      "FMC_NWAIT_0_1": {
         "interface_ports": [
-          "A7_CONFIG_QSPI",
-          "axi_quad_spi/SPI_0"
-        ]
-      },
-      "axi_interconnect_0_M00_AXI": {
-        "interface_ports": [
-          "axi_interconnect/M00_AXI",
-          "axi_quad_spi/AXI_LITE"
-        ]
-      },
-      "axi_ads868x_0_spi_1": {
-        "interface_ports": [
-          "FPGA_SPI1",
-          "axi_ads868x_0/spi_1"
-        ]
-      },
-      "dummy_fmc_0_bram": {
-        "interface_ports": [
-          "dummy_fmc_0/bram",
-          "blk_mem_gen_1/BRAM_PORTB"
-        ]
+          "FMC",
+          "fmc_slv_if_0/FMC_NWAIT"
+        ],
+        "hdl_attributes": {
+          "DEBUG": {
+            "value": "true"
+          },
+          "MARK_DEBUG": {
+            "value": "true"
+          }
+        }
       },
       "axi_intc_0_interrupt": {
         "interface_ports": [
@@ -1593,34 +1607,10 @@
           "axi_intc/interrupt"
         ]
       },
-      "axis_axi_master_1_M_AXI_LITE": {
+      "axi_quad_spi_0_SPI_0": {
         "interface_ports": [
-          "axis_axi_master_1/M_AXI_LITE",
-          "axi_interconnect/S01_AXI"
-        ]
-      },
-      "axi_bram_ctrl_0_BRAM_PORTB": {
-        "interface_ports": [
-          "blk_mem_gen_0/BRAM_PORTB",
-          "axi_bram_ctrl_0/BRAM_PORTB"
-        ]
-      },
-      "axis_axi_master_1_M_AXIS": {
-        "interface_ports": [
-          "axis_axi_master_1/M_AXIS",
-          "axis_spi_slave2_0/axis_tx"
-        ]
-      },
-      "axis_spi_slave2_0_axis_rx": {
-        "interface_ports": [
-          "axis_spi_slave2_0/axis_rx",
-          "axis_axi_master_1/S_AXIS"
-        ]
-      },
-      "axi_interconnect_M02_AXI": {
-        "interface_ports": [
-          "axi_interconnect/M02_AXI",
-          "axi_bram_ctrl_0/S_AXI"
+          "A7_CONFIG_QSPI",
+          "axi_quad_spi/SPI_0"
         ]
       },
       "jtag_axi_M_AXI": {
@@ -1629,10 +1619,16 @@
           "axi_interconnect/S00_AXI"
         ]
       },
-      "FMC_NWAIT_0_1": {
+      "axi_interconnect_M02_AXI": {
         "interface_ports": [
-          "FMC",
-          "fmc_slv_if_0/FMC_NWAIT"
+          "axi_interconnect/M02_AXI",
+          "axi_bram_ctrl_0/S_AXI"
+        ]
+      },
+      "axi_ads868x_0_spi_1": {
+        "interface_ports": [
+          "FPGA_SPI1",
+          "axi_ads868x_0/spi_1"
         ]
       },
       "axi_bram_ctrl_0_BRAM_PORTA": {
@@ -1641,16 +1637,58 @@
           "axi_bram_ctrl_0/BRAM_PORTA"
         ]
       },
-      "axi_interconnect_M03_AXI": {
+      "axis_spi_slave2_0_axis_rx": {
         "interface_ports": [
-          "axi_interconnect/M03_AXI",
-          "axi_ads868x_0/s_axi"
+          "axis_spi_slave2_0/axis_rx",
+          "axis_axi_master_1/S_AXIS"
+        ]
+      },
+      "axis_axi_master_1_M_AXI_LITE": {
+        "interface_ports": [
+          "axis_axi_master_1/M_AXI_LITE",
+          "axi_interconnect/S01_AXI"
+        ]
+      },
+      "SPI_0_1": {
+        "interface_ports": [
+          "FPGA_MCU_SPI",
+          "axis_spi_slave2_0/SPI"
+        ]
+      },
+      "dummy_fmc_0_bram": {
+        "interface_ports": [
+          "dummy_fmc_0/bram",
+          "blk_mem_gen_1/BRAM_PORTB"
+        ]
+      },
+      "axi_interconnect_0_M00_AXI": {
+        "interface_ports": [
+          "axi_interconnect/M00_AXI",
+          "axi_quad_spi/AXI_LITE"
+        ]
+      },
+      "axi_bram_ctrl_0_BRAM_PORTB": {
+        "interface_ports": [
+          "blk_mem_gen_0/BRAM_PORTB",
+          "axi_bram_ctrl_0/BRAM_PORTB"
         ]
       },
       "dds_compiler_0_M_AXIS_DATA": {
         "interface_ports": [
           "dummy_fmc_0/s_axis",
           "dds_compiler_0/M_AXIS_DATA"
+        ]
+      },
+      "axi_interconnect_M03_AXI": {
+        "interface_ports": [
+          "axi_interconnect/M03_AXI",
+          "axi_ads868x_0/s_axi"
+        ]
+      },
+      "axis_axi_master_1_M_AXIS": {
+        "interface_ports": [
+          "axis_axi_master_1/M_AXIS",
+          "axis_spi_slave2_0/axis_tx"
         ]
       },
       "fmc_slv_if_0_bram": {
@@ -1663,12 +1701,6 @@
         "interface_ports": [
           "axi_interconnect/M01_AXI",
           "axi_intc/s_axi"
-        ]
-      },
-      "SPI_0_1": {
-        "interface_ports": [
-          "FPGA_MCU_SPI",
-          "axis_spi_slave2_0/SPI"
         ]
       }
     },
@@ -1755,7 +1787,15 @@
         "ports": [
           "PTP_CLK_OUT",
           "clk_wiz_ptp_clk/clk_in1"
-        ]
+        ],
+        "hdl_attributes": {
+          "DEBUG": {
+            "value": "true"
+          },
+          "MARK_DEBUG": {
+            "value": "true"
+          }
+        }
       },
       "clk_wiz_ptp_clk_locked": {
         "ports": [
@@ -1900,6 +1940,12 @@
         "ports": [
           "c_counter_binary_ptp_led/Q",
           "xlslice_1/Din"
+        ]
+      },
+      "dummy_fmc_0_ts_irq": {
+        "ports": [
+          "dummy_fmc_0/ts_irq",
+          "FPGA_DAT_FIN"
         ]
       }
     },
