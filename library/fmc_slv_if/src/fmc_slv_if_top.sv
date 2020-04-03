@@ -137,7 +137,8 @@ module fmc_slv_if_top #(
         if (FMC_NE) begin
             FMC_NWAIT <= 1'b0;
         end else begin
-            FMC_NWAIT <= (!FMC_NWE || (FMC_NWE && fmc_cnt >= C_FMC_DATLAT));
+            // Compare to write operation, read has 1 clock extra delay
+            FMC_NWAIT <= (!FMC_NWE || (FMC_NWE && fmc_cnt >= C_FMC_DATLAT + 1));
         end
     end
 

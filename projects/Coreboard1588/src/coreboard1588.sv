@@ -98,7 +98,7 @@ module coreboard1588 (
         .FMC_addr               (FMC_A            ),
         .FMC_adv_ldn            (FMC_NL           ),
         .FMC_ben                (FMC_NBL          ),
-        .FMC_cre                (FMC_NE           ),
+        .FMC_ce_n               (FMC_NE           ),
         .FMC_dq_io              (FMC_D            ),
         .FMC_oen                (FMC_NOE          ),
         .FMC_rd_clk             (FMC_CLK          ),
