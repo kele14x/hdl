@@ -1,8 +1,8 @@
 //Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
-//Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-//Date        : Fri Apr  3 02:16:35 2020
-//Host        : Kele19t running 64-bit major release  (build 9200)
+//Tool Version: Vivado v.2019.2 (lin64) Build 2708876 Wed Nov  6 21:39:14 MST 2019
+//Date        : Fri Apr  3 09:41:47 2020
+//Host        : kele20vm running 64-bit Ubuntu 18.04.4 LTS
 //Command     : generate_target coreboard1588_bd_wrapper.bd
 //Design      : coreboard1588_bd_wrapper
 //Purpose     : IP block netlist
@@ -27,7 +27,7 @@ module coreboard1588_bd_wrapper
     FMC_addr,
     FMC_adv_ldn,
     FMC_ben,
-    FMC_cre,
+    FMC_ce_n,
     FMC_dq_io,
     FMC_oen,
     FMC_rd_clk,
@@ -67,7 +67,7 @@ module coreboard1588_bd_wrapper
   input [11:0]FMC_addr;
   input FMC_adv_ldn;
   input [1:0]FMC_ben;
-  input FMC_cre;
+  input FMC_ce_n;
   inout [15:0]FMC_dq_io;
   input FMC_oen;
   input FMC_rd_clk;
@@ -123,7 +123,7 @@ module coreboard1588_bd_wrapper
   wire [11:0]FMC_addr;
   wire FMC_adv_ldn;
   wire [1:0]FMC_ben;
-  wire FMC_cre;
+  wire FMC_ce_n;
   wire [0:0]FMC_dq_i_0;
   wire [1:1]FMC_dq_i_1;
   wire [10:10]FMC_dq_i_10;
@@ -407,7 +407,7 @@ module coreboard1588_bd_wrapper
         .FMC_addr(FMC_addr),
         .FMC_adv_ldn(FMC_adv_ldn),
         .FMC_ben(FMC_ben),
-        .FMC_cre(FMC_cre),
+        .FMC_ce_n(FMC_ce_n),
         .FMC_dq_i({FMC_dq_i_15,FMC_dq_i_14,FMC_dq_i_13,FMC_dq_i_12,FMC_dq_i_11,FMC_dq_i_10,FMC_dq_i_9,FMC_dq_i_8,FMC_dq_i_7,FMC_dq_i_6,FMC_dq_i_5,FMC_dq_i_4,FMC_dq_i_3,FMC_dq_i_2,FMC_dq_i_1,FMC_dq_i_0}),
         .FMC_dq_o({FMC_dq_o_15,FMC_dq_o_14,FMC_dq_o_13,FMC_dq_o_12,FMC_dq_o_11,FMC_dq_o_10,FMC_dq_o_9,FMC_dq_o_8,FMC_dq_o_7,FMC_dq_o_6,FMC_dq_o_5,FMC_dq_o_4,FMC_dq_o_3,FMC_dq_o_2,FMC_dq_o_1,FMC_dq_o_0}),
         .FMC_dq_t({FMC_dq_t_15,FMC_dq_t_14,FMC_dq_t_13,FMC_dq_t_12,FMC_dq_t_11,FMC_dq_t_10,FMC_dq_t_9,FMC_dq_t_8,FMC_dq_t_7,FMC_dq_t_6,FMC_dq_t_5,FMC_dq_t_4,FMC_dq_t_3,FMC_dq_t_2,FMC_dq_t_1,FMC_dq_t_0}),
