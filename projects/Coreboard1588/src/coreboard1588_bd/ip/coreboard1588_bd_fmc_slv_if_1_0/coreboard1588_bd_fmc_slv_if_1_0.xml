@@ -1,10 +1,106 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <spirit:component xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <spirit:vendor>jzhl</spirit:vendor>
+  <spirit:vendor>xilinx.com</spirit:vendor>
   <spirit:library>customized_ip</spirit:library>
-  <spirit:name>coreboard1588_bd_fmc_slv_if_0_0</spirit:name>
+  <spirit:name>coreboard1588_bd_fmc_slv_if_1_0</spirit:name>
   <spirit:version>1.0</spirit:version>
   <spirit:busInterfaces>
+    <spirit:busInterface>
+      <spirit:name>FMC</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="emc" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="emc_rtl" spirit:version="1.0"/>
+      <spirit:slave/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>DQ_I</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>FMC_D_I</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>DQ_O</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>FMC_D_O</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>DQ_T</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>FMC_D_T</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>ADDR</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>FMC_A</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>CE_N</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>FMC_NE</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>OEN</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>FMC_NOE</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>WEN</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>FMC_NWE</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>BEN</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>FMC_NBL</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>ADV_LDN</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>FMC_NL</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>WAIT</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>FMC_NWAIT</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>RD_CLK</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>FMC_CLK</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+    </spirit:busInterface>
     <spirit:busInterface>
       <spirit:name>BRAM</spirit:name>
       <spirit:busType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="bram" spirit:version="1.0"/>
@@ -124,102 +220,6 @@
           </spirit:vendorExtensions>
         </spirit:parameter>
       </spirit:parameters>
-    </spirit:busInterface>
-    <spirit:busInterface>
-      <spirit:name>FMC</spirit:name>
-      <spirit:busType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="emc" spirit:version="1.0"/>
-      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="interface" spirit:name="emc_rtl" spirit:version="1.0"/>
-      <spirit:slave/>
-      <spirit:portMaps>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>WAIT</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>FMC_NWAIT</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>WEN</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>FMC_NWE</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>DQ_T</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>FMC_D_T</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>RD_CLK</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>FMC_CLK</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>DQ_I</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>FMC_D_I</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>OEN</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>FMC_NOE</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>BEN</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>FMC_NBL</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>ADV_LDN</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>FMC_NL</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>DQ_O</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>FMC_D_O</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>CE_N</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>FMC_NE</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-        <spirit:portMap>
-          <spirit:logicalPort>
-            <spirit:name>ADDR</spirit:name>
-          </spirit:logicalPort>
-          <spirit:physicalPort>
-            <spirit:name>FMC_A</spirit:name>
-          </spirit:physicalPort>
-        </spirit:portMap>
-      </spirit:portMaps>
     </spirit:busInterface>
   </spirit:busInterfaces>
   <spirit:model>
@@ -493,7 +493,7 @@
       </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
-  <spirit:description>fmc_slv_if_v1_1</spirit:description>
+  <spirit:description>xilinx.com:module_ref:fmc_slv_if:1.0</spirit:description>
   <spirit:parameters>
     <spirit:parameter>
       <spirit:name>C_ADDR_WIDTH</spirit:name>
@@ -507,98 +507,14 @@
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Component_Name</spirit:name>
-      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Component_Name" spirit:order="1">coreboard1588_bd_fmc_slv_if_0_0</spirit:value>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Component_Name" spirit:order="1">coreboard1588_bd_fmc_slv_if_1_0</spirit:value>
     </spirit:parameter>
   </spirit:parameters>
   <spirit:vendorExtensions>
     <xilinx:coreExtensions>
-      <xilinx:displayName>fmc_slv_if_v1_1</xilinx:displayName>
-      <xilinx:definitionSource>package_project</xilinx:definitionSource>
-      <xilinx:coreRevision>7</xilinx:coreRevision>
-      <xilinx:tags>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@6355970a_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@17f97923_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@588903e8_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@5745fb40_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@51440c01_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@7f0dbaca_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@6480fa8e_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@2019040_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@3d6d0562_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@275f6452_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@412095fc_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@a166e1f_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@2fbc5f2e_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@6be23732_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@31c4fb52_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@6b05b553_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@2e97c50e_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@333238d7_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@839bfe8_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@3ffa0b14_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@20293e5e_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@2d6eb4ee_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@e88d355_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@1c02e0c0_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@5a7751e7_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@56fd2c26_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@6000e925_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@7a7d81df_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@68ee2d32_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@199ad4d4_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@1ec7f046_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@2bce392b_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@47ed0707_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@66e3f131_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@5c2e0bc3_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@6ba23932_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@6a45b0cf_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@4379f6d4_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@3b9168d3_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@f2db426_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@f6ac3b1_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@53282a74_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@69efac20_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@774d7481_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@79c0f5ed_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@6335eeb2_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@5df720e1_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@5d9b00e6_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@547f189d_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@3290a9c1_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@130d8d10_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@39205995_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@77fdd350_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@38dd1dea_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@274c7763_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@3630e1e_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@52bb1a31_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@3396351f_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@5d77581_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@55f662a1_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@76c95af3_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@2ea2059_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@3d5d67c9_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@10d8fb87_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@ec141de_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@145936ba_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@354a8922_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@2b13ad7c_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@6918af69_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@1c37bc23_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@3d64873d_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@d65db70_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@28dc5a82_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@1c4bec62_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@78947ecc_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@6cdac090_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@6f285e00_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@6b92076e_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@365985c2_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@1d53fa23_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@5d3d23b9_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-        <xilinx:tag xilinx:name="ui.data.coregen.dd@12ace9b4_ARCHIVE_LOCATION">/home/kele/Workspace/hdl/library/fmc_slv_if</xilinx:tag>
-      </xilinx:tags>
+      <xilinx:displayName>fmc_slv_if_v1_0</xilinx:displayName>
+      <xilinx:definitionSource>module_ref</xilinx:definitionSource>
+      <xilinx:coreRevision>1</xilinx:coreRevision>
       <xilinx:configElementInfos>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.BRAM.MASTER_TYPE" xilinx:valuePermission="bd_and_user"/>
         <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.BRAM.MEM_ECC" xilinx:valuePermission="bd_and_user"/>
@@ -610,11 +526,6 @@
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2019.2</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="244e6b1b"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="068f3e8e"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="1283e749"/>
-      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="54df3d8c"/>
-      <xilinx:checksum xilinx:scope="parameters" xilinx:value="0aeda1d6"/>
     </xilinx:packagingInfo>
   </spirit:vendorExtensions>
 </spirit:component>
