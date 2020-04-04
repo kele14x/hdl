@@ -74,7 +74,7 @@ module fmc_slv_if_top #(
 
     always_ff @ (posedge FMC_CLK_s or posedge FMC_NE) begin
         if (FMC_NE) begin
-            fmc_cnt <= {8{1'b1}};
+            fmc_cnt <= {8{1'b0}};
         end else begin // Count how many ticks
             fmc_cnt <= fmc_cnt + 1;
         end
@@ -88,8 +88,8 @@ module fmc_slv_if_top #(
         end else if (!FMC_NE && FMC_NWE) begin // Reading
             bram_addr <= bram_addr + 1;
         end else if (!FMC_NE && !FMC_NWE) begin // Writing
-            // Data will be at bus at 4th tick (fmc_cnt shows 2)
-            bram_addr <= (fmc_cnt >= C_FMC_DATLAT) ? bram_addr + 1 : bram_addr;
+            // Data will be at bus at 4th tick (fmc_cnt shows 4)
+            bram_addr <= (fmc_cnt >= C_FMC_DATLAT + 2) ? bram_addr + 1 : bram_addr;
         end
     end
 
@@ -110,14 +110,14 @@ module fmc_slv_if_top #(
         if (FMC_NE) begin
             bram_we <= 'd0;
         end else begin
-            bram_we <= (!FMC_NWE && fmc_cnt >= C_FMC_DATLAT) ? ~FMC_NBL : 'd0;
+            bram_we <= (!FMC_NWE && fmc_cnt >= C_FMC_DATLAT + 1) ? ~FMC_NBL : 'd0;
         end
     end
 
     // BRAM write data
     
     always_ff @ (posedge FMC_CLK_s) begin
-        if (!FMC_NE && !FMC_NWE && fmc_cnt >= C_FMC_DATLAT) begin
+        if (!FMC_NE && !FMC_NWE && fmc_cnt >= C_FMC_DATLAT + 1) begin
             bram_din <= FMC_D_I;
         end
     end
@@ -138,7 +138,7 @@ module fmc_slv_if_top #(
             FMC_NWAIT <= 1'b0;
         end else begin
             // Compare to write operation, read has 1 clock extra delay
-            FMC_NWAIT <= (!FMC_NWE || (FMC_NWE && fmc_cnt >= C_FMC_DATLAT + 1));
+            FMC_NWAIT <= (!FMC_NWE || (FMC_NWE && fmc_cnt >= C_FMC_DATLAT));
         end
     end
 
