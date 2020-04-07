@@ -6,7 +6,7 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module axi_ads868x_top (
+module axi_ads868x_top #(parameter C_ADDR_WIDTH = 10) (
     // AXI4-Lite
     //===========
     input  wire        aclk          ,
@@ -115,7 +115,9 @@ module axi_ads868x_top (
     wire [31:0] stat_spi_rxdata;
     wire        stat_spi_rxvalid;
 
-    axi4l_ipif i_ipif (
+    axi4l_ipif #(
+        .C_ADDR_WIDTH(C_ADDR_WIDTH)
+    ) i_ipif (
         .aclk         (aclk         ),
         .aresetn      (aresetn      ),
         //
@@ -156,7 +158,9 @@ module axi_ads868x_top (
     );
 
 
-    axi_ads868x_regs i_regs (
+    axi_ads868x_regs #(
+        .C_ADDR_WIDTH(C_ADDR_WIDTH-2)
+    ) i_regs (
         .clk             (aclk            ),
         .rst             (!aresetn        ),
         //

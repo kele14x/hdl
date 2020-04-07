@@ -6,7 +6,7 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module axi_ads868x (
+module axi_ads868x #(parameter C_ADDR_WIDTH = 10) (
     // AXI4-Lite
     //===========
     input  wire        aclk          ,
@@ -70,7 +70,9 @@ module axi_ads868x (
     output wire        EN_PCH_B
 );
 
-    axi_ads868x_top inst (
+    axi_ads868x_top #(
+        .C_ADDR_WIDTH(C_ADDR_WIDTH)
+    ) inst (
         //
         .aclk          (aclk          ),
         .aresetn       (aresetn       ),
