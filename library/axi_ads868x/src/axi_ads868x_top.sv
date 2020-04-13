@@ -239,7 +239,7 @@ module axi_ads868x_top #(parameter C_ADDR_WIDTH = 10) (
         .stat_spi_rxvalid(stat_spi_rxvalid)  // Data is valid
     );
 
-    axis_spi_master #(.CLK_RATIO(8)) i_spi (
+    axis_spi_master #(.CLK_RATIO(16)) i_spi (
         //
         .SCK_I           (SCK_I         ),
         .SCK_O           (SCK_O         ),

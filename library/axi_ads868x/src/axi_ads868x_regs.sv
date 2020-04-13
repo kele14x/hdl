@@ -12,34 +12,34 @@ module axi_ads868x_regs #(
 ) (
     // User Ports
     //------------
-    input  var logic                   clk             ,
-    input  var logic                   rst             ,
+    input  var logic                    clk             ,
+    input  var logic                    rst             ,
     //
     input  var logic [C_ADDR_WIDTH-1:0] up_wr_addr      ,
-    input  var logic                   up_wr_req       ,
-    input  var logic [            3:0] up_wr_be        ,
-    input  var logic [           31:0] up_wr_data      ,
-    output var logic                   up_wr_ack       ,
+    input  var logic                    up_wr_req       ,
+    input  var logic [             3:0] up_wr_be        ,
+    input  var logic [            31:0] up_wr_data      ,
+    output var logic                    up_wr_ack       ,
     //
     input  var logic [C_ADDR_WIDTH-1:0] up_rd_addr      ,
-    input  var logic                   up_rd_req       ,
-    output var logic [           31:0] up_rd_data      ,
-    output var logic                   up_rd_ack       ,
+    input  var logic                    up_rd_req       ,
+    output var logic [            31:0] up_rd_data      ,
+    output var logic                    up_rd_ack       ,
     // Core Ports
     //------------
-    output var logic                   ctrl_soft_reset ,
-    output var logic                   ctrl_power_down ,
-    output var logic                   ctrl_auto_spi   ,
+    output var logic                    ctrl_soft_reset ,
+    output var logic                    ctrl_power_down ,
+    output var logic                    ctrl_auto_spi   ,
     //
-    output var logic [            2:0] ctrl_ext_mux_sel,
-    output var logic [            3:0] ctrl_ext_mux_en ,
+    output var logic [             2:0] ctrl_ext_mux_sel,
+    output var logic [             3:0] ctrl_ext_mux_en ,
     //
-    output var logic [            1:0] ctrl_spi_txbyte ,
-    output var logic [           31:0] ctrl_spi_txdata ,
-    output var logic                   ctrl_spi_txvalid,
+    output var logic [             1:0] ctrl_spi_txbyte ,
+    output var logic [            31:0] ctrl_spi_txdata ,
+    output var logic                    ctrl_spi_txvalid,
     //
-    input  var logic [           31:0] stat_spi_rxdata ,
-    input  var logic                   stat_spi_rxvalid
+    input  var logic [            31:0] stat_spi_rxdata ,
+    input  var logic                    stat_spi_rxvalid
 );
 
     // Write
@@ -66,7 +66,7 @@ module axi_ads868x_regs #(
     // ctrl_auto_spi on reg[0] on address = 2
     always_ff @ (posedge clk) begin
         if (rst) begin
-            ctrl_auto_spi <= 'd0;
+            ctrl_auto_spi <= 'd1;
         end else if (up_wr_req && up_wr_addr == 'd2 && up_wr_be[0]) begin
             ctrl_auto_spi <= up_wr_data[0];
         end
