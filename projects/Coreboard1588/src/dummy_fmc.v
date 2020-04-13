@@ -12,7 +12,7 @@ module dummy_fmc (
     input  wire        aresetn      ,
     //
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis TDATA" *)
-    input  wire [15:0] s_axis_tdata ,
+    input  wire [55:0] s_axis_tdata ,
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis TVALID" *)
     input  wire        s_axis_tvalid,
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 s_axis TREADY" *)
@@ -65,18 +65,6 @@ module dummy_fmc (
 	localparam C_FS_COUNTER_MAX = C_CLOCK_FREQUECNY/1000-1;
 	localparam C_FS_COUNTER_WIDTH = $clog2(C_FS_COUNTER_MAX);
 
-	// Sample point counter
-	// which should be fixed to 1 kHz
-
-	reg [C_FS_COUNTER_WIDTH-1:0] counter_fs;
-
-	always @ (posedge aclk) begin
-		if (!aresetn || pps) begin
-			counter_fs <= 1'b0;
-		end else begin
-			counter_fs <= (counter_fs == C_FS_COUNTER_MAX) ? 0 : counter_fs + 1;
-		end
-	end
 
 	// Write frame to bram
 	// -------------------
@@ -94,13 +82,21 @@ module dummy_fmc (
 
     reg [31:0] counter_s_temp;
     reg [31:0] counter_ns_temp;
-
+    reg ads868x_ts_dv, ads868x_ts_dv_d, ads868x_ts_dv_dd, ads868x_ts_dv_d3;
+    
     // Move second & nano second counter to temp register
     always @ (posedge aclk) begin
-        if (counter_fs == 99) begin
-            counter_s_temp <= counter_s;
+        if (s_axis_tvalid && s_axis_tdata[23:16] == 8'h3F) begin
+            counter_s_temp  <= counter_s;
             counter_ns_temp <= counter_ns;
         end
+    end
+
+    always @ (posedge aclk) begin
+        ads868x_ts_dv    <= (s_axis_tvalid && s_axis_tdata[23:16] == 8'h3F);
+        ads868x_ts_dv_d  <= ads868x_ts_dv;
+        ads868x_ts_dv_dd <= ads868x_ts_dv_d;
+        ads868x_ts_dv_d3 <= ads868x_ts_dv_dd;
     end
 
     // BRAM clock
@@ -114,53 +110,19 @@ module dummy_fmc (
         if (!aresetn) begin
             bram_din <= 'd0;
         end else begin
-            case (counter_fs)
-                100     : bram_din <= counter_s_temp[31:16];
-                101     : bram_din <= counter_s_temp[15: 0];
-                102     : bram_din <= counter_ns_temp[31:16];
-                103     : bram_din <= counter_ns_temp[15: 0];
-                // TCH 0 ~ 15
-                104     : bram_din <= s_axis_tdata;
-                105     : bram_din <= s_axis_tdata;
-                106     : bram_din <= s_axis_tdata;
-                107     : bram_din <= s_axis_tdata;
-                108     : bram_din <= s_axis_tdata;
-                109     : bram_din <= s_axis_tdata;
-                110     : bram_din <= s_axis_tdata;
-                111     : bram_din <= s_axis_tdata;
-                112     : bram_din <= s_axis_tdata;
-                113     : bram_din <= s_axis_tdata;
-                114     : bram_din <= s_axis_tdata;
-                115     : bram_din <= s_axis_tdata;
-                116     : bram_din <= s_axis_tdata;
-                117     : bram_din <= s_axis_tdata;
-                118     : bram_din <= s_axis_tdata;
-                119     : bram_din <= s_axis_tdata;
-                // PCH 0 ~ 15
-                120     : bram_din <= s_axis_tdata;
-                121     : bram_din <= s_axis_tdata;
-                122     : bram_din <= s_axis_tdata;
-                123     : bram_din <= s_axis_tdata;
-                124     : bram_din <= s_axis_tdata;
-                125     : bram_din <= s_axis_tdata;
-                126     : bram_din <= s_axis_tdata;
-                127     : bram_din <= s_axis_tdata;
-                128     : bram_din <= s_axis_tdata;
-                129     : bram_din <= s_axis_tdata;
-                130     : bram_din <= s_axis_tdata;
-                131     : bram_din <= s_axis_tdata;
-                132     : bram_din <= s_axis_tdata;
-                133     : bram_din <= s_axis_tdata;
-                134     : bram_din <= s_axis_tdata;
-                135     : bram_din <= s_axis_tdata;
-                //
-                136     : bram_din <= s_axis_tdata;
-                137     : bram_din <= s_axis_tdata;
-                138     : bram_din <= s_axis_tdata;
-                139     : bram_din <= s_axis_tdata;
-                //
-                default : bram_din <= 'd0;
-            endcase // counter_fs
+            if (ads868x_ts_dv) begin
+                bram_din <= counter_s_temp[31:16];
+            end else if (ads868x_ts_dv_d) begin
+                bram_din <= counter_s_temp[15: 0];
+            end else if (ads868x_ts_dv_dd) begin
+                bram_din <= counter_ns_temp[31:16];
+            end else if (ads868x_ts_dv_d3) begin
+                bram_din <= counter_ns_temp[15: 0];
+            end else if (s_axis_tvalid && s_axis_tdata[23:16] <= 31) begin
+                bram_din <= s_axis_tdata[15:0];
+            end else begin
+                bram_din <= 'd0;
+            end
         end
     end
 
@@ -169,7 +131,8 @@ module dummy_fmc (
         if (!aresetn) begin
             bram_en <= 1'b0;
         end else begin
-            bram_en <= (counter_fs >= 100 && counter_fs <= 139);
+            bram_en <= ads868x_ts_dv || ads868x_ts_dv_d || ads868x_ts_dv_dd || 
+                ads868x_ts_dv_d3 || s_axis_tvalid && s_axis_tdata[23:16] <= 31;
         end
     end
 
@@ -178,7 +141,8 @@ module dummy_fmc (
         if (!aresetn) begin
             bram_we <= 2'b00;
         end else begin
-            bram_we <= (counter_fs >= 100 && counter_fs <= 139) ? 2'b11 : 2'b00;
+            bram_we <= (ads868x_ts_dv || ads868x_ts_dv_d || ads868x_ts_dv_dd || 
+                ads868x_ts_dv_d3 || s_axis_tvalid && s_axis_tdata[23:16] <= 31) ? 2'b11 : 2'b00;
         end
     end
 
@@ -187,8 +151,29 @@ module dummy_fmc (
         if (!aresetn) begin
             bram_addr <= 'd0;
         end else begin
-            bram_addr <= (counter_fs >= 100 && counter_fs <= 139) ? (counter_fs - 100) : 'd0;
+            bram_addr <= 
+                ads868x_ts_dv     ? 0 : 
+                ads868x_ts_dv_d   ? 1 : 
+                ads868x_ts_dv_dd  ? 2 : 
+                ads868x_ts_dv_d3  ? 3 : 
+                s_axis_tvalid && s_axis_tdata[23:16] <= 31 ? s_axis_tdata[23:16] + 4 :
+                0;
         end
+    end
+
+    //
+    reg [8:0] ts_irq_ext;
+    
+    always @ (posedge aclk) begin
+        if (!aresetn) begin
+            ts_irq_ext <= 'd0;
+        end else begin
+            if (s_axis_tvalid && s_axis_tdata[23:16] == 31) begin
+                ts_irq_ext <= 'd1;
+            end else if (|ts_irq_ext) begin
+                ts_irq_ext <= ts_irq_ext + 1;
+            end 
+        end 
     end
 
     // 
@@ -196,7 +181,7 @@ module dummy_fmc (
         if (!aresetn) begin
             ts_irq <= 1'b0;
         end else begin
-            ts_irq <= (counter_fs >= 150 && counter_fs <= 400);
+            ts_irq <= |ts_irq_ext;
         end
     end
             
