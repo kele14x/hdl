@@ -116,14 +116,14 @@ module axi_ads868x_ctrl #(
     localparam C_TS_CNT_MAX = C_CLOCK_FREQUENCY / 1000 - 1;
     localparam C_TS_CNT_WIDTH = $clog2(C_TS_CNT_MAX);
 
-    // For each channel, we will spend 512 clock here. The 32 channels will
-    // cost us 512*32 = 16384 clock ticks. Much smaller than the 125000
+    // For each channel, we will spend 1024 clock here. The 32 channels will
+    // cost us 1024*32 = 32768 clock ticks. Much smaller than the 125000
     // ticks. In fact we will send 33 SPI commands since last command is used
     // to read the 32th channel and no op.
     //
-    // [13:11] A[2:0]
-    // [10: 9] M[1:0]
-    // [ 8: 0] SPI Seq
+    // [14:12] A[2:0]
+    // [11:10] M[1:0]
+    // [ 9: 0] SPI Seq
     reg [C_TS_CNT_WIDTH-1:0] ts_cnt;
 
     // ts_cnt is tick counter runs from 0 to C_TS_CNT_MAX, to generate the sample
@@ -138,7 +138,7 @@ module axi_ads868x_ctrl #(
 
     // PPS counter
     //------------
-    
+
     localparam C_PPS_CNT_MAX = C_CLOCK_FREQUENCY - 1;
     localparam C_PPS_CNT_WIDTH = $clog2(C_PPS_CNT_MAX);
 
@@ -157,7 +157,7 @@ module axi_ads868x_ctrl #(
     // between auto (workign mode) and ctrl mode
 
     reg auto_mode = 0; // 1 = auto, 0 = ctrl
-    
+
     always_ff @ (posedge aclk) begin
         if (ts_cnt == 'd0) begin
             auto_mode <= ctrl_auto_spi;
@@ -300,7 +300,7 @@ module axi_ads868x_ctrl #(
             adc_tdata <= 'd0;
         end else if (rx_valid && !(adc_tvalid && !adc_tready) && auto_mode) begin
             adc_tdata[15:0]  <= rx_buffer[15:0];
-            adc_tdata[23:16] <= ts_cnt[14:9] - 1;
+            adc_tdata[23:16] <= ts_cnt[15:10] - 1;
             adc_tdata[55:24] <= pps_cnt;
         end
     end
@@ -324,15 +324,15 @@ module axi_ads868x_ctrl #(
         reg [15:0] cmd;
         begin
             for (int i = 0; i < 32; i++) begin
-                if (cnt == (i * 64 * 8 + 1)) begin
-                    if      (cnt[10:9] == 0) cmd = ADS868X_CMD_MAN_CH0;
-                    else if (cnt[10:9] == 1) cmd = ADS868X_CMD_MAN_CH1;
-                    else if (cnt[10:9] == 2) cmd = ADS868X_CMD_MAN_CH2;
-                    else                     cmd = ADS868X_CMD_MAN_CH3;
+                if (cnt == (i * 64 * 16 + 1)) begin
+                    if      (cnt[11:10] == 0) cmd = ADS868X_CMD_MAN_CH0;
+                    else if (cnt[11:10] == 1) cmd = ADS868X_CMD_MAN_CH1;
+                    else if (cnt[11:10] == 2) cmd = ADS868X_CMD_MAN_CH2;
+                    else                      cmd = ADS868X_CMD_MAN_CH3;
                     return {1'b1, cmd};
                 end
             end
-            if (cnt == 32 * 64 * 8 + 1) begin
+            if (cnt == 32 * 64 * 16 + 1) begin
                 return {1'b1, ADS868X_CMD_NO_OP};
             end
             return 0;
@@ -342,8 +342,8 @@ module axi_ads868x_ctrl #(
     function [3:0] ext_mux_on_tick(input [16:0] cnt);
         begin
             for (int i = 0; i < 32; i++)
-                if (cnt == (i * 64 * 8 + 16 * 8))
-                    return {1'b1, cnt[13:11]};
+                if (cnt == (i * 64 * 16 + 16 * 16))
+                    return {1'b1, cnt[14:12]};
             return 0;
         end
     endfunction
@@ -408,15 +408,15 @@ module axi_ads868x_ctrl #(
 
     // ADS868x GPIO Control
     //--------------------
-    
+
     reg soft_reset_d, soft_reset_dd;
     reg [3:0] reset_ext = 4'b1111;
-    
+
     always_ff @ (posedge aclk) begin
         soft_reset_d <= ctrl_soft_reset;
         soft_reset_dd <= soft_reset_d;
     end
-    
+
     always_ff @ (posedge aclk) begin
         // Posedge of ctrl_soft_reset
         if ({soft_reset_d, soft_reset_dd} == 2'b10) begin
