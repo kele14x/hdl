@@ -310,7 +310,7 @@ module axi_ads868x_ctrl #(
             adc_tvalid <= 1'b0;
         end else if (rx_valid && auto_mode) begin
             adc_tvalid <= 1'b1;
-        end if (adc_tready) begin
+        end else if (adc_tready) begin
             adc_tvalid <= 1'b0;
         end
     end
