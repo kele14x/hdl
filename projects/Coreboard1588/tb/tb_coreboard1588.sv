@@ -8,40 +8,58 @@ All rights reserved.
 
 module tb_coreboard1588;
 
+    // FPGA Misc
+
+    logic [1:0] FPGA_LED;
+    logic [3:0] FPGA_TEST;
+
     // MCU <-> FPGA
+
     logic FPGA_RST = 0; // !Active low
-    //
-    logic FPGA_MCU_SPI_CLK ;
-    logic FPGA_MCU_SPI_CS  ;
-    logic FPGA_MCU_SPI_MOSI;
-    wire  FPGA_MCU_SPI_MISO;
-    
+    logic FPGA_RUN;
+    logic FPGA_MCU_RST;
+    logic FPGA_DAT_FIN;
+
+    wire FPGA_MCU_SPI_CLK ;
+    wire FPGA_MCU_SPI_CS  ;
+    wire FPGA_MCU_SPI_MOSI;
+    wire FPGA_MCU_SPI_MISO;
+
+    logic [11:0]FMC_A            ;
+    logic       FMC_CLK          ;
+    logic       FMC_NE           ;
+    logic [ 1:0]FMC_NBL          ;
+    logic       FMC_NWAIT        ;
+    logic       FMC_NL           ;
+    logic       FMC_NOE          ;
+    logic       FMC_NWE          ;
+    wire  [15:0]FMC_D            ;
+
     // FPGA GCLK
+
     logic A7_GCLK = 0;
     
     // PHY
+
     logic PTP_CLK_OUT;
-    logic PTP_TRG_FPGA;
+    logic PTP_TRG_FPGA = 0;
     
     // FPGA <-> QSPI
-    wire  A7_CONFIG_FCS_B;
-    wire  A7_CONFIG_DQ0;
-    wire  A7_CONFIG_DQ1;
-    wire  A7_CONFIG_DQ2;
-    wire  A7_CONFIG_DQ3;
+
+    wire       A7_CONFIG_FCS_B;
+    wire [3:0] A7_CONFIG_DQ;
     
     // ADS868x
-    logic FPGA_SPI1_CLK;
-    logic FPGA_SPI1_CS;
-    wire  FPGA_SPI1_MOSI;
-    logic FPGA_SPI1_MISO;
-    //
+
+    wire FPGA_SPI1_CLK;
+    wire FPGA_SPI1_CS;
+    wire FPGA_SPI1_MOSI;
+    wire FPGA_SPI1_MISO;
+
     logic AD1_RST;
-    //
-    logic CH_SEL_A0;
-    logic CH_SEL_A1;
-    logic CH_SEL_A2;
-    //
+
+    logic [2:0] CH_SEL_A;
+
     logic EN_TCH_A;
     logic EN_PCH_A;
     logic EN_TCH_B;
@@ -57,17 +75,30 @@ module tb_coreboard1588;
     // Simulation cases
     //==================
 
-    always begin
-        #10 A7_GCLK = ~A7_GCLK;
-    end
+    sim_clk_gen #(
+        .CLK_FREQ_HZ (25000000),
+        .RST_POLARITY(1       ),
+        .RST_CYCLES  (10      )
+    ) i_A7_GCLK_GEN (
+        .clk(A7_GCLK),
+        .rst(       ) 
+    );
+
+    sim_clk_gen #(
+        .CLK_FREQ_HZ (25000000),
+        .RST_POLARITY(1       ),
+        .RST_CYCLES  (10      )
+    ) i_PTP_CLK_GEN (
+        .clk(PTP_CLK_OUT),
+        .rst(           ) 
+    );
 
     initial begin
-        #5000 FPGA_RST = 1;
-    end
-
-    initial begin
+        FPGA_RST = 0;
+        #1000;
+        FPGA_RST = 1;
         $display("%t: Simulation starts.", $time);
-        #100000;
+        #100000000;
         $finish;
     end
 
