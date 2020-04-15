@@ -70,7 +70,7 @@ module dummy_fmc (
 	// -------------------
 
 	always @ (posedge aclk) begin
-		if (aresetn) begin
+		if (!aresetn) begin
 			s_axis_tready <= 1'b0;
 		end else begin
 			s_axis_tready <= 1'b1;
@@ -86,14 +86,14 @@ module dummy_fmc (
     
     // Move second & nano second counter to temp register
     always @ (posedge aclk) begin
-        if (s_axis_tvalid && s_axis_tdata[23:16] == 8'h3F) begin
+        if (s_axis_tvalid && s_axis_tdata[23:16] == 8'hFF) begin
             counter_s_temp  <= counter_s;
             counter_ns_temp <= counter_ns;
         end
     end
 
     always @ (posedge aclk) begin
-        ads868x_ts_dv    <= (s_axis_tvalid && s_axis_tdata[23:16] == 8'h3F);
+        ads868x_ts_dv    <= (s_axis_tvalid && s_axis_tdata[23:16] == 8'hFF);
         ads868x_ts_dv_d  <= ads868x_ts_dv;
         ads868x_ts_dv_dd <= ads868x_ts_dv_d;
         ads868x_ts_dv_d3 <= ads868x_ts_dv_dd;
