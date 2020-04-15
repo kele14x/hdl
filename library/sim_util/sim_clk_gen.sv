@@ -28,7 +28,9 @@ module sim_clk_gen #(
     // Reset generation
     initial begin
         rst = !RST_POLARITY;
-        repeat(RST_TICKS) @posedge(clk);
+        repeat(RST_CYCLES) begin
+            @(posedge clk);
+        end
         rst <= RST_POLARITY;
     end
 
