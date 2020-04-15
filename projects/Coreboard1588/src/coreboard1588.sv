@@ -110,6 +110,7 @@ module coreboard1588 (
         // PTP
         //====
         .PTP_CLK_OUT            (PTP_CLK_OUT      ),
+        .PTP_TRG_FPGA           (PTP_TRG_FPGA     ),
         // AdS868x
         //========
         .FPGA_SPI1_ss_io        (FPGA_SPI1_CS    ),
