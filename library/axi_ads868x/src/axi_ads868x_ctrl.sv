@@ -279,7 +279,7 @@ module axi_ads868x_ctrl #(
         if (rx_state == S_RXCMD2 && spi_rx_tvalid) begin
             rx_buffer[23:16] <= spi_rx_tdata;
         end
-        if (rx_state == S_RXCMD2 && spi_rx_tvalid) begin
+        if (rx_state == S_RXCMD1 && spi_rx_tvalid) begin
             rx_buffer[15: 8] <= spi_rx_tdata;
         end
         if (rx_state == S_RXCMD0 && spi_rx_tvalid) begin
