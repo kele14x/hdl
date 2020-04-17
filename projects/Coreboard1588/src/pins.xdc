@@ -100,10 +100,13 @@ set_property PACKAGE_PIN D18 [get_ports EN_PCH_A]
 set_property PACKAGE_PIN B14 [get_ports EN_TCH_B]
 set_property PACKAGE_PIN A15 [get_ports EN_PCH_B]
 
-# FPGA Configuration Properties
-set_property CONFIG_VOLTAGE 3.3 [current_design]
-set_property CFGBVS VCCO [current_design]
-set_property CONFIG_MODE SPIx4 [current_design]
-set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
-set_property BITSTREAM.CONFIG.CONFIGRATE 40 [current_design]
+# ADS1247
 
+set_property PACKAGE_PIN B3 [get_ports FPGA_SPI2_CS]
+set_property PACKAGE_PIN B2 [get_ports FPGA_SPI2_CLK]
+set_property PACKAGE_PIN B4 [get_ports FPGA_SPI2_MOSI]
+set_property PACKAGE_PIN C6 [get_ports FPGA_SPI2_MISO]
+
+set_property PACKAGE_PIN A1 [get_ports AD2_DRDY]
+set_property PACKAGE_PIN A5 [get_ports AD2_START]
+set_property PACKAGE_PIN B1 [get_ports AD2_RST]

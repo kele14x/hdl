@@ -60,7 +60,16 @@ module coreboard1588 (
     output wire       EN_TCH_A         ,
     output wire       EN_PCH_A         ,
     output wire       EN_TCH_B         ,
-    output wire       EN_PCH_B
+    output wire       EN_PCH_B         ,
+    // ADS1247
+    inout  wire       FPGA_SPI2_CLK    ,
+    inout  wire       FPGA_SPI2_CS     ,
+    inout  wire       FPGA_SPI2_MOSI   ,
+    inout  wire       FPGA_SPI2_MISO   ,
+    //
+    input  wire       AD2_DRDY         ,
+    output wire       AD2_RST          ,
+    output wire       AD2_START    
 );
 
 
@@ -111,7 +120,7 @@ module coreboard1588 (
         //====
         .PTP_CLK_OUT            (PTP_CLK_OUT      ),
         .PTP_TRG_FPGA           (PTP_TRG_FPGA     ),
-        // AdS868x
+        // ADS868x
         //========
         .FPGA_SPI1_ss_io        (FPGA_SPI1_CS    ),
         .FPGA_SPI1_sck_io       (FPGA_SPI1_CLK   ),
@@ -127,7 +136,17 @@ module coreboard1588 (
         .EN_TCH_A               (EN_TCH_A        ),
         .EN_PCH_A               (EN_PCH_A        ),
         .EN_TCH_B               (EN_TCH_B        ),
-        .EN_PCH_B               (EN_PCH_B        )
+        .EN_PCH_B               (EN_PCH_B        ),
+        // ADS1247
+        //========
+        .FPGA_SPI2_ss_io        (FPGA_SPI2_CS    ),
+        .FPGA_SPI2_sck_io       (FPGA_SPI2_CLK   ),
+        .FPGA_SPI2_io0_io       (FPGA_SPI2_MOSI  ),
+        .FPGA_SPI2_io1_io       (FPGA_SPI2_MISO  ),
+        //
+        .AD2_DRDY               (AD2_DRDY        ),
+        .AD2_START              (AD2_START       ),
+        .AD2_RST                (AD2_RST         )
     );
 
 endmodule
