@@ -201,7 +201,7 @@ module axi_ads124x_top (
         .START            (START            ),
         .DRDY             (DRDY             ),
         //
-        .ctrl_soft_rest   (ctrl_soft_reset  ),
+        .ctrl_soft_reset  (ctrl_soft_reset  ),
         //
         .ctrl_op_mode     (ctrl_op_mode     ),
         //
