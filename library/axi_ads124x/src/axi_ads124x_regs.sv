@@ -72,7 +72,7 @@ module axi_ads124x_regs #(
     // ctrl_ad_reset at address = 3, bit[0]
     always_ff @ (posedge clk) begin
         if (rst) begin
-            ctrl_ad_reset <= 1'b0;
+            ctrl_ad_reset <= 1'b1;
         end else if (up_wr_req && up_wr_addr == 'd3) begin
             ctrl_ad_reset <= up_wr_din[0];
         end
@@ -100,8 +100,14 @@ module axi_ads124x_regs #(
         end
     end
 
-
-    assign up_wr_ack = 1;
+    // It take 1 clock to write response
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            up_wr_ack <= 1'b0;
+        end else begin
+            up_wr_ack <= up_wr_req;
+        end
+    end
 
     // Read
 
@@ -124,7 +130,14 @@ module axi_ads124x_regs #(
         end
     end
 
-    assign up_rd_ack = 1;
+    // It takes 1 clock for read response
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            up_rd_ack <= 1'b0;
+        end else begin
+            up_rd_ack <= up_rd_req;
+        end
+    end
 
 endmodule
 
