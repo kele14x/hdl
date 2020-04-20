@@ -38,23 +38,17 @@ set files [list \
  [file normalize "${origin_dir}/src/coreboard1588_bd/coreboard1588_bd.bd"] \
  [file normalize "${origin_dir}/src/coreboard1588_bd/hdl/coreboard1588_bd_wrapper.v"] \
  [file normalize "${origin_dir}/src/coreboard1588.sv"] \
-
  [file normalize "${repo_dir}/library/fmc_slv_if/src/fmc_slv_if.v"] \
  [file normalize "${repo_dir}/library/fmc_slv_if/src/fmc_slv_if_top.sv"] \
- 
  [file normalize "${repo_dir}/library/axi4l_ipif/src/axi4l_ipif.v"] \
  [file normalize "${repo_dir}/library/axi4l_ipif/src/axi4l_ipif_top.sv"] \
- 
  [file normalize "${repo_dir}/library/axis_spi_master/src/axis_spi_master.v"] \
  [file normalize "${repo_dir}/library/axis_spi_master/src/axis_spi_master_top.sv"] \
-
- 
  [file normalize "${repo_dir}/library/axi_ads868x/src/axi_ads868x.v"] \
  [file normalize "${repo_dir}/library/axi_ads868x/src/axi_ads868x_pkg.sv"] \
  [file normalize "${repo_dir}/library/axi_ads868x/src/axi_ads868x_ctrl.sv"] \
  [file normalize "${repo_dir}/library/axi_ads868x/src/axi_ads868x_regs.sv"] \
  [file normalize "${repo_dir}/library/axi_ads868x/src/axi_ads868x_top.sv"] \
- 
  [file normalize "${repo_dir}/library/axi_ads124x/src/axi_ads124x.v"] \
  [file normalize "${repo_dir}/library/axi_ads124x/src/axi_ads124x_pkg.sv"] \
  [file normalize "${repo_dir}/library/axi_ads124x/src/axi_ads124x_ctrl.sv"] \
