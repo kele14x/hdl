@@ -6,7 +6,9 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module axi_ads124x_top (
+module axi_ads124x_top #(
+    parameter C_ADDR_WIDTH = 10
+)(
     // AXI4-Lite Slave Interface
     //===========================
     input  wire        aclk          ,
@@ -62,8 +64,6 @@ module axi_ads124x_top (
     input  wire        DRDY
 );
 
-
-    localparam C_ADDR_WIDTH = 12;
     localparam C_DATA_WIDTH = 32;
 
     wire [  C_ADDR_WIDTH-3:0] up_wr_addr;
@@ -147,7 +147,9 @@ module axi_ads124x_top (
     );
 
 
-    axi_ads124x_regs i_regs (
+    axi_ads124x_regs #(
+        .C_ADDR_WIDTH(C_ADDR_WIDTH-2)
+    ) i_regs (
         .clk             (aclk            ),
         .rst             (!aresetn        ),
         //
@@ -217,7 +219,7 @@ module axi_ads124x_top (
         .stat_spi_rxvalid (stat_spi_rxvalid )
     );
 
-    axis_spi_master #(.CLK_RATIO(64)) i_axis_spi_master (
+    axis_spi_master #(.CLK_RATIO(128)) i_axis_spi_master (
         // SPI
         //=====
         .SCK_I           (SCK_I           ),
