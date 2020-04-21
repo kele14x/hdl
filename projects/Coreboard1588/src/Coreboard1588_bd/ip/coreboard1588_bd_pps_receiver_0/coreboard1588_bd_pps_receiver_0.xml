@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spirit:component xmlns:xilinx="http://www.xilinx.com" xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <spirit:vendor>jzhl</spirit:vendor>
+  <spirit:library>customized_ip</spirit:library>
+  <spirit:name>coreboard1588_bd_pps_receiver_1_0</spirit:name>
+  <spirit:version>1.0</spirit:version>
+  <spirit:busInterfaces>
+    <spirit:busInterface>
+      <spirit:name>clk</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock_rtl" spirit:version="1.0"/>
+      <spirit:slave/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>CLK</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>clk</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+      <spirit:parameters>
+        <spirit:parameter>
+          <spirit:name>ASSOCIATED_RESET</spirit:name>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.CLK.ASSOCIATED_RESET">rst</spirit:value>
+        </spirit:parameter>
+        <spirit:parameter>
+          <spirit:name>FREQ_HZ</spirit:name>
+          <spirit:value spirit:format="long" spirit:id="BUSIFPARAM_VALUE.CLK.FREQ_HZ">125000000</spirit:value>
+        </spirit:parameter>
+        <spirit:parameter>
+          <spirit:name>ASSOCIATED_BUSIF</spirit:name>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.CLK.ASSOCIATED_BUSIF">pps_in:pps_out:pps_status:pps_phase</spirit:value>
+        </spirit:parameter>
+        <spirit:parameter>
+          <spirit:name>PHASE</spirit:name>
+          <spirit:value spirit:format="float" spirit:resolve="generated" spirit:id="BUSIFPARAM_VALUE.CLK.PHASE">0.0</spirit:value>
+          <spirit:vendorExtensions>
+            <xilinx:parameterInfo>
+              <xilinx:parameterUsage>none</xilinx:parameterUsage>
+            </xilinx:parameterInfo>
+          </spirit:vendorExtensions>
+        </spirit:parameter>
+        <spirit:parameter>
+          <spirit:name>CLK_DOMAIN</spirit:name>
+          <spirit:value spirit:resolve="generated" spirit:id="BUSIFPARAM_VALUE.CLK.CLK_DOMAIN">/clk_wiz_ptp_clk_clk_out1</spirit:value>
+          <spirit:vendorExtensions>
+            <xilinx:parameterInfo>
+              <xilinx:parameterUsage>none</xilinx:parameterUsage>
+            </xilinx:parameterInfo>
+          </spirit:vendorExtensions>
+        </spirit:parameter>
+        <spirit:parameter>
+          <spirit:name>INSERT_VIP</spirit:name>
+          <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="BUSIFPARAM_VALUE.CLK.INSERT_VIP">0</spirit:value>
+          <spirit:vendorExtensions>
+            <xilinx:parameterInfo>
+              <xilinx:parameterUsage>simulation.rtl</xilinx:parameterUsage>
+            </xilinx:parameterInfo>
+          </spirit:vendorExtensions>
+        </spirit:parameter>
+      </spirit:parameters>
+    </spirit:busInterface>
+    <spirit:busInterface>
+      <spirit:name>rst</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="reset" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="reset_rtl" spirit:version="1.0"/>
+      <spirit:slave/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>RST</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>rst</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+      <spirit:parameters>
+        <spirit:parameter>
+          <spirit:name>POLARITY</spirit:name>
+          <spirit:value spirit:id="BUSIFPARAM_VALUE.RST.POLARITY">ACTIVE_HIGH</spirit:value>
+        </spirit:parameter>
+        <spirit:parameter>
+          <spirit:name>INSERT_VIP</spirit:name>
+          <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="BUSIFPARAM_VALUE.RST.INSERT_VIP">0</spirit:value>
+          <spirit:vendorExtensions>
+            <xilinx:parameterInfo>
+              <xilinx:parameterUsage>simulation.rtl</xilinx:parameterUsage>
+            </xilinx:parameterInfo>
+          </spirit:vendorExtensions>
+        </spirit:parameter>
+      </spirit:parameters>
+    </spirit:busInterface>
+    <spirit:busInterface>
+      <spirit:name>pps_in</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="data" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="data_rtl" spirit:version="1.0"/>
+      <spirit:slave/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>DATA</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>pps_in</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+      <spirit:parameters>
+        <spirit:parameter>
+          <spirit:name>LAYERED_METADATA</spirit:name>
+          <spirit:value spirit:resolve="generated" spirit:id="BUSIFPARAM_VALUE.PPS_IN.LAYERED_METADATA">undef</spirit:value>
+          <spirit:vendorExtensions>
+            <xilinx:parameterInfo>
+              <xilinx:parameterUsage>none</xilinx:parameterUsage>
+            </xilinx:parameterInfo>
+          </spirit:vendorExtensions>
+        </spirit:parameter>
+      </spirit:parameters>
+    </spirit:busInterface>
+    <spirit:busInterface>
+      <spirit:name>pps_out</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="data" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="data_rtl" spirit:version="1.0"/>
+      <spirit:master/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>DATA</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>pps_out</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+      <spirit:parameters>
+        <spirit:parameter>
+          <spirit:name>LAYERED_METADATA</spirit:name>
+          <spirit:value spirit:resolve="generated" spirit:id="BUSIFPARAM_VALUE.PPS_OUT.LAYERED_METADATA">undef</spirit:value>
+          <spirit:vendorExtensions>
+            <xilinx:parameterInfo>
+              <xilinx:parameterUsage>none</xilinx:parameterUsage>
+            </xilinx:parameterInfo>
+          </spirit:vendorExtensions>
+        </spirit:parameter>
+      </spirit:parameters>
+    </spirit:busInterface>
+    <spirit:busInterface>
+      <spirit:name>pps_status</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="data" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="data_rtl" spirit:version="1.0"/>
+      <spirit:master/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>DATA</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>pps_status</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+      <spirit:parameters>
+        <spirit:parameter>
+          <spirit:name>LAYERED_METADATA</spirit:name>
+          <spirit:value spirit:resolve="generated" spirit:id="BUSIFPARAM_VALUE.PPS_STATUS.LAYERED_METADATA">undef</spirit:value>
+          <spirit:vendorExtensions>
+            <xilinx:parameterInfo>
+              <xilinx:parameterUsage>none</xilinx:parameterUsage>
+            </xilinx:parameterInfo>
+          </spirit:vendorExtensions>
+        </spirit:parameter>
+      </spirit:parameters>
+    </spirit:busInterface>
+    <spirit:busInterface>
+      <spirit:name>pps_phase</spirit:name>
+      <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="data" spirit:version="1.0"/>
+      <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="data_rtl" spirit:version="1.0"/>
+      <spirit:master/>
+      <spirit:portMaps>
+        <spirit:portMap>
+          <spirit:logicalPort>
+            <spirit:name>DATA</spirit:name>
+          </spirit:logicalPort>
+          <spirit:physicalPort>
+            <spirit:name>pps_phase</spirit:name>
+          </spirit:physicalPort>
+        </spirit:portMap>
+      </spirit:portMaps>
+      <spirit:parameters>
+        <spirit:parameter>
+          <spirit:name>LAYERED_METADATA</spirit:name>
+          <spirit:value spirit:resolve="generated" spirit:id="BUSIFPARAM_VALUE.PPS_PHASE.LAYERED_METADATA">undef</spirit:value>
+          <spirit:vendorExtensions>
+            <xilinx:parameterInfo>
+              <xilinx:parameterUsage>none</xilinx:parameterUsage>
+            </xilinx:parameterInfo>
+          </spirit:vendorExtensions>
+        </spirit:parameter>
+      </spirit:parameters>
+    </spirit:busInterface>
+  </spirit:busInterfaces>
+  <spirit:model>
+    <spirit:ports>
+      <spirit:port>
+        <spirit:name>clk</spirit:name>
+        <spirit:wire>
+          <spirit:direction>in</spirit:direction>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>wire</spirit:typeName>
+              <spirit:viewNameRef>dummy_view</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+      <spirit:port>
+        <spirit:name>rst</spirit:name>
+        <spirit:wire>
+          <spirit:direction>in</spirit:direction>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>wire</spirit:typeName>
+              <spirit:viewNameRef>dummy_view</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+      <spirit:port>
+        <spirit:name>pps_in</spirit:name>
+        <spirit:wire>
+          <spirit:direction>in</spirit:direction>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>wire</spirit:typeName>
+              <spirit:viewNameRef>dummy_view</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+      <spirit:port>
+        <spirit:name>pps_out</spirit:name>
+        <spirit:wire>
+          <spirit:direction>out</spirit:direction>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>wire</spirit:typeName>
+              <spirit:viewNameRef>dummy_view</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+      <spirit:port>
+        <spirit:name>pps_status</spirit:name>
+        <spirit:wire>
+          <spirit:direction>out</spirit:direction>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>wire</spirit:typeName>
+              <spirit:viewNameRef>dummy_view</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+      <spirit:port>
+        <spirit:name>pps_phase</spirit:name>
+        <spirit:wire>
+          <spirit:direction>out</spirit:direction>
+          <spirit:vector>
+            <spirit:left spirit:format="long" spirit:resolve="dependent" spirit:dependency="(spirit:ceil(spirit:log(2,(spirit:decode(id(&apos;MODELPARAM_VALUE.C_CLOCK_FREQUENCY&apos;)) - 1))) - 1)">26</spirit:left>
+            <spirit:right spirit:format="long">0</spirit:right>
+          </spirit:vector>
+          <spirit:wireTypeDefs>
+            <spirit:wireTypeDef>
+              <spirit:typeName>wire</spirit:typeName>
+              <spirit:viewNameRef>dummy_view</spirit:viewNameRef>
+            </spirit:wireTypeDef>
+          </spirit:wireTypeDefs>
+        </spirit:wire>
+      </spirit:port>
+    </spirit:ports>
+    <spirit:modelParameters>
+      <spirit:modelParameter xsi:type="spirit:nameValueTypeType" spirit:dataType="integer">
+        <spirit:name>C_CLOCK_FREQUENCY</spirit:name>
+        <spirit:displayName>C Clock Frequency</spirit:displayName>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.C_CLOCK_FREQUENCY">125000000</spirit:value>
+      </spirit:modelParameter>
+    </spirit:modelParameters>
+  </spirit:model>
+  <spirit:description>pps_receiver_v1_2</spirit:description>
+  <spirit:parameters>
+    <spirit:parameter>
+      <spirit:name>C_CLOCK_FREQUENCY</spirit:name>
+      <spirit:displayName>Clock Frequency</spirit:displayName>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.C_CLOCK_FREQUENCY">125000000</spirit:value>
+    </spirit:parameter>
+    <spirit:parameter>
+      <spirit:name>Component_Name</spirit:name>
+      <spirit:value spirit:resolve="user" spirit:id="PARAM_VALUE.Component_Name" spirit:order="1">coreboard1588_bd_pps_receiver_1_0</spirit:value>
+    </spirit:parameter>
+  </spirit:parameters>
+  <spirit:vendorExtensions>
+    <xilinx:coreExtensions>
+      <xilinx:displayName>pps_receiver_v1_2</xilinx:displayName>
+      <xilinx:definitionSource>package_project</xilinx:definitionSource>
+      <xilinx:coreRevision>10</xilinx:coreRevision>
+      <xilinx:tags>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5492c9a_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@64cf4865_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@f4bc1f8_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@369481bb_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@56ea17f4_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5cf97ec5_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7af2902c_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@28e5d4cf_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@17af88ee_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@32c83e5c_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5cdd78c9_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@333b8220_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5ed8cfb2_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@618eea62_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1af2f277_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6beac87_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@778ce45f_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3805edc3_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@16ced7f_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@570f5e2f_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@77b6d2ff_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@449beeae_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2041bf0f_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@228585e3_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2fa8535f_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1620751f_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@359b96c3_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@294e308e_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@555b6d90_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@756f06c4_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@9a904c3_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@64418ec6_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3be3f68d_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@69be380c_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6e94738c_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@60bb6df0_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5842b129_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@18b3fd03_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6dd84268_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@40556eb_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3788a62e_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@336638d4_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6cbe4b33_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@30f29660_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4c8fe6d3_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2922fa8c_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6b0b69d2_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@624dc192_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@307340fa_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1fa3ba54_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7ae280fc_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@59c5879d_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@53673c4d_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@159039d9_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2dfa15e6_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4a2a8630_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4d5e409f_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@627f3689_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@286a3830_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@7949f8c_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@53d5f559_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@760967_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@40257538_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@ae1e349_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5e9117be_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2d6c06_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@ec727dc_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1b3612e7_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1204dd77_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@500a7640_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@31d53fff_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@64534eab_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6e1d69e1_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3539167d_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@35e99481_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@194a1eff_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@c107a87_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@774b3b8b_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@10ca4c48_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4d45709c_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3a6727c6_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@40bc985_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@15efcf74_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5ca43dcb_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4182d6d4_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5d129b34_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4d784838_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@16751d05_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5e45b20_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@401f6cb8_ARCHIVE_LOCATION">c:/users/kele/workspace/git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@28fb14f_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4f73ad08_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6d38fd3e_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@523942c_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@bb7846f_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4f3f99d4_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@45e624f3_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@31b4fdfe_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5e9dee43_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@30d39187_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@57d7add1_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@29e821ba_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@256f775_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2c5d3c1e_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@5436ac55_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1642c0c8_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@38443403_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@674acaf0_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@396b2f10_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@6e8938f2_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2e9b1769_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@11e4aa81_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@28d939a_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@52e49f95_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@377eacb1_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@b6b7c32_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@20989a89_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@53b66797_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1f96a84c_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3f61f51d_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@52986ad2_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@3dec0181_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@f548d6e_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@60085790_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@1588c50f_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@45dfd432_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@44c3467d_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@2b636eac_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@54c5262e_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@4b537f18_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+        <xilinx:tag xilinx:name="ui.data.coregen.dd@37f215c6_ARCHIVE_LOCATION">/home/kele/Workspace/Git/hdl/library/pps_receiver</xilinx:tag>
+      </xilinx:tags>
+      <xilinx:configElementInfos>
+        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.CLK.ASSOCIATED_BUSIF" xilinx:valuePermission="bd_and_user"/>
+        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.CLK.ASSOCIATED_RESET" xilinx:valuePermission="bd_and_user"/>
+        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.CLK.CLK_DOMAIN" xilinx:valueSource="ip_propagated" xilinx:valuePermission="bd_and_user"/>
+        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.CLK.FREQ_HZ" xilinx:valuePermission="bd_and_user"/>
+        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.CLK.PHASE" xilinx:valueSource="ip_propagated" xilinx:valuePermission="bd_and_user"/>
+        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.PPS_IN.LAYERED_METADATA" xilinx:valuePermission="bd_and_user"/>
+        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.PPS_OUT.LAYERED_METADATA" xilinx:valuePermission="bd_and_user"/>
+        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.PPS_PHASE.LAYERED_METADATA" xilinx:valuePermission="bd_and_user"/>
+        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.PPS_STATUS.LAYERED_METADATA" xilinx:valuePermission="bd_and_user"/>
+        <xilinx:configElementInfo xilinx:referenceId="BUSIFPARAM_VALUE.RST.POLARITY" xilinx:valuePermission="bd_and_user"/>
+      </xilinx:configElementInfos>
+    </xilinx:coreExtensions>
+    <xilinx:packagingInfo>
+      <xilinx:xilinxVersion>2019.2</xilinx:xilinxVersion>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="b9f6490f"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="8ea5ed67"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="3c810a4e"/>
+      <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="441e4a0b"/>
+      <xilinx:checksum xilinx:scope="parameters" xilinx:value="2ff00ebe"/>
+    </xilinx:packagingInfo>
+  </spirit:vendorExtensions>
+</spirit:component>
