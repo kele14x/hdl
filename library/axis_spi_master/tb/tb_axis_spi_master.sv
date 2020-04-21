@@ -23,6 +23,8 @@
 module tb_axis_spi_master ();
 
     parameter CLK_RATIO   = 16;
+    parameter PRE_PERIOD  = 8;
+    parameter POST_PERIOD = 8;
 
     logic SCK_I = 0;
     logic SCK_O = 0;
@@ -90,7 +92,9 @@ module tb_axis_spi_master ();
     end
 
     axis_spi_master #(
-        .CLK_RATIO  (CLK_RATIO  )
+        .CLK_RATIO  (CLK_RATIO  ),
+        .PRE_PERIOD (PRE_PERIOD ),
+        .POST_PERIOD(POST_PERIOD)
     ) UUT ( .* );
 
 endmodule
