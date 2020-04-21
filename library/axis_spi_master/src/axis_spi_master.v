@@ -36,7 +36,11 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module axis_spi_master #(parameter CLK_RATIO   = 8) (
+module axis_spi_master #(
+    parameter CLK_RATIO   = 8, // Number of clock ticks per one SCK period
+    parameter PRE_PERIOD  = 4, // Number of clock ticks after SS goes low and first MISO/MOSI bit
+    parameter POST_PERIOD = 4  // Number of clock ticks after last MISO/MISO bit and before SS goes high
+) (
     // SPI
     //=====
     (* X_INTERFACE_INFO = "xilinx.com:interface:spi:1.0 SPI SS_I" *)
@@ -89,7 +93,11 @@ module axis_spi_master #(parameter CLK_RATIO   = 8) (
     input  wire       m_axis_tready
 );
 
-    axis_spi_master_top #(.CLK_RATIO(CLK_RATIO)) inst (
+    axis_spi_master_top #(
+        .CLK_RATIO  (CLK_RATIO  ),
+        .PRE_PERIOD (PRE_PERIOD ),
+        .POST_PERIOD(POST_PERIOD)
+    ) inst (
         .SS_I         (SS_I         ),
         .SS_O         (SS_O         ),
         .SS_T         (SS_T         ),

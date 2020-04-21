@@ -6,7 +6,11 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module axis_spi_master_top #(parameter CLK_RATIO   = 8) (
+module axis_spi_master_top #(
+    parameter CLK_RATIO   = 8, // Number of clock ticks per one SCK period
+    parameter PRE_PERIOD  = 4, // Number of clock ticks after SS goes low and first MISO/MOSI bit
+    parameter POST_PERIOD = 4  // Number of clock ticks after last MISO/MISO bit and before SS goes high
+)(
     // SPI
     //=====
     input  var logic       SCK_I       ,
@@ -41,9 +45,10 @@ module axis_spi_master_top #(parameter CLK_RATIO   = 8) (
     // Parameter Check
     //------------------
 
-    initial
+    initial begin
         assert (CLK_RATIO / 2 == 0 && CLK_RATIO >= 2)
             else $error("CLK_RATIO must be an positive even number.");
+    end
 
     localparam C_STATE_MAX   = CLK_RATIO / 2 * 17;
 
@@ -55,9 +60,12 @@ module axis_spi_master_top #(parameter CLK_RATIO   = 8) (
 
     var logic SCK, SS, MOSI, MISO;
 
-    var logic [C_STATE_WIDTH-1:0] state, state_next;
+    typedef enum {S_RST, S_IDLE, S_PRE, S_SCK0, S_SCK1, S_LOAD, S_POST} STATE_T;
 
-    var logic s_idle, s_load, s_pre, s_sck1, s_out, s_in, s_rxv;
+    STATE_T state, state_next;
+
+    var logic [C_STATE_WIDTH-1:0] tick_cnt;
+    var logic [3:0] bit_cnt;
 
     var logic [7:0] tx_buffer;
 
@@ -86,34 +94,60 @@ module axis_spi_master_top #(parameter CLK_RATIO   = 8) (
     // `stat_cnt` state machine
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
-            state <= C_STATE_MAX;
+            state <= S_RST;
         end else begin
             state <= state_next;
         end
     end
 
-    assign s_idle = (state == C_STATE_MAX);
-    assign s_load = (state == C_STATE_MAX - 1);
-    assign s_out  = (state % CLK_RATIO == CLK_RATIO / 2) && !s_idle;
-    assign s_pre  = (state < CLK_RATIO / 2);
-    assign s_sck1 = ((state / (CLK_RATIO/2)) % 2) && !s_idle;
-
-    // Sample MISO at state_cnt = m * CLK_RATIO; where m = 1,2,3...8
-    assign s_in  = (state % CLK_RATIO == 0) && (state != 0);
-    // We already sample one byte
-    assign s_rxv = (state == 8 * CLK_RATIO);
-
+    // next state combination
+    // TODO: make S_LOAD at last tick of S_SCK1
     always_comb begin
-        if (s_idle && s_axis_tvalid) begin
-            state_next = 'd0;
-        end else if (s_load && s_axis_tvalid) begin
-            state_next = CLK_RATIO / 2;
-        end else if (s_idle) begin
-            state_next = state;
+        case(state)
+            S_RST   : state_next =                                S_IDLE;
+            S_IDLE  : state_next = !s_axis_tvalid               ? S_IDLE :
+                                   (PRE_PERIOD == 0)            ? S_SCK0 : S_PRE;
+            S_PRE   : state_next = !(tick_cnt == PRE_PERIOD-1)  ? S_PRE  : S_SCK0;
+            S_SCK0  : state_next = !(tick_cnt == CLK_RATIO/2-1) ? S_SCK0 : S_SCK1;
+            S_SCK1  : state_next = !(tick_cnt == CLK_RATIO/2-1) ? S_SCK1 :
+                                   !(bit_cnt == 8)              ? S_SCK0 : S_LOAD;
+            S_LOAD  : state_next = s_axis_tvalid                ? S_SCK0 :
+                                   (POST_PERIOD == 0)           ? S_IDLE : S_POST;
+            S_POST  : state_next = !(tick_cnt == POST_PERIOD-1) ? S_POST : S_IDLE;
+            default : state_next = S_IDLE;
+        endcase // state
+    end
+
+    // tick_cnt
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            tick_cnt <= 0;
+        end else if ((state_next == S_PRE || state_next == S_SCK0 || state_next == S_SCK1 || state_next == S_POST) && state != state_next) begin
+            // When newly switch to S_PRE, S_SCK0, S_SCK1, S_POST
+            tick_cnt <= 0;
+        end else if (state_next == S_PRE || state_next == S_SCK0 || state_next == S_SCK1 || state_next == S_POST) begin
+            // When we stay at S_PRE, S_SCK0, S_SCK1, S_POST
+            tick_cnt <= tick_cnt + 1;
         end else begin
-            state_next = state + 1;
+            tick_cnt <= 0;
         end
     end
+
+    // bit_cnt
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            bit_cnt <= 0;
+        end else if (state_next == S_SCK0 && state != S_SCK0) begin
+            // When newly switch to S_SCK0
+            bit_cnt <= bit_cnt + 1;
+        end else if (state_next == S_SCK0 || state_next == S_SCK1) begin
+            // When stay at S_SCK0, S_SCK1
+            bit_cnt <= bit_cnt;
+        end else begin
+            bit_cnt <= 0;
+        end
+    end
+
 
 
     // TX Interface
@@ -124,14 +158,22 @@ module axis_spi_master_top #(parameter CLK_RATIO   = 8) (
         if (!aresetn) begin
             s_axis_tready <= 1'b0;
         end else begin
-            s_axis_tready <= (state_next == C_STATE_MAX || state_next == C_STATE_MAX - 1);
+            s_axis_tready <= (state_next == S_IDLE || state_next == S_LOAD);
         end
     end
 
     // When there is a valid transfer on tx interface, move the data into tx_data
     always_ff @ (posedge aclk) begin
-        if ((s_idle || s_load) && s_axis_tvalid) begin
+        if (!aresetn) begin
+            tx_buffer <= 0;
+        end else if ((state == S_IDLE || state == S_LOAD) && s_axis_tvalid) begin
             tx_buffer <= s_axis_tdata;
+        end else if (state_next == S_SCK0 && state == S_SCK1) begin
+            tx_buffer <= {tx_buffer[6:0], 1'b0};
+        end else if (state_next == S_SCK0 || state_next == S_SCK1 || state_next == S_LOAD || state_next == S_PRE) begin
+            tx_buffer <= tx_buffer;
+        end else begin
+            tx_buffer <= 0;
         end
     end
 
@@ -139,9 +181,13 @@ module axis_spi_master_top #(parameter CLK_RATIO   = 8) (
     // RX Interface
     //==============
 
+    wire s_rxv;
+
+    assign s_rxv = (state_next == S_SCK1 && state == S_SCK0 && bit_cnt == 8);
 
     always_ff @ (posedge aclk) begin
-        if (s_in) begin
+        if (state_next == S_SCK1 && state == S_SCK0) begin
+            // falling edge of SCK
             rx_buffer <= {rx_buffer[5:0], MISO};
         end
     end
@@ -155,7 +201,7 @@ module axis_spi_master_top #(parameter CLK_RATIO   = 8) (
             m_axis_tvalid <= 1'b0;
         end else begin
             m_axis_tvalid <= m_axis_tvalid;
-        end 
+        end
     end
 
     always_ff @ (posedge aclk) begin
@@ -170,21 +216,12 @@ module axis_spi_master_top #(parameter CLK_RATIO   = 8) (
     // SPI SS & SCK
     //==============
 
-    always_ff @ (posedge aclk) begin
-        SS <= s_idle;
-    end
+    assign SS = !(state == S_PRE || state == S_SCK0 || state == S_SCK0 || 
+        state == S_SCK1 || state == S_LOAD || state == S_POST);
 
-    always_ff @ (posedge aclk) begin
-        SCK <= s_sck1;
-    end
+    assign SCK = (state == S_SCK0);
 
-    always_ff @ (posedge aclk) begin
-        if (s_idle || s_pre) begin
-            MOSI <= 1'b0;
-        end else begin
-            MOSI <= tx_buffer[7 - (state - CLK_RATIO/2)/CLK_RATIO];
-        end
-    end
+    assign MOSI = tx_buffer[7];
 
 endmodule
 
