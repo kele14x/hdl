@@ -68,6 +68,9 @@ set_property "ip_repo_paths" "[file normalize "$repo_dir/library"]" $obj
 # Rebuild user ip_repo's index before adding any source files
 update_ip_catalog -rebuild
 
+# Update compile oerder
+update_compile_order -fileset sources_1
+
 
 # Set 'constrs_1' fileset object
 set obj [get_filesets constrs_1]
@@ -81,6 +84,7 @@ add_files -norecurse -fileset $obj $files
 # Set 'constrs_1' fileset properties
 set obj [get_filesets constrs_1]
 set_property -name "target_constrs_file" -value "[file normalize "$repo_dir/projects/Coreboard1588/src/debug.xdc"]" -objects $obj
+
 
 # Set 'impl_1' implementation run properties
 set_property STEPS.WRITE_BITSTREAM.ARGS.BIN_FILE true [get_runs impl_1]

@@ -79,7 +79,15 @@ proc axi_ads124x_getdata { } {
 	axi_ads124x_spisend 3 0xFFFFFF
 }
 
+proc axi_ads124x_readreg {addr} {
+	set spi_word [expr 0x2000FF | ($addr << 16)]
+	axi_ads124x_spisend 3 $spi_word
+}
 
+proc axi_ads124x_writereg {addr data} {
+	set spi_word [expr 0x400000 | ($addr << 16) | $data]
+	axi_ads124x_spisend 3 $spi_word
+}
 
 
 
