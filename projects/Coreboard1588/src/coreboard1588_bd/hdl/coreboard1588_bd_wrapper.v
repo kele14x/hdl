@@ -1,7 +1,7 @@
 //Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-//Date        : Wed Apr 22 21:58:58 2020
+//Date        : Thu Apr 23 14:23:17 2020
 //Host        : CN-00002823 running 64-bit major release  (build 9200)
 //Command     : generate_target coreboard1588_bd_wrapper.bd
 //Design      : coreboard1588_bd_wrapper
@@ -38,7 +38,7 @@ module coreboard1588_bd_wrapper
     FMC_wen,
     FPGA_DAT_FIN,
     FPGA_LED,
-    FPGA_MCU_INTR_interrupt,
+    FPGA_MCU_INTR,
     FPGA_MCU_RST,
     FPGA_MCU_SPI_io0_io,
     FPGA_MCU_SPI_io1_io,
@@ -85,7 +85,7 @@ module coreboard1588_bd_wrapper
   input FMC_wen;
   output FPGA_DAT_FIN;
   output [1:0]FPGA_LED;
-  output FPGA_MCU_INTR_interrupt;
+  output FPGA_MCU_INTR;
   output [0:0]FPGA_MCU_RST;
   inout FPGA_MCU_SPI_io0_io;
   inout FPGA_MCU_SPI_io1_io;
@@ -211,7 +211,7 @@ module coreboard1588_bd_wrapper
   wire FMC_wen;
   wire FPGA_DAT_FIN;
   wire [1:0]FPGA_LED;
-  wire FPGA_MCU_INTR_interrupt;
+  wire FPGA_MCU_INTR;
   wire [0:0]FPGA_MCU_RST;
   wire FPGA_MCU_SPI_io0_i;
   wire FPGA_MCU_SPI_io0_io;
@@ -473,7 +473,7 @@ module coreboard1588_bd_wrapper
         .FMC_wen(FMC_wen),
         .FPGA_DAT_FIN(FPGA_DAT_FIN),
         .FPGA_LED(FPGA_LED),
-        .FPGA_MCU_INTR_interrupt(FPGA_MCU_INTR_interrupt),
+        .FPGA_MCU_INTR(FPGA_MCU_INTR),
         .FPGA_MCU_RST(FPGA_MCU_RST),
         .FPGA_MCU_SPI_io0_i(FPGA_MCU_SPI_io0_i),
         .FPGA_MCU_SPI_io0_o(FPGA_MCU_SPI_io0_o),

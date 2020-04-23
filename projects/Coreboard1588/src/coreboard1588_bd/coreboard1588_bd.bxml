@@ -2,20 +2,13 @@
 <Root MajorVersion="0" MinorVersion="39">
   <CompositeFile CompositeFileTopName="coreboard1588_bd" CanBeSetAsTop="false" CanDisplayChildGraph="true">
     <Description>Composite Fileset</Description>
-    <Generation Name="SYNTHESIS" State="RESET" Timestamp="1587606658"/>
-    <Generation Name="IMPLEMENTATION" State="RESET" Timestamp="1587606658"/>
-    <Generation Name="SIMULATION" State="RESET" Timestamp="1587606658"/>
-    <Generation Name="HW_HANDOFF" State="RESET" Timestamp="1587606658"/>
+    <Generation Name="SYNTHESIS" State="RESET" Timestamp="1587624209"/>
+    <Generation Name="IMPLEMENTATION" State="RESET" Timestamp="1587624209"/>
+    <Generation Name="SIMULATION" State="RESET" Timestamp="1587624209"/>
+    <Generation Name="HW_HANDOFF" State="RESET" Timestamp="1587624209"/>
     <FileCollection Name="SOURCES" Type="SOURCES">
-      <File Name="ip\coreboard1588_bd_axi_intc_0\coreboard1588_bd_axi_intc_0.xci" Type="IP">
-        <Instance HierarchyPath="axi_intc"/>
-        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
-        <Library Name="xil_defaultlib"/>
-        <UsedIn Val="SYNTHESIS"/>
-        <UsedIn Val="IMPLEMENTATION"/>
-        <UsedIn Val="SIMULATION"/>
-      </File>
       <File Name="ip\coreboard1588_bd_axi_interconnect_0\coreboard1588_bd_axi_interconnect_0.xci" Type="IP">
+        <Instance HierarchyPath="axi_interconnect"/>
         <Properties IsEditable="false" IsVisible="false" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
         <UsedIn Val="SYNTHESIS"/>
@@ -200,6 +193,14 @@
       </File>
       <File Name="ip\coreboard1588_bd_axi_ads124x_0_0\coreboard1588_bd_axi_ads124x_0_0.xci" Type="IP">
         <Instance HierarchyPath="axi_ads124x_0"/>
+        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
+        <Library Name="xil_defaultlib"/>
+        <UsedIn Val="SYNTHESIS"/>
+        <UsedIn Val="IMPLEMENTATION"/>
+        <UsedIn Val="SIMULATION"/>
+      </File>
+      <File Name="ip\coreboard1588_bd_coreboard1588_axi_top_0_0\coreboard1588_bd_coreboard1588_axi_top_0_0.xci" Type="IP">
+        <Instance HierarchyPath="coreboard1588_axi_top_0"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
         <UsedIn Val="SYNTHESIS"/>
