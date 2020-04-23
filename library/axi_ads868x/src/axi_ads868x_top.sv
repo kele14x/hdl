@@ -37,7 +37,7 @@ module axi_ads868x_top #(parameter C_ADDR_WIDTH = 10) (
     input  wire        s_axi_rready  ,
     // Fabric
     //========
-    output wire [55:0] m_axis_tdata  ,
+    output wire [31:0] m_axis_tdata  ,
     output wire        m_axis_tvalid ,
     input  wire        m_axis_tready ,
     //

@@ -65,7 +65,7 @@ module axi_ads868x_ctrl #(
     output reg         spi_rx_tready   ,
     // ADC
     //----
-    output reg  [55:0] adc_tdata       ,
+    output reg  [31:0] adc_tdata       ,
     output reg         adc_tvalid      ,
     input  wire        adc_tready      ,
     // GPIO
@@ -301,7 +301,7 @@ module axi_ads868x_ctrl #(
         end else if (rx_valid && !(adc_tvalid && !adc_tready) && auto_mode) begin
             adc_tdata[15:0]  <= rx_buffer[15:0];
             adc_tdata[23:16] <= ts_cnt[15:10] - 1;
-            adc_tdata[55:24] <= pps_cnt;
+            adc_tdata[31:24] <= 8'b0;
         end
     end
 
