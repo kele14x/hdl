@@ -6,7 +6,7 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
+module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
     input  wire        aclk             ,
     input  wire        aresetn          ,
     // SPI send
@@ -234,6 +234,8 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
 
     AUTO_STATE auto_state, auto_state_next;
 
+    var logic [1:0] auto_current_ch;
+
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             auto_state <= S_AUTO_RST;
@@ -310,6 +312,22 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
 
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
+            auto_current_ch <= 2'b11;
+        end else if (auto_state == S_AUTO_CH0) begin
+            auto_current_ch <= 2'b11;
+        end else if (auto_state == S_AUTO_CH1) begin
+            auto_current_ch <= 2'b11;
+        end else if (auto_state == S_AUTO_WAIT0 && drdy_negedge) begin
+            auto_current_ch <= 2'b00;
+        end else if (auto_state == S_AUTO_WAIT1 && drdy_negedge) begin
+            auto_current_ch <= 2'b01;
+        end else if (!ctrl_op_mode && ctrl_spi_txvalid) begin
+            auto_current_ch <= 2'b11;
+        end
+    end
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
             stat_spi_rxdata <= 'd0;
         end else if (!ctrl_op_mode && ctrl_spi_txvalid) begin
             stat_spi_rxdata <= 'd0;
@@ -337,13 +355,10 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
         if (!aresetn) begin
             adc_axis_tdata <= 'd0;
         end else if (ctrl_op_mode && spi_rx_valid) begin
-            if (auto_state == S_AUTO_CH0) begin
+            if (auto_current_ch == 2'b00) begin
                 adc_axis_tdata <= {8'd00, spi_rx_buffer};
-            end else if (auto_state == S_AUTO_CH1) begin
+            end else if (auto_current_ch == 2'b01) begin
                 adc_axis_tdata <= {8'd01, spi_rx_buffer};
-            end else begin
-                // Invalid data, assume we will not go here
-                adc_axis_tdata <= {8'hFF, spi_rx_buffer};
             end
         end 
     end
@@ -351,7 +366,7 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             adc_axis_tvalid <= 1'b0;
-        end else if (ctrl_op_mode && spi_rx_valid) begin
+        end else if (ctrl_op_mode && spi_rx_valid && auto_current_ch[1] == 1'b0) begin
             adc_axis_tvalid <= 1'b1;
         end else if (adc_axis_tready) begin
             adc_axis_tvalid <= 1'b0;
