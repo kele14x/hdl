@@ -64,7 +64,7 @@ module axi_ads124x (
     // FPGA Fabric
     //=============
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TDATA" *)
-    output wire [55:0] m_axis_tdata  ,
+    output wire [31:0] m_axis_tdata  ,
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TVALID" *)
     output wire        m_axis_tvalid ,
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_AXIS TREADY" *)
