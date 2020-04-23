@@ -10,8 +10,8 @@ module tb_axi_ads124x ();
 
     // AXI4-Lite Slave Interface
     //===========================
-    logic        s_axi_aclk     = 0;
-    logic        s_axi_aresetn  = 0;
+    logic        aclk          = 0;
+    logic        aresetn       = 0;
     //
     logic [31:0] s_axi_awaddr  ;
     logic [ 2:0] s_axi_awprot  ;
@@ -39,8 +39,6 @@ module tb_axi_ads124x ();
 
     // FPGA Fabric
     //=============
-    logic        m_axis_aclk    = 0;
-    logic        m_axis_aresetn = 0;
     //
     logic [31:0] m_axis_tdata  ;
     logic        m_axis_tvalid ;
@@ -66,14 +64,10 @@ module tb_axi_ads124x ();
     logic        START         ;
     logic        DRDY          ;
 
-    always #5 s_axi_aclk = ~s_axi_aclk;
+    always #4 aclk = ~aclk;
 
-    initial #100 s_axi_aresetn = 1;
+    initial #100 aresetn = 1;
      
-    always #4 m_axis_aclk = ~m_axis_aclk;
-
-    initial #100 m_axis_aresetn = 1;
-
     axi_ads124x UUT ( .* );
 
 endmodule
