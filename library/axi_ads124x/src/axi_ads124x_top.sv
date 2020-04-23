@@ -39,7 +39,7 @@ module axi_ads124x_top #(
     input  wire        s_axi_rready  ,
     // FPGA Fabric
     //=============
-    output wire [55:0] m_axis_tdata  ,
+    output wire [31:0] m_axis_tdata  ,
     output wire        m_axis_tvalid ,
     input  wire        m_axis_tready ,
     //
@@ -219,7 +219,10 @@ module axi_ads124x_top #(
         .stat_spi_rxvalid (stat_spi_rxvalid )
     );
 
-    axis_spi_master #(.CLK_RATIO(128)) i_axis_spi_master (
+    axis_spi_master #(
+        .CLK_RATIO  (128),
+        .POST_PERIOD(256)
+    ) i_axis_spi_master (
         // SPI
         //=====
         .SCK_I           (SCK_I           ),

@@ -18,7 +18,7 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
     input  wire        spirx_axis_tvalid,
     output wire        spirx_axis_tready,
     //
-    output reg  [55:0] adc_axis_tdata   ,
+    output reg  [31:0] adc_axis_tdata   ,
     output reg         adc_axis_tvalid  ,
     input  wire        adc_axis_tready  ,
     //
@@ -337,7 +337,14 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000) (
         if (!aresetn) begin
             adc_axis_tdata <= 'd0;
         end else if (ctrl_op_mode && spi_rx_valid) begin
-            adc_axis_tdata <= {counter, spi_rx_buffer};
+            if (auto_state == S_AUTO_CH0) begin
+                adc_axis_tdata <= {8'd00, spi_rx_buffer};
+            end else if (auto_state == S_AUTO_CH1) begin
+                adc_axis_tdata <= {8'd01, spi_rx_buffer};
+            end else begin
+                // Invalid data, assume we will not go here
+                adc_axis_tdata <= {8'hFF, spi_rx_buffer};
+            end
         end 
     end
 
