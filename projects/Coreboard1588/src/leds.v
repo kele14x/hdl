@@ -36,3 +36,5 @@ module leds #(parameter C_CLK_FREQ = 100000000) (
     end
 
 endmodule
+
+`default_nettype wire

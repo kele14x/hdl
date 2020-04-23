@@ -290,3 +290,5 @@ module dummy_fmc (
 
 
 endmodule
+
+`default_nettype wire

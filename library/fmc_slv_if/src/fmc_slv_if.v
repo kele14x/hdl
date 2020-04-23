@@ -71,3 +71,5 @@ module fmc_slv_if #(
     );
 
 endmodule
+
+`default_nettype wire
