@@ -2,20 +2,19 @@
 <Root MajorVersion="0" MinorVersion="39">
   <CompositeFile CompositeFileTopName="coreboard1588_bd" CanBeSetAsTop="false" CanDisplayChildGraph="true">
     <Description>Composite Fileset</Description>
-    <Generation Name="SYNTHESIS" State="RESET" Timestamp="1587624209"/>
-    <Generation Name="IMPLEMENTATION" State="RESET" Timestamp="1587624209"/>
-    <Generation Name="SIMULATION" State="RESET" Timestamp="1587624209"/>
-    <Generation Name="HW_HANDOFF" State="RESET" Timestamp="1587624209"/>
+    <Generation Name="SYNTHESIS" State="RESET" Timestamp="1587656443"/>
+    <Generation Name="IMPLEMENTATION" State="RESET" Timestamp="1587656443"/>
+    <Generation Name="SIMULATION" State="RESET" Timestamp="1587656443"/>
+    <Generation Name="HW_HANDOFF" State="RESET" Timestamp="1587656443"/>
     <FileCollection Name="SOURCES" Type="SOURCES">
-      <File Name="ip\coreboard1588_bd_axi_interconnect_0\coreboard1588_bd_axi_interconnect_0.xci" Type="IP">
-        <Instance HierarchyPath="axi_interconnect"/>
+      <File Name="ip/coreboard1588_bd_axi_interconnect_0/coreboard1588_bd_axi_interconnect_0.xci" Type="IP">
         <Properties IsEditable="false" IsVisible="false" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
         <UsedIn Val="SYNTHESIS"/>
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_xbar_0\coreboard1588_bd_xbar_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_xbar_0/coreboard1588_bd_xbar_0.xci" Type="IP">
         <Instance HierarchyPath="axi_interconnect/xbar"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -23,7 +22,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_axi_quad_spi_0\coreboard1588_bd_axi_quad_spi_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_axi_quad_spi_0/coreboard1588_bd_axi_quad_spi_0.xci" Type="IP">
         <Instance HierarchyPath="axi_quad_spi"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -31,7 +30,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_clk_wiz_gclk_0\coreboard1588_bd_clk_wiz_gclk_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_clk_wiz_gclk_0/coreboard1588_bd_clk_wiz_gclk_0.xci" Type="IP">
         <Instance HierarchyPath="clk_wiz_gclk"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -39,7 +38,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_jtag_axi_0\coreboard1588_bd_jtag_axi_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_jtag_axi_0/coreboard1588_bd_jtag_axi_0.xci" Type="IP">
         <Instance HierarchyPath="jtag_axi"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -47,7 +46,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_proc_sys_reset_gclk_0\coreboard1588_bd_proc_sys_reset_gclk_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_proc_sys_reset_gclk_0/coreboard1588_bd_proc_sys_reset_gclk_0.xci" Type="IP">
         <Instance HierarchyPath="proc_sys_reset_gclk"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -55,7 +54,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_clk_wiz_ptp_clk_0\coreboard1588_bd_clk_wiz_ptp_clk_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_clk_wiz_ptp_clk_0/coreboard1588_bd_clk_wiz_ptp_clk_0.xci" Type="IP">
         <Instance HierarchyPath="clk_wiz_ptp_clk"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -63,7 +62,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_proc_sys_reset_ptp_0\coreboard1588_bd_proc_sys_reset_ptp_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_proc_sys_reset_ptp_0/coreboard1588_bd_proc_sys_reset_ptp_0.xci" Type="IP">
         <Instance HierarchyPath="proc_sys_reset_ptp"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -71,7 +70,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_xlconstant_run_0\coreboard1588_bd_xlconstant_run_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_xlconstant_run_0/coreboard1588_bd_xlconstant_run_0.xci" Type="IP">
         <Instance HierarchyPath="xlconstant_run"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -79,7 +78,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_xlconstant_test_0\coreboard1588_bd_xlconstant_test_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_xlconstant_test_0/coreboard1588_bd_xlconstant_test_0.xci" Type="IP">
         <Instance HierarchyPath="xlconstant_test"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -87,7 +86,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_xlconcat_leds_0\coreboard1588_bd_xlconcat_leds_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_xlconcat_leds_0/coreboard1588_bd_xlconcat_leds_0.xci" Type="IP">
         <Instance HierarchyPath="xlconcat_leds"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -95,7 +94,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_axi_bram_ctrl_0_0\coreboard1588_bd_axi_bram_ctrl_0_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_axi_bram_ctrl_0_0/coreboard1588_bd_axi_bram_ctrl_0_0.xci" Type="IP">
         <Instance HierarchyPath="axi_bram_ctrl_0"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -103,7 +102,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_blk_mem_gen_0_0\coreboard1588_bd_blk_mem_gen_0_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_blk_mem_gen_0_0/coreboard1588_bd_blk_mem_gen_0_0.xci" Type="IP">
         <Instance HierarchyPath="blk_mem_gen_0"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -111,7 +110,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_xlconstant_0_0\coreboard1588_bd_xlconstant_0_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_xlconstant_0_0/coreboard1588_bd_xlconstant_0_0.xci" Type="IP">
         <Instance HierarchyPath="xlconstant_0"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -119,7 +118,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_pps_receiver_1_0\coreboard1588_bd_pps_receiver_1_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_pps_receiver_1_0/coreboard1588_bd_pps_receiver_1_0.xci" Type="IP">
         <Instance HierarchyPath="pps_receiver_1"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -127,7 +126,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_blk_mem_gen_1_0\coreboard1588_bd_blk_mem_gen_1_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_blk_mem_gen_1_0/coreboard1588_bd_blk_mem_gen_1_0.xci" Type="IP">
         <Instance HierarchyPath="blk_mem_gen_1"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -135,7 +134,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_axis_axi_master_0_0\coreboard1588_bd_axis_axi_master_0_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_axis_axi_master_0_0/coreboard1588_bd_axis_axi_master_0_0.xci" Type="IP">
         <Instance HierarchyPath="axis_axi_master_0"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -143,7 +142,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_axis_spi_slave2_0_0\coreboard1588_bd_axis_spi_slave2_0_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_axis_spi_slave2_0_0/coreboard1588_bd_axis_spi_slave2_0_0.xci" Type="IP">
         <Instance HierarchyPath="axis_spi_slave2_0"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -151,7 +150,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_leds_0_0\coreboard1588_bd_leds_0_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_leds_0_0/coreboard1588_bd_leds_0_0.xci" Type="IP">
         <Instance HierarchyPath="leds_0"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -159,7 +158,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_leds_1_0\coreboard1588_bd_leds_1_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_leds_1_0/coreboard1588_bd_leds_1_0.xci" Type="IP">
         <Instance HierarchyPath="leds_1"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -167,7 +166,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_fmc_slv_if_0_0\coreboard1588_bd_fmc_slv_if_0_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_fmc_slv_if_0_0/coreboard1588_bd_fmc_slv_if_0_0.xci" Type="IP">
         <Instance HierarchyPath="fmc_slv_if_0"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -175,7 +174,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_dummy_fmc_0_0\coreboard1588_bd_dummy_fmc_0_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_dummy_fmc_0_0/coreboard1588_bd_dummy_fmc_0_0.xci" Type="IP">
         <Instance HierarchyPath="dummy_fmc_0"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -183,7 +182,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_axi_ads868x_0_0\coreboard1588_bd_axi_ads868x_0_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_axi_ads868x_0_0/coreboard1588_bd_axi_ads868x_0_0.xci" Type="IP">
         <Instance HierarchyPath="axi_ads868x_0"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -191,7 +190,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_axi_ads124x_0_0\coreboard1588_bd_axi_ads124x_0_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_axi_ads124x_0_0/coreboard1588_bd_axi_ads124x_0_0.xci" Type="IP">
         <Instance HierarchyPath="axi_ads124x_0"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -199,7 +198,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_coreboard1588_axi_top_0_0\coreboard1588_bd_coreboard1588_axi_top_0_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_coreboard1588_axi_top_0_0/coreboard1588_bd_coreboard1588_axi_top_0_0.xci" Type="IP">
         <Instance HierarchyPath="coreboard1588_axi_top_0"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -207,7 +206,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_auto_cc_0\coreboard1588_bd_auto_cc_0.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_auto_cc_0/coreboard1588_bd_auto_cc_0.xci" Type="IP">
         <Instance HierarchyPath="axi_interconnect/m03_couplers/auto_cc"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -215,7 +214,7 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\coreboard1588_bd_auto_cc_1\coreboard1588_bd_auto_cc_1.xci" Type="IP">
+      <File Name="ip/coreboard1588_bd_auto_cc_1/coreboard1588_bd_auto_cc_1.xci" Type="IP">
         <Instance HierarchyPath="axi_interconnect/m04_couplers/auto_cc"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>

@@ -109,54 +109,28 @@ set AXI_ADS868X_REG_RXDATA    [expr $AXI_ADS868X_REG + 0x1C]
 set AXI_ADS868X_REG_RXVALID   [expr $AXI_ADS868X_REG + 0x20]
 
 
-proc axi_ads868x_softreset { } {
+proc axi_ads868x_softreset { rst } {
     global AXI_ADS868X_REG_SOFTRESET 
-    create_hw_axi_txn wr_txn hw_axi_1 -address $AXI_ADS868X_REG_SOFTRESET -data 0x00000001 -type write -force
-    run_hw_axi wr_txn
-    create_hw_axi_txn wr_txn hw_axi_1 -address $AXI_ADS868X_REG_SOFTRESET -data 0x00000000 -type write -force
-    run_hw_axi wr_txn
+    fpga_writereg $AXI_ADS868X_REG_SOFTRESET 1
+    fpga_writereg $AXI_ADS868X_REG_SOFTRESET 0
 }
 
-# Turn on AUTO SPI
-proc axi_ads868x_autospi_on { } {
+proc axi_ads868x_autospi { onoff } {
     global AXI_ADS868X_REG_AUTOSPI 
-    create_hw_axi_txn wr_txn hw_axi_1 -address $AXI_ADS868X_REG_AUTOSPI -data 0x00000001 -type write -force
-    run_hw_axi wr_txn
+    fpga_writereg $AXI_ADS868X_REG_AUTOSPI $onoff
 }
 
-# Turn off AUTO SPI
-proc axi_ads868x_autospi_off { } {
-    global AXI_ADS868X_REG_AUTOSPI 
-    create_hw_axi_txn wr_txn hw_axi_1 -address $AXI_ADS868X_REG_AUTOSPI -data 0x00000000 -type write -force
-    run_hw_axi wr_txn
-}
-
-proc axi_ads868x_spi_tx { nbyte data } {
+proc axi_ads868x_spisend { nbyte data } {
     global AXI_ADS868X_REG_TXBYTE 
-	global AXI_ADS868X_REG_TXDATA
-	# if { $nbyte == 1 } {
-	    # set d 0x00000000
-	# } elseif { $nbyte == 2 } {
-		# set d 0x00000001
-	# } elseif { $nbyte == 3 } {
-		# set d 0x00000002
-	# } elseif { $nbyte == 4 } {
-		# set d 0x00000003
-	# }
-	create_hw_axi_txn wr_txn hw_axi_1 -address $AXI_ADS868X_REG_TXBYTE -data $nbyte -type write -force
-    run_hw_axi wr_txn
-    create_hw_axi_txn wr_txn hw_axi_1 -address $AXI_ADS868X_REG_TXDATA -data $data -type write -force
-    run_hw_axi wr_txn
+    global AXI_ADS868X_REG_TXDATA
+    global AXI_ADS868X_REG_RXDATA
+    fpga_writereg $AXI_ADS868X_REG_TXBYTE [expr $nbyte - 1]
+    fpga_writereg $AXI_ADS868X_REG_TXDATA $data
+    after 1 fpga_readreg $AXI_ADS868X_REG_RXDATA
 }
 
-proc axi_ads868x_powerdown {} {
+proc axi_ads868x_powerdown { powerdown } {
 	global AXI_ADS868X_REG_POWERDOWN
-	create_hw_axi_txn wr_txn hw_axi_1 -address $AXI_ADS868X_REG_POWERDOWN -data 0x00000001 -type write -force
-    run_hw_axi wr_txn
+	fpga_writereg $AXI_ADS868X_REG_POWERDOWN $powerdown
 }
 
-proc axi_ads868x_powerup {} {
-	global AXI_ADS868X_REG_POWERDOWN
-	create_hw_axi_txn wr_txn hw_axi_1 -address $AXI_ADS868X_REG_POWERDOWN -data 0x00000000 -type write -force
-    run_hw_axi wr_txn
-}
