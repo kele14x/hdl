@@ -66,7 +66,7 @@ module axi_ads868x_regs #(
     // ctrl_auto_spi on reg[0] on address = 2
     always_ff @ (posedge clk) begin
         if (rst) begin
-            ctrl_auto_spi <= 'd1;
+            ctrl_auto_spi <= 'd0;
         end else if (up_wr_req && up_wr_addr == 'd2 && up_wr_be[0]) begin
             ctrl_auto_spi <= up_wr_data[0];
         end
