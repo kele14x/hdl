@@ -356,9 +356,9 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
             adc_axis_tdata <= 'd0;
         end else if (ctrl_op_mode && spi_rx_valid) begin
             if (auto_current_ch == 2'b00) begin
-                adc_axis_tdata <= {8'd00, spi_rx_buffer};
+                adc_axis_tdata <= {8'd00, spi_rx_buffer[23:0]};
             end else if (auto_current_ch == 2'b01) begin
-                adc_axis_tdata <= {8'd01, spi_rx_buffer};
+                adc_axis_tdata <= {8'd01, spi_rx_buffer[23:0]};
             end
         end 
     end
