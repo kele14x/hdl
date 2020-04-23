@@ -98,7 +98,7 @@ module coreboard1588 (
         // GPIO
         //-----
         .FPGA_RST               (FPGA_RST         ),
-        .FPGA_MCU_INTR_interrupt(/* Open */       ),
+        .FPGA_MCU_INTR          (/* Open */       ),
         .FPGA_MCU_RST           (FPGA_MCU_RST     ),
         .FPGA_RUN               (FPGA_RUN         ),
         .FPGA_DAT_FIN           (FPGA_DAT_FIN     ),
