@@ -42,3 +42,5 @@ module sim_clk_gen #(
     end
 
 endmodule
+
+`default_nettype wire

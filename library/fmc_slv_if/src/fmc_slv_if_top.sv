@@ -143,3 +143,5 @@ module fmc_slv_if_top #(
     end
 
 endmodule
+
+`default_nettype wire
