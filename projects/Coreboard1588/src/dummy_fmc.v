@@ -152,7 +152,7 @@ module dummy_fmc (
         if (s01_axis_tvalid && s01_axis_tdata[31:24] == 8'd0) begin
             pt100[0] <= s01_axis_tdata[23:0];
         end
-        if (s01_axis_tvalid && s01_axis_tdata[31:24] == 8'd0) begin
+        if (s01_axis_tvalid && s01_axis_tdata[31:24] == 8'd1) begin
             pt100[1] <= s01_axis_tdata[23:0];
         end
     end

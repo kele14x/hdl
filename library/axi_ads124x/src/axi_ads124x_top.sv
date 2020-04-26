@@ -221,6 +221,7 @@ module axi_ads124x_top #(
 
     axis_spi_master #(
         .CLK_RATIO  (128),
+        .PRE_PERIOD (128),
         .POST_PERIOD(256)
     ) i_axis_spi_master (
         // SPI
