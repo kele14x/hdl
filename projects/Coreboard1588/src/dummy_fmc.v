@@ -108,7 +108,7 @@ module dummy_fmc (
 
     // Move second & nano second counter to temp register
     always @ (posedge aclk) begin
-        if (s00_axis_tvalid && s00_axis_tdata[23:16] == 8'hFF) begin
+        if (s00_axis_tvalid && s00_axis_tdata[23:16] == 8'h00) begin
             ts_s_reg  <= counter_s;
             ts_ns_reg <= counter_ns;
         end

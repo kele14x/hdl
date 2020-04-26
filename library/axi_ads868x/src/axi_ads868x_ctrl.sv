@@ -295,12 +295,15 @@ module axi_ads868x_ctrl #(
     // ADC M AXIS
     //-------------
 
+    reg [1:0] auto_int_mux;
+    reg [2:0] auto_ext_mux;
+
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             adc_tdata <= 'd0;
         end else if (rx_valid && !(adc_tvalid && !adc_tready) && auto_mode) begin
             adc_tdata[15:0]  <= rx_buffer[15:0];
-            adc_tdata[23:16] <= ts_cnt[15:10] - 1;
+            adc_tdata[23:16] <= {3'b0, auto_ext_mux, auto_int_mux};
             adc_tdata[31:24] <= 8'b0;
         end
     end
@@ -318,44 +321,36 @@ module axi_ads868x_ctrl #(
     // Sample control
     //----------------
 
-    reg [2:0] auto_ext_mux;
-
     function [16:0] sample_on_tick(input [16:0] cnt);
-        reg [15:0] cmd;
+        int rem;
         begin
-            for (int i = 0; i < 32; i++) begin
-                if (cnt == (i * 64 * 16 + 1)) begin
-                    if      (cnt[11:10] == 0) cmd = ADS868X_CMD_MAN_CH0;
-                    else if (cnt[11:10] == 1) cmd = ADS868X_CMD_MAN_CH1;
-                    else if (cnt[11:10] == 2) cmd = ADS868X_CMD_MAN_CH2;
-                    else                      cmd = ADS868X_CMD_MAN_CH3;
-                    return {1'b1, cmd};
-                end
-            end
-            if (cnt == 32 * 64 * 16 + 1) begin
-                return {1'b1, ADS868X_CMD_NO_OP};
-            end
-            return 0;
+            rem = cnt % 15625;
+            if      (rem == 11000) return {1'b1, ADS868X_CMD_MAN_CH1}; // Sample channel 0, and change MUX to channel 1
+            else if (rem == 12000) return {1'b1, ADS868X_CMD_MAN_CH2}; // Sample channel 1, and change MUX to channel 2
+            else if (rem == 13000) return {1'b1, ADS868X_CMD_MAN_CH3}; // Sample channel 2, and change MUX to channel 3
+            else if (rem == 14000) return {1'b1, ADS868X_CMD_MAN_CH0}; // Sample channel 3, and change MUX to channel 0
+            else                   return {1'b0, 16'b0};
         end
     endfunction
 
-    function [3:0] ext_mux_on_tick(input [16:0] cnt);
+    // cnt range from 0 to 124999 (125000 ticks)
+    // This is function controls on which time we chanage external MUX
+    // for this, we divide the 1ms into 8 pieces
+    function [2:0] ext_mux_on_tick(input [16:0] cnt);
         begin
-            for (int i = 0; i < 32; i++)
-                if (cnt == (i * 64 * 16 + 16 * 16))
-                    return {1'b1, cnt[14:12]};
-            return 0;
+            return cnt / 15625;
         end
     endfunction
 
     always_ff @ (posedge aclk) begin
-        reg [3:0] temp;
-        temp = ext_mux_on_tick(ts_cnt);
-        if (temp[3])
-            auto_ext_mux <= temp[2:0];
+        auto_ext_mux <= ext_mux_on_tick(ts_cnt);
     end
 
-
+    always_ff @ (posedge aclk) begin
+        auto_int_mux <= (ts_cnt % 15625 < 12000) ? 2'b00 :
+                        (ts_cnt % 15625 < 13000) ? 2'b01 :
+                        (ts_cnt % 15625 < 14000) ? 2'b10 : 2'b11;
+    end
 
     always_ff @ (posedge aclk) begin
         reg [16:0] temp;
