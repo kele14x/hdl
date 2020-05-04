@@ -264,7 +264,7 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
         if (!aresetn) begin
             spi_tx_data <= 'd0;
         end else if (auto_state == S_AUTO_CH0) begin
-            spi_tx_data <= 24'h400017; // write MUX0 with MUX_SP=AN2/MUX_SN=AN1
+            spi_tx_data <= 24'h400011; // write MUX0 with MUX_SP=AN2/MUX_SN=AN1
         end else if (auto_state == S_AUTO_CH1) begin
             spi_tx_data <= 24'h400008; // write MUX0 with MUX_SP=AN1/MUX_SN=AN0
         end else if (auto_state == S_AUTO_WAIT0 && drdy_negedge) begin
