@@ -21,6 +21,7 @@ set_property PACKAGE_PIN R18 [get_ports FPGA_RST]
 set_property PACKAGE_PIN P18 [get_ports FPGA_MCU_RST]
 set_property PACKAGE_PIN U18 [get_ports FPGA_RUN]
 set_property PACKAGE_PIN C17 [get_ports FPGA_DAT_FIN]
+set_property PACKAGE_PIN U9  [get_ports FPGA_MCU_INTR]
 
 ## SPI
 set_property PACKAGE_PIN C5 [get_ports FPGA_MCU_SPI_CLK]
@@ -72,7 +73,6 @@ set_property PACKAGE_PIN U6	[get_ports FMC_NWE]
 set_property PACKAGE_PIN F4 [get_ports A7_GCLK]
 
 # PHY
-set_property PACKAGE_PIN E3 [get_ports PTP_CLK_OUT]
 set_property PACKAGE_PIN A6 [get_ports PTP_TRG_FPGA]
 
 # QSPI

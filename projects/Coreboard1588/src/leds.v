@@ -1,13 +1,14 @@
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module leds #(parameter C_CLK_FREQ = 100000000) (
+module leds #(parameter C_CLK_FREQ = 125000000) (
     (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 clk CLK" *)
     (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF LED, ASSOCIATED_RESET rst" *)
     input  wire clk,
     (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 rst RST" *)
     (* X_INTERFACE_PARAMETER = "POLARITY ACTIVE_HIGH" *)
     input  wire rst,
+    (* X_INTERFACE_INFO = "xilinx.com:signal:data:1.0 led LED" *)
     output reg  led
 );
 

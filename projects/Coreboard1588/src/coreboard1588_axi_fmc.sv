@@ -12,105 +12,70 @@
 //   [23: 0] ADC data
 //****************************************************************************
 
-module dummy_fmc (
+module coreboard1588_axi_fmc (
     // AXIS
     //-----
-    (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 aclk CLK" *)
-    (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF S00_AXIS:S01_AXIS, ASSOCIATED_RESET aresetn, FREQ_HZ 125000000" *)
-    input  wire        aclk           ,
-    (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 aresetn RST" *)
-    (* X_INTERFACE_PARAMETER = "POLARITY ACTIVE_LOW" *)
-    input  wire        aresetn        ,
+    input  wire        aclk                   ,
+    input  wire        aresetn                ,
+    //
+    input  wire        FPGA_EXT_TRIGGER       ,
+    input  wire        FPGA_TRIGGER_EN        ,
     //
     // ADS868x S_AXIS
     //----------
-    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S00_AXIS TDATA" *)
-    input  wire [31:0] s00_axis_tdata ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S00_AXIS TVALID" *)
-    input  wire        s00_axis_tvalid,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S00_AXIS TREADY" *)
-    output reg         s00_axis_tready,
+    input  wire [31:0] s00_axis_tdata         ,
+    input  wire        s00_axis_tvalid        ,
+    output reg         s00_axis_tready        ,
     //
     // ADS124x S_AXIS
     //---------------
-    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S01_AXIS TDATA" *)
-    input  wire [31:0] s01_axis_tdata ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S01_AXIS TVALID" *)
-    input  wire        s01_axis_tvalid,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S01_AXIS TREADY" *)
-    output reg         s01_axis_tready,
-    //
-    // PPS
-    //
-    input  wire        pps            ,
+    input  wire [31:0] s01_axis_tdata         ,
+    input  wire        s01_axis_tvalid        ,
+    output reg         s01_axis_tready        ,
+    // RTC
+    //=====
+    input  wire [31:0] rtc_second             ,
+    input  wire [31:0] rtc_nanosecond         ,
     // BRAM interface
     //---------------
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 bram CLK" *)
-    output wire        bram_clk       ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 bram RST" *)
-    output wire        bram_rst       ,
+    output wire        bram_clk               ,
+    output wire        bram_rst               ,
     //
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 bram ADDR" *)
-    output reg  [11:0] bram_addr      ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 bram EN" *)
-    output reg         bram_en        ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 bram DOUT" *)
-    input  wire [15:0] bram_dout      ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 bram DIN" *)
-    output reg  [15:0] bram_din       ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 bram WE" *)
-    output reg  [ 1:0] bram_we        ,
+    output reg  [11:0] bram_addr              ,
+    output reg         bram_en                ,
+    input  wire [15:0] bram_dout              ,
+    output reg  [15:0] bram_din               ,
+    output reg  [ 1:0] bram_we                ,
     //
-    output reg         ts_irq
+    output reg         ts_irq                 ,
+    // Control
+    //========
+    input  wire        ctrl_trigger_enable    ,
+    input  wire [ 1:0] ctrl_trigger_source    , // 00 = MCU, 01 = external, 11 = RTC
+    input  wire [31:0] ctrl_trigger_second    ,
+    input  wire [31:0] ctrl_trigger_nanosecond
 );
 
-    // Sencond & Nanosecond internal counter
-    //--------------------------------------
-
-	localparam C_CLK_FREQ = 125000000;
-	localparam C_NS_CNT_INC = 10**9 / C_CLK_FREQ;
-	localparam C_NS_CNT_MAX = 10**9 - C_NS_CNT_INC;
-
-	reg [31:0] counter_s;  // Sample tick s
-	reg [31:0] counter_ns; // Sample tick ns
-
-	// Nanosecond counter
-	// Real nanosecond value range from 0 to last tick
-	always @ (posedge aclk) begin
-		if (!aresetn || pps) begin
-			counter_ns <= 'd0;
-		end else begin
-			counter_ns <= (counter_ns == C_NS_CNT_MAX) ? 0 : counter_ns + C_NS_CNT_INC;
-		end
-	end
-
-	// Second counter
-	// Real second value range from 0 to maximum, it should be enough for use
-	always @ (posedge aclk) begin
-		if (!aresetn) begin
-			counter_s <= 'd0;
-		end else begin
-			counter_s <= (counter_ns == C_NS_CNT_MAX) ? counter_s + 1 : counter_s;
-		end
-	end
 
     // Data Buffer
     //-------------
-	// total 40 half word (80 byte)
+    // total 41 half word (82 byte)
 
-    reg [31:0] ts_s_reg;  // Sample time second value
-    reg [31:0] ts_ns_reg; // Sample time nanosacond value
+    reg [31:0] ts_s_reg ; // Sample time second value
+    reg [31:0] ts_ns_reg; // Sample time nanosecond value
 
     reg [15:0] pch_data[0:15]; // PCH data from ADS868x
     reg [15:0] tch_data[0:15]; // TCH data from ADS868x
 
     reg [23:0] pt100[0:1]; // PT100 value from ADS124x
 
+    reg [15:0] triggered;
+
     // Move second & nano second counter to temp register
     always @ (posedge aclk) begin
         if (s00_axis_tvalid && s00_axis_tdata[23:16] == 8'h00) begin
-            ts_s_reg  <= counter_s;
-            ts_ns_reg <= counter_ns;
+            ts_s_reg  <= rtc_second;
+            ts_ns_reg <= rtc_nanosecond;
         end
     end
 
@@ -157,13 +122,14 @@ module dummy_fmc (
         end
     end
 
-	always @ (posedge aclk) begin
-		if (!aresetn) begin
-			s00_axis_tready <= 1'b0;
-		end else begin
-			s00_axis_tready <= 1'b1;
-		end
-	end
+
+    always @ (posedge aclk) begin
+        if (!aresetn) begin
+            s00_axis_tready <= 1'b0;
+        end else begin
+            s00_axis_tready <= 1'b1;
+        end
+    end
 
     always @ (posedge aclk) begin
         if (!aresetn) begin
@@ -173,10 +139,83 @@ module dummy_fmc (
         end
     end
 
+    // Trigger
+    //========
 
-    // Write 80 byte to BRAM
+    // Trigger state machine
+    typedef enum {S_TRG_RESET, S_TRG_IDLE, S_TRG_ARMED, S_TRG_TRIGGERED} T_STATE;
+
+    T_STATE state, state_next;
+
+    var logic ext_trigger_async_reg1;
+    var logic ext_trigger_async_reg2;
+    var logic ext_trigger_sync_reg1;
+
+    var logic mcu_trigger_async_reg1;
+    var logic mcu_trigger_async_reg2;
+    var logic mcu_trigger_sync_reg1;
+
+    var logic trigger_wire;
+
+    var logic rtc_trigger;
+    var logic mcu_trigger;
+    var logic ext_trigger;
+
+    // Async signal sync
+    always_ff @ (posedge aclk) begin
+        ext_trigger_async_reg1 <= FPGA_EXT_TRIGGER;
+        ext_trigger_async_reg2 <= ext_trigger_async_reg1;
+        ext_trigger_sync_reg1  <= ext_trigger_async_reg2;
+    end
+
+    // Async signal sync
+    always_ff @ (posedge aclk) begin
+        mcu_trigger_async_reg1 <= FPGA_TRIGGER_EN;
+        mcu_trigger_async_reg2 <= mcu_trigger_async_reg1;
+        mcu_trigger_sync_reg1  <= mcu_trigger_async_reg2;
+    end
+
+    // Posedge
+    assign ext_trigger = ({ext_trigger_sync_reg1 && ext_trigger_async_reg2} == 2'b01);
+
+    // Posedge
+    assign mcu_trigger = ({mcu_trigger_sync_reg1 && mcu_trigger_async_reg2} == 2'b01);
+
+    assign rtc_trigger = (ctrl_trigger_second == rtc_second) &&
+        (ctrl_trigger_nanosecond == rtc_nanosecond);
+
+    assign trigger_wire = (ctrl_trigger_source == 2'b00) ? mcu_trigger :
+        (ctrl_trigger_source == 2'b01) ? ext_trigger :
+        (ctrl_trigger_source == 2'b11) ? rtc_trigger : 1'b0;
+
+    always_ff @ (posedge aclk) begin
+        if (!aresetn) begin
+            state <= S_TRG_RESET;
+        end else begin
+            state <= state_next;
+        end
+    end
+
+    always_comb begin
+        case (state)
+            S_TRG_RESET     : state_next = S_TRG_IDLE;
+            S_TRG_IDLE      : state_next = !ctrl_trigger_enable ? S_TRG_IDLE      : S_TRG_ARMED;
+            S_TRG_ARMED     : state_next = !trigger_wire        ? S_TRG_ARMED     : S_TRG_TRIGGERED;
+            S_TRG_TRIGGERED : state_next = !(s00_axis_tvalid && s00_axis_tdata[23:16] == 8'd0)
+                ? S_TRG_TRIGGERED : S_TRG_IDLE;
+            default : state_next = S_TRG_RESET;
+        endcase
+    end
+
+
+    always_ff @ (posedge aclk) begin
+        if (s00_axis_tvalid && s00_axis_tdata[23:16] == 8'd0) begin
+            triggered <= (state == S_TRG_TRIGGERED) ? 16'd1 : 16'd0;
+        end
+    end
+
+    // Write 82 byte to BRAM
     //----------------------
-
 
     reg [7:0] bram_wr_state;
 
@@ -186,7 +225,7 @@ module dummy_fmc (
         end else if (s00_axis_tvalid && s00_axis_tdata[23:16] == 8'd31) begin
             // last P/TCH data is writed into buffer
             bram_wr_state <= 0;
-        end else if (bram_wr_state < 40) begin
+        end else if (bram_wr_state < 41) begin
             bram_wr_state <= bram_wr_state + 1;
         end else begin
             bram_wr_state <= {8{1'b1}};
@@ -209,28 +248,31 @@ module dummy_fmc (
                 bram_din <= ts_s_reg[31:16];
             end else if (bram_wr_state == 1) begin
                 bram_din <= ts_s_reg[15: 0];
-            // {halfword [2], halfword [3]}: Nanosecond
+                // {halfword [2], halfword [3]}: Nanosecond
             end else if (bram_wr_state == 2) begin
                 bram_din <= ts_ns_reg[31:16];
             end else if (bram_wr_state == 3) begin
                 bram_din <= ts_ns_reg[15: 0];
-            // {halfword [4] ~ halfword [19]}: PCH[0] ~ PCH[15]
+                // {halfword [4] ~ halfword [19]}: PCH[0] ~ PCH[15]
             end else if (bram_wr_state <= 19) begin
                 bram_din <= pch_data[bram_wr_state-4];
-            // {halfword [20] ~ halfword [35]}: TCH[0] ~ TCH[15]
+                // {halfword [20] ~ halfword [35]}: TCH[0] ~ TCH[15]
             end else if (bram_wr_state <= 35) begin
                 bram_din <= tch_data[bram_wr_state-20];
-            // {halfword [36], halfword [37]}: PT100[0]
+                // {halfword [36], halfword [37]}: PT100[0]
             end else if (bram_wr_state == 36) begin
                 bram_din <= {8'b0, pt100[0][23:16]};
             end else if (bram_wr_state == 37) begin
                 bram_din <= pt100[0][15:0];
-            // {halfword [38], halfword [39]}: PT100[1]
+                // {halfword [38], halfword [39]}: PT100[1]
             end else if (bram_wr_state == 38) begin
                 bram_din <= {8'b0, pt100[1][23:16]};
             end else if (bram_wr_state == 39) begin
                 bram_din <= pt100[1][15:0];
-            //
+                // {halfword [40]}: triggered
+            end else if (bram_wr_state == 40) begin
+                bram_din <= triggered;
+                //
             end else begin
                 bram_din <= 'd0;
             end

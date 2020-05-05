@@ -55,7 +55,7 @@ module axis_spi_slave2 #(
     output wire                    IO1_T         ,
     //=====
     (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 aclk CLK" *)
-    (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF axis_rx:axis_tx, ASSOCIATED_RESET aresetn, FREQ_HZ 100000000" *)
+    (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF axis_rx:axis_tx, ASSOCIATED_RESET aresetn" *)
     input  wire                    aclk          ,
     (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 aresetn RST" *)
     (* X_INTERFACE_PARAMETER = "POLARITY ACTIVE_LOW" *)

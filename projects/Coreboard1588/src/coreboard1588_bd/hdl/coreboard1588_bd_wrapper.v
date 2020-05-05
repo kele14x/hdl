@@ -1,7 +1,7 @@
 //Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-//Date        : Mon Apr 27 11:48:17 2020
+//Date        : Tue May  5 23:52:10 2020
 //Host        : CN-00002823 running 64-bit major release  (build 9200)
 //Command     : generate_target coreboard1588_bd_wrapper.bd
 //Design      : coreboard1588_bd_wrapper
@@ -37,15 +37,14 @@ module coreboard1588_bd_wrapper
     FMC_wait,
     FMC_wen,
     FPGA_DAT_FIN,
+    FPGA_EXT_TRIGGER,
     FPGA_LED,
     FPGA_MCU_INTR,
-    FPGA_MCU_RST,
     FPGA_MCU_SPI_io0_io,
     FPGA_MCU_SPI_io1_io,
     FPGA_MCU_SPI_sck_io,
     FPGA_MCU_SPI_ss_io,
     FPGA_RST,
-    FPGA_RUN,
     FPGA_SPI1_io0_io,
     FPGA_SPI1_io1_io,
     FPGA_SPI1_sck_io,
@@ -54,8 +53,7 @@ module coreboard1588_bd_wrapper
     FPGA_SPI2_io1_io,
     FPGA_SPI2_sck_io,
     FPGA_SPI2_ss_io,
-    FPGA_TEST,
-    PTP_CLK_OUT,
+    FPGA_TRIGGER_EN,
     PTP_TRG_FPGA);
   inout A7_CONFIG_QSPI_io0_io;
   inout A7_CONFIG_QSPI_io1_io;
@@ -84,15 +82,14 @@ module coreboard1588_bd_wrapper
   output FMC_wait;
   input FMC_wen;
   output FPGA_DAT_FIN;
+  input FPGA_EXT_TRIGGER;
   output [1:0]FPGA_LED;
   output FPGA_MCU_INTR;
-  output [0:0]FPGA_MCU_RST;
   inout FPGA_MCU_SPI_io0_io;
   inout FPGA_MCU_SPI_io1_io;
   inout FPGA_MCU_SPI_sck_io;
   inout FPGA_MCU_SPI_ss_io;
   input FPGA_RST;
-  output [0:0]FPGA_RUN;
   inout FPGA_SPI1_io0_io;
   inout FPGA_SPI1_io1_io;
   inout FPGA_SPI1_sck_io;
@@ -101,8 +98,7 @@ module coreboard1588_bd_wrapper
   inout FPGA_SPI2_io1_io;
   inout FPGA_SPI2_sck_io;
   inout FPGA_SPI2_ss_io;
-  output [3:0]FPGA_TEST;
-  input PTP_CLK_OUT;
+  input FPGA_TRIGGER_EN;
   input PTP_TRG_FPGA;
 
   wire A7_CONFIG_QSPI_io0_i;
@@ -210,9 +206,9 @@ module coreboard1588_bd_wrapper
   wire FMC_wait;
   wire FMC_wen;
   wire FPGA_DAT_FIN;
+  wire FPGA_EXT_TRIGGER;
   wire [1:0]FPGA_LED;
   wire FPGA_MCU_INTR;
-  wire [0:0]FPGA_MCU_RST;
   wire FPGA_MCU_SPI_io0_i;
   wire FPGA_MCU_SPI_io0_io;
   wire FPGA_MCU_SPI_io0_o;
@@ -230,7 +226,6 @@ module coreboard1588_bd_wrapper
   wire FPGA_MCU_SPI_ss_o;
   wire FPGA_MCU_SPI_ss_t;
   wire FPGA_RST;
-  wire [0:0]FPGA_RUN;
   wire FPGA_SPI1_io0_i;
   wire FPGA_SPI1_io0_io;
   wire FPGA_SPI1_io0_o;
@@ -263,8 +258,7 @@ module coreboard1588_bd_wrapper
   wire FPGA_SPI2_ss_io;
   wire FPGA_SPI2_ss_o;
   wire FPGA_SPI2_ss_t;
-  wire [3:0]FPGA_TEST;
-  wire PTP_CLK_OUT;
+  wire FPGA_TRIGGER_EN;
   wire PTP_TRG_FPGA;
 
   IOBUF A7_CONFIG_QSPI_io0_iobuf
@@ -472,9 +466,9 @@ module coreboard1588_bd_wrapper
         .FMC_wait(FMC_wait),
         .FMC_wen(FMC_wen),
         .FPGA_DAT_FIN(FPGA_DAT_FIN),
+        .FPGA_EXT_TRIGGER(FPGA_EXT_TRIGGER),
         .FPGA_LED(FPGA_LED),
         .FPGA_MCU_INTR(FPGA_MCU_INTR),
-        .FPGA_MCU_RST(FPGA_MCU_RST),
         .FPGA_MCU_SPI_io0_i(FPGA_MCU_SPI_io0_i),
         .FPGA_MCU_SPI_io0_o(FPGA_MCU_SPI_io0_o),
         .FPGA_MCU_SPI_io0_t(FPGA_MCU_SPI_io0_t),
@@ -488,7 +482,6 @@ module coreboard1588_bd_wrapper
         .FPGA_MCU_SPI_ss_o(FPGA_MCU_SPI_ss_o),
         .FPGA_MCU_SPI_ss_t(FPGA_MCU_SPI_ss_t),
         .FPGA_RST(FPGA_RST),
-        .FPGA_RUN(FPGA_RUN),
         .FPGA_SPI1_io0_i(FPGA_SPI1_io0_i),
         .FPGA_SPI1_io0_o(FPGA_SPI1_io0_o),
         .FPGA_SPI1_io0_t(FPGA_SPI1_io0_t),
@@ -513,7 +506,6 @@ module coreboard1588_bd_wrapper
         .FPGA_SPI2_ss_i(FPGA_SPI2_ss_i),
         .FPGA_SPI2_ss_o(FPGA_SPI2_ss_o),
         .FPGA_SPI2_ss_t(FPGA_SPI2_ss_t),
-        .FPGA_TEST(FPGA_TEST),
-        .PTP_CLK_OUT(PTP_CLK_OUT),
+        .FPGA_TRIGGER_EN(FPGA_TRIGGER_EN),
         .PTP_TRG_FPGA(PTP_TRG_FPGA));
 endmodule
