@@ -88,16 +88,16 @@ module axi_ads868x_top #(parameter C_ADDR_WIDTH = 10) (
 
     // AXI Slave
 
-    wire [ 9:0] up_wr_addr;
-    wire        up_wr_req ;
-    wire [ 3:0] up_wr_be  ;
-    wire [31:0] up_wr_data;
-    wire        up_wr_ack ;
+    wire [C_ADDR_WIDTH-3:0] up_wr_addr;
+    wire                    up_wr_req ;
+    wire [             3:0] up_wr_be  ;
+    wire [            31:0] up_wr_data;
+    wire                    up_wr_ack ;
     //
-    wire [ 9:0] up_rd_addr;
-    wire        up_rd_req ;
-    wire [31:0] up_rd_data;
-    wire        up_rd_ack ;
+    wire [C_ADDR_WIDTH-3:0] up_rd_addr;
+    wire                    up_rd_req ;
+    wire [            31:0] up_rd_data;
+    wire                    up_rd_ack ;
 
     // User control signals
 

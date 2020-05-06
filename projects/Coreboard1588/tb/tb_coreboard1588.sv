@@ -19,6 +19,7 @@ module tb_coreboard1588 ();
     logic FPGA_RUN        ;
     logic FPGA_MCU_RST    ;
     logic FPGA_DAT_FIN    ;
+    logic FPGA_MCU_INTR   ;
 
     wire FPGA_MCU_SPI_CLK ;
     wire FPGA_MCU_SPI_CS  ;
@@ -39,9 +40,13 @@ module tb_coreboard1588 ();
 
     logic A7_GCLK = 0;
 
+    // Trigger
+    
+    logic FPGA_EXT_TRIGGER;
+    logic FPGA_TRIGGER_EN ;
+
     // PHY
 
-    logic PTP_CLK_OUT     ;
     logic PTP_TRG_FPGA = 0;
 
     // FPGA <-> QSPI
@@ -79,8 +84,6 @@ module tb_coreboard1588 ();
 
     coreboard1588 DUT (.*);
 
-    // tb_coreboard1588.DUT.i_coreboard1588_bd_wrapper.coreboard1588_bd_i.axi_vip.inst
-
     // Simulation cases
     //==================
 
@@ -91,15 +94,6 @@ module tb_coreboard1588 ();
     ) i_A7_GCLK_GEN (
         .clk(A7_GCLK),
         .rst(       )
-    );
-
-    sim_clk_gen #(
-        .CLK_FREQ_HZ (25000000),
-        .RST_POLARITY(1       ),
-        .RST_CYCLES  (10      )
-    ) i_PTP_CLK_GEN (
-        .clk(PTP_CLK_OUT),
-        .rst(           )
     );
 
     initial begin

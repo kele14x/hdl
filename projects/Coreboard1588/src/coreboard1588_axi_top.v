@@ -16,7 +16,7 @@ module coreboard1588_axi_top #(
 ) (
     // AXI4-Lite Slave
     //=================
-    (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME aclk, ASSOCIATED_BUSIF S_AXI:UP_WR:UP_RD, ASSOCIATED_RESET aresetn" *)
+    (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME aclk, ASSOCIATED_BUSIF S_AXI:S00_AXIS:S01_AXIS, ASSOCIATED_RESET aresetn" *)
     (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 aclk CLK" *)
     input  wire                      aclk            ,
     (* X_INTERFACE_PARAMETER = "XIL_INTERFACENAME aresetn, POLARITY ACTIVE_LOW" *)
@@ -110,16 +110,16 @@ module coreboard1588_axi_top #(
     input  wire                      FPGA_TRIGGER_EN
 );
 
-    wire [ 9:0] up_wr_addr;
-    wire        up_wr_req ;
-    wire [ 3:0] up_wr_be  ;
-    wire [31:0] up_wr_din ;
-    wire        up_wr_ack ;
+    wire [C_ADDR_WIDTH-3:0] up_wr_addr;
+    wire                    up_wr_req ;
+    wire [             3:0] up_wr_be  ;
+    wire [            31:0] up_wr_din ;
+    wire                    up_wr_ack ;
 
-    wire [ 9:0] up_rd_addr;
-    wire        up_rd_req ;
-    wire [31:0] up_rd_dout;
-    wire        up_rd_ack ;
+    wire [C_ADDR_WIDTH-3:0] up_rd_addr;
+    wire                    up_rd_req ;
+    wire [            31:0] up_rd_dout;
+    wire                    up_rd_ack ;
 
     wire pps_s;
 
