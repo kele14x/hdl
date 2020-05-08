@@ -72,6 +72,11 @@ set_property PACKAGE_PIN U6	[get_ports FMC_NWE]
 # FPGA Global Clock
 set_property PACKAGE_PIN F4 [get_ports A7_GCLK]
 
+# Trigger
+set_property PACKAGE_PIN B6  [get_ports FPGA_EXT_TRIGGER]
+set_property PACKAGE_PIN C16 [get_ports FPGA_TRIGGER_EN]
+
+
 # PHY
 set_property PACKAGE_PIN A6 [get_ports PTP_TRG_FPGA]
 

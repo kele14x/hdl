@@ -200,9 +200,11 @@ module coreboard1588_axi_fmc (
         case (state)
             S_TRG_RESET     : state_next = S_TRG_IDLE;
             S_TRG_IDLE      : state_next = !ctrl_trigger_enable ? S_TRG_IDLE      : S_TRG_ARMED;
-            S_TRG_ARMED     : state_next = !trigger_wire        ? S_TRG_ARMED     : S_TRG_TRIGGERED;
-            S_TRG_TRIGGERED : state_next = !(s00_axis_tvalid && s00_axis_tdata[23:16] == 8'd0)
-                ? S_TRG_TRIGGERED : S_TRG_IDLE;
+            S_TRG_ARMED     : state_next = !ctrl_trigger_enable ? S_TRG_IDLE      :
+                                           !trigger_wire        ? S_TRG_ARMED     : S_TRG_TRIGGERED;
+            S_TRG_TRIGGERED : state_next = !ctrl_trigger_enable ? S_TRG_IDLE      :
+                                           !(s00_axis_tvalid && s00_axis_tdata[23:16] == 8'd0)
+                                                                ? S_TRG_TRIGGERED : S_TRG_IDLE;
             default : state_next = S_TRG_RESET;
         endcase
     end
