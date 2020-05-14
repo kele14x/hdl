@@ -76,8 +76,8 @@ set_property PACKAGE_PIN F4 [get_ports A7_GCLK]
 set_property PACKAGE_PIN B6  [get_ports FPGA_EXT_TRIGGER]
 set_property PACKAGE_PIN C16 [get_ports FPGA_TRIGGER_EN]
 
-
 # PHY
+set_property PACKAGE_PIN E3 [get_ports PTP_CLK_OUT]
 set_property PACKAGE_PIN A6 [get_ports PTP_TRG_FPGA]
 
 # QSPI

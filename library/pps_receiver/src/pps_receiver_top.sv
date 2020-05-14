@@ -6,34 +6,33 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module pps_receiver_top #(
-    // The frequency of core clock
-    parameter C_CLOCK_FREQUENCY = 125000000,
-    // The PPS arriving time uncertainty window, if the PPS arrived at last
-    // phase - window or last phase + window, it's normal. Or it is out of
-    // lock
-    parameter C_PPS_DELAY      = 12500
-) (
+module pps_receiver_top #(parameter C_CLOCK_FREQUENCY = 25000000) (
     // Core clock domain
     //----------------------
     // Clock & Reset
-    input  var logic clk    ,
-    input  var logic rst    ,
+    input  var logic ptp_clk,
     // External 1PPS in
     input  var logic pps_in ,
     // 1PPS to Fabric
-    output var logic pps_out
+    output var logic pps_out,
+    // 1kHz to Fabric
+    output var logic ts_out
 );
 
-    localparam C_COUNTER_WIDTH = $clog2(C_CLOCK_FREQUENCY-1);
+    // Clock Buffer
+    //=============
 
-    initial begin
-        assert (C_COUNTER_WIDTH <= 32) else
-            $warning("Core clock frequency too slow, which makes the 1 PPS \
-                counter exist 32-bit width");
-        assert (C_PPS_DELAY < C_CLOCK_FREQUENCY / 2) else
-            $warning("PPS window too large");
-    end
+    wire clk;
+
+    BUFR #(
+        .BUFR_DIVIDE("BYPASS" ),
+        .SIM_DEVICE ("7SERIES")
+    ) BUFR_inst (
+        .I  (ptp_clk),
+        .CE (1'b1   ),
+        .CLR(1'b0   ),
+        .O  (clk    )
+    );
 
     // PPS input CDC
     //==============
@@ -57,46 +56,103 @@ module pps_receiver_top #(
     assign pps_posedge = {pps_cdc_reg2, pps_d} == 2'b10;
 
 
-    // PPS Phase
-    //=============
+    // ADV/LATE adjust
+    //================
+    // There will be 1 clock uncertainty when capture async input. That is
+    // if we see posedge at this clock, the accurate posedge can be at range
+    // (-1, +1) clock. We won't adjust the internal PPS if we see the posege
+    // within this range. However, to determine which clock is the best
+    // estimation within these 3 ticks, we count on which tick we see the
+    // posedge more frequently.
 
-    // The free running clock is used to record the PPS arriving time.
-    var logic [C_COUNTER_WIDTH-1:0] free_counter    ;
-    var logic [C_COUNTER_WIDTH-1:0] last_pha     = 0;
+    var logic [$clog2(C_CLOCK_FREQUENCY-1)-1:0] pps_counter    ;
+    var logic [$clog2(C_CLOCK_FREQUENCY-1)-1:0] last_pha    = 0;
 
-    // `free_counter` is a free running counter that count for 1s at current
+    var logic match, late_by1, adv_by1;
+
+    var logic [3:0] adv_cnt, late_cnt;
+
+    // `pps_counter` is a free running counter that count for 1s at current
     // clock frequency.
     always_ff @ (posedge clk) begin
-        free_counter <= (rst || free_counter == C_CLOCK_FREQUENCY-1) ? 'd0 :
-            free_counter + 1;
+        pps_counter <= (pps_counter >= C_CLOCK_FREQUENCY - 1) ? 'd0 :
+            pps_counter + 1;
     end
 
-    // Record the counter when PPS arrives
+    // We capture the PPS's posedge at same tick of last capture
+    assign match = (pps_counter == last_pha);
+
+    // We capture the PPS's posedge one tick advance than last capture
+    assign adv_by1 = (last_pha - pps_counter == 1) ||
+        (pps_counter - last_pha == C_CLOCK_FREQUENCY - 1);
+
+    // We capture the PPS's posedge one tick later than last capture
+    assign late_by1 = (pps_counter - last_pha == 1) ||
+        (last_pha - pps_counter == C_CLOCK_FREQUENCY - 1);
+
+    // To determine which tick (1 clock advanced tick, current tick, 1 clock
+    // late tick) is the best estimation of PPS time. We counter for if we see
+    // PPS's posedge on advanced tick or late tick more time. If any counter
+    // reach 15, we adjust the internal PPS. If we see PPS out of the (-1, +1)
+    // range, adjust the internall PPS immediately.
     always_ff @ (posedge clk) begin
-        if (rst) begin
-            last_pha <= 'd0;
-        end else if (pps_posedge) begin
-            last_pha <= free_counter;
+        // Default
+        adv_cnt  <= adv_cnt;
+        late_cnt <= late_cnt;
+        last_pha <= last_pha;
+        //
+        if (pps_posedge) begin
+            if (match) begin
+                // Current count is equal to last count
+                if (adv_cnt > 0) adv_cnt  <= adv_cnt - 1;
+                if (late_cnt > 0) late_cnt <= late_cnt - 1;
+            end else if (adv_by1) begin
+                // Current count is 1 less than last count
+                if (late_cnt > 0) late_cnt <= late_cnt - 1;
+                adv_cnt <= adv_cnt + 1;
+                if (&adv_cnt) last_pha <= pps_counter;
+            end else if (late_by1) begin
+                // Current count is 1 more than last count
+                if (adv_cnt > 0) adv_cnt  <= adv_cnt - 1;
+                late_cnt <= late_cnt + 1;
+                if (&late_cnt) last_pha <= pps_counter;
+            end else begin
+                // Current count is 1 more different than last count
+                adv_cnt  <= 0;
+                late_cnt <= 0;
+                last_pha <= pps_counter;
+            end
         end
     end
 
-    // PPS Output
-    //===========
-    // The internal PPS pulse is a delayed version of PPS input, this is to
-    // implement a "holdover" function but not generate 2 PPS if PPS arrives
-    // late
+    always_ff @ (posedge clk) begin
+        pps_out <= match;
+    end
 
-    var logic r1, r2;
+    // TS generation
+    //==============
+    // We need this since the period of PPS is long (1s). If we are using
+    // another async clock to capture this PPS, due to clock frequency error,
+    // it will be a large integrating error during 1s. Say 50 ppm, it will be
+    // 50us after 1s. Reduce the period will reduce this error.
+    // 1 kHZ pulse is chosen.
 
-    // Right boundary
-    assign r1 = (free_counter == last_pha + C_PPS_DELAY);
-    assign r2 = (free_counter == last_pha + C_PPS_DELAY - C_CLOCK_FREQUENCY);
+    var logic [$clog2(C_CLOCK_FREQUENCY/1000-1)-1:0] ts_counter    ;
 
     always_ff @ (posedge clk) begin
-        if (rst) begin
-            pps_out <= 1'b0;
+        if (match) begin
+            ts_counter <= 0;
+        end  else begin
+            ts_counter <= (ts_counter >= C_CLOCK_FREQUENCY/1000 - 1) ? 0 :
+                ts_counter + 1;
+        end
+    end
+
+    always_ff @ (posedge clk) begin
+        if (match) begin
+            ts_out <= 1'b1;
         end else begin
-            pps_out <= r1 || r2;
+            ts_out <= (ts_counter >= C_CLOCK_FREQUENCY/1000 - 1);
         end
     end
 

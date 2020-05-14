@@ -47,6 +47,7 @@ module coreboard1588 (
     input  wire       FPGA_TRIGGER_EN  ,
     // PHY
     //=====
+    input  wire       PTP_CLK_OUT      ,
     input  wire       PTP_TRG_FPGA     ,
     // QSPI
     //=====
@@ -124,6 +125,7 @@ module coreboard1588 (
         .FPGA_TRIGGER_EN      (FPGA_TRIGGER_EN  ),
         // PTP
         //====
+        .PTP_CLK_OUT          (PTP_CLK_OUT      ),
         .PTP_TRG_FPGA         (PTP_TRG_FPGA     ),
         // ADS868x
         //========

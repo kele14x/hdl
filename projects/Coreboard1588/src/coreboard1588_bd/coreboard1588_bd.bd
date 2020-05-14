@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x8F2CEDBDD85B8C58",
+      "boundary_crc": "0xA895CFEF8596DD0",
       "device": "xc7a100tcsg324-2L",
       "name": "coreboard1588_bd",
       "synth_flow_mode": "Hierarchical",
@@ -137,7 +137,7 @@
         "parameters": {
           "PortWidth": {
             "value": "1",
-            "value_src": "default"
+            "value_src": "default_prop"
           },
           "SENSITIVITY": {
             "value": "LEVEL_HIGH",
@@ -183,6 +183,9 @@
         "direction": "I"
       },
       "FPGA_TRIGGER_EN": {
+        "direction": "I"
+      },
+      "PTP_CLK_OUT": {
         "direction": "I"
       }
     },
@@ -677,24 +680,6 @@
           }
         },
         "interface_nets": {
-          "m03_couplers_to_axi_interconnect": {
-            "interface_ports": [
-              "M03_AXI",
-              "m03_couplers/M_AXI"
-            ]
-          },
-          "xbar_to_m02_couplers": {
-            "interface_ports": [
-              "xbar/M02_AXI",
-              "m02_couplers/S_AXI"
-            ]
-          },
-          "xbar_to_m03_couplers": {
-            "interface_ports": [
-              "xbar/M03_AXI",
-              "m03_couplers/S_AXI"
-            ]
-          },
           "axi_interconnect_to_s00_couplers": {
             "interface_ports": [
               "S00_AXI",
@@ -725,16 +710,16 @@
               "m00_couplers/M_AXI"
             ]
           },
-          "xbar_to_m00_couplers": {
-            "interface_ports": [
-              "xbar/M00_AXI",
-              "m00_couplers/S_AXI"
-            ]
-          },
           "m01_couplers_to_axi_interconnect": {
             "interface_ports": [
               "M01_AXI",
               "m01_couplers/M_AXI"
+            ]
+          },
+          "xbar_to_m00_couplers": {
+            "interface_ports": [
+              "xbar/M00_AXI",
+              "m00_couplers/S_AXI"
             ]
           },
           "xbar_to_m01_couplers": {
@@ -747,6 +732,24 @@
             "interface_ports": [
               "M02_AXI",
               "m02_couplers/M_AXI"
+            ]
+          },
+          "xbar_to_m02_couplers": {
+            "interface_ports": [
+              "xbar/M02_AXI",
+              "m02_couplers/S_AXI"
+            ]
+          },
+          "m03_couplers_to_axi_interconnect": {
+            "interface_ports": [
+              "M03_AXI",
+              "m03_couplers/M_AXI"
+            ]
+          },
+          "xbar_to_m03_couplers": {
+            "interface_ports": [
+              "xbar/M03_AXI",
+              "m03_couplers/S_AXI"
             ]
           }
         },
@@ -2869,17 +2872,19 @@
               }
             }
           },
-          "ts_irq": {
-            "type": "intr",
+          "FPGA_DAT_FIN": {
             "direction": "O",
             "parameters": {
-              "SENSITIVITY": {
-                "value": "LEVEL_HIGH",
-                "value_src": "constant"
+              "PortWidth": {
+                "value": "1",
+                "value_src": "default_prop"
               }
             }
           },
-          "pps_in": {
+          "PTP_CLK_OUT": {
+            "direction": "I"
+          },
+          "PTP_TRG_FPGA": {
             "direction": "I"
           },
           "pps_out": {
@@ -2895,10 +2900,10 @@
       }
     },
     "interface_nets": {
-      "FPGA_MCU_SPI_1": {
+      "axi_interconnect_M02_AXI": {
         "interface_ports": [
-          "FPGA_MCU_SPI",
-          "axis_spi_slave2_0/SPI"
+          "axi_interconnect/M02_AXI",
+          "axi_ads868x_0/S_AXI"
         ]
       },
       "axis_axi_master_1_M_AXI_LITE": {
@@ -2907,16 +2912,16 @@
           "axi_interconnect/S01_AXI"
         ]
       },
-      "coreboard1588_axi_top_0_bram": {
+      "SPI_0_3": {
         "interface_ports": [
-          "coreboard1588_axi_top_0/bram",
-          "blk_mem_gen_1/BRAM_PORTB"
+          "FPGA_SPI2",
+          "axi_ads124x_0/SPI"
         ]
       },
-      "fmc_slv_if_0_BRAM": {
+      "FMC_1": {
         "interface_ports": [
-          "fmc_slv_if_0/BRAM",
-          "blk_mem_gen_1/BRAM_PORTA"
+          "FMC",
+          "fmc_slv_if_0/FMC"
         ]
       },
       "axi_ads868x_0_M_AXIS": {
@@ -2925,10 +2930,10 @@
           "axi_ads868x_0/M_AXIS"
         ]
       },
-      "SPI_0_3": {
+      "axi_interconnect_M03_AXI": {
         "interface_ports": [
-          "FPGA_SPI2",
-          "axi_ads124x_0/SPI"
+          "axi_ads124x_0/S_AXI",
+          "axi_interconnect/M03_AXI"
         ]
       },
       "axi_quad_spi_0_SPI_0": {
@@ -2937,34 +2942,10 @@
           "axi_quad_spi/SPI_0"
         ]
       },
-      "axi_interconnect_M03_AXI": {
+      "coreboard1588_axi_top_0_bram": {
         "interface_ports": [
-          "axi_ads124x_0/S_AXI",
-          "axi_interconnect/M03_AXI"
-        ]
-      },
-      "axi_interconnect_M01_AXI": {
-        "interface_ports": [
-          "axi_quad_spi/AXI_LITE",
-          "axi_interconnect/M01_AXI"
-        ]
-      },
-      "axi_ads124x_0_M_AXIS": {
-        "interface_ports": [
-          "axi_ads124x_0/M_AXIS",
-          "coreboard1588_axi_top_0/S01_AXIS"
-        ]
-      },
-      "axi_interconnect_M02_AXI": {
-        "interface_ports": [
-          "axi_interconnect/M02_AXI",
-          "axi_ads868x_0/S_AXI"
-        ]
-      },
-      "axis_spi_slave2_0_axis_rx": {
-        "interface_ports": [
-          "axis_axi_master_1/S_AXIS",
-          "axis_spi_slave2_0/axis_rx"
+          "coreboard1588_axi_top_0/bram",
+          "blk_mem_gen_1/BRAM_PORTB"
         ]
       },
       "axis_axi_master_1_M_AXIS": {
@@ -2973,16 +2954,34 @@
           "axis_spi_slave2_0/axis_tx"
         ]
       },
+      "axi_ads124x_0_M_AXIS": {
+        "interface_ports": [
+          "axi_ads124x_0/M_AXIS",
+          "coreboard1588_axi_top_0/S01_AXIS"
+        ]
+      },
+      "axi_interconnect_M01_AXI": {
+        "interface_ports": [
+          "axi_quad_spi/AXI_LITE",
+          "axi_interconnect/M01_AXI"
+        ]
+      },
       "SPI_0_2": {
         "interface_ports": [
           "FPGA_SPI1",
           "axi_ads868x_0/SPI"
         ]
       },
-      "FMC_1": {
+      "FPGA_MCU_SPI_1": {
         "interface_ports": [
-          "FMC",
-          "fmc_slv_if_0/FMC"
+          "FPGA_MCU_SPI",
+          "axis_spi_slave2_0/SPI"
+        ]
+      },
+      "axis_spi_slave2_0_axis_rx": {
+        "interface_ports": [
+          "axis_axi_master_1/S_AXIS",
+          "axis_spi_slave2_0/axis_rx"
         ]
       },
       "jtag_axi_M_AXI": {
@@ -2995,6 +2994,12 @@
         "interface_ports": [
           "coreboard1588_axi_top_0/S_AXI",
           "axi_interconnect/M00_AXI"
+        ]
+      },
+      "fmc_slv_if_0_BRAM": {
+        "interface_ports": [
+          "fmc_slv_if_0/BRAM",
+          "blk_mem_gen_1/BRAM_PORTA"
         ]
       }
     },
@@ -3180,13 +3185,19 @@
       "PTP_TRG_FPGA_1": {
         "ports": [
           "PTP_TRG_FPGA",
-          "coreboard1588_axi_top_0/pps_in"
+          "coreboard1588_axi_top_0/PTP_TRG_FPGA"
         ]
       },
       "coreboard1588_axi_top_0_ts_irq": {
         "ports": [
-          "coreboard1588_axi_top_0/ts_irq",
+          "coreboard1588_axi_top_0/FPGA_DAT_FIN",
           "FPGA_DAT_FIN"
+        ]
+      },
+      "PTP_CLK_OUT_0_1": {
+        "ports": [
+          "PTP_CLK_OUT",
+          "coreboard1588_axi_top_0/PTP_CLK_OUT"
         ]
       }
     },

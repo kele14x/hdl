@@ -286,7 +286,7 @@ module coreboard1588_axi_fmc (
         if (!aresetn) begin
             bram_en <= 1'b0;
         end else begin
-            bram_en <= (bram_wr_state >=0 && bram_wr_state <= 39);
+            bram_en <= (bram_wr_state >=0 && bram_wr_state <= 40);
         end
     end
 
@@ -295,7 +295,7 @@ module coreboard1588_axi_fmc (
         if (!aresetn) begin
             bram_we <= 2'b00;
         end else begin
-            bram_we <= (bram_wr_state >=0 && bram_wr_state <= 39) ? 2'b11 : 2'b00;
+            bram_we <= (bram_wr_state >=0 && bram_wr_state <= 40) ? 2'b11 : 2'b00;
         end
     end
 
@@ -304,7 +304,7 @@ module coreboard1588_axi_fmc (
         if (!aresetn) begin
             bram_addr <= 'd0;
         end else begin
-            bram_addr <= (bram_wr_state >=0 && bram_wr_state <= 39) ? bram_wr_state : 'd0;
+            bram_addr <= (bram_wr_state >=0 && bram_wr_state <= 40) ? bram_wr_state : 'd0;
         end
     end
 
@@ -315,7 +315,7 @@ module coreboard1588_axi_fmc (
         if (!aresetn) begin
             ts_irq_ext <= 'd0;
         end else begin
-            if (bram_wr_state == 39) begin
+            if (bram_wr_state == 40) begin
                 ts_irq_ext <= 'd1;
             end else if (|ts_irq_ext) begin
                 ts_irq_ext <= ts_irq_ext + 1;

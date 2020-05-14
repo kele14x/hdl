@@ -9,8 +9,6 @@ All rights reserved.
 // Note: AxPROT not supported (not connected)
 
 module coreboard1588_axi_top #(
-    parameter C_CLOCK_FREQUENCY = 125000000,
-    parameter C_PPS_DELAY       = 1250     ,
     parameter C_ADDR_WIDTH      = 10       ,
     parameter C_DATA_WIDTH      = 32
 ) (
@@ -99,10 +97,12 @@ module coreboard1588_axi_top #(
     output wire [               1:0] bram_we         ,
     // IRQ
     //====
-    output wire                      ts_irq          ,
+    output wire                      FPGA_DAT_FIN    ,
+    // PHY
+    input  wire                      PTP_CLK_OUT     , // Clock output from PHY
+    input  wire                      PTP_TRG_FPGA    , // PPS input from PHY
     // PPS
     //====
-    input  wire                      pps_in          ,
     output wire                      pps_out         ,
     // Trigger input
     //==============
@@ -122,6 +122,7 @@ module coreboard1588_axi_top #(
     wire                    up_rd_ack ;
 
     wire pps_s;
+    wire ts_s;
 
     wire [31:0] rtc_second    ;
     wire [31:0] rtc_nanosecond;
@@ -185,8 +186,8 @@ module coreboard1588_axi_top #(
 
 
     coreboard1588_axi_regs #(
-        .C_ADDR_WIDTH(C_ADDR_WIDTH),
-        .C_DATA_WIDTH(C_DATA_WIDTH)
+        .C_ADDR_WIDTH(C_ADDR_WIDTH-2),
+        .C_DATA_WIDTH(C_DATA_WIDTH  )
     ) i_coreboard1588_axi_regs (
         .clk                    (aclk                   ),
         .rst                    (!aresetn               ),
@@ -220,13 +221,12 @@ module coreboard1588_axi_top #(
 
 
     pps_receiver #(
-        .C_CLOCK_FREQUENCY(C_CLOCK_FREQUENCY),
-        .C_PPS_DELAY      (C_PPS_DELAY      )
+        .C_CLOCK_FREQUENCY(25000000)
     ) i_pps_receiver (
-        .clk    (aclk    ),
-        .rst    (!aresetn),
-        .pps_in (pps_in  ),
-        .pps_out(pps_s   )
+        .ptp_clk(PTP_CLK_OUT ),
+        .pps_in (PTP_TRG_FPGA),
+        .pps_out(pps_s       ),
+        .ts_out (ts_s        )
     );
 
 
@@ -274,7 +274,7 @@ module coreboard1588_axi_top #(
         .bram_din               (bram_din               ),
         .bram_we                (bram_we                ),
         //
-        .ts_irq                 (ts_irq                 ),
+        .ts_irq                 (FPGA_DAT_FIN           ),
         //
         .FPGA_EXT_TRIGGER       (FPGA_EXT_TRIGGER       ),
         .FPGA_TRIGGER_EN        (FPGA_TRIGGER_EN        ),

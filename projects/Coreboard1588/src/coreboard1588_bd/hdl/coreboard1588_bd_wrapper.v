@@ -1,7 +1,7 @@
 //Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-//Date        : Fri May  8 10:03:22 2020
+//Date        : Thu May 14 15:22:37 2020
 //Host        : CN-00002823 running 64-bit major release  (build 9200)
 //Command     : generate_target coreboard1588_bd_wrapper.bd
 //Design      : coreboard1588_bd_wrapper
@@ -54,6 +54,7 @@ module coreboard1588_bd_wrapper
     FPGA_SPI2_sck_io,
     FPGA_SPI2_ss_io,
     FPGA_TRIGGER_EN,
+    PTP_CLK_OUT,
     PTP_TRG_FPGA);
   inout A7_CONFIG_QSPI_io0_io;
   inout A7_CONFIG_QSPI_io1_io;
@@ -99,6 +100,7 @@ module coreboard1588_bd_wrapper
   inout FPGA_SPI2_sck_io;
   inout FPGA_SPI2_ss_io;
   input FPGA_TRIGGER_EN;
+  input PTP_CLK_OUT;
   input PTP_TRG_FPGA;
 
   wire A7_CONFIG_QSPI_io0_i;
@@ -259,6 +261,7 @@ module coreboard1588_bd_wrapper
   wire FPGA_SPI2_ss_o;
   wire FPGA_SPI2_ss_t;
   wire FPGA_TRIGGER_EN;
+  wire PTP_CLK_OUT;
   wire PTP_TRG_FPGA;
 
   IOBUF A7_CONFIG_QSPI_io0_iobuf
@@ -507,5 +510,6 @@ module coreboard1588_bd_wrapper
         .FPGA_SPI2_ss_o(FPGA_SPI2_ss_o),
         .FPGA_SPI2_ss_t(FPGA_SPI2_ss_t),
         .FPGA_TRIGGER_EN(FPGA_TRIGGER_EN),
+        .PTP_CLK_OUT(PTP_CLK_OUT),
         .PTP_TRG_FPGA(PTP_TRG_FPGA));
 endmodule

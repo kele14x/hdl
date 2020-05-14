@@ -141,6 +141,16 @@ int FPGA_Init(void)
     printf("FPGA initialize fail!\r\n");
   }
 
+  /* Initialize RTC */
+
+  FPGA_Set_RtcMode(FPGA_RTC_MODE_PPS);
+  FPGA_Set_RtcTime(0 ,0); // The Unix epoch, 00:00:00 UTC on 1 January 1970
+
+  /* Initialize Trigger Machine */
+
+  FPGA_Set_TirggerSource(FPGA_TRIGGER_SOURCE_MCU);
+  FPGA_Set_TirggerEnable(FPGA_TRIGGER_ENABLE);
+
   /* Initialize ADS124x */
 
   // Soft reset of core
@@ -179,6 +189,120 @@ int FPGA_Init(void)
   return 0;
 }
 
+/**
+  * @brief Get FPGA Product ID value
+  * @param  id   : The ID of the FPGA Product
+  * @retval None
+  */
+void FPGA_Get_ProductId(uint32_t *id)
+{
+  uint32_t result;
+  FPGA_ReadReg(FPGA_AXI_TOP_PRODUCT_ID, &result);
+  *id = result;
+}
+
+/**
+  * @brief Get FPGA Firmware version
+  * @param    version: The version of FPGA
+  * @retval None
+  */
+void FPGA_Get_Version(uint32_t *version)
+{
+  uint32_t result;
+  FPGA_ReadReg(FPGA_AXI_TOP_VERSION, &result);
+  *version = result;
+}
+
+/**
+  * @brief Get FPGA Firmware version
+  * @param   mode: The RTC mode, should be one of @FPGA_RTC_Mode
+  * @retval None
+  */
+void FPGA_Get_RtcMode(uint8_t *mode)
+{
+  uint32_t result;
+  FPGA_ReadReg(FPGA_AXI_TOP_RTC_MODE, &result);
+  result &= 0x1;
+  *mode = result;
+}
+
+/**
+  * @brief Set FPGA Firmware version
+  * @param  mode: The RTC mode, should be one of @FPGA_RTC_Mode
+  * @retval None
+  */
+void FPGA_Set_RtcMode(uint8_t mode)
+{
+  uint32_t data = 0;
+  data = mode & 0x1;
+  FPGA_WriteReg(FPGA_AXI_TOP_RTC_MODE, data);
+}
+
+/**
+  * @brief Get FPGA RTC Time
+  * @param second     : Pointer to store the second value
+  * @param nanosecond : Pointer to store the nanosecond value
+  * @retval None
+  */
+void FPGA_Get_RtcTime(uint32_t *second, uint32_t *nanosecond)
+{
+  uint32_t result;
+  FPGA_WriteReg(FPGA_AXI_TOP_RTC_GET, 1);
+  FPGA_ReadReg(FPGA_AXI_TOP_RTC_GET_SECOND, &result);
+  *second = result;
+  FPGA_ReadReg(FPGA_AXI_TOP_RTC_GET_NANOSECOND, &result);
+  *nanosecond = result;
+}
+
+/**
+  * @brief Set FPGA RTC Time
+  * @param second     : The second value
+  * @param nanosecond : The nanosecond value
+  * @retval None
+  */
+void FPGA_Set_RtcTime(uint32_t second, uint32_t nanosecond)
+{
+  FPGA_WriteReg(FPGA_AXI_TOP_RTC_SET_SECOND, second);
+  FPGA_WriteReg(FPGA_AXI_TOP_RTC_SET_NANOSECOND, nanosecond);
+  FPGA_WriteReg(FPGA_AXI_TOP_RTC_SET, 1);
+}
+
+/**
+  * @brief Set FPGA Trigger Enable/Disable
+  * @param enable     : Enable the trigger or not，should be one of @FPGA_Trigger_Enable
+  * @retval None
+  */
+void FPGA_Set_TirggerEnable(uint8_t enable)
+{
+  uint32_t data = 0;
+  data = enable & 0x1;
+  FPGA_WriteReg(FPGA_AXI_TOP_TRIGGER_ENABLE, data);
+}
+
+/**
+  * @brief Set FPGA Trigger Source
+  * @param source     : Source of the trigger, should be one of @FPGA_Trigger_Source
+  * @retval None
+  */
+void FPGA_Set_TirggerSource(uint8_t source)
+{
+  uint32_t data = 0;
+  data = source & 0x3;
+  FPGA_WriteReg(FPGA_AXI_TOP_TRIGGER_SROUCE, data);
+}
+
+/**
+  * @brief Set FPGA Trigger RTC Time, it only useful when trigger source is RTC
+  *        trigger
+  * @param second     : Second value of RTC trigger
+  * @param nanosecond : Nanosecond value of RTC trigger
+  * @retval None
+  */
+void FPGA_Set_TirggerRtcTime(uint32_t second, uint32_t nanosecond)
+{
+  FPGA_WriteReg(FPGA_AXI_TOP_TRIGGER_SECOND, second);
+  FPGA_WriteReg(FPGA_AXI_TOP_TRIGGER_NANOSECOND, nanosecond);
+}
 
 /* Private functions --------------------------------------------------------*/
 

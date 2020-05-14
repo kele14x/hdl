@@ -165,6 +165,17 @@ module coreboard1588_axi_regs #(
         end
     end
 
+    //
+    
+    // It takes 1 clock for read response
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            up_wr_ack <= 1'b0;
+        end else begin
+            up_wr_ack <= up_wr_req;
+        end
+    end
+
     // Read
     //=====
 

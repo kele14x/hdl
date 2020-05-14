@@ -15,9 +15,12 @@ All rights reserved.
 module coreboard1588_axi_rtc #(parameter  C_CLOCK_FREQUENCY = 125000000) (
     input  var logic        clk            ,
     input  var logic        rst            ,
-    //
+    // ASYNC!!!
     input  var logic        pps_in         ,
+    input  var logic        ts_in          ,
+    // Synced
     output var logic        pps_out        ,
+    output var logic        ts_out         ,
     //
     output var logic [31:0] rtc_second     ,
     output var logic [31:0] rtc_nanosecond ,
@@ -31,6 +34,50 @@ module coreboard1588_axi_rtc #(parameter  C_CLOCK_FREQUENCY = 125000000) (
     output var logic [31:0] stat_second    ,
     output var logic [31:0] stat_nanosecond
 );
+
+
+    // PPS, TS input CDC
+    //==============
+    // Standard 2-async FF structure to capture PPS input from external input
+
+    (* ASYNC_REG="true" *)
+    var logic pps_cdc_reg1, pps_cdc_reg2;
+
+    var logic pps_d      ;
+    var logic pps_posedge;
+
+    always_ff @ (posedge clk) begin
+        pps_cdc_reg1 <= pps_in;
+        pps_cdc_reg2 <= pps_cdc_reg1;
+    end
+
+    always_ff @ (posedge clk) begin
+        pps_d <= pps_cdc_reg2;
+    end
+
+    assign pps_posedge = {pps_cdc_reg2, pps_d} == 2'b10;
+
+
+    (* ASYNC_REG="true" *)
+    var logic ts_cdc_reg1, ts_cdc_reg2;
+
+    var logic ts_d      ;
+    var logic ts_posedge;
+
+    always_ff @ (posedge clk) begin
+        ts_cdc_reg1 <= ts_in;
+        ts_cdc_reg2 <= ts_cdc_reg1;
+    end
+
+    always_ff @ (posedge clk) begin
+        ts_d <= ts_cdc_reg2;
+    end
+
+    assign ts_posedge = {ts_cdc_reg2, ts_d} == 2'b10;
+
+
+    // Time counter
+    //==============
 
     localparam C_NS_COUNTER_WIDTH = 10**9 / C_CLOCK_FREQUENCY ;
     localparam C_NS_COUNTER_MAX   = 10**9 - C_NS_COUNTER_WIDTH;
@@ -51,7 +98,7 @@ module coreboard1588_axi_rtc #(parameter  C_CLOCK_FREQUENCY = 125000000) (
                     0 : (nanosecond_counter + C_NS_COUNTER_WIDTH));
             end else begin
                 // PPS Mode
-                nanosecond_counter <= pps_in ? 0 : (nanosecond_counter + C_NS_COUNTER_WIDTH);
+                nanosecond_counter <= pps_posedge ? 0 : (nanosecond_counter + C_NS_COUNTER_WIDTH);
             end
             // Set time
             if (ctrl_timeset) begin
@@ -73,7 +120,7 @@ module coreboard1588_axi_rtc #(parameter  C_CLOCK_FREQUENCY = 125000000) (
                     second_counter + 1 : second_counter;
             end else begin
                 // PPS mode
-                second_counter <= pps_in ? second_counter + 1 : second_counter;
+                second_counter <= pps_posedge ? second_counter + 1 : second_counter;
             end
             // Set time
             if (ctrl_timeset) begin
@@ -116,9 +163,13 @@ module coreboard1588_axi_rtc #(parameter  C_CLOCK_FREQUENCY = 125000000) (
                 pps_out <= (nanosecond_counter >= C_NS_COUNTER_MAX);
             end else begin
                 // PPS mode
-                pps_out <= pps_in;
+                pps_out <= pps_posedge;
             end
         end
+    end
+
+    always_ff @ (posedge clk) begin
+        ts_out <= ts_posedge;
     end
 
 endmodule
