@@ -1,3 +1,6 @@
+# Copyright (c) 2019 Chengdu JinZhiLi Technology Co., Ltd
+# All rights reserved.
+
 # Rename Auto-Derived Clocks
 
 # Create clocks that not use MMCM/PLL
