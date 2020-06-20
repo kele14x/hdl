@@ -7,9 +7,10 @@ All rights reserved.
 `default_nettype none
 
 module ext_trg (
-    input  wire clk            ,
-    input  wire ext_trg_in     ,
-    output reg  ext_trg_negedge
+    input  wire       clk              ,
+    input  wire       ext_trg_in       ,
+    input  wire [1:0] ctrl_trigger_type, // 00 = rising edge, 01 = failing edge, 10 = both, 11 = reserved
+    output reg        ext_trg_out
 );
 
     (* ASYNC_REG="TRUE" *)
@@ -36,7 +37,9 @@ module ext_trg (
     end
 
     always_ff @ (posedge clk) begin
-        ext_trg_negedge <= ({stat, stat_d} == 2'b01);
+        ext_trg_out <= (ctrl_trigger_type == 2'b00) ? ({stat, stat_d} == 2'b10) :
+                       (ctrl_trigger_type == 2'b01) ? ({stat, stat_d} == 2'b01) :
+                       (ctrl_trigger_type == 2'b10) ? (({stat, stat_d} == 2'b10) || ({stat, stat_d} == 2'b01)) : 1'b0;
     end
 
 endmodule

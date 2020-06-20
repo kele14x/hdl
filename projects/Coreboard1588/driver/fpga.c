@@ -292,6 +292,18 @@ void FPGA_Set_TirggerSource(uint8_t source)
 }
 
 /**
+  * @brief Set FPGA Trigger Type
+  * @param type     : Type of the trigger, should be one of @FPGA_Trigger_Type
+  * @retval None
+  */
+void FPGA_Set_TirggerType(uint8_t type)
+{
+    uint32_t data = 0;
+    data = type & 0x3;
+    FPGA_WriteReg(FPGA_AXI_TOP_TRIGGER_TYPE, data);
+}
+
+/**
   * @brief Set FPGA Trigger RTC Time, it only useful when trigger source is RTC
   *        trigger
   * @param second     : Second value of RTC trigger

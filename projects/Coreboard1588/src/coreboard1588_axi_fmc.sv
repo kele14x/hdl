@@ -56,7 +56,8 @@ module coreboard1588_axi_fmc (
     // Control
     //========
     input  wire        ctrl_trigger_enable    ,
-    input  wire [ 1:0] ctrl_trigger_source    , // 00 = MCU, 01 = external, 11 = RTC
+    input  wire [ 1:0] ctrl_trigger_source    , // 00 = MCU OR external, 11 = RTC, reserved other wise
+    input  wire [ 1:0] ctrl_trigger_type      , // 00 = rising edge, 01 = failing edge, 10 = both, 11 = reserved
     input  wire [31:0] ctrl_trigger_second    ,
     input  wire [31:0] ctrl_trigger_nanosecond
 );
@@ -167,22 +168,23 @@ module coreboard1588_axi_fmc (
     var logic ext_trigger;
 
     ext_trg i_ext_trg1 (
-        .clk            (aclk            ),
-        .ext_trg_in     (FPGA_EXT_TRIGGER),
-        .ext_trg_negedge(ext_trigger     )
+        .clk              (aclk             ),
+        .ext_trg_in       (FPGA_EXT_TRIGGER ),
+        .ctrl_trigger_type(ctrl_trigger_type),
+        .ext_trg_out      (ext_trigger      )
     );
 
     ext_trg i_ext_trg2 (
-        .clk            (aclk           ),
-        .ext_trg_in     (FPGA_TRIGGER_EN),
-        .ext_trg_negedge(mcu_trigger    )
+        .clk              (aclk             ),
+        .ext_trg_in       (FPGA_TRIGGER_EN  ),
+        .ctrl_trigger_type(ctrl_trigger_type),
+        .ext_trg_out      (mcu_trigger      )
     );
 
     assign rtc_trigger = (ctrl_trigger_second == rtc_second) &&
         (ctrl_trigger_nanosecond == rtc_nanosecond);
 
-    assign trigger_wire = (ctrl_trigger_source == 2'b00) ? mcu_trigger :
-        (ctrl_trigger_source == 2'b01) ? ext_trigger :
+    assign trigger_wire = (ctrl_trigger_source == 2'b00) ? (mcu_trigger || ext_trigger) :
         (ctrl_trigger_source == 2'b11) ? rtc_trigger : 1'b0;
 
     always_ff @ (posedge aclk) begin

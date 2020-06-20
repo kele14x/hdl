@@ -37,7 +37,8 @@ module coreboard1588_axi_regs #(
     input  var logic [            31:0] stat_nanosecond        ,
     //
     output var logic                    ctrl_trigger_enable    ,
-    output var logic [             1:0] ctrl_trigger_source    , // 00 = MCU, 01 = external, 11 = RTC
+    output var logic [             1:0] ctrl_trigger_source    , // 00 = MCU, 11 = RTC, reserved other wise
+    output var logic [             1:0] ctrl_trigger_type      ,
     output var logic [            31:0] ctrl_trigger_second    ,
     output var logic [            31:0] ctrl_trigger_nanosecond
 );
@@ -64,6 +65,7 @@ module coreboard1588_axi_regs #(
     // |   33    | ctrl_trigger_source
     // |   34    | ctrl_trigger_second
     // |   35    | ctrl_trigger_nanosecond
+    // |   36    | ctrl_trigger_type
 
 `include "version.vh"
 `include "build_time.vh"
@@ -165,7 +167,14 @@ module coreboard1588_axi_regs #(
         end
     end
 
-    //
+    // ctrl_trigger_type at address = 36
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            ctrl_trigger_type <= 'd0;
+        end else if (up_wr_req && up_wr_addr == 'd36) begin
+            ctrl_trigger_type <= up_wr_din[1:0];
+        end
+    end
     
     // It takes 1 clock for read response
     always_ff @ (posedge clk) begin
@@ -200,6 +209,7 @@ module coreboard1588_axi_regs #(
                 'd33   : up_rd_dout <= {30'b0, ctrl_trigger_source};
                 'd34   : up_rd_dout <= ctrl_trigger_second;
                 'd35   : up_rd_dout <= ctrl_trigger_nanosecond;
+                'd36   : up_rd_dout <= {30'b0, ctrl_trigger_type};
                 default: up_rd_dout <= 32'hDEADBEEF;
             endcase
         end

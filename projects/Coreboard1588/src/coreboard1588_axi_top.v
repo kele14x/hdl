@@ -138,6 +138,7 @@ module coreboard1588_axi_top #(
 
     wire        ctrl_trigger_enable    ;
     wire [ 1:0] ctrl_trigger_source    ;
+    wire [ 1:0] ctrl_trigger_type      ;
     wire [31:0] ctrl_trigger_second    ;
     wire [31:0] ctrl_trigger_nanosecond;
 
@@ -215,6 +216,7 @@ module coreboard1588_axi_top #(
         //
         .ctrl_trigger_enable    (ctrl_trigger_enable    ),
         .ctrl_trigger_source    (ctrl_trigger_source    ),
+        .ctrl_trigger_type      (ctrl_trigger_type      ),
         .ctrl_trigger_second    (ctrl_trigger_second    ),
         .ctrl_trigger_nanosecond(ctrl_trigger_nanosecond)
     );
@@ -281,6 +283,7 @@ module coreboard1588_axi_top #(
         //
         .ctrl_trigger_enable    (ctrl_trigger_enable    ),
         .ctrl_trigger_source    (ctrl_trigger_source    ),
+        .ctrl_trigger_type      (ctrl_trigger_type      ),
         .ctrl_trigger_second    (ctrl_trigger_second    ),
         .ctrl_trigger_nanosecond(ctrl_trigger_nanosecond)
     );

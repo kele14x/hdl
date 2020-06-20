@@ -116,6 +116,7 @@ typedef struct
 #define FPGA_AXI_TOP_TRIGGER_SROUCE     (FPGA_AXI_TOP + (0x00000084UL))
 #define FPGA_AXI_TOP_TRIGGER_SECOND     (FPGA_AXI_TOP + (0x00000088UL))
 #define FPGA_AXI_TOP_TRIGGER_NANOSECOND (FPGA_AXI_TOP + (0x0000008CUL))
+#define FPGA_AXI_TOP_TRIGGER_TYPE       (FPGA_AXI_TOP + (0x00000090UL))
 /**
   * @}
   */
@@ -175,9 +176,18 @@ typedef struct
 /** @defgroup FPGA_Trigger_Source  FPGA Trigger Source
   * @{
   */
-#define FPGA_TRIGGER_SOURCE_MCU         (0x00000000UL) /* Trigger by MCU pin */
-#define FPGA_TRIGGER_SOURCE_EXT         (0x00000001UL) /* Trigger by EXT pin */
+#define FPGA_TRIGGER_SOURCE_EXT         (0x00000000UL) /* Trigger by EXT or MCU pin */
 #define FPGA_TRIGGER_SOURCE_RTC         (0x00000003UL) /* Trigger RTC time */
+/**
+  * @}
+  */
+
+/** @defgroup FPGA_Trigger_Type  FPGA Trigger Type
+  * @{
+  */
+#define FPGA_TRIGGER_TYPE_POSEDGE       (0x00000000UL) /* Trigger at rising edge */
+#define FPGA_TRIGGER_TYPE_NEGEDGE       (0x00000001UL) /* Trigger at failing edge */
+#define FPGA_TRIGGER_TYPE_BOTHEDGE      (0x00000002UL) /* Trigger at both edge */
 /**
   * @}
   */
@@ -208,6 +218,7 @@ void FPGA_Set_RtcTime(uint32_t second, uint32_t nanosecond);
 
 void FPGA_Set_TirggerEnable(uint8_t enable);
 void FPGA_Set_TirggerSource(uint8_t source);
+void FPGA_Set_TirggerType(uint8_t type);
 void FPGA_Set_TirggerRtcTime(uint32_t second, uint32_t nanosecond);
 /**
   * @}
