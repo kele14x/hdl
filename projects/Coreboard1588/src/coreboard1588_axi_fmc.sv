@@ -72,7 +72,7 @@ module coreboard1588_axi_fmc (
     reg [15:0] pch_data[0:15]; // PCH data from ADS868x
     reg [15:0] tch_data[0:15]; // TCH data from ADS868x
 
-    reg [23:0] pt100[0:1]; // PT100 value from ADS124x
+    reg [23:0] pt100[0:2]; // PT100 value from ADS124x
 
     reg [15:0] triggered;
 
@@ -120,6 +120,7 @@ module coreboard1588_axi_fmc (
     // Save PT100 value to buffer
     // ID = 0: Channel 0
     // ID = 1: Channel 1
+    // ID = 2: Channel 2
 
     always @ (posedge aclk) begin: p_pt100
         if (s01_axis_tvalid && s01_axis_tdata[31:24] == 8'd0) begin
@@ -127,6 +128,9 @@ module coreboard1588_axi_fmc (
         end
         if (s01_axis_tvalid && s01_axis_tdata[31:24] == 8'd1) begin
             pt100[1] <= s01_axis_tdata[23:0];
+        end
+        if (s01_axis_tvalid && s01_axis_tdata[31:24] == 8'd2) begin
+            pt100[2] <= s01_axis_tdata[23:0];
         end
     end
 
@@ -211,14 +215,14 @@ module coreboard1588_axi_fmc (
 
     // Triggered time
     always_ff @ (posedge aclk) begin
-        if (s00_axis_tvalid && s00_axis_tdata[23:16] == 8'd0 && 
+        if (s00_axis_tvalid && s00_axis_tdata[23:16] == 8'd0 &&
             state == S_TRG_TRIGGERED) begin
             trg_s_reg  <= rtc_second;
             trg_ns_reg <= rtc_nanosecond;
         end
     end
 
-    // Write 90 byte to BRAM
+    // Write 94 byte to BRAM
     //----------------------
 
     reg [7:0] bram_wr_state;
@@ -274,15 +278,20 @@ module coreboard1588_axi_fmc (
             end else if (bram_wr_state == 39) begin
                 bram_din <= pt100[1][15:0];
             end else if (bram_wr_state == 40) begin
+                // {halfword [40], halfword [41]}: PT100[2]
+                bram_din <= {8'b0, pt100[2][23:16]};
+            end else if (bram_wr_state == 41) begin
+                bram_din <= pt100[2][15:0];
+            end else if (bram_wr_state == 42) begin
                 // {halfword [40]}: triggered
                 bram_din <= triggered;
-            end else if (bram_wr_state == 41) begin
-                bram_din <= trg_s_reg[31:16];
-            end else if (bram_wr_state == 42) begin
-                bram_din <= trg_s_reg[15:0];
             end else if (bram_wr_state == 43) begin
-                bram_din <= trg_ns_reg[31:16];
+                bram_din <= trg_s_reg[31:16];
             end else if (bram_wr_state == 44) begin
+                bram_din <= trg_s_reg[15:0];
+            end else if (bram_wr_state == 45) begin
+                bram_din <= trg_ns_reg[31:16];
+            end else if (bram_wr_state == 46) begin
                 bram_din <= trg_ns_reg[15:0];
             end else begin
                 bram_din <= 'd0;
@@ -295,7 +304,7 @@ module coreboard1588_axi_fmc (
         if (!aresetn) begin
             bram_en <= 1'b0;
         end else begin
-            bram_en <= (bram_wr_state >=0 && bram_wr_state <= 44);
+            bram_en <= (bram_wr_state >=0 && bram_wr_state <= 46);
         end
     end
 
@@ -304,7 +313,7 @@ module coreboard1588_axi_fmc (
         if (!aresetn) begin
             bram_we <= 2'b00;
         end else begin
-            bram_we <= (bram_wr_state >=0 && bram_wr_state <= 44) ? 2'b11 : 2'b00;
+            bram_we <= (bram_wr_state >=0 && bram_wr_state <= 46) ? 2'b11 : 2'b00;
         end
     end
 
@@ -313,7 +322,7 @@ module coreboard1588_axi_fmc (
         if (!aresetn) begin
             bram_addr <= 'd0;
         end else begin
-            bram_addr <= (bram_wr_state >=0 && bram_wr_state <= 44) ? bram_wr_state : 'd0;
+            bram_addr <= (bram_wr_state >=0 && bram_wr_state <= 46) ? bram_wr_state : 'd0;
         end
     end
 
@@ -324,7 +333,7 @@ module coreboard1588_axi_fmc (
         if (!aresetn) begin
             ts_irq_ext <= 'd0;
         end else begin
-            if (bram_wr_state == 44) begin
+            if (bram_wr_state == 46) begin
                 ts_irq_ext <= 'd1;
             end else if (|ts_irq_ext) begin
                 ts_irq_ext <= ts_irq_ext + 1;

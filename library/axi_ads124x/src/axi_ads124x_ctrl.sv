@@ -40,7 +40,7 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
     input  wire [31:0] ctrl_spi_txdata  ,
     input  wire [ 1:0] ctrl_spi_txbytes ,
     input  wire        ctrl_spi_txvalid ,
-    
+
     //
     output reg         stat_spi_rxvalid ,
     output reg  [31:0] stat_spi_rxdata
@@ -67,12 +67,13 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
 
     // Sample on some tick
 
-    reg sample_tick1, sample_tick2;
+    reg sample_tick1, sample_tick2, sample_tick3;
 
 
     always_ff @ (posedge aclk) begin
         sample_tick1 <= (counter == 1);
-        sample_tick2 <= (counter == C_CLK_FREQ/2 + 1);
+        sample_tick2 <= (counter == C_CLK_FREQ/4 + 1);
+        sample_tick3 <= (counter == C_CLK_FREQ/2 + 1);
     end
 
     // SPI TX State Machine
@@ -160,7 +161,7 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
     always_comb begin
         case (rx_state)
             S_RX_RST   : rx_state_next = S_RX_IDLE;
-            S_RX_IDLE  : rx_state_next = !spi_tx_valid       ? S_RX_IDLE : 
+            S_RX_IDLE  : rx_state_next = !spi_tx_valid       ? S_RX_IDLE :
                                       spi_tx_nbytes == 2'b11 ? S_RX_BYTE3 :
                                       spi_tx_nbytes == 2'b10 ? S_RX_BYTE2 :
                                       spi_tx_nbytes == 2'b01 ? S_RX_BYTE1 : S_RX_BYTE0;
@@ -229,8 +230,8 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
     // AUTO mode
     //==========
 
-    typedef enum {S_AUTO_RST, S_AUTO_IDLE, S_AUTO_CH0, S_AUTO_WAIT0, 
-        S_AUTO_CH1, S_AUTO_WAIT1} AUTO_STATE;
+    typedef enum {S_AUTO_RST, S_AUTO_IDLE, S_AUTO_CH0, S_AUTO_WAIT0,
+        S_AUTO_CH1, S_AUTO_WAIT1, S_AUTO_CH2, S_AUTO_WAIT2} AUTO_STATE;
 
     AUTO_STATE auto_state, auto_state_next;
 
@@ -243,15 +244,17 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
             auto_state <= auto_state_next;
         end
     end
-    
+
     always_comb begin
-        case (auto_state) 
+        case (auto_state)
             S_AUTO_RST  : auto_state_next = S_AUTO_IDLE;
             S_AUTO_IDLE : auto_state_next = !(ctrl_op_mode && sample_tick1) ? S_AUTO_IDLE : S_AUTO_CH0;
             S_AUTO_CH0  : auto_state_next = S_AUTO_WAIT0;
-            S_AUTO_WAIT0: auto_state_next = !sample_tick2 ? S_AUTO_WAIT0 : S_AUTO_CH1; 
+            S_AUTO_WAIT0: auto_state_next = !sample_tick2 ? S_AUTO_WAIT0 : S_AUTO_CH1;
             S_AUTO_CH1  : auto_state_next = S_AUTO_WAIT1;
-            S_AUTO_WAIT1: auto_state_next = !sample_tick1 ? S_AUTO_WAIT1 :
+            S_AUTO_WAIT1: auto_state_next = !sample_tick3 ? S_AUTO_WAIT1 : S_AUTO_CH2;
+            S_AUTO_CH2  : auto_state_next = S_AUTO_WAIT2;
+            S_AUTO_WAIT2: auto_state_next = !sample_tick1 ? S_AUTO_WAIT2 :
                                             !ctrl_op_mode ? S_AUTO_IDLE  : S_AUTO_CH0;
             default     : auto_state_next = S_AUTO_RST;
         endcase
@@ -259,13 +262,15 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
 
     // SPI Control
     //============
-    
+
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             spi_tx_data <= 'd0;
         end else if (auto_state == S_AUTO_CH0) begin
-            spi_tx_data <= 24'h400011; // write MUX0 with MUX_SP=AN2/MUX_SN=AN1
+            spi_tx_data <= 24'h40001A; // write MUX0 with MUX_SP=AN3/MUX_SN=AN2
         end else if (auto_state == S_AUTO_CH1) begin
+            spi_tx_data <= 24'h400011; // write MUX0 with MUX_SP=AN2/MUX_SN=AN1
+        end else if (auto_state == S_AUTO_CH2) begin
             spi_tx_data <= 24'h400008; // write MUX0 with MUX_SP=AN1/MUX_SN=AN0
         end else if (auto_state == S_AUTO_WAIT0 && drdy_negedge) begin
             spi_tx_data <= 24'hFFFFFF; // NOOP
@@ -283,6 +288,8 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
             spi_tx_nbytes <= 2'b10;
         end else if (auto_state == S_AUTO_CH1) begin
             spi_tx_nbytes <= 2'b10;
+        end else if (auto_state == S_AUTO_CH2) begin
+            spi_tx_nbytes <= 2'b10;
         end else if (auto_state == S_AUTO_WAIT0 && drdy_negedge) begin
             spi_tx_nbytes <= 2'b10;
         end else if (auto_state == S_AUTO_WAIT1 && drdy_negedge) begin
@@ -298,6 +305,8 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
         end else if (auto_state == S_AUTO_CH0) begin
             spi_tx_valid <= 1'b1;
         end else if (auto_state == S_AUTO_CH1) begin
+            spi_tx_valid <= 1'b1;
+        end else if (auto_state == S_AUTO_CH2) begin
             spi_tx_valid <= 1'b1;
         end else if (auto_state == S_AUTO_WAIT0 && drdy_negedge) begin
             spi_tx_valid <= 1'b1;
@@ -317,10 +326,14 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
             auto_current_ch <= 2'b11;
         end else if (auto_state == S_AUTO_CH1) begin
             auto_current_ch <= 2'b11;
+        end else if (auto_state == S_AUTO_CH1) begin
+            auto_current_ch <= 2'b11;
         end else if (auto_state == S_AUTO_WAIT0 && drdy_negedge) begin
             auto_current_ch <= 2'b00;
         end else if (auto_state == S_AUTO_WAIT1 && drdy_negedge) begin
             auto_current_ch <= 2'b01;
+        end else if (auto_state == S_AUTO_WAIT2 && drdy_negedge) begin
+            auto_current_ch <= 2'b10;
         end else if (!ctrl_op_mode && ctrl_spi_txvalid) begin
             auto_current_ch <= 2'b11;
         end
@@ -360,7 +373,7 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
             end else if (auto_current_ch == 2'b01) begin
                 adc_axis_tdata <= {8'd01, spi_rx_buffer[23:0]};
             end
-        end 
+        end
     end
 
     always_ff @ (posedge aclk) begin

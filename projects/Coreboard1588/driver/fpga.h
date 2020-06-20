@@ -43,8 +43,10 @@ typedef struct
     uint32_t Nanosecond;        /* Sample nanosecond value */
     uint16_t PCH_data[16];      /* PCH data from channel 0 to channel 15 */
     uint16_t TCH_data[16];      /* TCH data from channel 0 to channel 15 */
-    uint32_t PT100[2];          /* PT100 data from channel 0 to channel 1 */
+    uint32_t PT100[3];          /* PT100 data from channel 0 to channel 1 */
 	uint16_t triggered;         /* Tirgger is issued before this sample point */
+	uint32_t TrgSecond;         /* Triggered second value */
+    uint32_t TrgNanosecond;     /* Triggered nanosecond value */
 } FPGA_FMCBufferTypeDef;
 
 /**
