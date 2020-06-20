@@ -233,7 +233,7 @@ module coreboard1588_axi_fmc (
         end else if (s00_axis_tvalid && s00_axis_tdata[23:16] == 8'd31) begin
             // last P/TCH data is writed into buffer
             bram_wr_state <= 0;
-        end else if (bram_wr_state <= 44) begin
+        end else if (bram_wr_state <= 46) begin
             bram_wr_state <= bram_wr_state + 1;
         end else begin
             bram_wr_state <= {8{1'b1}};
