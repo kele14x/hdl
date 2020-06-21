@@ -21,6 +21,9 @@ module coreboard1588 (
     output wire       FPGA_MCU_RST     ,
     output wire       FPGA_DAT_FIN     ,
     output wire       FPGA_MCU_INTR    ,
+    // PPS Intr output
+    output wire       FPGA_MCU_GPIO5   ,
+    output wire       FPGA_RAM_ADDR0   ,
     //   SPI
     inout  wire       FPGA_MCU_SPI_CLK ,
     inout  wire       FPGA_MCU_SPI_CS  ,
@@ -108,6 +111,8 @@ module coreboard1588 (
         .FPGA_RST             (FPGA_RST         ),
         .FPGA_MCU_INTR        (FPGA_MCU_INTR    ),
         .FPGA_DAT_FIN         (FPGA_DAT_FIN     ),
+        .FPGA_MCU_GPIO5       (FPGA_MCU_GPIO5   ),
+        .FPGA_RAM_ADDR0       (FPGA_RAM_ADDR0   ),
         // FMC
         //----
         .FMC_addr             (FMC_A            ),

@@ -72,8 +72,8 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
 
     always_ff @ (posedge aclk) begin
         sample_tick1 <= (counter == 1);
-        sample_tick2 <= (counter == C_CLK_FREQ/4 + 1);
-        sample_tick3 <= (counter == C_CLK_FREQ/2 + 1);
+        sample_tick2 <= (counter == C_CLK_FREQ/3 + 1);
+        sample_tick3 <= (counter == C_CLK_FREQ/3*2 + 1);
     end
 
     // SPI TX State Machine
@@ -276,6 +276,8 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
             spi_tx_data <= 24'hFFFFFF; // NOOP
         end else if (auto_state == S_AUTO_WAIT1 && drdy_negedge) begin
             spi_tx_data <= 24'hFFFFFF; // NOOP
+        end else if (auto_state == S_AUTO_WAIT2 && drdy_negedge) begin
+            spi_tx_data <= 24'hFFFFFF; // NOOP
         end else if (!ctrl_op_mode && ctrl_spi_txvalid) begin
             spi_tx_data <= ctrl_spi_txdata;
         end
@@ -294,6 +296,8 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
             spi_tx_nbytes <= 2'b10;
         end else if (auto_state == S_AUTO_WAIT1 && drdy_negedge) begin
             spi_tx_nbytes <= 2'b10;
+        end else if (auto_state == S_AUTO_WAIT2 && drdy_negedge) begin
+            spi_tx_nbytes <= 2'b10;
         end else if (!ctrl_op_mode && ctrl_spi_txvalid) begin
             spi_tx_nbytes <= ctrl_spi_txbytes;
         end
@@ -311,6 +315,8 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
         end else if (auto_state == S_AUTO_WAIT0 && drdy_negedge) begin
             spi_tx_valid <= 1'b1;
         end else if (auto_state == S_AUTO_WAIT1 && drdy_negedge) begin
+            spi_tx_valid <= 1'b1;
+        end else if (auto_state == S_AUTO_WAIT2 && drdy_negedge) begin
             spi_tx_valid <= 1'b1;
         end else if (!ctrl_op_mode && ctrl_spi_txvalid) begin
             spi_tx_valid <= 1'b1;
@@ -372,6 +378,8 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
                 adc_axis_tdata <= {8'd00, spi_rx_buffer[23:0]};
             end else if (auto_current_ch == 2'b01) begin
                 adc_axis_tdata <= {8'd01, spi_rx_buffer[23:0]};
+            end else if (auto_current_ch == 2'b10) begin
+                adc_axis_tdata <= {8'd10, spi_rx_buffer[23:0]};
             end
         end
     end
@@ -379,7 +387,7 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
     always_ff @ (posedge aclk) begin
         if (!aresetn) begin
             adc_axis_tvalid <= 1'b0;
-        end else if (ctrl_op_mode && spi_rx_valid && auto_current_ch[1] == 1'b0) begin
+        end else if (ctrl_op_mode && spi_rx_valid && auto_current_ch != 2'b11) begin
             adc_axis_tvalid <= 1'b1;
         end else if (adc_axis_tready) begin
             adc_axis_tvalid <= 1'b0;

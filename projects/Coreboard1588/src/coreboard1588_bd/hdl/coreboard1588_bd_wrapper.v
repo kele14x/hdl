@@ -1,7 +1,7 @@
 //Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-//Date        : Sat Jun 20 21:26:14 2020
+//Date        : Sun Jun 21 19:15:58 2020
 //Host        : Kele19e running 64-bit major release  (build 9200)
 //Command     : generate_target coreboard1588_bd_wrapper.bd
 //Design      : coreboard1588_bd_wrapper
@@ -39,11 +39,13 @@ module coreboard1588_bd_wrapper
     FPGA_DAT_FIN,
     FPGA_EXT_TRIGGER,
     FPGA_LED,
+    FPGA_MCU_GPIO5,
     FPGA_MCU_INTR,
     FPGA_MCU_SPI_io0_io,
     FPGA_MCU_SPI_io1_io,
     FPGA_MCU_SPI_sck_io,
     FPGA_MCU_SPI_ss_io,
+    FPGA_RAM_ADDR0,
     FPGA_RST,
     FPGA_SPI1_io0_io,
     FPGA_SPI1_io1_io,
@@ -85,11 +87,13 @@ module coreboard1588_bd_wrapper
   output FPGA_DAT_FIN;
   input FPGA_EXT_TRIGGER;
   output [1:0]FPGA_LED;
+  output FPGA_MCU_GPIO5;
   output FPGA_MCU_INTR;
   inout FPGA_MCU_SPI_io0_io;
   inout FPGA_MCU_SPI_io1_io;
   inout FPGA_MCU_SPI_sck_io;
   inout FPGA_MCU_SPI_ss_io;
+  output FPGA_RAM_ADDR0;
   input FPGA_RST;
   inout FPGA_SPI1_io0_io;
   inout FPGA_SPI1_io1_io;
@@ -210,6 +214,7 @@ module coreboard1588_bd_wrapper
   wire FPGA_DAT_FIN;
   wire FPGA_EXT_TRIGGER;
   wire [1:0]FPGA_LED;
+  wire FPGA_MCU_GPIO5;
   wire FPGA_MCU_INTR;
   wire FPGA_MCU_SPI_io0_i;
   wire FPGA_MCU_SPI_io0_io;
@@ -227,6 +232,7 @@ module coreboard1588_bd_wrapper
   wire FPGA_MCU_SPI_ss_io;
   wire FPGA_MCU_SPI_ss_o;
   wire FPGA_MCU_SPI_ss_t;
+  wire FPGA_RAM_ADDR0;
   wire FPGA_RST;
   wire FPGA_SPI1_io0_i;
   wire FPGA_SPI1_io0_io;
@@ -471,6 +477,7 @@ module coreboard1588_bd_wrapper
         .FPGA_DAT_FIN(FPGA_DAT_FIN),
         .FPGA_EXT_TRIGGER(FPGA_EXT_TRIGGER),
         .FPGA_LED(FPGA_LED),
+        .FPGA_MCU_GPIO5(FPGA_MCU_GPIO5),
         .FPGA_MCU_INTR(FPGA_MCU_INTR),
         .FPGA_MCU_SPI_io0_i(FPGA_MCU_SPI_io0_i),
         .FPGA_MCU_SPI_io0_o(FPGA_MCU_SPI_io0_o),
@@ -484,6 +491,7 @@ module coreboard1588_bd_wrapper
         .FPGA_MCU_SPI_ss_i(FPGA_MCU_SPI_ss_i),
         .FPGA_MCU_SPI_ss_o(FPGA_MCU_SPI_ss_o),
         .FPGA_MCU_SPI_ss_t(FPGA_MCU_SPI_ss_t),
+        .FPGA_RAM_ADDR0(FPGA_RAM_ADDR0),
         .FPGA_RST(FPGA_RST),
         .FPGA_SPI1_io0_i(FPGA_SPI1_io0_i),
         .FPGA_SPI1_io0_o(FPGA_SPI1_io0_o),

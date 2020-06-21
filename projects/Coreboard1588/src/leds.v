@@ -13,7 +13,6 @@ module leds #(parameter C_CLK_FREQ = 125000000) (
     (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 rst RST" *)
     (* X_INTERFACE_PARAMETER = "POLARITY ACTIVE_HIGH" *)
     input  wire rst,
-    (* X_INTERFACE_INFO = "xilinx.com:signal:data:1.0 led LED" *)
     output reg  led
 );
 
