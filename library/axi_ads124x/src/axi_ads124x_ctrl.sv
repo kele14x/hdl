@@ -332,7 +332,7 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
             auto_current_ch <= 2'b11;
         end else if (auto_state == S_AUTO_CH1) begin
             auto_current_ch <= 2'b11;
-        end else if (auto_state == S_AUTO_CH1) begin
+        end else if (auto_state == S_AUTO_CH2) begin
             auto_current_ch <= 2'b11;
         end else if (auto_state == S_AUTO_WAIT0 && drdy_negedge) begin
             auto_current_ch <= 2'b00;
@@ -375,11 +375,11 @@ module axi_ads124x_ctrl #(parameter C_CLK_FREQ = 125000000) (
             adc_axis_tdata <= 'd0;
         end else if (ctrl_op_mode && spi_rx_valid) begin
             if (auto_current_ch == 2'b00) begin
-                adc_axis_tdata <= {8'd00, spi_rx_buffer[23:0]};
+                adc_axis_tdata <= {8'b00, spi_rx_buffer[23:0]};
             end else if (auto_current_ch == 2'b01) begin
-                adc_axis_tdata <= {8'd01, spi_rx_buffer[23:0]};
+                adc_axis_tdata <= {8'b01, spi_rx_buffer[23:0]};
             end else if (auto_current_ch == 2'b10) begin
-                adc_axis_tdata <= {8'd10, spi_rx_buffer[23:0]};
+                adc_axis_tdata <= {8'b10, spi_rx_buffer[23:0]};
             end
         end
     end

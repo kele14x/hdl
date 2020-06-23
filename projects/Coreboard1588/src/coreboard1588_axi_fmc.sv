@@ -175,10 +175,10 @@ module coreboard1588_axi_fmc (
     );
 
     ext_trg i_ext_trg2 (
-        .clk              (aclk             ),
-        .ext_trg_in       (FPGA_TRIGGER_EN  ),
-        .ctrl_trigger_type(ctrl_trigger_type),
-        .ext_trg_out      (mcu_trigger      )
+        .clk              (aclk           ),
+        .ext_trg_in       (FPGA_TRIGGER_EN),
+        .ctrl_trigger_type(2'b00          ),
+        .ext_trg_out      (mcu_trigger    )
     );
 
     assign rtc_trigger = (ctrl_trigger_second == rtc_second) &&
