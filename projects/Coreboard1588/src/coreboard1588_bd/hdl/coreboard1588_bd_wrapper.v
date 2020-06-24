@@ -1,8 +1,8 @@
 //Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2019.2 (win64) Build 2708876 Wed Nov  6 21:40:23 MST 2019
-//Date        : Tue Jun 23 23:52:44 2020
-//Host        : Kele19e running 64-bit major release  (build 9200)
+//Date        : Wed Jun 24 10:55:35 2020
+//Host        : CN-00002823 running 64-bit major release  (build 9200)
 //Command     : generate_target coreboard1588_bd_wrapper.bd
 //Design      : coreboard1588_bd_wrapper
 //Purpose     : IP block netlist

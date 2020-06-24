@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="44" Path="C:/Users/Kele/Workspaces/Git/hdl/projects/Coreboard1588/prj/Coreboard1588_prj.xpr">
+<Project Version="7" Minor="44" Path="C:/Users/eniandu/Workspace/Git/hdl/projects/Coreboard1588/prj/Coreboard1588_prj.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="016357dd9b374a12b8a95b3a0dbd3f53"/>
