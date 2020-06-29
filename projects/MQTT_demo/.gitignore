@@ -1,0 +1,15 @@
+# Project
+/prj/*
+!/prj/*.xpr
+
+# Board design
+/bd/*/ui/
+/bd/*/ipshared/
+/bd/*/synth/
+
+# IP files for Board design
+/bd/*/ip/*/*
+!/bd/*/ip/*/*.xci
+!/bd/*/ip/*/*.xml
+!/bd/*/ip/*/*.mem
+!/bd/*/ip/*/*.bif
