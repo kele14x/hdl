@@ -7,18 +7,18 @@ All rights reserved.
 `default_nettype none
 
 module dummy_adc_core (
-    input  wire        aclk         ,
-    input  wire        aresetn      ,
+    input  var logic        aclk         ,
+    input  var logic        aresetn      ,
     // AXIS
-    input  wire [31:0] s_axis_tdata ,
-    input  wire        s_axis_tvalid,
-    output wire        s_axis_tready,
+    input  var logic [31:0] s_axis_tdata ,
+    input  var logic        s_axis_tvalid,
+    output var logic        s_axis_tready,
     // IRQ
-    output wire        interrupt    ,
+    output var logic        interrupt    ,
     //
-    input  wire [31:0] ctrl_ts      ,
+    input  var logic [31:0] ctrl_ts      ,
     //
-    output wire [31:0] stat_adc_data
+    output var logic [31:0] stat_adc
 );
 
     reg [31:0] ts_cnt;
@@ -48,13 +48,13 @@ module dummy_adc_core (
     // At sample tick, save to register
     always_ff @ (posedge aclk) begin
         if (~aresetn) begin
-            stat_adc_data <= 'd0;
+            stat_adc <= 'd0;
         end else if (ts_tick) begin
-            stat_adc_data <= s_axis_tdata;
+            stat_adc <= s_axis_tdata;
         end
     end
 
-    // At same time, generate a irq
+    // At same time, generate a IRQ
     always_ff @ (posedge aclk) begin
         if (~aresetn) begin
             irq_ext <= 'd0;
@@ -65,4 +65,14 @@ module dummy_adc_core (
         end
     end
 
+    always_ff @ (posedge aclk) begin
+        if (~aresetn) begin
+            interrupt <= 1'b0;
+        end else begin
+            interrupt <= irq_ext;
+        end
+    end
+
 endmodule
+
+`default_nettype wire

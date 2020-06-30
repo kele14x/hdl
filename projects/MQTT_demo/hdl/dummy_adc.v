@@ -85,7 +85,13 @@ module dummy_adc #(parameter C_ADDR_WIDTH = 12) (
     wire [            31:0] up_rd_dout;
     wire                    up_rd_ack ;
 
-    axi4l_ipif_top #(.C_ADDR_WIDTH(C_ADDR_WIDTH)) i_axi4l_ipif_top (
+    wire [31:0] ctrl_scratch;
+
+    wire [31:0] ctrl_ts ;
+    wire [31:0] stat_adc;
+
+
+    axi4l_ipif #(.C_ADDR_WIDTH(C_ADDR_WIDTH)) i_axi4l_ipif (
         .aclk         (aclk         ),
         .aresetn      (aresetn      ),
         //
@@ -140,8 +146,27 @@ module dummy_adc #(parameter C_ADDR_WIDTH = 12) (
         .up_rd_dout  (up_rd_dout  ),
         .up_rd_ack   (up_rd_ack   ),
         //
-        .ctrl_scratch(ctrl_scratch)
+        .ctrl_scratch(ctrl_scratch),
+        //
+        .ctrl_ts     (ctrl_ts     ),
+        .stat_adc    (stat_adc    )
     );
 
 
+    dummy_adc_core i_dummy_adc_core (
+        .aclk         (aclk         ),
+        .aresetn      (aresetn      ),
+        //
+        .s_axis_tdata (s_axis_tdata ),
+        .s_axis_tvalid(s_axis_tvalid),
+        .s_axis_tready(s_axis_tready),
+        //
+        .interrupt    (interrupt    ),
+        //
+        .ctrl_ts      (ctrl_ts      ),
+        .stat_adc     (stat_adc     )
+    );
+
 endmodule
+
+`default_nettype wire

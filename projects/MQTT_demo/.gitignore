@@ -3,9 +3,12 @@
 !/prj/*.xpr
 
 # Board design
-/bd/*/ui/
+/bd/*/hw_handoff/
 /bd/*/ipshared/
+/bd/*/sim/
 /bd/*/synth/
+/bd/*/ui/
+/bd/*/*.xdc
 
 # IP files for Board design
 /bd/*/ip/*/*
@@ -13,3 +16,4 @@
 !/bd/*/ip/*/*.xml
 !/bd/*/ip/*/*.mem
 !/bd/*/ip/*/*.bif
+/bd/*/ip/*/*_parameters.xml

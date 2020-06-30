@@ -24,8 +24,10 @@ module dummy_adc_regs #(
     output var logic                    up_rd_ack   ,
     //========
     // SCRATCH
-    output var logic [            31:0] ctrl_scratch
-    // RTC
+    output var logic [            31:0] ctrl_scratch,
+    // DUMMY ADC
+    output var logic [            31:0] ctrl_ts     ,
+    input  var logic [            31:0] stat_adc
 );
 
     localparam C_VERSION = 32'h0001;
@@ -37,7 +39,8 @@ module dummy_adc_regs #(
     //
     // |   4     | ctrl_scratch
     //
-    // |   8     | ctrl_rtc_mode
+    // |   8     | ctrl_ts
+    // |   9     | stat_adc
 
 
     // Write
@@ -47,13 +50,19 @@ module dummy_adc_regs #(
     always_ff @ (posedge clk) begin
         if (rst) begin
             ctrl_scratch <= 'd0;
-        end else if (up_wr_req && up_wr_addr == 'd8) begin
+        end else if (up_wr_req && up_wr_addr == 'd4) begin
             ctrl_scratch <= up_wr_din;
         end
     end
 
-
-
+    // ctrl_ts at address = 8, bit[31:0]
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            ctrl_ts <= 'd99999;
+        end else if (up_wr_req && up_wr_addr == 'd8) begin
+            ctrl_ts <= up_wr_din;
+        end
+    end
 
     // Read
     //=====
@@ -66,6 +75,8 @@ module dummy_adc_regs #(
                 'd1     : up_rd_dout <= C_MODUEL_ID;
                 'd2     : up_rd_dout <= C_VERSION;
                 'd4     : up_rd_dout <= ctrl_scratch;
+                'd8     : up_rd_dout <= ctrl_ts;
+                'd9     : up_rd_dout <= stat_adc;
                 default : up_rd_dout <= 32'hDEADBEEF;
             endcase
         end

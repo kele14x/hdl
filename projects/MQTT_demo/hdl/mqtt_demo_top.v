@@ -1,27 +1,34 @@
+/*
+Copyright (c) 2019 Chengdu JinZhiLi Technology Co., Ltd.
+All rights reserved.
+*/
+
 `timescale 1ns / 1ps
+`default_nettype none
 
 module mqtt_demo_top (
-    inout [14:0] DDR_addr         ,
-    inout [ 2:0] DDR_ba           ,
-    inout        DDR_cas_n        ,
-    inout        DDR_ck_n         ,
-    inout        DDR_ck_p         ,
-    inout        DDR_cke          ,
-    inout        DDR_cs_n         ,
-    inout [ 3:0] DDR_dm           ,
-    inout [31:0] DDR_dq           ,
-    inout [ 3:0] DDR_dqs_n        ,
-    inout [ 3:0] DDR_dqs_p        ,
-    inout        DDR_odt          ,
-    inout        DDR_ras_n        ,
-    inout        DDR_reset_n      ,
-    inout        DDR_we_n         ,
-    inout        FIXED_IO_ddr_vrn ,
-    inout        FIXED_IO_ddr_vrp ,
-    inout [53:0] FIXED_IO_mio     ,
-    inout        FIXED_IO_ps_clk  ,
-    inout        FIXED_IO_ps_porb ,
-    inout        FIXED_IO_ps_srstb
+    inout wire [14:0] DDR_addr         ,
+    inout wire [ 2:0] DDR_ba           ,
+    inout wire        DDR_cas_n        ,
+    inout wire        DDR_ck_n         ,
+    inout wire        DDR_ck_p         ,
+    inout wire        DDR_cke          ,
+    inout wire        DDR_cs_n         ,
+    inout wire [ 3:0] DDR_dm           ,
+    inout wire [31:0] DDR_dq           ,
+    inout wire [ 3:0] DDR_dqs_n        ,
+    inout wire [ 3:0] DDR_dqs_p        ,
+    inout wire        DDR_odt          ,
+    inout wire        DDR_ras_n        ,
+    inout wire        DDR_reset_n      ,
+    inout wire        DDR_we_n         ,
+    //
+    inout wire        FIXED_IO_ddr_vrn ,
+    inout wire        FIXED_IO_ddr_vrp ,
+    inout wire [53:0] FIXED_IO_mio     ,
+    inout wire        FIXED_IO_ps_clk  ,
+    inout wire        FIXED_IO_ps_porb ,
+    inout wire        FIXED_IO_ps_srstb
 );
 
     ps7_bd_wrapper i_ps7_bd_wrapper (
@@ -40,6 +47,7 @@ module mqtt_demo_top (
         .DDR_ras_n        (DDR_ras_n        ),
         .DDR_reset_n      (DDR_reset_n      ),
         .DDR_we_n         (DDR_we_n         ),
+        //
         .FIXED_IO_ddr_vrn (FIXED_IO_ddr_vrn ),
         .FIXED_IO_ddr_vrp (FIXED_IO_ddr_vrp ),
         .FIXED_IO_mio     (FIXED_IO_mio     ),
@@ -49,3 +57,5 @@ module mqtt_demo_top (
     );
 
 endmodule
+
+`default_nettype wire
