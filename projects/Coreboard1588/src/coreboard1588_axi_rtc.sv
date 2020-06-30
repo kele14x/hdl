@@ -7,9 +7,9 @@ All rights reserved.
 `default_nettype none
 
 // * In normal mode: Full local counter, nanosecond rollover each second, and
-//   when nanosecond rollover, second filed +1. Also, in this mode, internal 
+//   when nanosecond rollover, second filed +1. Also, in this mode, internal
 //   PPS is generated when nanosecond rollover.
-// * In PPS mode: Local counter + PPS, nanosecond will not rollover, and when 
+// * In PPS mode: Local counter + PPS, nanosecond will not rollover, and when
 //   PPS arrives, second field +1, internal PPS is generated.
 
 module coreboard1588_axi_rtc #(parameter  C_CLOCK_FREQUENCY = 125000000) (
@@ -30,6 +30,7 @@ module coreboard1588_axi_rtc #(parameter  C_CLOCK_FREQUENCY = 125000000) (
     input  var logic [31:0] ctrl_nanosecond,
     input  var logic        ctrl_timeset   ,
     input  var logic        ctrl_timeget   ,
+    input  var logic        ctrl_second_inc,
     //
     output var logic [31:0] stat_second    ,
     output var logic [31:0] stat_nanosecond
@@ -125,6 +126,10 @@ module coreboard1588_axi_rtc #(parameter  C_CLOCK_FREQUENCY = 125000000) (
             // Set time
             if (ctrl_timeset) begin
                 second_counter <= ctrl_second;
+            end
+            // Inc time by 1, this is for DP83640 bug work around
+            if (ctrl_second_inc) begin
+                second_counter <= second_counter + 1;
             end
         end
     end

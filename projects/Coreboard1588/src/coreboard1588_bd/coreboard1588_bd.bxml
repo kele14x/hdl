@@ -2,10 +2,10 @@
 <Root MajorVersion="0" MinorVersion="39">
   <CompositeFile CompositeFileTopName="coreboard1588_bd" CanBeSetAsTop="false" CanDisplayChildGraph="true">
     <Description>Composite Fileset</Description>
-    <Generation Name="SYNTHESIS" State="RESET" Timestamp="1592969153"/>
-    <Generation Name="IMPLEMENTATION" State="RESET" Timestamp="1592969153"/>
-    <Generation Name="SIMULATION" State="RESET" Timestamp="1592969153"/>
-    <Generation Name="HW_HANDOFF" State="RESET" Timestamp="1592969153"/>
+    <Generation Name="SYNTHESIS" State="RESET" Timestamp="1593480932"/>
+    <Generation Name="IMPLEMENTATION" State="RESET" Timestamp="1593480932"/>
+    <Generation Name="SIMULATION" State="RESET" Timestamp="1593480932"/>
+    <Generation Name="HW_HANDOFF" State="RESET" Timestamp="1593480932"/>
     <FileCollection Name="SOURCES" Type="SOURCES">
       <File Name="ip\coreboard1588_bd_axi_interconnect_0\coreboard1588_bd_axi_interconnect_0.xci" Type="IP">
         <Instance HierarchyPath="axi_interconnect"/>

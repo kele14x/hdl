@@ -1,0 +1,6 @@
+/prj/**
+!/prj/*.xpr
+
+/src/coreboard1588_bd/ipshared/
+/src/coreboard1588_bd/sim/
+/src/coreboard1588_bd/synth/

@@ -132,6 +132,7 @@ module coreboard1588_axi_top #(
     wire [31:0] ctrl_nanosecond;
     wire        ctrl_timeset   ;
     wire        ctrl_timeget   ;
+    wire        ctrl_second_inc;
 
     wire [31:0] stat_second    ;
     wire [31:0] stat_nanosecond;
@@ -210,6 +211,7 @@ module coreboard1588_axi_top #(
         .ctrl_nanosecond        (ctrl_nanosecond        ),
         .ctrl_timeset           (ctrl_timeset           ),
         .ctrl_timeget           (ctrl_timeget           ),
+        .ctrl_second_inc        (ctrl_second_inc        ),
         //
         .stat_second            (stat_second            ),
         .stat_nanosecond        (stat_nanosecond        ),
@@ -247,6 +249,7 @@ module coreboard1588_axi_top #(
         .ctrl_nanosecond(ctrl_nanosecond),
         .ctrl_timeset   (ctrl_timeset   ),
         .ctrl_timeget   (ctrl_timeget   ),
+        .ctrl_second_inc(ctrl_second_inc),
         //
         .stat_second    (stat_second    ),
         .stat_nanosecond(stat_nanosecond)

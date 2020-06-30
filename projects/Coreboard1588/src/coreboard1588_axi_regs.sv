@@ -35,6 +35,7 @@ module coreboard1588_axi_regs #(
     //
     input  var logic [            31:0] stat_second            ,
     input  var logic [            31:0] stat_nanosecond        ,
+    output var logic                    ctrl_second_inc        , // For bug work around
     //
     output var logic                    ctrl_trigger_enable    ,
     output var logic [             1:0] ctrl_trigger_source    , // 00 = MCU, 11 = RTC, reserved other wise
@@ -44,7 +45,7 @@ module coreboard1588_axi_regs #(
 );
 
 
-    // | Address | Regsiter
+    // | Address | Register
     //------------------------------
     // |   1     | PRODUCT_ID
     // |   2     | VERSION
@@ -60,6 +61,7 @@ module coreboard1588_axi_regs #(
     // |   20    | ctrl_timeget
     // |   21    | stat_second
     // |   22    | stat_nanosecond
+    // |   23    | ctrl_second_inc
     //
     // |   32    | ctrl_trigger_enable
     // |   33    | ctrl_trigger_source
@@ -131,6 +133,18 @@ module coreboard1588_axi_regs #(
         end
     end
 
+
+    // ctrl_second_inc at address = 23, bit[0]
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            ctrl_second_inc <= 'd0;
+        end else if (up_wr_req && up_wr_addr == 'd23) begin
+            ctrl_second_inc <= up_wr_din[0];
+        end else begin
+            ctrl_second_inc <= 'd0;
+        end
+    end
+
     // ctrl_trigger_enable at address = 32, bit[0]
     always_ff @ (posedge clk) begin
         if (rst) begin
@@ -175,7 +189,7 @@ module coreboard1588_axi_regs #(
             ctrl_trigger_type <= up_wr_din[1:0];
         end
     end
-    
+
     // It takes 1 clock for read response
     always_ff @ (posedge clk) begin
         if (rst) begin
@@ -205,6 +219,7 @@ module coreboard1588_axi_regs #(
                 'd20   : up_rd_dout <= 32'b0;
                 'd21   : up_rd_dout <= stat_second;
                 'd22   : up_rd_dout <= stat_nanosecond;
+                'd23   : up_rd_dout <= 32'b0;
                 'd32   : up_rd_dout <= {31'b0, ctrl_trigger_enable};
                 'd33   : up_rd_dout <= {30'b0, ctrl_trigger_source};
                 'd34   : up_rd_dout <= ctrl_trigger_second;

@@ -268,6 +268,15 @@ void FPGA_Set_RtcTime(uint32_t second, uint32_t nanosecond)
 }
 
 /**
+  * @brief FPGA RTC Time Second Self Increment by 1
+  * @retval None
+  */
+void FPGA_Set_RtcSecondInc()
+{
+  FPGA_WriteReg(FPGA_AXI_TOP_RTC_SECOND_INC, 1);
+}
+
+/**
   * @brief Set FPGA Trigger Enable/Disable
   * @param enable     : Enable the trigger or not，should be one of @FPGA_Trigger_Enable
   * @retval None
