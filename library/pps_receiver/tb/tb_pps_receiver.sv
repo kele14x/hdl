@@ -8,22 +8,21 @@ All rights reserved.
 
 module tb_pps_receiver;
 
-    parameter C_CLOCK_FREQUENCY = 125000;
-    parameter C_PPS_DELAY       = 12;
+    parameter C_CLOCK_FREQUENCY = 25000;
 
     // Core clock domain
     //----------------------
     // Clock & Reset
-    var logic clk = 0;
-    var logic rst = 1;
+    var logic ptp_clk = 0;
+
     // External 1PPS in
     var logic pps_in = 0;
     // 1PPS to Fabric
     var logic pps_out;
+    var logic ts_out;
 
-    always #4 clk = !clk;
+    always #20 ptp_clk = !ptp_clk;
 
-    initial #100 rst = 0;
 
     // Target PPS interval in ps
     const real TARGET_INTERVAL = 10**9;
@@ -36,6 +35,14 @@ module tb_pps_receiver;
         real interval;
         last_jitter = 0;
         $srandom(0);
+        
+        forever begin
+            pps_in = 1;
+            #100 pps_in = 0;
+            interval = TARGET_INTERVAL;
+            #(interval/1000 - 200);
+        end
+        
         forever begin
             $display("PPS pulse at %f", $realtime);
             pps_in = 1;
@@ -48,8 +55,7 @@ module tb_pps_receiver;
     end
 
     pps_receiver #(
-        .C_CLOCK_FREQUENCY(C_CLOCK_FREQUENCY),
-        .C_PPS_DELAY      (C_PPS_DELAY      )
+        .C_CLOCK_FREQUENCY(C_CLOCK_FREQUENCY)
     ) UUT (.*);
 
 

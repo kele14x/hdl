@@ -710,22 +710,40 @@
           }
         },
         "interface_nets": {
+          "axi_interconnect_to_s01_couplers": {
+            "interface_ports": [
+              "S01_AXI",
+              "s01_couplers/S_AXI"
+            ]
+          },
+          "m02_couplers_to_axi_interconnect": {
+            "interface_ports": [
+              "M02_AXI",
+              "m02_couplers/M_AXI"
+            ]
+          },
+          "xbar_to_m02_couplers": {
+            "interface_ports": [
+              "xbar/M02_AXI",
+              "m02_couplers/S_AXI"
+            ]
+          },
+          "m03_couplers_to_axi_interconnect": {
+            "interface_ports": [
+              "M03_AXI",
+              "m03_couplers/M_AXI"
+            ]
+          },
           "xbar_to_m03_couplers": {
             "interface_ports": [
               "xbar/M03_AXI",
               "m03_couplers/S_AXI"
             ]
           },
-          "s00_couplers_to_xbar": {
+          "xbar_to_m01_couplers": {
             "interface_ports": [
-              "s00_couplers/M_AXI",
-              "xbar/S00_AXI"
-            ]
-          },
-          "axi_interconnect_to_s01_couplers": {
-            "interface_ports": [
-              "S01_AXI",
-              "s01_couplers/S_AXI"
+              "xbar/M01_AXI",
+              "m01_couplers/S_AXI"
             ]
           },
           "s01_couplers_to_xbar": {
@@ -752,28 +770,10 @@
               "m00_couplers/S_AXI"
             ]
           },
-          "m02_couplers_to_axi_interconnect": {
+          "s00_couplers_to_xbar": {
             "interface_ports": [
-              "M02_AXI",
-              "m02_couplers/M_AXI"
-            ]
-          },
-          "xbar_to_m01_couplers": {
-            "interface_ports": [
-              "xbar/M01_AXI",
-              "m01_couplers/S_AXI"
-            ]
-          },
-          "xbar_to_m02_couplers": {
-            "interface_ports": [
-              "xbar/M02_AXI",
-              "m02_couplers/S_AXI"
-            ]
-          },
-          "m03_couplers_to_axi_interconnect": {
-            "interface_ports": [
-              "M03_AXI",
-              "m03_couplers/M_AXI"
+              "s00_couplers/M_AXI",
+              "xbar/S00_AXI"
             ]
           },
           "axi_interconnect_to_s00_couplers": {
@@ -3138,94 +3138,10 @@
       }
     },
     "interface_nets": {
-      "axi_quad_spi_0_SPI_0": {
-        "interface_ports": [
-          "A7_CONFIG_QSPI",
-          "axi_quad_spi/SPI_0"
-        ]
-      },
-      "axis_axi_master_1_M_AXIS": {
-        "interface_ports": [
-          "axis_axi_master_1/M_AXIS",
-          "axis_spi_slave2_0/axis_tx"
-        ]
-      },
-      "FMC_1": {
-        "interface_ports": [
-          "FMC",
-          "fmc_slv_if_0/FMC"
-        ]
-      },
-      "axi_ads124x_0_M_AXIS": {
-        "interface_ports": [
-          "axi_ads124x_0/M_AXIS",
-          "coreboard1588_axi_top_0/S01_AXIS"
-        ]
-      },
-      "SPI_0_2": {
-        "interface_ports": [
-          "FPGA_SPI1",
-          "axi_ads868x_0/SPI"
-        ]
-      },
-      "jtag_axi_M_AXI": {
-        "interface_ports": [
-          "jtag_axi/M_AXI",
-          "axi_interconnect/S00_AXI"
-        ]
-      },
-      "FPGA_MCU_SPI_1": {
-        "interface_ports": [
-          "FPGA_MCU_SPI",
-          "axis_spi_slave2_0/SPI"
-        ]
-      },
-      "axis_axi_master_1_M_AXI_LITE": {
-        "interface_ports": [
-          "axis_axi_master_1/M_AXI_LITE",
-          "axi_interconnect/S01_AXI"
-        ]
-      },
-      "SPI_0_3": {
-        "interface_ports": [
-          "FPGA_SPI2",
-          "axi_ads124x_0/SPI"
-        ]
-      },
-      "axi_interconnect_M01_AXI": {
-        "interface_ports": [
-          "axi_quad_spi/AXI_LITE",
-          "axi_interconnect/M01_AXI"
-        ]
-      },
-      "axi_interconnect_M03_AXI": {
-        "interface_ports": [
-          "axi_ads124x_0/S_AXI",
-          "axi_interconnect/M03_AXI"
-        ]
-      },
-      "axis_spi_slave2_0_axis_rx": {
-        "interface_ports": [
-          "axis_axi_master_1/S_AXIS",
-          "axis_spi_slave2_0/axis_rx"
-        ]
-      },
       "fir_lp_top_0_m_axis": {
         "interface_ports": [
           "fir_lp_top_0/m_axis",
           "coreboard1588_axi_top_0/S00_AXIS"
-        ]
-      },
-      "axi_interconnect_M02_AXI": {
-        "interface_ports": [
-          "axi_interconnect/M02_AXI",
-          "axi_ads868x_0/S_AXI"
-        ]
-      },
-      "coreboard1588_axi_top_0_bram": {
-        "interface_ports": [
-          "coreboard1588_axi_top_0/bram",
-          "blk_mem_gen_1/BRAM_PORTB"
         ]
       },
       "fmc_slv_if_0_BRAM": {
@@ -3234,16 +3150,100 @@
           "blk_mem_gen_1/BRAM_PORTA"
         ]
       },
-      "axi_ads868x_0_M_AXIS": {
+      "axis_axi_master_1_M_AXI_LITE": {
         "interface_ports": [
-          "axi_ads868x_0/M_AXIS",
-          "fir_lp_top_0/s_axis"
+          "axis_axi_master_1/M_AXI_LITE",
+          "axi_interconnect/S01_AXI"
+        ]
+      },
+      "coreboard1588_axi_top_0_bram": {
+        "interface_ports": [
+          "coreboard1588_axi_top_0/bram",
+          "blk_mem_gen_1/BRAM_PORTB"
+        ]
+      },
+      "FMC_1": {
+        "interface_ports": [
+          "FMC",
+          "fmc_slv_if_0/FMC"
+        ]
+      },
+      "SPI_0_3": {
+        "interface_ports": [
+          "FPGA_SPI2",
+          "axi_ads124x_0/SPI"
+        ]
+      },
+      "axi_interconnect_M03_AXI": {
+        "interface_ports": [
+          "axi_ads124x_0/S_AXI",
+          "axi_interconnect/M03_AXI"
+        ]
+      },
+      "axi_interconnect_M02_AXI": {
+        "interface_ports": [
+          "axi_interconnect/M02_AXI",
+          "axi_ads868x_0/S_AXI"
         ]
       },
       "axi_interconnect_M00_AXI": {
         "interface_ports": [
           "coreboard1588_axi_top_0/S_AXI",
           "axi_interconnect/M00_AXI"
+        ]
+      },
+      "axi_ads868x_0_M_AXIS": {
+        "interface_ports": [
+          "axi_ads868x_0/M_AXIS",
+          "fir_lp_top_0/s_axis"
+        ]
+      },
+      "FPGA_MCU_SPI_1": {
+        "interface_ports": [
+          "FPGA_MCU_SPI",
+          "axis_spi_slave2_0/SPI"
+        ]
+      },
+      "axi_quad_spi_0_SPI_0": {
+        "interface_ports": [
+          "A7_CONFIG_QSPI",
+          "axi_quad_spi/SPI_0"
+        ]
+      },
+      "axi_interconnect_M01_AXI": {
+        "interface_ports": [
+          "axi_quad_spi/AXI_LITE",
+          "axi_interconnect/M01_AXI"
+        ]
+      },
+      "jtag_axi_M_AXI": {
+        "interface_ports": [
+          "jtag_axi/M_AXI",
+          "axi_interconnect/S00_AXI"
+        ]
+      },
+      "axis_axi_master_1_M_AXIS": {
+        "interface_ports": [
+          "axis_axi_master_1/M_AXIS",
+          "axis_spi_slave2_0/axis_tx"
+        ]
+      },
+      "axis_spi_slave2_0_axis_rx": {
+        "interface_ports": [
+          "axis_axi_master_1/S_AXIS",
+          "axis_spi_slave2_0/axis_rx"
+        ]
+      },
+      "SPI_0_2": {
+        "interface_ports": [
+          "FPGA_SPI1",
+          "axi_ads868x_0/SPI"
+        ]
+      },
+      "axi_ads124x_0_M_AXIS": {
+        "interface_ports": [
+          "axi_ads124x_0/M_AXIS",
+          "coreboard1588_axi_top_0/S01_AXIS"
         ]
       }
     },

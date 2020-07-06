@@ -217,8 +217,7 @@ module coreboard1588_axi_fmc (
 
     // Triggered time
     always_ff @ (posedge aclk) begin
-        if (s00_axis_tvalid && s00_axis_tdata[23:16] == 8'd0 &&
-            state == S_TRG_TRIGGERED) begin
+        if (trigger_wire) begin
             trg_s_reg  <= rtc_second;
             trg_ns_reg <= rtc_nanosecond;
         end

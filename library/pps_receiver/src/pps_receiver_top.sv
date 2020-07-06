@@ -65,7 +65,7 @@ module pps_receiver_top #(parameter C_CLOCK_FREQUENCY = 25000000) (
     // estimation within these 3 ticks, we count on which tick we see the
     // posedge more frequently.
 
-    var logic [$clog2(C_CLOCK_FREQUENCY-1)-1:0] pps_counter    ;
+    var logic [$clog2(C_CLOCK_FREQUENCY-1)-1:0] pps_counter = 0;
     var logic [$clog2(C_CLOCK_FREQUENCY-1)-1:0] last_pha    = 0;
 
     var logic match, late_by1, adv_by1;
@@ -126,7 +126,7 @@ module pps_receiver_top #(parameter C_CLOCK_FREQUENCY = 25000000) (
     end
 
     always_ff @ (posedge clk) begin
-        pps_out <= match;
+        pps_out <= pps_posedge;
     end
 
     // TS generation
