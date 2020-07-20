@@ -1,0 +1,3 @@
+[submodule "3rd_party/analogdevicesinc_hdl"]
+	path = 3rd_party/analogdevicesinc_hdl
+	url = https://github.com/analogdevicesinc/hdl.git
