@@ -133,7 +133,7 @@ module axi_ad7124_v2 #(
         .GX_TC_SPI_SDO  (GX_TC_SPI_SDO  ),
         //
         .GX_RTD_SPI_SDO (GX_RTD_SPI_SDO ),
-        .GX_RTD_SPI_CS_N(GX_RTD_SPI_CS_N),
+        .GX_RTD_SPI_CS_N(GX_RTD_SPI_CSN ),
         .GX_RTD_SPI_SCLK(GX_RTD_SPI_SCLK),
         .GX_RTD_SPI_SDI (GX_RTD_SPI_SDI ),
         //

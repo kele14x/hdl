@@ -3,7 +3,7 @@ Copyright (c) 2019 Chengdu JinZhiLi Technology Co., Ltd.
 All rights reserved.
 */
 
-`timescale 1 ns / 1 ps
+`timescale 1 ns / 100 ps
 `default_nettype none
 
 module axi_ad7124_v2_top #(
