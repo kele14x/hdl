@@ -101,7 +101,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/spi_engine/axi_spi_engine/axi_spi_engine.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/spi_engine/spi_engine_offload/spi_engine_offload.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -109,7 +109,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/common/ad_rst.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/util_axis_fifo/address_sync.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -117,7 +117,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/spi_engine/spi_engine_execution/spi_engine_execution.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/spi_engine/axi_spi_engine/axi_spi_engine.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -125,7 +125,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/spi_engine/spi_engine_interconnect/spi_engine_interconnect.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/util_cdc/sync_bits.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -133,7 +133,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/spi_engine/spi_engine_offload/spi_engine_offload.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/spi_engine/spi_engine_interconnect/spi_engine_interconnect.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -141,7 +141,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/common/up_axi.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/common/ad_rst.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -149,7 +149,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/util_axis_fifo/address_gray_pipelined.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/common/ad_mem.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -157,7 +157,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/util_axis_fifo/address_sync.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/util_axis_fifo/address_gray_pipelined.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -165,7 +165,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/util_axis_fifo/util_axis_fifo.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/spi_engine/spi_engine_execution/spi_engine_execution.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -173,7 +173,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/util_axis_fifo/address_gray.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/util_axis_fifo/address_gray.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -181,7 +181,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/util_cdc/sync_bits.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/util_cdc/sync_gray.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -189,7 +189,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/util_cdc/sync_gray.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/util_axis_fifo/util_axis_fifo.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -197,7 +197,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../library/common/ad_mem.v">
+      <File Path="$PPRDIR/../../../3rd_party/analogdevicesinc_hdl/library/common/up_axi.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>

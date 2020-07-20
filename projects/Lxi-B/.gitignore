@@ -1,0 +1,7 @@
+/prj/**
+!/prj/*.xpr
+
+/bd/ps7_bd/ipshared/
+/bd/ps7_bd/sim/
+/bd/ps7_bd/synth/
+/bd/ps7_bd/ui/
