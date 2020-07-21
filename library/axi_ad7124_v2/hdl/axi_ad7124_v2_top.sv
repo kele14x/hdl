@@ -164,27 +164,30 @@ module axi_ad7124_v2_top #(
 
     /* Address mapping */
 
-    // Each channel need 128 word memory space (7-bit)
+    // Each channel need 128 word memory space (7-bit), however, the interface
+    // is configurated as 14-bit width, so we need to force high 7-bit to 0,
+    // and make them as MUX
+
     generate
         for (genvar i = 0; i < NUM_OF_BOARD; i++) begin
 
             // TC Channel N is mapped to N*258 word
             assign tc_up_wreq [i] = (up_waddr[13:8] == i && up_waddr[7] == 1'b0) ? up_wreq : 1'b0;
-            assign tc_up_waddr[i] = up_waddr;
+            assign tc_up_waddr[i] = {7'b0, up_waddr[6:0]};
             assign tc_up_wdata[i] = up_wdata;
 
             // RTD Channel N is mapped to N*256+128 word
             assign rtd_up_wreq [i] = (up_waddr[13:8] == i && up_waddr[7] == 1'b1) ? up_wreq : 1'b0;
-            assign rtd_up_waddr[i] = up_waddr;
+            assign rtd_up_waddr[i] = {7'b0, up_waddr[6:0]};
             assign rtd_up_wdata[i] = up_wdata;
 
             // TC Channel N is mapped to N*258 word
             assign tc_up_rreq [i] = (up_raddr[13:8] == i && up_raddr[7] == 1'b0) ? up_rreq : 1'b0;
-            assign tc_up_raddr[i] = up_raddr;
+            assign tc_up_raddr[i] = {7'b0, up_raddr[6:0]};
 
             // RTD Channel N is mapped to N*256+128 word
             assign rtd_up_rreq [i] = (up_raddr[13:8] == i && up_raddr[7] == 1'b1) ? up_rreq : 1'b0;
-            assign rtd_up_raddr[i] = up_raddr;
+            assign rtd_up_raddr[i] = {7'b0, up_raddr[6:0]};
 
         end
     endgenerate
