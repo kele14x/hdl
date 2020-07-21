@@ -20,35 +20,50 @@ module axi_ad7124_channel #(
     //
     parameter NUM_OF_CS                      = 1
 ) (
-    // up interface
-    input  wire                   up_clk  ,
-    input  wire                   up_rstn ,
+    // UP interface
+    //-------------
+    input  wire                   up_clk           ,
+    input  wire                   up_rstn          ,
     //
-    input  wire                   up_wreq ,
-    input  wire [           13:0] up_waddr,
-    input  wire [           31:0] up_wdata,
-    output wire                   up_wack ,
-    input  wire                   up_rreq ,
-    input  wire [           13:0] up_raddr,
-    output wire [           31:0] up_rdata,
-    output wire                   up_rack ,
+    input  wire                   up_wreq          ,
+    input  wire [           13:0] up_waddr         ,
+    input  wire [           31:0] up_wdata         ,
+    output wire                   up_wack          ,
+    input  wire                   up_rreq          ,
+    input  wire [           13:0] up_raddr         ,
+    output wire [           31:0] up_rdata         ,
+    output wire                   up_rack          ,
     //
-    output wire                   irq     ,
-    //
-    inout  wire                   phy_sclk,
-    inout  wire [(NUM_OF_CS-1):0] phy_cs  ,
-    inout  wire                   phy_mosi,
-    inout  wire                   phy_miso
+    output wire                   irq              ,
+    // AXIS I/F
+    //---------
+    output wire                   offload_sdi_valid,
+    input  wire                   offload_sdi_ready,
+    output wire [            7:0] offload_sdi_data ,
+    // SPI I/F
+    //--------
+    input  wire                   phy_sclk_i       ,
+    output wire                   phy_sclk_o       ,
+    output wire                   phy_sclk_t       ,
+    input  wire [(NUM_OF_CS-1):0] phy_cs_i         ,
+    output wire [(NUM_OF_CS-1):0] phy_cs_o         ,
+    output wire [(NUM_OF_CS-1):0] phy_cs_t         ,
+    input  wire                   phy_mosi_i       ,
+    output wire                   phy_mosi_o       ,
+    output wire                   phy_mosi_t       ,
+    input  wire                   phy_miso_i       ,
+    output wire                   phy_miso_o       ,
+    output wire                   phy_miso_t
 );
 
     // Common
-    localparam       NUM_OF_SDI      = 1    ;
-    localparam       DATA_WIDTH      = 8    ;
-    localparam       ASYNC_SPI_CLK   = 0    ;
+    localparam NUM_OF_SDI    = 1;
+    localparam DATA_WIDTH    = 8;
+    localparam ASYNC_SPI_CLK = 0;
     // AXI SPI
-    localparam       MM_IF_TYPE      = 1    ; // UP_FIFO
+    localparam MM_IF_TYPE = 1; // UP_FIFO
     // SPI Offload
-    localparam       ASYNC_TRIG      = 0    ;
+    localparam ASYNC_TRIG = 0;
     // SPI Execution
     localparam [7:0] DEFAULT_SPI_CFG = 1    ; // {5'b0, three_wire, CPOL, CPHA}
     localparam [7:0] DEFAULT_CLK_DIV = 0    ; // f_sclk = f_clk / ((div + 1) * 2)
@@ -82,10 +97,6 @@ module axi_ad7124_channel #(
     // spi_engine_offload <-> ext
 
     logic trigger;
-
-    logic                               offload_sdi_valid;
-    logic                               offload_sdi_ready;
-    logic [(NUM_OF_SDI*DATA_WIDTH-1):0] offload_sdi_data ;
 
     // axi_spi_engine <-> spi_engine_interconnect
 
@@ -147,14 +158,24 @@ module axi_ad7124_channel #(
     //--------------------------------------------------------------------------
 
     assign ctrl_clk = up_clk;
+    assign spi_clk  = up_clk;
 
-    assign spi_clk = up_clk;
+    // SPI PHY Ports
 
-    assign phy_sclk = spi_sclk;
-    assign phy_cs   = spi_cs;
-    assign phy_mosi = spi_sdo_t ? 1'bz : spi_sdo;
-    assign spi_sdi  = three_wire ? phy_mosi : phy_miso;
+    assign phy_sclk_o = spi_sclk;
+    assign phy_sclk_t = 1'b0;
 
+    assign phy_cs_o   = spi_cs;
+    assign phy_cs_t   = 1'b0;
+
+    assign phy_mosi_o = spi_sdo;
+    assign phy_mosi_t = spi_sdo_t;
+
+    assign phy_miso_o = 1'b0;
+    assign phy_miso_t = 1'b1;
+    assign spi_sdi  = three_wire ? phy_mosi_i : phy_miso_i;
+
+    (* keep_hierarchy="yes" *)
     axi_spi_engine #(
         .CMD_FIFO_ADDRESS_WIDTH        (CMD_FIFO_ADDRESS_WIDTH        ),
         .SYNC_FIFO_ADDRESS_WIDTH       (SYNC_FIFO_ADDRESS_WIDTH       ),
@@ -237,7 +258,7 @@ module axi_ad7124_channel #(
         .pulse_gen_load      (pulse_gen_load     )
     );
 
-
+    (* keep_hierarchy="yes" *)
     spi_engine_offload #(
         .ASYNC_SPI_CLK        (ASYNC_SPI_CLK                 ),
         .ASYNC_TRIG           (ASYNC_TRIG                    ),
@@ -282,7 +303,7 @@ module axi_ad7124_channel #(
         .offload_sdi_data (offload_sdi_data   )
     );
 
-
+    (* keep_hierarchy="yes" *)
     spi_engine_interconnect #(
         .DATA_WIDTH(DATA_WIDTH),
         .NUM_OF_SDI(NUM_OF_SDI)
@@ -330,7 +351,7 @@ module axi_ad7124_channel #(
         .s1_sync      (s1_sync      )
     );
 
-
+    (* keep_hierarchy="yes" *)
     spi_engine_execution #(
         .NUM_OF_CS      (NUM_OF_CS      ),
         .DEFAULT_SPI_CFG(DEFAULT_SPI_CFG),
@@ -366,7 +387,7 @@ module axi_ad7124_channel #(
         .three_wire    (three_wire  )
     );
 
-
+    (* keep_hierarchy="yes" *)
     util_pulse_gen #(
         .PULSE_WIDTH (1        ),
         .PULSE_PERIOD(100000000)
