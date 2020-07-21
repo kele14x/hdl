@@ -80,9 +80,9 @@ module axi_ad7124_v2 #(
     output wire [                                 3:0] bram_we          ,
     (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 BRAM ADDR" *)
     output wire [                                12:0] bram_addr        ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 BRAM DOUT" *)
-    output wire [                                31:0] bram_wrdata      ,
     (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 BRAM DIN" *)
+    output wire [                                31:0] bram_wrdata      ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 BRAM DOUT" *)
     input  wire [                                31:0] bram_rddata      ,
     // AD Board
     //=========

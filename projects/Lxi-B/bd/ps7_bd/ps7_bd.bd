@@ -6,7 +6,8 @@
       "name": "ps7_bd",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "Hierarchical",
-      "tool_version": "2020.1"
+      "tool_version": "2020.1",
+      "validated": "true"
     },
     "design_tree": {
       "processing_system7_0": "",
@@ -29,11 +30,67 @@
     "interface_ports": {
       "DDR": {
         "mode": "Master",
-        "vlnv": "xilinx.com:interface:ddrx_rtl:1.0"
+        "vlnv": "xilinx.com:interface:ddrx_rtl:1.0",
+        "parameters": {
+          "CAN_DEBUG": {
+            "value": "false",
+            "value_src": "default"
+          },
+          "TIMEPERIOD_PS": {
+            "value": "1250",
+            "value_src": "default"
+          },
+          "MEMORY_TYPE": {
+            "value": "COMPONENTS",
+            "value_src": "default"
+          },
+          "DATA_WIDTH": {
+            "value": "8",
+            "value_src": "default"
+          },
+          "CS_ENABLED": {
+            "value": "true",
+            "value_src": "default"
+          },
+          "DATA_MASK_ENABLED": {
+            "value": "true",
+            "value_src": "default"
+          },
+          "SLOT": {
+            "value": "Single",
+            "value_src": "default"
+          },
+          "MEM_ADDR_MAP": {
+            "value": "ROW_COLUMN_BANK",
+            "value_src": "default"
+          },
+          "BURST_LENGTH": {
+            "value": "8",
+            "value_src": "default"
+          },
+          "AXI_ARBITRATION_SCHEME": {
+            "value": "TDM",
+            "value_src": "default"
+          },
+          "CAS_LATENCY": {
+            "value": "11",
+            "value_src": "default"
+          },
+          "CAS_WRITE_LATENCY": {
+            "value": "11",
+            "value_src": "default"
+          }
+        }
       },
       "FIXED_IO": {
         "mode": "Master",
-        "vlnv": "xilinx.com:display_processing_system7:fixedio_rtl:1.0"
+        "vlnv": "xilinx.com:display_processing_system7:fixedio_rtl:1.0",
+        "parameters": {
+          "CAN_DEBUG": {
+            "value": "false",
+            "value_src": "default"
+          }
+        }
       },
       "GX_RTD_SPI_CSN": {
         "mode": "Master",
@@ -1271,16 +1328,16 @@
           }
         },
         "interface_nets": {
-          "s00_couplers_to_xbar": {
-            "interface_ports": [
-              "s00_couplers/M_AXI",
-              "xbar/S00_AXI"
-            ]
-          },
           "m00_couplers_to_axi_interconnect_0": {
             "interface_ports": [
               "M00_AXI",
               "m00_couplers/M_AXI"
+            ]
+          },
+          "s00_couplers_to_xbar": {
+            "interface_ports": [
+              "s00_couplers/M_AXI",
+              "xbar/S00_AXI"
             ]
           },
           "xbar_to_m00_couplers": {
@@ -1295,16 +1352,16 @@
               "m01_couplers/M_AXI"
             ]
           },
-          "xbar_to_m01_couplers": {
-            "interface_ports": [
-              "xbar/M01_AXI",
-              "m01_couplers/S_AXI"
-            ]
-          },
           "axi_interconnect_0_to_s00_couplers": {
             "interface_ports": [
               "S00_AXI",
               "s00_couplers/S_AXI"
+            ]
+          },
+          "xbar_to_m01_couplers": {
+            "interface_ports": [
+              "xbar/M01_AXI",
+              "m01_couplers/S_AXI"
             ]
           }
         },
@@ -1435,14 +1492,14 @@
                 "direction": "O"
               },
               "DOUT": {
-                "physical_name": "bram_wrdata",
-                "direction": "O",
+                "physical_name": "bram_rddata",
+                "direction": "I",
                 "left": "31",
                 "right": "0"
               },
               "DIN": {
-                "physical_name": "bram_rddata",
-                "direction": "I",
+                "physical_name": "bram_wrdata",
+                "direction": "O",
                 "left": "31",
                 "right": "0"
               },
@@ -1871,15 +1928,49 @@
         "ports": {
           "aclk": {
             "type": "clk",
-            "direction": "I"
+            "direction": "I",
+            "parameters": {
+              "ASSOCIATED_BUSIF": {
+                "value": "S_AXI",
+                "value_src": "constant"
+              },
+              "ASSOCIATED_RESET": {
+                "value": "aresetn",
+                "value_src": "constant"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              },
+              "FREQ_HZ": {
+                "value": "125000000",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              }
+            }
           },
           "aresetn": {
             "type": "rst",
-            "direction": "I"
+            "direction": "I",
+            "parameters": {
+              "POLARITY": {
+                "value": "ACTIVE_LOW",
+                "value_src": "constant"
+              }
+            }
           },
           "interrupt": {
             "type": "intr",
-            "direction": "O"
+            "direction": "O",
+            "parameters": {
+              "SENSITIVITY": {
+                "value": "EDGE_RISING",
+                "value_src": "constant"
+              }
+            }
           },
           "GX_ADC_SYNC": {
             "direction": "O",
@@ -1900,18 +1991,6 @@
       }
     },
     "interface_nets": {
-      "axi_ad7124_v2_0_GX_RTD_SPI_CSN": {
-        "interface_ports": [
-          "GX_RTD_SPI_CSN",
-          "axi_ad7124_v2_0/GX_RTD_SPI_CSN"
-        ]
-      },
-      "processing_system7_0_DDR": {
-        "interface_ports": [
-          "DDR",
-          "processing_system7_0/DDR"
-        ]
-      },
       "axi_ad7124_v2_0_GX_RTD_SPI_SDI": {
         "interface_ports": [
           "GX_RTD_SPI_SDI",
@@ -1930,22 +2009,22 @@
           "axi_ad7124_v2_0/GX_TC_SPI_CSN"
         ]
       },
-      "axi_interconnect_0_M01_AXI": {
+      "processing_system7_0_DDR": {
         "interface_ports": [
-          "axi_bram_ctrl_0/S_AXI",
-          "axi_interconnect_0/M01_AXI"
+          "DDR",
+          "processing_system7_0/DDR"
+        ]
+      },
+      "axi_ad7124_v2_0_GX_RTD_SPI_CSN": {
+        "interface_ports": [
+          "GX_RTD_SPI_CSN",
+          "axi_ad7124_v2_0/GX_RTD_SPI_CSN"
         ]
       },
       "axi_ad7124_v2_0_BRAM": {
         "interface_ports": [
           "blk_mem_gen_0/BRAM_PORTB",
           "axi_ad7124_v2_0/BRAM"
-        ]
-      },
-      "axi_ad7124_v2_0_GX_TC_SPI_SCLK": {
-        "interface_ports": [
-          "GX_TC_SPI_SCLK",
-          "axi_ad7124_v2_0/GX_TC_SPI_SCLK"
         ]
       },
       "axi_ad7124_v2_0_GX_RTD_SPI_SDO": {
@@ -1960,16 +2039,22 @@
           "processing_system7_0/FIXED_IO"
         ]
       },
+      "axi_interconnect_0_M01_AXI": {
+        "interface_ports": [
+          "axi_bram_ctrl_0/S_AXI",
+          "axi_interconnect_0/M01_AXI"
+        ]
+      },
+      "axi_ad7124_v2_0_GX_TC_SPI_SCLK": {
+        "interface_ports": [
+          "GX_TC_SPI_SCLK",
+          "axi_ad7124_v2_0/GX_TC_SPI_SCLK"
+        ]
+      },
       "axi_ad7124_v2_0_GX_RTD_SPI_SCLK": {
         "interface_ports": [
           "GX_RTD_SPI_SCLK",
           "axi_ad7124_v2_0/GX_RTD_SPI_SCLK"
-        ]
-      },
-      "axi_interconnect_0_M00_AXI": {
-        "interface_ports": [
-          "axi_interconnect_0/M00_AXI",
-          "axi_ad7124_v2_0/s_axi"
         ]
       },
       "axi_ad7124_v2_0_GX_TC_SPI_SDI": {
@@ -1978,16 +2063,22 @@
           "axi_ad7124_v2_0/GX_TC_SPI_SDI"
         ]
       },
-      "axi_bram_ctrl_0_BRAM_PORTA": {
-        "interface_ports": [
-          "blk_mem_gen_0/BRAM_PORTA",
-          "axi_bram_ctrl_0/BRAM_PORTA"
-        ]
-      },
       "S00_AXI_1": {
         "interface_ports": [
           "axi_interconnect_0/S00_AXI",
           "processing_system7_0/M_AXI_GP0"
+        ]
+      },
+      "axi_interconnect_0_M00_AXI": {
+        "interface_ports": [
+          "axi_interconnect_0/M00_AXI",
+          "axi_ad7124_v2_0/s_axi"
+        ]
+      },
+      "axi_bram_ctrl_0_BRAM_PORTA": {
+        "interface_ports": [
+          "blk_mem_gen_0/BRAM_PORTA",
+          "axi_bram_ctrl_0/BRAM_PORTA"
         ]
       }
     },
