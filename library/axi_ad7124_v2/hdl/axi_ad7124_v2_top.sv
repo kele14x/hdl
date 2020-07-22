@@ -162,42 +162,6 @@ module axi_ad7124_v2_top #(
     assign up_clk  = aclk;
     assign up_rstn = aresetn;
 
-    /* Address mapping */
-
-    // Each channel need 128 word memory space (7-bit), however, the interface
-    // is configurated as 14-bit width, so we need to force high 7-bit to 0,
-    // and make them as MUX
-
-    generate
-        for (genvar i = 0; i < NUM_OF_BOARD; i++) begin
-
-            // TC Channel N is mapped to N*258 word
-            assign tc_up_wreq [i] = (up_waddr[13:8] == i && up_waddr[7] == 1'b0) ? up_wreq : 1'b0;
-            assign tc_up_waddr[i] = {7'b0, up_waddr[6:0]};
-            assign tc_up_wdata[i] = up_wdata;
-
-            // RTD Channel N is mapped to N*256+128 word
-            assign rtd_up_wreq [i] = (up_waddr[13:8] == i && up_waddr[7] == 1'b1) ? up_wreq : 1'b0;
-            assign rtd_up_waddr[i] = {7'b0, up_waddr[6:0]};
-            assign rtd_up_wdata[i] = up_wdata;
-
-            // TC Channel N is mapped to N*258 word
-            assign tc_up_rreq [i] = (up_raddr[13:8] == i && up_raddr[7] == 1'b0) ? up_rreq : 1'b0;
-            assign tc_up_raddr[i] = {7'b0, up_raddr[6:0]};
-
-            // RTD Channel N is mapped to N*256+128 word
-            assign rtd_up_rreq [i] = (up_raddr[13:8] == i && up_raddr[7] == 1'b1) ? up_rreq : 1'b0;
-            assign rtd_up_raddr[i] = {7'b0, up_raddr[6:0]};
-
-        end
-    endgenerate
-
-    assign up_wack = up_waddr[7] == 1'b0 ? tc_up_wack[up_waddr[13:8]] :
-                                           rtd_up_wack[up_waddr[13:8]];
-    assign up_rack = up_raddr[7] == 1'b0 ? tc_up_rack[up_raddr[13:8]] :
-                                           rtd_up_rack[up_raddr[13:8]];
-    assign up_rdata = up_raddr[7] == 1'b0 ? tc_up_rdata[up_raddr[13:8]] :
-                                            rtd_up_rdata[up_raddr[13:8]];
 
     (* keep_hierarchy="yes" *)
     up_axi i_up_axi (
@@ -235,6 +199,40 @@ module axi_ad7124_v2_top #(
         .up_raddr      (up_raddr      ),
         .up_rdata      (up_rdata      ),
         .up_rack       (up_rack       )
+    );
+
+
+    (* keep_hierarchy="yes" *)
+    axi_ad7124_amap i_axi_ad7124_amap (
+        .up_clk      (up_clk      ),
+        .up_rstn     (up_rstn     ),
+        //
+        .up_wreq     (up_wreq     ),
+        .up_waddr    (up_waddr    ),
+        .up_wdata    (up_wdata    ),
+        .up_wack     (up_wack     ),
+        .up_rreq     (up_rreq     ),
+        .up_raddr    (up_raddr    ),
+        .up_rdata    (up_rdata    ),
+        .up_rack     (up_rack     ),
+        //
+        .tc_up_wreq  (tc_up_wreq  ),
+        .tc_up_waddr (tc_up_waddr ),
+        .tc_up_wdata (tc_up_wdata ),
+        .tc_up_wack  (tc_up_wack  ),
+        .tc_up_rreq  (tc_up_rreq  ),
+        .tc_up_raddr (tc_up_raddr ),
+        .tc_up_rdata (tc_up_rdata ),
+        .tc_up_rack  (tc_up_rack  ),
+        //
+        .rtd_up_wreq (rtd_up_wreq ),
+        .rtd_up_waddr(rtd_up_waddr),
+        .rtd_up_wdata(rtd_up_wdata),
+        .rtd_up_wack (rtd_up_wack ),
+        .rtd_up_rreq (rtd_up_rreq ),
+        .rtd_up_raddr(rtd_up_raddr),
+        .rtd_up_rdata(rtd_up_rdata),
+        .rtd_up_rack (rtd_up_rack )
     );
 
 
@@ -309,7 +307,7 @@ module axi_ad7124_v2_top #(
 
             (* keep_hierarchy="yes" *)
             axi_ad7124_channel #(
-                .ID                            (i                                 ),
+                .ID                            (32'h00000100 + i                  ),
                 .CMD_FIFO_ADDRESS_WIDTH        (RTD_CMD_FIFO_ADDRESS_WIDTH        ),
                 .SYNC_FIFO_ADDRESS_WIDTH       (RTD_SYNC_FIFO_ADDRESS_WIDTH       ),
                 .SDO_FIFO_ADDRESS_WIDTH        (RTD_SDO_FIFO_ADDRESS_WIDTH        ),
