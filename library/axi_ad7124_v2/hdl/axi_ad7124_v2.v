@@ -52,7 +52,7 @@ module axi_ad7124_v2 #(
     input  wire [                                 2:0] s_axi_arprot     ,
     (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI ARVALID" *)
     input  wire                                        s_axi_arvalid    ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI AREADY" *)
+    (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI ARREADY" *)
     output wire                                        s_axi_arready    ,
     //
     (* X_INTERFACE_INFO = "xilinx.com:interface:aximm:1.0 S_AXI RDATA" *)

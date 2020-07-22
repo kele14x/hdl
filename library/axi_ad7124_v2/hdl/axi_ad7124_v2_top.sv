@@ -127,6 +127,17 @@ module axi_ad7124_v2_top #(
     logic        up_rack          ;
 
 
+    logic        aux_up_wreq [0:NUM_OF_BOARD-1];
+    logic [13:0] aux_up_waddr[0:NUM_OF_BOARD-1];
+    logic [31:0] aux_up_wdata[0:NUM_OF_BOARD-1];
+    logic        aux_up_wack [0:NUM_OF_BOARD-1];
+    //
+    logic        aux_up_rreq [0:NUM_OF_BOARD-1];
+    logic [13:0] aux_up_raddr[0:NUM_OF_BOARD-1];
+    logic [31:0] aux_up_rdata[0:NUM_OF_BOARD-1];
+    logic        aux_up_rack [0:NUM_OF_BOARD-1];
+
+
     logic        tc_up_wreq [0:NUM_OF_BOARD-1];
     logic [13:0] tc_up_waddr[0:NUM_OF_BOARD-1];
     logic [31:0] tc_up_wdata[0:NUM_OF_BOARD-1];
@@ -203,7 +214,7 @@ module axi_ad7124_v2_top #(
 
 
     (* keep_hierarchy="yes" *)
-    axi_ad7124_amap i_axi_ad7124_amap (
+    axi_ad7124_amap #(.NUM_OF_BOARD(NUM_OF_BOARD)) i_axi_ad7124_amap (
         .up_clk      (up_clk      ),
         .up_rstn     (up_rstn     ),
         //
@@ -215,6 +226,15 @@ module axi_ad7124_v2_top #(
         .up_raddr    (up_raddr    ),
         .up_rdata    (up_rdata    ),
         .up_rack     (up_rack     ),
+        //
+        .aux_up_wreq (aux_up_wreq ),
+        .aux_up_waddr(aux_up_waddr),
+        .aux_up_wdata(aux_up_wdata),
+        .aux_up_wack (aux_up_wack ),
+        .aux_up_rreq (aux_up_rreq ),
+        .aux_up_raddr(aux_up_raddr),
+        .aux_up_rdata(aux_up_rdata),
+        .aux_up_rack (aux_up_rack ),
         //
         .tc_up_wreq  (tc_up_wreq  ),
         .tc_up_waddr (tc_up_waddr ),
@@ -237,7 +257,7 @@ module axi_ad7124_v2_top #(
 
 
     (* keep_hierarchy="yes" *)
-    axi_ad7124_buf i_axi_ad7124_buf (
+    axi_ad7124_buf #(.NUM_OF_BOARD(NUM_OF_BOARD)) i_axi_ad7124_buf (
         .aclk         (aclk         ),
         .aresetn      (aresetn      ),
         //
@@ -260,6 +280,31 @@ module axi_ad7124_v2_top #(
 
 
     generate
+
+        for (genvar i = 0; i < NUM_OF_BOARD; i ++) begin : g_aux
+
+            (* keep_hierarchy="yes" *)
+            axi_ad7124_aux i_axi_ad7124_aux (
+                .up_clk         (up_clk          ),
+                .up_rstn        (up_rstn         ),
+                //
+                .up_wreq        (aux_up_wreq  [i]),
+                .up_waddr       (aux_up_waddr [i]),
+                .up_wdata       (aux_up_wdata [i]),
+                .up_wack        (aux_up_wack  [i]),
+                .up_rreq        (aux_up_rreq  [i]),
+                .up_raddr       (aux_up_raddr [i]),
+                .up_rdata       (aux_up_rdata [i]),
+                .up_rack        (aux_up_rack  [i]),
+                //
+                .ctrl_power_en  (GX_ANA_POW_EN[i]),
+                .ctrl_relay_ctrl(GX_RELAY_CTRL[i])
+            );
+
+            assign GX_ADC_SYNC[i] = 1'b1;
+
+        end
+
         for (genvar i = 0; i < NUM_OF_BOARD; i ++) begin : g_tc
 
             (* keep_hierarchy="yes" *)
