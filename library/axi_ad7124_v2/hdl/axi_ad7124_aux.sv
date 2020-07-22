@@ -75,7 +75,7 @@ module axi_ad7124_aux #(parameter ID = 0) (
     // Read out
 
     always @(posedge up_clk) begin
-        if (~up_rdata) begin
+        if (~up_rstn) begin
             up_rdata <= 'b0;
         end else if (up_rreq) begin
             case (up_raddr)

@@ -102,20 +102,20 @@ module axi_ad7124_amap #(parameter NUM_OF_BOARD = 6) (
     endgenerate
 
 
-    assign up_wack = up_waddr[8:7] == 2'b00 ? aux_up_wack[up_waddr[13:9]] :
-                                      2'b01 ? 1'b0 :
-                                      2'b10 ? tc_up_wack[up_waddr[13:9]] :
-                                              rtd_up_wack[up_waddr[13:9]];
+    assign up_wack = (up_waddr[8:7] == 2'b00) ? aux_up_wack[up_waddr[13:9]] :
+                     (up_waddr[8:7] == 2'b01) ? 1'b0 :
+                     (up_waddr[8:7] == 2'b10) ? tc_up_wack[up_waddr[13:9]] :
+                                                rtd_up_wack[up_waddr[13:9]];
 
-    assign up_rdata = up_raddr[8:7] == 2'b00 ? aux_up_rdata[up_raddr[13:9]] :
-                                       2'b00 ? 32'b0 :
-                                       2'b10 ? tc_up_rdata[up_raddr[13:9]] :
-                                               rtd_up_rdata[up_raddr[13:9]];
+    assign up_rdata = (up_raddr[8:7] == 2'b00) ? aux_up_rdata[up_raddr[13:9]] :
+                      (up_raddr[8:7] == 2'b01) ? 32'b0 :
+                      (up_raddr[8:7] == 2'b10) ? tc_up_rdata[up_raddr[13:9]] :
+                                                 rtd_up_rdata[up_raddr[13:9]];
 
-    assign up_rack = up_raddr[8:7] == 2'b00 ? aux_up_rack[up_raddr[13:9]] :
-                                      2'b01 ? 1'b0 :
-                                      2'b10 ? tc_up_rack[up_raddr[13:9]] :
-                                              rtd_up_rack[up_raddr[13:9]];
+    assign up_rack = (up_raddr[8:7] == 2'b00) ? aux_up_rack[up_raddr[13:9]] :
+                     (up_raddr[8:7] == 2'b01) ? 1'b0 :
+                     (up_raddr[8:7] == 2'b10) ? tc_up_rack[up_raddr[13:9]] :
+                                                rtd_up_rack[up_raddr[13:9]];
 
 endmodule
 

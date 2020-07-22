@@ -284,7 +284,7 @@ module axi_ad7124_v2_top #(
         for (genvar i = 0; i < NUM_OF_BOARD; i ++) begin : g_aux
 
             (* keep_hierarchy="yes" *)
-            axi_ad7124_aux i_axi_ad7124_aux (
+            axi_ad7124_aux #(.ID(i)) i_axi_ad7124_aux (
                 .up_clk         (up_clk          ),
                 .up_rstn        (up_rstn         ),
                 //
