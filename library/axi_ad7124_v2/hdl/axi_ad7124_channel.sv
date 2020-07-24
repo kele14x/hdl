@@ -65,7 +65,7 @@ module axi_ad7124_channel #(
     // SPI Offload
     localparam ASYNC_TRIG = 0;
     // SPI Execution
-    localparam [7:0] DEFAULT_SPI_CFG = 1    ; // {5'b0, three_wire, CPOL, CPHA}
+    localparam [7:0] DEFAULT_SPI_CFG = 0    ; // {5'b0, three_wire, CPOL, CPHA}
     localparam [7:0] DEFAULT_CLK_DIV = 24   ; // f_sclk = f_clk / ((div + 1) * 2)
     localparam [0:0] SDO_DEFAULT     = 1'b0 ;
     localparam [1:0] SDI_DELAY       = 2'b00;
