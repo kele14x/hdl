@@ -387,21 +387,18 @@ module axi_ad7124_channel #(
         .three_wire    (three_wire  )
     );
 
-    (* keep_hierarchy="yes" *)
-    util_pulse_gen #(
-        .PULSE_WIDTH (1        ),
-        .PULSE_PERIOD(100000000)
-    ) i_util_pulse_gen (
-        .clk          (spi_clk         ),
-        .rstn         (spi_resetn      ),
-        //
-        .pulse_width  (pulse_gen_period),
-        .pulse_period (pulse_gen_width ),
-        .load_config  (pulse_gen_load  ),
-        //
-        .pulse        (trigger         ),
-        .pulse_counter(/* Not used */  )
-    );
+    // Test the tigger signal
+
+    reg sdi_d1, sdi_d2;
+
+    always_ff @ (posedge ctrl_clk) begin
+        sdi_d1 <= spi_sdi[0];
+        sdi_d2 <= sdi_d1;
+    end
+
+    always_ff @ (posedge ctrl_clk) begin
+        trigger <= ((spi_cs[0] == 1'b0) && (active == 1'b0) && (sdi_d1 == 1'b0) && (sdi_d2 == 1'b1));
+    end
 
 endmodule
 

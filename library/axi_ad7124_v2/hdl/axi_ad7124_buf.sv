@@ -35,6 +35,15 @@ module axi_ad7124_buf #(parameter NUM_OF_BOARD = 6) (
 
     // TODO
 
+    generate
+        for (genvar i = 0; i < NUM_OF_BOARD; i++) begin
+
+            assign tc_sdi_ready[i] = 1'b1;
+
+            assign rtd_sdi_ready[i] = 1'b1;
+        end
+    endgenerate
+
 endmodule
 
 `default_nettype wire

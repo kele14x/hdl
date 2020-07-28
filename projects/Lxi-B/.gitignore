@@ -5,3 +5,11 @@
 /bd/ps7_bd/sim/
 /bd/ps7_bd/synth/
 /bd/ps7_bd/ui/
+/bd/ps7_bd/hw_handoff/
+
+/bd/ps7_bd/*.xdc
+/bd/ps7_bd/*.bmm
+
+/bd/ps7_bd/ip/**
+!/bd/ps7_bd/ip/*.xci
+!/bd/ps7_bd/ip/*.xml
