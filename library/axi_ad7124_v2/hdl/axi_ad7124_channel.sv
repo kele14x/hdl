@@ -387,18 +387,18 @@ module axi_ad7124_channel #(
         .three_wire    (three_wire  )
     );
 
-    // Test the tigger signal
-
-    reg sdi_d1, sdi_d2;
-
-    always_ff @ (posedge ctrl_clk) begin
-        sdi_d1 <= spi_sdi[0];
-        sdi_d2 <= sdi_d1;
-    end
-
-    always_ff @ (posedge ctrl_clk) begin
-        trigger <= ((spi_cs[0] == 1'b0) && (active == 1'b0) && (sdi_d1 == 1'b0) && (sdi_d2 == 1'b1));
-    end
+    // When SDI from AD7124 goes high to low, it indicates ADC has finished
+    // sampling data and put it ready to read, we need to trigger offload module
+    // to read the data. The content in offload module is loaded by software.
+    // Be sure the CS of first AD7124 is set to low.
+    axi_ad7124_trigger i_axi_ad7124_trigger (
+        .spi_clk   (spi_clk   ),
+        .spi_resetn(spi_resetn),
+        .spi_sdi   (spi_sdi[0]),
+        .spi_active(active    ),
+        .spi_cs    (spi_cs [0]),
+        .trigger   (trigger   )
+    );
 
 endmodule
 

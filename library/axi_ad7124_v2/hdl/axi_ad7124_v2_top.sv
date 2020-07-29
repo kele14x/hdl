@@ -94,7 +94,7 @@ module axi_ad7124_v2_top #(
     localparam TC_SYNC_FIFO_ADDRESS_WIDTH = 4;
     localparam TC_SDO_FIFO_ADDRESS_WIDTH  = 5;
     localparam TC_SDI_FIFO_ADDRESS_WIDTH  = 5;
-    //
+    // We need more space in offload block than default 4
     localparam TC_OFFLOAD0_CMD_MEM_ADDRESS_WIDTH = 5;
     localparam TC_OFFLOAD0_SDO_MEM_ADDRESS_WIDTH = 5;
     //

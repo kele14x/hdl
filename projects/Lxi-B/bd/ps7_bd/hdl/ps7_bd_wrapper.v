@@ -1,8 +1,8 @@
 //Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2020.1 (win64) Build 2902540 Wed May 27 19:54:49 MDT 2020
-//Date        : Tue Jul 28 23:51:23 2020
-//Host        : Kele20e running 64-bit major release  (build 9200)
+//Date        : Wed Jul 29 10:36:02 2020
+//Host        : CN-00002823 running 64-bit major release  (build 9200)
 //Command     : generate_target ps7_bd_wrapper.bd
 //Design      : ps7_bd_wrapper
 //Purpose     : IP block netlist

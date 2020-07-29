@@ -1244,16 +1244,16 @@
               }
             },
             "interface_nets": {
-              "auto_pc_to_m00_couplers": {
-                "interface_ports": [
-                  "M_AXI",
-                  "auto_pc/M_AXI"
-                ]
-              },
               "m00_couplers_to_auto_pc": {
                 "interface_ports": [
                   "S_AXI",
                   "auto_pc/S_AXI"
+                ]
+              },
+              "auto_pc_to_m00_couplers": {
+                "interface_ports": [
+                  "M_AXI",
+                  "auto_pc/M_AXI"
                 ]
               }
             },
@@ -1994,16 +1994,10 @@
       }
     },
     "interface_nets": {
-      "processing_system7_0_DDR": {
+      "axi_ad7124_v2_0_GX_TC_SPI_SCLK": {
         "interface_ports": [
-          "DDR",
-          "processing_system7_0/DDR"
-        ]
-      },
-      "axi_ad7124_v2_0_GX_RTD_SPI_SDI": {
-        "interface_ports": [
-          "GX_RTD_SPI_SDI",
-          "axi_ad7124_v2_0/GX_RTD_SPI_SDI"
+          "GX_TC_SPI_SCLK",
+          "axi_ad7124_v2_0/GX_TC_SPI_SCLK"
         ]
       },
       "axi_interconnect_0_M01_AXI": {
@@ -2012,28 +2006,10 @@
           "axi_interconnect_0/M01_AXI"
         ]
       },
-      "processing_system7_0_FIXED_IO": {
+      "axi_ad7124_v2_0_GX_RTD_SPI_SDI": {
         "interface_ports": [
-          "FIXED_IO",
-          "processing_system7_0/FIXED_IO"
-        ]
-      },
-      "axi_ad7124_v2_0_GX_RTD_SPI_SDO": {
-        "interface_ports": [
-          "GX_RTD_SPI_SDO",
-          "axi_ad7124_v2_0/GX_RTD_SPI_SDO"
-        ]
-      },
-      "axi_ad7124_v2_0_GX_RTD_SPI_SCLK": {
-        "interface_ports": [
-          "GX_RTD_SPI_SCLK",
-          "axi_ad7124_v2_0/GX_RTD_SPI_SCLK"
-        ]
-      },
-      "axi_ad7124_v2_0_GX_TC_SPI_SCLK": {
-        "interface_ports": [
-          "GX_TC_SPI_SCLK",
-          "axi_ad7124_v2_0/GX_TC_SPI_SCLK"
+          "GX_RTD_SPI_SDI",
+          "axi_ad7124_v2_0/GX_RTD_SPI_SDI"
         ]
       },
       "axi_interconnect_0_M00_AXI": {
@@ -2042,10 +2018,10 @@
           "axi_ad7124_v2_0/S_AXI"
         ]
       },
-      "axi_bram_ctrl_0_BRAM_PORTA": {
+      "processing_system7_0_DDR": {
         "interface_ports": [
-          "blk_mem_gen_0/BRAM_PORTA",
-          "axi_bram_ctrl_0/BRAM_PORTA"
+          "DDR",
+          "processing_system7_0/DDR"
         ]
       },
       "axi_ad7124_v2_0_GX_RTD_SPI_CSN": {
@@ -2054,22 +2030,16 @@
           "axi_ad7124_v2_0/GX_RTD_SPI_CSN"
         ]
       },
-      "axi_ad7124_v2_0_GX_TX_SPI_CSN": {
-        "interface_ports": [
-          "GX_TC_SPI_CSN",
-          "axi_ad7124_v2_0/GX_TC_SPI_CSN"
-        ]
-      },
       "axi_ad7124_v2_0_GX_TC_SPI_SDI": {
         "interface_ports": [
           "GX_TC_SPI_SDI",
           "axi_ad7124_v2_0/GX_TC_SPI_SDI"
         ]
       },
-      "axi_ad7124_v2_0_BRAM": {
+      "axi_ad7124_v2_0_GX_TX_SPI_CSN": {
         "interface_ports": [
-          "blk_mem_gen_0/BRAM_PORTB",
-          "axi_ad7124_v2_0/BRAM"
+          "GX_TC_SPI_CSN",
+          "axi_ad7124_v2_0/GX_TC_SPI_CSN"
         ]
       },
       "S00_AXI_1": {
@@ -2078,10 +2048,40 @@
           "processing_system7_0/M_AXI_GP0"
         ]
       },
+      "axi_bram_ctrl_0_BRAM_PORTA": {
+        "interface_ports": [
+          "blk_mem_gen_0/BRAM_PORTA",
+          "axi_bram_ctrl_0/BRAM_PORTA"
+        ]
+      },
+      "axi_ad7124_v2_0_GX_RTD_SPI_SCLK": {
+        "interface_ports": [
+          "GX_RTD_SPI_SCLK",
+          "axi_ad7124_v2_0/GX_RTD_SPI_SCLK"
+        ]
+      },
+      "processing_system7_0_FIXED_IO": {
+        "interface_ports": [
+          "FIXED_IO",
+          "processing_system7_0/FIXED_IO"
+        ]
+      },
       "axi_ad7124_v2_0_GX_TC_SPI_SDO": {
         "interface_ports": [
           "GX_TC_SPI_SDO",
           "axi_ad7124_v2_0/GX_TC_SPI_SDO"
+        ]
+      },
+      "axi_ad7124_v2_0_GX_RTD_SPI_SDO": {
+        "interface_ports": [
+          "GX_RTD_SPI_SDO",
+          "axi_ad7124_v2_0/GX_RTD_SPI_SDO"
+        ]
+      },
+      "axi_ad7124_v2_0_BRAM": {
+        "interface_ports": [
+          "blk_mem_gen_0/BRAM_PORTB",
+          "axi_ad7124_v2_0/BRAM"
         ]
       }
     },
