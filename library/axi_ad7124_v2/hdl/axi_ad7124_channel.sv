@@ -40,6 +40,7 @@ module axi_ad7124_channel #(
     output wire                   offload_sdi_valid,
     input  wire                   offload_sdi_ready,
     output wire [            7:0] offload_sdi_data ,
+    output wire                   drdy             ,
     // SPI I/F
     //--------
     input  wire                   phy_sclk_i       ,
@@ -399,6 +400,8 @@ module axi_ad7124_channel #(
         .spi_cs    (spi_cs [0]),
         .trigger   (trigger   )
     );
+
+    assign drdy = trigger;
 
 endmodule
 

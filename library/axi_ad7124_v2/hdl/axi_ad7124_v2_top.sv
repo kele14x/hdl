@@ -163,10 +163,12 @@ module axi_ad7124_v2_top #(
     logic        tc_sdi_valid[0:NUM_OF_BOARD-1];
     logic        tc_sdi_ready[0:NUM_OF_BOARD-1];
     logic [ 7:0] tc_sdi_data [0:NUM_OF_BOARD-1];
+    logic        tc_drdy     [0:NUM_OF_BOARD-1];
 
     logic        rtd_sdi_valid[0:NUM_OF_BOARD-1];
     logic        rtd_sdi_ready[0:NUM_OF_BOARD-1];
     logic [ 7:0] rtd_sdi_data [0:NUM_OF_BOARD-1];
+    logic        rtd_drdy     [0:NUM_OF_BOARD-1];
 
     /* Signal mapping */
 
@@ -264,10 +266,12 @@ module axi_ad7124_v2_top #(
         .tc_sdi_valid (tc_sdi_valid ),
         .tc_sdi_ready (tc_sdi_ready ),
         .tc_sdi_data  (tc_sdi_data  ),
+        .tc_drdy      (tc_drdy      ),
         //
         .rtd_sdi_valid(rtd_sdi_valid),
         .rtd_sdi_ready(rtd_sdi_ready),
         .rtd_sdi_data (rtd_sdi_data ),
+        .rtd_drdy     (rtd_drdy     ),
         //
         .bram_clk     (bram_clk     ),
         .bram_rst     (bram_rst     ),
@@ -275,7 +279,9 @@ module axi_ad7124_v2_top #(
         .bram_we      (bram_we      ),
         .bram_addr    (bram_addr    ),
         .bram_wrdata  (bram_wrdata  ),
-        .bram_rddata  (bram_rddata  )
+        .bram_rddata  (bram_rddata  ),
+        //
+        .irq          (interrupt    )
     );
 
 
@@ -329,9 +335,12 @@ module axi_ad7124_v2_top #(
                 .up_rdata         (tc_up_rdata     [i]                                   ),
                 .up_rack          (tc_up_rack      [i]                                   ),
                 .irq              (/* Not used */                                        ),
+                //
                 .offload_sdi_valid(tc_sdi_valid    [i]                                   ),
                 .offload_sdi_ready(tc_sdi_ready    [i]                                   ),
                 .offload_sdi_data (tc_sdi_data     [i]                                   ),
+                .drdy             (tc_drdy         [i]                                   ),
+                //
                 .phy_sclk_i       (GX_TC_SPI_SCLK_i[i]                                   ),
                 .phy_sclk_o       (GX_TC_SPI_SCLK_o[i]                                   ),
                 .phy_sclk_t       (GX_TC_SPI_SCLK_t[i]                                   ),
@@ -372,9 +381,12 @@ module axi_ad7124_v2_top #(
                 .up_rdata         (rtd_up_rdata     [i]                                     ),
                 .up_rack          (rtd_up_rack      [i]                                     ),
                 .irq              (/* Not used */                                           ),
+                //
                 .offload_sdi_valid(rtd_sdi_valid    [i]                                     ),
                 .offload_sdi_ready(rtd_sdi_ready    [i]                                     ),
                 .offload_sdi_data (rtd_sdi_data     [i]                                     ),
+                .drdy             (rtd_drdy         [i]                                     ),
+                //
                 .phy_sclk_i       (GX_RTD_SPI_SCLK_i[i]                                     ),
                 .phy_sclk_o       (GX_RTD_SPI_SCLK_o[i]                                     ),
                 .phy_sclk_t       (GX_RTD_SPI_SCLK_t[i]                                     ),
