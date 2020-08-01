@@ -35,11 +35,15 @@ module axi_ad7124_channel #(
     output wire                   up_rack          ,
     //
     output wire                   irq              ,
-    // AXIS I/F
+    // BRAM I/F
     //---------
-    output wire                   offload_sdi_valid,
-    input  wire                   offload_sdi_ready,
-    output wire [            7:0] offload_sdi_data ,
+    input  wire                   bram_clk         ,
+    input  wire                   bram_rst         ,
+    //
+    input  wire                   bram_en          ,
+    input  wire [            2:0] bram_addr        ,
+    output wire [           31:0] bram_dout        ,
+    //
     output wire                   drdy             ,
     // SPI I/F
     //--------
@@ -70,6 +74,8 @@ module axi_ad7124_channel #(
     localparam [7:0] DEFAULT_CLK_DIV = 24   ; // f_sclk = f_clk / ((div + 1) * 2)
     localparam [0:0] SDO_DEFAULT     = 1'b0 ;
     localparam [1:0] SDI_DELAY       = 2'b00;
+
+    localparam BUFFER_ADDR_WIDTH = 5;
 
     logic spi_clk   ;
     logic spi_resetn;
@@ -155,6 +161,9 @@ module axi_ad7124_channel #(
     logic [ (NUM_OF_CS-1):0] spi_cs    ;
     logic                    three_wire; // 3 wire SPI ?
 
+    logic       offload_sdi_valid;
+    logic       offload_sdi_ready;
+    logic [7:0] offload_sdi_data;
 
     //--------------------------------------------------------------------------
 
@@ -392,6 +401,8 @@ module axi_ad7124_channel #(
     // sampling data and put it ready to read, we need to trigger offload module
     // to read the data. The content in offload module is loaded by software.
     // Be sure the CS of first AD7124 is set to low.
+
+    (* keep_hierarchy="yes" *)
     axi_ad7124_trigger i_axi_ad7124_trigger (
         .spi_clk   (spi_clk   ),
         .spi_resetn(spi_resetn),
@@ -401,7 +412,26 @@ module axi_ad7124_channel #(
         .trigger   (trigger   )
     );
 
-    assign drdy = trigger;
+    // Local buffer for data,
+
+    (* keep_hierarchy="yes" *)
+    axi_ad7124_buf #(.BUFFER_ADDR_WIDTH(BUFFER_ADDR_WIDTH)) i_axi_ad7124_buf (
+        .clk              (spi_clk          ),
+        .resetn           (spi_resetn       ),
+        //
+        .trigger          (trigger          ),
+        .drdy             (drdy             ),
+        //
+        .offload_sdi_valid(offload_sdi_valid),
+        .offload_sdi_ready(offload_sdi_ready),
+        .offload_sdi_data (offload_sdi_data ),
+        //
+        .bram_clk         (bram_clk         ),
+        .bram_rst         (bram_rst         ),
+        .bram_en          (bram_en          ),
+        .bram_addr        (bram_addr        ),
+        .bram_dout        (bram_dout        )
+    );
 
 endmodule
 
