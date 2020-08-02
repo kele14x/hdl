@@ -71,8 +71,8 @@ module axi_ad7124_buf #(parameter BUFFER_ADDR_WIDTH = 5) (
         if (bram_rst) begin
             bram_dout <= 'd0;
         end else if (bram_en) begin
-            bram_dout <= { buf_mem[bram_addr*4+3], buf_mem[bram_addr*4+2],
-                buf_mem[bram_addr*4+1], buf_mem[bram_addr*4] };
+            bram_dout <= { buf_mem[bram_addr*4], buf_mem[bram_addr*4+1],
+                buf_mem[bram_addr*4+2], buf_mem[bram_addr*4+3] };
         end
     end
 

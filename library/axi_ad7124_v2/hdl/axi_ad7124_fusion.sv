@@ -40,8 +40,11 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     output reg         irq
 );
 
+    localparam FRAME_LENGTH = 112;
 
-    // Data frame
+    reg start;
+
+    reg [6:0] state_cnt;
 
     reg [31:0] frame_type = 32'h1234abcd;
     reg [31:0] frame_sequence;
@@ -49,11 +52,19 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     reg [31:0] ts_sec;
     reg [31:0] ts_nsec;
 
-
-    // RTC
+    reg         fixed_valid;
+    reg  [23:0] fixed_data ;
+    wire        float_valid;
+    wire [31:0] float_data ;
 
     reg [31:0] rtc_sec;
     reg [31:0] rtc_nsec;
+
+    reg[8:0] irq_ext;
+
+
+    //--------------------------------------------------------------------------
+    // RTC
 
     always_ff @ (posedge clk) begin
         if (~resetn) begin
@@ -72,16 +83,8 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     end
 
 
-    // BRAM Write State Machine
-
-    localparam FRAME_LENGTH = 100;
-
-    reg start;
-
-    reg [6:0] bram_wr_stat;
-
-
-    // When to start write to BRAM
+    //--------------------------------------------------------------------------
+    // Start detect
 
     // TODO: Need a solid logic to handle all 6 board's data
     always_ff @ (posedge clk) begin
@@ -93,127 +96,93 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     end
 
 
-    // Frame header
+    //--------------------------------------------------------------------------
+    // Frame header update
 
     always_ff @ (posedge bram_clk) begin
-        if (start) begin
+        if (bram_rst) begin
+            ts_sec <= 0;
+        end else if (start) begin
             ts_sec <= rtc_sec;
         end
     end
 
     always_ff @ (posedge bram_clk) begin
-        if (start) begin
+        if (bram_rst) begin
+            ts_nsec <= 0;
+        end else if (start) begin
             ts_nsec <= rtc_nsec;
         end
     end
 
     always_ff @ (posedge bram_clk) begin
-        if (start) begin
+        if (bram_rst) begin
+            frame_sequence <= 'd0;
+        end else if (start) begin
             frame_sequence <= frame_sequence + 1;
         end
     end
 
 
-    // BRAM signals
+    //--------------------------------------------------------------------------
+    // FSM
 
     always_ff @ (posedge bram_clk) begin
         if (bram_rst) begin
-            bram_wr_stat <= 'hFF;
+            state_cnt <= 'hFF;
         end else if (start) begin
-            bram_wr_stat <= 'd0;
-        end else if (bram_wr_stat <= (FRAME_LENGTH - 1)) begin
-            bram_wr_stat <= bram_wr_stat + 1;
+            state_cnt <= 'd0;
+        end else if (state_cnt <= (FRAME_LENGTH - 1)) begin
+            state_cnt <= state_cnt + 1;
         end else begin
-            bram_wr_stat <= 'hFF;
+            state_cnt <= 'hFF;
         end
     end
 
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
-            bram_en   <= 1'b0;
-        end else begin
-            bram_en   <= (bram_wr_stat <= (FRAME_LENGTH - 1));
-        end
-    end
 
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
-            bram_we   <= 4'h0;
-        end else begin
-            bram_we   <= (bram_wr_stat <= (FRAME_LENGTH - 1)) ? 4'hF : 4'h0;
-        end
-    end
-
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
-            bram_addr <= 'd0;
-        end else begin
-            bram_addr <= (bram_wr_stat <= (FRAME_LENGTH - 1)) ? bram_wr_stat : 13'b0;
-        end
-    end
-
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
-            bram_din <= 'd0;
-        end else begin
-            if (bram_wr_stat == 'd0) bram_din <= frame_type;
-            else if (bram_wr_stat == 'd1) bram_din <= frame_sequence;
-            else if (bram_wr_stat == 'd2) bram_din <= ts_sec;
-            else if (bram_wr_stat == 'd3) bram_din <= ts_nsec;
-            // 4 ~ 51
-            else if (bram_wr_stat <= 'd11) bram_din <= tc_bram_dout[0];
-            else if (bram_wr_stat <= 'd19) bram_din <= tc_bram_dout[1];
-            else if (bram_wr_stat <= 'd27) bram_din <= tc_bram_dout[2];
-            else if (bram_wr_stat <= 'd35) bram_din <= tc_bram_dout[3];
-            else if (bram_wr_stat <= 'd43) bram_din <= tc_bram_dout[4];
-            else if (bram_wr_stat <= 'd51) bram_din <= tc_bram_dout[5];
-            // 52 ~ 99
-            else if (bram_wr_stat <= 'd59) bram_din <= rtd_bram_dout[0];
-            else if (bram_wr_stat <= 'd67) bram_din <= rtd_bram_dout[1];
-            else if (bram_wr_stat <= 'd75) bram_din <= rtd_bram_dout[2];
-            else if (bram_wr_stat <= 'd83) bram_din <= rtd_bram_dout[3];
-            else if (bram_wr_stat <= 'd91) bram_din <= rtd_bram_dout[4];
-            else if (bram_wr_stat <= 'd99) bram_din <= rtd_bram_dout[5];
-            else bram_din <= 'd0;
-        end
-    end
-
+    //--------------------------------------------------------------------------
     // Read from external module
 
     generate
         for (genvar i = 0; i < NUM_OF_BOARD; i++) begin
 
+            // At state 8 ~ 55, readout TC data
+
             always_ff @ (posedge clk) begin
                 if (~resetn) begin
                     tc_bram_en[i] <= 1'b0;
                 end else begin
-                    tc_bram_en[i] <= (i*6+3 <= bram_wr_stat && bram_wr_stat <=i*6+10);
+                    tc_bram_en[i] <= (i*8+8 <= state_cnt && state_cnt <=i*8+15);
                 end
             end
 
             always_ff @ (posedge clk) begin
                 if (~resetn) begin
                     tc_bram_addr[i] <= 'b0;
-                end else begin
-                    tc_bram_addr[i] <= (i*6+3 <= bram_wr_stat && bram_wr_stat <=i*6+10) ?
-                        (bram_wr_stat - i*6 - 3) : 'b0;
+                end else if (&state_cnt) begin
+                    tc_bram_addr[i] <= 'b0;
+                end else if (i*8+8 <= state_cnt && state_cnt <=i*8+15) begin
+                    tc_bram_addr[i] <= tc_bram_addr[i] + 1;
                 end
             end
+
+            // As state 56 ~ 103, readout RTC data
 
             always_ff @ (posedge clk) begin
                 if (~resetn) begin
                     rtd_bram_en[i] <= 1'b0;
                 end else begin
-                    rtd_bram_en[i] <= (i*6+51 <= bram_wr_stat && bram_wr_stat <=i*6+58);
+                    rtd_bram_en[i] <= (i*8+56 <= state_cnt && state_cnt <=i*8+63);
                 end
             end
 
             always_ff @ (posedge clk) begin
                 if (~resetn) begin
                     rtd_bram_addr[i] <= 'b0;
-                end else begin
-                    rtd_bram_addr[i] <= (i*6+51 <= bram_wr_stat && bram_wr_stat <=i*6+58) ?
-                        (bram_wr_stat - i*6 - 51) : 'b0;
+                end else if (&state_cnt) begin
+                    rtd_bram_addr[i] <= 'b0;
+                end else if (i*8+56 <= state_cnt && state_cnt <=i*8+63) begin
+                    rtd_bram_addr[i] <=  rtd_bram_addr[i] + 1;
                 end
             end
 
@@ -221,16 +190,79 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     endgenerate
 
 
+    //--------------------------------------------------------------------------
+    // Fixed to float convert
 
+    always_ff @ (posedge clk) begin
+        if (~resetn) begin
+            fixed_valid <= 1'b0;
+        end else begin
+            fixed_valid <= (9 <= state_cnt && state_cnt <= 104);
+        end
+    end
+
+    always_ff @ (posedge clk) begin
+        if (~resetn) begin
+            fixed_data <= 'b0;
+        end else if (9 <= state_cnt && state_cnt <= 56) begin
+            fixed_data <= (tc_bram_dout[(state_cnt-9)/8] - 24'h800000);
+        end else if (57 <= state_cnt && state_cnt <= 104) begin
+            fixed_data <= (rtd_bram_dout[(state_cnt-57)/8] - 24'h800000);
+        end
+    end
+
+    //--------------------------------------------------------------------------
+    // BRAM Write processes
+
+    always_ff @ (posedge bram_clk) begin
+        if (bram_rst) begin
+            bram_en   <= 1'b0;
+        end else begin
+            bram_en   <= (state_cnt <= (FRAME_LENGTH - 1));
+        end
+    end
+
+    always_ff @ (posedge bram_clk) begin
+        if (bram_rst) begin
+            bram_we   <= 4'h0;
+        end else begin
+            bram_we   <= (state_cnt <= (FRAME_LENGTH - 1)) ? 4'hF : 4'h0;
+        end
+    end
+
+    always_ff @ (posedge bram_clk) begin
+        if (bram_rst) begin
+            bram_addr <= 'd0;
+        end else begin
+            bram_addr <= (state_cnt <= (FRAME_LENGTH - 1)) ? {state_cnt, 2'b00} : 13'b0;
+        end
+    end
+
+    always_ff @ (posedge bram_clk) begin
+        if (bram_rst) begin
+            bram_din <= 'd0;
+        end else begin
+            if (state_cnt == 'd0) bram_din <= frame_type;
+            else if (state_cnt == 'd1) bram_din <= frame_sequence;
+            else if (state_cnt == 'd2) bram_din <= ts_sec;
+            else if (state_cnt == 'd3) bram_din <= ts_nsec;
+            else if (state_cnt <= 'd15) bram_din <= 'd0; // reserved header space
+            // 16 ~ 111
+            else if (state_cnt <= 'd111) bram_din <= float_data;
+            else bram_din <= 'd0;
+        end
+    end
+
+
+    //--------------------------------------------------------------------------
     // IRQ
 
-    reg[8:0] irq_ext;
 
     always_ff @ (posedge clk) begin
         if (~resetn) begin
             irq_ext <= 'd0;
         end else begin
-            if (bram_wr_stat == 'd99) begin
+            if (state_cnt == 'd99) begin
                 irq_ext <= 'd1;
             end else if (|irq_ext) begin
                 irq_ext <= irq_ext + 1;
@@ -248,6 +280,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
         end
     end
 
+    //--------------------------------------------------------------------------
     // Net mapping
 
     generate
@@ -262,6 +295,15 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     assign bram_clk = clk;
     assign bram_rst = ~resetn;
 
+    //
+    axi_ad7124_fixed2float i_axi_ad7124_fixed2float (
+        .aclk                (clk        ),
+        .aresetn             (resetn     ),
+        .s_axis_a_tvalid     (fixed_valid),
+        .s_axis_a_tdata      (fixed_data ),
+        .m_axis_result_tvalid(float_valid),
+        .m_axis_result_tdata (float_data )
+    );
 
 endmodule
 
