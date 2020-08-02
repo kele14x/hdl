@@ -79,7 +79,7 @@ module axi_ad7124_buf #(parameter BUFFER_ADDR_WIDTH = 5) (
     // drdy
 
     always_ff @ (posedge clk) begin
-        if (resetn) begin
+        if (~resetn) begin
             drdy <= 1'b0;
         end else if ((wr_addr == FRAME_LENGTH - 1) && offload_sdi_valid) begin
             drdy <= 1'b1;

@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="49" Path="C:/Users/eniandu/Workspace/Git/hdl/projects/Lxi-B/prj/Lxi-B.xpr">
+<Project Version="7" Minor="49" Path="C:/Users/Kele/Workspaces/Git/hdl/projects/Lxi-B/prj/Lxi-B.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="8562ed9def864995a92d40b72d7d4e5d"/>
@@ -219,26 +219,26 @@
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
-        <CompFileExtendedInfo CompFileName="ps7_bd.bd" FileRelPathName="ip/ps7_bd_axi_bram_ctrl_0_0/ps7_bd_axi_bram_ctrl_0_0.xci">
-          <Proxy FileSetName="ps7_bd_axi_bram_ctrl_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="ps7_bd.bd" FileRelPathName="ip/ps7_bd_clk_wiz_0_0/ps7_bd_clk_wiz_0_0.xci">
-          <Proxy FileSetName="ps7_bd_clk_wiz_0_0"/>
-        </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="ps7_bd.bd" FileRelPathName="ip/ps7_bd_processing_system7_0_0/ps7_bd_processing_system7_0_0.xci">
           <Proxy FileSetName="ps7_bd_processing_system7_0_0"/>
         </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="ps7_bd.bd" FileRelPathName="ip/ps7_bd_proc_sys_reset_0_0/ps7_bd_proc_sys_reset_0_0.xci">
           <Proxy FileSetName="ps7_bd_proc_sys_reset_0_0"/>
         </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="ps7_bd.bd" FileRelPathName="ip/ps7_bd_blk_mem_gen_0_0/ps7_bd_blk_mem_gen_0_0.xci">
-          <Proxy FileSetName="ps7_bd_blk_mem_gen_0_0"/>
+        <CompFileExtendedInfo CompFileName="ps7_bd.bd" FileRelPathName="ip/ps7_bd_clk_wiz_0_0/ps7_bd_clk_wiz_0_0.xci">
+          <Proxy FileSetName="ps7_bd_clk_wiz_0_0"/>
         </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="ps7_bd.bd" FileRelPathName="ip/ps7_bd_axi_ad7124_v2_0_0/ps7_bd_axi_ad7124_v2_0_0.xci">
           <Proxy FileSetName="ps7_bd_axi_ad7124_v2_0_0"/>
         </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="ps7_bd.bd" FileRelPathName="ip/ps7_bd_xbar_0/ps7_bd_xbar_0.xci">
           <Proxy FileSetName="ps7_bd_xbar_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="ps7_bd.bd" FileRelPathName="ip/ps7_bd_axi_bram_ctrl_0_0/ps7_bd_axi_bram_ctrl_0_0.xci">
+          <Proxy FileSetName="ps7_bd_axi_bram_ctrl_0_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="ps7_bd.bd" FileRelPathName="ip/ps7_bd_blk_mem_gen_0_0/ps7_bd_blk_mem_gen_0_0.xci">
+          <Proxy FileSetName="ps7_bd_blk_mem_gen_0_0"/>
         </CompFileExtendedInfo>
       </File>
       <File Path="$PPRDIR/../bd/ps7_bd/hdl/ps7_bd_wrapper.v">
@@ -453,7 +453,7 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7z020clg484-2" ConstrsSet="constrs_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" SynthRun="synth_1" IncludeInArchive="true" GenFullBitstream="true">
+    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7z020clg484-2" ConstrsSet="constrs_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" Dir="$PRUNDIR/impl_1" SynthRun="synth_1" IncludeInArchive="true" GenFullBitstream="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2020"/>
         <Step Id="init_design"/>
@@ -468,6 +468,7 @@
           <Option Id="BinFile">1</Option>
         </Step>
       </Strategy>
+      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
       <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2020"/>
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
