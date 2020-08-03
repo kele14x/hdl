@@ -84,6 +84,11 @@ module axi_ad7124_v2 #(
     output wire [                                31:0] bram_wrdata      ,
     (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 BRAM DOUT" *)
     input  wire [                                31:0] bram_rddata      ,
+    // Time Interface
+    //===============
+    input  wire                                        pps_in           ,
+    input  wire [                                31:0] rtc_sec          ,
+    input  wire [                                31:0] rtc_nsec         ,
     // AD Board
     //=========
     // There are 6 AD Board connected, each has two SPI interface. One interface
@@ -183,6 +188,11 @@ module axi_ad7124_v2 #(
         .s_axi_rready     (s_axi_rready     ),
         //
         .interrupt        (interrupt        ),
+        // Time
+        //=====
+        .pps_in           (pps_in           ),
+        .rtc_sec          (rtc_sec          ),
+        .rtc_nsec         (rtc_nsec         ),
         //BRAM
         //====
         .bram_clk         (bram_clk         ),

@@ -42,6 +42,11 @@ module axi_ad7124_v2_top #(
     input  wire                                        s_axi_rready     ,
     // IRQ
     output wire                                        interrupt        ,
+    // Time Interface
+    //===============
+    input  wire                                        pps_in           ,
+    input  wire [                                31:0] rtc_sec          ,
+    input  wire [                                31:0] rtc_nsec         ,
     // BRAM I/F
     //=========
     output wire                                        bram_clk         ,
@@ -113,19 +118,20 @@ module axi_ad7124_v2_top #(
 
 
 
-    logic        up_clk           ;
-    logic        up_rstn          ;
-
-    logic        up_wreq          ;
-    logic [13:0] up_waddr         ;
-    logic [31:0] up_wdata         ;
-    logic        up_wack          ;
+    logic up_clk ;
+    logic up_rstn;
     //
-    logic        up_rreq          ;
-    logic [13:0] up_raddr         ;
-    logic [31:0] up_rdata         ;
-    logic        up_rack          ;
+    logic        up_wreq ;
+    logic [13:0] up_waddr;
+    logic [31:0] up_wdata;
+    logic        up_wack ;
+    //
+    logic        up_rreq ;
+    logic [13:0] up_raddr;
+    logic [31:0] up_rdata;
+    logic        up_rack ;
 
+    wire adc_sync;
 
     logic        aux_up_wreq [0:NUM_OF_BOARD-1];
     logic [13:0] aux_up_waddr[0:NUM_OF_BOARD-1];
@@ -265,8 +271,11 @@ module axi_ad7124_v2_top #(
 
     (* keep_hierarchy="yes" *)
     axi_ad7124_fusion #(.NUM_OF_BOARD(NUM_OF_BOARD)) i_axi_ad7124_fusion (
-        .clk          (aclk         ),
-        .resetn       (aresetn      ),
+        .clk          (up_clk       ),
+        .resetn       (up_rstn      ),
+        //
+        .rtc_sec      (rtc_sec      ),
+        .rtc_nsec     (rtc_nsec     ),
         //
         .tc_bram_clk  (tc_bram_clk  ),
         .tc_bram_rst  (tc_bram_rst  ),
@@ -293,6 +302,14 @@ module axi_ad7124_v2_top #(
         .irq          (interrupt    )
     );
 
+    (* keep_hierarchy="yes" *)
+    pulse_ext #(.NEGATIVE_OUT(1)) i_pulse_ext (
+        .clk     (up_clk  ),
+        .rst     (~up_rstn),
+        .pulse_in(pps_in  ),
+        .ext_out (adc_sync)
+    );
+
 
     generate
 
@@ -316,7 +333,7 @@ module axi_ad7124_v2_top #(
                 .ctrl_relay_ctrl(GX_RELAY_CTRL[i])
             );
 
-            assign GX_ADC_SYNC[i] = 1'b1;
+            assign GX_ADC_SYNC[i] = adc_sync;
 
         end
 

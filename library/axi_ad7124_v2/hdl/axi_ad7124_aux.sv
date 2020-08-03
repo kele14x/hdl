@@ -29,9 +29,6 @@ module axi_ad7124_aux #(parameter ID = 0) (
 
     reg [31:0] up_scratch = 'h0;
 
-    reg adc_sync   = 'b1;
-
-
     // Write
 
     // up_scratch at 0x02

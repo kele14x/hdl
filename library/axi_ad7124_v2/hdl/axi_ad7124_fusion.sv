@@ -11,6 +11,9 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     //-------------
     input  wire        clk                            ,
     input  wire        resetn                         ,
+    //
+    input  wire [31:0] rtc_sec                        ,
+    input  wire [31:0] rtc_nsec                       ,
     // TC I/F
     output wire        tc_bram_clk  [0:NUM_OF_BOARD-1],
     output wire        tc_bram_rst  [0:NUM_OF_BOARD-1],
@@ -57,30 +60,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     wire        float_valid;
     wire [31:0] float_data ;
 
-    reg [31:0] rtc_sec;
-    reg [31:0] rtc_nsec;
-
-    reg[8:0] irq_ext;
-
-
-    //--------------------------------------------------------------------------
-    // RTC
-
-    always_ff @ (posedge clk) begin
-        if (~resetn) begin
-            rtc_sec <= 'd0;
-        end else if (rtc_nsec == 10**9 - 8) begin
-            rtc_sec <= rtc_sec + 1;
-        end
-    end
-
-    always_ff @ (posedge clk) begin
-        if (~resetn) begin
-            rtc_nsec <= 'd0;
-        end else begin
-            rtc_nsec <= (rtc_nsec >= 10**9 - 8) ? 0 : rtc_nsec + 8;
-        end
-    end
+    reg irq_ext;
 
 
     //--------------------------------------------------------------------------
@@ -257,28 +237,21 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     //--------------------------------------------------------------------------
     // IRQ
 
-
     always_ff @ (posedge clk) begin
         if (~resetn) begin
-            irq_ext <= 'd0;
+            irq_ext = 1'b0;
         end else begin
-            if (state_cnt == 'd99) begin
-                irq_ext <= 'd1;
-            end else if (|irq_ext) begin
-                irq_ext <= irq_ext + 1;
-            end else begin
-                irq_ext <= 'd0;
-            end
+            irq_ext = (state_cnt == 'd99);
         end
     end
 
-    always_ff @ (posedge clk) begin
-        if (~resetn) begin
-            irq <= 1'b0;
-        end else begin
-            irq <= |irq_ext;
-        end
-    end
+    pulse_ext i_pulse_ext (
+        .clk     (clk    ),
+        .rst     (~resetn),
+        .pulse_in(irq_ext),
+        .ext_out (irq    )
+    );
+
 
     //--------------------------------------------------------------------------
     // Net mapping
