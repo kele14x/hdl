@@ -26,7 +26,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     output wire        rtd_bram_clk [0:NUM_OF_BOARD-1],
     output wire        rtd_bram_rst [0:NUM_OF_BOARD-1],
     output reg         rtd_bram_en  [0:NUM_OF_BOARD-1],
-    output reg  [ 2:0] rtd_bram_addr[0:NUM_OF_BOARD-1],
+    output reg  [ 3:0] rtd_bram_addr[0:NUM_OF_BOARD-1],
     input  wire [31:0] rtd_bram_dout[0:NUM_OF_BOARD-1],
     //
     input  wire        rtd_drdy     [0:NUM_OF_BOARD-1],
@@ -116,7 +116,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     //--------------------------------------------------------------------------
     // FSM
 
-    localparam FRAME_LENGTH = 112;
+    localparam FRAME_LENGTH = 124;
 
     reg [6:0] bram_wr_cnt;
 
@@ -169,41 +169,69 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
 
             // At state 8 ~ 55, readout TC data
 
+            logic tc_bram_en_lut[0:127];
+            
+            initial begin
+                for (int j = 0; j < 128; j++) begin
+                    tc_bram_en_lut[j] = (i*8+8 <= j && j <=i*8+15);
+                end
+            end
+
             always_ff @ (posedge clk) begin
                 if (~resetn) begin
                     tc_bram_en[i] <= 1'b0;
                 end else begin
-                    tc_bram_en[i] <= (i*8+8 <= bram_wr_cnt && bram_wr_cnt <=i*8+15);
+                    tc_bram_en[i] <= tc_bram_en_lut[bram_wr_cnt];
+                end
+            end
+
+            logic tc_bram_addr_lut[0:127];
+
+            initial begin
+                for (int j = 0; j < 128; j++) begin
+                    tc_bram_addr_lut[j] = (j - i*8 - 8);
                 end
             end
 
             always_ff @ (posedge clk) begin
                 if (~resetn) begin
                     tc_bram_addr[i] <= 'b0;
-                end else if (&bram_wr_cnt) begin
-                    tc_bram_addr[i] <= 'b0;
-                end else if (i*8+8 <= bram_wr_cnt && bram_wr_cnt <=i*8+15) begin
-                    tc_bram_addr[i] <= tc_bram_addr[i] + 1;
+                end else begin
+                    tc_bram_addr[i] <= tc_bram_addr_lut[bram_wr_cnt];
                 end
             end
 
-            // As state 56 ~ 103, readout RTC data
+            // As state 56 ~ 115, readout RTC data
+
+            logic rtd_bram_en_lut[0:127];
+
+            initial begin
+                for (int j = 0; j < 128; j++) begin
+                    rtd_bram_en_lut[j] = (i*10+56 <= j && j <=i*10+65);
+                end
+            end
 
             always_ff @ (posedge clk) begin
                 if (~resetn) begin
                     rtd_bram_en[i] <= 1'b0;
                 end else begin
-                    rtd_bram_en[i] <= (i*8+56 <= bram_wr_cnt && bram_wr_cnt <=i*8+63);
+                    rtd_bram_en[i] <= rtd_bram_en_lut[bram_wr_cnt];
+                end
+            end
+
+            logic rtd_bram_addr_lut[0:127];
+
+            initial begin
+                for (int j = 0; j < 128; j++) begin
+                    rtd_bram_addr_lut[j] = (j - i*10 - 56);
                 end
             end
 
             always_ff @ (posedge clk) begin
                 if (~resetn) begin
                     rtd_bram_addr[i] <= 'b0;
-                end else if (&bram_wr_cnt) begin
-                    rtd_bram_addr[i] <= 'b0;
-                end else if (i*8+56 <= bram_wr_cnt && bram_wr_cnt <=i*8+63) begin
-                    rtd_bram_addr[i] <=  rtd_bram_addr[i] + 1;
+                end else begin
+                    rtd_bram_addr[i] <=  rtd_bram_addr_lut[bram_wr_cnt];
                 end
             end
 
@@ -218,7 +246,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
         if (~resetn) begin
             fixed_valid <= 1'b0;
         end else begin
-            fixed_valid <= (9 <= bram_wr_cnt && bram_wr_cnt <= 104);
+            fixed_valid <= (9 <= bram_wr_cnt && bram_wr_cnt <= 116);
         end
     end
 
@@ -227,8 +255,19 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
             fixed_data <= 'b0;
         end else if (9 <= bram_wr_cnt && bram_wr_cnt <= 56) begin
             fixed_data <= (tc_bram_dout[(bram_wr_cnt-9)/8] - 24'h800000);
-        end else if (57 <= bram_wr_cnt && bram_wr_cnt <= 104) begin
-            fixed_data <= (rtd_bram_dout[(bram_wr_cnt-57)/8] - 24'h800000);
+        // RTD data to fixed
+        end else if (57 <= bram_wr_cnt && bram_wr_cnt <= 66) begin
+            fixed_data <= (rtd_bram_dout[0] - 24'h800000);
+        end else if (67 <= bram_wr_cnt && bram_wr_cnt <= 76) begin
+            fixed_data <= (rtd_bram_dout[1] - 24'h800000);
+        end else if (77 <= bram_wr_cnt && bram_wr_cnt <= 86) begin
+            fixed_data <= (rtd_bram_dout[2] - 24'h800000);
+        end else if (87 <= bram_wr_cnt && bram_wr_cnt <= 96) begin
+            fixed_data <= (rtd_bram_dout[3] - 24'h800000);
+        end else if (97 <= bram_wr_cnt && bram_wr_cnt <= 106) begin
+            fixed_data <= (rtd_bram_dout[4] - 24'h800000);
+        end else if (107 <= bram_wr_cnt && bram_wr_cnt <= 116) begin
+            fixed_data <= (rtd_bram_dout[5] - 24'h800000);
         end
     end
 
@@ -268,8 +307,8 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
             else if (bram_wr_cnt == 'd2) bram_din <= ts_sec;
             else if (bram_wr_cnt == 'd3) bram_din <= ts_nsec;
             else if (bram_wr_cnt <= 'd15) bram_din <= 'd0; // reserved header space
-            // 16 ~ 111
-            else if (bram_wr_cnt <= 'd111) bram_din <= float_data;
+            // 16 ~ 123
+            else if (bram_wr_cnt <= 'd123) bram_din <= float_data;
             else bram_din <= 'd0;
         end
     end

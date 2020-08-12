@@ -176,7 +176,7 @@ module axi_ad7124_v2_top #(
     logic        rtd_bram_clk [0:NUM_OF_BOARD-1];
     logic        rtd_bram_rst [0:NUM_OF_BOARD-1];
     logic        rtd_bram_en  [0:NUM_OF_BOARD-1];
-    logic [ 2:0] rtd_bram_addr[0:NUM_OF_BOARD-1];
+    logic [ 3:0] rtd_bram_addr[0:NUM_OF_BOARD-1];
     logic [31:0] rtd_bram_dout[0:NUM_OF_BOARD-1];
     logic        rtd_drdy     [0:NUM_OF_BOARD-1];
 
@@ -388,7 +388,7 @@ module axi_ad7124_v2_top #(
         for (genvar i = 0; i < NUM_OF_BOARD; i ++) begin : g_rtd
 
             (* keep_hierarchy="yes" *)
-            axi_ad7124_channel #(
+            axi_ad7124_rtd_channel #(
                 .ID                            (32'h00000100 + i                  ),
                 .CMD_FIFO_ADDRESS_WIDTH        (RTD_CMD_FIFO_ADDRESS_WIDTH        ),
                 .SYNC_FIFO_ADDRESS_WIDTH       (RTD_SYNC_FIFO_ADDRESS_WIDTH       ),
@@ -397,7 +397,7 @@ module axi_ad7124_v2_top #(
                 .OFFLOAD0_CMD_MEM_ADDRESS_WIDTH(RTD_OFFLOAD0_CMD_MEM_ADDRESS_WIDTH),
                 .OFFLOAD0_SDO_MEM_ADDRESS_WIDTH(RTD_OFFLOAD0_SDO_MEM_ADDRESS_WIDTH),
                 .NUM_OF_CS                     (RTD_NUM_OF_CS                     )
-            ) i_axi_ad7124_channel (
+            ) i_axi_ad7124_rtd_channel (
                 .up_clk    (up_clk                                                   ),
                 .up_rstn   (up_rstn                                                  ),
                 .up_wreq   (rtd_up_wreq      [i]                                     ),
@@ -409,6 +409,8 @@ module axi_ad7124_v2_top #(
                 .up_rdata  (rtd_up_rdata     [i]                                     ),
                 .up_rack   (rtd_up_rack      [i]                                     ),
                 .irq       (/* Not used */                                           ),
+                //
+                .pps_in    (pps_in                                                   ),
                 //
                 .bram_clk  (rtd_bram_clk     [i]                                     ),
                 .bram_rst  (rtd_bram_rst     [i]                                     ),
