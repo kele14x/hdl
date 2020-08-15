@@ -185,7 +185,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
                 end
             end
 
-            logic tc_bram_addr_lut[0:127];
+            logic [2:0] tc_bram_addr_lut[0:127];
 
             initial begin
                 for (int j = 0; j < 128; j++) begin
@@ -219,7 +219,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
                 end
             end
 
-            logic rtd_bram_addr_lut[0:127];
+            logic [3:0] rtd_bram_addr_lut[0:127];
 
             initial begin
                 for (int j = 0; j < 128; j++) begin
