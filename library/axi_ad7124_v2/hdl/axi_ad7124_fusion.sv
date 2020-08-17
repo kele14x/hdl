@@ -167,13 +167,14 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     generate
         for (genvar i = 0; i < NUM_OF_BOARD; i++) begin
 
-            // At state 8 ~ 55, readout TC data
+            // At state 7 ~ 54, readout TC data, 
+            // 8 per board, 48 totoal
 
             logic tc_bram_en_lut[0:127];
             
             initial begin
                 for (int j = 0; j < 128; j++) begin
-                    tc_bram_en_lut[j] = (i*8+8 <= j && j <=i*8+15);
+                    tc_bram_en_lut[j] = (i * 8 + 7 <= j && j <=i * 8 + 14);
                 end
             end
 
@@ -189,7 +190,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
 
             initial begin
                 for (int j = 0; j < 128; j++) begin
-                    tc_bram_addr_lut[j] = (j - i*8 - 8);
+                    tc_bram_addr_lut[j] = (j - i * 8 - 7);
                 end
             end
 
@@ -201,13 +202,14 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
                 end
             end
 
-            // As state 56 ~ 115, readout RTC data
+            // As state 55 ~ 114, readout RTC data
+            // 10 per board, 60 total
 
             logic rtd_bram_en_lut[0:127];
 
             initial begin
                 for (int j = 0; j < 128; j++) begin
-                    rtd_bram_en_lut[j] = (i*10+56 <= j && j <=i*10+65);
+                    rtd_bram_en_lut[j] = (i * 10 + 55 <= j && j <= i * 10 + 64);
                 end
             end
 
@@ -223,7 +225,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
 
             initial begin
                 for (int j = 0; j < 128; j++) begin
-                    rtd_bram_addr_lut[j] = (j - i*10 - 56);
+                    rtd_bram_addr_lut[j] = (j - i * 10 - 55);
                 end
             end
 
