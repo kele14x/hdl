@@ -53,14 +53,14 @@ module axi_ad7124_rtd_offload #(
     //  0 - idle
     //  1 - cmd, chip-select 0xFE
     //  2 - cmd, transfer 10 bytes, write
-    //  3 - sdo, 0x43
+    //  3 - sdo, 0x03
     //  4 - sdo, 0x00
     //  5 - sdo, 0x18
     //  6 - sdo, 0x00              60              C0
-    //  7 - sdo, 0x49
+    //  7 - sdo, 0x09
     //  8 - sdo, 0x80  80  80  80  80  81  81  81  81  81
     //  9 - sdo, 0x22  43  64  85  E8  09  2A  4B  AE  CF
-    // 10 - sdo, 0x41
+    // 10 - sdo, 0x01
     // 11 - sdo, 0x00
     // 12 - sdo, 0x84
     // 13 - cmd, sync 0
@@ -163,14 +163,14 @@ module axi_ad7124_rtd_offload #(
         if (~spi_resetn) begin
             sdo_data <= 8'h00;
         end else if (state_tick_next == 3) begin
-            sdo_data <= 8'h43;
+            sdo_data <= 8'h03;
         end else if (state_tick_next == 5) begin
             sdo_data <= 8'h18;
         end else if (state_tick_next == 6) begin
             sdo_data <= (state_channel <= 3) ? 8'h00 :
                         (state_channel <= 7) ? 8'h60 : 8'hC0;
         end else if (state_tick_next == 7) begin
-            sdo_data <= 8'h49;
+            sdo_data <= 8'h09;
         end else if (state_tick_next == 8) begin
             sdo_data <= state_channel <= 4 ? 8'h80 : 8'h81;
         end else if (state_tick_next == 9) begin
@@ -184,7 +184,7 @@ module axi_ad7124_rtd_offload #(
                         state_channel == 7 ? 8'h4B :
                         state_channel == 8 ? 8'hAE : 8'hCF;
         end else if (state_tick_next == 10) begin
-            sdo_data <= 8'h41;
+            sdo_data <= 8'h01;
         end else if (state_tick_next == 12) begin
             sdo_data <= 8'h84;
         end else if (state_tick_next == 16) begin
