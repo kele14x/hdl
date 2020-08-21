@@ -6,7 +6,10 @@ All rights reserved.
 `timescale 1 ns / 100 ps
 `default_nettype none
 
-module axi_ad7124_buf #(parameter BUFFER_ADDR_WIDTH = 5) (
+module axi_ad7124_buf #(
+    parameter integer BUFFER_ADDR_WIDTH = 5 ,
+    parameter integer FRAME_LENGTH      = 32
+) (
     // Data I/F from SPI
     //-------------
     input  wire                         clk              ,
@@ -28,8 +31,6 @@ module axi_ad7124_buf #(parameter BUFFER_ADDR_WIDTH = 5) (
     output reg  [                 31:0] bram_dout
 );
 
-
-    localparam FRAME_LENGTH = 32;
 
     reg [7:0] buf_mem [0:(2**BUFFER_ADDR_WIDTH-1)];
 

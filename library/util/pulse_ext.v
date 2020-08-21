@@ -6,12 +6,12 @@ All rights reserved.
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module pulse_ext (
-    (* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 clk CLK" *)
-    (* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF LED, ASSOCIATED_RESET rst" *)
+module pulse_ext #(parameter NEGATIVE_OUT = 0) (
+	(* X_INTERFACE_INFO = "xilinx.com:signal:clock:1.0 clk CLK" *)
+	(* X_INTERFACE_PARAMETER = "ASSOCIATED_BUSIF LED, ASSOCIATED_RESET rst" *)
 	input  wire clk     ,
-    (* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 rst RST" *)
-    (* X_INTERFACE_PARAMETER = "POLARITY ACTIVE_HIGH" *)
+	(* X_INTERFACE_INFO = "xilinx.com:signal:reset:1.0 rst RST" *)
+	(* X_INTERFACE_PARAMETER = "POLARITY ACTIVE_HIGH" *)
 	input  wire rst     ,
 	input  wire pulse_in,
 	output reg  ext_out
@@ -33,7 +33,7 @@ module pulse_ext (
 	end
 
 	always @ (posedge clk) begin
-		ext_out <= |ext_reg;
+		ext_out <= NEGATIVE_OUT ? (~|ext_reg) : (|ext_reg);
 	end
 
 endmodule

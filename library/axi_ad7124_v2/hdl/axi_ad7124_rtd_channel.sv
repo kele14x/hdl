@@ -6,7 +6,7 @@ All rights reserved.
 `timescale 1 ns / 100 ps
 `default_nettype none
 
-module axi_ad7124_channel #(
+module axi_ad7124_rtd_channel #(
     // ID
     parameter ID                             = 0,
     // Direct
@@ -22,42 +22,45 @@ module axi_ad7124_channel #(
 ) (
     // UP interface
     //-------------
-    input  wire                   up_clk           ,
-    input  wire                   up_rstn          ,
+    input  wire                   up_clk    ,
+    input  wire                   up_rstn   ,
     //
-    input  wire                   up_wreq          ,
-    input  wire [           13:0] up_waddr         ,
-    input  wire [           31:0] up_wdata         ,
-    output wire                   up_wack          ,
-    input  wire                   up_rreq          ,
-    input  wire [           13:0] up_raddr         ,
-    output wire [           31:0] up_rdata         ,
-    output wire                   up_rack          ,
+    input  wire                   up_wreq   ,
+    input  wire [           13:0] up_waddr  ,
+    input  wire [           31:0] up_wdata  ,
+    output wire                   up_wack   ,
+    input  wire                   up_rreq   ,
+    input  wire [           13:0] up_raddr  ,
+    output wire [           31:0] up_rdata  ,
+    output wire                   up_rack   ,
     //
-    output wire                   irq              ,
+    output wire                   irq       ,
+    // PPS In
+    //-------
+    input  wire                   pps_in    ,
     // BRAM I/F
     //---------
-    input  wire                   bram_clk         ,
-    input  wire                   bram_rst         ,
+    input  wire                   bram_clk  ,
+    input  wire                   bram_rst  ,
     //
-    input  wire                   bram_en          ,
-    input  wire [            2:0] bram_addr        ,
-    output wire [           31:0] bram_dout        ,
+    input  wire                   bram_en   ,
+    input  wire [            3:0] bram_addr ,
+    output wire [           31:0] bram_dout ,
     //
-    output wire                   drdy             ,
+    output wire                   drdy      ,
     // SPI I/F
     //--------
-    input  wire                   phy_sclk_i       ,
-    output wire                   phy_sclk_o       ,
-    output wire                   phy_sclk_t       ,
-    input  wire [(NUM_OF_CS-1):0] phy_cs_i         ,
-    output wire [(NUM_OF_CS-1):0] phy_cs_o         ,
-    output wire [(NUM_OF_CS-1):0] phy_cs_t         ,
-    input  wire                   phy_mosi_i       ,
-    output wire                   phy_mosi_o       ,
-    output wire                   phy_mosi_t       ,
-    input  wire                   phy_miso_i       ,
-    output wire                   phy_miso_o       ,
+    input  wire                   phy_sclk_i,
+    output wire                   phy_sclk_o,
+    output wire                   phy_sclk_t,
+    input  wire [(NUM_OF_CS-1):0] phy_cs_i  ,
+    output wire [(NUM_OF_CS-1):0] phy_cs_o  ,
+    output wire [(NUM_OF_CS-1):0] phy_cs_t  ,
+    input  wire                   phy_mosi_i,
+    output wire                   phy_mosi_o,
+    output wire                   phy_mosi_t,
+    input  wire                   phy_miso_i,
+    output wire                   phy_miso_o,
     output wire                   phy_miso_t
 );
 
@@ -70,12 +73,13 @@ module axi_ad7124_channel #(
     // SPI Offload
     localparam ASYNC_TRIG = 0;
     // SPI Execution
-    localparam [7:0] DEFAULT_SPI_CFG = 8'h3 ; // {5'b0, three_wire, CPOL, CPHA}
+    localparam [7:0] DEFAULT_SPI_CFG = 8'h03; // {5'b0, three_wire, CPOL, CPHA}
     localparam [7:0] DEFAULT_CLK_DIV = 24   ; // f_sclk = f_clk / ((div + 1) * 2)
     localparam [0:0] SDO_DEFAULT     = 1'b1 ;
     localparam [1:0] SDI_DELAY       = 2'b00;
 
-    localparam BUFFER_ADDR_WIDTH = 5;
+    localparam BUFFER_ADDR_WIDTH = 6;
+    localparam FRAME_LENGTH = 40;
 
     logic spi_clk   ;
     logic spi_resetn;
@@ -269,48 +273,34 @@ module axi_ad7124_channel #(
     );
 
     (* keep_hierarchy="yes" *)
-    spi_engine_offload #(
-        .ASYNC_SPI_CLK        (ASYNC_SPI_CLK                 ),
-        .ASYNC_TRIG           (ASYNC_TRIG                    ),
-        .CMD_MEM_ADDRESS_WIDTH(OFFLOAD0_CMD_MEM_ADDRESS_WIDTH),
-        .SDO_MEM_ADDRESS_WIDTH(OFFLOAD0_SDO_MEM_ADDRESS_WIDTH),
-        .DATA_WIDTH           (DATA_WIDTH                    ),
-        .NUM_OF_SDI           (NUM_OF_SDI                    )
-    ) i_spi_engine_offload (
-        .ctrl_clk         (ctrl_clk           ),
+    axi_ad7124_rtd_offload i_axi_ad7124_rtd_offload (
+        .ctrl_clk         (ctrl_clk         ),
         //
-        .ctrl_cmd_wr_en   (offload_cmd_wr_en  ),
-        .ctrl_cmd_wr_data (offload_cmd_wr_data),
-        .ctrl_sdo_wr_en   (offload_sdo_wr_en  ),
-        .ctrl_sdo_wr_data (offload_sdo_wr_data),
-        .ctrl_enable      (offload_enable     ),
-        .ctrl_enabled     (offload_enabled    ),
-        .ctrl_mem_reset   (offload_mem_reset  ),
-        .status_sync_valid(offload_sync_valid ),
-        .status_sync_ready(offload_sync_ready ),
-        .status_sync_data (offload_sync_data  ),
+        .ctrl_enable      (offload_enable   ),
+        .ctrl_enabled     (offload_enabled  ),
         //
-        .spi_clk          (spi_clk            ),
-        .spi_resetn       (spi_resetn         ),
+        .spi_clk          (spi_clk          ),
+        .spi_resetn       (spi_resetn       ),
         //
-        .trigger          (trigger            ),
+        .pps              (pps_in           ),
+        .trigger          (trigger          ),
         //
-        .cmd_valid        (s1_cmd_valid       ),
-        .cmd_ready        (s1_cmd_ready       ),
-        .cmd              (s1_cmd_data        ),
-        .sdo_data_valid   (s1_sdo_valid       ),
-        .sdo_data_ready   (s1_sdo_ready       ),
-        .sdo_data         (s1_sdo_data        ),
-        .sdi_data_valid   (s1_sdi_valid       ),
-        .sdi_data_ready   (s1_sdi_ready       ),
-        .sdi_data         (s1_sdi_data        ),
-        .sync_valid       (s1_sync_valid      ),
-        .sync_ready       (s1_sync_ready      ),
-        .sync_data        (s1_sync            ),
+        .cmd_valid        (s1_cmd_valid     ),
+        .cmd_ready        (s1_cmd_ready     ),
+        .cmd_data         (s1_cmd_data      ),
+        .sdo_valid        (s1_sdo_valid     ),
+        .sdo_ready        (s1_sdo_ready     ),
+        .sdo_data         (s1_sdo_data      ),
+        .sdi_valid        (s1_sdi_valid     ),
+        .sdi_ready        (s1_sdi_ready     ),
+        .sdi_data         (s1_sdi_data      ),
+        .sync_valid       (s1_sync_valid    ),
+        .sync_ready       (s1_sync_ready    ),
+        .sync_data        (s1_sync          ),
         //
-        .offload_sdi_valid(offload_sdi_valid  ),
-        .offload_sdi_ready(offload_sdi_ready  ),
-        .offload_sdi_data (offload_sdi_data   )
+        .offload_sdi_valid(offload_sdi_valid),
+        .offload_sdi_ready(offload_sdi_ready),
+        .offload_sdi_data (offload_sdi_data )
     );
 
     (* keep_hierarchy="yes" *)
@@ -415,11 +405,14 @@ module axi_ad7124_channel #(
     // Local buffer for data,
 
     (* keep_hierarchy="yes" *)
-    axi_ad7124_buf #(.BUFFER_ADDR_WIDTH(BUFFER_ADDR_WIDTH)) i_axi_ad7124_buf (
+    axi_ad7124_buf #(
+        .BUFFER_ADDR_WIDTH(BUFFER_ADDR_WIDTH),
+        .FRAME_LENGTH     (FRAME_LENGTH     )
+    ) i_axi_ad7124_buf (
         .clk              (spi_clk          ),
         .resetn           (spi_resetn       ),
         //
-        .trigger          (trigger          ),
+        .trigger          (pps_in           ),
         .drdy             (drdy             ),
         //
         .offload_sdi_valid(offload_sdi_valid),
