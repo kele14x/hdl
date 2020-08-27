@@ -2,10 +2,10 @@
 <Root MajorVersion="0" MinorVersion="39">
   <CompositeFile CompositeFileTopName="ps7_bd" CanBeSetAsTop="false" CanDisplayChildGraph="true">
     <Description>Composite Fileset</Description>
-    <Generation Name="SYNTHESIS" State="GENERATED" Timestamp="1597679242"/>
-    <Generation Name="IMPLEMENTATION" State="GENERATED" Timestamp="1597679242"/>
-    <Generation Name="SIMULATION" State="GENERATED" Timestamp="1597679242"/>
-    <Generation Name="HW_HANDOFF" State="GENERATED" Timestamp="1597679242"/>
+    <Generation Name="SYNTHESIS" State="GENERATED" Timestamp="1598511165"/>
+    <Generation Name="IMPLEMENTATION" State="GENERATED" Timestamp="1598511165"/>
+    <Generation Name="SIMULATION" State="GENERATED" Timestamp="1598511165"/>
+    <Generation Name="HW_HANDOFF" State="GENERATED" Timestamp="1598511165"/>
     <FileCollection Name="SOURCES" Type="SOURCES">
       <File Name="ip\ps7_bd_processing_system7_0_0\ps7_bd_processing_system7_0_0.xci" Type="IP">
         <Instance HierarchyPath="processing_system7_0"/>
@@ -32,7 +32,6 @@
         <UsedIn Val="SIMULATION"/>
       </File>
       <File Name="ip\ps7_bd_axi_interconnect_0_0\ps7_bd_axi_interconnect_0_0.xci" Type="IP">
-        <Instance HierarchyPath="axi_interconnect_0"/>
         <Properties IsEditable="false" IsVisible="false" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
         <UsedIn Val="SYNTHESIS"/>
@@ -79,7 +78,15 @@
         <UsedIn Val="IMPLEMENTATION"/>
         <UsedIn Val="SIMULATION"/>
       </File>
-      <File Name="ip\ps7_bd_auto_pc_2\ps7_bd_auto_pc_2.xci" Type="IP">
+      <File Name="ip\ps7_bd_axi_gpio_0_0\ps7_bd_axi_gpio_0_0.xci" Type="IP">
+        <Instance HierarchyPath="axi_gpio_0"/>
+        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
+        <Library Name="xil_defaultlib"/>
+        <UsedIn Val="SYNTHESIS"/>
+        <UsedIn Val="IMPLEMENTATION"/>
+        <UsedIn Val="SIMULATION"/>
+      </File>
+      <File Name="ip\ps7_bd_auto_pc_3\ps7_bd_auto_pc_3.xci" Type="IP">
         <Instance HierarchyPath="axi_interconnect_0/s00_couplers/auto_pc"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
@@ -97,6 +104,14 @@
       </File>
       <File Name="ip\ps7_bd_auto_pc_1\ps7_bd_auto_pc_1.xci" Type="IP">
         <Instance HierarchyPath="axi_interconnect_0/m02_couplers/auto_pc"/>
+        <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
+        <Library Name="xil_defaultlib"/>
+        <UsedIn Val="SYNTHESIS"/>
+        <UsedIn Val="IMPLEMENTATION"/>
+        <UsedIn Val="SIMULATION"/>
+      </File>
+      <File Name="ip\ps7_bd_auto_pc_2\ps7_bd_auto_pc_2.xci" Type="IP">
+        <Instance HierarchyPath="axi_interconnect_0/m03_couplers/auto_pc"/>
         <Properties IsEditable="false" IsVisible="true" Timestamp="0" IsTrackable="true" IsStatusTracked="true"/>
         <Library Name="xil_defaultlib"/>
         <UsedIn Val="SYNTHESIS"/>

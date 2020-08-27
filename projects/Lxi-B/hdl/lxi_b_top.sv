@@ -43,8 +43,14 @@ module lxi_b_top (
     inout  wire [47:0] GX_TC_SPI_CSN    ,
     inout  wire [ 5:0] GX_TC_SPI_SCLK   ,
     inout  wire [ 5:0] GX_TC_SPI_SDI    ,
-    inout  wire [ 5:0] GX_TC_SPI_SDO
-    //
+    inout  wire [ 5:0] GX_TC_SPI_SDO    ,
+    // LCD
+    inout  wire        LCD_LED_EN       ,
+    inout  wire        LCD_V0           ,
+    inout  wire        LCD_RS           ,
+    inout  wire        LCD_RW           ,
+    inout  wire        LCD_E            ,
+    inout  wire [ 7:0] LCD_DB
 );
 
 
@@ -83,7 +89,14 @@ module lxi_b_top (
         .GX_TC_SPI_CSN_tri_io  (GX_TC_SPI_CSN    ),
         .GX_TC_SPI_SCLK_tri_io (GX_TC_SPI_SCLK   ),
         .GX_TC_SPI_SDI_tri_io  (GX_TC_SPI_SDI    ),
-        .GX_TC_SPI_SDO_tri_io  (GX_TC_SPI_SDO    )
+        .GX_TC_SPI_SDO_tri_io  (GX_TC_SPI_SDO    ),
+        //
+        .lcd_gpio_tri_io       ({LCD_LED_EN,
+                                 LCD_V0,
+                                 LCD_RS,
+                                 LCD_RW,
+                                 LCD_E,
+                                 LCD_DB}         )
     );
 
 endmodule
