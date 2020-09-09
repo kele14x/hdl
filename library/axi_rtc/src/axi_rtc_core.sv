@@ -45,6 +45,8 @@ module axi_rtc_core (
     logic [29:0] nsec_cnt     ;
     logic [30:0] nsec_cnt_next;
 
+    logic [30:0] nsec_cnt_adder;
+
     always @ (posedge clk) begin
         if (rst) begin
             nsec_cnt <= 'd0;
@@ -53,37 +55,54 @@ module axi_rtc_core (
         end
     end
 
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            nsec_cnt_adder <= 'd0;
+        end else if (ctrl_adj && ctrl_adj_addsub == 1'b0) begin
+            nsec_cnt_adder = ctrl_inc_nsec + ctrl_adj_nsec;
+        end else if (ctrl_adj && ctrl_adj_addsub == 1'b1) begin
+            nsec_cnt_adder = ctrl_inc_nsec - ctrl_adj_nsec;
+        end else begin
+            nsec_cnt_adder = ctrl_inc_nsec;
+        end
+    end
+ 
     always_comb begin
-        if (ctrl_timeset) begin
+        if (ctrl_set) begin
             nsec_cnt_next = ctrl_set_nsec;
         end else begin
-            nsec_cnt_next = nsec_cnt + ctrl_inc_nsec;
-
-            if (ctrl_adj && ctrl_adj_addsub == 1'b0) begin
-                nsec_cnt_next = nsec_cnt_next + ctrl_adj_nsec
-            end else if (ctrl_adj && ctrl_adj_addsub == 1'b1) begin
-                nsec_cnt_next = nsec_cnt_next + ctrl_adj_nsec
-            end
-
+            // Normal update
+            nsec_cnt_next = nsec_cnt + nsec_cnt_adder;
+            // Handle the counter rollover
             if (nsec_cnt_next >= 1000000000) begin
                 nsec_cnt_next = nsec_cnt_next - 1000000000;
             end
         end
     end
 
+    // Second counter
+    //-------------------
+    // Real second value range from 0 to 2^32-1
+
     logic sec_p1;
     logic [31:0] sec_cnt ; // Sample tick s
+
+    always_ff @ (posedge clk) begin
+        if (rst) begin
+            sec_p1 <= 1'b0;
+        end else begin
+            sec_p1 = (nsec_cnt_next >= 1000000000);
+        end
+    end
 
     // Second counter
     // Real second value range from 0 to maximum, it should be enough for use
     always @ (posedge clk) begin
         if (rst) begin
             sec_cnt <= 'd0;
-        end else if (ctrl_timeset) begin
-            // Set time
-            sec_cnt <= ctrl_timeset_sec;
+        end else if (ctrl_set) begin
+            sec_cnt <= ctrl_set_sec;
         end else if (sec_p1) begin
-            // Normal mode
             sec_cnt <= sec_cnt + 1;
         end else begin
             sec_cnt <= sec_cnt;
@@ -96,21 +115,17 @@ module axi_rtc_core (
 
     always_ff @ (posedge clk) begin
         if (rst) begin
-            stat_rtc_nsec <= 'd0;
-        end else begin
-            if (ctrl_rtc_tick) begin
-                stat_rtc_nsec <= nsec_cnt;
-            end
+            stat_get_sec <= 'd0;
+        end else if (ctrl_get) begin
+            stat_get_sec <= nsec_cnt;
         end
     end
 
     always_ff @ (posedge clk) begin
         if (rst) begin
-            stat_rtc_sec <= 'd0;
-        end else begin
-            if (ctrl_rtc_tick) begin
-                stat_rtc_sec <= sec_cnt;
-            end
+            stat_get_nsec <= 'd0;
+        end else if (ctrl_get) begin
+            stat_get_sec <= sec_cnt;
         end
     end
 
@@ -126,7 +141,7 @@ module axi_rtc_core (
         if (rst) begin
             pps_out <= 1'b0;
         end else begin
-            pps_out <= (nsec_cnt >= NSEC_MAX);
+            pps_out <= sec_p1;
         end
     end
 
