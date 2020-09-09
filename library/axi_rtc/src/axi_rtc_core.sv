@@ -12,46 +12,67 @@ All rights reserved.
 // * In PPS mode: Local counter + PPS, nanosecond will not rollover, and when
 //   PPS arrives, second field +1, internal PPS is generated.
 
-module axi_rtc_core #(parameter  CLOCK_FREQUENCY = 125000000) (
-    input  var logic        clk              ,
-    input  var logic        rst              ,
+module axi_rtc_core (
+    input  var logic        clk            ,
+    input  var logic        rst            ,
     // PPS Out
-    output var logic        pps_out          ,
+    output var logic        pps_out        ,
     //
-    output var logic [31:0] rtc_sec          ,
-    output var logic [31:0] rtc_nsec         ,
+    output var logic [31:0] rtc_sec        ,
+    output var logic [29:0] rtc_nsec       ,
     //
-    input  var logic        ctrl_rtc_tick    ,
-    input  var logic        ctrl_timeset     ,
-    input  var logic [31:0] ctrl_timeset_sec ,
-    input  var logic [31:0] ctrl_timeset_nsec,
+    input  var logic        ctrl_get       ,
+    input  var logic [31:0] stat_get_sec   ,
+    input  var logic [29:0] stat_get_nsec  ,
     //
-    output var logic [31:0] stat_rtc_sec     ,
-    output var logic [31:0] stat_rtc_nsec
+    input  var logic        ctrl_set       ,
+    input  var logic [31:0] ctrl_set_sec   ,
+    input  var logic [29:0] ctrl_set_nsec  ,
+    //
+    input  var logic        ctrl_adj       ,
+    input  var logic        ctrl_adj_addsub,
+    input  var logic [29:0] ctrl_adj_nsec  ,
+    //
+    input  var logic [ 7:0] ctrl_inc_b4    ,
+    input  var logic [ 7:0] ctrl_inc_nsec  ,
+    input  var logic [ 7:0] ctrl_inc_alt
 );
 
-    // Time counter
-    //==============
-
-    localparam NSEC_INC = 10**9 / CLOCK_FREQUENCY ;
-    localparam NSEC_MAX   = 10**9 - NSEC_INC;
-
-    reg [31:0] sec_cnt    ; // Sample tick s
-    reg [31:0] nsec_cnt; // Sample tick ns
-
     // Nanosecond counter
-    // Real nanosecond value range from 0 to last tick
+    //-------------------
+    // Real nanosecond value range from 0 to 999999999
+
+    logic [29:0] nsec_cnt     ;
+    logic [30:0] nsec_cnt_next;
+
     always @ (posedge clk) begin
         if (rst) begin
             nsec_cnt <= 'd0;
-        end else if (ctrl_timeset) begin
-            // Set time
-            nsec_cnt <= ctrl_timeset_nsec;
         end else begin
-            // Normal mode
-            nsec_cnt <= ((nsec_cnt >= NSEC_MAX) ? 0 : (nsec_cnt + NSEC_INC));
+            nsec_cnt <= nsec_cnt_next;
         end
     end
+
+    always_comb begin
+        if (ctrl_timeset) begin
+            nsec_cnt_next = ctrl_set_nsec;
+        end else begin
+            nsec_cnt_next = nsec_cnt + ctrl_inc_nsec;
+
+            if (ctrl_adj && ctrl_adj_addsub == 1'b0) begin
+                nsec_cnt_next = nsec_cnt_next + ctrl_adj_nsec
+            end else if (ctrl_adj && ctrl_adj_addsub == 1'b1) begin
+                nsec_cnt_next = nsec_cnt_next + ctrl_adj_nsec
+            end
+
+            if (nsec_cnt_next >= 1000000000) begin
+                nsec_cnt_next = nsec_cnt_next - 1000000000;
+            end
+        end
+    end
+
+    logic sec_p1;
+    logic [31:0] sec_cnt ; // Sample tick s
 
     // Second counter
     // Real second value range from 0 to maximum, it should be enough for use
@@ -61,9 +82,11 @@ module axi_rtc_core #(parameter  CLOCK_FREQUENCY = 125000000) (
         end else if (ctrl_timeset) begin
             // Set time
             sec_cnt <= ctrl_timeset_sec;
-        end else begin
+        end else if (sec_p1) begin
             // Normal mode
-            sec_cnt <= (nsec_cnt >= NSEC_MAX) ? sec_cnt + 1 : sec_cnt;
+            sec_cnt <= sec_cnt + 1;
+        end else begin
+            sec_cnt <= sec_cnt;
         end
     end
 

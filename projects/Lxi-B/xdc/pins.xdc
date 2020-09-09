@@ -146,12 +146,28 @@ set_property PACKAGE_PIN K21  [get_ports {GX_TC_SPI_SDO[3]}]
 set_property PACKAGE_PIN AB22 [get_ports {GX_TC_SPI_SDO[4]}]
 set_property PACKAGE_PIN U17  [get_ports {GX_TC_SPI_SDO[5]}]
 
+## LCD
+
+set_property PACKAGE_PIN D17 [get_ports {LCD_LED_EN}]
+set_property PACKAGE_PIN C17 [get_ports {LCD_V0}]
+set_property PACKAGE_PIN C18 [get_ports {LCD_RS}]
+set_property PACKAGE_PIN B16 [get_ports {LCD_RW}]
+set_property PACKAGE_PIN C19 [get_ports {LCD_E}]
+set_property PACKAGE_PIN D21 [get_ports {LCD_DB[7]}]
+set_property PACKAGE_PIN E16 [get_ports {LCD_DB[6]}]
+set_property PACKAGE_PIN D20 [get_ports {LCD_DB[5]}]
+set_property PACKAGE_PIN D15 [get_ports {LCD_DB[4]}]
+set_property PACKAGE_PIN C20 [get_ports {LCD_DB[3]}]
+set_property PACKAGE_PIN A16 [get_ports {LCD_DB[2]}]
+set_property PACKAGE_PIN B21 [get_ports {LCD_DB[1]}]
+set_property PACKAGE_PIN D16 [get_ports {LCD_DB[0]}]
+
 # IO Standard
 
 set_property IOSTANDARD LVCMOS33 [get_ports -of_objects [get_iobanks 13]]
 set_property IOSTANDARD LVCMOS33 [get_ports -of_objects [get_iobanks 33]]
 set_property IOSTANDARD LVCMOS33 [get_ports -of_objects [get_iobanks 34]]
-#set_property IOSTANDARD LVCMOS33 [get_ports -of_objects [get_iobanks 35]];
+set_property IOSTANDARD LVCMOS33 [get_ports -of_objects [get_iobanks 35]];
 
 ## [EOF]
 
