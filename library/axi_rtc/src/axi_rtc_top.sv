@@ -7,43 +7,41 @@ All rights reserved.
 `default_nettype none
 
 module axi_rtc_top #(
-    parameter integer AXI_ADDR_WIDTH  = 16       ,
-    parameter integer AXI_DATA_WIDTH  = 32       ,
-    parameter integer CLOCK_FREQUENCY = 125000000
+    parameter integer AXI_ADDR_WIDTH = 16
 ) (
     // AXI4-Lite Slave I/F
     //====================
-    input  var logic                          aclk         ,
-    input  var logic                          aresetn      ,
+    input  var logic                      aclk         ,
+    input  var logic                      aresetn      ,
     //
-    input  var logic [    AXI_ADDR_WIDTH-1:0] s_axi_awaddr ,
-    input  var logic [                   2:0] s_axi_awprot ,
-    input  var logic                          s_axi_awvalid,
-    output var logic                          s_axi_awready,
+    input  var logic [AXI_ADDR_WIDTH-1:0] s_axi_awaddr ,
+    input  var logic [               2:0] s_axi_awprot ,
+    input  var logic                      s_axi_awvalid,
+    output var logic                      s_axi_awready,
     //
-    input  var logic [    AXI_DATA_WIDTH-1:0] s_axi_wdata  ,
-    input  var logic [(AXI_DATA_WIDTH/8)-1:0] s_axi_wstrb  ,
-    input  var logic                          s_axi_wvalid ,
-    output var logic                          s_axi_wready ,
+    input  var logic [              31:0] s_axi_wdata  ,
+    input  var logic [               3:0] s_axi_wstrb  ,
+    input  var logic                      s_axi_wvalid ,
+    output var logic                      s_axi_wready ,
     //
-    output var logic [                   1:0] s_axi_bresp  ,
-    output var logic                          s_axi_bvalid ,
-    input  var logic                          s_axi_bready ,
+    output var logic [               1:0] s_axi_bresp  ,
+    output var logic                      s_axi_bvalid ,
+    input  var logic                      s_axi_bready ,
     //
-    input  var logic [    AXI_ADDR_WIDTH-1:0] s_axi_araddr ,
-    input  var logic [                   2:0] s_axi_arprot ,
-    input  var logic                          s_axi_arvalid,
-    output var logic                          s_axi_arready,
+    input  var logic [AXI_ADDR_WIDTH-1:0] s_axi_araddr ,
+    input  var logic [               2:0] s_axi_arprot ,
+    input  var logic                      s_axi_arvalid,
+    output var logic                      s_axi_arready,
     //
-    output var logic [    AXI_DATA_WIDTH-1:0] s_axi_rdata  ,
-    output var logic [                   1:0] s_axi_rresp  ,
-    output var logic                          s_axi_rvalid ,
-    input  var logic                          s_axi_rready ,
+    output var logic [              31:0] s_axi_rdata  ,
+    output var logic [               1:0] s_axi_rresp  ,
+    output var logic                      s_axi_rvalid ,
+    input  var logic                      s_axi_rready ,
     // RTC Interface
     //==============
-    output var logic                          pps_out      ,
-    output var logic [                  31:0] rtc_sec      ,
-    output var logic [                  31:0] rtc_nsec
+    output var logic                      pps_out      ,
+    output var logic [              31:0] rtc_sec      ,
+    output var logic [              29:0] rtc_nsec
 );
 
 
@@ -57,13 +55,19 @@ module axi_rtc_top #(
     logic [              31:0] up_rdata;
     logic                      up_rack ;
 
-    logic        ctrl_rtc_tick    ;
-    logic        ctrl_timeset     ;
-    logic [31:0] ctrl_timeset_sec ;
-    logic [31:0] ctrl_timeset_nsec;
+    logic        ctrl_get     ;
+    logic [31:0] stat_get_sec ;
+    logic [29:0] stat_get_nsec;
 
-    logic [31:0] stat_rtc_sec ;
-    logic [31:0] stat_rtc_nsec;
+    logic        ctrl_set     ;
+    logic [31:0] ctrl_set_sec ;
+    logic [29:0] ctrl_set_nsec;
+
+    logic        ctrl_adj     ;
+    logic [31:0] ctrl_adj_nsec;
+
+    logic [ 7:0] ctrl_inc_nsec     ;
+    logic [23:0] ctrl_inc_nsec_frac;
 
 
     (* keep_hierarchy="yes" *)
@@ -107,44 +111,58 @@ module axi_rtc_top #(
 
     (* keep_hierarchy="yes" *)
     axi_rtc_regs #(.ADDR_WIDTH(AXI_ADDR_WIDTH-2)) i_axi_rtc_regs (
-        .up_clk           (aclk             ),
-        .up_rstn          (aresetn          ),
-        .up_wreq          (up_wreq          ),
-        .up_waddr         (up_waddr         ),
-        .up_wdata         (up_wdata         ),
-        .up_wack          (up_wack          ),
-        .up_rreq          (up_rreq          ),
-        .up_raddr         (up_raddr         ),
-        .up_rdata         (up_rdata         ),
-        .up_rack          (up_rack          ),
+        .up_clk            (aclk              ),
+        .up_rstn           (aresetn           ),
         //
-        .ctrl_rtc_tick    (ctrl_rtc_tick    ),
-        .ctrl_timeset     (ctrl_timeset     ),
-        .ctrl_timeset_sec (ctrl_timeset_sec ),
-        .ctrl_timeset_nsec(ctrl_timeset_nsec),
+        .up_wreq           (up_wreq           ),
+        .up_waddr          (up_waddr          ),
+        .up_wdata          (up_wdata          ),
+        .up_wack           (up_wack           ),
         //
-        .stat_rtc_sec     (stat_rtc_sec     ),
-        .stat_rtc_nsec    (stat_rtc_nsec    )
+        .up_rreq           (up_rreq           ),
+        .up_raddr          (up_raddr          ),
+        .up_rdata          (up_rdata          ),
+        .up_rack           (up_rack           ),
+        //
+        .ctrl_get          (ctrl_get          ),
+        .stat_get_sec      (stat_get_sec      ),
+        .stat_get_nsec     (stat_get_nsec     ),
+        //
+        .ctrl_set          (ctrl_set          ),
+        .ctrl_set_sec      (ctrl_set_sec      ),
+        .ctrl_set_nsec     (ctrl_set_nsec     ),
+        //
+        .ctrl_adj          (ctrl_adj          ),
+        .ctrl_adj_nsec     (ctrl_adj_nsec     ), // signed
+        //
+        .ctrl_inc_nsec     (ctrl_inc_nsec     ),
+        .ctrl_inc_nsec_frac(ctrl_inc_nsec_frac)
     );
 
 
     (* keep_hierarchy="yes" *)
-    axi_rtc_core #(.CLOCK_FREQUENCY(CLOCK_FREQUENCY)) i_axi_rtc_core (
-        .clk              (aclk             ),
-        .rst              (~aresetn         ),
+    axi_rtc_core i_axi_rtc_core (
+        .clk               (aclk              ),
+        .rst               (~aresetn          ),
         //
-        .pps_out          (pps_out          ),
+        .pps_out           (pps_out           ),
         //
-        .rtc_sec          (rtc_sec          ),
-        .rtc_nsec         (rtc_nsec         ),
+        .rtc_sec           (rtc_sec           ),
+        .rtc_nsec          (rtc_nsec          ),
         //
-        .ctrl_rtc_tick    (ctrl_rtc_tick    ),
-        .ctrl_timeset     (ctrl_timeset     ),
-        .ctrl_timeset_sec (ctrl_timeset_sec ),
-        .ctrl_timeset_nsec(ctrl_timeset_nsec),
+        .ctrl_get          (ctrl_get          ),
+        .stat_get_sec      (stat_get_sec      ),
+        .stat_get_nsec     (stat_get_nsec     ),
         //
-        .stat_rtc_sec     (stat_rtc_sec     ),
-        .stat_rtc_nsec    (stat_rtc_nsec    )
+        .ctrl_set          (ctrl_set          ),
+        .ctrl_set_sec      (ctrl_set_sec      ),
+        .ctrl_set_nsec     (ctrl_set_nsec     ),
+        //
+        .ctrl_adj          (ctrl_adj          ),
+        .ctrl_adj_nsec     (ctrl_adj_nsec     ), // signed
+        //
+        .ctrl_inc_nsec     (ctrl_inc_nsec     ),
+        .ctrl_inc_nsec_frac(ctrl_inc_nsec_frac)
     );
 
 

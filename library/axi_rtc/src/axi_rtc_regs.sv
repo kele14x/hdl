@@ -6,104 +6,124 @@ All rights reserved.
 `timescale 1 ns / 100 ps
 `default_nettype none
 
-module axi_rtc_regs #(
-    parameter ID         = 0 ,
-    parameter ADDR_WIDTH = 14
-) (
+module axi_rtc_regs #(parameter ADDR_WIDTH = 14) (
     //==========
-    input  var logic                  up_clk           ,
-    input  var logic                  up_rstn          ,
+    input  var logic                  up_clk            ,
+    input  var logic                  up_rstn           ,
     //
-    input  var logic                  up_wreq          ,
-    input  var logic [ADDR_WIDTH-1:0] up_waddr         ,
-    input  var logic [          31:0] up_wdata         ,
-    output var logic                  up_wack          ,
+    input  var logic                  up_wreq           ,
+    input  var logic [ADDR_WIDTH-1:0] up_waddr          ,
+    input  var logic [          31:0] up_wdata          ,
+    output var logic                  up_wack           ,
     //
-    input  var logic                  up_rreq          ,
-    input  var logic [ADDR_WIDTH-1:0] up_raddr         ,
-    output var logic [          31:0] up_rdata         ,
-    output var logic                  up_rack          ,
+    input  var logic                  up_rreq           ,
+    input  var logic [ADDR_WIDTH-1:0] up_raddr          ,
+    output var logic [          31:0] up_rdata          ,
+    output var logic                  up_rack           ,
     //=========
-    output var logic                  ctrl_rtc_tick    ,
-    output var logic                  ctrl_timeset     ,
-    output var logic [          31:0] ctrl_timeset_sec ,
-    output var logic [          31:0] ctrl_timeset_nsec,
+    output var logic                  ctrl_get          ,
+    input  var logic [          31:0] stat_get_sec      ,
+    input  var logic [          29:0] stat_get_nsec     ,
     //
-    input  var logic [          31:0] stat_rtc_sec     ,
-    input  var logic [          31:0] stat_rtc_nsec
+    output var logic                  ctrl_set          ,
+    output var logic [          31:0] ctrl_set_sec      ,
+    output var logic [          29:0] ctrl_set_nsec     ,
+    //
+    output var logic                  ctrl_adj          ,
+    output var logic [          31:0] ctrl_adj_nsec     , // signed
+    //
+    output var logic [           7:0] ctrl_inc_nsec     ,
+    output var logic [          23:0] ctrl_inc_nsec_frac
 );
-
-
-    localparam [31:0] PCORE_VERSION = 32'h20200803;
-
 
     //  addr       reg
     //--------------------------
-    //  0x0000    PCORE_VERSION
-    //  0x0001    ID
-    //  0x0002    up_scratch
-    //  0x0010    ctrl_rtc_tick
-    //  0x0011    ctrl_timeset
-    //  0x0012    ctrl_timeset_sec
-    //  0x0013    ctrl_timeset_nsec
-    //  0x0020    stat_rtc_sec
-    //  0x0021    stat_rtc_nsec
+    //  02    scratch
+    //  16    ctrl_get
+    //  17    stat_get_sec
+    //  18    stat_get_nsec
+    //  19    ctrl_set
+    //  20    ctrl_set_sec
+    //  21    ctrl_set_nsec
+    //  22    ctrl_adj_nsec
+    //  23    ctrl_inc_nsec, ctrl_inc_nsec_frac
 
 
-    reg [31:0] up_scratch    = 'h0;
+    reg [31:0] scratch    = 'h0;
 
 
     // Write
 
-    // up_scratch at 0x02
+    // scratch at 2
     always @(posedge up_clk) begin
         if (~up_rstn) begin
-            up_scratch <= 'h00;
-        end else if (up_wreq && up_waddr == 'h02) begin
-            up_scratch <= up_wdata;
+            scratch <= 'h00;
+        end else if (up_wreq && up_waddr == 'd2) begin
+            scratch <= up_wdata;
         end
     end
 
-    // ctrl_rtc_tick at 0x10
+    // ctrl_get at 16
     always @(posedge up_clk) begin
         if (~up_rstn) begin
-            ctrl_rtc_tick <= 'b0;
-        end else if (up_wreq && up_waddr == 'h10) begin
-            ctrl_rtc_tick <= up_wdata[0];
+            ctrl_get <= 'b0;
+        end else if (up_wreq && up_waddr == 'd16) begin
+            ctrl_get <= up_wdata[0];
         end else begin
-            ctrl_rtc_tick <= 1'b0;
+            ctrl_get <= 1'b0;
         end
     end
 
-    // ctrl_timeset at 0x11
+    // ctrl_set at 19
     always @(posedge up_clk) begin
         if (~up_rstn) begin
-            ctrl_timeset <= 'b0;
-        end else if (up_wreq && up_waddr == 'h11) begin
-            ctrl_timeset <= up_wdata[0];
+            ctrl_set <= 'b0;
+        end else if (up_wreq && up_waddr == 'd19) begin
+            ctrl_set <= up_wdata[0];
         end else begin
-            ctrl_timeset <= 1'b0;
+            ctrl_set <= 1'b0;
         end
     end
 
-    // ctrl_timeset_sec at 0x12
+    // ctrl_set_sec at 20
     always @(posedge up_clk) begin
         if (~up_rstn) begin
-            ctrl_timeset_sec <= 'b0;
-        end else if (up_wreq && up_waddr == 'h12) begin
-            ctrl_timeset_sec <= up_wdata;
+            ctrl_set_sec <= 'b0;
+        end else if (up_wreq && up_waddr == 'd20) begin
+            ctrl_set_sec <= up_wdata;
         end
     end
 
-    // ctrl_timeset_nsec at 0x13
+    // ctrl_set_nsec at 21
     always @(posedge up_clk) begin
         if (~up_rstn) begin
-            ctrl_timeset_nsec <= 'b0;
-        end else if (up_wreq && up_waddr == 'h13) begin
-            ctrl_timeset_nsec <= up_wdata;
+            ctrl_set_nsec <= 'b0;
+        end else if (up_wreq && up_waddr == 'd21) begin
+            ctrl_set_nsec <= up_wdata[29:0];
         end
     end
 
+    // ctrl_adj_nsec at 22
+    always @(posedge up_clk) begin
+        if (~up_rstn) begin
+            ctrl_adj_nsec <= 'b0;
+            ctrl_adj <= 1'b0;
+        end else if (up_wreq && up_waddr == 'd22) begin
+            ctrl_adj_nsec <= up_wdata;
+            ctrl_adj <= 1'b1;
+        end else begin
+            ctrl_adj <= 1'b0;
+        end
+    end
+
+    // ctrl_inc_nsec, ctrl_inc_nsec_frac at 23
+    always @(posedge up_clk) begin
+        if (~up_rstn) begin
+            {ctrl_inc_nsec, ctrl_inc_nsec_frac} <= 'b0;
+        end else if (up_wreq && up_waddr == 'd23) begin
+            {ctrl_inc_nsec, ctrl_inc_nsec_frac} <= up_wdata;
+        end
+    end
 
     // Read out
     //=========
@@ -113,13 +133,13 @@ module axi_rtc_regs #(
             up_rdata <= 'b0;
         end else if (up_rreq) begin
             case (up_raddr)
-                'h00    : up_rdata <= PCORE_VERSION;
-                'h01    : up_rdata <= ID;
-                'h02    : up_rdata <= up_scratch;
-                'h12    : up_rdata <= ctrl_timeset_sec;
-                'h13    : up_rdata <= ctrl_timeset_nsec;
-                'h20    : up_rdata <= stat_rtc_sec;
-                'h21    : up_rdata <= stat_rtc_nsec;
+                'd02    : up_rdata <= scratch;
+                'd17    : up_rdata <= stat_get_sec;
+                'd18    : up_rdata <= {2'b0, stat_get_nsec};
+                'd20    : up_rdata <= ctrl_set_sec;
+                'd21    : up_rdata <= {2'b0, ctrl_set_nsec};
+                'd22    : up_rdata <= ctrl_adj_nsec;
+                'd23    : up_rdata <= {ctrl_inc_nsec, ctrl_inc_nsec_frac};
                 default : up_rdata <= 32'h00000000;
             endcase
         end
