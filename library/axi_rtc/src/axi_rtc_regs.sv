@@ -119,7 +119,7 @@ module axi_rtc_regs #(parameter ADDR_WIDTH = 14) (
     // ctrl_inc_nsec, ctrl_inc_nsec_frac at 23
     always @(posedge up_clk) begin
         if (~up_rstn) begin
-            {ctrl_inc_nsec, ctrl_inc_nsec_frac} <= 'b0;
+            {ctrl_inc_nsec, ctrl_inc_nsec_frac} <= {8'd8, 24'b0};
         end else if (up_wreq && up_waddr == 'd23) begin
             {ctrl_inc_nsec, ctrl_inc_nsec_frac} <= up_wdata;
         end

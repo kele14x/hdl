@@ -10,6 +10,6 @@
 /bd/ps7_bd/*.xdc
 /bd/ps7_bd/*.bmm
 
-/bd/ps7_bd/ip/**
-!/bd/ps7_bd/ip/*.xci
-!/bd/ps7_bd/ip/*.xml
+/bd/ps7_bd/ip/*/**
+!/bd/ps7_bd/ip/*/*.xci
+!/bd/ps7_bd/ip/*/*.xml
