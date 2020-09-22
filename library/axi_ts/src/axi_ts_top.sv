@@ -45,101 +45,146 @@ module axi_ts_top #(parameter int AXI_ADDR_WIDTH = 12) (
     output var logic                      measure_start           ,
     input  var logic                      measure_ready           ,
     input  var logic                      measure_idle            ,
-    input  var logic                      measure_done            ,
-    // Control
-    //--------
-    // Overall
-    input  var logic                      ctrl_abort              ,
-    // Idle & Init state control
-    input  var logic                      ctrl_init_immediate     ,
-    input  var logic                      ctrl_init_continuous    ,
-    // Arm state control
-    input  var logic                      ctrl_arm_immediate      ,
-    input  var logic                      ctrl_arm_source         ,
-    input  var logic [              31:0] ctrl_arm_count          ,
-    // Trigger state control
-    input  var logic                      ctrl_trigger_immediate  ,
-    input  var logic                      ctrl_trigger_source     ,
-    input  var logic [              31:0] ctrl_trigger_count      ,
-    // State
-    //------
-    // Measure state control
-    output var logic                      stat_operation_complete ,
-    output var logic                      stat_sweeping           ,
-    output var logic                      stat_waiting_for_arm    ,
-    output var logic                      stat_waiting_for_trigger,
-    output var logic                      stat_measuring
+    input  var logic                      measure_done            
 );
 
 
-    typedef enum {
-        S_RST           , // Under rest, fault recovery
-        S_IDLE          , // Idle, waiting for init
-        S_INITIATED_DOWN, // Initiated, going downward
-        S_INITIATED_UP  , // Initiated, going upward
-        S_ARM_DOWN      , // Waiting for arm
-        S_ARM_UP        , // Check arm count
-        S_TRIGGER_DOWN  , // Waiting for trigger
-        S_TRIGGER_UP    , // Check trigger count
-        S_MEASURING       // Measuring, wait action done
-    } AT_STATE_T;
-
-    AT_STATE_T state, state_next;
+    logic                      up_wreq ;
+    logic [AXI_ADDR_WIDTH-3:0] up_waddr;
+    logic [              31:0] up_wdata;
+    logic                      up_wack ;
+    //
+    logic                      up_rreq ;
+    logic [AXI_ADDR_WIDTH-3:0] up_raddr;
+    logic [              31:0] up_rdata;
+    logic                      up_rack ;
 
 
-    logic [31:0] arm_count, trigger_count;
-    logic arm_wire, trigger_wire;
+    logic ctrl_abort;
 
-    always_ff @ (posedge aclk) begin
-        if (~aresetn) begin
-            state <= S_RST;
-        end else begin
-            state <= state_next;
-        end
-    end
+    // Idle & Init state control
+    logic ctrl_init_immediate ;
+    logic ctrl_init_continuous;
 
-    always_comb begin
-        if (ctrl_abort) begin
-            state_next = S_IDLE;
-        end else begin
-            case (state)
-                S_RST            : state_next = S_IDLE;
-                //
-                S_IDLE           : state_next = (ctrl_init_immediate || ctrl_init_continuous) ? S_INITIATED_DOWN : S_IDLE;
-                //
-                S_INITIATED_DOWN : state_next = S_ARM_DOWN;
-                S_INITIATED_UP   : state_next = ctrl_init_continuous ? S_ARM_DOWN : S_IDLE;
-                //
-                S_ARM_DOWN       : state_next = arm_wire ? S_TRIGGER_DOWN : S_ARM_DOWN;
-                S_ARM_UP         : state_next = (arm_count >= ctrl_arm_count) ? S_INITIATED_DOWN : S_ARM_DOWN;
-                //
-                S_TRIGGER_DOWN   : state_next = trigger_wire ? S_MEASURING : S_TRIGGER_DOWN;
-                S_TRIGGER_UP     : state_next = (trigger_count >= ctrl_trigger_count) ? S_ARM_UP : S_TRIGGER_DOWN;
-                //
-                S_MEASURING      : state_next = measure_done ? S_TRIGGER_UP : S_MEASURING;
-                //
-                default          : state_next = S_RST;
-            endcase // state
-        end
-    end
+    // Arm state control
+    logic        ctrl_arm_immediate;
+    logic [31:0] ctrl_arm_source   ;
+    logic [31:0] ctrl_arm_count    ;
 
-    always_ff @ (posedge aclk) begin
-        if (~aresetn) begin
-            stat_operation_complete <= 1'b0;
-        end else begin
-            stat_operation_complete <= (state_next == S_IDLE);
-        end
-    end
+    // Trigger state control
+    logic        ctrl_trigger_immediate;
+    logic [31:0] ctrl_trigger_source   ;
+    logic [31:0] ctrl_trigger_count    ;
 
-    always_ff @ (posedge aclk) begin
-        if (~aresetn) begin
-            stat_sweeping <= 1'b0;
-        end else begin
-            stat_sweeping <= ((state_next == S_ARM_DOWN) ||
-                (state_next == S_ARM_UP) || (state_next == S_TRIGGER_DOWN) ||
-                (state_next == S_TRIGGER_UP) || (state_next == S_MEASURING));
-        end
-    end
+    // Measure state control
+    logic stat_operation_complete ;
+    logic stat_sweeping           ;
+    logic stat_waiting_for_arm    ;
+    logic stat_waiting_for_trigger;
+    logic stat_measuring          ;
+
+
+    (* keep_hierarchy="yes" *)
+    up_axi #(.AXI_ADDRESS_WIDTH(AXI_ADDR_WIDTH)) i_up_axi (
+        .up_clk        (aclk         ),
+        .up_rstn       (aresetn      ),
+        //
+        .up_axi_awvalid(s_axi_awvalid),
+        .up_axi_awaddr (s_axi_awaddr ),
+        .up_axi_awready(s_axi_awready),
+        //
+        .up_axi_wvalid (s_axi_wvalid ),
+        .up_axi_wdata  (s_axi_wdata  ),
+        .up_axi_wstrb  (s_axi_wstrb  ),
+        .up_axi_wready (s_axi_wready ),
+        //
+        .up_axi_bvalid (s_axi_bvalid ),
+        .up_axi_bresp  (s_axi_bresp  ),
+        .up_axi_bready (s_axi_bready ),
+        //
+        .up_axi_arvalid(s_axi_arvalid),
+        .up_axi_araddr (s_axi_araddr ),
+        .up_axi_arready(s_axi_arready),
+        //
+        .up_axi_rvalid (s_axi_rvalid ),
+        .up_axi_rresp  (s_axi_rresp  ),
+        .up_axi_rdata  (s_axi_rdata  ),
+        .up_axi_rready (s_axi_rready ),
+        //
+        .up_wreq       (up_wreq      ),
+        .up_waddr      (up_waddr     ),
+        .up_wdata      (up_wdata     ),
+        .up_wack       (up_wack      ),
+        //
+        .up_rreq       (up_rreq      ),
+        .up_raddr      (up_raddr     ),
+        .up_rdata      (up_rdata     ),
+        .up_rack       (up_rack      )
+    );
+
+
+    (* keep_hierarchy="yes" *)
+    axi_ts_regs #(.ADDR_WIDTH(AXI_ADDR_WIDTH-2)) i_axi_ts_regs (
+        .up_clk                  (aclk                    ),
+        .up_rstn                 (aresetn                 ),
+        //
+        .up_wreq                 (up_wreq                 ),
+        .up_waddr                (up_waddr                ),
+        .up_wdata                (up_wdata                ),
+        .up_wack                 (up_wack                 ),
+        //
+        .up_rreq                 (up_rreq                 ),
+        .up_raddr                (up_raddr                ),
+        .up_rdata                (up_rdata                ),
+        .up_rack                 (up_rack                 ),
+        //
+        .ctrl_abort              (ctrl_abort              ),
+        .ctrl_init_immediate     (ctrl_init_immediate     ),
+        .ctrl_init_continuous    (ctrl_init_continuous    ),
+        .ctrl_arm_immediate      (ctrl_arm_immediate      ),
+        .ctrl_arm_source         (ctrl_arm_source         ),
+        .ctrl_arm_count          (ctrl_arm_count          ),
+        .ctrl_trigger_immediate  (ctrl_trigger_immediate  ),
+        .ctrl_trigger_source     (ctrl_trigger_source     ),
+        .ctrl_trigger_count      (ctrl_trigger_count      ),
+        //
+        .stat_operation_complete (stat_operation_complete ),
+        .stat_sweeping           (stat_sweeping           ),
+        .stat_waiting_for_arm    (stat_waiting_for_arm    ),
+        .stat_waiting_for_trigger(stat_waiting_for_trigger),
+        .stat_measuring          (stat_measuring          )
+    );
+
+
+    axi_ts_core i_axi_ts_core (
+        .clk                     (aclk                    ),
+        .rst                     (~aresetn                ),
+        //
+        .rtc_sec                 (rtc_sec                 ),
+        .rtc_nsec                (rtc_nsec                ),
+        //
+        .ext_trigger             (ext_trigger             ),
+        //
+        .measure_start           (measure_start           ),
+        .measure_ready           (measure_ready           ),
+        .measure_idle            (measure_idle            ),
+        .measure_done            (measure_done            ),
+        //
+        .ctrl_abort              (ctrl_abort              ),
+        .ctrl_init_immediate     (ctrl_init_immediate     ),
+        .ctrl_init_continuous    (ctrl_init_continuous    ),
+        .ctrl_arm_immediate      (ctrl_arm_immediate      ),
+        .ctrl_arm_source         (ctrl_arm_source         ),
+        .ctrl_arm_count          (ctrl_arm_count          ),
+        .ctrl_trigger_immediate  (ctrl_trigger_immediate  ),
+        .ctrl_trigger_source     (ctrl_trigger_source     ),
+        .ctrl_trigger_count      (ctrl_trigger_count      ),
+        .stat_operation_complete (stat_operation_complete ),
+        .stat_sweeping           (stat_sweeping           ),
+        .stat_waiting_for_arm    (stat_waiting_for_arm    ),
+        .stat_waiting_for_trigger(stat_waiting_for_trigger),
+        .stat_measuring          (stat_measuring          )
+    );
 
 endmodule
 

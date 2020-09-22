@@ -33,9 +33,58 @@ module axi_ts #(parameter AXI_ADDR_WIDTH = 12) (
     output wire [              31:0] s_axi_rdata  ,
     output wire [               1:0] s_axi_rresp  ,
     output wire                      s_axi_rvalid ,
-    input  wire                      s_axi_rready
+    input  wire                      s_axi_rready ,
+    //
+    input  wire [              31:0] rtc_sec      ,
+    input  wire [              31:0] rtc_nsec     ,
+    //
+    input  wire [               7:0] ext_trigger  ,
+    //
+    output wire                      measure_start,
+    input  wire                      measure_ready,
+    input  wire                      measure_idle ,
+    input  wire                      measure_done
 );
 
+
+    axi_ts_top #(.AXI_ADDR_WIDTH(AXI_ADDR_WIDTH)) i_axi_ts_top (
+        .aclk         (aclk         ),
+        .aresetn      (aresetn      ),
+        //
+        .s_axi_awaddr (s_axi_awaddr ),
+        .s_axi_awprot (s_axi_awprot ),
+        .s_axi_awvalid(s_axi_awvalid),
+        .s_axi_awready(s_axi_awready),
+        //
+        .s_axi_wdata  (s_axi_wdata  ),
+        .s_axi_wstrb  (s_axi_wstrb  ),
+        .s_axi_wvalid (s_axi_wvalid ),
+        .s_axi_wready (s_axi_wready ),
+        //
+        .s_axi_bresp  (s_axi_bresp  ),
+        .s_axi_bvalid (s_axi_bvalid ),
+        .s_axi_bready (s_axi_bready ),
+        //
+        .s_axi_araddr (s_axi_araddr ),
+        .s_axi_arprot (s_axi_arprot ),
+        .s_axi_arvalid(s_axi_arvalid),
+        .s_axi_arready(s_axi_arready),
+        //
+        .s_axi_rdata  (s_axi_rdata  ),
+        .s_axi_rresp  (s_axi_rresp  ),
+        .s_axi_rvalid (s_axi_rvalid ),
+        .s_axi_rready (s_axi_rready ),
+        //
+        .rtc_sec      (rtc_sec      ),
+        .rtc_nsec     (rtc_nsec     ),
+        //
+        .ext_trigger  (ext_trigger  ),
+        //
+        .measure_start(measure_start),
+        .measure_ready(measure_ready),
+        .measure_idle (measure_idle ),
+        .measure_done (measure_done )
+    );
 
 endmodule
 
