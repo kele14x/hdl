@@ -40,9 +40,11 @@ module axi_ts #(parameter AXI_ADDR_WIDTH = 12) (
     //
     input  wire [               7:0] ext_trigger  ,
     //
+    (* X_INTERFACE_INFO = "xilinx.com:interface:acc_handshake:1.0 measure_ctrl ap_start" *)
     output wire                      measure_start,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:acc_handshake:1.0 measure_ctrl ap_ready" *)
     input  wire                      measure_ready,
-    input  wire                      measure_idle ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:acc_handshake:1.0 measure_ctrl ap_done" *)
     input  wire                      measure_done
 );
 
@@ -82,7 +84,6 @@ module axi_ts #(parameter AXI_ADDR_WIDTH = 12) (
         //
         .measure_start(measure_start),
         .measure_ready(measure_ready),
-        .measure_idle (measure_idle ),
         .measure_done (measure_done )
     );
 

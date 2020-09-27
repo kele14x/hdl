@@ -44,7 +44,6 @@ module axi_ts_top #(parameter int AXI_ADDR_WIDTH = 12) (
     // Device action
     output var logic                      measure_start           ,
     input  var logic                      measure_ready           ,
-    input  var logic                      measure_idle            ,
     input  var logic                      measure_done            
 );
 
@@ -167,7 +166,6 @@ module axi_ts_top #(parameter int AXI_ADDR_WIDTH = 12) (
         //
         .measure_start           (measure_start           ),
         .measure_ready           (measure_ready           ),
-        .measure_idle            (measure_idle            ),
         .measure_done            (measure_done            ),
         //
         .ctrl_abort              (ctrl_abort              ),

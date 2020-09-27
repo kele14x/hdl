@@ -20,7 +20,6 @@ module axi_ts_core (
     // Device action
     output var logic        measure_start           ,
     input  var logic        measure_ready           ,
-    input  var logic        measure_idle            ,
     input  var logic        measure_done            ,
     // Control
     //--------
