@@ -41,7 +41,7 @@ module axi_rtc_top #(
     //==============
     output var logic                      pps_out      ,
     output var logic [              31:0] rtc_sec      ,
-    output var logic [              29:0] rtc_nsec
+    output var logic [              31:0] rtc_nsec
 );
 
 

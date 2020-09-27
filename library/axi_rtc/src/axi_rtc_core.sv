@@ -19,8 +19,9 @@ module axi_rtc_core (
     output var logic        pps_out           ,
     //
     output var logic [31:0] rtc_sec           ,
-    output var logic [29:0] rtc_nsec          ,
-    //
+    output var logic [31:0] rtc_nsec          ,
+    // Control ports
+    //--------------
     input  var logic        ctrl_get          ,
     output var logic [31:0] stat_get_sec      ,
     output var logic [29:0] stat_get_nsec     ,
@@ -99,7 +100,7 @@ module axi_rtc_core (
 
     // Nanosecond counter in action
 
-    logic [29:0] nsec_cnt;
+    logic [31:0] nsec_cnt;
 
     logic signed [31:0] nsec_cnt_next_a;
     logic signed [31:0] nsec_cnt_next_b;
@@ -159,7 +160,7 @@ module axi_rtc_core (
     // Time output
     //============
 
-    logic [29:0] nsec_cnt_d;
+    logic [31:0] nsec_cnt_d;
 
     always_ff @ (posedge clk) begin
         if (rst) begin

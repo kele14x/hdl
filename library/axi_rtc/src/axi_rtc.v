@@ -63,7 +63,7 @@ module axi_rtc #(parameter integer AXI_ADDR_WIDTH  = 16) (
     output wire                      pps_out      ,
     //
     output wire [              31:0] rtc_sec      ,
-    output wire [              29:0] rtc_nsec
+    output wire [              31:0] rtc_nsec
 );
 
     axi_rtc_top #(
