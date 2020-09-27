@@ -7,56 +7,77 @@ All rights reserved.
 `default_nettype none
 
 module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
-    // UP interface
-    //-------------
-    input  wire        clk                            ,
-    input  wire        resetn                         ,
-    //
-    input  wire [31:0] rtc_sec                        ,
-    input  wire [31:0] rtc_nsec                       ,
+    // Clock & Reset
+    //--------------
+    input  var logic        clk                                        ,
+    input  var logic        resetn                                     ,
+    // RTC
+    //----
+    input  var logic [31:0] rtc_sec                                    ,
+    input  var logic [31:0] rtc_nsec                                   ,
     // TC I/F
-    output wire        tc_bram_clk  [0:NUM_OF_BOARD-1],
-    output wire        tc_bram_rst  [0:NUM_OF_BOARD-1],
-    output reg         tc_bram_en   [0:NUM_OF_BOARD-1],
-    output reg  [ 2:0] tc_bram_addr [0:NUM_OF_BOARD-1],
-    input  wire [31:0] tc_bram_dout [0:NUM_OF_BOARD-1],
-    //
-    input  wire        tc_drdy      [0:NUM_OF_BOARD-1],
+    //-------
+    // Data
+    output var logic        tc_bram_en               [0:NUM_OF_BOARD-1],
+    output var logic [ 2:0] tc_bram_addr             [0:NUM_OF_BOARD-1],
+    input  var logic [31:0] tc_bram_dout             [0:NUM_OF_BOARD-1],
+    // Sync
+    output var logic        tc_sync                  [0:NUM_OF_BOARD-1],
+    // Data Handshake
+    input  var logic        tc_valid                 [0:NUM_OF_BOARD-1],
+    output var logic        tc_ready                 [0:NUM_OF_BOARD-1],
     // RTD I/F
-    output wire        rtd_bram_clk [0:NUM_OF_BOARD-1],
-    output wire        rtd_bram_rst [0:NUM_OF_BOARD-1],
-    output reg         rtd_bram_en  [0:NUM_OF_BOARD-1],
-    output reg  [ 3:0] rtd_bram_addr[0:NUM_OF_BOARD-1],
-    input  wire [31:0] rtd_bram_dout[0:NUM_OF_BOARD-1],
+    //========
+    output var logic        rtd_bram_en              [0:NUM_OF_BOARD-1],
+    output var logic [ 3:0] rtd_bram_addr            [0:NUM_OF_BOARD-1],
+    input  var logic [31:0] rtd_bram_dout            [0:NUM_OF_BOARD-1],
+    // Measurement
+    //============
+    input  var logic        measure_start                              ,
+    output var logic        measure_ready                              ,
+    output var logic        measure_done                               ,
+    // Control I/F
+    //============
+    input  var logic        ctrl_reset                                 ,
     //
-    input  wire        rtd_drdy     [0:NUM_OF_BOARD-1],
-    // BRAM I/F
-    //---------
-    output wire        bram_clk                       ,
-    output wire        bram_rst                       ,
-    output reg         bram_en                        ,
-    output reg  [ 3:0] bram_we                        ,
-    output reg  [12:0] bram_addr                      ,
-    output reg  [31:0] bram_din                       ,
-    input  wire [31:0] bram_dout                      ,
-    // Interrupt
-    output reg         irq
+    input  var logic        ctrl_measure_immediate                     ,
+    input  var logic        ctrl_measure_continuous                    ,
+    input  var logic [31:0] ctrl_measure_count                         ,
+    output var logic [ 2:0] stat_measure_state                         ,
+    //
+    input  var logic        ctrl_fifo_read                             ,
+    output var logic [31:0] stat_fifo_data                             ,
+    output var logic        stat_fifo_empty                            ,
+    //
+    output var logic        irq
 );
 
 
-    reg [31:0] frame_type = 32'h1234abcd;
-    reg [31:0] frame_sequence;
+    localparam FRAME_LENGTH = 112;
 
-    reg [31:0] ts_sec;
-    reg [31:0] ts_nsec;
 
-    reg         fixed_valid;
-    reg  [23:0] fixed_data ;
-    wire        float_valid;
-    wire [31:0] float_data ;
+    logic [31:0] ts_sec ;
+    logic [31:0] ts_nsec;
 
-    reg irq_ext;
+    logic [31:0] measure_id;
+    logic [31:0] measure_count;
 
+    logic [9:0] mcs_cnt ;
+    logic       mcs_done;
+
+    logic all_drdy;
+
+    logic [6:0] get_cnt ;
+    logic       get_done;
+
+    logic        fifo_rst ;
+    logic [31:0] fifo_din ;
+    logic        fifo_wren;
+    logic        fifo_full;
+
+
+
+    logic irq_ext;
 
     //--------------------------------------------------------------------------
     // Start detect
@@ -65,175 +86,211 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     // wait 1024 clocks until timeout.
 
 
-    typedef enum {S_RST, S_IDLE, S_WAIT, S_GO} state_t;
+    typedef enum {
+        S_RST , // Under reset
+        S_IDLE, // Nothing to do, wait `measure_start`
+        S_MCS , // Multi chip sync
+        S_CLR , // Clear previous data
+        S_WAIT, // Wait data ready
+        S_GET , // Read data and build frame
+        S_FIN , // Captured one frame
+        S_DONE  // Measurement done
+    } state_t;
 
-    state_t state, next_state;
-
-    reg any_drdy;
-    reg [9:0] timeout_cnt;
-    wire start, timeout;
+    state_t state, state_next;
 
     always_ff @ (posedge clk) begin
-        if (~resetn) begin
+        if ((~resetn) || ctrl_reset) begin
             state <= S_RST;
         end else begin
-            state <= next_state;
+            state <= state_next;
         end
     end
 
-    always_comb begin
-        any_drdy = 0;
-        for (int i = 0; i < NUM_OF_BOARD; i++) begin
-            any_drdy = any_drdy | tc_drdy[i];
-        end
-    end
 
     always_comb begin
         case(state)
-            S_RST  : next_state = S_IDLE;
-            S_IDLE : next_state = any_drdy ? S_WAIT : S_IDLE;
-            S_WAIT : next_state = timeout ? S_GO : S_WAIT;
-            S_GO   : next_state = S_IDLE;
-            default: next_state = S_RST;
+            S_RST   : state_next = S_IDLE;
+            S_IDLE  : state_next = (measure_start || ctrl_measure_immediate || ctrl_measure_continuous) ? S_MCS : S_IDLE;
+            S_MCS   : state_next = mcs_done ? S_CLR : S_MCS;
+            S_CLR   : state_next = S_WAIT;
+            S_WAIT  : state_next = all_drdy ? S_GET : S_WAIT;
+            S_GET   : state_next = get_done ? S_FIN : S_GET;
+            S_FIN   : state_next = (measure_count >= ctrl_measure_count) ? S_DONE : S_WAIT;
+            S_DONE  : state_next = S_IDLE;
+            default : state_next = S_RST;
         endcase
+    end
+
+
+    always_ff @ (posedge clk) begin
+        stat_measure_state <=
+            (state == S_RST ) ? 'd0 :
+            (state == S_IDLE) ? 'd1 :
+            (state == S_MCS ) ? 'd2 :
+            (state == S_CLR ) ? 'd3 :
+            (state == S_WAIT) ? 'd4 :
+            (state == S_FIN ) ? 'd5 :
+            (state == S_DONE) ? 'd6 : 'd0;
+    end
+
+    //--------------------------------------------------------------------------
+    // Measurement
+
+    always_ff @ (posedge clk) begin
+        if (~resetn) begin
+            measure_id <= 'd0;
+        end else if (state == S_IDLE && (measure_start || ctrl_measure_immediate || ctrl_measure_continuous)) begin
+            measure_id <= measure_id + 1;;
+        end
+    end
+
+    always_ff @ (posedge clk) begin
+        if (state_next == S_WAIT || state_next == S_GET) begin
+            measure_count <= measure_count;
+        end else if (state_next == S_FIN) begin
+            measure_count <= measure_count + 1;
+        end else begin
+            measure_count <= 'd0;
+        end
     end
 
     always_ff @ (posedge clk) begin
         if (~resetn) begin
-            timeout_cnt <= 'd0;
-        end else if (next_state == S_WAIT) begin
-            timeout_cnt <= &timeout_cnt ? timeout_cnt : timeout_cnt + 1;
+            measure_done <= 1'b0;
         end else begin
-            timeout_cnt <= 'd0;
-        end
-    end
-
-    assign timeout = &timeout_cnt;
-
-    assign start = (state == S_GO);
-
-
-    //--------------------------------------------------------------------------
-    // FSM
-
-    localparam FRAME_LENGTH = 124;
-
-    reg [6:0] bram_wr_cnt;
-
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
-            bram_wr_cnt <= 'hFF;
-        end else if (start) begin
-            bram_wr_cnt <= 'd0;
-        end else if (bram_wr_cnt <= (FRAME_LENGTH - 1)) begin
-            bram_wr_cnt <= bram_wr_cnt + 1;
-        end else begin
-            bram_wr_cnt <= 'hFF;
+            measure_done <= (state_next == S_DONE);
         end
     end
 
 
-    //--------------------------------------------------------------------------
-    // Frame header update
+    always_ff @ (posedge clk) begin
+        if (~resetn) begin
+            tc_ready <= '{NUM_OF_BOARD{1'b0}};
+        end else begin
+            tc_ready <= (state_next == S_FIN || state_next == S_CLR) ? '{NUM_OF_BOARD{1'b1}} : '{NUM_OF_BOARD{1'b0}};
+        end
+    end
 
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
+    //--------------------------------------------------------------------------
+    // MCS
+
+    always_ff @ (posedge clk) begin
+        if (~resetn) begin
+            mcs_cnt <= 'd0;
+        end else if (state_next == S_MCS) begin
+            mcs_cnt <= mcs_done ? mcs_cnt : mcs_cnt + 1;
+        end else begin
+            mcs_cnt <= 'd0;
+        end
+    end
+
+    assign mcs_done = (&mcs_cnt);
+
+    always_ff @ (posedge clk) begin
+        tc_sync <= (state_next == S_MCS) ? '{NUM_OF_BOARD{1'b1}} : '{NUM_OF_BOARD{1'b0}};
+    end
+
+    //--------------------------------------------------------------------------
+    // WAIT
+
+    always_comb begin
+        all_drdy = 1;
+        for (int i = 0; i < NUM_OF_BOARD; i++) begin
+            all_drdy = all_drdy & tc_valid[i];
+        end
+    end
+
+    always_ff @ (posedge clk) begin
+        if (~resetn) begin
             ts_sec <= 0;
-        end else if (start) begin
+        end else if (state == S_WAIT && all_drdy) begin
             ts_sec <= rtc_sec;
         end
     end
 
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
+    always_ff @ (posedge clk) begin
+        if (~resetn) begin
             ts_nsec <= 0;
-        end else if (start) begin
+        end else if (state == S_WAIT && all_drdy) begin
             ts_nsec <= rtc_nsec;
         end
     end
 
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
-            frame_sequence <= 'd0;
-        end else if (start) begin
-            frame_sequence <= frame_sequence + 1;
+    //--------------------------------------------------------------------------
+    // GET
+
+    always_ff @ (posedge clk) begin
+        if (~resetn) begin
+            get_cnt <= 'd0;
+        end else if (state_next == S_GET) begin
+            get_cnt <= get_cnt + 1;
+        end else begin
+            get_cnt <= 'd0;
         end
     end
 
+    always_comb begin
+        get_done <= (get_cnt == FRAME_LENGTH);
+    end
 
-    //--------------------------------------------------------------------------
-    // Read from external module
+    always_ff @ (posedge clk) begin
+        fifo_wren <= |get_cnt;
+    end
+
+    always_ff @ (posedge clk) begin
+        fifo_din <= ('d1 == get_cnt ) ? "DATA" :
+            ('d2 == get_cnt ) ? FRAME_LENGTH :
+            ('d3 == get_cnt ) ? measure_id :
+            ('d4 == get_cnt ) ? measure_count :
+            ('d5 == get_cnt ) ? ts_sec :
+            ('d6 == get_cnt ) ? ts_nsec :
+            ('d7  <= get_cnt && get_cnt <= 'd14) ? tc_bram_dout[0] :
+            ('d15 <= get_cnt && get_cnt <= 'd22) ? tc_bram_dout[1] :
+            ('d23 <= get_cnt && get_cnt <= 'd30) ? tc_bram_dout[2] :
+            ('d31 <= get_cnt && get_cnt <= 'd38) ? tc_bram_dout[3] :
+            ('d39 <= get_cnt && get_cnt <= 'd46) ? tc_bram_dout[4] :
+            ('d47 <= get_cnt && get_cnt <= 'd54) ? tc_bram_dout[5] :
+            ('d55 <= get_cnt && get_cnt <= 'd64) ? rtd_bram_dout[0] :
+            ('d65 <= get_cnt && get_cnt <= 'd74) ? rtd_bram_dout[1] :
+            ('d75 <= get_cnt && get_cnt <= 'd84) ? rtd_bram_dout[2] :
+            ('d85 <= get_cnt && get_cnt <= 'd94) ? rtd_bram_dout[3] :
+            ('d95 <= get_cnt && get_cnt <= 'd104) ? rtd_bram_dout[4] :
+            ('d105 <= get_cnt && get_cnt <= 'd114) ? rtd_bram_dout[5] : 'b0;
+    end
+
+
+
+    // At state 5 ~ 52, readout TC data,
+    // 8 per board, 48 total
 
     generate
         for (genvar i = 0; i < NUM_OF_BOARD; i++) begin
 
-            // At state 7 ~ 54, readout TC data, 
-            // 8 per board, 48 totoal
-
-            logic tc_bram_en_lut[0:127];
-            
-            initial begin
-                for (int j = 0; j < 128; j++) begin
-                    tc_bram_en_lut[j] = (i * 8 + 7 <= j && j <=i * 8 + 14);
-                end
+            always_ff @ (posedge clk) begin
+                tc_bram_en[i] <= ((5+i*8) <= get_cnt && get_cnt <= (12+i*8));
             end
 
             always_ff @ (posedge clk) begin
-                if (~resetn) begin
-                    tc_bram_en[i] <= 1'b0;
+                if ((5+i*8) <= get_cnt && get_cnt <= (12+i*8)) begin
+                    tc_bram_addr[i] <= (get_cnt - (5+i*8));
                 end else begin
-                    tc_bram_en[i] <= tc_bram_en_lut[bram_wr_cnt];
-                end
-            end
-
-            logic [2:0] tc_bram_addr_lut[0:127];
-
-            initial begin
-                for (int j = 0; j < 128; j++) begin
-                    tc_bram_addr_lut[j] = (j - i * 8 - 7);
-                end
-            end
-
-            always_ff @ (posedge clk) begin
-                if (~resetn) begin
                     tc_bram_addr[i] <= 'b0;
-                end else begin
-                    tc_bram_addr[i] <= tc_bram_addr_lut[bram_wr_cnt];
                 end
             end
 
             // As state 55 ~ 114, readout RTC data
             // 10 per board, 60 total
 
-            logic rtd_bram_en_lut[0:127];
-
-            initial begin
-                for (int j = 0; j < 128; j++) begin
-                    rtd_bram_en_lut[j] = (i * 10 + 55 <= j && j <= i * 10 + 64);
-                end
+            always_ff @ (posedge clk) begin
+                rtd_bram_en[i] <= ((53+i*10) <= get_cnt && get_cnt <= (62+i*10));
             end
 
             always_ff @ (posedge clk) begin
-                if (~resetn) begin
-                    rtd_bram_en[i] <= 1'b0;
+                if  ((53+i*10) <= get_cnt && get_cnt <= (53+i*10)) begin
+                    rtd_bram_addr[i] <= (get_cnt - (53+i*10));
                 end else begin
-                    rtd_bram_en[i] <= rtd_bram_en_lut[bram_wr_cnt];
-                end
-            end
-
-            logic [3:0] rtd_bram_addr_lut[0:127];
-
-            initial begin
-                for (int j = 0; j < 128; j++) begin
-                    rtd_bram_addr_lut[j] = (j - i * 10 - 55);
-                end
-            end
-
-            always_ff @ (posedge clk) begin
-                if (~resetn) begin
-                    rtd_bram_addr[i] <= 'b0;
-                end else begin
-                    rtd_bram_addr[i] <=  rtd_bram_addr_lut[bram_wr_cnt];
+                    rtd_bram_addr[i] <= 'd0;
                 end
             end
 
@@ -242,90 +299,28 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
 
 
     //--------------------------------------------------------------------------
-    // Fixed to float convert
+    // FIFO
 
     always_ff @ (posedge clk) begin
         if (~resetn) begin
-            fixed_valid <= 1'b0;
+            fifo_rst <= 1'b1;
         end else begin
-            fixed_valid <= (9 <= bram_wr_cnt && bram_wr_cnt <= 116);
+            fifo_rst <= ctrl_reset;
         end
     end
 
-    always_ff @ (posedge clk) begin
-        if (~resetn) begin
-            fixed_data <= 'b0;
-        end else if (9 <= bram_wr_cnt && bram_wr_cnt <= 56) begin
-            fixed_data <= (tc_bram_dout[(bram_wr_cnt-9)/8] - 24'h800000);
-        // RTD data to fixed
-        end else if (57 <= bram_wr_cnt && bram_wr_cnt <= 66) begin
-            fixed_data <= (rtd_bram_dout[0] - 24'h800000);
-        end else if (67 <= bram_wr_cnt && bram_wr_cnt <= 76) begin
-            fixed_data <= (rtd_bram_dout[1] - 24'h800000);
-        end else if (77 <= bram_wr_cnt && bram_wr_cnt <= 86) begin
-            fixed_data <= (rtd_bram_dout[2] - 24'h800000);
-        end else if (87 <= bram_wr_cnt && bram_wr_cnt <= 96) begin
-            fixed_data <= (rtd_bram_dout[3] - 24'h800000);
-        end else if (97 <= bram_wr_cnt && bram_wr_cnt <= 106) begin
-            fixed_data <= (rtd_bram_dout[4] - 24'h800000);
-        end else if (107 <= bram_wr_cnt && bram_wr_cnt <= 116) begin
-            fixed_data <= (rtd_bram_dout[5] - 24'h800000);
-        end
-    end
-
-    //--------------------------------------------------------------------------
-    // BRAM Write processes
-
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
-            bram_en   <= 1'b0;
-        end else begin
-            bram_en   <= (bram_wr_cnt <= (FRAME_LENGTH - 1));
-        end
-    end
-
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
-            bram_we   <= 4'h0;
-        end else begin
-            bram_we   <= (bram_wr_cnt <= (FRAME_LENGTH - 1)) ? 4'hF : 4'h0;
-        end
-    end
-
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
-            bram_addr <= 'd0;
-        end else begin
-            bram_addr <= (bram_wr_cnt <= (FRAME_LENGTH - 1)) ? {bram_wr_cnt, 2'b00} : 13'b0;
-        end
-    end
-
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
-            bram_din <= 'd0;
-        end else begin
-            if (bram_wr_cnt == 'd0) bram_din <= frame_type;
-            else if (bram_wr_cnt == 'd1) bram_din <= frame_sequence;
-            else if (bram_wr_cnt == 'd2) bram_din <= ts_sec;
-            else if (bram_wr_cnt == 'd3) bram_din <= ts_nsec;
-            else if (bram_wr_cnt <= 'd15) bram_din <= 'd0; // reserved header space
-            // 16 ~ 123
-            else if (bram_wr_cnt <= 'd123) bram_din <= float_data;
-            else bram_din <= 'd0;
-        end
-    end
-
-
-    //--------------------------------------------------------------------------
-    // IRQ
-
-    always_ff @ (posedge clk) begin
-        if (~resetn) begin
-            irq_ext = 1'b0;
-        end else begin
-            irq_ext = (bram_wr_cnt == 'd99);
-        end
-    end
+    axi_ad7124_fifo i_axi_ad7124_fifo (
+        .clk  (clk            ),
+        .rst  (fifo_rst       ),
+        //
+        .din  (fifo_din       ),
+        .wr_en(fifo_wren      ),
+        .full (fifo_full      ),
+        //
+        .rd_en(ctrl_fifo_read ),
+        .dout (stat_fifo_data ),
+        .empty(stat_fifo_empty)
+    );
 
     pulse_ext i_pulse_ext (
         .clk     (clk    ),
@@ -334,31 +329,17 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
         .ext_out (irq    )
     );
 
-
     //--------------------------------------------------------------------------
-    // Net mapping
+    // IRQ
 
-    generate
-        for (genvar i = 0; i < NUM_OF_BOARD; i++) begin
-            assign tc_bram_clk[i]  = clk;
-            assign tc_bram_rst[i]  = ~resetn;
-            assign rtd_bram_clk[i] = clk;
-            assign rtd_bram_rst[i] = ~resetn;
+    always_ff @ (posedge clk) begin
+        if (~resetn) begin
+            irq_ext = 1'b0;
+        end else begin
+            irq_ext = (state_next == S_FIN);
         end
-    endgenerate
+    end
 
-    assign bram_clk = clk;
-    assign bram_rst = ~resetn;
-
-    //
-    axi_ad7124_fixed2float i_axi_ad7124_fixed2float (
-        .aclk                (clk        ),
-        .aresetn             (resetn     ),
-        .s_axis_a_tvalid     (fixed_valid),
-        .s_axis_a_tdata      (fixed_data ),
-        .m_axis_result_tvalid(float_valid),
-        .m_axis_result_tdata (float_data )
-    );
 
 endmodule
 

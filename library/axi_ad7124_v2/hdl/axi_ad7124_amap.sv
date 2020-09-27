@@ -20,25 +20,25 @@ module axi_ad7124_amap #(parameter NUM_OF_BOARD = 6) (
     output wire [31:0] up_rdata                      ,
     output wire        up_rack                       ,
     // AUX
-    output wire        aux_up_wreq [0:NUM_OF_BOARD-1],
-    output wire [13:0] aux_up_waddr[0:NUM_OF_BOARD-1],
-    output wire [31:0] aux_up_wdata[0:NUM_OF_BOARD-1],
-    input  wire        aux_up_wack [0:NUM_OF_BOARD-1],
+    output wire        aux_up_wreq                   ,
+    output wire [13:0] aux_up_waddr                  ,
+    output wire [31:0] aux_up_wdata                  ,
+    input  wire        aux_up_wack                   ,
     //
-    output wire        aux_up_rreq [0:NUM_OF_BOARD-1],
-    output wire [13:0] aux_up_raddr[0:NUM_OF_BOARD-1],
-    input  wire [31:0] aux_up_rdata[0:NUM_OF_BOARD-1],
-    input  wire        aux_up_rack [0:NUM_OF_BOARD-1],
+    output wire        aux_up_rreq                   ,
+    output wire [13:0] aux_up_raddr                  ,
+    input  wire [31:0] aux_up_rdata                  ,
+    input  wire        aux_up_rack                   ,
     // TC
-    output wire        tc_up_wreq [0:NUM_OF_BOARD-1] ,
-    output wire [13:0] tc_up_waddr[0:NUM_OF_BOARD-1] ,
-    output wire [31:0] tc_up_wdata[0:NUM_OF_BOARD-1] ,
-    input  wire        tc_up_wack [0:NUM_OF_BOARD-1] ,
+    output wire        tc_up_wreq  [0:NUM_OF_BOARD-1],
+    output wire [13:0] tc_up_waddr [0:NUM_OF_BOARD-1],
+    output wire [31:0] tc_up_wdata [0:NUM_OF_BOARD-1],
+    input  wire        tc_up_wack  [0:NUM_OF_BOARD-1],
     //
-    output wire        tc_up_rreq [0:NUM_OF_BOARD-1] ,
-    output wire [13:0] tc_up_raddr[0:NUM_OF_BOARD-1] ,
-    input  wire [31:0] tc_up_rdata[0:NUM_OF_BOARD-1] ,
-    input  wire        tc_up_rack [0:NUM_OF_BOARD-1] ,
+    output wire        tc_up_rreq  [0:NUM_OF_BOARD-1],
+    output wire [13:0] tc_up_raddr [0:NUM_OF_BOARD-1],
+    input  wire [31:0] tc_up_rdata [0:NUM_OF_BOARD-1],
+    input  wire        tc_up_rack  [0:NUM_OF_BOARD-1],
     // RTD
     output wire        rtd_up_wreq [0:NUM_OF_BOARD-1],
     output wire [13:0] rtd_up_waddr[0:NUM_OF_BOARD-1],
@@ -69,17 +69,16 @@ module axi_ad7124_amap #(parameter NUM_OF_BOARD = 6) (
     //                     10 - TC SPI
     //                     11 - RTD SPI
 
+    // AUX is mapped to first 512 word
+    assign aux_up_wreq  = (up_waddr[13:9] == 5'b00000 && up_waddr[8:7] == 2'b00) ? up_wreq : 1'b0;
+    assign aux_up_waddr = {7'b0, up_waddr[6:0]};
+    assign aux_up_wdata = up_wdata;
+
+    assign aux_up_rreq  = (up_raddr[13:9] == 5'b00000 && up_raddr[8:7] == 2'b00) ? up_rreq : 1'b0;
+    assign aux_up_raddr = {7'b0, up_raddr[6:0]};
+
     generate
         for (genvar i = 0; i < NUM_OF_BOARD; i++) begin
-
-            // AUX Channel N is mapped to N * 512 word
-            assign aux_up_wreq [i] = (up_waddr[13:9] == i && up_waddr[8:7] == 2'b00) ? up_wreq : 1'b0;
-            assign aux_up_waddr[i] = {7'b0, up_waddr[6:0]};
-            assign aux_up_wdata[i] = up_wdata;
-
-            assign aux_up_rreq [i] = (up_raddr[13:9] == i && up_raddr[8:7] == 2'b00) ? up_rreq : 1'b0;
-            assign aux_up_raddr[i] = {7'b0, up_raddr[6:0]};
-
 
             // TC Channel N is mapped to N * 512 + 256 word
             assign tc_up_wreq [i] = (up_waddr[13:9] == i && up_waddr[8:7] == 2'b10) ? up_wreq : 1'b0;
@@ -88,7 +87,6 @@ module axi_ad7124_amap #(parameter NUM_OF_BOARD = 6) (
 
             assign tc_up_rreq [i] = (up_raddr[13:9] == i && up_raddr[8:7] == 2'b10) ? up_rreq : 1'b0;
             assign tc_up_raddr[i] = {7'b0, up_raddr[6:0]};
-
 
             // RTD Channel N is mapped to N * 512 + 384 word
             assign rtd_up_wreq [i] = (up_waddr[13:9] == i && up_waddr[8:7] == 2'b11) ? up_wreq : 1'b0;
@@ -102,20 +100,20 @@ module axi_ad7124_amap #(parameter NUM_OF_BOARD = 6) (
     endgenerate
 
 
-    assign up_wack = (up_waddr[8:7] == 2'b00) ? aux_up_wack[up_waddr[13:9]] :
+    assign up_wack = (up_waddr[8:7] == 2'b00) ? aux_up_wack :
                      (up_waddr[8:7] == 2'b01) ? 1'b0 :
                      (up_waddr[8:7] == 2'b10) ? tc_up_wack[up_waddr[13:9]] :
                                                 rtd_up_wack[up_waddr[13:9]];
 
-    assign up_rdata = (up_raddr[8:7] == 2'b00) ? aux_up_rdata[up_raddr[13:9]] :
+    assign up_rdata = (up_raddr[8:7] == 2'b00) ? aux_up_rdata :
                       (up_raddr[8:7] == 2'b01) ? 32'b0 :
                       (up_raddr[8:7] == 2'b10) ? tc_up_rdata[up_raddr[13:9]] :
                                                  rtd_up_rdata[up_raddr[13:9]];
 
-    assign up_rack = (up_raddr[8:7] == 2'b00) ? aux_up_rack[up_raddr[13:9]] :
+    assign up_rack = (up_raddr[8:7] == 2'b00) ? aux_up_rack :
                      (up_raddr[8:7] == 2'b01) ? 1'b0 :
                      (up_raddr[8:7] == 2'b10) ? tc_up_rack[up_raddr[13:9]] :
-                                                rtd_up_rack[up_raddr[13:9]];
+                     rtd_up_rack[up_raddr[13:9]];
 
 endmodule
 

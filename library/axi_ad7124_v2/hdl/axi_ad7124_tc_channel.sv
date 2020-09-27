@@ -6,7 +6,7 @@ All rights reserved.
 `timescale 1 ns / 100 ps
 `default_nettype none
 
-module axi_ad7124_channel #(
+module axi_ad7124_tc_channel #(
     // ID
     parameter ID                             = 0,
     // Direct
@@ -15,10 +15,10 @@ module axi_ad7124_channel #(
     parameter SDO_FIFO_ADDRESS_WIDTH         = 5,
     parameter SDI_FIFO_ADDRESS_WIDTH         = 5,
     // Offload
-    parameter OFFLOAD0_CMD_MEM_ADDRESS_WIDTH = 4,
-    parameter OFFLOAD0_SDO_MEM_ADDRESS_WIDTH = 4,
+    parameter OFFLOAD0_CMD_MEM_ADDRESS_WIDTH = 5,
+    parameter OFFLOAD0_SDO_MEM_ADDRESS_WIDTH = 5,
     //
-    parameter NUM_OF_CS                      = 1
+    parameter NUM_OF_CS                      = 8
 ) (
     // UP interface
     //-------------
@@ -35,18 +35,18 @@ module axi_ad7124_channel #(
     output wire                   up_rack          ,
     //
     output wire                   irq              ,
+    // Data Handshake
+    //---------------
+    output wire                   data_valid       ,
+    input  wire                   data_ready       ,
     // BRAM I/F
     //---------
-    input  wire                   bram_clk         ,
-    input  wire                   bram_rst         ,
-    //
     input  wire                   bram_en          ,
     input  wire [            2:0] bram_addr        ,
     output wire [           31:0] bram_dout        ,
-    //
-    output wire                   drdy             ,
-    // SPI I/F
-    //--------
+    // Physical Ports
+    //---------------
+    // SPI
     input  wire                   phy_sclk_i       ,
     output wire                   phy_sclk_o       ,
     output wire                   phy_sclk_t       ,
@@ -404,12 +404,14 @@ module axi_ad7124_channel #(
 
     (* keep_hierarchy="yes" *)
     axi_ad7124_trigger i_axi_ad7124_trigger (
-        .spi_clk   (spi_clk   ),
-        .spi_resetn(spi_resetn),
-        .spi_sdi   (spi_sdi[0]),
-        .spi_active(active    ),
-        .spi_cs    (spi_cs [0]),
-        .trigger   (trigger   )
+        .clk       (spi_clk    ),
+        .rst       (~spi_resetn),
+        //
+        .spi_sdi   (spi_sdi[0] ),
+        .spi_active(active     ),
+        .spi_cs    (spi_cs [0] ),
+        //
+        .trigger   (trigger    )
     );
 
     // Local buffer for data,
@@ -417,17 +419,17 @@ module axi_ad7124_channel #(
     (* keep_hierarchy="yes" *)
     axi_ad7124_buf #(.BUFFER_ADDR_WIDTH(BUFFER_ADDR_WIDTH)) i_axi_ad7124_buf (
         .clk              (spi_clk          ),
-        .resetn           (spi_resetn       ),
+        .rst              (~spi_resetn      ),
         //
         .trigger          (trigger          ),
-        .drdy             (drdy             ),
+        //
+        .data_valid       (data_valid       ),
+        .data_ready       (data_ready       ),
         //
         .offload_sdi_valid(offload_sdi_valid),
         .offload_sdi_ready(offload_sdi_ready),
         .offload_sdi_data (offload_sdi_data ),
         //
-        .bram_clk         (bram_clk         ),
-        .bram_rst         (bram_rst         ),
         .bram_en          (bram_en          ),
         .bram_addr        (bram_addr        ),
         .bram_dout        (bram_dout        )

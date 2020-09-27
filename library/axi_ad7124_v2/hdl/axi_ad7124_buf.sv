@@ -12,38 +12,37 @@ module axi_ad7124_buf #(
 ) (
     // Data I/F from SPI
     //-------------
-    input  wire                         clk              ,
-    input  wire                         resetn           ,
-    //
-    input  wire                         trigger          ,
-    output reg                          drdy             ,
-    //
-    input  wire                         offload_sdi_valid,
-    output wire                         offload_sdi_ready,
-    input  wire [                  7:0] offload_sdi_data ,
+    input  var logic                         clk              ,
+    input  var logic                         rst              ,
+    // AXIS
+    input  var logic                         offload_sdi_valid,
+    output var logic                         offload_sdi_ready,
+    input  var logic [                  7:0] offload_sdi_data ,
+    // MISC
+    input  var logic                         trigger          ,
+    // HS
+    output var logic                         data_valid       ,
+    input  var logic                         data_ready       ,
     // BRAM I/F
     //---------
-    input  wire                         bram_clk         ,
-    input  wire                         bram_rst         ,
-    //
-    input  wire                         bram_en          ,
-    input  wire [BUFFER_ADDR_WIDTH-3:0] bram_addr        ,
-    output reg  [                 31:0] bram_dout
+    input  var logic                         bram_en          ,
+    input  var logic [BUFFER_ADDR_WIDTH-3:0] bram_addr        ,
+    output var logic [                 31:0] bram_dout
 );
 
 
-    reg [7:0] buf_mem [0:(2**BUFFER_ADDR_WIDTH-1)];
+    logic  [7:0] buf_mem [0:(2**BUFFER_ADDR_WIDTH-1)];
 
-    reg  [BUFFER_ADDR_WIDTH-1:0] wr_addr;
-    wire                         wr_en  ;
-    wire [                  7:0] wr_data;
+    logic [BUFFER_ADDR_WIDTH-1:0] wr_addr;
+    logic                         wr_en  ;
+    logic [                  7:0] wr_data;
 
-    reg [BUFFER_ADDR_WIDTH-3:0] rd_addr;
+    logic  [BUFFER_ADDR_WIDTH-3:0] rd_addr;
 
     // Memory write FSM
 
     always_ff @ (posedge clk) begin
-        if (~resetn) begin
+        if (rst) begin
             wr_addr <= 'd0;
         end else if (trigger) begin
             wr_addr <= 'd0;
@@ -68,8 +67,8 @@ module axi_ad7124_buf #(
 
     // Memory read port
 
-    always_ff @ (posedge bram_clk) begin
-        if (bram_rst) begin
+    always_ff @ (posedge clk) begin
+        if (rst) begin
             bram_dout <= 'd0;
         end else if (bram_en) begin
             bram_dout <= { buf_mem[bram_addr*4], buf_mem[bram_addr*4+1],
@@ -77,15 +76,15 @@ module axi_ad7124_buf #(
         end
     end
 
-    // drdy
+    // data_valid
 
     always_ff @ (posedge clk) begin
-        if (~resetn) begin
-            drdy <= 1'b0;
+        if (rst) begin
+            data_valid <= 1'b0;
         end else if ((wr_addr == FRAME_LENGTH - 1) && offload_sdi_valid) begin
-            drdy <= 1'b1;
-        end else begin
-            drdy <= 1'b0;
+            data_valid <= 1'b1;
+        end else if (data_ready) begin
+            data_valid <= 1'b0;
         end
     end
 

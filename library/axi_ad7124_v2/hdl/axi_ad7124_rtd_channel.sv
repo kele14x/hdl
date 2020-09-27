@@ -394,8 +394,8 @@ module axi_ad7124_rtd_channel #(
 
     (* keep_hierarchy="yes" *)
     axi_ad7124_trigger i_axi_ad7124_trigger (
-        .spi_clk   (spi_clk   ),
-        .spi_resetn(spi_resetn),
+        .clk       (spi_clk   ),
+        .rst       (~spi_resetn),
         .spi_sdi   (spi_sdi[0]),
         .spi_active(active    ),
         .spi_cs    (spi_cs [0]),
@@ -410,17 +410,17 @@ module axi_ad7124_rtd_channel #(
         .FRAME_LENGTH     (FRAME_LENGTH     )
     ) i_axi_ad7124_buf (
         .clk              (spi_clk          ),
-        .resetn           (spi_resetn       ),
+        .rst              (~spi_resetn      ),
         //
-        .trigger          (pps_in           ),
-        .drdy             (drdy             ),
+        .trigger          (trigger          ),
+        //
+        .data_valid       (                 ),
+        .data_ready       (1'b1             ),
         //
         .offload_sdi_valid(offload_sdi_valid),
         .offload_sdi_ready(offload_sdi_ready),
         .offload_sdi_data (offload_sdi_data ),
         //
-        .bram_clk         (bram_clk         ),
-        .bram_rst         (bram_rst         ),
         .bram_en          (bram_en          ),
         .bram_addr        (bram_addr        ),
         .bram_dout        (bram_dout        )

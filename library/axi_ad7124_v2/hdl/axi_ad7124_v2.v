@@ -7,7 +7,7 @@ All rights reserved.
 `default_nettype none
 
 module axi_ad7124_v2 #(
-    parameter integer AXI_ADDR_WIDTH      = 32,
+    parameter integer AXI_ADDR_WIDTH      = 16,
     parameter integer AXI_DATA_WIDTH      = 32,
     parameter integer NUM_OF_BOARD        = 6 ,
     parameter integer NUM_OF_TC_PER_BOARD = 8
@@ -67,28 +67,20 @@ module axi_ad7124_v2 #(
     (* X_INTERFACE_INFO = "xilinx.com:signal:interrupt:1.0 interrupt INTERRUPT" *)
     (* X_INTERFACE_PARAMETER = "SENSITIVITY EDGE_RISING" *)
     output wire                                        interrupt        ,
-    // BRAM I/F
-    //=========
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 BRAM CLK" *)
-    (* X_INTERFACE_PARAMETER = "MASTER_TYPE BRAM_CTRL" *)
-    output wire                                        bram_clk         ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 BRAM RST" *)
-    output wire                                        bram_rst         ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 BRAM EN" *)
-    output wire                                        bram_en          ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 BRAM WE" *)
-    output wire [                                 3:0] bram_we          ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 BRAM ADDR" *)
-    output wire [                                12:0] bram_addr        ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 BRAM DIN" *)
-    output wire [                                31:0] bram_wrdata      ,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:bram:1.0 BRAM DOUT" *)
-    input  wire [                                31:0] bram_rddata      ,
     // Time Interface
     //===============
     input  wire                                        pps_in           ,
+    //
     input  wire [                                31:0] rtc_sec          ,
     input  wire [                                31:0] rtc_nsec         ,
+    // Measure Control
+    //================
+    (* X_INTERFACE_INFO = "xilinx.com:interface:acc_handshake:1.0 measure_ctrl ap_start" *)
+    input  wire                                        measure_start    ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:acc_handshake:1.0 measure_ctrl ap_ready" *)
+    output wire                                        measure_ready    ,
+    (* X_INTERFACE_INFO = "xilinx.com:interface:acc_handshake:1.0 measure_ctrl ap_done" *)
+    output wire                                        measure_done     ,
     // AD Board
     //=========
     // There are 6 AD Board connected, each has two SPI interface. One interface
@@ -193,15 +185,11 @@ module axi_ad7124_v2 #(
         .pps_in           (pps_in           ),
         .rtc_sec          (rtc_sec          ),
         .rtc_nsec         (rtc_nsec         ),
-        //BRAM
-        //====
-        .bram_clk         (bram_clk         ),
-        .bram_rst         (bram_rst         ),
-        .bram_en          (bram_en          ),
-        .bram_we          (bram_we          ),
-        .bram_addr        (bram_addr        ),
-        .bram_wrdata      (bram_wrdata      ),
-        .bram_rddata      (bram_rddata      ),
+        // Measure Control
+        //================
+        .measure_start    (measure_start    ),
+        .measure_ready    (measure_ready    ),
+        .measure_done     (measure_done     ),
         // AD Board
         //=========
         .GX_TC_SPI_SCLK_i (GX_TC_SPI_SCLK_i ),

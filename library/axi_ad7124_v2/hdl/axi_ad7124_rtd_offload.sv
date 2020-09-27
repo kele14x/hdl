@@ -57,12 +57,15 @@ module axi_ad7124_rtd_offload #(
     //  4 - sdo, 0x00
     //  5 - sdo, 0x18
     //  6 - sdo, 0x00              60              C0
+    //
     //  7 - sdo, 0x09
     //  8 - sdo, 0x80  80  80  80  80  81  81  81  81  81
     //  9 - sdo, 0x22  43  64  85  E8  09  2A  4B  AE  CF
+    //
     // 10 - sdo, 0x01
     // 11 - sdo, 0x00
     // 12 - sdo, 0x84
+    //
     // 13 - cmd, sync 0
     // 14 - wait trigger
     // 15 - cmd, transfer 4 bytes, write/read
