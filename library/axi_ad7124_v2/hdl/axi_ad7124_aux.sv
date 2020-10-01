@@ -58,23 +58,31 @@ module axi_ad7124_aux #(parameter NUM_OF_BOARD = 6) (
         end
     end
 
-    // ctrl_power_en at 16
-    always @(posedge up_clk) begin
-        if (~up_rstn) begin
-            ctrl_power_en <= 'b0;
-        end else if (up_wreq && up_waddr == 'd16) begin
-            ctrl_power_en <= up_wdata[NUM_OF_BOARD-1:0];
+    generate 
+        for (genvar i = 0; i < 6; i++) begin
+            // ctrl_power_en at 16 + i
+            always @(posedge up_clk) begin
+                if (~up_rstn) begin
+                    ctrl_power_en[i] <= 'b0;
+                end else if (up_wreq && up_waddr == ('d16 + i)) begin
+                    ctrl_power_en[i] <= up_wdata[0];
+                end
+            end
         end
-    end
+    endgenerate
 
-    // ctrl_relay_ctrl at 17
-    always @(posedge up_clk) begin
-        if (~up_rstn) begin
-            ctrl_relay_ctrl <= 'b0;
-        end else if (up_wreq && up_waddr == 'd17) begin
-            ctrl_relay_ctrl <= up_wdata[NUM_OF_BOARD-1:0];
+    generate 
+        for (genvar i = 0; i < 6; i++) begin
+            // ctrl_relay_ctrl at 24 + i
+            always @(posedge up_clk) begin
+                if (~up_rstn) begin
+                    ctrl_relay_ctrl[i] <= 'b0;
+                end else if (up_wreq && up_waddr == ('d24 + i)) begin
+                    ctrl_relay_ctrl[i] <= up_wdata[0];
+                end
+            end
         end
-    end
+    endgenerate
 
     // ctrl_reset at 32
     always @(posedge up_clk) begin
@@ -125,8 +133,18 @@ module axi_ad7124_aux #(parameter NUM_OF_BOARD = 6) (
                 'd0     : up_rdata <= PCORE_VERSION;
                 'd1     : up_rdata <= ID;
                 'd2     : up_rdata <= up_scratch;
-                'd16    : up_rdata <= {26'b0, ctrl_power_en};
-                'd17    : up_rdata <= {26'b0, ctrl_relay_ctrl};
+                'd16    : up_rdata <= {31'b0, ctrl_power_en[0]};
+                'd17    : up_rdata <= {31'b0, ctrl_power_en[1]};
+                'd18    : up_rdata <= {31'b0, ctrl_power_en[2]};
+                'd19    : up_rdata <= {31'b0, ctrl_power_en[3]};
+                'd20    : up_rdata <= {31'b0, ctrl_power_en[4]};
+                'd21    : up_rdata <= {31'b0, ctrl_power_en[5]};
+                'd24    : up_rdata <= {26'b0, ctrl_relay_ctrl[0]};
+                'd25    : up_rdata <= {26'b0, ctrl_relay_ctrl[1]};
+                'd26    : up_rdata <= {26'b0, ctrl_relay_ctrl[2]};
+                'd27    : up_rdata <= {26'b0, ctrl_relay_ctrl[3]};
+                'd28    : up_rdata <= {26'b0, ctrl_relay_ctrl[4]};
+                'd29    : up_rdata <= {26'b0, ctrl_relay_ctrl[5]};
                 'd32    : up_rdata <= {31'b0, ctrl_reset};
                 'd34    : up_rdata <= {31'b0, ctrl_measure_continuous};
                 'd35    : up_rdata <= ctrl_measure_count;
