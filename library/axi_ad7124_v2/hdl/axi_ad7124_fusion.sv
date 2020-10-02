@@ -39,6 +39,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     // Control I/F
     //============
     input  var logic        ctrl_reset                                 ,
+    input  var logic [ 5:0] ctrl_board_mask                            ,
     //
     input  var logic        ctrl_measure_immediate                     ,
     input  var logic        ctrl_measure_continuous                    ,
@@ -163,6 +164,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
         end
     end
 
+    assign measure_ready = measure_done;
 
     always_ff @ (posedge clk) begin
         if (~resetn) begin
@@ -188,7 +190,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     assign mcs_done = (&mcs_cnt);
 
     always_ff @ (posedge clk) begin
-        tc_sync <= (state_next == S_MCS) ? '{NUM_OF_BOARD{1'b1}} : '{NUM_OF_BOARD{1'b0}};
+        tc_sync <= (state_next == S_MCS) ? '{NUM_OF_BOARD{1'b0}} : '{NUM_OF_BOARD{1'b1}};
     end
 
     //--------------------------------------------------------------------------
@@ -197,7 +199,7 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     always_comb begin
         all_drdy = 1;
         for (int i = 0; i < NUM_OF_BOARD; i++) begin
-            all_drdy = all_drdy & tc_valid[i];
+            all_drdy = all_drdy & tc_valid[i] | ~ctrl_board_mask[i];
         end
     end
 

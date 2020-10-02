@@ -27,6 +27,7 @@ module axi_ad7124_aux #(parameter NUM_OF_BOARD = 6) (
     output var logic [NUM_OF_BOARD-1:0] ctrl_relay_ctrl        , // 1 = Calibration, 0 = Normal op
     //
     output var logic                    ctrl_reset             ,
+    output var logic [             5:0] ctrl_board_mask        ,
     //
     output var logic                    ctrl_measure_immediate ,
     output var logic                    ctrl_measure_continuous,
@@ -93,31 +94,40 @@ module axi_ad7124_aux #(parameter NUM_OF_BOARD = 6) (
         end
     end
 
-    // ctrl_measure_immediate at 33
+    // ctrl_board_mask at 33
+    always @(posedge up_clk) begin
+        if (~up_rstn) begin
+            ctrl_board_mask <= 'b0;
+        end else if (up_wreq && up_waddr == 'd33) begin
+            ctrl_board_mask <= up_wdata[5:0];
+        end
+    end
+
+    // ctrl_measure_immediate at 40
     always @(posedge up_clk) begin
         if (~up_rstn) begin
             ctrl_measure_immediate <= 'b0;
-        end else if (up_wreq && up_waddr == 'd33) begin
+        end else if (up_wreq && up_waddr == 'd40) begin
             ctrl_measure_immediate <= up_wdata[0];
         end else begin
             ctrl_measure_immediate <= 'b0;
         end
     end
 
-    // ctrl_measure_continuous at 34
+    // ctrl_measure_continuous at 41
     always @(posedge up_clk) begin
         if (~up_rstn) begin
             ctrl_measure_continuous <= 'b0;
-        end else if (up_wreq && up_waddr == 'd34) begin
+        end else if (up_wreq && up_waddr == 'd41) begin
             ctrl_measure_continuous <= up_wdata[0];
         end
     end
 
-    // ctrl_measure_count at 35
+    // ctrl_measure_count at 42
     always @(posedge up_clk) begin
         if (~up_rstn) begin
             ctrl_measure_count <= 'b0;
-        end else if (up_wreq && up_waddr == 'd35) begin
+        end else if (up_wreq && up_waddr == 'd42) begin
             ctrl_measure_count <= up_wdata;
         end
     end
@@ -146,9 +156,10 @@ module axi_ad7124_aux #(parameter NUM_OF_BOARD = 6) (
                 'd28    : up_rdata <= {26'b0, ctrl_relay_ctrl[4]};
                 'd29    : up_rdata <= {26'b0, ctrl_relay_ctrl[5]};
                 'd32    : up_rdata <= {31'b0, ctrl_reset};
-                'd34    : up_rdata <= {31'b0, ctrl_measure_continuous};
-                'd35    : up_rdata <= ctrl_measure_count;
-                'd36    : up_rdata <= {29'b0, stat_measure_state};
+                'd33    : up_rdata <= {26'd0, ctrl_board_mask};
+                'd41    : up_rdata <= {31'b0, ctrl_measure_continuous};
+                'd42    : up_rdata <= ctrl_measure_count;
+                'd43    : up_rdata <= {29'b0, stat_measure_state};
                 'd48    : up_rdata <= {31'b0, stat_fifo_empty};
                 'd49    : up_rdata <= stat_fifo_data;
                 default : up_rdata <= 32'h00000000;

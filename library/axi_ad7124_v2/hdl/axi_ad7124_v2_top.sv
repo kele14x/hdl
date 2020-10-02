@@ -171,7 +171,8 @@ module axi_ad7124_v2_top #(
     logic [31:0] rtd_bram_dout[0:NUM_OF_BOARD-1];
 
 
-    logic ctrl_reset;
+    logic       ctrl_reset     ;
+    logic [5:0] ctrl_board_mask;
 
     logic        ctrl_measure_immediate ;
     logic        ctrl_measure_continuous;
@@ -285,6 +286,7 @@ module axi_ad7124_v2_top #(
         .ctrl_relay_ctrl        (GX_RELAY_CTRL          ),
         //
         .ctrl_reset             (ctrl_reset             ),
+        .ctrl_board_mask        (ctrl_board_mask        ),
         //
         .ctrl_measure_immediate (ctrl_measure_immediate ),
         .ctrl_measure_continuous(ctrl_measure_continuous),
@@ -325,6 +327,7 @@ module axi_ad7124_v2_top #(
         .measure_done           (measure_done           ),
         //
         .ctrl_reset             (ctrl_reset             ),
+        .ctrl_board_mask        (ctrl_board_mask        ),
         //
         .ctrl_measure_immediate (ctrl_measure_immediate ),
         .ctrl_measure_continuous(ctrl_measure_continuous),
