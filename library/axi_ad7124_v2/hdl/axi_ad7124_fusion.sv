@@ -131,8 +131,9 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
             (state == S_MCS ) ? 'd2 :
             (state == S_CLR ) ? 'd3 :
             (state == S_WAIT) ? 'd4 :
-            (state == S_FIN ) ? 'd5 :
-            (state == S_DONE) ? 'd6 : 'd0;
+            (state == S_GET ) ? 'd5 :
+            (state == S_FIN ) ? 'd6 :
+            (state == S_DONE) ? 'd7 : 'd0;
     end
 
     //--------------------------------------------------------------------------
@@ -197,9 +198,13 @@ module axi_ad7124_fusion #(parameter NUM_OF_BOARD = 6) (
     // WAIT
 
     always_comb begin
-        all_drdy = 1;
-        for (int i = 0; i < NUM_OF_BOARD; i++) begin
-            all_drdy = all_drdy & tc_valid[i] | ~ctrl_board_mask[i];
+        if (ctrl_board_mask == 0) begin
+            all_drdy = 0;
+        end else begin
+            all_drdy = 1;
+            for (int i = 0; i < NUM_OF_BOARD; i++) begin
+                all_drdy = all_drdy & (tc_valid[i] | ~ctrl_board_mask[i]);
+            end
         end
     end
 
