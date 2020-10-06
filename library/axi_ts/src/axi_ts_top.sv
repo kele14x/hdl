@@ -40,7 +40,7 @@ module axi_ts_top #(parameter int AXI_ADDR_WIDTH = 12) (
     input  var logic [              31:0] rtc_sec                 ,
     input  var logic [              31:0] rtc_nsec                ,
     // External trigger
-    input  var logic [               7:0] ext_trigger             ,
+    input  var logic                      ext_trigger             ,
     // Device action
     output var logic                      measure_start           ,
     input  var logic                      measure_ready           ,

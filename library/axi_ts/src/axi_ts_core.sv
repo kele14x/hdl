@@ -16,7 +16,7 @@ module axi_ts_core (
     input  var logic [31:0] rtc_sec                 ,
     input  var logic [31:0] rtc_nsec                ,
     // External trigger
-    input  var logic [ 7:0] ext_trigger             ,
+    input  var logic        ext_trigger             ,
     // Device action
     output var logic        measure_start           ,
     input  var logic        measure_ready           ,
@@ -91,8 +91,9 @@ module axi_ts_core (
                 //
                 S_TRIGGER_DOWN   : state_next = trigger_wire ? S_MEASURE_START : S_TRIGGER_DOWN;
                 S_TRIGGER_UP     : state_next = (trigger_count >= ctrl_trigger_count) ? S_ARM_UP : S_TRIGGER_DOWN;
-                //
-                S_MEASURE_START  : state_next = measure_ready ? S_MEASURE_WAIT : S_MEASURE_START;
+                // if measure_ready and measure_done is assert same clock, directly goes to S_TRIGGER_UP
+                S_MEASURE_START  : state_next = ~measure_ready ? S_MEASURE_START :
+                                                ~measure_done  ? S_MEASURE_WAIT  : S_TRIGGER_UP;
                 S_MEASURE_WAIT   : state_next = measure_done ? S_TRIGGER_UP : S_MEASURE_WAIT;
                 //
                 default          : state_next = S_RST;
@@ -114,19 +115,67 @@ module axi_ts_core (
 
     // Arm and trigger wire
 
+    wire ext_trigger_rising;
+    wire ext_trigger_falling;
+    wire ext_trigger_level;
+    wire ext_trigger_level_high;
+    wire ext_trigger_level_low;
+
+    ext_trg i_ext_trg_rising (
+        .clk              (clk               ),
+        .ext_trg_in       (ext_trigger       ),
+        .ctrl_trigger_type(2'b00             ), 
+        .ext_trg_out      (ext_trigger_rising)
+    );
+
+    ext_trg i_ext_trg_falling (
+        .clk              (clk                ),
+        .ext_trg_in       (ext_trigger        ),
+        .ctrl_trigger_type(2'b01              ), 
+        .ext_trg_out      (ext_trigger_falling)
+    );
+
+    xpm_cdc_single #(
+        .DEST_SYNC_FF  (2),
+        .INIT_SYNC_FF  (0),
+        .SIM_ASSERT_CHK(0),
+        .SRC_INPUT_REG (1)
+   ) xpm_cdc_ext_trg (
+        .src_clk (                 ),
+        .src_in  (ext_trigger      ),
+        .dest_clk(clk              ),
+        .dest_out(ext_trigger_level)
+   );
+
+    // arm_wire selection
     always_ff @ (posedge clk) begin
         if (rst) begin
             arm_wire <= 1'b0;
         end else begin
-            arm_wire <= (ctrl_arm_immediate);
+            arm_wire <= (
+                ctrl_arm_immediate || 
+                (ctrl_arm_source[0] && 1'b1) || 
+                (ctrl_arm_source[4] && ext_trigger_rising) ||
+                (ctrl_arm_source[5] && ext_trigger_falling) ||
+                (ctrl_arm_source[6] && (ext_trigger_level == 1'b1)) ||
+                (ctrl_arm_source[7] && (ext_trigger_level == 1'b0))
+            );
         end
     end
 
+    // trigger wire selection
     always_ff @ (posedge clk) begin
         if (rst) begin
             trigger_wire <= 1'b0;
         end else begin
-            trigger_wire <= (ctrl_trigger_immediate);
+            trigger_wire <= (
+                ctrl_trigger_immediate ||
+                (ctrl_trigger_source[0] && 1'b1) ||
+                (ctrl_trigger_source[4] && ext_trigger_rising) ||
+                (ctrl_trigger_source[5] && ext_trigger_falling) ||
+                (ctrl_trigger_source[4] && (ext_trigger_level == 1'b1)) ||
+                (ctrl_trigger_source[7] && (ext_trigger_level == 1'b0))
+            );
         end
     end
 

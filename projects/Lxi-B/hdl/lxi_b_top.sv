@@ -30,6 +30,9 @@ module lxi_b_top (
     inout  wire        FIXED_IO_ps_clk  ,
     inout  wire        FIXED_IO_ps_porb ,
     inout  wire        FIXED_IO_ps_srstb,
+    // BNC
+    input  wire        PL_RX_BNC        ,
+    output wire        PL_TX_BNC        ,
     // ADC
     output wire [ 5:0] GX_ADC_SYNC      ,
     output wire [ 5:0] GX_ANA_POW_EN    ,
@@ -91,6 +94,8 @@ module lxi_b_top (
         .GX_TC_SPI_SDI_tri_io  (GX_TC_SPI_SDI    ),
         .GX_TC_SPI_SDO_tri_io  (GX_TC_SPI_SDO    ),
         //
+        .PL_RX_BNC             (PL_RX_BNC        ),
+        //
         .lcd_gpio_tri_io       ({LCD_LED_EN,
                                  LCD_V0,
                                  LCD_RS,
@@ -98,6 +103,8 @@ module lxi_b_top (
                                  LCD_E,
                                  LCD_DB}         )
     );
+
+    assign PL_TX_BNC = 1'bz;
 
 endmodule
 

@@ -11,6 +11,11 @@ set_property CONFIG_VOLTAGE 3.3 [current_design]
 #set_property PACKAGE_PIN G15 [get_ports rst_0]
 #set_property PACKAGE_PIN H22 [get_ports PL_LED_TEST_0]
 
+## BNC
+
+set_property PACKAGE_PIN B17 [get_ports {PL_RX_BNC}]
+set_property PACKAGE_PIN A17 [get_ports {PL_TX_BNC}]
+
 ## RTD SPI
 
 set_property PACKAGE_PIN AB1 [get_ports {GX_ADC_SYNC[0]}]

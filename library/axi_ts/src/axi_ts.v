@@ -38,7 +38,7 @@ module axi_ts #(parameter AXI_ADDR_WIDTH = 12) (
     input  wire [              31:0] rtc_sec      ,
     input  wire [              31:0] rtc_nsec     ,
     //
-    input  wire [               7:0] ext_trigger  ,
+    input  wire                      ext_trigger  ,
     //
     (* X_INTERFACE_INFO = "xilinx.com:interface:acc_handshake:1.0 measure_ctrl ap_start" *)
     output wire                      measure_start,

@@ -1,7 +1,7 @@
 //Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
 //--------------------------------------------------------------------------------
 //Tool Version: Vivado v.2020.1 (win64) Build 2902540 Wed May 27 19:54:49 MDT 2020
-//Date        : Sat Oct  3 01:55:45 2020
+//Date        : Tue Oct  6 14:58:57 2020
 //Host        : Kele20x running 64-bit major release  (build 9200)
 //Command     : generate_target ps7_bd_wrapper.bd
 //Design      : ps7_bd_wrapper
@@ -42,6 +42,7 @@ module ps7_bd_wrapper
     GX_TC_SPI_SCLK_tri_io,
     GX_TC_SPI_SDI_tri_io,
     GX_TC_SPI_SDO_tri_io,
+    PL_RX_BNC,
     lcd_gpio_tri_io);
   inout [14:0]DDR_addr;
   inout [2:0]DDR_ba;
@@ -75,6 +76,7 @@ module ps7_bd_wrapper
   inout [5:0]GX_TC_SPI_SCLK_tri_io;
   inout [5:0]GX_TC_SPI_SDI_tri_io;
   inout [5:0]GX_TC_SPI_SDO_tri_io;
+  input PL_RX_BNC;
   inout [12:0]lcd_gpio_tri_io;
 
   wire [14:0]DDR_addr;
@@ -461,6 +463,7 @@ module ps7_bd_wrapper
   wire [3:3]GX_TC_SPI_SDO_tri_t_3;
   wire [4:4]GX_TC_SPI_SDO_tri_t_4;
   wire [5:5]GX_TC_SPI_SDO_tri_t_5;
+  wire PL_RX_BNC;
   wire [0:0]lcd_gpio_tri_i_0;
   wire [1:1]lcd_gpio_tri_i_1;
   wire [10:10]lcd_gpio_tri_i_10;
@@ -1078,6 +1081,7 @@ module ps7_bd_wrapper
         .GX_TC_SPI_SDO_tri_i({GX_TC_SPI_SDO_tri_i_5,GX_TC_SPI_SDO_tri_i_4,GX_TC_SPI_SDO_tri_i_3,GX_TC_SPI_SDO_tri_i_2,GX_TC_SPI_SDO_tri_i_1,GX_TC_SPI_SDO_tri_i_0}),
         .GX_TC_SPI_SDO_tri_o({GX_TC_SPI_SDO_tri_o_5,GX_TC_SPI_SDO_tri_o_4,GX_TC_SPI_SDO_tri_o_3,GX_TC_SPI_SDO_tri_o_2,GX_TC_SPI_SDO_tri_o_1,GX_TC_SPI_SDO_tri_o_0}),
         .GX_TC_SPI_SDO_tri_t({GX_TC_SPI_SDO_tri_t_5,GX_TC_SPI_SDO_tri_t_4,GX_TC_SPI_SDO_tri_t_3,GX_TC_SPI_SDO_tri_t_2,GX_TC_SPI_SDO_tri_t_1,GX_TC_SPI_SDO_tri_t_0}),
+        .PL_RX_BNC(PL_RX_BNC),
         .lcd_gpio_tri_i({lcd_gpio_tri_i_12,lcd_gpio_tri_i_11,lcd_gpio_tri_i_10,lcd_gpio_tri_i_9,lcd_gpio_tri_i_8,lcd_gpio_tri_i_7,lcd_gpio_tri_i_6,lcd_gpio_tri_i_5,lcd_gpio_tri_i_4,lcd_gpio_tri_i_3,lcd_gpio_tri_i_2,lcd_gpio_tri_i_1,lcd_gpio_tri_i_0}),
         .lcd_gpio_tri_o({lcd_gpio_tri_o_12,lcd_gpio_tri_o_11,lcd_gpio_tri_o_10,lcd_gpio_tri_o_9,lcd_gpio_tri_o_8,lcd_gpio_tri_o_7,lcd_gpio_tri_o_6,lcd_gpio_tri_o_5,lcd_gpio_tri_o_4,lcd_gpio_tri_o_3,lcd_gpio_tri_o_2,lcd_gpio_tri_o_1,lcd_gpio_tri_o_0}),
         .lcd_gpio_tri_t({lcd_gpio_tri_t_12,lcd_gpio_tri_t_11,lcd_gpio_tri_t_10,lcd_gpio_tri_t_9,lcd_gpio_tri_t_8,lcd_gpio_tri_t_7,lcd_gpio_tri_t_6,lcd_gpio_tri_t_5,lcd_gpio_tri_t_4,lcd_gpio_tri_t_3,lcd_gpio_tri_t_2,lcd_gpio_tri_t_1,lcd_gpio_tri_t_0}));
