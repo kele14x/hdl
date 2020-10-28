@@ -81,6 +81,7 @@ module tb_axi4l_ipif ();
         rd_ack  <= 0;
         repeat(16) @(posedge aclk);
         @(posedge aclk) aresetn <= 1;
+        repeat(16) @(posedge aclk);
     endtask;
 
     // Test cases
@@ -237,6 +238,133 @@ module tb_axi4l_ipif ();
     endtask;
 
 
+    //-------------------------------------------------------------------------
+    // Task: test_single_read_response_after_address
+    // Brief: Test if DUT can accept signal AXI read. Read response is present
+    //        after address is assert. Only read response is checked. No read
+    //        effect is checked.
+    //-------------------------------------------------------------------------
+
+    task test_single_read_response_after_address();
+        logic arok, rok;
+        arok = 0;
+        rok = 0;
+
+        reset_slave_and_interface();
+
+        fork
+            begin
+                @(posedge aclk);
+                s_axi_araddr  <= 32'h0000_0004;
+                s_axi_arvalid <= 1'b1;
+                repeat (16) begin
+                    @(posedge aclk);
+                    if (s_axi_arready) begin
+                        arok = 1;
+                        s_axi_arvalid <= 1'b0;
+                        break;
+                    end
+                end
+            end
+
+            begin
+                @(posedge aclk);
+                s_axi_rready  <= 1'b1;
+                repeat (16) begin
+                    @(posedge aclk);
+                    if (s_axi_rvalid) begin
+                        rok = 1;
+                        s_axi_rready <= 1'b0;
+                        break;
+                    end
+                end
+            end
+
+            begin
+                repeat (16) begin
+                    @(posedge aclk);
+                    if (rd_req) begin
+                        rd_ack <= 1'b1;
+                        rd_data <= 32'hABCD_1234;
+                        @(posedge aclk);
+                        rd_ack <= 1'b0;
+                        break;
+                    end
+                end
+            end
+        join
+
+        if (arok && rok) begin
+            $info("%t, Test \"test_single_read_response_after_address\" success.", $time());
+        end else begin
+            $warning("%t, Test \"test_single_read_response_after_address\" fail.", $time());
+        end
+    endtask;
+
+
+    //-------------------------------------------------------------------------
+    // Task: test_single_read_response_before_address
+    // Brief: Test if DUT can accept signal AXI read. Read response is present
+    //        before address is assert. Only read response is checked. No read
+    //        effect is checked.
+    //-------------------------------------------------------------------------
+
+    task test_single_read_response_before_address();
+        logic arok, rok;
+        arok = 0;
+        rok = 0;
+
+        reset_slave_and_interface();
+
+        fork
+            begin
+                @(posedge aclk);
+                s_axi_araddr  <= 32'h0000_0004;
+                s_axi_arvalid <= 1'b1;
+                repeat (16) begin
+                    @(posedge aclk);
+                    if (s_axi_arready) begin
+                        arok = 1;
+                        s_axi_arvalid <= 1'b0;
+                        break;
+                    end
+                end
+            end
+
+            begin
+                @(posedge aclk);
+                s_axi_rready  <= 1'b1;
+                repeat (16) begin
+                    @(posedge aclk);
+                    if (s_axi_rvalid) begin
+                        rok = 1;
+                        s_axi_rready <= 1'b0;
+                        break;
+                    end
+                end
+            end
+
+            begin
+                rd_ack <= 1'b1;
+                rd_data <= 32'hABCD_1234;
+                repeat (16) begin
+                    @(posedge aclk);
+                    if (rd_req) begin
+                        rd_ack <= 1'b0;
+                        break;
+                    end
+                end
+            end
+        join
+
+        if (arok && rok) begin
+            $info("%t, Test \"test_single_read_response_after_address\" success.", $time());
+        end else begin
+            $warning("%t, Test \"test_single_read_response_after_address\" fail.", $time());
+        end
+    endtask;
+
+
     initial begin
         $display("%t, simulation ends.", $time());
 
@@ -244,6 +372,10 @@ module tb_axi4l_ipif ();
         test_single_write_same_time();
         #1000;
         test_single_write_address_before_data();
+        #1000;
+        test_single_read_response_after_address();
+        #1000;
+        test_single_read_response_before_address();
         #1000;
 
         $finish();
@@ -253,7 +385,7 @@ module tb_axi4l_ipif ();
         $display("%t, simulation ends.", $time());
     end
 
-    axi4l_ipif_v1_0 #(
+    axi4l_ipif #(
         .C_ADDR_WIDTH(C_ADDR_WIDTH),
         .C_DATA_WIDTH(C_DATA_WIDTH)
     ) UUT (.*);

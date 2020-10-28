@@ -65,26 +65,17 @@ module axi4l_ipif #(
     input  wire                      s_axi_rready ,
     // Write i/f
     //-----------
-    (* X_INTERFACE_INFO = "jzhl:user:up_wr:1.0 UP_WR addr" *)
-    output wire [  C_ADDR_WIDTH-3:0] up_wr_addr      ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_wr:1.0 UP_WR req" *)
-    output wire                      up_wr_req       ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_wr:1.0 UP_WR be" *)
-    output wire [               3:0] up_wr_be        ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_wr:1.0 UP_WR din" *)
-    output wire [  C_DATA_WIDTH-1:0] up_wr_din       ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_wr:1.0 UP_WR ack" *)
-    input  wire                      up_wr_ack       ,
+    output wire [  C_ADDR_WIDTH-3:0] wr_addr      ,
+    output wire                      wr_req       ,
+    output wire [               3:0] wr_be        ,
+    output wire [  C_DATA_WIDTH-1:0] wr_data      ,
+    input  wire                      wr_ack       ,
     // Read i/f
     //----------
-    (* X_INTERFACE_INFO = "jzhl:user:up_rd:1.0 UP_RD addr" *)
-    output wire [  C_ADDR_WIDTH-3:0] up_rd_addr      ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_rd:1.0 UP_RD req" *)
-    output wire                      up_rd_req       ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_rd:1.0 UP_RD dout" *)
-    input  wire [  C_DATA_WIDTH-1:0] up_rd_dout      ,
-    (* X_INTERFACE_INFO = "jzhl:user:up_rd:1.0 UP_RD ack" *)
-    input  wire                      up_rd_ack
+    output wire [  C_ADDR_WIDTH-3:0] rd_addr      ,
+    output wire                      rd_req       ,
+    input  wire [  C_DATA_WIDTH-1:0] rd_data      ,
+    input  wire                      rd_ack
 );
 
     axi4l_ipif_top #(
@@ -114,16 +105,16 @@ module axi4l_ipif #(
         .s_axi_rvalid (s_axi_rvalid ),
         .s_axi_rready (s_axi_rready ),
         //
-        .up_wr_addr   (up_wr_addr   ),
-        .up_wr_req    (up_wr_req    ),
-        .up_wr_be     (up_wr_be     ),
-        .up_wr_din    (up_wr_din    ),
-        .up_wr_ack    (up_wr_ack    ),
+        .wr_addr      (wr_addr      ),
+        .wr_req       (wr_req       ),
+        .wr_be        (wr_be        ),
+        .wr_data      (wr_data      ),
+        .wr_ack       (wr_ack       ),
         //
-        .up_rd_addr   (up_rd_addr   ),
-        .up_rd_req    (up_rd_req    ),
-        .up_rd_dout   (up_rd_dout   ),
-        .up_rd_ack    (up_rd_ack    )
+        .rd_addr      (rd_addr      ),
+        .rd_req       (rd_req       ),
+        .rd_data      (rd_data      ),
+        .rd_ack       (rd_ack       )
     );
 
 endmodule
