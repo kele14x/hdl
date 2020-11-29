@@ -17,13 +17,13 @@ module cordiccart2pol #(
 
     logic signed [  DATA_WIDTH:0] x[  0:ITERATIONS];
     logic signed [DATA_WIDTH-1:0] y[  0:ITERATIONS];
-    logic        [ITERATIONS+1:0] z[  0:ITERATIONS];
+    logic        [  ITERATIONS:0] z[  0:ITERATIONS];
     logic                         d[0:ITERATIONS-1];
 
     // Iteration Initialization
     assign x[0] = {xin[DATA_WIDTH-1], xin};
     assign y[0] = yin;
-    assign z[0] = {{ITERATIONS{1'b0}}, y[0][DATA_WIDTH-1], x[0][DATA_WIDTH]};
+    assign z[0] = {{ITERATIONS{1'b0}}, x[0][DATA_WIDTH]};
 
     // Pseudo Rotation
     generate

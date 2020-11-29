@@ -11,7 +11,7 @@ module tb_cordiccart2pol();
     logic signed [DATA_WIDTH-1:0] xin  ;
     logic signed [DATA_WIDTH-1:0] yin  ;
     //
-    logic        [ITERATIONS+1:0] theta;
+    logic        [  ITERATIONS:0] theta;
     logic        [  DATA_WIDTH:0] r    ;
 
     always begin
