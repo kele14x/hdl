@@ -19,8 +19,7 @@
 // Breif: CORDIC-based approximation of cartesian-to-polar conversion
 `timescale 1ns / 1ps
 
-// TODO:
-module cordiccart2pol #(
+module cordic_translate #(
     parameter int DATA_WIDTH           = 16,
     parameter int ITERATIONS           = 7,
     parameter int COMPENSATION_SCALING = 1
@@ -31,7 +30,7 @@ module cordiccart2pol #(
     input  logic [DATA_WIDTH-1:0] xin,
     input  logic [DATA_WIDTH-1:0] yin,
     //
-    output logic [ITERATIONS+1:0] theta,
+    output logic [  ITERATIONS:0] theta,
     output logic [DATA_WIDTH+1:0] r
 );
 
@@ -50,7 +49,7 @@ module cordiccart2pol #(
   // Iteration initialization
   assign x[0] = {xin[DATA_WIDTH-1], xin[DATA_WIDTH-1], xin};
   assign y[0] = yin;
-  assign z[0] = {{ITERATIONS{1'b0}}, x[0][DATA_WIDTH]};
+  assign z[0] = {{ITERATIONS{1'b0}}, x[0][DATA_WIDTH+1]};
 
   // Pseudo rotation iterations
   generate

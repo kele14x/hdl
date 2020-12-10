@@ -19,7 +19,7 @@
 // Brief: Testbench for modile cordic_translate
 `timescale 1ns / 1ps
 
-module tb_cordiccart2pol ();
+module tb_cordic_translate ();
 
   parameter int ITERATIONS = 7;
   parameter int DATA_WIDTH = 16;
