@@ -16,8 +16,8 @@
 //******************************************************************************
 
 // File: cordic_rotation.sv
-// Breif: Rotate input using CORDIC-based approximation
-`timescale 1ns / 1ps
+// Brief: Rotate input using CORDIC-based approximation
+`timescale 1ns / 1ps `default_nettype none
 
 module cordic_rotation #(
     parameter int DATA_WIDTH           = 16,
@@ -106,3 +106,5 @@ module cordic_rotation #(
   endgenerate
 
 endmodule
+
+`default_nettype wire
