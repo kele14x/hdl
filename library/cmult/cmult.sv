@@ -112,8 +112,9 @@ module cmult #(
     end else begin : g_ovf
 
       always_ff @(posedge clk) begin
-        ovf <= ^pr_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1] || 
-          ^pi_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1];
+        ovf <= ~(&pr_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1] ||
+                 &(~pr_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1])) || ~(
+            &pi_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1] || &(~pi_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1]));
       end
 
     end
