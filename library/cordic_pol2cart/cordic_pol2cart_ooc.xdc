@@ -15,6 +15,6 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #*******************************************************************************
 
-# File: cordic_rotate_ooc.xdc
-# Brief: Out-of-context constraints for module cordic_rotate
+# File: cordic_pol2cart_ooc.xdc
+# Brief: Out-of-context constraints for module cordic_pol2cart
 create_clock -name clk -period 2 [get_ports clk]
