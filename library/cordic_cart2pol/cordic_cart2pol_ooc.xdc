@@ -15,6 +15,6 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #*******************************************************************************
 
-# File: cordic_translate_ooc.xdc
-# Brief: Out-of-context constraints for module cordic_translate
+# File: cordic_cart2pol_ooc.xdc
+# Brief: Out-of-context constraints for module cordic_cart2pol
 create_clock -name clk -period 2 [get_ports clk]

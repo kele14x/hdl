@@ -15,38 +15,42 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //******************************************************************************
 
-// File: tb_cordic_translate.sv
-// Brief: Testbench for modile cordic_translate
+// File: tb_cordic_cart2pol.sv
+// Brief: Test bench for module cordic_cart2pol
 `timescale 1ns / 1ps
 
-module tb_cordic_translate ();
+module tb_cordic_cart2pol ();
 
-  parameter int ITERATIONS = 7;
-  parameter int DATA_WIDTH = 16;
-  parameter int COMPENSATION_SCALING = 1;
+  localparam int DataWidth = 16;
+  localparam int CtrlWidth = 1;
+  localparam int Iterations = 7;
+  localparam int CompensationScaling = 1;
 
-  parameter int TEST_LENGTH = 1000;
-  parameter int LATENCY = 10;
+  logic                        clk;
+  logic                        rst;
 
-  logic                         clk;
-  logic                         rst;
+  logic signed [DataWidth-1:0] xin;
+  logic signed [DataWidth-1:0] yin;
+  logic                        ctrl_in;
 
-  logic signed [DATA_WIDTH-1:0] xin;
-  logic signed [DATA_WIDTH-1:0] yin;
+  logic        [ Iterations:0] theta;
+  logic signed [DataWidth+1:0] r;
+  logic                        ctrl_out;
 
-  logic        [  ITERATIONS:0] theta;
-  logic signed [DATA_WIDTH+1:0] r;
 
-  logic signed [          15:0] xin_mem  [TEST_LENGTH];
-  logic signed [          15:0] yin_mem  [TEST_LENGTH];
-  logic        [           7:0] theta_mem[TEST_LENGTH];
-  logic signed [          17:0] r_mem    [TEST_LENGTH];
+  localparam int TestVectorLength = 1000;
+  localparam int Latency = 10;
+
+  logic signed [15:0] xin_mem  [TestVectorLength];
+  logic signed [15:0] yin_mem  [TestVectorLength];
+  logic        [ 7:0] theta_mem[TestVectorLength];
+  logic signed [17:0] r_mem    [TestVectorLength];
 
   initial begin
-    $readmemh("test_cordic_translate_input_xin.txt", xin_mem, 0, TEST_LENGTH - 1);
-    $readmemh("test_cordic_translate_input_yin.txt", yin_mem, 0, TEST_LENGTH - 1);
-    $readmemh("test_cordic_translate_output_theta.txt", theta_mem, 0, TEST_LENGTH - 1);
-    $readmemh("test_cordic_translate_output_r.txt", r_mem, 0, TEST_LENGTH - 1);
+    $readmemh("test_cordic_cart2pol_input_xin.txt", xin_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cordic_cart2pol_input_yin.txt", yin_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cordic_cart2pol_output_theta.txt", theta_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cordic_cart2pol_output_r.txt", r_mem, 0, TestVectorLength - 1);
   end
 
   always begin
@@ -72,8 +76,8 @@ module tb_cordic_translate ();
 
     fork
       // Stimulation
-      begin
-        for (int i = 0; i < TEST_LENGTH; i++) begin
+      begin : p_feed_input
+        for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
           xin <= xin_mem[i];
           yin <= yin_mem[i];
@@ -84,9 +88,9 @@ module tb_cordic_translate ();
       end
 
       // Checker
-      begin
-        repeat (LATENCY + 1) @(posedge clk);
-        for (int i = 0; i < TEST_LENGTH; i++) begin
+      begin : p_checker
+        repeat (Latency + 1) @(posedge clk);
+        for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
           if (theta != theta_mem[i]) begin
             $warning("\"Theta\" output mismatch with gold result. Time=%t, i=%d, expect=%x, got=%x",
@@ -106,17 +110,12 @@ module tb_cordic_translate ();
     $finish();
   end
 
-  cordiccart2pol #(
-      .ITERATIONS          (ITERATIONS),
-      .DATA_WIDTH          (DATA_WIDTH),
-      .COMPENSATION_SCALING(COMPENSATION_SCALING)
-  ) i_cordiccart2pol (
-      .clk  (clk),
-      .rst  (rst),
-      .xin  (xin),
-      .yin  (yin),
-      .theta(theta),
-      .r    (r)
+  cordic_cart2pol #(
+      .ITERATIONS          (Iterations),
+      .DATA_WIDTH          (DataWidth),
+      .COMPENSATION_SCALING(CompensationScaling)
+  ) i_cordic_cart2pol (
+      .*
   );
 
 endmodule
