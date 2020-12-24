@@ -15,12 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //******************************************************************************
 
-// File: cordic_rotation.sv
+// File: cordic_rotate.sv
 // Brief: Rotate input using CORDIC-based approximation
 `timescale 1ns / 1ps `default_nettype none
 
-module cordic_rotation #(
+module cordic_rotate #(
     parameter int DATA_WIDTH           = 16,
+    parameter int CTRL_WIDTH           = 1,
     parameter int ITERATIONS           = 7,
     parameter int COMPENSATION_SCALING = 1
 ) (
@@ -30,10 +31,14 @@ module cordic_rotation #(
     input var  logic [DATA_WIDTH-1:0] xin,
     input var  logic [DATA_WIDTH-1:0] yin,
     input var  logic [  ITERATIONS:0] theta,
+    input var  logic [CTRL_WIDTH-1:0] ctrl_in,
     //
     output var logic [DATA_WIDTH+1:0] xout,
-    output var logic [DATA_WIDTH+1:0] yout
+    output var logic [DATA_WIDTH+1:0] yout,
+    output var logic [CTRL_WIDTH-1:0] ctrl_out
 );
+
+  localparam int Latency = ITERATIONS + 2 * COMPENSATION_SCALING + 1;
 
   // During iteration, x & y need 2 more bits, one for magnitude, one for CORDIC
   // growth factor.
@@ -76,7 +81,7 @@ module cordic_rotation #(
   // Scale growth compensation
   generate
 
-    if (COMPENSATION_SCALING) begin
+    if (COMPENSATION_SCALING) begin : g_comp_scaling
 
       // Compensation is done by r = r * (1/2 + 1/8) * (1 - 1/32)
       logic signed [DATA_WIDTH+1:0] x_compensation[2];
@@ -95,7 +100,7 @@ module cordic_rotation #(
       assign xout = x_compensation[1];
       assign yout = y_compensation[1];
 
-    end else begin
+    end else begin : g_no_comp_scaling
 
       // No compensation, directly output
       assign xout = x_cordic;
@@ -103,6 +108,20 @@ module cordic_rotation #(
 
     end
 
+  endgenerate
+
+  generate
+    if (CTRL_WIDTH > 0) begin : g_ctrl_delay
+      // CTRL path, the module itself does not use it
+      reg_pipeline #(
+          .DATA_WIDTH     (CTRL_WIDTH),
+          .PIPELINE_STAGES(Latency)
+      ) i_reg_pipeline (
+          .clk (clk),
+          .din (ctrl_in),
+          .dout(ctrl_out)
+      );
+    end
   endgenerate
 
 endmodule
