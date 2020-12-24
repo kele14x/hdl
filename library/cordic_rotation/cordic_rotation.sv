@@ -24,15 +24,15 @@ module cordic_rotation #(
     parameter int ITERATIONS           = 7,
     parameter int COMPENSATION_SCALING = 1
 ) (
-    input  logic                  clk,
-    input  logic                  rst,
+    input var  logic                  clk,
+    input var  logic                  rst,
     //
-    input  logic [DATA_WIDTH-1:0] xin,
-    input  logic [DATA_WIDTH-1:0] yin,
-    input  logic [  ITERATIONS:0] theta,
+    input var  logic [DATA_WIDTH-1:0] xin,
+    input var  logic [DATA_WIDTH-1:0] yin,
+    input var  logic [  ITERATIONS:0] theta,
     //
-    output logic [DATA_WIDTH+1:0] xout,
-    output logic [DATA_WIDTH+1:0] yout
+    output var logic [DATA_WIDTH+1:0] xout,
+    output var logic [DATA_WIDTH+1:0] yout
 );
 
   // During iteration, x & y need 2 more bits, one for magnitude, one for CORDIC
