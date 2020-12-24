@@ -50,7 +50,7 @@ module hb_up2_int2 #(
 
   always_ff @(posedge clk) begin
     xin_d[0] <= xin;
-    for (int i = 1; i < 100; i++) begin
+    for (int i = 1; i < NUM_UNIQUE_COE*4; i++) begin
       xin_d[i] <= xin_d[i-1];
     end
   end
