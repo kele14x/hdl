@@ -39,6 +39,7 @@ module cordic_pol2cart #(
 
   cordic_rotate #(
       .DATA_WIDTH          (DATA_WIDTH),
+      .CTRL_WIDTH          (CTRL_WIDTH),
       .ITERATIONS          (ITERATIONS),
       .COMPENSATION_SCALING(COMPENSATION_SCALING)
   ) i_cordic_rotate (

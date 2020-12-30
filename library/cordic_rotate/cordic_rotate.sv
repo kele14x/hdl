@@ -110,19 +110,15 @@ module cordic_rotate #(
 
   endgenerate
 
-  generate
-    if (CTRL_WIDTH > 0) begin : g_ctrl_delay
-      // CTRL path, the module itself does not use it
-      reg_pipeline #(
-          .DATA_WIDTH     (CTRL_WIDTH),
-          .PIPELINE_STAGES(Latency)
-      ) i_reg_pipeline (
-          .clk (clk),
-          .din (ctrl_in),
-          .dout(ctrl_out)
-      );
-    end
-  endgenerate
+  // CTRL path, the module itself does not use it
+  reg_pipeline #(
+      .DATA_WIDTH     (CTRL_WIDTH),
+      .PIPELINE_STAGES(Latency)
+  ) i_reg_pipeline (
+      .clk (clk),
+      .din (ctrl_in),
+      .dout(ctrl_out)
+  );
 
 endmodule
 

@@ -109,6 +109,7 @@ module cordic_cart2pol #(
 
   endgenerate
 
+  // CTRL path, the module itself does not use it
   reg_pipeline #(
       .DATA_WIDTH     (CTRL_WIDTH),
       .PIPELINE_STAGES(Latency)
