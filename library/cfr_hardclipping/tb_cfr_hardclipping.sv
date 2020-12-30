@@ -68,7 +68,7 @@ module tb_cfr_hardclipping ();
   end
 
   cfr_hardclipping #(
-      .DataWidth(DataWidth)
+      .DATA_WIDTH(DataWidth)
   ) DUT (
       .clk           (clk),
       .rst           (rst),

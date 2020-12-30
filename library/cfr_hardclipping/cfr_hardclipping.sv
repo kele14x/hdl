@@ -75,11 +75,11 @@ module cfr_hardclipping #(
   // Convert input data into "theta and r" format
 
   (* keep_hierarchy="yes" *)
-  cordic_translate #(
+  cordic_cart2pol #(
       .DATA_WIDTH          (DATA_WIDTH),
       .ITERATIONS          (Iterations),
       .COMPENSATION_SCALING(1)
-  ) i_cordic_translate (
+  ) i_cordic_cart2pol (
       .clk  (clk),
       .rst  (rst),
       //
@@ -109,16 +109,15 @@ module cfr_hardclipping #(
   // Rotate the delta vector back to i & q
 
   (* keep_hierarchy="yes" *)
-  cordic_rotation #(
+  cordic_pol2cart #(
       .DATA_WIDTH          (DATA_WIDTH + 1),
       .ITERATIONS          (Iterations),
       .COMPENSATION_SCALING(1)
-  ) i_cordic_rotation (
+  ) i_cordic_pol2cart (
       .clk  (clk),
       .rst  (rst),
       //
-      .xin  (delta_r),
-      .yin  ('b0),
+      .r    (delta_r),
       .theta(delta_theta),
       //
       .xout (delta_i),
