@@ -78,7 +78,7 @@ module cfr_cpgs_int2 #(
   (* keep_hierarchy="yes" *)
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(64)
+      .PIPELINE_STAGES(131)
   ) i_delay (
       .clk (clk),
       .din ({data_q_in, data_i_in}),

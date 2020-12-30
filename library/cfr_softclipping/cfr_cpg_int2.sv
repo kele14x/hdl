@@ -60,9 +60,9 @@ module cfr_cpg_int2 #(
   // `state1` is for channel 1, `state2` is for channel 2
 
   logic state1_busy, state2_busy;
-  logic [CPW_ADDR_WIDTH-1:0] state1_addr, state2_addr;
+  logic [CPW_ADDR_WIDTH-2:0] state1_addr, state2_addr;
   logic state1_phase, state2_phase;
-  logic [DATA_WIDTH-1:0] state1_i, state1_q, state2_i, state2_q;
+  logic [DATA_WIDTH-1:0] state1_i, state1_q, state2_i, state2_q, state2_i_d, state2_q_d;
 
   logic [DATA_WIDTH-1:0] delta_i, delta_q;
 
@@ -110,7 +110,11 @@ module cfr_cpg_int2 #(
       state2_q <= 'd0;
     end else begin
       {state1_q, state1_i} <= {state2_q, state2_i};
-      {state2_q, state2_i} <= (peak_valid_in && ~state1_busy) ? {peak_q_in, peak_i_in} : 0;
+      {state2_q, state2_i} <= (peak_valid_in && ~state1_busy) ? {
+        peak_q_in, peak_i_in
+      } : &state1_addr ? 'd0 : {
+        state1_q, state1_i
+      };
     end
   end
 
@@ -161,6 +165,16 @@ module cfr_cpg_int2 #(
   );
 
   (* keep_hierarchy="yes" *)
+  reg_pipeline #(
+      .DATA_WIDTH     (DATA_WIDTH * 2),
+      .PIPELINE_STAGES(2)
+  ) i_delay (
+      .clk (clk),
+      .din ({state2_q, state2_i}),
+      .dout({state2_q_d, state2_i_d})
+  );
+
+  (* keep_hierarchy="yes" *)
   cmult #(
       .AWIDTH (DATA_WIDTH),
       .BWIDTH (DATA_WIDTH),
@@ -170,8 +184,8 @@ module cfr_cpg_int2 #(
       .clk(clk),
       .rst(rst),
       //
-      .ar (state2_i),
-      .ai (state2_q),
+      .ar (state2_i_d),
+      .ai (state2_q_d),
       //
       .br (cpw_rd_data_i),
       .bi (cpw_rd_data_q),

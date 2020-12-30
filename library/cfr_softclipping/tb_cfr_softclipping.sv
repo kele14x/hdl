@@ -72,7 +72,16 @@ module tb_cfr_softclipping ();
 
   initial begin
     rst = 1;
-    #100;
+    data_i_in = 0;
+    data_q_in = 0;
+    ctrl_enable = 1;
+    ctrl_clipping_threshold = 13818;
+    ctrl_pd_threshold = 13818;
+    ctrl_cpw_wr_en = 0;
+    ctrl_cpw_wr_addr = 0;
+    ctrl_cpw_wr_data_i = 0;
+    ctrl_cpw_wr_data_q = 0;
+    #10000;
     rst = 0;
   end
 
@@ -89,11 +98,6 @@ module tb_cfr_softclipping ();
 
     wait(rst == 0);
 
-    #100;
-    @(posedge clk);
-    ctrl_enable    <= 1;
-    ctrl_clipping_threshold <= 13818;
-    ctrl_pd_threshold <= 13818;
     #100;
 
     fork

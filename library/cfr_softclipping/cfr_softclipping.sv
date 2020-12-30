@@ -24,28 +24,28 @@ module cfr_softclipping #(
     parameter int DATA_WIDTH     = 16,
     parameter int CPW_ADDR_WIDTH = 8
 ) (
-    input var  logic                  clk,
-    input var  logic                  rst,
+    input var  logic                      clk,
+    input var  logic                      rst,
     // Data input
-    input var  logic [DATA_WIDTH-1:0] data_i_in,
-    input var  logic [DATA_WIDTH-1:0] data_q_in,
+    input var  logic [    DATA_WIDTH-1:0] data_i_in,
+    input var  logic [    DATA_WIDTH-1:0] data_q_in,
     // Data output
-    output var logic [DATA_WIDTH-1:0] data_i_out,
-    output var logic [DATA_WIDTH-1:0] data_q_out,
+    output var logic [    DATA_WIDTH-1:0] data_i_out,
+    output var logic [    DATA_WIDTH-1:0] data_q_out,
     // Control
-    input var  logic                  ctrl_enable,  // 1 = enable, 0 = bypass
-    input var  logic [  DATA_WIDTH:0] ctrl_clipping_threshold,  // unsigned
-    input var  logic [  DATA_WIDTH:0] ctrl_pd_threshold,  // unsigned
+    input var  logic                      ctrl_enable,  // 1 = enable, 0 = bypass
+    input var  logic [      DATA_WIDTH:0] ctrl_clipping_threshold,  // unsigned
+    input var  logic [      DATA_WIDTH:0] ctrl_pd_threshold,  // unsigned
     //
-    input var  logic                  ctrl_cpw_wr_en,
+    input var  logic                      ctrl_cpw_wr_en,
     input var  logic [CPW_ADDR_WIDTH-1:0] ctrl_cpw_wr_addr,
-    input var  logic [DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
-    input var  logic [DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
+    input var  logic [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
+    input var  logic [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
 
 
   localparam int Iterations = 7;
-  localparam int DataPathLatency = Iterations * 2 + 8;
+  localparam int DataPathLatency = 16 + 10 + 4 + 10;
 
   logic signed [DATA_WIDTH-1:0] data_i_p0;
   logic signed [DATA_WIDTH-1:0] data_i_p1;
@@ -63,13 +63,14 @@ module cfr_softclipping #(
 
   logic signed [DATA_WIDTH-1:0] peak_i;
   logic signed [DATA_WIDTH-1:0] peak_q;
-  logic                         peak_valid;
-  logic                         peak_phase;
+  logic peak_valid, peak_valid_d;
+  logic peak_phase, peak_phase_d;
 
   logic signed [DATA_WIDTH-1:0] data_i_in_d;
   logic signed [DATA_WIDTH-1:0] data_q_in_d;
 
-  // Up-sample by 2
+  // Up-sample by 2? 
+  // 16 clock tick impulse latency
 
   (* keep_hierarchy="yes" *)
   hb_up2_int2 #(
@@ -105,14 +106,15 @@ module cfr_softclipping #(
       .ovf  (  /* Not used */)
   );
 
-  // Convert input data into "theta and r" format
+  // Convert input data into "theta and r" format.
+  // 10 clock tick latency
 
   (* keep_hierarchy="yes" *)
-  cordic_translate #(
+  cordic_cart2pol #(
       .DATA_WIDTH          (DATA_WIDTH),
       .ITERATIONS          (Iterations),
       .COMPENSATION_SCALING(1)
-  ) i_cordic_translate_p0 (
+  ) i_cordic_cart2pol_p0 (
       .clk  (clk),
       .rst  (rst),
       //
@@ -124,11 +126,11 @@ module cfr_softclipping #(
   );
 
   (* keep_hierarchy="yes" *)
-  cordic_translate #(
+  cordic_cart2pol #(
       .DATA_WIDTH          (DATA_WIDTH),
       .ITERATIONS          (Iterations),
       .COMPENSATION_SCALING(1)
-  ) i_cordic_translate_p1 (
+  ) i_cordic_cart2pol_p1 (
       .clk  (clk),
       .rst  (rst),
       //
@@ -139,48 +141,60 @@ module cfr_softclipping #(
       .r    (data_r_p1)
   );
 
+  // Peak detector, 
+  // 4 clock tick latency
+
   (* keep_hierarchy="yes" *)
   cfr_pd #(
       .ITERATIONS(Iterations),
       .DATA_WIDTH(DATA_WIDTH)
   ) i_cfr_pd (
-      .clk       (clk),
-      .rst       (rst),
+      .clk                    (clk),
+      .rst                    (rst),
       //
-      .data_r_p0      (data_r_p0),
-      .data_r_p1      (data_r_p1),
-      .data_theta_p0  (data_theta_p0),
-      .data_theta_p1  (data_theta_p1),
+      .data_r_p0              (data_r_p0),
+      .data_r_p1              (data_r_p1),
+      .data_theta_p0          (data_theta_p0),
+      .data_theta_p1          (data_theta_p1),
       //
-      .peak_theta(peak_theta),
-      .peak_r    (peak_r),
-      .peak_valid(peak_valid),
-      .peak_phase(peak_phase),
+      .peak_theta             (peak_theta),
+      .peak_r                 (peak_r),
+      .peak_valid             (peak_valid),
+      .peak_phase             (peak_phase),
       //
-      .ctrl_enable(ctrl_enable),
-      .ctrl_pd_threshold(ctrl_pd_threshold),
+      .ctrl_enable            (ctrl_enable),
+      .ctrl_pd_threshold      (ctrl_pd_threshold),
       .ctrl_clipping_threshold(ctrl_clipping_threshold)
   );
 
   // Rotate the delta vector back to i & q
+  // 10 clock tick latency
 
   (* keep_hierarchy="yes" *)
-  cordic_rotation #(
+  cordic_pol2cart #(
       .DATA_WIDTH          (DATA_WIDTH + 1),
       .ITERATIONS          (Iterations),
       .COMPENSATION_SCALING(1)
-  ) i_cordic_rotation (
+  ) i_cordic_pol2cart (
       .clk  (clk),
       .rst  (rst),
       //
-      .xin  (peak_r),
-      .yin  ('b0),
+      .r    (peak_r),
       .theta(peak_theta),
       //
       .xout (peak_i),
       .yout (peak_q)
   );
 
+  (* keep_hierarchy="yes" *)
+  reg_pipeline #(
+      .DATA_WIDTH     (2),
+      .PIPELINE_STAGES(10)
+  ) i_delay_peak (
+      .clk (clk),
+      .din ({peak_phase, peak_valid}),
+      .dout({peak_phase_d, peak_valid_d})
+  );
 
   // Delay input data for `DataPathLatency` clocks
 
@@ -193,6 +207,9 @@ module cfr_softclipping #(
       .din ({data_q_in, data_i_in}),
       .dout({data_q_in_d, data_i_in_d})
   );
+
+  // Soft clipper
+  // 137 clock tick latency
 
   (* keep_hierarchy="yes" *)
   cfr_cpgs_int2 #(
@@ -208,8 +225,8 @@ module cfr_softclipping #(
       //
       .peak_i_in         (peak_i),
       .peak_q_in         (peak_q),
-      .peak_phase_in     (peak_phase),
-      .peak_valid_in     (peak_valid),
+      .peak_phase_in     (peak_phase_d),
+      .peak_valid_in     (peak_valid_d),
       //
       .data_i_out        (data_i_out),
       .data_q_out        (data_q_out),
