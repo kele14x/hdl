@@ -20,7 +20,7 @@
 
 `timescale 1ns / 1ps `default_nettype none
 
-module cfr_cpgs_int2 #(
+module pc_cfr_softclipper #(
     parameter int DATA_WIDTH     = 16,
     parameter int CPW_ADDR_WIDTH = 8,
     parameter int NUM_CPG        = 6
@@ -78,7 +78,7 @@ module cfr_cpgs_int2 #(
   (* keep_hierarchy="yes" *)
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(131)
+      .PIPELINE_STAGES(136)
   ) i_delay (
       .clk (clk),
       .din ({data_q_in, data_i_in}),
@@ -88,10 +88,10 @@ module cfr_cpgs_int2 #(
   generate
     for (genvar i = 0; i < NUM_CPG; i++) begin : g_cpgs
       (* keep_hierarchy="yes" *)
-      cfr_cpg_int2 #(
+      pc_cfr_cpg #(
           .DATA_WIDTH    (DATA_WIDTH),
           .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH)
-      ) i_cfr_cpg_int2 (
+      ) i_pc_cfr_cpg (
           .clk               (clk),
           .rst               (rst),
           //

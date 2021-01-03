@@ -15,12 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //******************************************************************************
 
-// File: cfr_cpg.sv
-// Brief: cfr_cpg is Canceling pulse generator. It' designed as cascade-able.
+// File: pc_cfr_cpg.sv
+// Brief: pc_cfr_cpg is Canceling Pulse Generator (CPG) for PC-CFR. It' designed
+//        as cascade-able.
 
 `timescale 1ns / 1ps `default_nettype none
 
-module cfr_cpg_int2 #(
+module pc_cfr_cpg #(
     parameter int DATA_WIDTH     = 16,
     parameter int CPW_ADDR_WIDTH = 8
 ) (
@@ -179,7 +180,7 @@ module cfr_cpg_int2 #(
       .AWIDTH (DATA_WIDTH),
       .BWIDTH (DATA_WIDTH),
       .PWIDTH (DATA_WIDTH),
-      .SRABITS(15)
+      .SRABITS(14)
   ) i_cmult (
       .clk(clk),
       .rst(rst),
@@ -203,12 +204,13 @@ module cfr_cpg_int2 #(
       .P_WIDTH (DATA_WIDTH),
       .SRA_BITS(0)
   ) i_adder_i (
-      .clk(clk),
-      .rst(rst),
-      .a  (data_i_in),
-      .b  (delta_i),
-      .p  (data_i_out),
-      .ovf(  /* Not Used */)
+      .clk    (clk),
+      .rst    (rst),
+      .a      (data_i_in),
+      .b      (delta_i),
+      .add_sub(1'b1),
+      .p      (data_i_out),
+      .ovf    (  /* Not Used */)
   );
 
   (* keep_hierarchy="yes" *)
@@ -218,12 +220,13 @@ module cfr_cpg_int2 #(
       .P_WIDTH (DATA_WIDTH),
       .SRA_BITS(0)
   ) i_adder_q (
-      .clk(clk),
-      .rst(rst),
-      .a  (data_q_in),
-      .b  (delta_q),
-      .p  (data_q_out),
-      .ovf(  /* Not Used */)
+      .clk    (clk),
+      .rst    (rst),
+      .a      (data_q_in),
+      .b      (delta_q),
+      .add_sub(1'b1),
+      .p      (data_q_out),
+      .ovf    (  /* Not Used */)
   );
 
 endmodule

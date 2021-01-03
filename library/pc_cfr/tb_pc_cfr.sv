@@ -23,7 +23,7 @@
 module tb_cfr_softclipping ();
 
   localparam int TestVectorLength = 4096;
-  localparam int DutLatency = 23;
+  localparam int DutLatency = 182;
 
   localparam int DataWidth = 16;
   localparam int CpwAddrWidth = 8;
@@ -55,12 +55,19 @@ module tb_cfr_softclipping ();
   logic signed [   DataWidth-1:0] data_i_out_mem          [TestVectorLength];
   logic signed [   DataWidth-1:0] data_q_out_mem          [TestVectorLength];
 
+  logic signed [DataWidth-1:0] cancellation_pulse_i_mem [2**CpwAddrWidth];
+  logic signed [DataWidth-1:0] cancellation_pulse_q_mem [2**CpwAddrWidth];
+
+  integer fout;
 
   initial begin
-    $readmemh("test_cfr_softclipping_data_i_in.txt", data_i_in_mem, 0, TestVectorLength - 1);
-    $readmemh("test_cfr_softclipping_data_q_in.txt", data_q_in_mem, 0, TestVectorLength - 1);
-    $readmemh("test_cfr_softclipping_data_i_out.txt", data_i_out_mem, 0, TestVectorLength - 1);
-    $readmemh("test_cfr_softclipping_data_q_out.txt", data_q_out_mem, 0, TestVectorLength - 1);
+    $readmemh("test_pc_cfr_cancellation_pulse_i.txt", cancellation_pulse_i_mem, 0, 2**CpwAddrWidth - 1);
+    $readmemh("test_pc_cfr_cancellation_pulse_q.txt", cancellation_pulse_q_mem, 0, 2**CpwAddrWidth - 1);
+    //
+    $readmemh("test_pc_cfr_data_i_in.txt", data_i_in_mem, 0, TestVectorLength - 1);
+    $readmemh("test_pc_cfr_data_q_in.txt", data_q_in_mem, 0, TestVectorLength - 1);
+    $readmemh("test_pc_cfr_data_i_out.txt", data_i_out_mem, 0, TestVectorLength - 1);
+    $readmemh("test_pc_cfr_data_q_out.txt", data_q_out_mem, 0, TestVectorLength - 1);
   end
 
   always begin
@@ -85,7 +92,7 @@ module tb_cfr_softclipping ();
     rst = 0;
   end
 
-  cfr_softclipping #(
+  pc_cfr #(
       .DATA_WIDTH    (DataWidth),
       .CPW_ADDR_WIDTH(CpwAddrWidth)
   ) DUT (
@@ -96,9 +103,29 @@ module tb_cfr_softclipping ();
     $display("**************************");
     $display("Simulation starts.");
 
+    fout = $fopen("fout.txt", "w");
+    if (fout == 0) begin
+      $display("Error: File, \"fout.txt\" could not be opened.\nExiting Simulation.");
+      $finish;
+    end
+
     wait(rst == 0);
 
     #100;
+    // Set cancellation pulse
+    for (int i = 0; i < 2**CpwAddrWidth; i++) begin
+      @(posedge clk);
+      ctrl_cpw_wr_en <= 1'b1;
+      ctrl_cpw_wr_addr <= i;
+      ctrl_cpw_wr_data_i <= cancellation_pulse_i_mem[i];
+      ctrl_cpw_wr_data_q <= cancellation_pulse_q_mem[i];
+    end
+    @(posedge clk);
+    ctrl_cpw_wr_en <= 1'b0;
+    ctrl_cpw_wr_addr <= 0;
+    ctrl_cpw_wr_data_i <= 0;
+    ctrl_cpw_wr_data_q <= 0;
+
 
     fork
       begin : feed_input
@@ -122,6 +149,7 @@ module tb_cfr_softclipping ();
         repeat (DutLatency + 1) @(posedge clk);
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
+          $fwrite(fout, "%d, %d\n", data_i_out, data_q_out);
           if (data_i_out != data_i_out_ref) begin
             $warning(
                 "\"data_i_out\" mismatch with golden reference, time = %t, expected = %x, got = %x",
@@ -139,6 +167,10 @@ module tb_cfr_softclipping ();
     #100;
     $display("Simulation ends.");
     $finish();
+  end
+
+  final begin
+    $fclose(fout);
   end
 
 endmodule

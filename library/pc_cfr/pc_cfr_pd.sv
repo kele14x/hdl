@@ -15,12 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //******************************************************************************
 
-// File: cfr_cpg.sv
-// Brief: cfr_cpg is Canceling pulse generator. It' designed as cascade-able.
+// File: pc_cfr_pd.sv
+// Brief: pc_cfr_pd Peak Detector for `pc_cfr` module
 
 `timescale 1ns / 1ps `default_nettype none
 
-module cfr_pd #(
+module pc_cfr_pd #(
     parameter int ITERATIONS = 7,
     parameter int DATA_WIDTH = 16
 ) (

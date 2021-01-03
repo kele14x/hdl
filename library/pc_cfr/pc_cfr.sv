@@ -15,12 +15,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //******************************************************************************
 
-// File: cfr_softclipping.sv
-// Brief: cfr_softclipping performs PC-CFR
+// File: pc_cfr.sv
+// Brief: pc_cfr performs PC-CFR on input signal. This module is designed with
+//        clock to sample rate ratio (CSR) = 2, and interface is 2 channel
+//        interleaved. That is CH1/CH2/CH1/CH2...
 
 `timescale 1ns / 1ps `default_nettype none
 
-module cfr_softclipping #(
+module pc_cfr #(
     parameter int DATA_WIDTH     = 16,
     parameter int CPW_ADDR_WIDTH = 8
 ) (
@@ -69,7 +71,7 @@ module cfr_softclipping #(
   logic signed [DATA_WIDTH-1:0] data_i_in_d;
   logic signed [DATA_WIDTH-1:0] data_q_in_d;
 
-  // Up-sample by 2? 
+  // Up-sample by 2?
   // 16 clock tick impulse latency
 
   (* keep_hierarchy="yes" *)
@@ -141,14 +143,14 @@ module cfr_softclipping #(
       .r    (data_r_p1)
   );
 
-  // Peak detector, 
+  // Peak detector,
   // 4 clock tick latency
 
   (* keep_hierarchy="yes" *)
-  cfr_pd #(
+  pc_cfr_pd #(
       .ITERATIONS(Iterations),
       .DATA_WIDTH(DATA_WIDTH)
-  ) i_cfr_pd (
+  ) i_pc_cfr_pd (
       .clk                    (clk),
       .rst                    (rst),
       //
@@ -209,14 +211,14 @@ module cfr_softclipping #(
   );
 
   // Soft clipper
-  // 137 clock tick latency
+  // 142 clock tick latency
 
   (* keep_hierarchy="yes" *)
-  cfr_cpgs_int2 #(
+  pc_cfr_softclipper #(
       .DATA_WIDTH    (DATA_WIDTH),
       .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH),
       .NUM_CPG       (6)
-  ) i_cpgs (
+  ) i_pc_cfr_softclipper (
       .clk               (clk),
       .rst               (rst),
       //
