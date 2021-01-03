@@ -31,6 +31,7 @@ module adder #(
     input var  logic                      rst,
     input var  logic signed [A_WIDTH-1:0] a,
     input var  logic signed [B_WIDTH-1:0] b,
+    input var  logic                      add_sub,
     output var logic signed [P_WIDTH-1:0] p,
     output var logic                      ovf
 );
@@ -40,7 +41,7 @@ module adder #(
   logic signed [FULL_WIDTH-1:0] p_s;
 
   // Full adder without truncate or sign expansion
-  assign p_s = a + b;
+  assign p_s = add_sub ? a - b : a + b;
 
   // Sign expansion and truncate
   generate
