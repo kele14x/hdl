@@ -24,7 +24,9 @@
 
 module pc_cfr #(
     parameter int DATA_WIDTH     = 16,
-    parameter int CPW_ADDR_WIDTH = 8
+    //
+    parameter int CPW_ADDR_WIDTH = 8 ,
+    parameter int CPW_DATA_WIDTH = 16
 ) (
     input var  logic                      clk,
     input var  logic                      rst,
