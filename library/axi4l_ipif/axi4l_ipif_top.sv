@@ -1,7 +1,19 @@
-/*
-Copyright (c) 2019 Chengdu JinZhiLi Technology Co., Ltd.
-All rights reserved.
-*/
+//******************************************************************************
+// Copyright (C) 2020  kele14x
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+//******************************************************************************
 
 `timescale 1 ns / 1 ps
 `default_nettype none
@@ -17,7 +29,7 @@ module axi4l_ipif_top #(
     input  var logic                      aclk         ,
     input  var logic                      aresetn      ,
     //
-    input  var logic [              31:0] s_axi_awaddr ,
+    input  var logic [  C_ADDR_WIDTH-1:0] s_axi_awaddr ,
     input  var logic [               2:0] s_axi_awprot ,
     input  var logic                      s_axi_awvalid,
     output var logic                      s_axi_awready,
@@ -31,7 +43,7 @@ module axi4l_ipif_top #(
     output var logic                      s_axi_bvalid ,
     input  var logic                      s_axi_bready ,
     //
-    input  var logic [              31:0] s_axi_araddr ,
+    input  var logic [  C_ADDR_WIDTH-1:0] s_axi_araddr ,
     input  var logic [               2:0] s_axi_arprot ,
     input  var logic                      s_axi_arvalid,
     output var logic                      s_axi_arready,
