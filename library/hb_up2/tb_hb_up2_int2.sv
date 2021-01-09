@@ -18,7 +18,7 @@
 // File: tb_hb_up2.sv
 // Brief: Test bench for hb_up2
 
-`default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module tb_hb_up2 ();
 
@@ -47,9 +47,9 @@ module tb_hb_up2 ();
   logic                 ovf_mem [TestVectorLength * 2];
 
   initial begin
-    $readmemh("test_hb_up2_input_xin.txt", xin_mem, 0, TestVectorLength - 1);
-    $readmemh("test_hb_up2_output_yout.txt", yout_mem, 0, TestVectorLength * 2 - 1);
-    $readmemh("test_hb_up2_output_ovf.txt", ovf_mem, 0, TestVectorLength * 2 - 1);
+    $readmemh("test_hb_up2_xin.txt", xin_mem, 0, TestVectorLength - 1);
+    $readmemh("test_hb_up2_yout.txt", yout_mem, 0, TestVectorLength * 2 - 1);
+    $readmemh("test_hb_up2_ovf.txt", ovf_mem, 0, TestVectorLength * 2 - 1);
   end
 
   always begin

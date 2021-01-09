@@ -17,14 +17,14 @@
 
 // File: hb_up2.sv
 // Brief: Half band up-sample by 2. Interleaved 2 channels.
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module hb_up2_int2 #(
     parameter int XIN_WIDTH = 16,
     parameter int COE_WIDTH = 16,
     parameter int NUM_UNIQUE_COE = 5,
     parameter signed [COE_WIDTH-1:0] COE_NUMS[NUM_UNIQUE_COE] = {
-      16'h01dc, 16'hfcdb, 16'h0609, 16'hf3c6, 16'h2847
+      16'h03B8, 16'hF9B7, 16'h0C12, 16'hE78C, 16'h508E
     },
     parameter int YOUT_WIDTH = 16,
     parameter int SRA_BITS = 15
