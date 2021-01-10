@@ -133,6 +133,9 @@ module tb_cfr_softclipping ();
           @(posedge clk);
           data_i_in <= data_i_in_mem[i];
           data_q_in <= data_q_in_mem[i];
+          @(posedge clk);
+          data_i_in <= '0;
+          data_q_in <= '0;
         end
       end
 
@@ -142,6 +145,9 @@ module tb_cfr_softclipping ();
           @(posedge clk);
           data_i_out_ref <= data_i_out_mem[i];
           data_q_out_ref <= data_q_out_mem[i];
+          @(posedge clk);
+          data_i_out_ref <= '0;
+          data_q_out_ref <= '0;
         end
       end
 
@@ -160,6 +166,7 @@ module tb_cfr_softclipping ();
                 "\"data_q_out\" mismatch with golden reference, time = %t, expected = %x, got = %x",
                 $time, data_q_out_ref, data_q_out);
           end
+          @(posedge clk);
         end
       end
     join

@@ -87,7 +87,7 @@ module pc_cfr_cpg #(
       state2_addr <= 'd0;
     end else begin
       state1_addr <= state2_addr;
-      state2_addr <= state1_busy ? state1_addr + 1 : 0;
+      state2_addr <= state1_busy ? state1_addr + 1 : &state1_addr ? '0 : state1_addr;
     end
   end
 
@@ -98,7 +98,7 @@ module pc_cfr_cpg #(
       state2_phase <= 'd0;
     end else begin
       state1_phase <= state2_phase;
-      state2_phase <= (peak_valid_in && ~state1_busy) ? peak_phase_in : 0;
+      state2_phase <= (peak_valid_in && ~state1_busy) ? peak_phase_in : &state1_addr ? '0 : state1_phase;;
     end
   end
 
