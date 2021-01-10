@@ -73,18 +73,18 @@ module cfr_branch #(
 
 
     cfr_regs i_cfr_regs (
-        .ipif_clk                      (ipif_clk                      ),
-        .ipif_rst                      (ipif_rst                      ),
+        .clk                           (ipif_clk                      ),
+        .rst                           (ipif_rst                      ),
         //
-        .ipif_wr_addr                  (ipif_wr_addr                  ),
-        .ipif_wr_req                   (ipif_wr_req                   ),
-        .ipif_wr_data                  (ipif_wr_data                  ),
-        .ipif_wr_ack                   (ipif_wr_ack                   ),
+        .wr_addr                       (ipif_wr_addr                  ),
+        .wr_req                        (ipif_wr_req                   ),
+        .wr_data                       (ipif_wr_data                  ),
+        .wr_ack                        (ipif_wr_ack                   ),
         //
-        .ipif_rd_addr                  (ipif_rd_addr                  ),
-        .ipif_rd_req                   (ipif_rd_req                   ),
-        .ipif_rd_data                  (ipif_rd_data                  ),
-        .ipif_rd_ack                   (ipif_rd_ack                   ),
+        .rd_addr                       (ipif_rd_addr                  ),
+        .rd_req                        (ipif_rd_req                   ),
+        .rd_data                       (ipif_rd_data                  ),
+        .rd_ack                        (ipif_rd_ack                   ),
         //
         .ctrl_pc_cfr_enable            (ctrl_pc_cfr_enable            ),
         .ctrl_pc_cfr_clipping_threshold(ctrl_pc_cfr_clipping_threshold),

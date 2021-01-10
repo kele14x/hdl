@@ -21,7 +21,7 @@
 `timescale 1ns / 1ps `default_nettype none
 
 module cfr #(
-    parameter int AXI_ADDR_WIDTH = 12,
+    parameter int AXI_ADDR_WIDTH = 16,
     parameter int AXI_DATA_WIDTH = 32,
     //
     parameter int DATA_WIDTH     = 16,

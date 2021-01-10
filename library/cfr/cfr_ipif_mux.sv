@@ -21,7 +21,7 @@
 `timescale 1ns / 1ps `default_nettype none
 
 module cfr_ipif_mux #(
-    parameter int IPIF_ADDR_WIDTH = 10,
+    parameter int IPIF_ADDR_WIDTH = 14,
     parameter int IPIF_DATA_WIDTH = 32,
     //
     parameter int NUM_BRANCH      = 16
@@ -52,6 +52,56 @@ module cfr_ipif_mux #(
     input  var [IPIF_DATA_WIDTH-1:0] ipif_rd_data[NUM_BRANCH],
     input  var                       ipif_rd_ack [NUM_BRANCH]
 );
+
+    localparam int ADDR_WIDTH_PER_BRANCH = IPIF_ADDR_WIDTH - $clog2(NUM_BRANCH-1);
+    localparam int ADDR_SPACE_PER_BRANCH = 2**ADDR_WIDTH_PER_BRANCH;
+
+    // WR
+
+    generate
+        for (genvar i = 0; i < NUM_BRANCH; i++) begin
+
+            // wr_addr, wr_data
+            always_ff @ (posedge clk) begin
+                ipif_wr_addr[i] <= wr_addr;
+                ipif_wr_data[i] <= wr_data;
+            end
+
+            // wr_req
+            always_ff @ (posedge clk) begin
+                ipif_wr_req[i] <= (i*ADDR_SPACE_PER_BRANCH <= wr_addr) && (wr_addr < (i+1)*ADDR_SPACE_PER_BRANCH) && wr_req;
+            end
+
+        end
+    endgenerate
+
+    always_ff @ (posedge clk) begin
+        wr_ack <= ipif_wr_ack[wr_addr/ADDR_SPACE_PER_BRANCH];
+    end
+
+    // RD
+
+    generate
+        for (genvar i = 0; i < NUM_BRANCH; i++) begin
+
+            // rd_addr
+            always_ff @ (posedge clk) begin
+                ipif_rd_addr[i] <= rd_addr;
+            end
+
+            // rd_req
+            always_ff @ (posedge clk) begin
+                ipif_rd_req[i] <= (i*ADDR_SPACE_PER_BRANCH <= rd_addr) && (rd_addr < (i+1)*ADDR_SPACE_PER_BRANCH) && rd_req;
+            end
+
+        end
+    endgenerate
+
+    // rd_data, rd_ack
+    always_ff @ (posedge clk) begin
+        rd_data <= ipif_rd_data[rd_addr/ADDR_SPACE_PER_BRANCH];
+        rd_ack  <= ipif_rd_ack [rd_addr/ADDR_SPACE_PER_BRANCH];
+    end
 
 endmodule
 
