@@ -28,6 +28,8 @@ module pc_cfr #(
     parameter int CPW_ADDR_WIDTH = 8 ,
     parameter int CPW_DATA_WIDTH = 16
 ) (
+    // Data Interface
+    //---------------
     input var  logic                      clk,
     input var  logic                      rst,
     // Data input
@@ -36,11 +38,15 @@ module pc_cfr #(
     // Data output
     output var logic [    DATA_WIDTH-1:0] data_i_out,
     output var logic [    DATA_WIDTH-1:0] data_q_out,
-    // Control
+    // Control Interface
+    //------------------
+    input var  logic                      ctrl_clk,
+    input var  logic                      ctrl_rst,
+    // Scalar
     input var  logic                      ctrl_enable,  // 1 = enable, 0 = bypass
     input var  logic [      DATA_WIDTH:0] ctrl_clipping_threshold,  // unsigned
     input var  logic [      DATA_WIDTH:0] ctrl_pd_threshold,  // unsigned
-    //
+    // Cancellation pulse write port
     input var  logic                      ctrl_cpw_wr_en,
     input var  logic [CPW_ADDR_WIDTH-1:0] ctrl_cpw_wr_addr,
     input var  logic [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
@@ -63,10 +69,11 @@ module pc_cfr #(
   logic signed [DATA_WIDTH+1:0] data_r_p1;
 
   logic        [  Iterations:0] peak_theta;
-  logic signed [DATA_WIDTH+1:0] peak_r;
+  logic signed [  DATA_WIDTH:0] peak_r;
 
-  logic signed [DATA_WIDTH-1:0] peak_i;
-  logic signed [DATA_WIDTH-1:0] peak_q;
+  logic signed [DATA_WIDTH+2:0] peak_i;
+  logic signed [DATA_WIDTH+2:0] peak_q;
+
   logic peak_valid, peak_valid_d;
   logic peak_phase, peak_phase_d;
 
@@ -116,17 +123,20 @@ module pc_cfr #(
   (* keep_hierarchy="yes" *)
   cordic_cart2pol #(
       .DATA_WIDTH          (DATA_WIDTH),
+      .CTRL_WIDTH          (1),
       .ITERATIONS          (Iterations),
       .COMPENSATION_SCALING(1)
   ) i_cordic_cart2pol_p0 (
-      .clk  (clk),
-      .rst  (rst),
+      .clk     (clk),
+      .rst     (rst),
       //
-      .xin  (data_i_p0),
-      .yin  (data_q_p0),
+      .xin     (data_i_p0),
+      .yin     (data_q_p0),
+      .ctrl_in (1'b0),
       //
-      .theta(data_theta_p0),
-      .r    (data_r_p0)
+      .theta   (data_theta_p0),
+      .r       (data_r_p0),
+      .ctrl_out(/* Not used */)
   );
 
   (* keep_hierarchy="yes" *)
@@ -135,14 +145,16 @@ module pc_cfr #(
       .ITERATIONS          (Iterations),
       .COMPENSATION_SCALING(1)
   ) i_cordic_cart2pol_p1 (
-      .clk  (clk),
-      .rst  (rst),
+      .clk     (clk),
+      .rst     (rst),
       //
-      .xin  (data_i_p1),
-      .yin  (data_q_p1),
+      .xin     (data_i_p1),
+      .yin     (data_q_p1),
+      .ctrl_in (1'b0),
       //
-      .theta(data_theta_p1),
-      .r    (data_r_p1)
+      .theta   (data_theta_p1),
+      .r       (data_r_p1),
+      .ctrl_out(/* Not used */)
   );
 
   // Peak detector,
@@ -156,8 +168,8 @@ module pc_cfr #(
       .clk                    (clk),
       .rst                    (rst),
       //
-      .data_r_p0              (data_r_p0),
-      .data_r_p1              (data_r_p1),
+      .data_r_p0              (data_r_p0[DATA_WIDTH:0]),
+      .data_r_p1              (data_r_p1[DATA_WIDTH:0]),
       .data_theta_p0          (data_theta_p0),
       .data_theta_p1          (data_theta_p1),
       //
@@ -177,17 +189,20 @@ module pc_cfr #(
   (* keep_hierarchy="yes" *)
   cordic_pol2cart #(
       .DATA_WIDTH          (DATA_WIDTH + 1),
+      .CTRL_WIDTH          (1),
       .ITERATIONS          (Iterations),
       .COMPENSATION_SCALING(1)
   ) i_cordic_pol2cart (
-      .clk  (clk),
-      .rst  (rst),
+      .clk     (clk),
+      .rst     (rst),
       //
-      .r    (peak_r),
-      .theta(peak_theta),
+      .r       (peak_r),
+      .theta   (peak_theta),
+      .ctrl_in (1'b0),
       //
-      .xout (peak_i),
-      .yout (peak_q)
+      .xout    (peak_i),
+      .yout    (peak_q),
+      .ctrl_out(/* Not used */)
   );
 
   (* keep_hierarchy="yes" *)
@@ -227,8 +242,8 @@ module pc_cfr #(
       .data_i_in         (data_i_in_d),
       .data_q_in         (data_q_in_d),
       //
-      .peak_i_in         (peak_i),
-      .peak_q_in         (peak_q),
+      .peak_i_in         (peak_i[DATA_WIDTH-1:0]),
+      .peak_q_in         (peak_q[DATA_WIDTH-1:0]),
       .peak_phase_in     (peak_phase_d),
       .peak_valid_in     (peak_valid_d),
       //
@@ -238,7 +253,10 @@ module pc_cfr #(
       .peak_i_out        (  /* Not used */),
       .peak_q_out        (  /* Not used */),
       .peak_phase_out    (  /* Not used */),
-      .peak_valid_out    (),
+      .peak_valid_out    (  /* Not used */),
+      //
+      .ctrl_clk          (ctrl_clk),
+      .ctrl_rst          (ctrl_rst),
       //
       .ctrl_cpw_wr_en    (ctrl_cpw_wr_en),
       .ctrl_cpw_wr_addr  (ctrl_cpw_wr_addr),

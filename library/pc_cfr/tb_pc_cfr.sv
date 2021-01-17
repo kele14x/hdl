@@ -37,6 +37,9 @@ module tb_cfr_softclipping ();
   logic signed [   DataWidth-1:0] data_i_out;
   logic signed [   DataWidth-1:0] data_q_out;
 
+  logic                           ctrl_clk;
+  logic                           ctrl_rst;
+
   logic                           ctrl_enable;
   logic        [     DataWidth:0] ctrl_clipping_threshold;
   logic        [     DataWidth:0] ctrl_pd_threshold;
@@ -72,13 +75,16 @@ module tb_cfr_softclipping ();
 
   always begin
     clk = 0;
+    ctrl_clk = 0;
     #5;
     clk = 1;
+    ctrl_clk = 1;
     #5;
   end
 
   initial begin
     rst = 1;
+    ctrl_rst = 1;
     data_i_in = 0;
     data_q_in = 0;
     ctrl_enable = 1;
@@ -90,6 +96,7 @@ module tb_cfr_softclipping ();
     ctrl_cpw_wr_data_q = 0;
     #10000;
     rst = 0;
+    ctrl_rst = 0;
   end
 
   pc_cfr #(
@@ -114,13 +121,13 @@ module tb_cfr_softclipping ();
     #100;
     // Set cancellation pulse
     for (int i = 0; i < 2**CpwAddrWidth; i++) begin
-      @(posedge clk);
+      @(posedge ctrl_clk);
       ctrl_cpw_wr_en <= 1'b1;
       ctrl_cpw_wr_addr <= i;
       ctrl_cpw_wr_data_i <= cancellation_pulse_i_mem[i];
       ctrl_cpw_wr_data_q <= cancellation_pulse_q_mem[i];
     end
-    @(posedge clk);
+    @(posedge ctrl_clk);
     ctrl_cpw_wr_en <= 1'b0;
     ctrl_cpw_wr_addr <= 0;
     ctrl_cpw_wr_data_i <= 0;
@@ -158,13 +165,13 @@ module tb_cfr_softclipping ();
           $fwrite(fout, "%d, %d\n", data_i_out, data_q_out);
           if (data_i_out != data_i_out_ref) begin
             $warning(
-                "\"data_i_out\" mismatch with golden reference, time = %t, expected = %x, got = %x",
-                $time, data_i_out_ref, data_i_out);
+                "\"data_i_out\" mismatch with golden reference, time = %t, i = %d, expected = %d, got = %d",
+                $time, i, data_i_out_ref, data_i_out);
           end
           if (data_q_out != data_q_out_ref) begin
             $warning(
-                "\"data_q_out\" mismatch with golden reference, time = %t, expected = %x, got = %x",
-                $time, data_q_out_ref, data_q_out);
+                "\"data_q_out\" mismatch with golden reference, time = %t, i = %d, expected = %d, got = %d",
+                $time, i, data_q_out_ref, data_q_out);
           end
           @(posedge clk);
         end

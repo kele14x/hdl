@@ -43,6 +43,9 @@ module pc_cfr_softclipper #(
     output var logic signed [    DATA_WIDTH-1:0] peak_q_out,
     output var logic                             peak_phase_out,
     output var logic                             peak_valid_out,
+    // Cancellation pulse write port
+    input var  logic                             ctrl_clk,
+    input var  logic                             ctrl_rst,
     //
     input var  logic                             ctrl_cpw_wr_en,
     input var  logic        [CPW_ADDR_WIDTH-1:0] ctrl_cpw_wr_addr,
@@ -110,6 +113,9 @@ module pc_cfr_softclipper #(
           .peak_q_out        (peak_q_s[i+1]),
           .peak_phase_out    (peak_phase_s[i+1]),
           .peak_valid_out    (peak_valid_s[i+1]),
+          //
+          .ctrl_clk   (ctrl_clk),
+          .ctrl_rst   (ctrl_rst),
           //
           .ctrl_cpw_wr_en    (ctrl_cpw_wr_en),
           .ctrl_cpw_wr_addr  (ctrl_cpw_wr_addr),

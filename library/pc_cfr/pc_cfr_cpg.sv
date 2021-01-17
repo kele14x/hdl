@@ -43,6 +43,9 @@ module pc_cfr_cpg #(
     output var logic signed [    DATA_WIDTH-1:0] peak_q_out,
     output var logic                             peak_phase_out,
     output var logic                             peak_valid_out,
+    // Cancellation pulse write port
+    input var  logic                             ctrl_clk,
+    input var  logic                             ctrl_rst,
     //
     input var  logic                             ctrl_cpw_wr_en,
     input var  logic        [CPW_ADDR_WIDTH-1:0] ctrl_cpw_wr_addr,
@@ -153,7 +156,7 @@ module pc_cfr_cpg #(
       .INIT_FILE     ("")
   ) i_bram_sdp (
       //
-      .clka (clk),
+      .clka (ctrl_clk),
       .wea  (ctrl_cpw_wr_en),
       .addra(ctrl_cpw_wr_addr),
       .dina ({ctrl_cpw_wr_data_q, ctrl_cpw_wr_data_i}),
