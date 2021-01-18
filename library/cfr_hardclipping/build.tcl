@@ -2,11 +2,12 @@
 create_project project_1 ./prj -part xczu21dr-ffvd1156-2-e -force
 
 # Add source files
-add_files -norecurse ./cfr_hardclipping.sv
-add_files -norecurse ./../util/reg_pipeline.sv
+add_files -norecurse ./../cdc/cdc_array_single.sv
 add_files -norecurse ./../cordic_cart2pol/cordic_cart2pol.sv
 add_files -norecurse ./../cordic_pol2cart/cordic_pol2cart.sv
 add_files -norecurse ./../cordic_rotate/cordic_rotate.sv
+add_files -norecurse ./../util/reg_pipeline.sv
+add_files -norecurse ./cfr_hardclipping.sv
 update_compile_order -fileset sources_1
 
 # Add simulation only files
