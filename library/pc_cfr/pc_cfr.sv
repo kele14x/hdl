@@ -57,6 +57,10 @@ module pc_cfr #(
   localparam int Iterations = 7;
   localparam int DataPathLatency = 16 + 10 + 4 + 10;
 
+  logic                      ctrl_enable_s;
+  logic [      DATA_WIDTH:0] ctrl_clipping_threshold_s;
+  logic [      DATA_WIDTH:0] ctrl_pd_threshold_s;
+
   logic signed [DATA_WIDTH-1:0] data_i_p0;
   logic signed [DATA_WIDTH-1:0] data_i_p1;
   logic signed [DATA_WIDTH-1:0] data_q_p0;
@@ -80,10 +84,47 @@ module pc_cfr #(
   logic signed [DATA_WIDTH-1:0] data_i_in_d;
   logic signed [DATA_WIDTH-1:0] data_q_in_d;
 
+  // Ctrl interface CDC
+
+  cdc_array_single #(
+    .DEST_SYNC_FF (2),
+    .INIT_SYNC_FF (0),
+    .SRC_INPUT_REG(0),
+    .WIDTH        (1)
+  ) i_cdc_array_single_ctrl_enable (
+    .src_clk (1'b0),
+    .src_in  (ctrl_enable),
+    .dest_clk(clk),
+    .dest_out(ctrl_enable_s)
+  );
+
+  cdc_array_single #(
+    .DEST_SYNC_FF (2),
+    .INIT_SYNC_FF (0),
+    .SRC_INPUT_REG(0),
+    .WIDTH        (DATA_WIDTH+1)
+  ) i_cdc_array_single_ctrl_clipping_threshold (
+    .src_clk (1'b0),
+    .src_in  (ctrl_clipping_threshold),
+    .dest_clk(clk),
+    .dest_out(ctrl_clipping_threshold_s)
+  );
+
+  cdc_array_single #(
+    .DEST_SYNC_FF (2),
+    .INIT_SYNC_FF (0),
+    .SRC_INPUT_REG(0),
+    .WIDTH        (DATA_WIDTH+1)
+  ) i_cdc_array_single_ctrl_pd_threshold (
+    .src_clk (1'b0),
+    .src_in  (ctrl_pd_threshold),
+    .dest_clk(clk),
+    .dest_out(ctrl_pd_threshold_s)
+  );
+
   // Up-sample by 2?
   // 16 clock tick impulse latency
 
-  (* keep_hierarchy="yes" *)
   hb_up2_int2 #(
       .XIN_WIDTH     (DATA_WIDTH),
       .COE_WIDTH     (16),
@@ -100,7 +141,6 @@ module pc_cfr #(
       .ovf  (  /* Not used */)
   );
 
-  (* keep_hierarchy="yes" *)
   hb_up2_int2 #(
       .XIN_WIDTH     (DATA_WIDTH),
       .COE_WIDTH     (16),
@@ -120,7 +160,6 @@ module pc_cfr #(
   // Convert input data into "theta and r" format.
   // 10 clock tick latency
 
-  (* keep_hierarchy="yes" *)
   cordic_cart2pol #(
       .DATA_WIDTH          (DATA_WIDTH),
       .CTRL_WIDTH          (1),
@@ -139,7 +178,6 @@ module pc_cfr #(
       .ctrl_out(/* Not used */)
   );
 
-  (* keep_hierarchy="yes" *)
   cordic_cart2pol #(
       .DATA_WIDTH          (DATA_WIDTH),
       .ITERATIONS          (Iterations),
@@ -160,7 +198,6 @@ module pc_cfr #(
   // Peak detector,
   // 4 clock tick latency
 
-  (* keep_hierarchy="yes" *)
   pc_cfr_pd #(
       .ITERATIONS(Iterations),
       .DATA_WIDTH(DATA_WIDTH)
@@ -178,15 +215,14 @@ module pc_cfr #(
       .peak_valid             (peak_valid),
       .peak_phase             (peak_phase),
       //
-      .ctrl_enable            (ctrl_enable),
-      .ctrl_pd_threshold      (ctrl_pd_threshold),
-      .ctrl_clipping_threshold(ctrl_clipping_threshold)
+      .ctrl_enable            (ctrl_enable_s),
+      .ctrl_pd_threshold      (ctrl_pd_threshold_s),
+      .ctrl_clipping_threshold(ctrl_clipping_threshold_s)
   );
 
   // Rotate the delta vector back to i & q
   // 10 clock tick latency
 
-  (* keep_hierarchy="yes" *)
   cordic_pol2cart #(
       .DATA_WIDTH          (DATA_WIDTH + 1),
       .CTRL_WIDTH          (1),
@@ -205,7 +241,6 @@ module pc_cfr #(
       .ctrl_out(/* Not used */)
   );
 
-  (* keep_hierarchy="yes" *)
   reg_pipeline #(
       .DATA_WIDTH     (2),
       .PIPELINE_STAGES(10)
@@ -217,7 +252,6 @@ module pc_cfr #(
 
   // Delay input data for `DataPathLatency` clocks
 
-  (* keep_hierarchy="yes" *)
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
       .PIPELINE_STAGES(DataPathLatency)
@@ -230,7 +264,6 @@ module pc_cfr #(
   // Soft clipper
   // 142 clock tick latency
 
-  (* keep_hierarchy="yes" *)
   pc_cfr_softclipper #(
       .DATA_WIDTH    (DATA_WIDTH),
       .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH),
