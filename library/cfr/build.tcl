@@ -3,6 +3,7 @@ create_project project_1 ./prj -part xczu21dr-ffvd1156-2-e -force
 
 # Add source files
 add_files -norecurse ./../axi4l_ipif/axi4l_ipif_top.sv
+add_files -norecurse ./../cdc/cdc_array_single.sv
 add_files -norecurse ./../cfr_hardclipping/cfr_hardclipping.sv
 add_files -norecurse ./../cmult/cmult.sv
 add_files -norecurse ./../cordic_cart2pol/cordic_cart2pol.sv

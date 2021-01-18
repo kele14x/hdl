@@ -124,7 +124,7 @@ module cfr_regs #(
         end else if (rd_req) begin
             case (rd_addr)
                 0       : rd_data <= ID;
-                8       : rd_data <= {32'b0, ctrl_pc_cfr_enable};
+                8       : rd_data <= {31'b0, ctrl_pc_cfr_enable};
                 9       : rd_data <= {15'b0, ctrl_pc_cfr_detect_threshold};
                 10      : rd_data <= {15'b0, ctrl_pc_cfr_clipping_threshold};
                 11      : rd_data <= {31'b0, ctrl_hc_enable};

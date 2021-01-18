@@ -105,6 +105,8 @@ module cfr_branch #(
         .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH),
         .CPW_DATA_WIDTH(CPW_DATA_WIDTH)
     ) i_pc_cfr (
+        // Data Interface
+        //---------------
         .clk                    (clk                           ),
         .rst                    (rst                           ),
         // Data input
@@ -113,7 +115,11 @@ module cfr_branch #(
         // Data output
         .data_i_out             (data_i_s                      ),
         .data_q_out             (data_q_s                      ),
-        // Control
+        // Control Interface
+        //------------------
+        .ctrl_clk               (ipif_clk                      ),
+        .ctrl_rst               (ipif_rst                      ),
+        //
         .ctrl_enable            (ctrl_pc_cfr_enable            ),
         .ctrl_clipping_threshold(ctrl_pc_cfr_clipping_threshold),
         .ctrl_pd_threshold      (ctrl_pc_cfr_detect_threshold  ),

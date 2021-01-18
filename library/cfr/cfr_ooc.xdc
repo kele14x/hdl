@@ -18,3 +18,5 @@
 # File: cfr_ooc.xdc
 # Brief: Out-of-context constraints for module cfr_ooc
 create_clock -name clk -period 2 [get_ports clk]
+create_clock -name aclk -period 2 [get_ports aclk]
+set_clock_groups -asynchronous -group clk -group aclk
