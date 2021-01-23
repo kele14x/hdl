@@ -81,16 +81,17 @@ module cfr #(
     logic [AXI_DATA_WIDTH-1:0] rd_data;
     logic                      rd_ack ;
 
-    logic [AXI_ADDR_WIDTH-3:0] ipif_wr_addr[NUM_BRANCH];
+    logic [AXI_ADDR_WIDTH-7:0] ipif_wr_addr[NUM_BRANCH];
     logic                      ipif_wr_req [NUM_BRANCH];
     logic [AXI_DATA_WIDTH-1:0] ipif_wr_data[NUM_BRANCH];
     logic                      ipif_wr_ack [NUM_BRANCH];
 
-    logic [AXI_ADDR_WIDTH-3:0] ipif_rd_addr[NUM_BRANCH];
+    logic [AXI_ADDR_WIDTH-7:0] ipif_rd_addr[NUM_BRANCH];
     logic                      ipif_rd_req [NUM_BRANCH];
     logic [AXI_DATA_WIDTH-1:0] ipif_rd_data[NUM_BRANCH];
     logic                      ipif_rd_ack [NUM_BRANCH];
 
+    // Address width 16 -> 14
     axi4l_ipif_top #(
         .C_ADDR_WIDTH(AXI_ADDR_WIDTH),
         .C_DATA_WIDTH(AXI_DATA_WIDTH)
@@ -135,6 +136,7 @@ module cfr #(
     );
 
 
+    // Address width 14 -> 10
     cfr_ipif_mux #(
         .IPIF_ADDR_WIDTH(AXI_ADDR_WIDTH-2),
         .IPIF_DATA_WIDTH(AXI_DATA_WIDTH  ),
@@ -167,8 +169,10 @@ module cfr #(
 
     generate
         for (genvar i = 0; i < NUM_BRANCH; i++) begin : g_branch
+
+            // Address width: 10
             cfr_branch #(
-                .IPIF_ADDR_WIDTH(AXI_ADDR_WIDTH-2),
+                .IPIF_ADDR_WIDTH(AXI_ADDR_WIDTH-6),
                 .IPIF_DATA_WIDTH(AXI_DATA_WIDTH  ),
                 //
                 .DATA_WIDTH     (DATA_WIDTH      ),

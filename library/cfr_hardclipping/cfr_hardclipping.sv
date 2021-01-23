@@ -21,7 +21,7 @@
 //        threshold. Those signal are hard clipped without maintains the
 //        spectrum.
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module cfr_hardclipping #(
     parameter int DATA_WIDTH = 16

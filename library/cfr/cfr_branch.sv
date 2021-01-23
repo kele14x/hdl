@@ -21,6 +21,8 @@
 `timescale 1ns / 1ps `default_nettype none
 
 module cfr_branch #(
+    parameter int ID              = 0 ,
+    //
     parameter int IPIF_ADDR_WIDTH = 10,
     parameter int IPIF_DATA_WIDTH = 32,
     //
@@ -34,12 +36,12 @@ module cfr_branch #(
     input  var                       ipif_clk    ,
     input  var                       ipif_rst    ,
     //
-    input  var [IPIF_ADDR_WIDTH-3:0] ipif_wr_addr,
+    input  var [IPIF_ADDR_WIDTH-1:0] ipif_wr_addr,
     input  var                       ipif_wr_req ,
     input  var [IPIF_DATA_WIDTH-1:0] ipif_wr_data,
     output var                       ipif_wr_ack ,
     //
-    input  var [IPIF_ADDR_WIDTH-3:0] ipif_rd_addr,
+    input  var [IPIF_ADDR_WIDTH-1:0] ipif_rd_addr,
     input  var                       ipif_rd_req ,
     output var [IPIF_DATA_WIDTH-1:0] ipif_rd_data,
     output var                       ipif_rd_ack ,
@@ -72,7 +74,11 @@ module cfr_branch #(
     logic [DATA_WIDTH-1:0] data_q_s;
 
 
-    cfr_regs i_cfr_regs (
+    cfr_regs #(
+        .ID        (ID),
+        .ADDR_WIDTH(IPIF_ADDR_WIDTH),
+        .DATA_WIDTH(IPIF_DATA_WIDTH)
+    ) i_cfr_regs (
         .clk                           (ipif_clk                      ),
         .rst                           (ipif_rst                      ),
         //

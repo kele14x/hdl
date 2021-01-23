@@ -18,7 +18,7 @@
 // File: cfr_ipif_mux.sv
 // Brief: IPIF MUX for CFR
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module cfr_ipif_mux #(
     parameter int IPIF_ADDR_WIDTH = 14,
@@ -28,33 +28,32 @@ module cfr_ipif_mux #(
 ) (
     // IPIF Interface
     //---------------
-    input  var                       clk                     ,
-    input  var                       rst                     ,
+    input  var                                          clk                     ,
+    input  var                                          rst                     ,
     //
-    input  var [IPIF_ADDR_WIDTH-1:0] wr_addr                 ,
-    input  var                       wr_req                  ,
-    input  var [IPIF_DATA_WIDTH-1:0] wr_data                 ,
-    output var                       wr_ack                  ,
+    input  var [                   IPIF_ADDR_WIDTH-1:0] wr_addr                 ,
+    input  var                                          wr_req                  ,
+    input  var [                   IPIF_DATA_WIDTH-1:0] wr_data                 ,
+    output var                                          wr_ack                  ,
     //
-    input  var [IPIF_ADDR_WIDTH-1:0] rd_addr                 ,
-    input  var                       rd_req                  ,
-    output var [IPIF_DATA_WIDTH-1:0] rd_data                 ,
-    output var                       rd_ack                  ,
+    input  var [                   IPIF_ADDR_WIDTH-1:0] rd_addr                 ,
+    input  var                                          rd_req                  ,
+    output var [                   IPIF_DATA_WIDTH-1:0] rd_data                 ,
+    output var                                          rd_ack                  ,
     // Registers
     //---------------
-    output var [IPIF_ADDR_WIDTH-1:0] ipif_wr_addr[NUM_BRANCH],
-    output var                       ipif_wr_req [NUM_BRANCH],
-    output var [IPIF_DATA_WIDTH-1:0] ipif_wr_data[NUM_BRANCH],
-    input  var                       ipif_wr_ack [NUM_BRANCH],
+    output var [IPIF_ADDR_WIDTH-$clog2(NUM_BRANCH)-1:0] ipif_wr_addr[NUM_BRANCH],
+    output var                                          ipif_wr_req [NUM_BRANCH],
+    output var [                   IPIF_DATA_WIDTH-1:0] ipif_wr_data[NUM_BRANCH],
+    input  var                                          ipif_wr_ack [NUM_BRANCH],
     //
-    output var [IPIF_ADDR_WIDTH-1:0] ipif_rd_addr[NUM_BRANCH],
-    output var                       ipif_rd_req [NUM_BRANCH],
-    input  var [IPIF_DATA_WIDTH-1:0] ipif_rd_data[NUM_BRANCH],
-    input  var                       ipif_rd_ack [NUM_BRANCH]
+    output var [IPIF_ADDR_WIDTH-$clog2(NUM_BRANCH)-1:0] ipif_rd_addr[NUM_BRANCH],
+    output var                                          ipif_rd_req [NUM_BRANCH],
+    input  var [                   IPIF_DATA_WIDTH-1:0] ipif_rd_data[NUM_BRANCH],
+    input  var                                          ipif_rd_ack [NUM_BRANCH]
 );
 
     localparam int ADDR_WIDTH_PER_BRANCH = IPIF_ADDR_WIDTH - $clog2(NUM_BRANCH-1);
-    localparam int ADDR_SPACE_PER_BRANCH = 2**ADDR_WIDTH_PER_BRANCH;
 
     // WR
 
@@ -63,20 +62,33 @@ module cfr_ipif_mux #(
 
             // wr_addr, wr_data
             always_ff @ (posedge clk) begin
-                ipif_wr_addr[i] <= wr_addr;
-                ipif_wr_data[i] <= wr_data;
+                if (rst) begin
+                    ipif_wr_addr[i] <= '0;
+                    ipif_wr_data[i] <= '0;
+                end else if ((wr_addr[IPIF_ADDR_WIDTH-1:ADDR_WIDTH_PER_BRANCH] == i) && wr_req) begin
+                    ipif_wr_addr[i] <= wr_addr[ADDR_WIDTH_PER_BRANCH-1:0];
+                    ipif_wr_data[i] <= wr_data;
+                end
             end
 
             // wr_req
             always_ff @ (posedge clk) begin
-                ipif_wr_req[i] <= (i*ADDR_SPACE_PER_BRANCH <= wr_addr) && (wr_addr < (i+1)*ADDR_SPACE_PER_BRANCH) && wr_req;
+                if (rst) begin
+                    ipif_wr_req[i] <= 1'b0;
+                end else begin
+                    ipif_wr_req[i] <= (wr_addr[IPIF_ADDR_WIDTH-1:ADDR_WIDTH_PER_BRANCH] == i) && wr_req;
+                end
             end
 
         end
     endgenerate
 
     always_ff @ (posedge clk) begin
-        wr_ack <= ipif_wr_ack[wr_addr/ADDR_SPACE_PER_BRANCH];
+        if (rst)begin
+            wr_ack <= 1'b0;
+        end else begin
+            wr_ack <= ipif_wr_ack[wr_addr[IPIF_ADDR_WIDTH-1:ADDR_WIDTH_PER_BRANCH]];
+        end
     end
 
     // RD
@@ -86,12 +98,20 @@ module cfr_ipif_mux #(
 
             // rd_addr
             always_ff @ (posedge clk) begin
-                ipif_rd_addr[i] <= rd_addr;
+                if (rst) begin
+                    ipif_rd_addr[i] <= '0;
+                end else if ((rd_addr[IPIF_ADDR_WIDTH-1:ADDR_WIDTH_PER_BRANCH] == i) && rd_req) begin
+                    ipif_rd_addr[i] <= rd_addr[ADDR_WIDTH_PER_BRANCH-1:0];
+                end
             end
 
             // rd_req
             always_ff @ (posedge clk) begin
-                ipif_rd_req[i] <= (i*ADDR_SPACE_PER_BRANCH <= rd_addr) && (rd_addr < (i+1)*ADDR_SPACE_PER_BRANCH) && rd_req;
+                if (rst) begin
+                    ipif_rd_req[i] <= 1'b0;
+                end else begin
+                    ipif_rd_req[i] <= (rd_addr[IPIF_ADDR_WIDTH-1:ADDR_WIDTH_PER_BRANCH] == i) && rd_req;
+                end
             end
 
         end
@@ -99,8 +119,13 @@ module cfr_ipif_mux #(
 
     // rd_data, rd_ack
     always_ff @ (posedge clk) begin
-        rd_data <= ipif_rd_data[rd_addr/ADDR_SPACE_PER_BRANCH];
-        rd_ack  <= ipif_rd_ack [rd_addr/ADDR_SPACE_PER_BRANCH];
+        if (rst) begin
+            rd_data <= '0;
+            rd_ack  <= 1'b0;
+        end else begin
+            rd_data <= ipif_rd_data[rd_addr[IPIF_ADDR_WIDTH-1:ADDR_WIDTH_PER_BRANCH]];
+            rd_ack  <= ipif_rd_ack [rd_addr[IPIF_ADDR_WIDTH-1:ADDR_WIDTH_PER_BRANCH]];
+        end
     end
 
 endmodule

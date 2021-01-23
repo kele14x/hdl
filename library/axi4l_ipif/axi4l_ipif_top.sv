@@ -67,11 +67,13 @@ module axi4l_ipif_top #(
     input  var logic                      rd_ack
 );
 
+    // synthesis translate_off
     initial begin
         assert ((C_DATA_WIDTH == 32) || (C_DATA_WIDTH == 64)) else
             $error("AXI-4 Lite interface only support C_DATA_WIDTH=32 or 64");
     end
-
+    // synthesis translate_on
+  
     // RRESP/BRESP
     localparam C_RESP_OKAY   = 2'b00; // OKAY, normal access success
     localparam C_RESP_EXOKAY = 2'b01; // EXOKAY, exclusive access success
