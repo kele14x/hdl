@@ -54,23 +54,29 @@ module tb_cfr_softclipping ();
   logic signed [   DataWidth-1:0] data_q_out_ref;
 
   logic signed [   DataWidth-1:0] data_i_in_mem           [TestVectorLength];
+  logic signed [   DataWidth-1:0] data_i_in2_mem          [TestVectorLength];
   logic signed [   DataWidth-1:0] data_q_in_mem           [TestVectorLength];
+  logic signed [   DataWidth-1:0] data_q_in2_mem          [TestVectorLength];
   logic signed [   DataWidth-1:0] data_i_out_mem          [TestVectorLength];
+  logic signed [   DataWidth-1:0] data_i_out2_mem         [TestVectorLength];
   logic signed [   DataWidth-1:0] data_q_out_mem          [TestVectorLength];
+  logic signed [   DataWidth-1:0] data_q_out2_mem         [TestVectorLength];
 
   logic signed [DataWidth-1:0] cancellation_pulse_i_mem [2**CpwAddrWidth];
   logic signed [DataWidth-1:0] cancellation_pulse_q_mem [2**CpwAddrWidth];
-
-  integer fout;
 
   initial begin
     $readmemh("test_pc_cfr_cancellation_pulse_i.txt", cancellation_pulse_i_mem, 0, 2**CpwAddrWidth - 1);
     $readmemh("test_pc_cfr_cancellation_pulse_q.txt", cancellation_pulse_q_mem, 0, 2**CpwAddrWidth - 1);
     //
     $readmemh("test_pc_cfr_data_i_in.txt", data_i_in_mem, 0, TestVectorLength - 1);
+    $readmemh("test_pc_cfr_data_i_in2.txt", data_i_in2_mem, 0, TestVectorLength - 1);
     $readmemh("test_pc_cfr_data_q_in.txt", data_q_in_mem, 0, TestVectorLength - 1);
+    $readmemh("test_pc_cfr_data_q_in2.txt", data_q_in2_mem, 0, TestVectorLength - 1);
     $readmemh("test_pc_cfr_data_i_out.txt", data_i_out_mem, 0, TestVectorLength - 1);
+    $readmemh("test_pc_cfr_data_i_out2.txt", data_i_out2_mem, 0, TestVectorLength - 1);
     $readmemh("test_pc_cfr_data_q_out.txt", data_q_out_mem, 0, TestVectorLength - 1);
+    $readmemh("test_pc_cfr_data_q_out2.txt", data_q_out2_mem, 0, TestVectorLength - 1);
   end
 
   always begin
@@ -110,12 +116,6 @@ module tb_cfr_softclipping ();
     $display("**************************");
     $display("Simulation starts.");
 
-    fout = $fopen("fout.txt", "w");
-    if (fout == 0) begin
-      $display("Error: File, \"fout.txt\" could not be opened.\nExiting Simulation.");
-      $finish;
-    end
-
     wait(rst == 0);
 
     #100;
@@ -141,8 +141,8 @@ module tb_cfr_softclipping ();
           data_i_in <= data_i_in_mem[i];
           data_q_in <= data_q_in_mem[i];
           @(posedge clk);
-          data_i_in <= '0;
-          data_q_in <= '0;
+          data_i_in <= data_i_in2_mem[i];
+          data_q_in <= data_q_in2_mem[i];
         end
       end
 
@@ -153,8 +153,8 @@ module tb_cfr_softclipping ();
           data_i_out_ref <= data_i_out_mem[i];
           data_q_out_ref <= data_q_out_mem[i];
           @(posedge clk);
-          data_i_out_ref <= '0;
-          data_q_out_ref <= '0;
+          data_i_out_ref <= data_i_out2_mem[i];
+          data_q_out_ref <= data_q_out2_mem[i];
         end
       end
 
@@ -162,7 +162,6 @@ module tb_cfr_softclipping ();
         repeat (DutLatency + 1) @(posedge clk);
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
-          $fwrite(fout, "%d, %d\n", data_i_out, data_q_out);
           if (data_i_out != data_i_out_ref) begin
             $warning(
                 "\"data_i_out\" mismatch with golden reference, time = %t, i = %d, expected = %d, got = %d",
@@ -174,6 +173,16 @@ module tb_cfr_softclipping ();
                 $time, i, data_q_out_ref, data_q_out);
           end
           @(posedge clk);
+          if (data_i_out != data_i_out_ref) begin
+            $warning(
+                "\"data_i_out\" mismatch with golden reference, time = %t, i = %d, expected = %d, got = %d",
+                $time, i, data_i_out_ref, data_i_out);
+          end
+          if (data_q_out != data_q_out_ref) begin
+            $warning(
+                "\"data_q_out\" mismatch with golden reference, time = %t, i = %d, expected = %d, got = %d",
+                $time, i, data_q_out_ref, data_q_out);
+          end
         end
       end
     join
@@ -181,10 +190,6 @@ module tb_cfr_softclipping ();
     #100;
     $display("Simulation ends.");
     $finish();
-  end
-
-  final begin
-    $fclose(fout);
   end
 
 endmodule
