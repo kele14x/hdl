@@ -77,8 +77,6 @@ module tb_hb_up2 ();
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
           xin <= xin_mem[i];
-          @(posedge clk);
-          xin <= 0;
         end
       end
 
@@ -89,10 +87,6 @@ module tb_hb_up2 ();
           yout0_ref <= (i == 0) ? 0 : yout_mem[2*i-1];
           yout1_ref <= yout_mem[2*i];
           ovf_ref   <= ((i == 0) ? 0 : ovf_mem[2*i-1]) | ovf_mem[2*i];
-          @(posedge clk);
-          yout0_ref <= 0;
-          yout1_ref <= 0;
-          ovf_ref   <= 0;
         end
       end
 
@@ -104,7 +98,7 @@ module tb_hb_up2 ();
   end
 
 
-  hb_up2_int2 #(
+  hb_up2 #(
       .XIN_WIDTH     (XinWidth),
       .COE_WIDTH     (CoeWidth),
       .NUM_UNIQUE_COE(NumUniqueCoe),
