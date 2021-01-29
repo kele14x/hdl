@@ -7,7 +7,7 @@ add_files -norecurse ./../cmult/cmult.sv
 add_files -norecurse ./../cordic_cart2pol/cordic_cart2pol.sv
 add_files -norecurse ./../cordic_pol2cart/cordic_pol2cart.sv
 add_files -norecurse ./../cordic_rotate/cordic_rotate.sv
-add_files -norecurse ./../hb_up2/hb_up2_int2.sv
+add_files -norecurse ./../hb_up2/hb_up2.sv
 add_files -norecurse ./../util/adder.sv
 add_files -norecurse ./../util/bram_sdp.sv
 add_files -norecurse ./../util/reg_pipeline.sv

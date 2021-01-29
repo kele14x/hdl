@@ -81,7 +81,7 @@ module pc_cfr_softclipper #(
   (* keep_hierarchy="yes" *)
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(136)
+      .PIPELINE_STAGES(73)
   ) i_delay (
       .clk (clk),
       .din ({data_q_in, data_i_in}),
@@ -114,8 +114,8 @@ module pc_cfr_softclipper #(
           .peak_phase_out    (peak_phase_s[i+1]),
           .peak_valid_out    (peak_valid_s[i+1]),
           //
-          .ctrl_clk   (ctrl_clk),
-          .ctrl_rst   (ctrl_rst),
+          .ctrl_clk          (ctrl_clk),
+          .ctrl_rst          (ctrl_rst),
           //
           .ctrl_cpw_wr_en    (ctrl_cpw_wr_en),
           .ctrl_cpw_wr_addr  (ctrl_cpw_wr_addr),

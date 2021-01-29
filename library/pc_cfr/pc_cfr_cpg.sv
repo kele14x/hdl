@@ -61,12 +61,11 @@ module pc_cfr_cpg #(
   logic signed [    DATA_WIDTH-1:0] cpw_rd_data_q;
 
   // State of CPG stage
-  // `state1` is for channel 1, `state2` is for channel 2
 
-  logic state1_busy, state2_busy;
-  logic [CPW_ADDR_WIDTH-2:0] state1_addr, state2_addr;
-  logic state1_phase, state2_phase;
-  logic [DATA_WIDTH-1:0] state1_i, state1_q, state2_i, state2_q, state2_i_d, state2_q_d;
+  logic state_busy;
+  logic [CPW_ADDR_WIDTH-2:0] state_addr;
+  logic state_phase;
+  logic [DATA_WIDTH-1:0] state_i, state_q, state_i_d, state_q_d;
 
   logic [DATA_WIDTH-1:0] delta_i, delta_q;
 
@@ -75,66 +74,57 @@ module pc_cfr_cpg #(
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      state1_busy <= 'd0;
-      state2_busy <= 'd0;
+      state_busy <= 'd0;
     end else begin
-      state1_busy <= state2_busy;
-      state2_busy <= (peak_valid_in && ~state1_busy) ? 1'b1 : &state1_addr ? 1'b0 : state1_busy;
+      state_busy <= (peak_valid_in && ~state_busy) ? 1'b1 : &state_addr ? 1'b0 : state_busy;
     end
   end
 
   // `state*_addr` will move from 0 to 'hFF
   always_ff @(posedge clk) begin
     if (rst) begin
-      state1_addr <= 'd0;
-      state2_addr <= 'd0;
+      state_addr <= 'd0;
     end else begin
-      state1_addr <= state2_addr;
-      state2_addr <= state1_busy ? state1_addr + 1 : &state1_addr ? '0 : state1_addr;
+      state_addr <= state_busy ? state_addr + 1 : &state_addr ? '0 : state_addr;
     end
   end
 
   // `state*_phase` is phase of peak
   always_ff @(posedge clk) begin
     if (rst) begin
-      state1_phase <= 'd0;
-      state2_phase <= 'd0;
+      state_phase <= 'd0;
     end else begin
-      state1_phase <= state2_phase;
-      state2_phase <= (peak_valid_in && ~state1_busy) ? peak_phase_in : &state1_addr ? '0 : state1_phase;;
+      state_phase <= (peak_valid_in && ~state_busy) ? peak_phase_in : &state_addr ? '0 : state_phase;;
     end
   end
 
   // `state*_phase` is phase of peak
   always_ff @(posedge clk) begin
     if (rst) begin
-      state1_i <= 'd0;
-      state1_q <= 'd0;
-      state2_i <= 'd0;
-      state2_q <= 'd0;
+      state_i <= 'd0;
+      state_q <= 'd0;
     end else begin
-      {state1_q, state1_i} <= {state2_q, state2_i};
-      {state2_q, state2_i} <= (peak_valid_in && ~state1_busy) ? {
+      {state_q, state_i} <= (peak_valid_in && ~state_busy) ? {
         peak_q_in, peak_i_in
-      } : &state1_addr ? 'd0 : {
-        state1_q, state1_i
+      } : &state_addr ? 'd0 : {
+        state_q, state_i
       };
     end
   end
 
-  // If current stage's CPG is busy (state1's MSB is high), pass this peak to
+  // If current stage's CPG is busy (state's MSB is high), pass this peak to
   // next CPG.
 
   always_ff @(posedge clk) begin
     if (rst) begin
       peak_valid_out <= 1'b0;
     end else begin
-      peak_valid_out <= peak_valid_in && state1_busy;
+      peak_valid_out <= peak_valid_in && state_busy;
     end
   end
 
   always_ff @(posedge clk) begin
-    if (peak_valid_in && state1_busy) begin
+    if (peak_valid_in && state_busy) begin
       peak_i_out     <= peak_i_in;
       peak_q_out     <= peak_q_in;
       peak_phase_out <= peak_phase_in;
@@ -145,8 +135,8 @@ module pc_cfr_cpg #(
     end
   end
 
-  assign cpw_rd_en   = state2_busy;
-  assign cpw_rd_addr = {state2_addr, ~state2_phase};
+  assign cpw_rd_en   = state_busy;
+  assign cpw_rd_addr = {state_addr, ~state_phase};
 
   (* keep_hierarchy="yes" *)
   bram_sdp #(
@@ -174,8 +164,8 @@ module pc_cfr_cpg #(
       .PIPELINE_STAGES(2)
   ) i_delay (
       .clk (clk),
-      .din ({state2_q, state2_i}),
-      .dout({state2_q_d, state2_i_d})
+      .din ({state_q, state_i}),
+      .dout({state_q_d, state_i_d})
   );
 
   (* keep_hierarchy="yes" *)
@@ -188,8 +178,8 @@ module pc_cfr_cpg #(
       .clk(clk),
       .rst(rst),
       //
-      .ar (state2_i_d),
-      .ai (state2_q_d),
+      .ar (state_i_d),
+      .ai (state_q_d),
       //
       .br (cpw_rd_data_i),
       .bi (cpw_rd_data_q),
