@@ -23,7 +23,7 @@
 module tb_cfr_softclipping ();
 
   localparam int TestVectorLength = 4096;
-  localparam int DutLatency = 113;
+  localparam int DutLatency = 111;
 
   localparam int DataWidth = 16;
   localparam int CpwAddrWidth = 8;

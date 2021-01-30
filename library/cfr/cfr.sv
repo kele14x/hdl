@@ -21,7 +21,7 @@
 `timescale 1ns / 1ps `default_nettype none
 
 module cfr #(
-    parameter int AXI_ADDR_WIDTH = 16,
+    parameter int AXI_ADDR_WIDTH = 17,
     parameter int AXI_DATA_WIDTH = 32,
     //
     parameter int DATA_WIDTH     = 16,
@@ -29,7 +29,7 @@ module cfr #(
     parameter int CPW_ADDR_WIDTH = 8 ,
     parameter int CPW_DATA_WIDTH = 16,
     //
-    parameter int NUM_BRANCH     = 16
+    parameter int NUM_BRANCH     = 32
 ) (
     // AXI4-Lite Slave I/F
     //--------------------
@@ -81,17 +81,17 @@ module cfr #(
     logic [AXI_DATA_WIDTH-1:0] rd_data;
     logic                      rd_ack ;
 
-    logic [AXI_ADDR_WIDTH-7:0] ipif_wr_addr[NUM_BRANCH];
+    logic [AXI_ADDR_WIDTH-8:0] ipif_wr_addr[NUM_BRANCH];
     logic                      ipif_wr_req [NUM_BRANCH];
     logic [AXI_DATA_WIDTH-1:0] ipif_wr_data[NUM_BRANCH];
     logic                      ipif_wr_ack [NUM_BRANCH];
 
-    logic [AXI_ADDR_WIDTH-7:0] ipif_rd_addr[NUM_BRANCH];
+    logic [AXI_ADDR_WIDTH-8:0] ipif_rd_addr[NUM_BRANCH];
     logic                      ipif_rd_req [NUM_BRANCH];
     logic [AXI_DATA_WIDTH-1:0] ipif_rd_data[NUM_BRANCH];
     logic                      ipif_rd_ack [NUM_BRANCH];
 
-    // Address width 16 -> 14
+    // Address width 17 -> 15
     axi4l_ipif_top #(
         .C_ADDR_WIDTH(AXI_ADDR_WIDTH),
         .C_DATA_WIDTH(AXI_DATA_WIDTH)
@@ -136,7 +136,7 @@ module cfr #(
     );
 
 
-    // Address width 14 -> 10
+    // Address width 15 -> 10
     cfr_ipif_mux #(
         .IPIF_ADDR_WIDTH(AXI_ADDR_WIDTH-2),
         .IPIF_DATA_WIDTH(AXI_DATA_WIDTH  ),
@@ -172,7 +172,9 @@ module cfr #(
 
             // Address width: 10
             cfr_branch #(
-                .IPIF_ADDR_WIDTH(AXI_ADDR_WIDTH-6),
+                .ID             (i),
+                //
+                .IPIF_ADDR_WIDTH(AXI_ADDR_WIDTH-7),
                 .IPIF_DATA_WIDTH(AXI_DATA_WIDTH  ),
                 //
                 .DATA_WIDTH     (DATA_WIDTH      ),
