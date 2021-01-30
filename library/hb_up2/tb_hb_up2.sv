@@ -28,8 +28,8 @@ module tb_hb_up2 ();
 
   localparam int XinWidth = 16;
   localparam int CoeWidth = 16;
-  localparam int NumUniqueCoe = 5;
-  localparam signed [CoeWidth-1:0] CoeNums[NumUniqueCoe] = {952, -1609, 3090, -6260, 20622};
+  localparam int NumUniqueCoe = 3;
+  localparam signed [CoeWidth-1:0] CoeNums[NumUniqueCoe] = {1277, -4710, 20014};
   localparam int YoutWidth = 16;
   localparam int SraBits = 15;
 
@@ -47,9 +47,9 @@ module tb_hb_up2 ();
   logic                 ovf_mem [TestVectorLength * 2];
 
   initial begin
-    $readmemh("test_hb_up2_xin.txt", xin_mem, 0, TestVectorLength - 1);
-    $readmemh("test_hb_up2_yout.txt", yout_mem, 0, TestVectorLength * 2 - 1);
-    $readmemh("test_hb_up2_ovf.txt", ovf_mem, 0, TestVectorLength * 2 - 1);
+    $readmemh("test_hb_up2_input_xin.txt", xin_mem, 0, TestVectorLength - 1);
+    $readmemh("test_hb_up2_output_yout.txt", yout_mem, 0, TestVectorLength * 2 - 1);
+    $readmemh("test_hb_up2_output_ovf.txt", ovf_mem, 0, TestVectorLength * 2 - 1);
   end
 
   always begin
