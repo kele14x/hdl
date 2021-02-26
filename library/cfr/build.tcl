@@ -10,7 +10,7 @@ add_files -norecurse ./../cordic_cart2pol/cordic_cart2pol.sv
 add_files -norecurse ./../cordic_pol2cart/cordic_pol2cart.sv
 add_files -norecurse ./../cordic_rotate/cordic_rotate.sv
 add_files -norecurse ./../cordic_rotate/cordic_rotate.sv
-add_files -norecurse ./../hb_up2/hb_up2_int2.sv
+add_files -norecurse ./../hb_up2/hb_up2.sv
 add_files -norecurse ./../pc_cfr/pc_cfr.sv
 add_files -norecurse ./../pc_cfr/pc_cfr_cpg.sv
 add_files -norecurse ./../pc_cfr/pc_cfr_pd.sv

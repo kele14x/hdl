@@ -55,7 +55,7 @@ module pc_cfr #(
 
 
   localparam int Iterations = 7;
-  localparam int DataPathLatency = 16 + 10 + 4 + 10;
+  localparam int DataPathLatency = 9 + 10 + 3 + 10;
 
   logic                      ctrl_enable_s;
   logic [      DATA_WIDTH:0] ctrl_clipping_threshold_s;
@@ -123,13 +123,13 @@ module pc_cfr #(
   );
 
   // Up-sample by 2?
-  // 16 clock tick impulse latency
+  // 9 clock tick impulse latency
 
-  hb_up2_int2 #(
+  hb_up2 #(
       .XIN_WIDTH     (DATA_WIDTH),
       .COE_WIDTH     (16),
-      .NUM_UNIQUE_COE(5),
-      .COE_NUMS      ({952, -1609, 3090, -6260, 20622}),
+      .NUM_UNIQUE_COE(3),
+      .COE_NUMS      ({1277, -4710, 20014}),
       .YOUT_WIDTH    (DATA_WIDTH),
       .SRA_BITS      (15)
   ) i_up2_i (
@@ -141,11 +141,11 @@ module pc_cfr #(
       .ovf  (  /* Not used */)
   );
 
-  hb_up2_int2 #(
+  hb_up2 #(
       .XIN_WIDTH     (DATA_WIDTH),
       .COE_WIDTH     (16),
-      .NUM_UNIQUE_COE(5),
-      .COE_NUMS      ({952, -1609, 3090, -6260, 20622}),
+      .NUM_UNIQUE_COE(3),
+      .COE_NUMS      ({1277, -4710, 20014}),
       .YOUT_WIDTH    (DATA_WIDTH),
       .SRA_BITS      (15)
   ) i_up2_q (
@@ -196,7 +196,7 @@ module pc_cfr #(
   );
 
   // Peak detector,
-  // 4 clock tick latency
+  // 3 clock tick latency
 
   pc_cfr_pd #(
       .ITERATIONS(Iterations),

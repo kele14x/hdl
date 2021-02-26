@@ -21,10 +21,10 @@
 `timescale 1 ns / 1 ps `default_nettype none
 
 module cfr_ipif_mux #(
-    parameter int IPIF_ADDR_WIDTH = 14,
+    parameter int IPIF_ADDR_WIDTH = 15,
     parameter int IPIF_DATA_WIDTH = 32,
     //
-    parameter int NUM_BRANCH      = 16
+    parameter int NUM_BRANCH      = 32
 ) (
     // IPIF Interface
     //---------------

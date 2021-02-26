@@ -28,8 +28,8 @@ module tb_hb_up2 ();
 
   localparam int XinWidth = 16;
   localparam int CoeWidth = 16;
-  localparam int NumUniqueCoe = 5;
-  localparam signed [CoeWidth-1:0] CoeNums[NumUniqueCoe] = {952, -1609, 3090, -6260, 20622};
+  localparam int NumUniqueCoe = 3;
+  localparam signed [CoeWidth-1:0] CoeNums[NumUniqueCoe] = {1277, -4710, 20014};
   localparam int YoutWidth = 16;
   localparam int SraBits = 15;
 
@@ -47,9 +47,9 @@ module tb_hb_up2 ();
   logic                 ovf_mem [TestVectorLength * 2];
 
   initial begin
-    $readmemh("test_hb_up2_xin.txt", xin_mem, 0, TestVectorLength - 1);
-    $readmemh("test_hb_up2_yout.txt", yout_mem, 0, TestVectorLength * 2 - 1);
-    $readmemh("test_hb_up2_ovf.txt", ovf_mem, 0, TestVectorLength * 2 - 1);
+    $readmemh("test_hb_up2_input_xin.txt", xin_mem, 0, TestVectorLength - 1);
+    $readmemh("test_hb_up2_output_yout.txt", yout_mem, 0, TestVectorLength * 2 - 1);
+    $readmemh("test_hb_up2_output_ovf.txt", ovf_mem, 0, TestVectorLength * 2 - 1);
   end
 
   always begin
@@ -77,8 +77,6 @@ module tb_hb_up2 ();
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
           xin <= xin_mem[i];
-          @(posedge clk);
-          xin <= 0;
         end
       end
 
@@ -89,10 +87,6 @@ module tb_hb_up2 ();
           yout0_ref <= (i == 0) ? 0 : yout_mem[2*i-1];
           yout1_ref <= yout_mem[2*i];
           ovf_ref   <= ((i == 0) ? 0 : ovf_mem[2*i-1]) | ovf_mem[2*i];
-          @(posedge clk);
-          yout0_ref <= 0;
-          yout1_ref <= 0;
-          ovf_ref   <= 0;
         end
       end
 
@@ -104,7 +98,7 @@ module tb_hb_up2 ();
   end
 
 
-  hb_up2_int2 #(
+  hb_up2 #(
       .XIN_WIDTH     (XinWidth),
       .COE_WIDTH     (CoeWidth),
       .NUM_UNIQUE_COE(NumUniqueCoe),
