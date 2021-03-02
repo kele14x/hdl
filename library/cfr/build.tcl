@@ -1,8 +1,7 @@
 # Create project, override if exist
-create_project project_1 ./prj -part xczu21dr-ffvd1156-2-e -force
+create_project project_1 ./prj -part xczu49dr-ffvf1760-2lvi-i -force
 
 # Add source files
-add_files -norecurse ./../axi4l_ipif/axi4l_ipif_top.sv
 add_files -norecurse ./../cdc/cdc_array_single.sv
 add_files -norecurse ./../cfr_hardclipping/cfr_hardclipping.sv
 add_files -norecurse ./../cmult/cmult.sv
@@ -20,8 +19,6 @@ add_files -norecurse ./../util/bram_sdp.sv
 add_files -norecurse ./../util/reg_pipeline.sv
 add_files -norecurse ./cfr.sv
 add_files -norecurse ./cfr_branch.sv
-add_files -norecurse ./cfr_ipif_mux.sv
-add_files -norecurse ./cfr_regs.sv
 update_compile_order -fileset sources_1
 
 # Add constrain files

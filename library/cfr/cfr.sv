@@ -29,150 +29,42 @@ module cfr #(
     parameter int CPW_ADDR_WIDTH = 8 ,
     parameter int CPW_DATA_WIDTH = 16,
     //
-    parameter int NUM_BRANCH     = 32
+    parameter int NUM_BRANCH     = 16
 ) (
-    // AXI4-Lite Slave I/F
-    //--------------------
-    input  var                      aclk                   ,
-    input  var                      aresetn                ,
-    //
-    input  var [AXI_ADDR_WIDTH-1:0] s_axi_awaddr           ,
-    input  var [               2:0] s_axi_awprot           ,
-    input  var                      s_axi_awvalid          ,
-    output var                      s_axi_awready          ,
-    //
-    input  var [AXI_DATA_WIDTH-1:0] s_axi_wdata            ,
-    input  var [               3:0] s_axi_wstrb            ,
-    input  var                      s_axi_wvalid           ,
-    output var                      s_axi_wready           ,
-    //
-    output var [               1:0] s_axi_bresp            ,
-    output var                      s_axi_bvalid           ,
-    input  var                      s_axi_bready           ,
-    //
-    input  var [AXI_ADDR_WIDTH-1:0] s_axi_araddr           ,
-    input  var [               2:0] s_axi_arprot           ,
-    input  var                      s_axi_arvalid          ,
-    output var                      s_axi_arready          ,
-    //
-    output var [AXI_DATA_WIDTH-1:0] s_axi_rdata            ,
-    output var [               1:0] s_axi_rresp            ,
-    output var                      s_axi_rvalid           ,
-    input  var                      s_axi_rready           ,
     // Data Interface
     //---------------
-    input  var                      clk                    ,
-    input  var                      rst                    ,
+    input  var                      clk                                        ,
+    input  var                      rst                                        ,
     // Data input
-    input  var [    DATA_WIDTH-1:0] data_i_in  [NUM_BRANCH],
-    input  var [    DATA_WIDTH-1:0] data_q_in  [NUM_BRANCH],
+    input  var [    DATA_WIDTH-1:0] data_i_in                      [NUM_BRANCH],
+    input  var [    DATA_WIDTH-1:0] data_q_in                      [NUM_BRANCH],
     // Data output
-    output var [    DATA_WIDTH-1:0] data_i_out [NUM_BRANCH],
-    output var [    DATA_WIDTH-1:0] data_q_out [NUM_BRANCH]
+    output var [    DATA_WIDTH-1:0] data_i_out                     [NUM_BRANCH],
+    output var [    DATA_WIDTH-1:0] data_q_out                     [NUM_BRANCH],
+    // Control Interface
+    //------------------
+    input  var                      ctrl_clk                                   ,
+    input  var                      ctrl_rst                                   ,
+    //
+    input  var                      ctrl_pc_cfr_enable             [NUM_BRANCH],
+    input  var [      DATA_WIDTH:0] ctrl_pc_cfr_clipping_threshold [NUM_BRANCH],
+    input  var [      DATA_WIDTH:0] ctrl_pc_cfr_detect_threshold   [NUM_BRANCH],
+    //
+    input  var                      ctrl_pc_cfr_cpw_wr_en          [NUM_BRANCH],
+    input  var [CPW_ADDR_WIDTH-1:0] ctrl_pc_cfr_cpw_wr_addr        [NUM_BRANCH],
+    input  var [CPW_DATA_WIDTH-1:0] ctrl_pc_cfr_cpw_wr_data_i      [NUM_BRANCH],
+    input  var [CPW_DATA_WIDTH-1:0] ctrl_pc_cfr_cpw_wr_data_q      [NUM_BRANCH],
+    //
+    input  var                      ctrl_hc_enable                 [NUM_BRANCH],
+    input  var [      DATA_WIDTH:0] ctrl_hc_threshold              [NUM_BRANCH]
 );
-
-    logic [AXI_ADDR_WIDTH-3:0] wr_addr;
-    logic                      wr_req ;
-    logic [AXI_DATA_WIDTH-1:0] wr_data;
-    logic                      wr_ack ;
-
-    logic [AXI_ADDR_WIDTH-3:0] rd_addr;
-    logic                      rd_req ;
-    logic [AXI_DATA_WIDTH-1:0] rd_data;
-    logic                      rd_ack ;
-
-    logic [AXI_ADDR_WIDTH-8:0] ipif_wr_addr[NUM_BRANCH];
-    logic                      ipif_wr_req [NUM_BRANCH];
-    logic [AXI_DATA_WIDTH-1:0] ipif_wr_data[NUM_BRANCH];
-    logic                      ipif_wr_ack [NUM_BRANCH];
-
-    logic [AXI_ADDR_WIDTH-8:0] ipif_rd_addr[NUM_BRANCH];
-    logic                      ipif_rd_req [NUM_BRANCH];
-    logic [AXI_DATA_WIDTH-1:0] ipif_rd_data[NUM_BRANCH];
-    logic                      ipif_rd_ack [NUM_BRANCH];
-
-    // Address width 17 -> 15
-    axi4l_ipif_top #(
-        .C_ADDR_WIDTH(AXI_ADDR_WIDTH),
-        .C_DATA_WIDTH(AXI_DATA_WIDTH)
-    ) i_axi4l_ipif_top (
-        .aclk         (aclk          ),
-        .aresetn      (aresetn       ),
-        //
-        .s_axi_awaddr (s_axi_awaddr  ),
-        .s_axi_awprot (s_axi_awprot  ),
-        .s_axi_awvalid(s_axi_awvalid ),
-        .s_axi_awready(s_axi_awready ),
-        //
-        .s_axi_wdata  (s_axi_wdata   ),
-        .s_axi_wstrb  (s_axi_wstrb   ),
-        .s_axi_wvalid (s_axi_wvalid  ),
-        .s_axi_wready (s_axi_wready  ),
-        //
-        .s_axi_bresp  (s_axi_bresp   ),
-        .s_axi_bvalid (s_axi_bvalid  ),
-        .s_axi_bready (s_axi_bready  ),
-        //
-        .s_axi_araddr (s_axi_araddr  ),
-        .s_axi_arprot (s_axi_arprot  ),
-        .s_axi_arvalid(s_axi_arvalid ),
-        .s_axi_arready(s_axi_arready ),
-        //
-        .s_axi_rdata  (s_axi_rdata   ),
-        .s_axi_rresp  (s_axi_rresp   ),
-        .s_axi_rvalid (s_axi_rvalid  ),
-        .s_axi_rready (s_axi_rready  ),
-        //
-        .wr_addr      (wr_addr       ),
-        .wr_req       (wr_req        ),
-        .wr_be        (/* Not used */),
-        .wr_data      (wr_data       ),
-        .wr_ack       (wr_ack        ),
-        //
-        .rd_addr      (rd_addr       ),
-        .rd_req       (rd_req        ),
-        .rd_data      (rd_data       ),
-        .rd_ack       (rd_ack        )
-    );
-
-
-    // Address width 15 -> 10
-    cfr_ipif_mux #(
-        .IPIF_ADDR_WIDTH(AXI_ADDR_WIDTH-2),
-        .IPIF_DATA_WIDTH(AXI_DATA_WIDTH  ),
-        .NUM_BRANCH     (NUM_BRANCH      )
-    ) i_cfr_ipif_mux (
-        .clk         (aclk        ),
-        .rst         (~aresetn    ),
-        //
-        .wr_addr     (wr_addr     ),
-        .wr_req      (wr_req      ),
-        .wr_data     (wr_data     ),
-        .wr_ack      (wr_ack      ),
-        //
-        .rd_addr     (rd_addr     ),
-        .rd_req      (rd_req      ),
-        .rd_data     (rd_data     ),
-        .rd_ack      (rd_ack      ),
-        //
-        .ipif_wr_addr(ipif_wr_addr),
-        .ipif_wr_req (ipif_wr_req ),
-        .ipif_wr_data(ipif_wr_data),
-        .ipif_wr_ack (ipif_wr_ack ),
-        //
-        .ipif_rd_addr(ipif_rd_addr),
-        .ipif_rd_req (ipif_rd_req ),
-        .ipif_rd_data(ipif_rd_data),
-        .ipif_rd_ack (ipif_rd_ack )
-    );
 
 
     generate
         for (genvar i = 0; i < NUM_BRANCH; i++) begin : g_branch
 
-            // Address width: 10
             cfr_branch #(
-                .ID             (i),
+                .ID             (i               ),
                 //
                 .IPIF_ADDR_WIDTH(AXI_ADDR_WIDTH-7),
                 .IPIF_DATA_WIDTH(AXI_DATA_WIDTH  ),
@@ -182,27 +74,31 @@ module cfr #(
                 .CPW_ADDR_WIDTH (CPW_ADDR_WIDTH  ),
                 .CPW_DATA_WIDTH (CPW_DATA_WIDTH  )
             ) i_cfr_branch (
-                .ipif_clk    (aclk           ),
-                .ipif_rst    (~aresetn       ),
+                .clk                           (clk                              ),
+                .rst                           (rst                              ),
                 //
-                .ipif_wr_addr(ipif_wr_addr[i]),
-                .ipif_wr_req (ipif_wr_req [i]),
-                .ipif_wr_data(ipif_wr_data[i]),
-                .ipif_wr_ack (ipif_wr_ack [i]),
+                .data_i_in                     (data_i_in                     [i]),
+                .data_q_in                     (data_q_in                     [i]),
                 //
-                .ipif_rd_addr(ipif_rd_addr[i]),
-                .ipif_rd_req (ipif_rd_req [i]),
-                .ipif_rd_data(ipif_rd_data[i]),
-                .ipif_rd_ack (ipif_rd_ack [i]),
+                .data_i_out                    (data_i_out                    [i]),
+                .data_q_out                    (data_q_out                    [i]),
                 //
-                .clk         (clk            ),
-                .rst         (rst            ),
+                .ctrl_clk                      (ctrl_clk                         ),
+                .ctrl_rst                      (ctrl_rst                         ),
                 //
-                .data_i_in   (data_i_in   [i]),
-                .data_q_in   (data_q_in   [i]),
-                .data_i_out  (data_i_out  [i]),
-                .data_q_out  (data_q_out  [i])
+                .ctrl_pc_cfr_enable            (ctrl_pc_cfr_enable            [i]),
+                .ctrl_pc_cfr_clipping_threshold(ctrl_pc_cfr_clipping_threshold[i]),
+                .ctrl_pc_cfr_detect_threshold  (ctrl_pc_cfr_detect_threshold  [i]),
+                //
+                .ctrl_pc_cfr_cpw_wr_en         (ctrl_pc_cfr_cpw_wr_en         [i]),
+                .ctrl_pc_cfr_cpw_wr_addr       (ctrl_pc_cfr_cpw_wr_addr       [i]),
+                .ctrl_pc_cfr_cpw_wr_data_i     (ctrl_pc_cfr_cpw_wr_data_i     [i]),
+                .ctrl_pc_cfr_cpw_wr_data_q     (ctrl_pc_cfr_cpw_wr_data_q     [i]),
+                //
+                .ctrl_hc_enable                (ctrl_hc_enable                [i]),
+                .ctrl_hc_threshold             (ctrl_hc_threshold             [i])
             );
+
         end
     endgenerate
 endmodule

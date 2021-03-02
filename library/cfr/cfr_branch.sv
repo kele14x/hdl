@@ -31,79 +31,37 @@ module cfr_branch #(
     parameter int CPW_ADDR_WIDTH  = 8 ,
     parameter int CPW_DATA_WIDTH  = 16
 ) (
-    // IPIF Interface
-    //---------------
-    input  var                       ipif_clk    ,
-    input  var                       ipif_rst    ,
-    //
-    input  var [IPIF_ADDR_WIDTH-1:0] ipif_wr_addr,
-    input  var                       ipif_wr_req ,
-    input  var [IPIF_DATA_WIDTH-1:0] ipif_wr_data,
-    output var                       ipif_wr_ack ,
-    //
-    input  var [IPIF_ADDR_WIDTH-1:0] ipif_rd_addr,
-    input  var                       ipif_rd_req ,
-    output var [IPIF_DATA_WIDTH-1:0] ipif_rd_data,
-    output var                       ipif_rd_ack ,
     // Data Interface
     //---------------
-    input  var                       clk         ,
-    input  var                       rst         ,
+    input  var                      clk                           ,
+    input  var                      rst                           ,
     // Data input
-    input  var [     DATA_WIDTH-1:0] data_i_in   ,
-    input  var [     DATA_WIDTH-1:0] data_q_in   ,
+    input  var [    DATA_WIDTH-1:0] data_i_in                     ,
+    input  var [    DATA_WIDTH-1:0] data_q_in                     ,
     // Data output
-    output var [     DATA_WIDTH-1:0] data_i_out  ,
-    output var [     DATA_WIDTH-1:0] data_q_out
+    output var [    DATA_WIDTH-1:0] data_i_out                    ,
+    output var [    DATA_WIDTH-1:0] data_q_out                    ,
+    // Control Interface
+    //------------------
+    input  var                      ctrl_clk                      ,
+    input  var                      ctrl_rst                      ,
+    //
+    input  var                      ctrl_pc_cfr_enable            ,
+    input  var [      DATA_WIDTH:0] ctrl_pc_cfr_clipping_threshold,
+    input  var [      DATA_WIDTH:0] ctrl_pc_cfr_detect_threshold  ,
+    //
+    input  var                      ctrl_pc_cfr_cpw_wr_en         ,
+    input  var [CPW_ADDR_WIDTH-1:0] ctrl_pc_cfr_cpw_wr_addr       ,
+    input  var [CPW_DATA_WIDTH-1:0] ctrl_pc_cfr_cpw_wr_data_i     ,
+    input  var [CPW_DATA_WIDTH-1:0] ctrl_pc_cfr_cpw_wr_data_q     ,
+    //
+    input  var                      ctrl_hc_enable                ,
+    input  var [      DATA_WIDTH:0] ctrl_hc_threshold
 );
 
 
-    logic                ctrl_pc_cfr_enable            ;
-    logic [DATA_WIDTH:0] ctrl_pc_cfr_clipping_threshold;
-    logic [DATA_WIDTH:0] ctrl_pc_cfr_detect_threshold  ;
-
-    logic                      ctrl_pc_cfr_cpw_wr_en    ;
-    logic [CPW_ADDR_WIDTH-1:0] ctrl_pc_cfr_cpw_wr_addr  ;
-    logic [CPW_DATA_WIDTH-1:0] ctrl_pc_cfr_cpw_wr_data_i;
-    logic [CPW_DATA_WIDTH-1:0] ctrl_pc_cfr_cpw_wr_data_q;
-
-    logic                ctrl_hc_enable   ;
-    logic [DATA_WIDTH:0] ctrl_hc_threshold;
-
     logic [DATA_WIDTH-1:0] data_i_s;
     logic [DATA_WIDTH-1:0] data_q_s;
-
-
-    cfr_regs #(
-        .ID        (ID),
-        .ADDR_WIDTH(IPIF_ADDR_WIDTH),
-        .DATA_WIDTH(IPIF_DATA_WIDTH)
-    ) i_cfr_regs (
-        .clk                           (ipif_clk                      ),
-        .rst                           (ipif_rst                      ),
-        //
-        .wr_addr                       (ipif_wr_addr                  ),
-        .wr_req                        (ipif_wr_req                   ),
-        .wr_data                       (ipif_wr_data                  ),
-        .wr_ack                        (ipif_wr_ack                   ),
-        //
-        .rd_addr                       (ipif_rd_addr                  ),
-        .rd_req                        (ipif_rd_req                   ),
-        .rd_data                       (ipif_rd_data                  ),
-        .rd_ack                        (ipif_rd_ack                   ),
-        //
-        .ctrl_pc_cfr_enable            (ctrl_pc_cfr_enable            ),
-        .ctrl_pc_cfr_clipping_threshold(ctrl_pc_cfr_clipping_threshold),
-        .ctrl_pc_cfr_detect_threshold  (ctrl_pc_cfr_detect_threshold  ),
-        //
-        .ctrl_pc_cfr_cpw_wr_en         (ctrl_pc_cfr_cpw_wr_en         ),
-        .ctrl_pc_cfr_cpw_wr_addr       (ctrl_pc_cfr_cpw_wr_addr       ),
-        .ctrl_pc_cfr_cpw_wr_data_i     (ctrl_pc_cfr_cpw_wr_data_i     ),
-        .ctrl_pc_cfr_cpw_wr_data_q     (ctrl_pc_cfr_cpw_wr_data_q     ),
-        //
-        .ctrl_hc_enable                (ctrl_hc_enable                ),
-        .ctrl_hc_threshold             (ctrl_hc_threshold             )
-    );
 
 
     pc_cfr #(
@@ -123,8 +81,8 @@ module cfr_branch #(
         .data_q_out             (data_q_s                      ),
         // Control Interface
         //------------------
-        .ctrl_clk               (ipif_clk                      ),
-        .ctrl_rst               (ipif_rst                      ),
+        .ctrl_clk               (ctrl_clk                      ),
+        .ctrl_rst               (ctrl_rst                      ),
         //
         .ctrl_enable            (ctrl_pc_cfr_enable            ),
         .ctrl_clipping_threshold(ctrl_pc_cfr_clipping_threshold),
