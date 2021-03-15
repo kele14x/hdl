@@ -1,0 +1,14 @@
+[main]
+description = CORIDC rotate core
+
+[file_set]
+src_files =
+    cordic_rotate
+    ../util/reg_pipeline.sv
+sim_private_src_files =
+    test_cordic_rotate_input_xin.txt
+    test_cordic_rotate_output_xout.txt
+    test_cordic_rotate_output_yout.txt
+    test_cordic_rotate_input_yin.txt
+    test_cordic_rotate_input_theta.txt
+    tb_cordic_rotate.sv
