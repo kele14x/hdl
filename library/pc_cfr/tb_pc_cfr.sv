@@ -44,8 +44,11 @@ module tb_cfr_softclipping ();
   logic        [     DataWidth:0] ctrl_clipping_threshold;
   logic        [     DataWidth:0] ctrl_pd_threshold;
 
-  logic                           ctrl_cpw_wr_en;
-  logic        [CpwAddrWidth-1:0] ctrl_cpw_wr_addr;
+  logic        [CpwAddrWidth-1:0] ctrl_cpw_addr;
+  logic                           ctrl_cpw_en;
+  logic                           ctrl_cpw_we;
+  logic        [   DataWidth-1:0] ctrl_cpw_rd_data_i;
+  logic        [   DataWidth-1:0] ctrl_cpw_rd_data_q;
   logic        [   DataWidth-1:0] ctrl_cpw_wr_data_i;
   logic        [   DataWidth-1:0] ctrl_cpw_wr_data_q;
 
@@ -71,13 +74,14 @@ module tb_cfr_softclipping ();
     $readmemh("test_pc_cfr_data_q_out.txt", data_q_out_mem, 0, TestVectorLength - 1);
   end
 
-  always begin
+  initial begin
     clk = 0;
     ctrl_clk = 0;
-    #5;
-    clk = 1;
-    ctrl_clk = 1;
-    #5;
+    forever begin
+      #5;
+      clk = ~clk;
+      ctrl_clk = ~ctrl_clk;
+    end
   end
 
   initial begin
@@ -88,8 +92,9 @@ module tb_cfr_softclipping ();
     ctrl_enable = 1;
     ctrl_clipping_threshold = 13818;
     ctrl_pd_threshold = 13818;
-    ctrl_cpw_wr_en = 0;
-    ctrl_cpw_wr_addr = 0;
+    ctrl_cpw_addr = 0;
+    ctrl_cpw_en = 0;
+    ctrl_cpw_we = 0;
     ctrl_cpw_wr_data_i = 0;
     ctrl_cpw_wr_data_q = 0;
     #10000;
@@ -114,14 +119,16 @@ module tb_cfr_softclipping ();
     // Set cancellation pulse
     for (int i = 0; i < 2**CpwAddrWidth; i++) begin
       @(posedge ctrl_clk);
-      ctrl_cpw_wr_en <= 1'b1;
-      ctrl_cpw_wr_addr <= i;
+      ctrl_cpw_addr <= i;
+      ctrl_cpw_en <= 1'b1;
+      ctrl_cpw_we <= 1'b1;
       ctrl_cpw_wr_data_i <= cancellation_pulse_i_mem[i];
       ctrl_cpw_wr_data_q <= cancellation_pulse_q_mem[i];
     end
     @(posedge ctrl_clk);
-    ctrl_cpw_wr_en <= 1'b0;
-    ctrl_cpw_wr_addr <= 0;
+    ctrl_cpw_addr <= 0;
+    ctrl_cpw_en <= 1'b0;
+    ctrl_cpw_we <= 1'b0;
     ctrl_cpw_wr_data_i <= 0;
     ctrl_cpw_wr_data_q <= 0;
 

@@ -47,8 +47,11 @@ module pc_cfr_cpg #(
     input var  logic                             ctrl_clk,
     input var  logic                             ctrl_rst,
     //
-    input var  logic                             ctrl_cpw_wr_en,
-    input var  logic        [CPW_ADDR_WIDTH-1:0] ctrl_cpw_wr_addr,
+    input var  logic        [CPW_ADDR_WIDTH-1:0] ctrl_cpw_addr,
+    input var  logic                             ctrl_cpw_en,
+    input var  logic                             ctrl_cpw_we,
+    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_i,
+    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_q,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
@@ -139,22 +142,27 @@ module pc_cfr_cpg #(
   assign cpw_rd_addr = {state_addr, ~state_phase};
 
   (* keep_hierarchy="yes" *)
-  bram_sdp #(
+  bram_tdp #(
       .ADDR_WIDTH    (CPW_ADDR_WIDTH),
       .DATA_WIDTH    (DATA_WIDTH * 2),
       .USE_OUTPUT_REG(1),
       .INIT_FILE     ("")
-  ) i_bram_sdp (
+  ) i_bram_tdp (
       //
       .clka (ctrl_clk),
-      .wea  (ctrl_cpw_wr_en),
-      .addra(ctrl_cpw_wr_addr),
+      .rsta (ctrl_rst),
+      .ena  (ctrl_cpw_en),
+      .wea  (ctrl_cpw_we),
+      .addra(ctrl_cpw_addr),
       .dina ({ctrl_cpw_wr_data_q, ctrl_cpw_wr_data_i}),
+      .douta({ctrl_cpw_rd_data_q, ctrl_cpw_rd_data_i}),
       //
       .clkb (clk),
-      .enb  (cpw_rd_en),
       .rstb (~cpw_rd_en),
+      .enb  (cpw_rd_en),
+      .web  (1'b0),
       .addrb(cpw_rd_addr),
+      .dinb ('0),
       .doutb({cpw_rd_data_q, cpw_rd_data_i})
   );
 

@@ -3,18 +3,19 @@ create_project project_1 ./prj -part xczu21dr-ffvd1156-2-e -force
 
 # Add source files
 add_files -norecurse ./../cdc/cdc_array_single.sv
+add_files -norecurse ./../cdc/cdc_async_rst_sync.sv
 add_files -norecurse ./../cmult/cmult.sv
 add_files -norecurse ./../cordic_cart2pol/cordic_cart2pol.sv
 add_files -norecurse ./../cordic_pol2cart/cordic_pol2cart.sv
 add_files -norecurse ./../cordic_rotate/cordic_rotate.sv
 add_files -norecurse ./../hb_up2/hb_up2.sv
 add_files -norecurse ./../util/adder.sv
-add_files -norecurse ./../util/bram_sdp.sv
+add_files -norecurse ./../util/bram_tdp.sv
 add_files -norecurse ./../util/reg_pipeline.sv
-add_files -norecurse ./pc_cfr_cpg.sv
-add_files -norecurse ./pc_cfr_softclipper.sv
-add_files -norecurse ./pc_cfr_pd.sv
 add_files -norecurse ./pc_cfr.sv
+add_files -norecurse ./pc_cfr_cpg.sv
+add_files -norecurse ./pc_cfr_pd.sv
+add_files -norecurse ./pc_cfr_softclipper.sv
 update_compile_order -fileset sources_1
 
 # Add simulation only files

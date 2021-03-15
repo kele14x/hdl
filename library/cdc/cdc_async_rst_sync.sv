@@ -12,15 +12,15 @@ module cdc_async_rst_sync #(
     parameter logic RST_ACTIVE_HIGH = 0
 ) (
     input var  clk,
-    input var  async_rst,
-    output var sync_rst
+    input var  async_rst_in,
+    output var sync_rst_out
 );
 
   (* async_reg="true" *)
   logic [SYNC_FF-1:0] async_reg;
   logic async_clr;
 
-  assign async_clr = async_rst ^ (RST_ACTIVE_HIGH ? 1'b0 : 1'b1);
+  assign async_clr = async_rst_in ^ (RST_ACTIVE_HIGH ? 1'b0 : 1'b1);
 
   always_ff @(posedge clk, posedge async_clr) begin
     if (async_clr) begin
@@ -30,7 +30,7 @@ module cdc_async_rst_sync #(
     end
   end
 
-  assign sync_rst = async_reg[SYNC_FF-1];
+  assign sync_rst_out = async_reg[SYNC_FF-1];
 
 endmodule
 

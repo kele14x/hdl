@@ -47,8 +47,11 @@ module pc_cfr #(
     input var  logic [      DATA_WIDTH:0] ctrl_clipping_threshold,  // unsigned
     input var  logic [      DATA_WIDTH:0] ctrl_pd_threshold,  // unsigned
     // Cancellation pulse write port
-    input var  logic                      ctrl_cpw_wr_en,
-    input var  logic [CPW_ADDR_WIDTH-1:0] ctrl_cpw_wr_addr,
+    input var  logic [CPW_ADDR_WIDTH-1:0] ctrl_cpw_addr,
+    input var  logic                      ctrl_cpw_en,
+    input var  logic                      ctrl_cpw_we,
+    output var logic [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_i,
+    output var logic [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_q,
     input var  logic [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
     input var  logic [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
@@ -56,6 +59,8 @@ module pc_cfr #(
 
   localparam int Iterations = 7;
   localparam int DataPathLatency = 9 + 10 + 3 + 10;
+
+  logic local_rst;
 
   logic                      ctrl_enable_s;
   logic [      DATA_WIDTH:0] ctrl_clipping_threshold_s;
@@ -122,6 +127,17 @@ module pc_cfr #(
     .dest_out(ctrl_pd_threshold_s)
   );
 
+  // Reset CDC
+
+  cdc_async_rst_sync #(
+      .SYNC_FF(4),
+      .RST_ACTIVE_HIGH(1)
+  ) i_cdc_async_rst_sync (
+      .clk(clk),
+      .async_rst_in(rst),
+      .sync_rst_out(local_rst)
+  );
+
   // Up-sample by 2?
   // 9 clock tick impulse latency
 
@@ -134,7 +150,7 @@ module pc_cfr #(
       .SRA_BITS      (15)
   ) i_up2_i (
       .clk  (clk),
-      .rst  (rst),
+      .rst  (local_rst),
       .xin  (data_i_in),
       .yout0(data_i_p0),
       .yout1(data_i_p1),
@@ -150,7 +166,7 @@ module pc_cfr #(
       .SRA_BITS      (15)
   ) i_up2_q (
       .clk  (clk),
-      .rst  (rst),
+      .rst  (local_rst),
       .xin  (data_q_in),
       .yout0(data_q_p0),
       .yout1(data_q_p1),
@@ -167,7 +183,7 @@ module pc_cfr #(
       .COMPENSATION_SCALING(1)
   ) i_cordic_cart2pol_p0 (
       .clk     (clk),
-      .rst     (rst),
+      .rst     (local_rst),
       //
       .xin     (data_i_p0),
       .yin     (data_q_p0),
@@ -184,7 +200,7 @@ module pc_cfr #(
       .COMPENSATION_SCALING(1)
   ) i_cordic_cart2pol_p1 (
       .clk     (clk),
-      .rst     (rst),
+      .rst     (local_rst),
       //
       .xin     (data_i_p1),
       .yin     (data_q_p1),
@@ -203,7 +219,7 @@ module pc_cfr #(
       .DATA_WIDTH(DATA_WIDTH)
   ) i_pc_cfr_pd (
       .clk                    (clk),
-      .rst                    (rst),
+      .rst                    (local_rst),
       //
       .data_r_p0              (data_r_p0[DATA_WIDTH:0]),
       .data_r_p1              (data_r_p1[DATA_WIDTH:0]),
@@ -230,7 +246,7 @@ module pc_cfr #(
       .COMPENSATION_SCALING(1)
   ) i_cordic_pol2cart (
       .clk     (clk),
-      .rst     (rst),
+      .rst     (local_rst),
       //
       .r       (peak_r),
       .theta   (peak_theta),
@@ -270,7 +286,7 @@ module pc_cfr #(
       .NUM_CPG       (6)
   ) i_pc_cfr_softclipper (
       .clk               (clk),
-      .rst               (rst),
+      .rst               (local_rst),
       //
       .data_i_in         (data_i_in_d),
       .data_q_in         (data_q_in_d),
@@ -291,8 +307,11 @@ module pc_cfr #(
       .ctrl_clk          (ctrl_clk),
       .ctrl_rst          (ctrl_rst),
       //
-      .ctrl_cpw_wr_en    (ctrl_cpw_wr_en),
-      .ctrl_cpw_wr_addr  (ctrl_cpw_wr_addr),
+      .ctrl_cpw_addr     (ctrl_cpw_addr),
+      .ctrl_cpw_en       (ctrl_cpw_en),
+      .ctrl_cpw_we       (ctrl_cpw_we),
+      .ctrl_cpw_rd_data_i(ctrl_cpw_rd_data_i),
+      .ctrl_cpw_rd_data_q(ctrl_cpw_rd_data_q),
       .ctrl_cpw_wr_data_i(ctrl_cpw_wr_data_i),
       .ctrl_cpw_wr_data_q(ctrl_cpw_wr_data_q)
   );

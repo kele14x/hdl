@@ -65,7 +65,7 @@ module bram_tdp #(
     end
   end
 
-  // Port A process
+  // Memory write
 
   always_ff @(posedge clka) begin
     if (ena && wea) begin
@@ -73,19 +73,21 @@ module bram_tdp #(
     end
   end
 
+  always_ff @(posedge clkb) begin
+    if (enb && web) begin
+      MEM[addrb] <= dinb;
+    end
+  end
+
+  // Port A read
+
   always_ff @(posedge clka) begin
     if (ena) begin
       ram_data_a <= MEM[addra];
     end
   end
 
-  // Read B process
-
-  always_ff @(posedge clkb) begin
-    if (enb && web) begin
-      MEM[addrb] <= dinb;
-    end
-  end
+  // Read B read
 
   always_ff @(posedge clkb) begin
     if (enb) begin
