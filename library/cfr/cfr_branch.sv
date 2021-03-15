@@ -50,8 +50,11 @@ module cfr_branch #(
     input  var [      DATA_WIDTH:0] ctrl_pc_cfr_clipping_threshold,
     input  var [      DATA_WIDTH:0] ctrl_pc_cfr_detect_threshold  ,
     //
-    input  var                      ctrl_pc_cfr_cpw_wr_en         ,
-    input  var [CPW_ADDR_WIDTH-1:0] ctrl_pc_cfr_cpw_wr_addr       ,
+    input  var [CPW_ADDR_WIDTH-1:0] ctrl_pc_cfr_cpw_addr          ,
+    input  var                      ctrl_pc_cfr_cpw_en            ,
+    input  var                      ctrl_pc_cfr_cpw_we            ,
+    output var [CPW_DATA_WIDTH-1:0] ctrl_pc_cfr_cpw_rd_data_i     ,
+    output var [CPW_DATA_WIDTH-1:0] ctrl_pc_cfr_cpw_rd_data_q     ,
     input  var [CPW_DATA_WIDTH-1:0] ctrl_pc_cfr_cpw_wr_data_i     ,
     input  var [CPW_DATA_WIDTH-1:0] ctrl_pc_cfr_cpw_wr_data_q     ,
     //
@@ -88,8 +91,11 @@ module cfr_branch #(
         .ctrl_clipping_threshold(ctrl_pc_cfr_clipping_threshold),
         .ctrl_pd_threshold      (ctrl_pc_cfr_detect_threshold  ),
         //
-        .ctrl_cpw_wr_en         (ctrl_pc_cfr_cpw_wr_en         ),
-        .ctrl_cpw_wr_addr       (ctrl_pc_cfr_cpw_wr_addr       ),
+        .ctrl_cpw_addr          (ctrl_pc_cfr_cpw_addr          ),
+        .ctrl_cpw_en            (ctrl_pc_cfr_cpw_en            ),
+        .ctrl_cpw_we            (ctrl_pc_cfr_cpw_we            ),
+        .ctrl_cpw_rd_data_i     (ctrl_pc_cfr_cpw_rd_data_i     ),
+        .ctrl_cpw_rd_data_q     (ctrl_pc_cfr_cpw_rd_data_q     ),
         .ctrl_cpw_wr_data_i     (ctrl_pc_cfr_cpw_wr_data_i     ),
         .ctrl_cpw_wr_data_q     (ctrl_pc_cfr_cpw_wr_data_q     )
     );
