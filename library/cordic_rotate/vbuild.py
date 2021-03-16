@@ -1,47 +1,85 @@
-import configparser
 import argparse
-import pathlib
 import logging
 import sys
 import subprocess
+import os
+
+logger = logging.getLogger('main')
+
+default_config = {
+    'working_dir': 'build',  # relative path to the folder where .flt file exists
+}
 
 
 def read_flt(filename: str):
     """
     Read and parse a .flt file
     """
-    path: pathlib.Path
-    path = pathlib.Path(filename)
-    path.resolve()
-    logging.basicConfig(level=logging.INFO)
-    logging.info('Read .flt file "%s"', path)
 
-    config = configparser.ConfigParser()
-    config.read(path)
+    abspath = os.path.abspath(filename)
+    logger.info('Read .flt file "%s"', abspath)
 
-    flt = {}
-    print(config['file_set']['src_files'].split())
-
-    flt['flt_file_path'] = path.parent
-    return flt
+    files = []
+    with open(abspath, 'r') as flt:
+        for line in flt:
+            if not line[0] == '#' or not line == '':
+                files.append(line)
 
 
-def setup(core):
-    working_dir: pathlib.Path
-    build_dir = working_dir / 'prj'
-    if not build_dir.exists():
-        build_dir.mkdir()
+def call_vivado(args, settings=None):
+    if settings:
+        (_, ext) = os.path.splitext(settings)
+        if ext == '.bat':
+            vivado_cmd = 'call {} & vivado'.format(settings)
+        elif ext == '.sh':
+            vivado_cmd = 'source {} & vivado'.format(settings)
+        else:
+            logger.error(
+                'Wrong configuration of vivado_settings {}'.format(settings))
+            sys.exit()
+    else:
+        vivado_cmd = 'vivado'
+
+    cmd = '{} -nolog -nojournal '.format(vivado_cmd)
+    cmd = cmd + ' '.join(args)
+
+    logger.info('Call command \"{}\"'.format(cmd))
+    try:
+        # shell=True is important here
+        output = subprocess.check_output(cmd, shell=True)
+    except subprocess.CalledProcessError as e:
+        logger.error('Call command error with code {}'.format(e.returncode))
+    return output
 
 
-def call_vivado(vivado, args):
-    subprocess.run('vivado -nolog -nojou' + ' '.join(args),
-                   shell=True)
+def get_vivado_version():
+    vivado_settings = 'D:\\Xilinx\\Vivado\\2020.2\\settings64.bat'
+    output = call_vivado(['-version'], settings=vivado_settings)
+    version = output.split()[1][1:]
+    # version is bytes string, so decode is needed
+    logger.info('Vivado version {}'.format(version.decode()))
+    return version
+
+
+def config_logger():
+    formatter = logging.Formatter('[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s')
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
 
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('infile')
-    args = parser.parse_args(sys.argv)
+    config_logger()
+    logger.info("vbuild starts")
 
-    prj = read_flt(args.infile)
+    get_vivado_version()
+
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument('infile')
+    # args = parser.parse_args(sys.argv)
+
+    # prj = read_flt(args.infile)
