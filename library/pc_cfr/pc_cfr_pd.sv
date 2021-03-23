@@ -117,7 +117,7 @@ module pc_cfr_pd #(
     end
   end
 
-  assign peak_lt_threshold = (peak_valid_pre && peak_r_pre > ctrl_pd_threshold);
+  assign peak_lt_threshold = ctrl_enable && peak_valid_pre && (peak_r_pre > ctrl_pd_threshold);
 
   always_ff @(posedge clk) begin
     peak_valid <= peak_lt_threshold ? 1'b1 : 1'b0;
