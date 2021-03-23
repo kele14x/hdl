@@ -1,0 +1,6 @@
+[src_files]
+axi4l_if.sv
+axi4l_vip.sv
+
+[tb_files]
+tb_axi4l_vip.sv
