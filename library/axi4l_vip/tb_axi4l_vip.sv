@@ -73,7 +73,7 @@ module tb_axi4l_vip ();
     aresetn = 1;
   end
 
-//  logic [31:0] data;
+  //  logic [31:0] data;
 
   initial begin
     tb_axi4l_vip.DUT.IF.set_intf_master();
@@ -112,7 +112,7 @@ module tb_axi4l_vip ();
       .s_axi_arprot (s_axi_arprot),
       .s_axi_arvalid(s_axi_arvalid),
       .s_axi_arready(s_axi_arready),
-      //
+
       .s_axi_rdata  (s_axi_rdata),
       .s_axi_rresp  (s_axi_rresp),
       .s_axi_rvalid (s_axi_rvalid),

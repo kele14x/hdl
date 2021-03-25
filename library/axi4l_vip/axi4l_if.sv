@@ -8,35 +8,39 @@ interface axi4l_if #(
     parameter int C_ADDR_WIDTH = 32,
     parameter int C_DATA_WIDTH = 32
 ) (
-    input var aclk,
-    input var aresetn
+    // Due to a bug in Vivado 2020.2, I need to declare the type of port to tri
+    input tri aclk,
+    input tri aresetn
 );
 
-  localparam int MAX_WAIT = 16;
+  localparam int MaxWait = 16;
 
-  logic [  C_ADDR_WIDTH-1:0] awaddr;
-  logic [               2:0] awprot;
-  logic                      awvalid;
-  logic                      awready;
+  // Those signals need multiple driver to solve the mux behavior. If interface
+  // is set to monitor mode, all signals will be driver by 'z internally. And
+  // external module could drive it to the desired value.
+  tri [  C_ADDR_WIDTH-1:0] awaddr;
+  tri [               2:0] awprot;
+  tri                      awvalid;
+  tri                      awready;
   //
-  logic [  C_DATA_WIDTH-1:0] wdata;
-  logic [C_DATA_WIDTH/8-1:0] wstrb;
-  logic                      wvalid;
-  logic                      wready;
+  tri [  C_DATA_WIDTH-1:0] wdata;
+  tri [C_DATA_WIDTH/8-1:0] wstrb;
+  tri                      wvalid;
+  tri                      wready;
   //
-  logic [               1:0] bresp;
-  logic                      bvalid;
-  logic                      bready;
+  tri [               1:0] bresp;
+  tri                      bvalid;
+  tri                      bready;
   //
-  logic [  C_ADDR_WIDTH-1:0] araddr;
-  logic [               2:0] arprot;
-  logic                      arvalid;
-  logic                      arready;
+  tri [  C_ADDR_WIDTH-1:0] araddr;
+  tri [               2:0] arprot;
+  tri                      arvalid;
+  tri                      arready;
   //
-  logic [  C_DATA_WIDTH-1:0] rdata;
-  logic [               1:0] rresp;
-  logic                      rvalid;
-  logic                      rready;
+  tri [  C_DATA_WIDTH-1:0] rdata;
+  tri [               1:0] rresp;
+  tri                      rvalid;
+  tri                      rready;
 
   modport master(
       input aclk, aresetn, awready, wready, bresp, bvalid, arready, rdata, rresp, rvalid,
@@ -44,7 +48,8 @@ interface axi4l_if #(
   );
 
   modport slave(
-      input aclk, aresetn, awaddr, awprot, awvalid, wdata, wstrb, wvalid, bready, araddr, arprot, arvalid, rready,
+      input aclk, aresetn, awaddr, awprot, awvalid, wdata, wstrb, wvalid, bready, araddr, arprot,
+        arvalid, rready,
       output awready, wready, bresp, bvalid, arready, rdata, rresp, rvalid
   );
 
@@ -174,7 +179,8 @@ interface axi4l_if #(
     rready_s  <= 0;
   endfunction
 
-  task master_write(input logic [C_ADDR_WIDTH-1:0] addr, input logic [C_DATA_WIDTH-1:0] data);
+  task automatic master_write(input logic [C_ADDR_WIDTH-1:0] addr,
+                              input logic [C_DATA_WIDTH-1:0] data);
     @(posedge aclk);
     awaddr_s  <= addr;
     awprot_s  <= 0;
@@ -184,7 +190,7 @@ interface axi4l_if #(
     wstrb_s   <= 1;
     wvalid_s  <= 1;
     //
-    bready    <= 1;
+    bready_s  <= 1;
     //
     araddr_s  <= 0;
     arprot_s  <= 0;
@@ -229,49 +235,50 @@ interface axi4l_if #(
     join
   endtask
 
- task master_read(input logic [C_ADDR_WIDTH-1:0] addr, output logic [C_DATA_WIDTH-1:0] data);
-   @(posedge aclk);
-   awaddr_s  <= 0;
-   awprot_s  <= 0;
-   awvalid_s <= 0;
-   //
-   wdata_s   <= 0;
-   wstrb_s   <= 1;
-   wvalid_s  <= 0;
-   //
-   bready    <= 0;
-   //
-   araddr_s  <= addr;
-   arprot_s  <= 0;
-   arvalid_s <= 1;
-   //
-   rready_s  <= 1;
-   //
-   fork
-     begin : p_wait_arready
-       repeat (16)
-         @(posedge aclk) begin
-           if (arready) begin
-             araddr_s  <= 0;
-             arprot_s  <= 0;
-             arvalid_s <= 0;
-             break;
-           end
-         end
-     end
+  task automatic master_read(input logic [C_ADDR_WIDTH-1:0] addr,
+                             output logic [C_DATA_WIDTH-1:0] data);
+    @(posedge aclk);
+    awaddr_s  <= 0;
+    awprot_s  <= 0;
+    awvalid_s <= 0;
+    //
+    wdata_s   <= 0;
+    wstrb_s   <= 1;
+    wvalid_s  <= 0;
+    //
+    bready_s  <= 0;
+    //
+    araddr_s  <= addr;
+    arprot_s  <= 0;
+    arvalid_s <= 1;
+    //
+    rready_s  <= 1;
+    //
+    fork
+      begin : p_wait_arready
+        repeat (16)
+          @(posedge aclk) begin
+            if (arready) begin
+              araddr_s  <= 0;
+              arprot_s  <= 0;
+              arvalid_s <= 0;
+              break;
+            end
+          end
+      end
 
-     begin : p_wait_rdata
-       repeat (16)
-         @(posedge aclk) begin
-           if (rvalid) begin
-             // data      = rdata;
-             rready_s <= 0;
-             break;
-           end
-         end
-     end
-   join
- endtask
+      begin : p_wait_rdata
+        repeat (16)
+          @(posedge aclk) begin
+            if (rvalid) begin
+              // data      = rdata;
+              rready_s <= 0;
+              break;
+            end
+          end
+      end
+    join
+  endtask
 
 endinterface  // axi4l_if
 

@@ -10,58 +10,59 @@ module axi4l_vip #(
     parameter int C_ADDR_WIDTH = 32,
     parameter int C_DATA_WIDTH = 32
 ) (
-    input var                       aclk,
-    input var                       aresetn,
+    input var                          aclk,
+    input var                          aresetn,
+    // Due to a bug in Vivado 2020.2, I need to declare all posts below to type tri
     // Slave side interface
     //---------------------
-    input var  [  C_ADDR_WIDTH-1:0] s_axi_awaddr,
-    input var  [               2:0] s_axi_awprot,
-    input var                       s_axi_awvalid,
-    output var                      s_axi_awready,
+    input     tri [  C_ADDR_WIDTH-1:0] s_axi_awaddr,
+    input     tri [               2:0] s_axi_awprot,
+    input     tri                      s_axi_awvalid,
+    output    tri                      s_axi_awready,
     //
-    input var  [  C_DATA_WIDTH-1:0] s_axi_wdata,
-    input var  [C_DATA_WIDTH/8-1:0] s_axi_wstrb,
-    input var                       s_axi_wvalid,
-    output var                      s_axi_wready,
+    input     tri [  C_DATA_WIDTH-1:0] s_axi_wdata,
+    input     tri [C_DATA_WIDTH/8-1:0] s_axi_wstrb,
+    input     tri                      s_axi_wvalid,
+    output    tri                      s_axi_wready,
     //
-    output var [               1:0] s_axi_bresp,
-    output var                      s_axi_bvalid,
-    input var                       s_axi_bready,
+    output    tri [               1:0] s_axi_bresp,
+    output    tri                      s_axi_bvalid,
+    input     tri                      s_axi_bready,
     //
-    input var  [  C_ADDR_WIDTH-1:0] s_axi_araddr,
-    input var  [               2:0] s_axi_arprot,
-    input var                       s_axi_arvalid,
-    output var                      s_axi_arready,
+    input     tri [  C_ADDR_WIDTH-1:0] s_axi_araddr,
+    input     tri [               2:0] s_axi_arprot,
+    input     tri                      s_axi_arvalid,
+    output    tri                      s_axi_arready,
     //
-    output var [  C_DATA_WIDTH-1:0] s_axi_rdata,
-    output var [               1:0] s_axi_rresp,
-    output var                      s_axi_rvalid,
-    input var                       s_axi_rready,
+    output    tri [  C_DATA_WIDTH-1:0] s_axi_rdata,
+    output    tri [               1:0] s_axi_rresp,
+    output    tri                      s_axi_rvalid,
+    input     tri                      s_axi_rready,
     // Master side interface
     //----------------------
-    output var [  C_ADDR_WIDTH-1:0] m_axi_awaddr,
-    output var [               2:0] m_axi_awprot,
-    output var                      m_axi_awvalid,
-    input var                       m_axi_awready,
+    output    tri [  C_ADDR_WIDTH-1:0] m_axi_awaddr,
+    output    tri [               2:0] m_axi_awprot,
+    output    tri                      m_axi_awvalid,
+    input     tri                      m_axi_awready,
     //
-    output var [  C_DATA_WIDTH-1:0] m_axi_wdata,
-    output var [C_DATA_WIDTH/8-1:0] m_axi_wstrb,
-    output var                      m_axi_wvalid,
-    input var                       m_axi_wready,
+    output    tri [  C_DATA_WIDTH-1:0] m_axi_wdata,
+    output    tri [C_DATA_WIDTH/8-1:0] m_axi_wstrb,
+    output    tri                      m_axi_wvalid,
+    input     tri                      m_axi_wready,
     //
-    input var  [               1:0] m_axi_bresp,
-    input var                       m_axi_bvalid,
-    output var                      m_axi_bready,
+    input     tri [               1:0] m_axi_bresp,
+    input     tri                      m_axi_bvalid,
+    output    tri                      m_axi_bready,
     //
-    output var [  C_ADDR_WIDTH-1:0] m_axi_araddr,
-    output var [               2:0] m_axi_arprot,
-    output var                      m_axi_arvalid,
-    input var                       m_axi_arready,
+    output    tri [  C_ADDR_WIDTH-1:0] m_axi_araddr,
+    output    tri [               2:0] m_axi_arprot,
+    output    tri                      m_axi_arvalid,
+    input     tri                      m_axi_arready,
     //
-    input var  [  C_DATA_WIDTH-1:0] m_axi_rdata,
-    input var  [               1:0] m_axi_rresp,
-    input var                       m_axi_rvalid,
-    output var                      m_axi_rready
+    input     tri [  C_DATA_WIDTH-1:0] m_axi_rdata,
+    input     tri [               1:0] m_axi_rresp,
+    input     tri                      m_axi_rvalid,
+    output    tri                      m_axi_rready
 );
 
   axi4l_if #(
