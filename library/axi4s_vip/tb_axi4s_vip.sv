@@ -74,13 +74,13 @@ module tb_axi4s_vip ();
       .m_axis_tready(m_axis_tready)
   );
 
-    logic [TDATA_WIDTH-1:0] data[100];
+  logic [TDATA_WIDTH-1:0] data[100];
 
-    initial begin
-        for (int i = 0; i < 100; i++) begin
-            data[i] = i + 100;
-        end
+  initial begin
+    for (int i = 0; i < 100; i++) begin
+      data[i] = i + 100;
     end
+  end
 
   initial begin
     aclk = 1'b0;
@@ -100,11 +100,11 @@ module tb_axi4s_vip ();
   end
 
   initial begin
-    tb_axi4s_vip.DUT.IF.reset();
-    tb_axi4s_vip.DUT.IF.intf_set_master();
+    tb_axi4s_vip.DUT.reset();
+    tb_axi4s_vip.DUT.intf_set_master();
     wait(aresetn);
     #100;
-    tb_axi4s_vip.DUT.IF.master_send(100, data);
+    tb_axi4s_vip.DUT.master_send(100, data);
     #1000;
     $finish();
   end
