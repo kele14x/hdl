@@ -35,7 +35,7 @@ module tb_axi4s_vip ();
   logic                                                                  m_axis_tvalid;
   logic [(TDATA_WIDTH == 0 || HAS_TSTRB == 0 ? 0 : (TDATA_WIDTH/8-1)):0] m_axis_tstrb;
   logic [                    (TUSER_WIDTH == 0 ? 0 : (TUSER_WIDTH-1)):0] m_axis_tuser;
-  logic                                                                  m_axis_tready = 1;
+  logic                                                                  m_axis_tready;
 
   axi4s_vip #(
       .HAS_ACLKEN (HAS_ACLKEN),
@@ -49,30 +49,11 @@ module tb_axi4s_vip ();
       .TID_WIDTH  (TID_WIDTH),
       .TUSER_WIDTH(TUSER_WIDTH)
   ) DUT (
-      .aclk         (aclk),
-      .aclken       (aclken),
-      .aresetn      (aresetn),
-      //
-      .s_axis_tdata (s_axis_tdata),
-      .s_axis_tdest (s_axis_tdest),
-      .s_axis_tid   (s_axis_tid),
-      .s_axis_tkeep (s_axis_tkeep),
-      .s_axis_tlast (s_axis_tlast),
-      .s_axis_tvalid(s_axis_tvalid),
-      .s_axis_tstrb (s_axis_tstrb),
-      .s_axis_tuser (s_axis_tuser),
-      .s_axis_tready(s_axis_tready),
-      //
-      .m_axis_tdata (m_axis_tdata),
-      .m_axis_tdest (m_axis_tdest),
-      .m_axis_tid   (m_axis_tid),
-      .m_axis_tkeep (m_axis_tkeep),
-      .m_axis_tlast (m_axis_tlast),
-      .m_axis_tvalid(m_axis_tvalid),
-      .m_axis_tstrb (m_axis_tstrb),
-      .m_axis_tuser (m_axis_tuser),
-      .m_axis_tready(m_axis_tready)
+      .*
   );
+
+  // Simulation
+  //===========
 
   logic [TDATA_WIDTH-1:0] data[100];
 
@@ -100,11 +81,11 @@ module tb_axi4s_vip ();
   end
 
   initial begin
-    tb_axi4s_vip.DUT.reset();
-    tb_axi4s_vip.DUT.intf_set_master();
+    tb_axi4s_vip.DUT.set_master_mode();
+    tb_axi4s_vip.DUT.IF.reset();
     wait(aresetn);
     #100;
-    tb_axi4s_vip.DUT.master_send(100, data);
+    tb_axi4s_vip.DUT.IF.master_send(100, data);
     #1000;
     $finish();
   end
