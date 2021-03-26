@@ -114,7 +114,6 @@ interface axi4s_if #(
   endtask
 
   task automatic master_send(input int cnt, input logic [TDATA_WIDTH-1:0] data[]);
-    $info("Call of master_send()");
     wait(aresetn);
 
     for (int i = 0; i < cnt; i++) begin
