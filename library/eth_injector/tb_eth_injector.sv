@@ -29,7 +29,7 @@ module tb_eth_injector;
   initial begin
     aclk = 0;
     forever begin
-      #5 aclk = ~aclk;
+      #(1.28) aclk = ~aclk;
     end
   end
 

@@ -54,15 +54,15 @@ package pcap_pkg;
   //   orig_len: the length of the packet it appeared on the network.
   //
   typedef struct {
-    logic [31:0] ts_sec;  // timestamp seconds
-    logic [31:0] ts_usec;  // timestamp microseconds
-    logic [31:0] incl_len;  // number of octets of packet saved in file
-    logic [31:0] orig_len;  // actual length of packet
+    int ts_sec;  // timestamp seconds
+    int ts_usec;  // timestamp microseconds
+    int incl_len;  // number of octets of packet saved in file
+    int orig_len;  // actual length of packet
   } pcap_rec_header_t;
 
   // Packet data buffer
   typedef struct {
-    time ts; // 64-bit unsigned
+    longint ts; // 64-bit signed, nanosecond
     logic [7:0] buffer[16384]; // data blob
     int len; // buffer length
   } pkt_buffer_t;
@@ -88,7 +88,10 @@ package pcap_pkg;
     pcap_header_t global_header;
     pcap_handler_t ret;
 
+`ifdef DEBUG
     $display("Read pcap file \"%s\"", file_name);
+`endif
+
     file = $fopen(file_name, "rb");
     if (file == 0) begin
       $fatal("Unable to open file \"%s\"", file_name);
@@ -96,9 +99,12 @@ package pcap_pkg;
     end
 
     magic_number = read_4bytes(file, 1);
-    $display(" magic_number: %x", magic_number);
     read_mode = read_magic_number(magic_number);
+
+`ifdef DEBUG
     $display(" file read mode: %x", read_mode);
+    $display(" magic_number: %x", magic_number);
+`endif
 
     global_header.magic_number = magic_number;
     global_header.version_major = read_2bytes(file, (read_mode & 1));
@@ -108,12 +114,14 @@ package pcap_pkg;
     global_header.snaplen = read_4bytes(file, (read_mode & 1));
     global_header.network = read_4bytes(file, (read_mode & 1));
 
+`ifdef DEBUG
     $display(" version_major: %x", global_header.version_major);
     $display(" version_minor: %x", global_header.version_minor);
     $display(" thiszone: %x", global_header.thiszone);
     $display(" sigfigs: %x", global_header.sigfigs);
     $display(" snaplen: %x", global_header.snaplen);
     $display(" network: %x", global_header.network);
+`endif
 
     ret.file = file;
     ret.read_mode = read_mode;
@@ -150,16 +158,18 @@ package pcap_pkg;
       return pkt;
     end
 
+`ifdef DEBUG
     $display("Read one packet from pcap");
     $display(" ts_sec: %d", pkt_header.ts_sec);
     $display(" ts_nsec: %d", pkt_header.ts_usec);
     $display(" incl_len: %d", pkt_header.incl_len);
     $display(" orig_len: %d", pkt_header.orig_len);
+`endif
 
     for (int i = 0; i < pkt_header.incl_len; i++) begin
       pkt.buffer[i] = $fgetc(file);
     end
-    pkt.ts = pkt_header.ts_sec * 1000 + pkt_header.ts_usec;
+    pkt.ts = pkt_header.ts_sec * 1000000000 + pkt_header.ts_usec * (read_mode & 2 ? 1 : 1000);
     pkt.len = pkt_header.incl_len;
 
     h.pkt_cnt++;
@@ -202,19 +212,27 @@ package pcap_pkg;
   function automatic int read_magic_number(input int magic_number);
     case (magic_number)
       'hA1B2C3D4: begin
+`ifdef DEBUG
         $display("Magic number format is Little Endian");
+`endif
         return 'h101;
       end
       'hA1B23C4D: begin
+`ifdef DEBUG
         $display("Magic number format is Little Endian in NanoSecond resolution");
+`endif
         return 'h111;
       end
       'hD4C3B2A1: begin
+`ifdef DEBUG
         $display("Magic number format is Big Endian");
+ `endif
         return 'h100;
       end
       'h4D3CB2A1: begin
+`ifdef DEBUG
         $display("Magic number format is Big Endian in NameSecond resolution");
+`endif
       end
       default: begin
         $error("Magic number not recognized");
