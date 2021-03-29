@@ -73,61 +73,96 @@ module axi4l_vip #(
       .aresetn(aresetn)
   );
 
+  logic is_master = 0;
+  logic is_slave = 0;
+
+  // Slave side connection
+
+  assign IF.awaddr = is_slave ? s_axi_awaddr : 'z;
+  assign IF.awprot = is_slave ? s_axi_awprot : 'z;
+  assign IF.awvalid = is_slave ? s_axi_awvalid : 'z;
+  assign s_axi_awready = is_slave ? IF.awready : '1;
+
+  assign IF.wdata = is_slave ? s_axi_wdata : 'z;
+  assign IF.wstrb = is_slave ? s_axi_wstrb : 'z;
+  assign IF.wvalid = is_slave ? s_axi_wvalid : 'z;
+  assign s_axi_wready = is_slave ? IF.wready : '1;
+
+  assign s_axi_bresp = is_slave ? IF.bresp : '0;
+  assign s_axi_bvalid = is_slave ? IF.bvalid : '0;
+  assign IF.bready = is_slave ? s_axi_bready : 'z;
+
+  assign IF.araddr = is_slave ? s_axi_araddr : 'z;
+  assign IF.arprot = is_slave ? s_axi_arprot : 'z;
+  assign IF.arvalid = is_slave ? s_axi_arvalid : 'z;
+  assign s_axi_arready = is_slave ? IF.arready : '1;
+
+  assign s_axi_rdata = is_slave ? IF.rdata : '0;
+  assign s_axi_rresp = is_slave ? IF.rresp : '0;
+  assign s_axi_rvalid = is_slave ? IF.rvalid : '0;
+  assign IF.rready = is_slave ? s_axi_rready : 'z;
+
+  // Master side connection
+
+  assign m_axi_awaddr = is_master ? IF.awaddr : '0;
+  assign m_axi_awprot = is_master ? IF.awprot : '0;
+  assign m_axi_awvalid = is_master ? IF.awvalid : '0;
+  assign IF.awready = is_master ? m_axi_awready : 'z;
+
+  assign m_axi_wdata = is_master ? IF.wdata : '0;
+  assign m_axi_wstrb = is_master ? IF.wstrb : '0;
+  assign m_axi_wvalid = is_master ? IF.wvalid : '0;
+  assign IF.wready = is_master ? m_axi_wready : 'z;
+
+  assign IF.bresp = is_master ? m_axi_bresp : 'z;
+  assign IF.bvalid = is_master ? m_axi_bvalid : 'z;
+  assign m_axi_bready = is_master ? IF.bready : '0;
+
+  assign m_axi_araddr = is_master ? IF.araddr : '0;
+  assign m_axi_arprot = is_master ? IF.arprot : '0;
+  assign m_axi_arvalid = is_master ? IF.arvalid : '0;
+  assign IF.arready = is_master ? m_axi_arready : 'z;
+
+  assign IF.rdata = is_master ? m_axi_rdata : 'z;
+  assign IF.rresp = is_master ? m_axi_rresp : 'z;
+  assign IF.rvalid = is_master ? m_axi_rvalid : 'z;
+  assign m_axi_rready = is_master ? IF.rready : '0;
+
+  // synthesis translate_off
+
   initial begin
     $display("axi4l_vip found on path %m");
   end
 
-  // Slave side connection
+  // Set the interface to master mode
+  function automatic void set_master_mode();
+    is_master = 1;
+    is_slave  = 0;
+    IF.intf_set_master();
+  endfunction
 
-  assign IF.awaddr = s_axi_awaddr;
-  assign IF.awprot = s_axi_awprot;
-  assign IF.awvalid = s_axi_awvalid;
-  assign s_axi_awready = IF.awready;
+  // Set the interface to slave mode
+  function automatic void set_slave_mode();
+    is_master = 0;
+    is_slave  = 1;
+    IF.intf_set_slave();
+  endfunction
 
-  assign IF.wdata = s_axi_wdata;
-  assign IF.wstrb = s_axi_wstrb;
-  assign IF.wvalid = s_axi_wvalid;
-  assign s_axi_wready = IF.wready;
+  // Set the interface to monitor mode
+  function automatic void set_monitor_mode();
+    is_master = 1;
+    is_slave  = 1;
+    IF.intf_set_monitor();
+  endfunction
 
-  assign s_axi_bresp = IF.bresp;
-  assign s_axi_bvalid = IF.bvalid;
-  assign IF.bready = s_axi_bready;
+  // Set the interface to autistic  mode
+  function automatic void set_autistic_mode();
+    is_master = 0;
+    is_slave  = 0;
+    IF.intf_set_monitor();
+  endfunction
 
-  assign IF.araddr = s_axi_araddr;
-  assign IF.arprot = s_axi_arprot;
-  assign IF.arvalid = s_axi_arvalid;
-  assign s_axi_arready = IF.arready;
-
-  assign s_axi_rdata = IF.rdata;
-  assign s_axi_rresp = IF.rresp;
-  assign s_axi_rvalid = IF.rvalid;
-  assign IF.rready = s_axi_rready;
-
-  // Master side connection
-
-  assign m_axi_awaddr = IF.awaddr;
-  assign m_axi_awprot = IF.awprot;
-  assign m_axi_awvalid = IF.awvalid;
-  assign IF.awready = m_axi_awready;
-
-  assign m_axi_wdata = IF.wdata;
-  assign m_axi_wstrb = IF.wstrb;
-  assign m_axi_wvalid = IF.wvalid;
-  assign IF.wready = m_axi_wready;
-
-  assign IF.bresp = m_axi_bresp;
-  assign IF.bvalid = m_axi_bvalid;
-  assign m_axi_bready = IF.bready;
-
-  assign m_axi_araddr = IF.araddr;
-  assign m_axi_arprot = IF.arprot;
-  assign m_axi_arvalid = IF.arvalid;
-  assign IF.arready = m_axi_arready;
-
-  assign IF.rdata = m_axi_rdata;
-  assign IF.rresp = m_axi_rresp;
-  assign IF.rvalid = m_axi_rvalid;
-  assign m_axi_rready = IF.rready;
+  // synthesis translate_on
 
 endmodule
 

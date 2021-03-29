@@ -138,17 +138,17 @@ interface axi4l_if #(
   // Public APIs
   //------------
 
-  function automatic void set_intf_master();
+  function automatic void intf_set_master();
     intf_is_master = 1;
     intf_is_slave  = 0;
   endfunction
 
-  function automatic void set_intf_slave();
+  function automatic void intf_set_slave();
     intf_is_master = 0;
     intf_is_slave  = 1;
   endfunction
 
-  function automatic void set_intf_monitor();
+  function automatic void intf_set_monitor();
     intf_is_master = 0;
     intf_is_slave  = 0;
   endfunction
@@ -183,29 +183,29 @@ interface axi4l_if #(
                               input logic [C_DATA_WIDTH-1:0] data);
     @(posedge aclk);
     awaddr_s  <= addr;
-    awprot_s  <= 0;
-    awvalid_s <= 1;
+    awprot_s  <= '0;
+    awvalid_s <= '1;
     //
     wdata_s   <= data;
-    wstrb_s   <= 1;
-    wvalid_s  <= 1;
+    wstrb_s   <= '1;
+    wvalid_s  <= '1;
     //
-    bready_s  <= 1;
+    bready_s  <= '1;
     //
-    araddr_s  <= 0;
-    arprot_s  <= 0;
-    arvalid_s <= 0;
+    araddr_s  <= '0;
+    arprot_s  <= '0;
+    arvalid_s <= '0;
     //
-    rready_s  <= 0;
+    rready_s  <= '0;
     //
     fork
       begin : p_wait_awready
         repeat (16)
           @(posedge aclk) begin
             if (awready) begin
-              awaddr_s  <= 0;
-              awprot_s  <= 0;
-              awvalid_s <= 0;
+              awaddr_s  <= '0;
+              awprot_s  <= '0;
+              awvalid_s <= '0;
               break;
             end
           end
@@ -215,9 +215,9 @@ interface axi4l_if #(
         repeat (16)
           @(posedge aclk) begin
             if (wready) begin
-              wdata_s  <= 0;
-              wstrb_s  <= 0;
-              wvalid_s <= 0;
+              wdata_s  <= '0;
+              wstrb_s  <= '0;
+              wvalid_s <= '0;
               break;
             end
           end
@@ -227,7 +227,7 @@ interface axi4l_if #(
         repeat (16)
           @(posedge aclk) begin
             if (bvalid) begin
-              bready_s <= 0;
+              bready_s <= '0;
               break;
             end
           end
@@ -238,30 +238,30 @@ interface axi4l_if #(
   task automatic master_read(input logic [C_ADDR_WIDTH-1:0] addr,
                              output logic [C_DATA_WIDTH-1:0] data);
     @(posedge aclk);
-    awaddr_s  <= 0;
-    awprot_s  <= 0;
-    awvalid_s <= 0;
+    awaddr_s  <= '0;
+    awprot_s  <= '0;
+    awvalid_s <= '0;
     //
-    wdata_s   <= 0;
-    wstrb_s   <= 1;
-    wvalid_s  <= 0;
+    wdata_s   <= '0;
+    wstrb_s   <= '0;
+    wvalid_s  <= '0;
     //
-    bready_s  <= 0;
+    bready_s  <= '0;
     //
     araddr_s  <= addr;
-    arprot_s  <= 0;
-    arvalid_s <= 1;
+    arprot_s  <= '0;
+    arvalid_s <= '1;
     //
-    rready_s  <= 1;
+    rready_s  <= '1;
     //
     fork
       begin : p_wait_arready
         repeat (16)
           @(posedge aclk) begin
             if (arready) begin
-              araddr_s  <= 0;
-              arprot_s  <= 0;
-              arvalid_s <= 0;
+              araddr_s  <= '0;
+              arprot_s  <= '0;
+              arvalid_s <= '0;
               break;
             end
           end
@@ -271,8 +271,8 @@ interface axi4l_if #(
         repeat (16)
           @(posedge aclk) begin
             if (rvalid) begin
-              // data      = rdata;
-              rready_s <= 0;
+              data = rdata;
+              rready_s <= '0;
               break;
             end
           end
