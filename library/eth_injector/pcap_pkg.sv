@@ -94,7 +94,7 @@ package pcap_pkg;
 
     file = $fopen(file_name, "rb");
     if (file == 0) begin
-      $fatal("Unable to open file \"%s\"", file_name);
+      $fatal(0, "Unable to open file \"%s\"", file_name);
       $stop();
     end
 

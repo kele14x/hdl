@@ -200,38 +200,42 @@ interface axi4l_if #(
     //
     fork
       begin : p_wait_awready
-        repeat (16)
-          @(posedge aclk) begin
-            if (awready) begin
-              awaddr_s  <= '0;
-              awprot_s  <= '0;
-              awvalid_s <= '0;
-              break;
-            end
+        repeat (160) begin
+          @(posedge aclk);
+          if (awready) begin
+            break;
           end
+        end
+        awaddr_s  <= '0;
+        awprot_s  <= '0;
+        awvalid_s <= '0;
+        @(posedge aclk);
       end
 
       begin : p_wait_wready
-        repeat (16)
-          @(posedge aclk) begin
-            if (wready) begin
-              wdata_s  <= '0;
-              wstrb_s  <= '0;
-              wvalid_s <= '0;
-              break;
-            end
+        repeat (160) begin
+          @(posedge aclk);
+          if (wready) begin
+            break;
           end
+        end
+        wdata_s  <= '0;
+        wstrb_s  <= '0;
+        wvalid_s <= '0;
+        @(posedge aclk);
       end
 
       begin : p_wait_bresp
-        repeat (16)
-          @(posedge aclk) begin
-            if (bvalid) begin
-              bready_s <= '0;
-              break;
-            end
+        repeat (160) begin
+          @(posedge aclk);
+          if (bvalid) begin
+            break;
           end
+        end
+        bready_s <= '0;
+        @(posedge aclk);
       end
+ 
     join
   endtask
 
@@ -256,26 +260,28 @@ interface axi4l_if #(
     //
     fork
       begin : p_wait_arready
-        repeat (16)
-          @(posedge aclk) begin
-            if (arready) begin
-              araddr_s  <= '0;
-              arprot_s  <= '0;
-              arvalid_s <= '0;
-              break;
-            end
+        repeat (160) begin
+          @(posedge aclk);
+          if (arready) begin
+            break;
           end
+        end
+        araddr_s  <= '0;
+        arprot_s  <= '0;
+        arvalid_s <= '0;
+        @(posedge aclk);
       end
 
       begin : p_wait_rdata
-        repeat (16)
-          @(posedge aclk) begin
-            if (rvalid) begin
-              data = rdata;
-              rready_s <= '0;
-              break;
-            end
+        repeat (160) begin
+          @(posedge aclk);
+          if (rvalid) begin
+            break;
           end
+        end
+        data = rdata;
+        rready_s <= '0;
+        @(posedge aclk);
       end
     join
   endtask

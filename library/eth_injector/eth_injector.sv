@@ -1,7 +1,6 @@
 // File: eth_injector
 // Brief: Inject Ethernet packet to target DUT
 `timescale 1 ns / 1 ps `default_nettype none
-`define DEBUG
 
 module eth_injector #(
     parameter int TDATA_WIDTH = 64
@@ -41,6 +40,7 @@ module eth_injector #(
   pkt_buffer_t   pkt;
 
   logic [TDATA_WIDTH-1:0] buf_tdata [1000];
+  logic [TDATA_WIDTH/8-1:0] buf_tkeep [1000];
   int buf_len;
   longint wait_time;
   longint ts_shift;
@@ -63,13 +63,13 @@ module eth_injector #(
     while(pkt.len != 0) begin
       wait_time = pkt.ts - $time() - ts_shift;
       wait_time = (wait_time > 0) ? wait_time : 0;
-`ifdef DEBUG  
+`ifdef DEBUG
       $display("Packet TS: %d ns, sim time: %d (%d) ns, wait: %d ns.", pkt.ts, $time(), $signed(ts_shift + $time()), wait_time);
 `endif
       #(wait_time);
   
       copy_pkg();
-      i_vip.IF.master_send(buf_len, buf_tdata);
+      i_vip.IF.master_send(buf_len, buf_tdata, buf_tkeep);
 
       pkt = pcap_read_packet(pcap);
     end
@@ -79,8 +79,14 @@ module eth_injector #(
   function automatic void copy_pkg();
     buf_len = pkt.len % 8 == 0 ? pkt.len / 8 : pkt.len / 8 + 1;
     for (int i = 0; i < buf_len; i++) begin
-        for (int j = 0; i*8+j < pkt.len; j++) begin
-            buf_tdata[i][j*8+7-:8] = pkt.buffer[i*8+j];
+        for (int j = 0; j < 8; j++) begin
+            if (i*8+j < pkt.len) begin
+                buf_tdata[i][j*8+7-:8] = pkt.buffer[i*8+j];
+                buf_tkeep[i][j] = 1'b1;
+            end else begin
+                buf_tdata[i][j*8+7-:8] = '0;
+                buf_tkeep[i][j] = 1'b0;
+            end
         end
     end
   endfunction

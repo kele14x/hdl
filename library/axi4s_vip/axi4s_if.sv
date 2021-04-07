@@ -113,7 +113,11 @@ interface axi4s_if #(
     tready_s <= '0;
   endtask
 
-  task automatic master_send(input int cnt, input logic [TDATA_WIDTH-1:0] data[]);
+  task automatic master_send(
+    input int cnt, 
+    input logic [TDATA_WIDTH-1:0] data[],
+    input logic [TDATA_WIDTH/8-1:0] keep[]
+  );
     wait(aresetn);
 
     for (int i = 0; i < cnt; i++) begin
@@ -122,7 +126,9 @@ interface axi4s_if #(
         @(posedge aclk);
       end
       tdata_s  <= data[i];
+      tkeep_s  <= keep[i];
       tvalid_s <= 1'b1;
+      tlast_s  <= (i == cnt - 1);
     end
     @(posedge aclk);
     reset();
