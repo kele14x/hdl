@@ -1,0 +1,5 @@
+[rules]
+generate_keyword_forbidden = false
+generate_keyword_required = true
+genvar_declaration_in_loop = true
+genvar_declaration_out_loop = false
