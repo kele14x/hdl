@@ -20,392 +20,579 @@
 
 module tb_axi4l_ipif ();
 
-    parameter C_ADDR_WIDTH = 12;
-    parameter C_DATA_WIDTH = 32;
+  parameter int C_ADDR_WIDTH = 12;
+  parameter int C_DATA_WIDTH = 32;
 
-    // AXI i/f
-    //---------
-    logic aclk    = 0;
-    logic aresetn = 0;
-    //
-    logic [31:0] s_axi_awaddr  = 0;
-    logic [ 2:0] s_axi_awprot  = 0;
-    logic        s_axi_awvalid = 0;
-    logic        s_axi_awready = 0;
-    //
-    logic [31:0] s_axi_wdata  = 0;
-    logic [ 3:0] s_axi_wstrb  = 0;
-    logic        s_axi_wvalid = 0;
-    logic        s_axi_wready = 0;
-    //
-    logic [1:0] s_axi_bresp  = 0;
-    logic       s_axi_bvalid = 0;
-    logic       s_axi_bready = 0;
-    //
-    logic [31:0] s_axi_araddr  = 0;
-    logic [ 2:0] s_axi_arprot  = 0;
-    logic        s_axi_arvalid = 0;
-    logic        s_axi_arready = 0;
-    //
-    logic [31:0] s_axi_rdata  = 0;
-    logic [ 1:0] s_axi_rresp  = 0;
-    logic        s_axi_rvalid = 0;
-    logic        s_axi_rready = 0;
+  // AXI i/f
+  //---------
+  logic                      aclk = 0;
+  logic                      aresetn = 0;
+  //
+  logic [              31:0] s_axi_awaddr = 0;
+  logic [               2:0] s_axi_awprot = 0;
+  logic                      s_axi_awvalid = 0;
+  logic                      s_axi_awready = 0;
+  //
+  logic [              31:0] s_axi_wdata = 0;
+  logic [               3:0] s_axi_wstrb = 0;
+  logic                      s_axi_wvalid = 0;
+  logic                      s_axi_wready = 0;
+  //
+  logic [               1:0] s_axi_bresp = 0;
+  logic                      s_axi_bvalid = 0;
+  logic                      s_axi_bready = 0;
+  //
+  logic [              31:0] s_axi_araddr = 0;
+  logic [               2:0] s_axi_arprot = 0;
+  logic                      s_axi_arvalid = 0;
+  logic                      s_axi_arready = 0;
+  //
+  logic [              31:0] s_axi_rdata = 0;
+  logic [               1:0] s_axi_rresp = 0;
+  logic                      s_axi_rvalid = 0;
+  logic                      s_axi_rready = 0;
 
-    // Write i/f
-    //-----------
-    logic [C_ADDR_WIDTH-3:0] wr_addr = 0;
-    logic                    wr_req  = 0;
-    logic [             3:0] wr_be   = 0;
-    logic [C_DATA_WIDTH-1:0] wr_data = 0;
-    logic                    wr_ack  = 0;
+  // Write i/f
+  //-----------
+  logic [  C_ADDR_WIDTH-3:0] wr_addr = 0;
+  logic                      wr_en = 0;
+  logic                      wr_req = 0;
+  logic [C_DATA_WIDTH/8-1:0] wr_be = 0;
+  logic [  C_DATA_WIDTH-1:0] wr_data = 0;
+  logic                      wr_ack = 0;
 
-    // Read i/f
-    //----------
-    logic [C_ADDR_WIDTH-3:0] rd_addr = 0;
-    logic                    rd_req  = 0;
-    logic [C_DATA_WIDTH-1:0] rd_data = 0;
-    logic                    rd_ack  = 0;
+  // Read i/f
+  //----------
+  logic [  C_ADDR_WIDTH-3:0] rd_addr = 0;
+  logic                      rd_en = 0;
+  logic                      rd_req = 0;
+  logic [  C_DATA_WIDTH-1:0] rd_data = 0;
+  logic                      rd_ack = 0;
 
 
-    // Stimulation
+  // Stimulation
 
-    always #5 aclk = ~aclk;
+  always #5 aclk = ~aclk;
 
-    //-------------------------------------------------------------------------
-    // Task: reset_slave_and_interface
-    // Brief: Reset the DUT and all input signal to DUT
-    //-------------------------------------------------------------------------
+  //-------------------------------------------------------------------------
+  // Task: reset_slave_and_interface
+  // Brief: Reset the DUT and all input signal to DUT
+  //-------------------------------------------------------------------------
 
-    task reset_slave_and_interface();
+  task automatic reset_slave_and_interface();
+    @(posedge aclk);
+    // AXI
+    aresetn <= 0;
+    s_axi_awaddr <= 0;
+    s_axi_awprot <= 0;
+    s_axi_awvalid <= 0;
+    s_axi_wdata <= 0;
+    s_axi_wstrb <= 0;
+    s_axi_wvalid <= 0;
+    s_axi_bready <= 0;
+    s_axi_araddr <= 0;
+    s_axi_arprot <= 0;
+    s_axi_arvalid <= 0;
+    s_axi_rready <= 0;
+    // WR
+    wr_ack <= 0;
+    // RD
+    rd_data <= 0;
+    rd_ack <= 0;
+    repeat (16) @(posedge aclk);
+    @(posedge aclk) aresetn <= 1;
+    repeat (16) @(posedge aclk);
+  endtask
+
+  // Test cases
+
+  //-------------------------------------------------------------------------
+  // Task: test_single_write_same_time
+  // Brief: Test if DUT can accept signal AXI write. Only write response is
+  //        checked. No write effect is checked.
+  //-------------------------------------------------------------------------
+
+  task automatic test_single_write_same_time();
+    logic awok, wok, bok, wreqok;
+    awok = 0;
+    wok = 0;
+    bok = 0;
+    wreqok = 0;
+    reset_slave_and_interface();
+
+    fork
+      // Set write address
+      begin
         @(posedge aclk);
-        // AXI
-        aresetn <= 0;
-        s_axi_awaddr  <= 0;
-        s_axi_awprot  <= 0;
-        s_axi_awvalid <= 0;
-        s_axi_wdata   <= 0;
-        s_axi_wstrb   <= 0;
-        s_axi_wvalid  <= 0;
-        s_axi_bready  <= 0;
-        s_axi_araddr  <= 0;
-        s_axi_arprot  <= 0;
-        s_axi_arvalid <= 0;
-        s_axi_rready  <= 0;
-        // WR
-        wr_ack  <= 0;
-        // RD
-        rd_data <= 0;
-        rd_ack  <= 0;
-        repeat(16) @(posedge aclk);
-        @(posedge aclk) aresetn <= 1;
-        repeat(16) @(posedge aclk);
-    endtask;
-
-    // Test cases
-
-    //-------------------------------------------------------------------------
-    // Task: test_single_write_same_time
-    // Brief: Test if DUT can accept signal AXI write. Only write response is
-    //        checked. No write effect is checked.
-    //-------------------------------------------------------------------------
-
-    task test_single_write_same_time();
-        logic awok, wok, bok, wreqok;
-        awok = 0;
-        wok = 0;
-        bok = 0;
-        wreqok = 0;
-        reset_slave_and_interface();
-
-        fork
-            // Set write address
-            begin
-                @(posedge aclk);
-                s_axi_awaddr  <= $random();
-                s_axi_awvalid <= 1'b1;
-                repeat(16) begin
-                    @(posedge aclk);
-                    if (s_axi_awready) begin
-                        awok = 1;
-                        s_axi_awvalid <= 1'b0;
-                        break;
-                    end
-                end
-            end
-
-            // Set write data
-            begin
-                @(posedge aclk);
-                s_axi_wdata   <= $random();
-                s_axi_wstrb   <= $random();
-                s_axi_wvalid  <= 1'b1;
-                repeat(16) begin
-                    @(posedge aclk);
-                    if (s_axi_wready) begin
-                        wok = 1;
-                        s_axi_wvalid <= 1'b0;
-                        break;
-                    end
-                end
-            end
-
-            // Response to write
-            begin
-                @(posedge aclk);
-                s_axi_bready  <= 1'b1;
-                repeat (16) begin
-                    @(posedge aclk);
-                    if (s_axi_bvalid) begin
-                        bok = 1;
-                        s_axi_bready <= 1'b0;
-                        break;
-                    end
-                end
-            end
-
-            // Response to wr_ack
-            begin
-                repeat(16) begin
-                    @(posedge aclk);
-                    if (wr_req) begin
-                        wr_ack <= 1'b1;
-                        wreqok <= 1;
-                        break;
-                    end
-                end
-                @(posedge aclk);
-                wr_ack <= 1'b0;
-            end
-
-        join
-
-        if (awok && wok && bok && wreqok) begin
-            $info("%t, Test \"test_single_write_sampe_time\" success.", $time);
-        end else begin
-            $warning("%t, Test \"test_single_write_sampe_time\" fail.", $time());
+        s_axi_awaddr  <= $urandom();
+        s_axi_awvalid <= 1'b1;
+        repeat (16) begin
+          @(posedge aclk);
+          if (s_axi_awready) begin
+            awok = 1;
+            s_axi_awvalid <= 1'b0;
+            break;
+          end
         end
-    endtask;
+      end
 
-
-    //-------------------------------------------------------------------------
-    // Task: test_single_write_address_before_data
-    // Brief: Test if DUT can accept signal AXI write. Write address is assert
-    //        before data. Only write response is checked. No write effect is
-    //        checked.
-    //-------------------------------------------------------------------------
-
-    task test_single_write_address_before_data();
-        logic awok, wok, bok;
-        awok = 0;
-        wok = 0;
-        bok = 0;
-
-        reset_slave_and_interface();
-
-        fork
-            begin
-                @(posedge aclk);
-                s_axi_awaddr  <= 32'h0000_0004;
-                s_axi_awvalid <= 1'b1;
-                repeat (16) begin
-                    @(posedge aclk);
-                    if (s_axi_awready) begin
-                        awok = 1;
-                        s_axi_awvalid <= 1'b0;
-                        break;
-                    end
-                end
-            end
-
-            begin
-                @(posedge aclk);
-                @(posedge aclk);
-                s_axi_wdata   <= 32'hABCD_EF01;
-                s_axi_wstrb   <= 4'b1111;
-                s_axi_wvalid  <= 1'b1;
-                repeat (16) begin
-                    @(posedge aclk);
-                    if (s_axi_wready) begin
-                        wok = 1;
-                        s_axi_wvalid <= 1'b0;
-                        break;
-                    end
-                end
-            end
-
-            begin
-                @(posedge aclk);
-                s_axi_bready  <= 1'b1;
-                repeat (16) begin
-                    @(posedge aclk);
-                    if (s_axi_bvalid) begin
-                        bok = 1;
-                        s_axi_bready <= 1'b0;
-                        break;
-                    end
-                end
-            end
-        join
-
-        if (awok && wok && bok) begin
-            $info("%t, Test \"test_single_write_address_before_data\" success.", $time());
-        end else begin
-            $warning("%t, Test \"test_single_write_address_before_data\" fail.", $time());
+      // Set write data
+      begin
+        @(posedge aclk);
+        s_axi_wdata  <= $urandom();
+        s_axi_wstrb  <= $urandom();
+        s_axi_wvalid <= 1'b1;
+        repeat (16) begin
+          @(posedge aclk);
+          if (s_axi_wready) begin
+            wok = 1;
+            s_axi_wvalid <= 1'b0;
+            break;
+          end
         end
-    endtask;
+      end
 
-
-    //-------------------------------------------------------------------------
-    // Task: test_single_read_response_after_address
-    // Brief: Test if DUT can accept signal AXI read. Read response is present
-    //        after address is assert. Only read response is checked. No read
-    //        effect is checked.
-    //-------------------------------------------------------------------------
-
-    task test_single_read_response_after_address();
-        logic arok, rok;
-        arok = 0;
-        rok = 0;
-
-        reset_slave_and_interface();
-
-        fork
-            begin
-                @(posedge aclk);
-                s_axi_araddr  <= 32'h0000_0004;
-                s_axi_arvalid <= 1'b1;
-                repeat (16) begin
-                    @(posedge aclk);
-                    if (s_axi_arready) begin
-                        arok = 1;
-                        s_axi_arvalid <= 1'b0;
-                        break;
-                    end
-                end
-            end
-
-            begin
-                @(posedge aclk);
-                s_axi_rready  <= 1'b1;
-                repeat (16) begin
-                    @(posedge aclk);
-                    if (s_axi_rvalid) begin
-                        rok = 1;
-                        s_axi_rready <= 1'b0;
-                        break;
-                    end
-                end
-            end
-
-            begin
-                repeat (16) begin
-                    @(posedge aclk);
-                    if (rd_req) begin
-                        rd_ack <= 1'b1;
-                        rd_data <= 32'hABCD_1234;
-                        @(posedge aclk);
-                        rd_ack <= 1'b0;
-                        break;
-                    end
-                end
-            end
-        join
-
-        if (arok && rok) begin
-            $info("%t, Test \"test_single_read_response_after_address\" success.", $time());
-        end else begin
-            $warning("%t, Test \"test_single_read_response_after_address\" fail.", $time());
+      // Response to write
+      begin
+        @(posedge aclk);
+        s_axi_bready <= 1'b1;
+        repeat (16) begin
+          @(posedge aclk);
+          if (s_axi_bvalid) begin
+            bok = 1;
+            s_axi_bready <= 1'b0;
+            break;
+          end
         end
-    endtask;
+      end
 
-
-    //-------------------------------------------------------------------------
-    // Task: test_single_read_response_before_address
-    // Brief: Test if DUT can accept signal AXI read. Read response is present
-    //        before address is assert. Only read response is checked. No read
-    //        effect is checked.
-    //-------------------------------------------------------------------------
-
-    task test_single_read_response_before_address();
-        logic arok, rok;
-        arok = 0;
-        rok = 0;
-
-        reset_slave_and_interface();
-
-        fork
-            begin
-                @(posedge aclk);
-                s_axi_araddr  <= 32'h0000_0004;
-                s_axi_arvalid <= 1'b1;
-                repeat (16) begin
-                    @(posedge aclk);
-                    if (s_axi_arready) begin
-                        arok = 1;
-                        s_axi_arvalid <= 1'b0;
-                        break;
-                    end
-                end
-            end
-
-            begin
-                @(posedge aclk);
-                s_axi_rready  <= 1'b1;
-                repeat (16) begin
-                    @(posedge aclk);
-                    if (s_axi_rvalid) begin
-                        rok = 1;
-                        s_axi_rready <= 1'b0;
-                        break;
-                    end
-                end
-            end
-
-            begin
-                rd_ack <= 1'b1;
-                rd_data <= 32'hABCD_1234;
-                repeat (16) begin
-                    @(posedge aclk);
-                    if (rd_req) begin
-                        rd_ack <= 1'b0;
-                        break;
-                    end
-                end
-            end
-        join
-
-        if (arok && rok) begin
-            $info("%t, Test \"test_single_read_response_after_address\" success.", $time());
-        end else begin
-            $warning("%t, Test \"test_single_read_response_after_address\" fail.", $time());
+      // Response to wr_ack
+      begin
+        repeat (16) begin
+          @(posedge aclk);
+          if (wr_req) begin
+            wr_ack <= 1'b1;
+            wreqok = 1;
+            break;
+          end
         end
-    endtask;
+        @(posedge aclk);
+        wr_ack <= 1'b0;
+      end
 
+    join
 
-    initial begin
-        $display("%t, simulation ends.", $time());
-
-        #1000;
-        test_single_write_same_time();
-        #1000;
-        test_single_write_address_before_data();
-        #1000;
-        test_single_read_response_after_address();
-        #1000;
-        test_single_read_response_before_address();
-        #1000;
-
-        $finish();
+    if (awok && wok && bok && wreqok) begin
+      $info("%t, Test \"test_single_write_same_time\" success.", $time);
+    end else begin
+      $warning("%t, Test \"test_single_write_same_time\" fail.", $time());
     end
+  endtask
 
-    final begin
-        $display("%t, simulation ends.", $time());
+
+  //-------------------------------------------------------------------------
+  // Task: test_single_write_address_before_data
+  // Brief: Test if DUT can accept signal AXI write. Write address is assert
+  //        before data. Only write response is checked. No write effect is
+  //        checked.
+  //-------------------------------------------------------------------------
+
+  task automatic test_single_write_address_before_data();
+    logic awok, wok, bok, wreqok;
+    awok = 0;
+    wok = 0;
+    bok = 0;
+    wreqok = 0;
+    reset_slave_and_interface();
+
+    fork
+
+      // Set write address
+      begin
+        @(posedge aclk);
+        s_axi_awaddr  <= $urandom();
+        s_axi_awvalid <= 1'b1;
+        repeat (16) begin
+          @(posedge aclk);
+          if (s_axi_awready) begin
+            awok = 1;
+            s_axi_awvalid <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      // Set write data
+      begin
+        repeat (2) @(posedge aclk);
+        s_axi_wdata  <= $urandom();
+        s_axi_wstrb  <= $urandom();
+        s_axi_wvalid <= 1'b1;
+        repeat (15) begin
+          @(posedge aclk);
+          if (s_axi_wready) begin
+            wok = 1;
+            s_axi_wvalid <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      // Response to write response
+      begin
+        @(posedge aclk);
+        s_axi_bready <= 1'b1;
+        repeat (16) begin
+          @(posedge aclk);
+          if (s_axi_bvalid) begin
+            bok = 1;
+            s_axi_bready <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      // Response to wr_ack
+      begin
+        repeat (16) begin
+          @(posedge aclk);
+          if (wr_req) begin
+            wr_ack <= 1'b1;
+            wreqok = 1;
+            break;
+          end
+        end
+        @(posedge aclk);
+        wr_ack <= 1'b0;
+      end
+
+    join
+
+    if (awok && wok && bok && wreqok) begin
+      $info("%t, Test \"test_single_write_address_before_data\" success.", $time());
+    end else begin
+      $warning("%t, Test \"test_single_write_address_before_data\" fail.", $time());
     end
+  endtask
 
-    axi4l_ipif #(
-        .C_ADDR_WIDTH(C_ADDR_WIDTH),
-        .C_DATA_WIDTH(C_DATA_WIDTH)
-    ) UUT (.*);
+
+  //-------------------------------------------------------------------------
+  // Task: test_single_write_wr_ack_high
+  // Brief: Test if DUT can accept signal AXI write, when wr ack is tied
+  //        high
+  //-------------------------------------------------------------------------
+
+  task automatic test_single_write_wr_ack_high();
+    logic awok, wok, bok;
+    awok = 0;
+    wok  = 0;
+    bok  = 0;
+    reset_slave_and_interface();
+
+    fork
+      // Set write address
+      begin
+        repeat (5) @(posedge aclk);
+        s_axi_awaddr  <= $urandom();
+        s_axi_awvalid <= 1'b1;
+        repeat (16) begin
+          @(posedge aclk);
+          if (s_axi_awready) begin
+            awok = 1;
+            s_axi_awvalid <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      // Set write data
+      begin
+        repeat (5) @(posedge aclk);
+        s_axi_wdata  <= $urandom();
+        s_axi_wstrb  <= $urandom();
+        s_axi_wvalid <= 1'b1;
+        repeat (16) begin
+          @(posedge aclk);
+          if (s_axi_wready) begin
+            wok = 1;
+            s_axi_wvalid <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      // Response to write
+      begin
+        repeat (5) @(posedge aclk);
+        s_axi_bready <= 1'b1;
+        repeat (16) begin
+          @(posedge aclk);
+          if (s_axi_bvalid) begin
+            bok = 1;
+            s_axi_bready <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      // Response to wr_ack
+      begin
+        repeat (16) begin
+          @(posedge aclk);
+          wr_ack <= 1'b1;
+        end
+        @(posedge aclk);
+        wr_ack <= 1'b0;
+      end
+
+    join
+
+    if (awok && wok && bok) begin
+      $info("%t, Test \"test_single_write_wr_ack_high\" success.", $time);
+    end else begin
+      $warning("%t, Test \"test_single_write_wr_ack_high\" fail.", $time());
+    end
+  endtask
+
+
+  //-------------------------------------------------------------------------
+  // Task: test_single_write_wr_ack_just
+  // Brief: Test if DUT can accept signal AXI write, when wr_ack is just be
+  //        at the timeout tick.
+  //-------------------------------------------------------------------------
+
+  task automatic test_single_write_wr_ack_just();
+    logic awok, wok, bok, wreqok;
+    awok = 0;
+    wok = 0;
+    bok = 0;
+    wreqok = 0;
+    reset_slave_and_interface();
+
+    fork
+      // Set write address
+      begin
+        @(posedge aclk);
+        s_axi_awaddr  <= $urandom();
+        s_axi_awvalid <= 1'b1;
+        repeat (100) begin
+          @(posedge aclk);
+          if (s_axi_awready) begin
+            awok = 1;
+            s_axi_awvalid <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      // Set write data
+      begin
+        @(posedge aclk);
+        s_axi_wdata  <= $urandom();
+        s_axi_wstrb  <= $urandom();
+        s_axi_wvalid <= 1'b1;
+        repeat (100) begin
+          @(posedge aclk);
+          if (s_axi_wready) begin
+            wok = 1;
+            s_axi_wvalid <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      // Response to write
+      begin
+        @(posedge aclk);
+        s_axi_bready <= 1'b1;
+        repeat (100) begin
+          @(posedge aclk);
+          if (s_axi_bvalid) begin
+            bok = 1;
+            s_axi_bready <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      // Response to wr_ack
+      begin
+        repeat (100) begin
+          @(posedge aclk);
+          if (wr_req) begin
+            repeat (30) @(posedge aclk);
+            wr_ack <= 1'b1;
+            wreqok = 1;
+            break;
+          end
+        end
+        @(posedge aclk);
+        wr_ack <= 1'b0;
+      end
+
+    join
+
+    if (awok && wok && bok && wreqok) begin
+      $info("%t, Test \"test_single_write_wr_ack_just\" success.", $time);
+    end else begin
+      $warning("%t, Test \"test_single_write_wr_ack_just\" fail.", $time());
+    end
+  endtask
+
+
+  //-------------------------------------------------------------------------
+  // Task: test_single_read_response_after_address
+  // Brief: Test if DUT can accept signal AXI read. Read response is present
+  //        after address is assert. Only read response is checked. No read
+  //        effect is checked.
+  //-------------------------------------------------------------------------
+
+  task automatic test_single_read_response_after_address();
+    logic arok, rok;
+    arok = 0;
+    rok  = 0;
+
+    reset_slave_and_interface();
+
+    fork
+      begin
+        @(posedge aclk);
+        s_axi_araddr  <= 32'h0000_0004;
+        s_axi_arvalid <= 1'b1;
+        repeat (16) begin
+          @(posedge aclk);
+          if (s_axi_arready) begin
+            arok = 1;
+            s_axi_arvalid <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      begin
+        @(posedge aclk);
+        s_axi_rready <= 1'b1;
+        repeat (16) begin
+          @(posedge aclk);
+          if (s_axi_rvalid) begin
+            rok = 1;
+            s_axi_rready <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      begin
+        repeat (16) begin
+          @(posedge aclk);
+          if (rd_req) begin
+            rd_ack  <= 1'b1;
+            rd_data <= 32'hABCD_1234;
+            @(posedge aclk);
+            rd_ack <= 1'b0;
+            break;
+          end
+        end
+      end
+    join
+
+    if (arok && rok) begin
+      $info("%t, Test \"test_single_read_response_after_address\" success.", $time());
+    end else begin
+      $warning("%t, Test \"test_single_read_response_after_address\" fail.", $time());
+    end
+  endtask
+
+
+  //-------------------------------------------------------------------------
+  // Task: test_single_read_response_before_address
+  // Brief: Test if DUT can accept signal AXI read. Read response is present
+  //        before address is assert. Only read response is checked. No read
+  //        effect is checked.
+  //-------------------------------------------------------------------------
+
+  task automatic test_single_read_response_before_address();
+    logic arok, rok;
+    arok = 0;
+    rok  = 0;
+
+    reset_slave_and_interface();
+
+    fork
+      begin
+        @(posedge aclk);
+        s_axi_araddr  <= 32'h0000_0004;
+        s_axi_arvalid <= 1'b1;
+        repeat (16) begin
+          @(posedge aclk);
+          if (s_axi_arready) begin
+            arok = 1;
+            s_axi_arvalid <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      begin
+        @(posedge aclk);
+        s_axi_rready <= 1'b1;
+        repeat (16) begin
+          @(posedge aclk);
+          if (s_axi_rvalid) begin
+            rok = 1;
+            s_axi_rready <= 1'b0;
+            break;
+          end
+        end
+      end
+
+      begin
+        rd_ack  <= 1'b1;
+        rd_data <= $urandom();
+        repeat (16) begin
+          @(posedge aclk);
+          rd_data <= $urandom();
+        end
+      end
+    join
+
+    if (arok && rok) begin
+      $info("%t, Test \"test_single_read_response_after_address\" success.", $time());
+    end else begin
+      $warning("%t, Test \"test_single_read_response_after_address\" fail.", $time());
+    end
+  endtask
+
+
+  initial begin
+    $display("%t, simulation ends.", $time());
+
+    #1000;
+    test_single_write_same_time();
+    #1000;
+    test_single_write_address_before_data();
+    #1000;
+    test_single_write_wr_ack_high();
+    #1000;
+    test_single_write_wr_ack_just();
+    #1000;
+    test_single_read_response_after_address();
+    #1000;
+    test_single_read_response_before_address();
+    #1000;
+
+    $finish();
+  end
+
+  final begin
+    $display("%t, simulation ends.", $time());
+  end
+
+  axi4l_ipif #(
+      .C_ADDR_WIDTH(C_ADDR_WIDTH),
+      .C_DATA_WIDTH(C_DATA_WIDTH)
+  ) UUT (
+      .*
+  );
 
 endmodule
