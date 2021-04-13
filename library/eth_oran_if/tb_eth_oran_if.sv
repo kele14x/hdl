@@ -115,7 +115,7 @@ module tb_eth_oran_if;
   // Simulation Signals
   //===================
 
-  logic axi_done = 0;
+  logic        axi_done = 0;
 
 
   // Registers Configuration Tasks
@@ -472,13 +472,13 @@ module tb_eth_oran_if;
     $display("Done AXI registers configuration");
     axi_done = 1;
 
-    #(100*1000 - $time()); // wait to 100us
+    #(100 * 1000 - $time());  // wait to 100us
     $display("Enable and reload CC");
     // cc_reload
     axi_write(32'hE000, 32'hF);
     // cc_enable
     axi_write(32'hE004, 32'hF);
- 
+
   end
 
   // Ends
@@ -491,7 +491,7 @@ module tb_eth_oran_if;
   //---------------------
 
   initial begin
-    #(100*1000); // wait to 100u
+    #(100 * 1000);  // wait to 100u
     g_eth_injector[0].eth_injector_i.play_pcap("test_1640.pcap");
     #1000;
     $finish();
@@ -504,7 +504,7 @@ module tb_eth_oran_if;
   initial begin
     wait(~rst_491m52);
 
-    #100000; // 100 us
+    #100000;  // 100 us
     // #100000000;  // 10 ms
 
     forever begin
@@ -587,7 +587,7 @@ module tb_eth_oran_if;
   );
 
   generate
-    for (genvar i = 0; i < NUM_ETH_PORT; i++) begin: g_eth_injector
+    for (genvar i = 0; i < NUM_ETH_PORT; i++) begin : g_eth_injector
       eth_injector eth_injector_i (
           // Clocks
           .aclk        (eth_port_clk[i]),
@@ -603,11 +603,13 @@ module tb_eth_oran_if;
   endgenerate
 
   eth_oran_if #(
-    .NUM_CC(NUM_CC),
-    .NUM_ETH_PORT(NUM_ETH_PORT),
-    .NUM_DL_LAYER(NUM_DL_LAYER),
-    .NUM_UL_LAYER(NUM_UL_LAYER)
-  ) DUT (.*);
+      .NUM_CC(NUM_CC),
+      .NUM_ETH_PORT(NUM_ETH_PORT),
+      .NUM_DL_LAYER(NUM_DL_LAYER),
+      .NUM_UL_LAYER(NUM_UL_LAYER)
+  ) DUT (
+      .*
+  );
 
 endmodule
 

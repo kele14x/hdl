@@ -103,7 +103,14 @@ module eth_oran_if #(
     input var         rst_491m52,
     // Radio frame start
     input var         dl_radio_start_10ms,
-    input var         ul_radio_start_10ms
+    input var         ul_radio_start_10ms,
+    // DL data
+    output var        dl_dfe_sof            [NUM_DL_LAYER][NUM_CC],
+    output var        dl_dfe_sos            [NUM_DL_LAYER][NUM_CC],
+    output var [31:0] dl_dfe_data           [NUM_DL_LAYER][NUM_CC],
+    output var        dl_dfe_valid          [NUM_DL_LAYER][NUM_CC],
+    output var [11:0] dl_dfe_num            [NUM_DL_LAYER][NUM_CC]
+    // UL data
 );
 
   // Radio IP signal
@@ -326,7 +333,9 @@ module eth_oran_if #(
   // Others signals
   //---------------
 
-  logic [  1:0] ctrl_numerology            [      NUM_CC] = '{NUM_CC{0}};
+  // TODO: connect
+  logic [  1:0] ctrl_compression_mode      [      NUM_CC] = '{NUM_CC{1}};
+  logic [  1:0] ctrl_numerology            [      NUM_CC] = '{NUM_CC{1}};
 
   logic [ 11:0] dl_sym_num                 [      NUM_CC];
   logic [ 11:0] ul_sym_num                 [      NUM_CC];
@@ -1225,6 +1234,38 @@ module eth_oran_if #(
       .s_axi_rresp                   (s00_axi_rresp),
       .s_axi_rvalid                  (s00_axi_rvalid),
       .s_axi_rready                  (s00_axi_rready)
+  );
+
+
+
+  dl_adaptor i_dl_adaptor (
+      // Interface with XORIF
+      //=====================
+      .clk_400m             (clk_400m),
+      .rst_400m             (rst_400m),
+      //
+      .defm_radio_start_10ms(defm_radio_start_10ms),
+      .s_dl_update          (m_dl_update),
+      //
+      .m_defm_data_tdata    (m_defm_data_tdata),
+      .m_defm_data_tkeep    (m_defm_data_tkeep),
+      .m_defm_data_tvalid   (m_defm_data_tvalid),
+      .m_defm_data_tlast    (m_defm_data_tlast),
+      .m_defm_data_tready   (m_defm_data_tready),
+      .m_defm_data_tuser    (m_defm_data_tuser),
+      // Interface with DFE
+      //===================
+      .clk_491m52           (clk_491m52),
+      .rst_491m52           (rst_491m52),
+      //
+      .dl_dfe_sof           (dl_dfe_sof),
+      .dl_dfe_sos           (dl_dfe_sos),
+      .dl_dfe_data          (dl_dfe_data),
+      .dl_dfe_valid         (dl_dfe_valid),
+      .dl_dfe_num           (dl_dfe_num),
+      // Control Interface
+      .ctrl_numerology      (ctrl_numerology),
+      .ctrl_compression_mode(ctrl_compression_mode)
   );
 
 endmodule

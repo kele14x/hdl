@@ -133,7 +133,7 @@ module numerology_counter (
   logic [15:0] tick_counter;  // $clog2(NUM_TICK_NUMEROLOGY_0_7) = 16
   logic [15:0] tick_counter_max;
 
-  logic [ 1:0] numerology;
+  logic [1:0] numerology;
 
 
   always_ff @(posedge clk_491m52) begin
@@ -146,7 +146,7 @@ module numerology_counter (
     end
   end
 
-  always_ff @ (posedge clk_491m52) begin
+  always_ff @(posedge clk_491m52) begin
     if (rst_491m52 || radio_start_10ms) begin
       radio_start_counter <= '0;
     end else if (&radio_start_counter) begin
@@ -156,7 +156,7 @@ module numerology_counter (
     end
   end
 
-  always_ff @ (posedge clk_491m52)  begin
+  always_ff @(posedge clk_491m52) begin
     if (rst_491m52) begin
       radio_start_delayed <= '0;
     end else begin

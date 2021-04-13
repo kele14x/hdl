@@ -85,7 +85,7 @@ module axi4l_ipif #(
   // Write State Machine
   //=====================
 
-  typedef enum {
+  typedef enum int {
     S_WRRST,  // in reset
     S_WRIDLE,  // idle, waiting for both write address and write data
     S_WRADDR,  // write data is provided, waiting for write address
@@ -167,8 +167,7 @@ module axi4l_ipif #(
     if (!aresetn) begin
       wr_data <= 'd0;
       wr_be   <= 'd0;
-    end
-    if (wr_data_valid) begin
+    end else if (wr_data_valid) begin
       wr_data <= s_axi_wdata;
       wr_be   <= s_axi_wstrb;
     end
@@ -185,7 +184,7 @@ module axi4l_ipif #(
   end
 
 
-  // Read Enable & Request
+  // Write Enable & Request
   //----------------------
 
   always_ff @(posedge aclk) begin
@@ -244,7 +243,7 @@ module axi4l_ipif #(
   // Read Iteration Interval = 2 (back-to-back read transaction)
   // Read Latency = 2 (from AWADDR transaction to RDATA transaction)
 
-  typedef enum {
+  typedef enum int {
     S_RDRST,
     S_RDIDLE,
     S_RDWAIT,
