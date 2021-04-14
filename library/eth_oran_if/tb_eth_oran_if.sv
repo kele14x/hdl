@@ -4,7 +4,7 @@ module tb_eth_oran_if;
   // The number of ethernet ports for ORAN_IF
   parameter int NUM_ETH_PORT = 2;
   // The number of CCs for ORAN_IF
-  parameter int NUM_CC = 1;
+  parameter int NUM_CC = 2;
   // The number of DL layers
   parameter int NUM_DL_LAYER = 16;
   // The number of Ul layers
@@ -20,12 +20,13 @@ module tb_eth_oran_if;
   logic [ 7:0] m_eth_fram_tkeep        [NUM_ETH_PORT];
   logic        m_eth_fram_tvalid       [NUM_ETH_PORT];
   logic        m_eth_fram_tlast        [NUM_ETH_PORT];
-  logic        m_eth_fram_tready       [NUM_ETH_PORT];
+  logic        m_eth_fram_tready       [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b1}};
 
-  logic        s_eth_mac_tuser         [NUM_ETH_PORT];
-  logic        s_eth_mac_bad_fcs       [NUM_ETH_PORT];
-  logic [79:0] s_eth_mac_tstamp_out    [NUM_ETH_PORT];
-  logic        s_eth_mac_tstamp_valid  [NUM_ETH_PORT];
+  logic        s_eth_mac_tuser         [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b0}};
+  logic        s_eth_mac_bad_fcs       [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b0}};;
+  logic [79:0] s_eth_mac_tstamp_out    [NUM_ETH_PORT] = '{NUM_ETH_PORT{80'b0}};;
+  logic        s_eth_mac_tstamp_valid  [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b0}};;
+  //
   logic [63:0] s_eth_defm_tdata        [NUM_ETH_PORT];
   logic [ 7:0] s_eth_defm_tkeep        [NUM_ETH_PORT];
   logic        s_eth_defm_tvalid       [NUM_ETH_PORT];
@@ -35,7 +36,7 @@ module tb_eth_oran_if;
   logic [ 7:0] m_message_tkeep         [NUM_ETH_PORT];
   logic        m_message_tvalid        [NUM_ETH_PORT];
   logic        m_message_tlast         [NUM_ETH_PORT];
-  logic        m_message_tready        [NUM_ETH_PORT];
+  logic        m_message_tready        [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b1}};;
   logic [79:0] m_message_ts_tdata      [NUM_ETH_PORT];
   logic        m_message_ts_tvalid     [NUM_ETH_PORT];
 
@@ -53,6 +54,13 @@ module tb_eth_oran_if;
 
   logic        dl_radio_start_10ms = 0;
   logic        ul_radio_start_10ms = 0;
+
+    // DL data
+  logic        dl_dfe_sof            [NUM_DL_LAYER][NUM_CC];
+  logic        dl_dfe_sos            [NUM_DL_LAYER][NUM_CC];
+  logic [31:0] dl_dfe_data           [NUM_DL_LAYER][NUM_CC];
+  logic        dl_dfe_valid          [NUM_DL_LAYER][NUM_CC];
+  logic [11:0] dl_dfe_num            [NUM_DL_LAYER][NUM_CC];
 
   // AXI-Lite Control/Status
   //========================
@@ -264,22 +272,22 @@ module tb_eth_oran_if;
   task simulation_config();
     logic [31:0] data;
 
-    $display("Start configate simulation only registers");
+    $display("Start configure simulation only registers");
     // setup_cnt
     axi_write(32'hE600, 32'd7200);
     // setup_sf
     axi_write(32'hE608, 32'h2);
     // setup_sl
-    axi_write(32'hE60C, 32'h1);
+    axi_write(32'hE60C, 32'h0);
     // setup_sy
-    axi_write(32'hE610, 32'h0);
+    axi_write(32'hE610, 32'hD);
     // oran_timer_sim_cfg
     axi_write(32'hE604, 32'h0);
   endtask
 
   task cc_config();
     logic [31:0] data;
-    for (int i = 0; i < NUM_CC; i++) begin
+    for (int i = 0; i < 1; i++) begin
       $display("Start configure CC registers for CC %0d", i);
       // CC(X), 0xE100 + 0x100 * (X)
       // oran_cc_config
@@ -448,6 +456,13 @@ module tb_eth_oran_if;
     rst_491m52 <= 0;
   end
 
+  // ETH reset
+  initial begin
+    eth_port_rst = '{NUM_ETH_PORT{1'b1}};
+    repeat (100) @(posedge eth_port_clk);
+    eth_port_rst = '{NUM_ETH_PORT{1'b0}};
+  end
+
   // AXI Port Stimulation
   //---------------------
 
@@ -472,12 +487,12 @@ module tb_eth_oran_if;
     $display("Done AXI registers configuration");
     axi_done = 1;
 
-    #(100 * 1000 - $time());  // wait to 100us
+    #(100 * 1000 - $time()); // wait to 100 us
     $display("Enable and reload CC");
     // cc_reload
-    axi_write(32'hE000, 32'hF);
+    axi_write(32'hE000, 32'h1);
     // cc_enable
-    axi_write(32'hE004, 32'hF);
+    axi_write(32'hE004, 32'h1);
 
   end
 
@@ -491,7 +506,7 @@ module tb_eth_oran_if;
   //---------------------
 
   initial begin
-    #(100 * 1000);  // wait to 100u
+    #(100 * 1000);  // wait to 100 us
     g_eth_injector[0].eth_injector_i.play_pcap("test_1640.pcap");
     #1000;
     $finish();
@@ -504,8 +519,7 @@ module tb_eth_oran_if;
   initial begin
     wait(~rst_491m52);
 
-    #100000;  // 100 us
-    // #100000000;  // 10 ms
+    #(10 * 1000 * 1000);  // 10ms us
 
     forever begin
       @(posedge clk_491m52);
@@ -591,7 +605,7 @@ module tb_eth_oran_if;
       eth_injector eth_injector_i (
           // Clocks
           .aclk        (eth_port_clk[i]),
-          .aresetn     (eth_port_rst[i]),
+          .aresetn     (~eth_port_rst[i]),
           // Data interface
           .m_eth_tdata (s_eth_defm_tdata[i]),
           .m_eth_tkeep (s_eth_defm_tkeep[i]),

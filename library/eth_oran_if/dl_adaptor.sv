@@ -31,7 +31,6 @@ module dl_adaptor #(
     // DL symbol timing
     input var         dl_radio_start_10ms,
     input var         dl_sym_update        [      NUM_CC],
-    input var         dl_sym_num           [      NUM_CC],
     // 2 CC port, each will have interleaved 4 layer data
     output var        dl_sof               [NUM_DL_LAYER][NUM_CC],
     output var        dl_sos               [NUM_DL_LAYER][NUM_CC],
@@ -91,68 +90,63 @@ module dl_adaptor #(
           .ctrl_compression_mode(ctrl_compression_mode)
       );
 
-      for (genvar j = 0; j < NUM_CC; j++) begin : g_cc
+//      for (genvar j = 0; j < NUM_CC; j++) begin : g_cc
 
-        dl_adaptor_writer i_dl_adaptor_writer (
-            // Interface with DFE
-            //===================
-            .clk     (clk_491m52),
-            .rst     (rst_491m52),
-            // Separated CCs
-            .gb_sof  (gb_sof[i][j]),
-            .gb_sos  (gb_sos[i][j]),
-            .gb_data (gb_data[i][j]),
-            .gb_valid(gb_valid[i][j]),
-            .gb_re   (gb_re[i][j]),  // 0 ~
-            //
-            .wr_data (wr_data[i][j]),
-            .wr_addr (wr_addr[i][j]),
-            .wr_en   (wr_en[i][j])
-        );
+//        dl_adaptor_writer i_dl_adaptor_writer (
+//            // Interface with DFE
+//            //===================
+//            .clk     (clk_491m52),
+//            .rst     (rst_491m52),
+//            // Separated CCs
+//            .gb_sof  (gb_sof[i][j]),
+//            .gb_sos  (gb_sos[i][j]),
+//            .gb_data (gb_data[i][j]),
+//            .gb_valid(gb_valid[i][j]),
+//            .gb_re   (gb_re[i][j]),  // 0 ~
+//            //
+//            .wr_data (wr_data[i][j]),
+//            .wr_addr (wr_addr[i][j]),
+//            .wr_en   (wr_en[i][j])
+//        );
 
-        dl_adaptor_buffer i_dl_adaptor_buffer (
-            // Interface with DFE
-            //===================
-            .clk    (clk_491m52),
-            .rst    (rst_491m52),
-            // Separated CCs
-            .wr_addr(wr_addr[i][j]),
-            .wr_en  (wr_en[i][j]),
-            .wr_data(wr_data[i][j]),
-            //
-            .rd_addr(rd_addr[i][j]),
-            .rd_en  (rd_en[i][j]),
-            .rd_data(rd_data[i][j])
-        );
+//        dl_adaptor_buffer i_dl_adaptor_buffer (
+//            // Interface with DFE
+//            //===================
+//            .clk    (clk_491m52),
+//            .rst    (rst_491m52),
+//            // Separated CCs
+//            .wr_addr(wr_addr[i][j]),
+//            .wr_en  (wr_en[i][j]),
+//            .wr_data(wr_data[i][j]),
+//            //
+//            .rd_addr(rd_addr[i][j]),
+//            .rd_en  (rd_en[i][j]),
+//            .rd_data(rd_data[i][j])
+//        );
 
-      end
+//      end
     end
   endgenerate
 
 
-  generate
-    for (genvar j = 0; j < NUM_CC; j++) begin : g_rd
 
-      dl_adaptor_reader i_dl_adaptor_reader (
-          .clk                (clk_491m52),
-          .rst                (rst_491m52),
-          //
-          .dl_radio_start_10ms(dl_radio_start_10ms),
-          .dl_sym_update      (dl_sym_update[j]),
-          // Read
-          .rd_addr            ('{rd_addr[0][j], rd_addr[1][j], rd_addr[2][j], rd_addr[3][j]}),
-          .rd_en              ('{rd_en[0][j], rd_en[1][j], rd_en[2][j], rd_en[3][j]}),
-          .rd_data            ('{rd_data[0][j], rd_data[1][j], rd_data[2][j], rd_data[3][j]}),
-          //
-          .dl_sof             (dl_sof[j]),
-          .dl_sos             (dl_sos[j]),
-          .dl_data            (dl_data[j]),
-          .dl_valid           (dl_valid[j]),
-          .dl_num             (dl_num[j])
-      );
-
-    end
-  endgenerate
+//  dl_adaptor_reader i_dl_adaptor_reader (
+//      .clk                (clk_491m52),
+//      .rst                (rst_491m52),
+//      //
+//      .dl_radio_start_10ms(dl_radio_start_10ms),
+//      .dl_sym_update      (dl_sym_update),
+//      // Read
+//      .rd_addr            (rd_addr),
+//      .rd_en              (rd_en),
+//      .rd_data            (rd_data),
+//      //
+//      .dl_sof             (dl_sof),
+//      .dl_sos             (dl_sos),
+//      .dl_data            (dl_data),
+//      .dl_valid           (dl_valid),
+//      .dl_num             (dl_num)
+//  );
 
 endmodule
 

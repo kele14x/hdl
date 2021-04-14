@@ -334,7 +334,7 @@ module eth_oran_if #(
   //---------------
 
   // TODO: connect
-  logic [  1:0] ctrl_compression_mode      [      NUM_CC] = '{NUM_CC{1}};
+  logic [  1:0] ctrl_compression_mode      [      NUM_CC] = '{NUM_CC{0}};
   logic [  1:0] ctrl_numerology            [      NUM_CC] = '{NUM_CC{1}};
 
   logic [ 11:0] dl_sym_num                 [      NUM_CC];
@@ -1247,22 +1247,25 @@ module eth_oran_if #(
       .defm_radio_start_10ms(defm_radio_start_10ms),
       .s_dl_update          (m_dl_update),
       //
-      .m_defm_data_tdata    (m_defm_data_tdata),
-      .m_defm_data_tkeep    (m_defm_data_tkeep),
-      .m_defm_data_tvalid   (m_defm_data_tvalid),
-      .m_defm_data_tlast    (m_defm_data_tlast),
-      .m_defm_data_tready   (m_defm_data_tready),
-      .m_defm_data_tuser    (m_defm_data_tuser),
+      .s_defm_data_tdata    (m_defm_data_tdata),
+      .s_defm_data_tkeep    (m_defm_data_tkeep),
+      .s_defm_data_tvalid   (m_defm_data_tvalid),
+      .s_defm_data_tlast    (m_defm_data_tlast),
+      .s_defm_data_tready   (m_defm_data_tready),
+      .s_defm_data_tuser    (m_defm_data_tuser),
       // Interface with DFE
       //===================
       .clk_491m52           (clk_491m52),
       .rst_491m52           (rst_491m52),
       //
-      .dl_dfe_sof           (dl_dfe_sof),
-      .dl_dfe_sos           (dl_dfe_sos),
-      .dl_dfe_data          (dl_dfe_data),
-      .dl_dfe_valid         (dl_dfe_valid),
-      .dl_dfe_num           (dl_dfe_num),
+      .dl_radio_start_10ms  (dl_radio_start_10ms),
+      .dl_sym_update        (dl_sym_update),
+      //
+      .dl_sof               (dl_dfe_sof),
+      .dl_sos               (dl_dfe_sos),
+      .dl_data              (dl_dfe_data),
+      .dl_valid             (dl_dfe_valid),
+      .dl_num               (dl_dfe_num),
       // Control Interface
       .ctrl_numerology      (ctrl_numerology),
       .ctrl_compression_mode(ctrl_compression_mode)

@@ -31,7 +31,7 @@ module dl_adaptor_gearbox #(
     output var [11:0] gb_re                [NUM_CC],
     // Control Interface
     //==================
-    input var  [ 1:0] ctrl_compression_mode
+    input var  [ 1:0] ctrl_compression_mode[NUM_CC]
 );
 
 
@@ -61,7 +61,7 @@ module dl_adaptor_gearbox #(
   dl_adaptor_fifo i_dl_adaptor_fifo (
       // Writer side
       .s_axis_aclk   (clk_400m),
-      .s_axis_aresetn(rst_400m),
+      .s_axis_aresetn(~rst_400m),
       //
       .s_axis_tdata  (s_defm_data_tdata),
       .s_axis_tkeep  (s_defm_data_tkeep),
@@ -81,7 +81,7 @@ module dl_adaptor_gearbox #(
   );
 
   always_ff @(posedge clk_491m52) begin
-    compression_mode <= ctrl_compression_mode;
+    compression_mode <= ctrl_compression_mode[0];
   end
 
   assign m_axis_tready = (compression_mode == 0) ? m_axis_tready_raw :

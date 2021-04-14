@@ -88,7 +88,7 @@ module dl_adaptor_gearbox_bfp9 #(
     end
   end
 
-  assign state_next = (state >= 12) ? 0 : go_next ? state + 1 : state;
+  assign state_next = (state >= 11) ? 0 : go_next ? state + 1 : state;
 
   // AXI4-Stream
 
@@ -118,9 +118,9 @@ module dl_adaptor_gearbox_bfp9 #(
     if (rst) begin
       exp_last <= '0;
     end else if (state == 0 && s_axis_tvalid) begin
-      exp_last <= s_axis_tdata[59:56];
+      exp_last <= tdata_current[59:56];
     end else if (state == 5 && s_axis_tvalid) begin
-      exp_last <= s_axis_tdata[27:24];
+      exp_last <= tdata_current[27:24];
     end else begin
       exp_last <= exp_last;
     end
@@ -169,6 +169,10 @@ module dl_adaptor_gearbox_bfp9 #(
   end
 
   always_ff @(posedge clk) begin
+    gb_cc_r <= tuser_component_carrier;
+  end
+  
+  always_ff @(posedge clk) begin
     if (go_next) begin
       if (tuser_start_of_section) begin
         gb_re_r <= tuser_start_rb * 12;
@@ -187,7 +191,7 @@ module dl_adaptor_gearbox_bfp9 #(
         if (rst) begin
           gb_data[i] <= '0;
         end else if (gb_valid_r && gb_cc_r == i) begin
-          gb_data[i] <= gb_data_r;
+          gb_data[i] <= {10'b0, gb_data_r[39:36], gb_data_r[35:18], 10'b0, gb_data_r[39:36], gb_data_r[17:0]};
         end
       end
 

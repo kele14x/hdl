@@ -7,7 +7,8 @@
 `timescale 1 ns / 1 ps `default_nettype none
 
 module dl_adaptor_reader #(
-    parameter int NUM_BRANCH = 4
+    parameter int NUM_DL_LAYER = 16,
+    parameter int NUM_CC = 2
 ) (
     // Interface with DFE
     //===================
@@ -15,17 +16,17 @@ module dl_adaptor_reader #(
     input var         rst,
     //
     input var         dl_radio_start_10ms,
-    input var         dl_symbol_start,
+    input var         dl_sym_update      [NUM_CC],
     // Read
-    output var [11:0] rd_addr            [NUM_BRANCH],
-    output var        rd_en              [NUM_BRANCH],
-    input var  [63:0] rd_data            [NUM_BRANCH],
+    output var [11:0] rd_addr            [NUM_DL_LAYER][NUM_CC],
+    output var        rd_en              [NUM_DL_LAYER][NUM_CC],
+    input var  [63:0] rd_data            [NUM_DL_LAYER][NUM_CC],
     //
-    output var        dl_sof             [NUM_BRANCH],
-    output var        dl_sos             [NUM_BRANCH],
-    output var [31:0] dl_data            [NUM_BRANCH],
-    output var        dl_valid           [NUM_BRANCH],
-    output var [11:0] dl_num             [NUM_BRANCH]
+    output var        dl_sof             [NUM_DL_LAYER][NUM_CC],
+    output var        dl_sos             [NUM_DL_LAYER][NUM_CC],
+    output var [31:0] dl_data            [NUM_DL_LAYER][NUM_CC],
+    output var        dl_valid           [NUM_DL_LAYER][NUM_CC],
+    output var [11:0] dl_num             [NUM_DL_LAYER][NUM_CC]
 );
 
 
