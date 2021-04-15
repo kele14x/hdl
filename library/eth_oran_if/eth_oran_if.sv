@@ -105,11 +105,11 @@ module eth_oran_if #(
     input var         dl_radio_start_10ms,
     input var         ul_radio_start_10ms,
     // DL data
-    output var        dl_dfe_sof            [NUM_DL_LAYER][NUM_CC],
-    output var        dl_dfe_sos            [NUM_DL_LAYER][NUM_CC],
-    output var [31:0] dl_dfe_data           [NUM_DL_LAYER][NUM_CC],
-    output var        dl_dfe_valid          [NUM_DL_LAYER][NUM_CC],
-    output var [11:0] dl_dfe_num            [NUM_DL_LAYER][NUM_CC]
+    output var        dl_sof            [NUM_DL_LAYER][NUM_CC],
+    output var        dl_sos            [NUM_DL_LAYER][NUM_CC],
+    output var [15:0] dl_data_i         [NUM_DL_LAYER][NUM_CC],
+    output var [15:0] dl_data_q         [NUM_DL_LAYER][NUM_CC],
+    output var        dl_valid          [NUM_DL_LAYER][NUM_CC]
     // UL data
 );
 
@@ -334,14 +334,9 @@ module eth_oran_if #(
   //---------------
 
   // TODO: connect
-  logic [  1:0] ctrl_compression_mode      [      NUM_CC] = '{NUM_CC{0}};
-  logic [  1:0] ctrl_numerology            [      NUM_CC] = '{NUM_CC{1}};
-
-  logic [ 11:0] dl_sym_num                 [      NUM_CC];
-  logic [ 11:0] ul_sym_num                 [      NUM_CC];
-
-  logic         dl_sym_update              [      NUM_CC];
-  logic         ul_sym_update              [      NUM_CC];
+  logic [3:0] ctrl_bandwidth             [      NUM_CC] = '{NUM_CC{0}};
+  logic [1:0] ctrl_numerology            [      NUM_CC] = '{NUM_CC{1}};
+  logic [1:0] ctrl_compression_mode      [      NUM_CC] = '{NUM_CC{1}};
 
 
   // TODO: Reset generator
@@ -351,16 +346,7 @@ module eth_oran_if #(
 
   // Symbol timing generation
 
-  symbol_timing #(
-      .NUM_CC(NUM_CC)
-  ) i_symbol_timing (
-      // XORIF Timer
-      //============
-      .clk_400m             (clk_400m),
-      .rst_400m             (rst_400m),
-      //
-      .defm_radio_start_10ms(defm_radio_start_10ms),
-      .fram_radio_start_10ms(fram_radio_start_10ms),
+  symbol_timing i_symbol_timing (
       // Adaptor Timer
       //==============
       .clk_491m52           (clk_491m52),
@@ -368,14 +354,13 @@ module eth_oran_if #(
       // Timing base
       .dl_radio_start_10ms  (dl_radio_start_10ms),
       .ul_radio_start_10ms  (ul_radio_start_10ms),
-      // adaptor timer
-      .dl_sym_num           (dl_sym_num),
-      .ul_sym_num           (ul_sym_num),
-      .dl_sym_update        (dl_sym_update),
-      .ul_sym_update        (ul_sym_update),
-      // Control Interface
-      //==================
-      .ctrl_numerology      (ctrl_numerology)
+      // XORIF Timer
+      //============
+      .clk_400m             (clk_400m),
+      .rst_400m             (rst_400m),
+      //
+      .defm_radio_start_10ms(defm_radio_start_10ms),
+      .fram_radio_start_10ms(fram_radio_start_10ms)
   );
 
   oran_radio_if i_oran_radio_if (
@@ -1237,7 +1222,6 @@ module eth_oran_if #(
   );
 
 
-
   dl_adaptor i_dl_adaptor (
       // Interface with XORIF
       //=====================
@@ -1259,14 +1243,14 @@ module eth_oran_if #(
       .rst_491m52           (rst_491m52),
       //
       .dl_radio_start_10ms  (dl_radio_start_10ms),
-      .dl_sym_update        (dl_sym_update),
       //
-      .dl_sof               (dl_dfe_sof),
-      .dl_sos               (dl_dfe_sos),
-      .dl_data              (dl_dfe_data),
-      .dl_valid             (dl_dfe_valid),
-      .dl_num               (dl_dfe_num),
+      .dl_sof               (dl_sof),
+      .dl_sos               (dl_sos),
+      .dl_data_i            (dl_data_i),
+      .dl_data_q            (dl_data_q),
+      .dl_valid             (dl_valid),
       // Control Interface
+      .ctrl_bandwidth       (ctrl_bandwidth),
       .ctrl_numerology      (ctrl_numerology),
       .ctrl_compression_mode(ctrl_compression_mode)
   );

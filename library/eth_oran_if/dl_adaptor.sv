@@ -30,123 +30,120 @@ module dl_adaptor #(
     input var         rst_491m52,
     // DL symbol timing
     input var         dl_radio_start_10ms,
-    input var         dl_sym_update        [      NUM_CC],
     // 2 CC port, each will have interleaved 4 layer data
-    output var        dl_sof               [NUM_DL_LAYER][NUM_CC],
-    output var        dl_sos               [NUM_DL_LAYER][NUM_CC],
-    output var [31:0] dl_data              [NUM_DL_LAYER][NUM_CC],
-    output var        dl_valid             [NUM_DL_LAYER][NUM_CC],
-    output var [11:0] dl_num               [NUM_DL_LAYER][NUM_CC],
+    output var        dl_sof               [      NUM_CC][NUM_DL_LAYER],
+    output var        dl_sos               [      NUM_CC][NUM_DL_LAYER],
+    output var [15:0] dl_data_i            [      NUM_CC][NUM_DL_LAYER],
+    output var [15:0] dl_data_q            [      NUM_CC][NUM_DL_LAYER],
+    output var        dl_valid             [      NUM_CC][NUM_DL_LAYER],
     // Control Interface
+    //==================
+    input var  [ 3:0] ctrl_bandwidth       [      NUM_CC],
     input var  [ 1:0] ctrl_numerology      [      NUM_CC],
     input var  [ 1:0] ctrl_compression_mode[      NUM_CC]
 );
 
+  // Start of symbol for each CC
+  logic        gb_sos  [NUM_CC];
 
-  logic [63:0] gb_data [NUM_DL_LAYER][NUM_CC];
-  logic        gb_valid[NUM_DL_LAYER][NUM_CC];
-  logic        gb_sof  [NUM_DL_LAYER][NUM_CC];
-  logic        gb_sos  [NUM_DL_LAYER][NUM_CC];
-  logic [11:0] gb_re   [NUM_DL_LAYER][NUM_CC];
-
-  logic [63:0] wr_data [NUM_DL_LAYER][NUM_CC];
-  logic [11:0] wr_addr [NUM_DL_LAYER][NUM_CC];
-  logic        wr_en   [NUM_DL_LAYER][NUM_CC];
-
-  logic [63:0] rd_data [NUM_DL_LAYER][NUM_CC];
-  logic [11:0] rd_addr [NUM_DL_LAYER][NUM_CC];
-  logic        rd_en   [NUM_DL_LAYER][NUM_CC];
+  logic [63:0] gb_data [NUM_CC] [NUM_DL_LAYER];
+  logic        gb_valid[NUM_CC] [NUM_DL_LAYER];
+  logic [11:0] gb_re   [NUM_CC] [NUM_DL_LAYER];
 
   generate
-    for (genvar i = 0; i < NUM_DL_LAYER; i++) begin : g_ly
+    for (genvar i = 0; i < NUM_CC; i++) begin : g_cdc
 
-      dl_adaptor_gearbox i_dl_adaptor_gearbox (
-          // Interface with XORIF
-          //=====================
-          .clk_400m             (clk_400m),
-          .rst_400m             (rst_400m),
-          //
-          .defm_radio_start_10ms(defm_radio_start_10ms),
-          .s_dl_update          (s_dl_update),
-          //
-          .s_defm_data_tdata    (s_defm_data_tdata[i]),
-          .s_defm_data_tkeep    (s_defm_data_tkeep[i]),
-          .s_defm_data_tvalid   (s_defm_data_tvalid[i]),
-          .s_defm_data_tlast    (s_defm_data_tlast[i]),
-          .s_defm_data_tready   (s_defm_data_tready[i]),
-          .s_defm_data_tuser    (s_defm_data_tuser[i]),
-          // Interface with DFE
-          //===================
-          .clk_491m52           (clk_491m52),
-          .rst_491m52           (rst_491m52),
-          // Shared by CC0 and CC1
-          .gb_data              (gb_data[i]),  // {Q, I}
-          .gb_valid             (gb_valid[i]),
-          .gb_sof               (gb_sof[i]),  // Start of a radio frame
-          .gb_sos               (gb_sos[i]),  // start of a symbol
-          .gb_re                (gb_re[i]),  // RE number, 0 ~ 3275
-          // Control Interface
-          //==================
-          .ctrl_compression_mode(ctrl_compression_mode)
+      xpm_cdc_pulse #(
+          .DEST_SYNC_FF  (2),
+          .INIT_SYNC_FF  (0),
+          .REG_OUTPUT    (1),
+          .RST_USED      (1),
+          .SIM_ASSERT_CHK(0)
+      ) i_xpm_cdc_pulse_s_dl_update (
+          .src_clk   (clk_400m),
+          .src_rst   (rst_400m),
+          .src_pulse (s_dl_update[i]),
+          .dest_clk  (clk_491m52),
+          .dest_rst  (rst_491m52),
+          .dest_pulse(gb_sos[i])
       );
 
-//      for (genvar j = 0; j < NUM_CC; j++) begin : g_cc
-
-//        dl_adaptor_writer i_dl_adaptor_writer (
-//            // Interface with DFE
-//            //===================
-//            .clk     (clk_491m52),
-//            .rst     (rst_491m52),
-//            // Separated CCs
-//            .gb_sof  (gb_sof[i][j]),
-//            .gb_sos  (gb_sos[i][j]),
-//            .gb_data (gb_data[i][j]),
-//            .gb_valid(gb_valid[i][j]),
-//            .gb_re   (gb_re[i][j]),  // 0 ~
-//            //
-//            .wr_data (wr_data[i][j]),
-//            .wr_addr (wr_addr[i][j]),
-//            .wr_en   (wr_en[i][j])
-//        );
-
-//        dl_adaptor_buffer i_dl_adaptor_buffer (
-//            // Interface with DFE
-//            //===================
-//            .clk    (clk_491m52),
-//            .rst    (rst_491m52),
-//            // Separated CCs
-//            .wr_addr(wr_addr[i][j]),
-//            .wr_en  (wr_en[i][j]),
-//            .wr_data(wr_data[i][j]),
-//            //
-//            .rd_addr(rd_addr[i][j]),
-//            .rd_en  (rd_en[i][j]),
-//            .rd_data(rd_data[i][j])
-//        );
-
-//      end
     end
   endgenerate
 
 
+  dl_adaptor_gearbox i_dl_adaptor_gearbox (
+      // Interface with XORIF
+      //=====================
+      .clk_400m             (clk_400m),
+      .rst_400m             (rst_400m),
+      //
+      .s_defm_data_tdata    (s_defm_data_tdata),
+      .s_defm_data_tkeep    (s_defm_data_tkeep),
+      .s_defm_data_tvalid   (s_defm_data_tvalid),
+      .s_defm_data_tlast    (s_defm_data_tlast),
+      .s_defm_data_tready   (s_defm_data_tready),
+      .s_defm_data_tuser    (s_defm_data_tuser),
+      // Interface with DFE
+      //===================
+      .clk_491m52           (clk_491m52),
+      .rst_491m52           (rst_491m52),
+      // Shared by CC0 and CC1
+      .gb_data              (gb_data),  // {Q, I}
+      .gb_valid             (gb_valid),
+      .gb_re                (gb_re),  // RE number, 0 ~ 3275
+      // Control Interface
+      //==================
+      .ctrl_compression_mode(ctrl_compression_mode)
+  );
 
-//  dl_adaptor_reader i_dl_adaptor_reader (
-//      .clk                (clk_491m52),
-//      .rst                (rst_491m52),
-//      //
-//      .dl_radio_start_10ms(dl_radio_start_10ms),
-//      .dl_sym_update      (dl_sym_update),
-//      // Read
-//      .rd_addr            (rd_addr),
-//      .rd_en              (rd_en),
-//      .rd_data            (rd_data),
-//      //
-//      .dl_sof             (dl_sof),
-//      .dl_sos             (dl_sos),
-//      .dl_data            (dl_data),
-//      .dl_valid           (dl_valid),
-//      .dl_num             (dl_num)
-//  );
+
+  generate
+    for (genvar i = 0; i < NUM_CC; i++) begin: g_buf
+
+      //
+      dl_adaptor_buf #(
+          .LAYER_NUMBER_C(NUM_DL_LAYER)
+      ) dl_adaptor_buf (
+          // Clock & Reset
+          //==============
+          .clk_491m_i                (clk_491m52),
+          .rst_491m_i                (rst_491m52),
+          .clk_491m_gating_dl_i      (clk_491m52),
+          .clk_491m_gating_dl_flush_i(rst_491m52),
+          // DL extra timing ports
+          // TODO:
+          .s0_rd_trig_i              (1'b0),
+          .s0_rd_trig_en             (1'b0),
+          // Data from Gearbox
+          .dl_data_i                 (gb_data),
+          .dl_data_sof_i             (dl_radio_start_10ms),
+          .dl_data_sop_i             (gb_sos[i]),
+          .dl_data_valid_i           (gb_valid),
+          .re_no_i                   (gb_re),
+          // Data output to DFE
+          .dl_di_o                   (dl_data_i[i]),
+          .dl_dq_o                   (dl_data_q[i]),
+          .dl_sof_o                  (dl_sof[i]),
+          .dl_sop_o                  (dl_sos[i]),
+          .dl_sof_ahead_7_o          (  /* Not used */),
+          .dl_sop_ahead_7_o          (  /* Not used */),
+          .dl_valid_o                (dl_valid[i]),
+          // Control interface
+          //===================
+          .bw_mode_i                 (ctrl_bandwidth[i]),  // Bandwidth mode
+          .rat_mode_i                (ctrl_numerology[i]),  // Numerology
+          .compression_mode          (ctrl_compression_mode[i]),  // Compression mode
+          //
+          .buffer_mem_ctrl_en        ( /* Not used */),
+          .buffer_mem_addr_i         ( /* Not used */),
+          .buffer_mem_data_i         ( /* Not used */),
+          .buffer_mem_we             ( /* Not used */),
+          .buffer_mem_data_o         ( /* Not used */)
+      );
+
+    end
+  endgenerate
 
 endmodule
 
