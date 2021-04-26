@@ -30,6 +30,22 @@ module tb_ul_adaptor_gearbox_bfp9 ();
 
   ul_adaptor_gearbox_bfp9 #(.NUM_CC(NUM_CC)) UUT (.*);
 
+  logic [63:0] URAM [NUM_CC][4096];
+  
+  initial begin: init_uram
+    logic [2:0] exp;
+    logic [8:0] mantissa;
+    for (int cc = 0; cc < NUM_CC; cc++) begin
+      for (int addr = 0; addr < 4096; addr++) begin
+        exp = $urandom();
+        for (int i = 0; i < 4; i++) begin
+          mantissa = $urandom();
+          URAM[cc][addr][i*16+15-:16] = (mantissa << exp);
+        end
+      end
+    end
+  end
+
   generate 
     for (genvar i = 0; i < NUM_CC; i++) begin: g_uram
 
@@ -37,7 +53,7 @@ module tb_ul_adaptor_gearbox_bfp9 ();
         if (rst) begin
           uram_data_r[i] <= '0;
         end else if (uram_rden[i]) begin
-          uram_data_r[i] <= 10000 + uram_bank[i] * 10000 + uram_addr[i]; 
+          uram_data_r[i] <= URAM[i][uram_addr[i]];
         end else begin
           uram_data_r[i] <= '0;
         end

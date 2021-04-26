@@ -137,7 +137,7 @@ module ul_adaptor_gearbox_bfp9 #(
   logic wait_for_sync [NUM_CC];
 
   generate
-    for (genvar i = 0; i < NUM_CC; i++) begin
+    for (genvar i = 0; i < NUM_CC; i++) begin: g_addr_gen
 
       // we need to handle the case that up_radio_start arrives few clock ticks
       // earlier than ul_update (UL symbol number update).
@@ -196,6 +196,7 @@ module ul_adaptor_gearbox_bfp9 #(
   logic [63:0] rd_data;
   logic        rd_valid;
   logic        rd_done;
+  logic [ 2:0] rd_cnt;
 
   logic [ 2:0] rd_cc_pre;
 
@@ -219,6 +220,15 @@ module ul_adaptor_gearbox_bfp9 #(
 
   reg_pipeline #(
     .DATA_WIDTH     (3),
+    .PIPELINE_STAGES(5)
+  ) i_reg_pipeline_cnt (
+    .clk (clk),
+    .din (re_pair_cnt),
+    .dout(rd_cnt)
+  );
+
+  reg_pipeline #(
+    .DATA_WIDTH     (3),
     .PIPELINE_STAGES(4)
   ) i_reg_pipeline_cc (
     .clk (clk),
@@ -230,127 +240,191 @@ module ul_adaptor_gearbox_bfp9 #(
     rd_data <= uram_data[rd_cc_pre];
   end
 
+  // BFP9 Compression
+  //-----------------
+
+  logic [63:0] rd_data_d [8];
+  logic [ 2:0] rd_cnt_d  [8];
+  logic        rd_valid_d[8];
+  logic        rd_done_d [8];
+
+  logic [3:0] exp_0, exp_1, exp_2, exp_3, exp_mt, exp_ma;
+  logic [3:0] comp_exp_pre;
+  
+  logic [ 3:0] comp_exp; // actually 0 ~ 7, but 4-bit is specified in std.
+  logic [35:0] comp_mantissa;
+  logic [ 3:0] comp_cnt; // 0 ~ 11, 12-state
+  logic        comp_valid;
+  logic        comp_done;
+
+  // Get the BFP9 exponent value based on the 16-bit data, for example
+  // 16'b0000000_000000001_ => exp = 0
+  // 16'b0000_010000000_000 => exp = 3
+  // 16'b_010000000_0000000 => exp = 7
+  function automatic [3:0] get_exp(input logic [15:0] data);
+    int i;
+    for (i = 15; i >= 9; i--) begin
+      if (data[i] != data[i-1]) begin
+        return (i - 8);
+      end
+    end
+    return 0;
+  endfunction
+
+  assign exp_0 = get_exp(rd_data[15: 0]);
+  assign exp_1 = get_exp(rd_data[31:16]);
+  assign exp_2 = get_exp(rd_data[47:32]);
+  assign exp_3 = get_exp(rd_data[63:48]);
+
+  // exp_mt is largest of exp_0 ~ exp_3
+  always_ff @ (posedge clk) begin
+    automatic logic [3:0] temp;
+    temp = (exp_0 > exp_1) ? exp_0 : exp_1;
+    temp = temp > exp_2 ? temp : exp_2;
+    temp = temp > exp_3 ? temp : exp_3;
+    exp_mt <= temp;
+  end
+
+  // Delay line
+  
+  always_ff @ (posedge clk) begin
+    rd_cnt_d[0] <= rd_cnt;
+    for (int i = 1; i < 8; i++) begin
+      rd_cnt_d[i] <= rd_cnt_d[i-1];
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    rd_data_d[0] <= rd_data;
+    for (int i = 1; i < 8; i++) begin
+      rd_data_d[i] <= rd_data_d[i-1];
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    rd_valid_d[0] <= rd_valid;
+    for (int i = 1; i < 8; i++) begin
+      rd_valid_d[i] <= rd_valid_d[i-1];
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    rd_done_d[0] <= rd_done;
+    for (int i = 1; i < 8; i++) begin
+      rd_done_d[i] <= rd_done_d[i-1];
+    end
+  end
+
+  always_ff @ (posedge clk) begin
+    if (rd_cnt_d[0] == 0) begin
+      exp_ma <= exp_mt;
+    end else begin
+      exp_ma <= exp_ma > exp_mt ? exp_ma : exp_mt;
+    end
+  end
+
+
+  always_ff @ (posedge clk) begin
+    if (rd_cnt_d[1] == 5) begin
+      comp_exp_pre <= exp_ma;
+    end
+  end
+
+  always_ff @ (posedge clk) begin
+    comp_exp <= comp_exp_pre;
+  end
+
+  always_ff @ (posedge clk) begin
+    comp_mantissa[35:27] <= rd_data_d[7][15: 0] >> comp_exp_pre; // re0_i
+    comp_mantissa[26:18] <= rd_data_d[7][31:16] >> comp_exp_pre; // re0_q
+    comp_mantissa[17: 9] <= rd_data_d[7][47:32] >> comp_exp_pre; // re1_i
+    comp_mantissa[ 8: 0] <= rd_data_d[7][63:48] >> comp_exp_pre; // re1_q
+  end
+
+  always_ff @(posedge clk) begin
+    comp_valid <= rd_valid_d[7];
+  end
+  
+  always_ff @(posedge clk) begin
+    comp_done <= rd_done_d[7];
+  end
+
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      comp_cnt <= '1;
+    end else if (rd_valid_d[7]) begin
+      comp_cnt <= ((comp_cnt == 11) ? 0 : (comp_cnt + 1));
+    end else begin
+      comp_cnt <= '1;
+    end
+  end
+
+
   // AXIS FSM
   //---------
   // Write 7-word (24 REs) or 3.5-word (12 REs) to AXI-Stream interface
 
-  // Two RBs data
-  logic [ 7:0] rb0_exp;
-  logic [17:0] rb0_re [12]; // {i[8:0], q[8:0]}
-  //
-  logic [ 7:0] rb1_exp;
-  logic [17:0] rb1_re [12];
+  logic [35:0] comp_mantissa_d;
+  logic [35:0] comp_mantissa_dd;
 
-  logic axis_rb_valid;
-  logic axis_rb_cnt;
+  logic comp_done_odd;
 
-  logic [3:0] axis_state, axis_state_next; // 0 ~ 6
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      axis_state <= '1;
-    end else begin
-      axis_state <= axis_state_next;
-    end
-  end
-
-  always_comb begin
-    case (axis_state)
-      0      : axis_state_next = m_axis_tready ? 1 : 0;
-      1      : axis_state_next = m_axis_tready ? 2 : 1;
-      2      : axis_state_next = m_axis_tready ? 3 : 2;
-      3      : axis_state_next = m_axis_tready ? ((axis_rb_cnt == 1) ? 15 : 4) : 3;
-      4      : axis_state_next = m_axis_tready ? 5 : 4;
-      5      : axis_state_next = m_axis_tready ? 6 : 5;
-      6      : axis_state_next = m_axis_tready ? ((axis_rb_cnt == 2) ? 15 : 0) : 6;
-      15     : axis_state_next = axis_rb_valid ? 0 : 15;
-      default: axis_state_next = 15;
-    endcase
+  always_ff @ (posedge clk) begin
+    comp_mantissa_d  <= comp_mantissa;
+    comp_mantissa_dd <= comp_mantissa_d;
   end
 
   always_ff @(posedge clk) begin
     if (rst) begin
       m_axis_tdata <= '0;
-    end else if (axis_state_next == 0) begin
-      m_axis_tdata <= {rb0_exp, rb0_re[0], rb0_re[1], rb0_re[2], rb0_re[3][17:16]};
-    end else if (axis_state_next == 1) begin
-      m_axis_tdata <= {rb0_re[3][15:0], rb0_re[4], rb0_re[5], rb0_re[6][17:6]};
-    end else if (axis_state_next == 2) begin
-      m_axis_tdata <= {rb0_re[6][5:0], rb0_re[7], rb0_re[8], rb0_re[9], rb0_re[10][17:14]};
-    end else if (axis_state_next == 3) begin
-      m_axis_tdata <= {rb0_re[10][13:0], rb0_re[11], rb1_exp, rb1_re[0], rb1_re[1][17:12]};
-    end else if (axis_state_next == 4) begin
-      m_axis_tdata <= {rb1_re[1][11:0], rb1_re[2],rb1_re[3], rb1_re[4][17:2]};
-    end else if (axis_state_next == 5) begin
-      m_axis_tdata <= {rb1_re[4][1:0], rb1_re[5], rb1_re[6], rb1_re[7], rb1_re[8][17:10]};
-    end else begin // 6
-      m_axis_tdata <= {rb1_re[8][9:0], rb1_re[9], rb1_re[10], rb1_re[11]};
-    end
+    end else if (comp_cnt == 1) begin
+      m_axis_tdata <= {4'b0, comp_exp, comp_mantissa_d, comp_mantissa[35:16]};
+    end else if (comp_cnt == 3) begin
+      m_axis_tdata <= {comp_mantissa_dd[15:0], comp_mantissa_d, comp_mantissa[35:24]};
+    end else if (comp_cnt == 5) begin
+      m_axis_tdata <= {comp_mantissa_dd[23:0], comp_mantissa_d, comp_mantissa[35:32]};
+    end else if (comp_cnt == 6 || comp_done_odd) begin
+      m_axis_tdata <= {comp_mantissa_d[31:0], 4'b0, comp_exp, comp_mantissa[35:12]};
+    end else if (comp_cnt == 8) begin
+      m_axis_tdata <= {comp_mantissa_dd[11:0], comp_mantissa_d, comp_mantissa[35:20]};
+    end else if (comp_cnt == 10) begin
+      m_axis_tdata <= {comp_mantissa_dd[19:0], comp_mantissa_d, comp_mantissa[35:28]};
+    end else if (comp_cnt == 11) begin
+      m_axis_tdata <= {comp_mantissa_d[27:0], comp_mantissa};
+    end else begin
+      m_axis_tdata <= m_axis_tdata;
+    end 
   end
 
   always_ff @(posedge clk) begin
     if (rst) begin
       m_axis_tkeep <= '0;
-    end else if (axis_state_next == 0) begin
-      m_axis_tkeep <= '1;
-    end else if (axis_state_next == 1) begin
-      m_axis_tkeep <= '1;
-    end else if (axis_state_next == 2) begin
-      m_axis_tkeep <= '1;
-    end else if (axis_state_next == 3) begin
-      m_axis_tkeep <= '1;
-    end else if (axis_state_next == 4) begin
-      m_axis_tkeep <= '1;
-    end else if (axis_state_next == 5) begin
-      m_axis_tkeep <= '1;
-    end else if (axis_state_next == 6) begin
-      m_axis_tkeep <= '1;
+
     end else begin
-      m_axis_tkeep <= '0;
+      m_axis_tkeep <= comp_done_odd ? 8'h0F : 8'hFF;
     end
   end
 
   always_ff @(posedge clk) begin
     if (rst) begin
       m_axis_tvalid <= '0;
-    end else if (axis_state_next == 0) begin
-      m_axis_tvalid <= '1;
-    end else if (axis_state_next == 1) begin
-      m_axis_tvalid <= '1;
-    end else if (axis_state_next == 2) begin
-      m_axis_tvalid <= '1;
-    end else if (axis_state_next == 3) begin
-      m_axis_tvalid <= '1;
-    end else if (axis_state_next == 4) begin
-      m_axis_tvalid <= '1;
-    end else if (axis_state_next == 5) begin
-      m_axis_tvalid <= '1;
-    end else if (axis_state_next == 6) begin
-      m_axis_tvalid <= '1;
     end else begin
-      m_axis_tvalid <= '0;
+      m_axis_tvalid <= ((comp_cnt == 1) || (comp_cnt == 3) || 
+        (comp_cnt == 5) || (comp_cnt == 6) || (comp_cnt == 8) ||
+        (comp_cnt == 10) || (comp_cnt == 11) || comp_done_odd) && comp_valid;
     end
+  end
+
+  always_ff @ (posedge clk) begin
+    comp_done_odd <= (comp_cnt == 5 && comp_done);
   end
 
   always_ff @(posedge clk) begin
     if (rst) begin
       m_axis_tlast <= '0;
-    end else if (axis_state_next == 0) begin
-      m_axis_tlast <= '0;
-    end else if (axis_state_next == 1) begin
-      m_axis_tlast <= '0;
-    end else if (axis_state_next == 2) begin
-      m_axis_tlast <= '0;
-    end else if (axis_state_next == 3) begin
-      m_axis_tlast <= '0;
-    end else if (axis_state_next == 4) begin
-      m_axis_tlast <= '0;
-    end else if (axis_state_next == 5) begin
-      m_axis_tlast <= '0;
-    end else if (axis_state_next == 6) begin
-      m_axis_tlast <= '0;
+
     end else begin
-      m_axis_tlast <= '0;
+      m_axis_tlast <= comp_done_odd || (comp_cnt == 11 && comp_done);
     end
   end
 
