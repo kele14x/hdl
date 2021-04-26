@@ -116,7 +116,8 @@ interface axi4s_if #(
   task automatic master_send(
     input int cnt, 
     input logic [TDATA_WIDTH-1:0] data[],
-    input logic [TDATA_WIDTH/8-1:0] keep[]
+    input logic [TDATA_WIDTH/8-1:0] keep[],
+    input logic [TUSER_WIDTH-1:0] user[]
   );
     wait(aresetn);
 
@@ -127,10 +128,15 @@ interface axi4s_if #(
       end
       tdata_s  <= data[i];
       tkeep_s  <= keep[i];
+      tuser_s  <= user[i];
       tvalid_s <= 1'b1;
       tlast_s  <= (i == cnt - 1);
     end
     @(posedge aclk);
+    // Wait slave accept last word
+    while (tready == 0) begin
+      @(posedge aclk);
+    end
     reset();
   endtask
 
