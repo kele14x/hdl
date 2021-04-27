@@ -82,9 +82,29 @@ module tb_ul_adaptor_gearbox_bfp9 ();
 
   initial begin
     wait(rst == 0);
+    #100;
+
+    // Set 10 ms start for 1 tick
     @(posedge clk);
-    fram_req_data <= {9'd0, 8'd119, 3'd0, 4'd0};
+    ul_radio_start_10ms = 1;
+    ul_update[0] = 1;
+    @(posedge clk);
+    ul_radio_start_10ms = 0;
+    ul_update[0] = 0;
+    #20;
+
+    // Set 
+    @(posedge clk);
+    ul_update[1] = 1;
+    @(posedge clk);
+    ul_update[1] = 0;
+    #100;
+
+    // Set fram_req
+    @(posedge clk);
+    fram_req_data <= {9'd0, 8'd119, 3'd1, 4'd0};
     fram_req_empty <= 1'b0;
+    // Wait it be accepted
     forever begin
       @(posedge clk);
       if (fram_req_rden) break;

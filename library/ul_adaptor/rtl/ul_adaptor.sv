@@ -14,7 +14,8 @@ module ul_adaptor #(
     input var         clk_400m,
     input var         rst_400m,
     //
-    output var        ul_radio_start_10ms,
+    output var        fram_radio_start_10ms,
+    input var         ul_update            [      NUM_CC],
     //
     output var [63:0] m_fram_data_tdata    [NUM_UL_LAYER],
     output var [ 7:0] m_fram_data_tkeep    [NUM_UL_LAYER],
@@ -41,11 +42,11 @@ module ul_adaptor #(
 );
 
 
-  logic [11:0] ram_addr              [NUM_CC][NUM_UL_LAYER];
-  logic        ram_rden              [NUM_CC][NUM_UL_LAYER];
-  logic [63:0] ram_data              [NUM_CC][NUM_UL_LAYER];
+  logic [11:0] ram_addr                [NUM_CC][NUM_UL_LAYER];
+  logic        ram_rden                [NUM_CC][NUM_UL_LAYER];
+  logic [63:0] ram_data                [NUM_CC][NUM_UL_LAYER];
 
-  logic        fram_radio_start_10ms;
+  logic        fram_radio_start_10ms_s;
 
   ul_adaptor_gearbox #(
       .NUM_CC      (NUM_CC),
@@ -56,7 +57,8 @@ module ul_adaptor #(
       .clk_400m             (clk_400m),
       .rst_400m             (rst_400m),
       // ul timing
-      .fram_radio_start_10ms(fram_radio_start_10ms),
+      .fram_radio_start_10ms(fram_radio_start_10ms_s),
+      .ul_update            (ul_update),
       // ul data
       .m_fram_data_tdata    (m_fram_data_tdata),
       .m_fram_data_tkeep    (m_fram_data_tkeep),

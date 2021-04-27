@@ -1,30 +1,30 @@
+// file: ul_adaptor_gearbox_bfp9_reader.sv
+// breif: URAM reader FSM
 `timescale 1 ns / 1 ps `default_nettype none
 
-module ul_adaptor_gearbox_raw #(
+module ul_adaptor_gearbox_bfp9_reader #(
     parameter int NUM_CC = 2
 ) (
     input var         clk,
     input var         rst,
-    // ul timing
+    //
     input var         fram_radio_start_10ms,
     input var         ul_update            [NUM_CC],
-    // ul data
-    output var [63:0] m_axis_tdata,
-    output var [ 7:0] m_axis_tkeep,
-    output var        m_axis_tvalid,
-    output var        m_axis_tlast,
-    input var         m_axis_tready,
     // FIFO
     input var  [23:0] fram_req_data,
     input var         fram_req_empty,
     output var        fram_req_rden,
     // URAM
-    output var        uram_bank             [NUM_CC],
-    output var [11:0] uram_addr             [NUM_CC],
-    output var        uram_rden             [NUM_CC],
-    input var  [63:0] uram_data             [NUM_CC]
+    output var        uram_bank            [NUM_CC],
+    output var [11:0] uram_addr            [NUM_CC],
+    output var        uram_rden            [NUM_CC],
+    input var  [63:0] uram_data            [NUM_CC],
+    //
+    output var [63:0] re_data,  // RE pair, {re1_q, re1_i, re0_q, re0_i}
+    output var [ 2:0] re_cnt,  // 0 ~ 5
+    output var        re_valid,  // Should be valid all alone the packet
+    output var        re_done  // Pulse at last RE pair
 );
-
 
 
   // fram_req signal mapping
@@ -91,7 +91,7 @@ module ul_adaptor_gearbox_raw #(
       rb_cnt <= '0;
     end else if (req_accept) begin
       rb_cnt <= fram_req_start_rb;
-    end else if (busy_next && (re_pair_cnt == 7)) begin
+    end else if (busy_next && (re_pair_cnt == 5)) begin
       rb_cnt <= rb_cnt + 1;
     end else if (busy_next) begin
       rb_cnt <= rb_cnt;
@@ -118,7 +118,7 @@ module ul_adaptor_gearbox_raw #(
     end else if (req_accept) begin
       re_pair_cnt <= '0;
     end else if (busy_next) begin
-      re_pair_cnt <= re_pair_cnt + 1;
+      re_pair_cnt <= ((re_pair_cnt == 5) ? 0 : re_pair_cnt + 1);
     end else begin
       re_pair_cnt <= '0;
     end
@@ -185,7 +185,7 @@ module ul_adaptor_gearbox_raw #(
         if (rst) begin
           uram_rden[i] <= '0;
         end else begin
-          uram_rden[i] <= (busy && (rb_cc == i) && (re_pair_cnt <= 5));
+          uram_rden[i] <= (busy && (rb_cc == i));
         end
       end
 
@@ -234,12 +234,12 @@ module ul_adaptor_gearbox_raw #(
   //-------------
 
   always_ff @(posedge clk) begin
-    m_axis_tdata <= uram_data[re_cc_pre[3]];
+    re_data <= uram_data[re_cc_pre[3]];
   end
-  
-  assign m_axis_tkeep  = '1;
-  assign m_axis_tvalid = re_valid_d[4];
-  assign m_axis_tlast  = re_done_d[4];
+
+  assign re_cnt   = re_cnt_d[4];
+  assign re_valid = re_valid_d[4];
+  assign re_done  = re_done_d[4];
 
 endmodule
 
