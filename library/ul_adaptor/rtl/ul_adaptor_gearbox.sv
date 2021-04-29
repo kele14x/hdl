@@ -24,7 +24,6 @@ module ul_adaptor_gearbox #(
     input var         clk_491m52,
     input var         rst_491m52,
     //
-    output var        ram_bank             [NUM_UL_LAYER][NUM_CC],
     output var [11:0] ram_addr             [NUM_UL_LAYER][NUM_CC],
     output var        ram_rden             [NUM_UL_LAYER][NUM_CC],
     input var  [63:0] ram_data             [NUM_UL_LAYER][NUM_CC],
@@ -48,12 +47,10 @@ module ul_adaptor_gearbox #(
   logic        fram_req_rden_bfp9 [NUM_UL_LAYER];
   logic        fram_req_empty_bfp9[NUM_UL_LAYER];
 
-  logic        ram_bank_raw       [NUM_UL_LAYER] [NUM_CC];
   logic [11:0] ram_addr_raw       [NUM_UL_LAYER] [NUM_CC];
   logic        ram_rden_raw       [NUM_UL_LAYER] [NUM_CC];
   logic [63:0] ram_data_raw       [NUM_UL_LAYER] [NUM_CC];
 
-  logic        ram_bank_bfp9      [NUM_UL_LAYER] [NUM_CC];
   logic [11:0] ram_addr_bfp9      [NUM_UL_LAYER] [NUM_CC];
   logic        ram_rden_bfp9      [NUM_UL_LAYER] [NUM_CC];
   logic [63:0] ram_data_bfp9      [NUM_UL_LAYER] [NUM_CC];
@@ -142,7 +139,6 @@ module ul_adaptor_gearbox #(
           .fram_req_rden        (fram_req_rden_raw[i]),
           .fram_req_empty       (fram_req_empty_raw[i]),
           //
-          .uram_bank            (ram_bank_raw[i]),
           .uram_addr            (ram_addr_raw[i]),
           .uram_rden            (ram_rden_raw[i]),
           .uram_data            (ram_data_raw[i])
@@ -167,13 +163,11 @@ module ul_adaptor_gearbox #(
           .fram_req_rden        (fram_req_rden_bfp9[i]),
           .fram_req_empty       (fram_req_empty_bfp9[i]),
           //
-          .uram_bank            (ram_bank_bfp9[i]),
           .uram_addr            (ram_addr_bfp9[i]),
           .uram_rden            (ram_rden_bfp9[i]),
           .uram_data            (ram_data_bfp9[i])
       );
 
-      assign ram_bank[i] = ctrl_compression_mode[0] == 0 ? ram_bank_raw[i] : ram_bank_bfp9[i];
       assign ram_addr[i] = ctrl_compression_mode[0] == 0 ? ram_addr_raw[i] : ram_addr_bfp9[i];
       assign ram_rden[i] = ctrl_compression_mode[0] == 0 ? ram_rden_raw[i] : ram_rden_bfp9[i];
 

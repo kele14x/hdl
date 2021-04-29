@@ -18,7 +18,6 @@ module ul_adaptor_gearbox_bfp9 #(
     input var         fram_req_empty,
     output var        fram_req_rden,
     // URAM
-    output var        uram_bank            [NUM_CC],
     output var [11:0] uram_addr            [NUM_CC],
     output var        uram_rden            [NUM_CC],
     input var  [63:0] uram_data            [NUM_CC]
@@ -53,7 +52,6 @@ module ul_adaptor_gearbox_bfp9 #(
       .fram_req_empty       (fram_req_empty),
       .fram_req_rden        (fram_req_rden),
       // URAM
-      .uram_bank            (uram_bank),
       .uram_addr            (uram_addr),
       .uram_rden            (uram_rden),
       .uram_data            (uram_data),

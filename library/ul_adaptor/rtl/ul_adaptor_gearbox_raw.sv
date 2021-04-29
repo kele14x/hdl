@@ -19,7 +19,6 @@ module ul_adaptor_gearbox_raw #(
     input var         fram_req_empty,
     output var        fram_req_rden,
     // URAM
-    output var        uram_bank             [NUM_CC],
     output var [11:0] uram_addr             [NUM_CC],
     output var        uram_rden             [NUM_CC],
     input var  [63:0] uram_data             [NUM_CC]
@@ -137,7 +136,9 @@ module ul_adaptor_gearbox_raw #(
   //-----------------------------
   // we need to be care which CC and which band to read
 
-  logic wait_for_sync[NUM_CC];
+  logic        wait_for_sync[NUM_CC];
+  logic        uram_bank    [NUM_CC];
+  logic [10:0] uram_addr_r  [NUM_CC];
 
   generate
     for (genvar i = 0; i < NUM_CC; i++) begin : g_addr_gen
@@ -172,12 +173,12 @@ module ul_adaptor_gearbox_raw #(
 
       always_ff @(posedge clk) begin
         if (rst) begin
-          uram_addr[i] <= '0;
+          uram_addr_r[i] <= '0;
         end else if (busy && (rb_cc == i)) begin
-          uram_addr[i] <= (rb_cnt << 2) + (rb_cnt << 1) + re_pair_cnt;
+          uram_addr_r[i] <= (rb_cnt << 2) + (rb_cnt << 1) + re_pair_cnt;
           // rb_cnt * 6 + re_pari_cnt
         end else begin
-          uram_addr[i] <= '0;
+          uram_addr_r[i] <= '0;
         end
       end
 
@@ -189,8 +190,11 @@ module ul_adaptor_gearbox_raw #(
         end
       end
 
+      assign uram_addr[i] = {uram_bank[i], uram_addr_r[i]};
+
     end
   endgenerate
+
 
 
   // Match URAM delay

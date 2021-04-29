@@ -29,24 +29,33 @@ module ul_adaptor #(
     input var         clk_491m52,
     input var         rst_491m52,
     //
-    input var         ul_sof,
-    input var         ul_sos               [      NUM_CC],
+    input var         ul_sof_ahead_3       [      NUM_CC],
+    input var         ul_sop_ahead_3       [      NUM_CC],
     input var  [15:0] ul_data_i            [      NUM_CC][NUM_UL_LAYER],
     input var  [15:0] ul_data_q            [      NUM_CC][NUM_UL_LAYER],
-    input var         ul_valid             [      NUM_CC],
     // Control Interface
     //==================
     input var  [ 3:0] ctrl_bandwidth       [      NUM_CC],
     input var  [ 1:0] ctrl_numerology      [      NUM_CC],
-    input var  [ 1:0] ctrl_compression_mode[      NUM_CC]
+    input var  [ 1:0] ctrl_compression_mode[      NUM_CC],
+    //
+    input var  [ 1:0] buffer_mem_ctrl_en   [      NUM_CC],
+    input var  [11:0] buffer_mem_addr_i    [      NUM_CC][NUM_UL_LAYER],
+    input var  [31:0] buffer_mem_data_i    [      NUM_CC][NUM_UL_LAYER],
+    input var         buffer_mem_we        [      NUM_CC][NUM_UL_LAYER],
+    output var [31:0] buffer_mem_data_o    [      NUM_CC][NUM_UL_LAYER]
 );
 
+
+  logic [11:0] ram_addr_s              [NUM_UL_LAYER][NUM_CC];
+  logic        ram_rden_s              [NUM_UL_LAYER][NUM_CC];
+  logic [63:0] ram_data_s              [NUM_UL_LAYER][NUM_CC];
 
   logic [11:0] ram_addr                [NUM_CC][NUM_UL_LAYER];
   logic        ram_rden                [NUM_CC][NUM_UL_LAYER];
   logic [63:0] ram_data                [NUM_CC][NUM_UL_LAYER];
 
-  logic        fram_radio_start_10ms_s;
+  logic        fram_radio_start_10ms_s [NUM_CC];
 
   ul_adaptor_gearbox #(
       .NUM_CC      (NUM_CC),
@@ -57,7 +66,7 @@ module ul_adaptor #(
       .clk_400m             (clk_400m),
       .rst_400m             (rst_400m),
       // ul timing
-      .fram_radio_start_10ms(fram_radio_start_10ms_s),
+      .fram_radio_start_10ms(fram_radio_start_10ms_s[0]),
       .ul_update            (ul_update),
       // ul data
       .m_fram_data_tdata    (m_fram_data_tdata),
@@ -72,13 +81,65 @@ module ul_adaptor #(
       .clk_491m52           (clk_491m52),
       .rst_491m52           (rst_491m52),
       //
-      .ram_addr             (ram_addr),
-      .ram_rden             (ram_rden),
-      .ram_data             (ram_data),
+      .ram_addr             (ram_addr_s),
+      .ram_rden             (ram_rden_s),
+      .ram_data             (ram_data_s),
       // Control Interface
       //==================
       .ctrl_compression_mode(ctrl_compression_mode)
   );
+
+  generate
+    for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_cc
+      for (genvar ly = 0; ly < NUM_UL_LAYER; ly++) begin : g_ly
+        assign ram_addr[cc][ly] = ram_addr_s[ly][cc];
+        assign ram_rden[cc][ly] = ram_rden_s[ly][cc];
+        assign ram_data_s[ly][cc] = ram_data[cc][ly];
+      end
+    end
+  endgenerate
+
+  generate
+    for (genvar i = 0; i < NUM_CC; i++) begin : g_buf
+      ul_adaptor_buf #(
+          .LAYER_NUMBER_C(NUM_UL_LAYER)
+      ) i_ul_adaptor_buf (
+          // DFE Interface
+          //==============
+          .clk_491m_i                (clk_491m52),
+          .rst_491m_i                (rst_491m52),
+          .clk_491m_gating_ul_i      (clk_491m52),
+          .clk_491m_gating_ul_flush_i(1'b0),
+          //
+          .ul_sof_ahead_3_i          (ul_sof_ahead_3[i]),
+          .ul_sop_ahead_3_i          (ul_sop_ahead_3[i]),
+          .ul_di_i                   (ul_data_i[i]),
+          .ul_dq_i                   (ul_data_q[i]),
+          // Internal Interface
+          //===================
+          .ul_buf_ready_o            (fram_radio_start_10ms_s[i]),
+          //
+          .buffer_rd_addr_i          (ram_addr[i]),
+          .buffer_rd_en_i            (ram_rden[i]),
+          .ul_data_o                 (ram_data[i]),
+          .ul_data_sop_o             (  /* not used */),
+          .ul_data_valid_o           (  /* not used */),
+          // Control Interface
+          //==================
+          .clk_axi                   (1'b0),
+          .rst_axi                   (1'b0),
+          //
+          .bw_mode_i                 (ctrl_bandwidth[i]),
+          .rat_mode_i                (ctrl_numerology[i]),
+          //
+          .buffer_mem_ctrl_en        (buffer_mem_ctrl_en[i]),
+          .buffer_mem_addr_i         (buffer_mem_addr_i[i]),
+          .buffer_mem_data_i         (buffer_mem_data_i[i]),
+          .buffer_mem_we             (buffer_mem_we[i]),
+          .buffer_mem_data_o         (buffer_mem_data_o[i])
+      );
+    end
+  endgenerate
 
 endmodule
 
