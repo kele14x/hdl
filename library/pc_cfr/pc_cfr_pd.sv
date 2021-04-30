@@ -121,9 +121,9 @@ module pc_cfr_pd #(
 
   always_ff @(posedge clk) begin
     peak_valid <= peak_lt_threshold ? 1'b1 : 1'b0;
-    peak_r     <= peak_lt_threshold ? (peak_r_pre - ctrl_clipping_threshold) : 'd0;
-    peak_phase <= peak_lt_threshold ? peak_phase_pre : 'd0;
-    peak_theta <= peak_lt_threshold ? peak_theta_pre : 'd0;
+    peak_r     <= (peak_r_pre - ctrl_clipping_threshold);
+    peak_phase <= peak_phase_pre;
+    peak_theta <= peak_theta_pre;
   end
 
 endmodule
