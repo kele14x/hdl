@@ -190,7 +190,7 @@ module ul_adaptor_gearbox_bfp9_reader #(
         end
       end
 
-      assign uram_addr = {uram_bank[i], uram_addr_r[i]};
+      assign uram_addr[i] = {uram_bank[i], uram_addr_r[i]};
 
     end
   endgenerate

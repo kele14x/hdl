@@ -55,12 +55,12 @@ module ul_adaptor_buf #(
       .ul_sop_ahead_3_i(ul_sop_ahead_3_i),
       .buffer_wr_ctrl  (buffer_wr_ctrl[0]),
       .symbol_no_o     (  /* Not used */),
-      .ul_buf_ready_o  (  /* Not used */)
+      .ul_buf_ready_o  (ul_buf_ready_o)
   );
 
 
   generate
-    for (genvar ii = 0; ii <= 2; ii++) begin: g_dly
+    for (genvar ii = 0; ii <= 2; ii++) begin : g_dly
       always_ff @(posedge clk_491m_i) begin
         buffer_wr_ctrl[ii+1] <= buffer_wr_ctrl[ii];
       end
@@ -68,7 +68,7 @@ module ul_adaptor_buf #(
   endgenerate
 
   generate
-    for (genvar ii = 0; ii <= 3; ii++) begin: g_cpy
+    for (genvar ii = 0; ii <= 3; ii++) begin : g_cpy
       assign buffer_wr_ctrl[ii+4] = buffer_wr_ctrl[ii];
     end
   endgenerate

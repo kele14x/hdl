@@ -57,6 +57,23 @@ module ul_adaptor #(
 
   logic        fram_radio_start_10ms_s [NUM_CC];
 
+
+  xpm_cdc_pulse #(
+      .DEST_SYNC_FF  (4),
+      .INIT_SYNC_FF  (0),
+      .REG_OUTPUT    (1),
+      .RST_USED      (1),
+      .SIM_ASSERT_CHK(0)
+  )
+ xpm_cdc_pulse_inst (
+      .src_clk   (clk_491m52),
+      .src_rst   (rst_491m52),
+      .src_pulse (fram_radio_start_10ms_s[0]),
+      .dest_clk  (clk_400m),
+      .dest_rst  (rst_400m),
+      .dest_pulse(fram_radio_start_10ms)
+  );
+
   ul_adaptor_gearbox #(
       .NUM_CC      (NUM_CC),
       .NUM_UL_LAYER(NUM_UL_LAYER)
