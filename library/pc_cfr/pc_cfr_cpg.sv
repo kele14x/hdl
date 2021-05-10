@@ -103,16 +103,11 @@ module pc_cfr_cpg #(
 
   // `state*_phase` is phase of peak
   always_ff @(posedge clk) begin
-    if (rst) begin
-      state_i <= 'd0;
-      state_q <= 'd0;
-    end else begin
-      {state_q, state_i} <= (peak_valid_in && ~state_busy) ? {
-        peak_q_in, peak_i_in
-      } : &state_addr ? 'd0 : {
-        state_q, state_i
-      };
-    end
+    {state_q, state_i} <= (peak_valid_in && ~state_busy) ? {
+      peak_q_in, peak_i_in
+    } : &state_addr ? 'd0 : {
+      state_q, state_i
+    };
   end
 
   // If current stage's CPG is busy (state's MSB is high), pass this peak to
