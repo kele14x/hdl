@@ -31,6 +31,7 @@ module dl_adaptor_gearbox #(
 );
 
 
+  (* max_fanout=100 *)
   logic [ 1:0] compression_mode;
 
   logic [63:0] m_axis_tdata      [NUM_DL_LAYER];
