@@ -15,7 +15,7 @@ module ul_adaptor #(
     input var         rst_400m,
     //
     output var        fram_radio_start_10ms,
-    input var         ul_update            [      NUM_CC],
+    input var         s_ul_update          [      NUM_CC],
     //
     output var [63:0] m_fram_data_tdata    [NUM_UL_LAYER],
     output var [ 7:0] m_fram_data_tkeep    [NUM_UL_LAYER],
@@ -84,7 +84,7 @@ module ul_adaptor #(
       .rst_400m             (rst_400m),
       // ul timing
       .fram_radio_start_10ms(fram_radio_start_10ms_s[0]),
-      .ul_update            (ul_update),
+      .ul_update            (s_ul_update),
       // ul data
       .m_fram_data_tdata    (m_fram_data_tdata),
       .m_fram_data_tkeep    (m_fram_data_tkeep),
