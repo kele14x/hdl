@@ -30,7 +30,9 @@ module tb_dl_adaptor ();
 
     // 2 CC port; each will have interleaved 4 layer data
     logic        dl_sof               [      NUM_CC];
-    logic        dl_sos               [      NUM_CC];
+    logic        dl_sop               [      NUM_CC];
+    logic        dl_sof_ahead_7       [      NUM_CC];
+    logic        dl_sop_ahead_7       [      NUM_CC];
     logic [15:0] dl_data_i            [      NUM_CC][NUM_DL_LAYER];
     logic [15:0] dl_data_q            [      NUM_CC][NUM_DL_LAYER];
     logic        dl_valid             [      NUM_CC];
@@ -39,6 +41,12 @@ module tb_dl_adaptor ();
     logic   [ 3:0] ctrl_bandwidth       [      NUM_CC] = '{NUM_CC{0}};
     logic   [ 1:0] ctrl_numerology      [      NUM_CC] = '{NUM_CC{0}};
     logic   [ 1:0] ctrl_compression_mode[      NUM_CC] = '{NUM_CC{1}};
+
+    logic [ 1:0] buffer_mem_ctrl_en = 2'b00;
+    logic [11:0] buffer_mem_addr_i    [      NUM_CC][NUM_DL_LAYER];
+    logic [31:0] buffer_mem_data_i    [      NUM_CC][NUM_DL_LAYER];
+    logic        buffer_mem_we        [      NUM_CC][NUM_DL_LAYER];
+    logic [31:0] buffer_mem_data_o    [      NUM_CC][NUM_DL_LAYER];
 
     // Simulation signals
 
@@ -50,6 +58,10 @@ module tb_dl_adaptor ();
     logic        TLAST  [1000];
     logic        TREADY [1000];
     logic [30:0] TUSER  [1000];
+
+
+    // DUT
+    //====
 
     int len;
 
@@ -90,7 +102,9 @@ module tb_dl_adaptor ();
         .*
     );
 
+
     // Stimulation
+    //============
 
     // Clock Generation
     //-----------------
@@ -109,6 +123,7 @@ module tb_dl_adaptor ();
         end
     end
 
+
     // Reset Generation
     //-----------------
 
@@ -125,7 +140,8 @@ module tb_dl_adaptor ();
     end
 
 
-
+    // Main Process
+    //-------------
 
     initial begin
         string line;
@@ -141,26 +157,28 @@ module tb_dl_adaptor ();
 
         wait(rst_400m == 0);
         #100;
-        
+
         // Set sof
         @(posedge clk_491m52);
         dl_radio_start_10ms <= 1;
         @(posedge clk_491m52);
         dl_radio_start_10ms <= 0;
         #10;
-        
+
         // Set sop
         @(posedge clk_400m);
         s_dl_update <= '{NUM_CC{1}};
         @(posedge clk_400m);
         s_dl_update <= '{NUM_CC{0}};
         #10;
-        
+
         repeat(3) begin
             len = load_packet();
             i_axi4s_vip.IF.master_send(len, TDATA, TKEEP, TUSER);
         end
-        #(100 * 1000);
+        $display("Send 1 symbol OK");
+
+        #(1000);
         $finish(2);
     end
 

@@ -46,7 +46,7 @@ module dl_adaptor_buf #(
     output var [31:0] buffer_mem_data_o         [LAYER_NUMBER_C]
 );
 
-  logic [14:0] buffer_rd_ctrl[LAYER_NUMBER_C];
+  logic [14:0] buffer_rd_ctrl[16];
 
   dl_adaptor_ctrl inst_dl_adaptor_ctrl (
       .clk             (clk_491m_i),

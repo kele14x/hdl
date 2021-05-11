@@ -44,7 +44,7 @@ module ul_adaptor_buf #(
 );
 
 
-  logic [13:0] buffer_wr_ctrl  [LAYER_NUMBER_C];
+  logic [13:0] buffer_wr_ctrl  [8];
   logic [12:0] buffer_rd_addr_s[LAYER_NUMBER_C];
 
   ul_adaptor_ctrl inst_ul_adaptor_ctrl (
