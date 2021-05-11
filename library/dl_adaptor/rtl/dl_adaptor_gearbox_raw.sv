@@ -3,7 +3,7 @@
 `timescale 1 ns / 1 ps `default_nettype none
 
 module dl_adaptor_gearbox_raw #(
-    parameter int NUM_CC
+    parameter int NUM_CC = 2
 ) (
     // Interface with DFE
     //===================
@@ -48,9 +48,7 @@ module dl_adaptor_gearbox_raw #(
     for (genvar i = 0; i < NUM_CC; i++) begin
 
       always_ff @(posedge clk) begin
-        if (s_axis_tvalid && (tuser_component_carrier == i)) begin
-          gb_data[i] <= s_axis_tdata;
-        end
+        gb_data[i] <= s_axis_tdata;
       end
 
       always_ff @(posedge clk) begin
@@ -69,8 +67,6 @@ module dl_adaptor_gearbox_raw #(
 
     end
   endgenerate
-
-
 
 endmodule
 

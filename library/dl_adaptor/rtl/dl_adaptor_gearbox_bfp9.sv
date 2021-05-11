@@ -58,7 +58,7 @@ module dl_adaptor_gearbox_bfp9 #(
   function automatic logic [63:0] byte_reverse(input logic [63:0] data);
     begin
       return {
-        data[7:0], data[15:8], data[23:16], data[31:24], 
+        data[7:0], data[15:8], data[23:16], data[31:24],
         data[39:32], data[47:40], data[55:48], data[63:56]
       };
     end
@@ -94,7 +94,21 @@ module dl_adaptor_gearbox_bfp9 #(
     end
   end
 
-  assign state_next = (state >= 11) ? 0 : go_next ? state + 1 : state;
+  always_comb begin
+    if (state >= 11) begin
+      state_next = 0; // failt recovery
+    end else if (go_next && (state == 0 || state == 1 || state == 3 ||
+      state == 5 || state == 6 || state == 8 ||
+      state == 10) && s_axis_tlast) begin
+      state_next = 0;
+    end else if (go_next && state == 11) begin
+      state_next = 0;
+    end else if (go_next) begin
+      state_next = state + 1;
+    end else begin
+      state_next = state;
+    end
+  end
 
   // AXI4-Stream
 
@@ -125,7 +139,7 @@ module dl_adaptor_gearbox_bfp9 #(
       exp_last <= '0;
     end else if (state == 0 && s_axis_tvalid) begin
       exp_last <= tdata_current[59:56];
-    end else if (state == 5 && s_axis_tvalid) begin
+    end else if (state == 5 && s_axis_tvalid && ~s_axis_tlast) begin
       exp_last <= tdata_current[27:24];
     end else begin
       exp_last <= exp_last;
@@ -179,7 +193,8 @@ module dl_adaptor_gearbox_bfp9 #(
   always_ff @(posedge clk) begin
     gb_cc_r <= tuser_component_carrier;
   end
-  
+
+  // If incoming packets does not come in order, this will fail.
   always_ff @(posedge clk) begin
     if (go_next) begin
       if (tuser_start_of_section) begin
@@ -196,32 +211,19 @@ module dl_adaptor_gearbox_bfp9 #(
     for (genvar i = 0; i < NUM_CC; i++) begin
 
       always_ff @(posedge clk) begin
-        if (rst) begin
-          gb_data[i] <= '0;
-        end else if (gb_valid_r && gb_cc_r == i) begin
-          gb_data[i] <= {10'b0, gb_data_exp, gb_data_q1, gb_data_i1, 10'b0, gb_data_exp, gb_data_q0, gb_data_i0};
-        end
+        gb_data[i] <= {10'b0, gb_data_exp, gb_data_q1, gb_data_i1, 10'b0, gb_data_exp, gb_data_q0, gb_data_i0};
       end
 
       always_ff @(posedge clk) begin
-        if (rst) begin
-          gb_re[i] <= '0;
-        end else if (gb_valid_r && gb_cc_r == i) begin
-          gb_re[i] <= gb_re_r;
-        end
+        gb_re[i] <= gb_re_r;
       end
 
       always_ff @(posedge clk) begin
-        if (rst) begin
-          gb_valid[i] <= '0;
-        end else begin
-          gb_valid[i] <= (gb_valid_r && gb_cc_r == i);
-        end
+        gb_valid[i] <= (gb_valid_r && gb_cc_r == i);
       end
 
     end
   endgenerate
-
 
 endmodule
 

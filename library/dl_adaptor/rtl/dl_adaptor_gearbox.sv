@@ -31,9 +31,6 @@ module dl_adaptor_gearbox #(
 );
 
 
-  (* max_fanout=100 *)
-  logic [ 1:0] compression_mode;
-
   logic [63:0] m_axis_tdata      [NUM_DL_LAYER];
   logic [ 7:0] m_axis_tkeep      [NUM_DL_LAYER];
   logic        m_axis_tvalid     [NUM_DL_LAYER];
@@ -52,9 +49,6 @@ module dl_adaptor_gearbox #(
   logic        gb_valid_bfp9     [NUM_DL_LAYER][      NUM_CC];
   logic [11:0] gb_re_bfp9        [NUM_DL_LAYER][      NUM_CC];
 
-  always_ff @(posedge clk_491m52) begin
-    compression_mode <= ctrl_compression_mode[0];
-  end
 
   generate
     for (genvar i = 0; i < NUM_DL_LAYER; i++) begin: g_ly
@@ -81,8 +75,8 @@ module dl_adaptor_gearbox #(
           .m_axis_tuser  (m_axis_tuser[i])
       );
 
-      assign m_axis_tready[i] = (compression_mode == 0) ? m_axis_tready_raw[i] :
-                              (compression_mode == 1) ? m_axis_tready_bfp9[i] :
+      assign m_axis_tready[i] = (ctrl_compression_mode[0] == 0) ? m_axis_tready_raw[i] :
+                              (ctrl_compression_mode[0] == 1) ? m_axis_tready_bfp9[i] :
                               1'b1;
 
       dl_adaptor_gearbox_raw #(
@@ -132,14 +126,14 @@ module dl_adaptor_gearbox #(
     for (genvar i = 0; i < NUM_DL_LAYER; i++) begin
 
       for (genvar j = 0; j < NUM_CC; j++) begin
-        assign gb_data[j][i] = (compression_mode == 0) ? gb_data_raw[i][j] :
-                        (compression_mode == 1) ? gb_data_bfp9[i][j] : {'0};
+        assign gb_data[j][i] = (ctrl_compression_mode[0] == 0) ? gb_data_raw[i][j] :
+                        (ctrl_compression_mode[0] == 1) ? gb_data_bfp9[i][j] : {'0};
 
-        assign gb_valid[j][i] = (compression_mode == 0) ? gb_valid_raw[i][j] :
-                            (compression_mode == 1) ? gb_valid_bfp9[i][j] : {'0};
+        assign gb_valid[j][i] = (ctrl_compression_mode[0] == 0) ? gb_valid_raw[i][j] :
+                            (ctrl_compression_mode[0] == 1) ? gb_valid_bfp9[i][j] : {'0};
 
-        assign gb_re[j][i] = (compression_mode == 0) ? gb_re_raw[i][j] :
-                        (compression_mode == 1) ? gb_re_bfp9[i][j] : {'0};
+        assign gb_re[j][i] = (ctrl_compression_mode[0] == 0) ? gb_re_raw[i][j] :
+                        (ctrl_compression_mode[0] == 1) ? gb_re_bfp9[i][j] : {'0};
       end
 
     end
