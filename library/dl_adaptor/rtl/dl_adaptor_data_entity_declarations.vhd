@@ -40,39 +40,6 @@ use work.conv_pkg.all;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-entity sysgen_concat_e8fa01c855 is
-  port (
-    in0 : in std_logic_vector((16 - 1) downto 0);
-    in1 : in std_logic_vector((16 - 1) downto 0);
-    in2 : in std_logic_vector((16 - 1) downto 0);
-    in3 : in std_logic_vector((16 - 1) downto 0);
-    y : out std_logic_vector((64 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_concat_e8fa01c855;
-architecture behavior of sysgen_concat_e8fa01c855
-is
-  signal in0_1_23: unsigned((16 - 1) downto 0);
-  signal in1_1_27: unsigned((16 - 1) downto 0);
-  signal in2_1_31: unsigned((16 - 1) downto 0);
-  signal in3_1_35: unsigned((16 - 1) downto 0);
-  signal y_2_1_concat: unsigned((64 - 1) downto 0);
-begin
-  in0_1_23 <= std_logic_vector_to_unsigned(in0);
-  in1_1_27 <= std_logic_vector_to_unsigned(in1);
-  in2_1_31 <= std_logic_vector_to_unsigned(in2);
-  in3_1_35 <= std_logic_vector_to_unsigned(in3);
-  y_2_1_concat <= std_logic_vector_to_unsigned(unsigned_to_std_logic_vector(in0_1_23) & unsigned_to_std_logic_vector(in1_1_27) & unsigned_to_std_logic_vector(in2_1_31) & unsigned_to_std_logic_vector(in3_1_35));
-  y <= unsigned_to_std_logic_vector(y_2_1_concat);
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
 entity sysgen_concat_98da57e59d is
   port (
     in0 : in std_logic_vector((32 - 1) downto 0);

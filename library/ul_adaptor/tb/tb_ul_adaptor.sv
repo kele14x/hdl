@@ -15,7 +15,7 @@ module tb_ul_adaptor ();
   logic        rst_400m;
   //
   logic        fram_radio_start_10ms = 0;
-  logic        ul_update                 [      NUM_CC] = '{NUM_CC{1'b0}};
+  logic        s_ul_update               [      NUM_CC] = '{NUM_CC{1'b0}};
   // AXIS
   logic [63:0] m_fram_data_tdata         [NUM_UL_LAYER];
   logic [ 7:0] m_fram_data_tkeep         [NUM_UL_LAYER];

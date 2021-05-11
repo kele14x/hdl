@@ -66,7 +66,7 @@ module ul_adaptor_gearbox_bfp9_axis (
     if (rst) begin
       m_axis_tdata <= '0;
     end else if (tvalid) begin
-      m_axis_tdata <= tdata;
+      m_axis_tdata <= byte_reverse(tdata);
     end
   end
 
@@ -82,7 +82,7 @@ module ul_adaptor_gearbox_bfp9_axis (
     if (rst) begin
       m_axis_tvalid <= '0;
     end else begin
-      m_axis_tvalid <= byte_reverse(tvalid);
+      m_axis_tvalid <= tvalid;
     end
   end
 

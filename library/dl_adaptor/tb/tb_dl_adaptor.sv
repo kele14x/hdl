@@ -42,7 +42,7 @@ module tb_dl_adaptor ();
     logic   [ 1:0] ctrl_numerology      [      NUM_CC] = '{NUM_CC{0}};
     logic   [ 1:0] ctrl_compression_mode[      NUM_CC] = '{NUM_CC{1}};
 
-    logic [ 1:0] buffer_mem_ctrl_en = 2'b00;
+    logic [ 1:0] buffer_mem_ctrl_en   [      NUM_CC]               = '{NUM_CC {2'b00} };
     logic [11:0] buffer_mem_addr_i    [      NUM_CC][NUM_DL_LAYER];
     logic [31:0] buffer_mem_data_i    [      NUM_CC][NUM_DL_LAYER];
     logic        buffer_mem_we        [      NUM_CC][NUM_DL_LAYER];

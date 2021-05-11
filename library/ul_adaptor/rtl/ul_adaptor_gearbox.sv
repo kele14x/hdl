@@ -73,6 +73,13 @@ module ul_adaptor_gearbox #(
   logic        s_axis_tlast_bfp9  [NUM_UL_LAYER];
   logic        s_axis_tready_bfp9 [NUM_UL_LAYER];
 
+  logic [72:0] fifo_din           [NUM_UL_LAYER];
+  logic        fifo_full          [NUM_UL_LAYER];
+  logic        fifo_wren          [NUM_UL_LAYER];
+  logic [72:0] fifo_dout          [NUM_UL_LAYER];
+  logic        fifo_empty         [NUM_UL_LAYER];
+  logic        fifo_rden          [NUM_UL_LAYER];
+
   generate
     for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_as
 
@@ -185,21 +192,25 @@ module ul_adaptor_gearbox #(
 
       ul_adaptor_fram_fifo i_ul_adaptor_fram_fifo (
           // Writer side (input)
-          .s_aclk       (clk_491m52),
-          .s_aresetn    (~rst_491m52),
-          .s_axis_tdata (s_axis_tdata_s[i]),
-          .s_axis_tkeep (s_axis_tkeep_s[i]),
-          .s_axis_tvalid(s_axis_tvalid_s[i]),
-          .s_axis_tlast (s_axis_tlast_s[i]),
-          .s_axis_tready(s_axis_tready_s[i]),
+          .wr_clk(clk_491m52),
+          .rst   (rst_491m52),
+          .din   (fifo_din[i]),
+          .wr_en (fifo_wren[i]),
+          .full  (fifo_full[i]),
           // Reader side (output)
-          .m_aclk       (clk_400m),
-          .m_axis_tdata (m_fram_data_tdata[i]),
-          .m_axis_tkeep (m_fram_data_tkeep[i]),
-          .m_axis_tvalid(m_fram_data_tvalid[i]),
-          .m_axis_tlast (m_fram_data_tlast[i]),
-          .m_axis_tready(m_fram_data_tready[i])
+          .rd_clk(clk_400m),
+          .dout  (fifo_dout[i]),
+          .empty (fifo_empty[i]),
+          .rd_en (fifo_rden[i])
       );
+
+      assign fifo_din[i] = {s_axis_tlast_s[i], s_axis_tkeep_s[i], s_axis_tdata_s[i]};
+      assign fifo_wren[i] = s_axis_tvalid_s[i];
+      assign s_axis_tready_s[i] = ~fifo_full[i];
+
+      assign {m_fram_data_tlast[i], m_fram_data_tkeep[i], m_fram_data_tdata[i]} = fifo_dout[i];
+      assign m_fram_data_tvalid[i] = ~fifo_empty[i];
+      assign fifo_rden[i] = m_fram_data_tready[i];
 
     end
   endgenerate

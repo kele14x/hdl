@@ -18,10 +18,10 @@ module tb_adaptor ();
 
   // Timing signals
   logic        dl_radio_start_10ms = 0;
-  logic        s_dl_update               [      NUM_CC] = '{NUM_CC{0}};
+  logic        s_dl_update               [      NUM_CC] = '{NUM_CC{'0}};
   //
   logic        fram_radio_start_10ms = 0;
-  logic        s_ul_update               [      NUM_CC] = '{NUM_CC{1'b0}};
+  logic        s_ul_update               [      NUM_CC] = '{NUM_CC{'0}};
 
   // 16 branch/layer stream; CC shared
   logic [63:0] s_defm_data_tdata         [NUM_DL_LAYER];
@@ -36,7 +36,7 @@ module tb_adaptor ();
   logic [ 7:0] m_fram_data_tkeep         [NUM_UL_LAYER];
   logic        m_fram_data_tvalid        [NUM_UL_LAYER];
   logic        m_fram_data_tlast         [NUM_UL_LAYER];
-  logic        m_fram_data_tready        [NUM_UL_LAYER] = '{NUM_UL_LAYER{1'b1}};
+  logic        m_fram_data_tready        [NUM_UL_LAYER] = '{NUM_UL_LAYER{'1}};
   //
   logic [24:0] m_fram_data_req           [NUM_UL_LAYER] = '{NUM_UL_LAYER{'0}};
 
@@ -124,14 +124,14 @@ module tb_adaptor ();
     end
   end
 
-  generate 
+  generate
     for (genvar i = 0; i < NUM_CC; i++) begin
       assign ul_sof_ahead_3[i] = sof_ahead_d[i][3];
       assign ul_sop_ahead_3[i] = sop_ahead_d[i][3];
     end
   endgenerate
 
-  generate 
+  generate
     for (genvar i = 0; i < NUM_CC; i++) begin
       assign ul_data_i[i] = dl_data_i[i][0:NUM_UL_LAYER-1];
       assign ul_data_q[i] = dl_data_q[i][0:NUM_UL_LAYER-1];
@@ -272,6 +272,54 @@ module tb_adaptor ();
   // Main Process
   //-------------
 
+  // set dl_radio_start_10ms every 10 ms
+  initial begin
+    wait(rst_491m52 == 0);
+    wait(rst_400m   == 0);
+    #100;
+
+    forever begin
+      @(posedge clk_491m52);
+      dl_radio_start_10ms <= 1;
+      @(posedge clk_491m52);
+      dl_radio_start_10ms <= 0;
+      repeat(4915200 - 2) @(posedge clk_491m52);
+    end
+  end
+
+  // Set s_dl_update like XORIF
+  initial begin
+    forever begin
+      @(posedge clk_491m52);
+      if (dl_radio_start_10ms) break;
+    end
+    #10;
+    forever begin
+      @(posedge clk_400m);
+      s_dl_update <= '{NUM_CC{1}};
+      @(posedge clk_400m);
+      s_dl_update <= '{NUM_CC{0}};
+      repeat(14286 - 2) @(posedge clk_400m);
+    end
+  end
+
+  // Set s_ul_update like XORIF
+  initial begin
+    forever begin
+      @(posedge clk_400m);
+      if (fram_radio_start_10ms) break;
+    end
+
+    forever begin
+      @(posedge clk_491m52);
+      s_ul_update <= '{NUM_CC{1}};
+      @(posedge clk_491m52);
+      s_ul_update <= '{NUM_CC{0}};
+      repeat(14286 - 2) @(posedge clk_491m52);
+    end
+  end
+
+  // Send DL packets
   initial begin
     string line;
     fin = $fopen("s_defm_data.txt", "r");
@@ -285,32 +333,40 @@ module tb_adaptor ();
     i_axi4s_vip.set_master_mode();
     i_axi4s_vip.IF.reset();
 
-    wait(rst_400m == 0);
-    #100;
+    repeat(7) begin
+      forever begin
+        @(posedge clk_400m);
+        if (s_dl_update[0]) break;
+      end
 
-    // Set sof
-    @(posedge clk_491m52);
-    dl_radio_start_10ms <= 1;
-    @(posedge clk_491m52);
-    dl_radio_start_10ms <= 0;
-    #10;
-
-    // Set sop
-    @(posedge clk_400m);
-    s_dl_update <= '{NUM_CC{1}};
-    @(posedge clk_400m);
-    s_dl_update <= '{NUM_CC{0}};
-    #10;
-
-    repeat (3) begin
-      len = load_packet();
-      i_axi4s_vip.IF.master_send(len, TDATA, TKEEP, TUSER);
-      #100;
+      repeat (3) begin
+        len = load_packet();
+        i_axi4s_vip.IF.master_send(len, TDATA, TKEEP, TUSER);
+        #100;
+      end
+      $display("Send 1 symbol OK");
     end
-    $display("Send 1 symbol OK");
 
-    #(100*1000);
     $finish(2);
+  end
+
+  // Send UL request
+  initial begin
+    forever begin
+      forever begin
+        @(posedge clk_400m);
+        if (s_ul_update[0]) break;
+      end
+
+      @(posedge clk_400m);
+      m_fram_data_req[0] <= {1'b1, 9'd0,   8'd119, 3'd0, 4'd0};
+      @(posedge clk_400m);
+      m_fram_data_req[0] <= {1'b1, 9'd119, 8'd119, 3'd0, 4'd0};
+      @(posedge clk_400m);
+      m_fram_data_req[0] <= {1'b1, 9'd238, 8'd53,  3'd0, 4'd0};
+      @(posedge clk_400m);
+      m_fram_data_req[0] <= '0;
+    end
   end
 
   final begin
