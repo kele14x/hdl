@@ -42,7 +42,7 @@ module ul_adaptor_gearbox_bfp9_axis (
 
   assign tvalid = ((comp_cnt == 1) || (comp_cnt == 3) ||
     (comp_cnt == 5) || (comp_cnt == 6) || (comp_cnt == 8) ||
-    (comp_cnt == 10) || (comp_cnt == 11) || comp_done_odd) && comp_valid;
+    (comp_cnt == 10) || (comp_cnt == 11)) && comp_valid || comp_done_odd;
 
   always_comb begin
     if (comp_cnt == 1) begin

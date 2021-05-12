@@ -93,9 +93,11 @@ module tb_adaptor ();
 
   function automatic int load_packet();
     int n = 0;
+    int r = 0;
     forever begin
-      $fscanf(fin, "%x, %x, %x, %x, %x, %x", TDATA[n], TKEEP[n], TVALID[n], TLAST[n], TREADY[n],
+      r = $fscanf(fin, "%x, %x, %x, %x, %x, %x", TDATA[n], TKEEP[n], TVALID[n], TLAST[n], TREADY[n],
               TUSER[n]);
+      if (r <= 0) return 0;
       if (TLAST[n]) break;
       n++;
     end
@@ -252,7 +254,7 @@ module tb_adaptor ();
 
   initial begin
     rst_400m = 1;
-    repeat (10) @(posedge clk_400m);
+    repeat (100) @(posedge clk_400m);
     rst_400m = 0;
   end
 
@@ -265,7 +267,7 @@ module tb_adaptor ();
 
   initial begin
     rst_491m52 = 1;
-    repeat (10) @(posedge clk_491m52);
+    repeat (100) @(posedge clk_491m52);
     rst_491m52 = 0;
   end
 
@@ -299,7 +301,7 @@ module tb_adaptor ();
       s_dl_update <= '{NUM_CC{1}};
       @(posedge clk_400m);
       s_dl_update <= '{NUM_CC{0}};
-      repeat(14286 - 2) @(posedge clk_400m);
+      repeat(14285 - 2) @(posedge clk_400m);
     end
   end
 
@@ -311,11 +313,11 @@ module tb_adaptor ();
     end
 
     forever begin
-      @(posedge clk_491m52);
+      @(posedge clk_400m);
       s_ul_update <= '{NUM_CC{1}};
-      @(posedge clk_491m52);
+      @(posedge clk_400m);
       s_ul_update <= '{NUM_CC{0}};
-      repeat(14286 - 2) @(posedge clk_491m52);
+      repeat(14285 - 2) @(posedge clk_400m);
     end
   end
 

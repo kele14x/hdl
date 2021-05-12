@@ -13,28 +13,28 @@ entity dl_adaptor_data_barrel_shift1 is
   );
 end dl_adaptor_data_barrel_shift1;
 architecture structural of dl_adaptor_data_barrel_shift1 is 
-  signal reinterpret3_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal convert4_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal clk_net : std_logic;
+  signal convert3_dout_net : std_logic_vector( 16-1 downto 0 );
   signal reinterpret1_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal reinterpret9_output_port_net_x0 : std_logic_vector( 16-1 downto 0 );
-  signal ce_net : std_logic;
+  signal reinterpret6_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal convert1_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal convert5_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal convert_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret5_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal reinterpret9_output_port_net : std_logic_vector( 9-1 downto 0 );
   signal reinterpret4_output_port_net : std_logic_vector( 9-1 downto 0 );
   signal slice14_y_net : std_logic_vector( 3-1 downto 0 );
-  signal convert2_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret5_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert1_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal convert3_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret9_output_port_net_x0 : std_logic_vector( 16-1 downto 0 );
   signal reinterpret2_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal clk_net : std_logic;
-  signal reinterpret9_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert4_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal convert5_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret6_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal convert6_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal mux3_y_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret3_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal ce_net : std_logic;
+  signal convert2_dout_net : std_logic_vector( 16-1 downto 0 );
   signal reinterpret7_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert7_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal mux3_y_net : std_logic_vector( 16-1 downto 0 );
   signal reinterpret8_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal convert6_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal convert7_dout_net : std_logic_vector( 16-1 downto 0 );
 begin
   mantissa <= reinterpret9_output_port_net_x0;
   reinterpret9_output_port_net <= data;
@@ -313,28 +313,28 @@ entity dl_adaptor_data_barrel_shift2 is
   );
 end dl_adaptor_data_barrel_shift2;
 architecture structural of dl_adaptor_data_barrel_shift2 is 
+  signal reinterpret8_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal convert1_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret1_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal reinterpret9_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal ce_net : std_logic;
+  signal convert2_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret2_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal convert_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret3_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal slice14_y_net : std_logic_vector( 3-1 downto 0 );
+  signal clk_net : std_logic;
   signal reinterpret4_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal convert3_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal mux3_y_net : std_logic_vector( 16-1 downto 0 );
+  signal convert5_dout_net : std_logic_vector( 16-1 downto 0 );
   signal reinterpret5_output_port_net : std_logic_vector( 9-1 downto 0 );
   signal convert4_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret3_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal reinterpret9_output_port_net : std_logic_vector( 16-1 downto 0 );
-  signal convert3_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret8_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert5_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret1_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal slice14_y_net : std_logic_vector( 3-1 downto 0 );
-  signal convert1_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal clk_net : std_logic;
-  signal ce_net : std_logic;
-  signal convert_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret2_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert2_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal convert6_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret8_output_port_net_x0 : std_logic_vector( 9-1 downto 0 );
-  signal convert7_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret6_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal mux3_y_net : std_logic_vector( 16-1 downto 0 );
   signal reinterpret7_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal reinterpret8_output_port_net_x0 : std_logic_vector( 9-1 downto 0 );
+  signal reinterpret6_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal convert6_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal convert7_dout_net : std_logic_vector( 16-1 downto 0 );
 begin
   mantissa <= reinterpret9_output_port_net;
   reinterpret8_output_port_net <= data;
@@ -624,88 +624,88 @@ entity dl_adaptor_data_struct is
   );
 end dl_adaptor_data_struct;
 architecture structural of dl_adaptor_data_struct is 
-  signal reinterpret9_output_port_net_x0 : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret9_output_port_net_x1 : std_logic_vector( 9-1 downto 0 );
-  signal mux1_y_net : std_logic_vector( 32-1 downto 0 );
-  signal buffer_rd_ctrl_i_net : std_logic_vector( 15-1 downto 0 );
-  signal compression_mode_net : std_logic_vector( 2-1 downto 0 );
-  signal buffer_mem_data_i_net : std_logic_vector( 32-1 downto 0 );
-  signal buffer_mem_we_net : std_logic_vector( 1-1 downto 0 );
-  signal buffer_mem_addr_i_net : std_logic_vector( 12-1 downto 0 );
-  signal buffer_mem_ctrl_en_net : std_logic_vector( 2-1 downto 0 );
-  signal data_i_net : std_logic_vector( 64-1 downto 0 );
-  signal clk_net : std_logic;
-  signal ce_net : std_logic;
-  signal mux2_y_net : std_logic_vector( 16-1 downto 0 );
-  signal re_no_i_net : std_logic_vector( 12-1 downto 0 );
-  signal sop_i_net : std_logic_vector( 1-1 downto 0 );
-  signal sof_i_net : std_logic_vector( 1-1 downto 0 );
-  signal mux4_y_net : std_logic_vector( 16-1 downto 0 );
-  signal valid_i_net : std_logic_vector( 1-1 downto 0 );
   signal concat3_y_net : std_logic_vector( 12-1 downto 0 );
-  signal slice14_y_net : std_logic_vector( 3-1 downto 0 );
-  signal reinterpret8_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal slice41_y_net : std_logic_vector( 1-1 downto 0 );
   signal register5_q_net : std_logic_vector( 11-1 downto 0 );
-  signal reinterpret9_output_port_net : std_logic_vector( 16-1 downto 0 );
-  signal concat2_y_net : std_logic_vector( 64-1 downto 0 );
+  signal slice41_y_net : std_logic_vector( 1-1 downto 0 );
   signal slice29_y_net : std_logic_vector( 1-1 downto 0 );
-  signal concat9_y_net : std_logic_vector( 64-1 downto 0 );
-  signal register15_q_net : std_logic_vector( 32-1 downto 0 );
-  signal register16_q_net : std_logic_vector( 32-1 downto 0 );
-  signal constant7_op_net : std_logic_vector( 1-1 downto 0 );
-  signal convert1_dout_net : std_logic_vector( 1-1 downto 0 );
-  signal concat8_y_net : std_logic_vector( 12-1 downto 0 );
   signal slice18_y_net : std_logic_vector( 11-1 downto 0 );
-  signal dual_port_ram_doutb_net : std_logic_vector( 64-1 downto 0 );
-  signal register11_q_net : std_logic_vector( 1-1 downto 0 );
-  signal logical7_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice36_y_net : std_logic_vector( 1-1 downto 0 );
+  signal concat8_y_net : std_logic_vector( 12-1 downto 0 );
+  signal concat9_y_net : std_logic_vector( 64-1 downto 0 );
+  signal register16_q_net : std_logic_vector( 32-1 downto 0 );
   signal convert2_dout_net : std_logic_vector( 1-1 downto 0 );
-  signal register34_q_net : std_logic_vector( 1-1 downto 0 );
-  signal slice13_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice30_y_net : std_logic_vector( 1-1 downto 0 );
-  signal dual_port_ram_douta_net : std_logic_vector( 64-1 downto 0 );
-  signal register7_q_net : std_logic_vector( 64-1 downto 0 );
-  signal convert3_dout_net : std_logic_vector( 1-1 downto 0 );
+  signal register15_q_net : std_logic_vector( 32-1 downto 0 );
+  signal register11_q_net : std_logic_vector( 1-1 downto 0 );
   signal convert4_dout_net : std_logic_vector( 64-1 downto 0 );
+  signal convert5_dout_net : std_logic_vector( 1-1 downto 0 );
+  signal slice36_y_net : std_logic_vector( 1-1 downto 0 );
+  signal convert1_dout_net : std_logic_vector( 1-1 downto 0 );
+  signal slice13_y_net : std_logic_vector( 1-1 downto 0 );
+  signal convert3_dout_net : std_logic_vector( 1-1 downto 0 );
   signal mux14_y_net : std_logic_vector( 12-1 downto 0 );
   signal inverter1_op_net : std_logic_vector( 1-1 downto 0 );
-  signal register39_q_net : std_logic_vector( 1-1 downto 0 );
+  signal dual_port_ram_doutb_net : std_logic_vector( 64-1 downto 0 );
+  signal register7_q_net : std_logic_vector( 64-1 downto 0 );
   signal register14_q_net : std_logic_vector( 1-1 downto 0 );
-  signal mux6_y_net : std_logic_vector( 32-1 downto 0 );
-  signal register46_q_net : std_logic_vector( 1-1 downto 0 );
   signal slice39_y_net : std_logic_vector( 32-1 downto 0 );
-  signal register44_q_net : std_logic_vector( 32-1 downto 0 );
-  signal slice15_y_net : std_logic_vector( 1-1 downto 0 );
-  signal mux17_y_net : std_logic_vector( 1-1 downto 0 );
+  signal register39_q_net : std_logic_vector( 1-1 downto 0 );
+  signal register34_q_net : std_logic_vector( 1-1 downto 0 );
+  signal dual_port_ram_douta_net : std_logic_vector( 64-1 downto 0 );
+  signal logical7_y_net : std_logic_vector( 1-1 downto 0 );
   signal slice17_y_net : std_logic_vector( 32-1 downto 0 );
-  signal register10_q_net : std_logic_vector( 16-1 downto 0 );
+  signal slice30_y_net : std_logic_vector( 1-1 downto 0 );
   signal mux12_y_net : std_logic_vector( 64-1 downto 0 );
-  signal register8_q_net : std_logic_vector( 16-1 downto 0 );
-  signal register17_q_net : std_logic_vector( 16-1 downto 0 );
+  signal slice15_y_net : std_logic_vector( 1-1 downto 0 );
+  signal register10_q_net : std_logic_vector( 16-1 downto 0 );
+  signal register46_q_net : std_logic_vector( 1-1 downto 0 );
   signal register45_q_net : std_logic_vector( 32-1 downto 0 );
-  signal register18_q_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret2_output_port_net : std_logic_vector( 16-1 downto 0 );
-  signal slice2_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice22_y_net : std_logic_vector( 32-1 downto 0 );
-  signal slice21_y_net : std_logic_vector( 32-1 downto 0 );
-  signal register2_q_net : std_logic_vector( 32-1 downto 0 );
-  signal register47_q_net : std_logic_vector( 1-1 downto 0 );
-  signal reinterpret1_output_port_net : std_logic_vector( 16-1 downto 0 );
-  signal register48_q_net : std_logic_vector( 1-1 downto 0 );
-  signal register13_q_net : std_logic_vector( 1-1 downto 0 );
   signal reinterpret6_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal register13_q_net : std_logic_vector( 1-1 downto 0 );
+  signal mux6_y_net : std_logic_vector( 32-1 downto 0 );
+  signal register17_q_net : std_logic_vector( 16-1 downto 0 );
+  signal mux17_y_net : std_logic_vector( 1-1 downto 0 );
+  signal register8_q_net : std_logic_vector( 16-1 downto 0 );
+  signal slice2_y_net : std_logic_vector( 1-1 downto 0 );
+  signal register18_q_net : std_logic_vector( 16-1 downto 0 );
+  signal register44_q_net : std_logic_vector( 32-1 downto 0 );
+  signal slice21_y_net : std_logic_vector( 32-1 downto 0 );
+  signal slice22_y_net : std_logic_vector( 32-1 downto 0 );
+  signal mux1_y_net : std_logic_vector( 32-1 downto 0 );
+  signal buffer_mem_data_i_net : std_logic_vector( 32-1 downto 0 );
+  signal mux2_y_net : std_logic_vector( 16-1 downto 0 );
+  signal buffer_mem_ctrl_en_net : std_logic_vector( 2-1 downto 0 );
+  signal buffer_rd_ctrl_i_net : std_logic_vector( 15-1 downto 0 );
+  signal buffer_mem_we_net : std_logic_vector( 1-1 downto 0 );
+  signal mux4_y_net : std_logic_vector( 16-1 downto 0 );
+  signal buffer_mem_addr_i_net : std_logic_vector( 12-1 downto 0 );
+  signal re_no_i_net : std_logic_vector( 12-1 downto 0 );
+  signal sof_i_net : std_logic_vector( 1-1 downto 0 );
+  signal compression_mode_net : std_logic_vector( 2-1 downto 0 );
+  signal data_i_net : std_logic_vector( 64-1 downto 0 );
+  signal valid_i_net : std_logic_vector( 1-1 downto 0 );
+  signal reinterpret8_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal reinterpret9_output_port_net_x0 : std_logic_vector( 16-1 downto 0 );
+  signal sop_i_net : std_logic_vector( 1-1 downto 0 );
+  signal reinterpret9_output_port_net_x1 : std_logic_vector( 9-1 downto 0 );
+  signal ce_net : std_logic;
+  signal clk_net : std_logic;
+  signal reinterpret9_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal slice14_y_net : std_logic_vector( 3-1 downto 0 );
+  signal concat2_y_net : std_logic_vector( 64-1 downto 0 );
+  signal register47_q_net : std_logic_vector( 1-1 downto 0 );
   signal slice25_y_net : std_logic_vector( 1-1 downto 0 );
+  signal register48_q_net : std_logic_vector( 1-1 downto 0 );
   signal register43_q_net : std_logic_vector( 64-1 downto 0 );
+  signal reinterpret2_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret1_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal register2_q_net : std_logic_vector( 32-1 downto 0 );
   signal slice12_y_net : std_logic_vector( 11-1 downto 0 );
-  signal slice19_y_net : std_logic_vector( 9-1 downto 0 );
-  signal slice20_y_net : std_logic_vector( 18-1 downto 0 );
-  signal slice11_y_net : std_logic_vector( 9-1 downto 0 );
   signal slice28_y_net : std_logic_vector( 12-1 downto 0 );
-  signal slice10_y_net : std_logic_vector( 16-1 downto 0 );
-  signal slice4_y_net : std_logic_vector( 16-1 downto 0 );
+  signal slice11_y_net : std_logic_vector( 9-1 downto 0 );
   signal reinterpret7_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal slice19_y_net : std_logic_vector( 9-1 downto 0 );
+  signal slice4_y_net : std_logic_vector( 16-1 downto 0 );
+  signal slice10_y_net : std_logic_vector( 16-1 downto 0 );
+  signal slice20_y_net : std_logic_vector( 18-1 downto 0 );
   signal synbol_cnt1_op_net : std_logic_vector( 1-1 downto 0 );
 begin
   buffer_mem_addr_i_net <= buffer_mem_addr_i;
@@ -775,13 +775,6 @@ begin
     in0 => register16_q_net,
     in1 => register15_q_net,
     y => concat9_y_net
-  );
-  constant7 : entity work.sysgen_constant_fc92696315 
-  port map (
-    clk => '0',
-    ce => '0',
-    clr => '0',
-    op => constant7_op_net
   );
   convert1 : entity work.dl_adaptor_data_xlconvert 
   generic map (
@@ -867,6 +860,27 @@ begin
     ce => ce_net,
     dout => convert4_dout_net
   );
+  convert5 : entity work.dl_adaptor_data_xlconvert 
+  generic map (
+    bool_conversion => 1,
+    din_arith => 1,
+    din_bin_pt => 0,
+    din_width => 1,
+    dout_arith => 1,
+    dout_bin_pt => 0,
+    dout_width => 1,
+    latency => 0,
+    overflow => xlWrap,
+    quantization => xlTruncate
+  )
+  port map (
+    clr => '0',
+    en => "1",
+    din => slice36_y_net,
+    clk => clk_net,
+    ce => ce_net,
+    dout => convert5_dout_net
+  );
   dual_port_ram : entity work.dl_adaptor_data_xldpram 
   generic map (
     c_address_width_a => 12,
@@ -885,8 +899,8 @@ begin
     addrb => concat8_y_net,
     dinb => convert4_dout_net,
     web => register34_q_net,
-    ena => constant7_op_net,
-    enb => constant7_op_net,
+    ena => convert2_dout_net,
+    enb => convert5_dout_net,
     a_clk => clk_net,
     a_ce => ce_net,
     b_clk => clk_net,
@@ -1586,8 +1600,8 @@ end dl_adaptor_data;
 architecture structural of dl_adaptor_data is 
   attribute core_generation_info : string;
   attribute core_generation_info of structural : architecture is "dl_adaptor_data,sysgen_core_2018_3,{,compilation=HDL Netlist,block_icon_display=Default,family=zynquplus,part=xczu19eg,speed=-2-i,package=ffvc1760,synthesis_language=vhdl,hdl_library=work,synthesis_strategy=Vivado Synthesis Defaults,implementation_strategy=Performance_Explore,testbench=0,interface_doc=0,ce_clr=0,clock_period=2.03451,system_simulink_period=2.03451e-09,waveform_viewer=0,axilite_interface=0,ip_catalog_plugin=0,hwcosim_burst_mode=0,simulation_time=0.0005,concat=4,constant=2,convert=21,counter=1,dpram=1,inv=1,logical=1,mux=9,register=20,reinterpret=24,slice=21,}";
-  signal clk_1_net : std_logic;
   signal ce_1_net : std_logic;
+  signal clk_1_net : std_logic;
 begin
   dl_adaptor_data_default_clock_driver : entity work.dl_adaptor_data_default_clock_driver 
   port map (

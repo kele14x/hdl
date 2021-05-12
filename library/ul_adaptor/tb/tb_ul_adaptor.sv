@@ -4,8 +4,8 @@
 
 module tb_ul_adaptor ();
 
-  parameter int NUM_CC = 2;
-  parameter int NUM_UL_LAYER = 8;
+  parameter int NUM_CC = 1;
+  parameter int NUM_UL_LAYER = 1;
 
   // DUT Signals
   //============
@@ -36,12 +36,12 @@ module tb_ul_adaptor ();
 
   logic [ 3:0] ctrl_bandwidth            [      NUM_CC] = '{NUM_CC{4'b0}};
   logic [ 1:0] ctrl_numerology           [      NUM_CC] = '{NUM_CC{2'b0}};
-  logic [ 1:0] ctrl_compression_mode     [      NUM_CC] = '{NUM_CC{2'b0}};
+  logic [ 1:0] ctrl_compression_mode     [      NUM_CC] = '{NUM_CC{2'b1}};
   //
-  logic [ 1:0] buffer_mem_ctrl_en        [      NUM_CC];
-  logic [11:0] buffer_mem_addr_i         [      NUM_CC]                         [NUM_UL_LAYER];
-  logic [31:0] buffer_mem_data_i         [      NUM_CC]                         [NUM_UL_LAYER];
-  logic        buffer_mem_we             [      NUM_CC]                         [NUM_UL_LAYER];
+  logic [ 1:0] buffer_mem_ctrl_en        [      NUM_CC] = '{NUM_CC{2'b0}};
+  logic [11:0] buffer_mem_addr_i         [      NUM_CC]                         [NUM_UL_LAYER] = '{NUM_CC{'{NUM_UL_LAYER{'0}}}};
+  logic [31:0] buffer_mem_data_i         [      NUM_CC]                         [NUM_UL_LAYER] = '{NUM_CC{'{NUM_UL_LAYER{'0}}}};
+  logic        buffer_mem_we             [      NUM_CC]                         [NUM_UL_LAYER] = '{NUM_CC{'{NUM_UL_LAYER{'0}}}};
   logic [31:0] buffer_mem_data_o         [      NUM_CC]                         [NUM_UL_LAYER];
 
 
@@ -106,7 +106,7 @@ module tb_ul_adaptor ();
       //++++++++++++++++++
       begin : gen_sof
         forever begin
-          // Set ul_sof_ahead_3 every radio frame
+          // Set ul_sof_ahead_3 every radio frame (10ms)
           @(posedge clk_491m52);
           ul_sof_ahead_3 <= '{NUM_CC{1'b1}};
           @(posedge clk_491m52);
@@ -118,15 +118,19 @@ module tb_ul_adaptor ();
       //++++++++++++++++++
       begin : gen_sop
         forever begin
-          // One radio fram
-          repeat (14) begin
+          // One slot (0.5ms or 14 symbols)
+          for (int sym = 0; sym < 14; sym++) begin
             // One symbol
             @(posedge clk_491m52);
             ul_sop_ahead_3 <= '{NUM_CC{1'b1}};
             @(posedge clk_491m52);
             ul_sop_ahead_3 <= '{NUM_CC{1'b0}};
             // Wait N tick, which is 4096 + CP time
-            repeat ((4096 + 352) * 4 - 2) @(posedge clk_491m52);
+            if (sym == 0) begin
+              repeat ((4096 + 352) * 4 - 2) @(posedge clk_491m52);
+            end else begin
+              repeat ((4096 + 288) * 4 - 2) @(posedge clk_491m52);
+            end
           end
         end
       end
@@ -136,8 +140,8 @@ module tb_ul_adaptor ();
         // wait 3 ticks
         repeat (3) @(posedge clk_491m52);
         forever begin
-          // One radio frame
-          repeat (14) begin
+          // One slot (0.5ms or 14 symbols)
+          for (int sym = 0; sym < 14; sym++) begin
             // One symbol
             repeat (4096) begin
               // One sample, takes 4 ticks to set
@@ -146,13 +150,70 @@ module tb_ul_adaptor ();
               repeat (3) @(posedge clk_491m52);
             end
             // Wait CP time
-            repeat (352 * 4 - 2) @(posedge clk_491m52);
+            if (sym == 0) begin
+              repeat (352 * 4) @(posedge clk_491m52);
+            end else begin
+              repeat (288 * 4) @(posedge clk_491m52);
+            end
           end
         end
       end
 
     join
   end
+
+  // XORIF Simply
+  //=============
+
+  initial begin
+  
+    fork
+
+      //++++++++++++++++++
+      begin : gen_fram_req
+        forever begin
+          forever begin
+            @(posedge clk_400m);
+            if (s_ul_update[0]) break;
+          end
+
+          @(posedge clk_400m);
+          m_fram_data_req[0] <= {1'b1, 9'd0,   8'd119, 3'd0, 4'd0};
+          @(posedge clk_400m);
+          m_fram_data_req[0] <= {1'b1, 9'd119, 8'd119, 3'd0, 4'd0};
+          @(posedge clk_400m);
+          m_fram_data_req[0] <= {1'b1, 9'd238, 8'd53,  3'd0, 4'd0};
+          @(posedge clk_400m);
+          m_fram_data_req[0] <= '0;
+        end
+      end
+
+      //++++++++++++++++
+      begin : gen_s_ul_update
+        forever begin
+          forever begin
+            @(posedge clk_400m);
+            if (fram_radio_start_10ms) break;
+          end
+          
+          for (int slot = 0; slot < 20; slot++) begin
+            for (int sym = 0; sym < 14; sym++) begin
+              @(posedge clk_400m);
+              s_ul_update <= '{NUM_CC{1'b1}};
+              @(posedge clk_400m);
+              s_ul_update <= '{NUM_CC{1'b0}};
+              repeat(14285 - 2) @(posedge clk_400m);
+              // or 14285 * 4 + 14286 * 10
+            end
+          end
+        end
+      end
+
+    join
+  end
+
+  // DUT
+  //====
 
   ul_adaptor #(
       .NUM_CC(NUM_CC),

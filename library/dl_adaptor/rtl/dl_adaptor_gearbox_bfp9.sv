@@ -1,5 +1,5 @@
-// File: dl_adaptor_gearbox.sv
-// Brief: Downlink PDxCH (DL U-Plane data) adaptor gearbox.
+// File: dl_adaptor_gearbox_bfp9.sv
+// Brief: Downlink PDxCH (DL U-Plane data) adaptor gearbox, for BFP9 format.
 `timescale 1 ns / 1 ps `default_nettype none
 
 module dl_adaptor_gearbox_bfp9 #(

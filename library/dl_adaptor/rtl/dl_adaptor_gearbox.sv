@@ -1,5 +1,10 @@
 // File: dl_adaptor_gearbox.sv
-// Brief: Downlink PDxCH (DL U-Plane data) adaptor gearbox.
+// Brief: Downlink PDxCH (DL U-Plane data) adaptor gearbox. It is designed to
+//        read incoming Ethernet like stream (which from XORIF DL data) and put
+//        them into a more convenient interface. The gearbox module is designed
+//        to handle two format: raw and BFP9. Note due to the gearbox is shared
+//        between 2 CCs, 2 CCs need to be in same compression format. This is
+//        a limitation of this module.
 `timescale 1 ns / 1 ps `default_nettype none
 
 module dl_adaptor_gearbox #(
@@ -53,6 +58,12 @@ module dl_adaptor_gearbox #(
   generate
     for (genvar i = 0; i < NUM_DL_LAYER; i++) begin: g_ly
 
+      // DL packets are firstly feed into a FIFO. This is FIFO is used to do the
+      // backward press across two time domain. It's a little bit complex, so
+      // use Xilinx's IP core and hope it can do well.
+      //
+      // Note tkeep and tuser is not need to be feed into FIFO since they are
+      // stable during the packet. But we still do this.
       dl_adaptor_fifo i_dl_adaptor_fifo (
           // Writer side
           .s_axis_aclk   (clk_400m),
@@ -78,6 +89,9 @@ module dl_adaptor_gearbox #(
       assign m_axis_tready[i] = (ctrl_compression_mode[0] == 0) ? m_axis_tready_raw[i] :
                               (ctrl_compression_mode[0] == 1) ? m_axis_tready_bfp9[i] :
                               1'b1;
+
+      // We have two modules to handle different compression format. To save
+      // resource, remove raw module.
 
       dl_adaptor_gearbox_raw #(
           .NUM_CC(NUM_CC)
@@ -138,6 +152,40 @@ module dl_adaptor_gearbox #(
 
     end
   endgenerate
+
+  // synthesis translate_off
+
+  int fifo_wr_cnt, fifo_rd_cnt;
+
+  always_ff @ (posedge clk_400m) begin
+    if (rst_400m) begin
+      fifo_wr_cnt = 0;
+    end else begin
+      if (s_defm_data_tready[0] && s_defm_data_tvalid[0]) begin
+        fifo_wr_cnt++;
+        if (s_defm_data_tlast[0]) begin
+          $display("%m: write %d words to FIFO", fifo_wr_cnt);
+          fifo_wr_cnt = 0;
+        end
+      end
+    end
+  end
+
+  always_ff @ (posedge clk_491m52) begin
+    if (rst_491m52) begin
+      fifo_rd_cnt = 0;
+    end else begin
+      if (m_axis_tvalid[0] && m_axis_tready[0]) begin
+        fifo_rd_cnt++;
+        if (m_axis_tlast[0]) begin
+          $display("%m: read %d words from FIFO", fifo_rd_cnt);
+          fifo_rd_cnt = 0;
+        end
+      end
+    end
+  end
+
+  // synthesis translate_on
 
 endmodule
 

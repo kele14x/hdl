@@ -1,5 +1,5 @@
 // File: dl_adaptor.sv
-// Brief: Downlink PDxCH (DL U-Plane data) adaptor. Input is 16 DL stream from 
+// Brief: Downlink PDxCH (DL U-Plane data) adaptor. Input is 16 DL stream from
 //        XORIF ip core, each stream contains all CCs' data of one layer.
 //        Output has different structure. Each stream contains 1
 //        layer, 1 CC data. Resulting 32 streams for 16 layer and 2 CCs.
@@ -11,10 +11,11 @@ module dl_adaptor #(
 ) (
     // Interface with XORIF
     //=====================
+    // Note, connect these ports to XORIF same name ports
     input var         clk_400m,
     input var         rst_400m,
     // Timing ports
-    // Note, s_dl_update is expected to be few ticks after `dl_radio_start_10ms`
+    output var        defm_radio_start_10ms,
     input var         s_dl_update          [      NUM_CC],
     // 16 branch/layer stream, CC shared
     input var  [63:0] s_defm_data_tdata    [NUM_DL_LAYER],
@@ -28,8 +29,7 @@ module dl_adaptor #(
     input var         clk_491m52,
     input var         rst_491m52,
     // DL symbol timing
-    // Note, to module need to forward this pulse to `clk_400m` domain without 
-    // too large delay. XPM_CDC_PULSE is good for this.
+    // This is base line of DL timing
     input var         dl_radio_start_10ms,
     // 2 CC port, each will have interleaved 4 layer data
     output var        dl_sof               [      NUM_CC],
@@ -59,9 +59,32 @@ module dl_adaptor #(
   logic        gb_valid[NUM_CC] [NUM_DL_LAYER];
   logic [11:0] gb_re   [NUM_CC] [NUM_DL_LAYER];
 
+  // DL timing base is `dl_radio_start_10ms`, it should be stable and
+  // precisely 1 pulse every 10ms. Top module can delay this pulse to adjust DL
+  // timing. Then this pulse will CDC to `clk_400m` clock domain to drive the
+  // XORIF IP core. XORIF IP will use `defm_radio_start_10ms` to generate it's
+  // DL window for various DL C-Plane and U-Plane packets.
+  xpm_cdc_pulse #(
+      .DEST_SYNC_FF  (2),
+      .INIT_SYNC_FF  (0),
+      .REG_OUTPUT    (1),
+      .RST_USED      (1),
+      .SIM_ASSERT_CHK(0)
+  ) i_xpm_cdc_pulse_radio_start (
+      .src_clk   (clk_491m52),
+      .src_rst   (rst_491m52),
+      .src_pulse (dl_radio_start_10ms),
+      .dest_clk  (clk_400m),
+      .dest_rst  (rst_400m),
+      .dest_pulse(defm_radio_start_10ms)
+  );
+
   generate
     for (genvar i = 0; i < NUM_CC; i++) begin : g_cdc
 
+      // XORIF will feed back `dl_update`, which is dl symbol start pulse.
+      // We need to CDC this to `clk_491m52` domain. The CDCed pulse is used to
+      // drive the ping-pong buffer selection.
       xpm_cdc_pulse #(
           .DEST_SYNC_FF  (2),
           .INIT_SYNC_FF  (0),
@@ -113,7 +136,8 @@ module dl_adaptor #(
   generate
     for (genvar i = 0; i < NUM_CC; i++) begin: g_buf
 
-      //
+      // Not `gb_sos` is expected to arrive few ticks after
+      // `dl_radio_start_10ms`. And `gb_data` should be few ticks more late.
       dl_adaptor_buf #(
           .LAYER_NUMBER_C(NUM_DL_LAYER)
       ) dl_adaptor_buf (

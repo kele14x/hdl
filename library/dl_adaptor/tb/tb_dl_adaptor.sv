@@ -2,8 +2,8 @@
 
 module tb_dl_adaptor ();
 
-    parameter int NUM_CC = 2;
-    parameter int NUM_DL_LAYER = 16;
+    parameter int NUM_CC = 1;
+    parameter int NUM_DL_LAYER = 1;
 
     // DUT Signals
 
@@ -156,27 +156,40 @@ module tb_dl_adaptor ();
         i_axi4s_vip.IF.reset();
 
         wait(rst_400m == 0);
-        #100;
+        #1000;
 
-        // Set sof
-        @(posedge clk_491m52);
-        dl_radio_start_10ms <= 1;
-        @(posedge clk_491m52);
-        dl_radio_start_10ms <= 0;
-        #10;
+        fork 
 
-        // Set sop
-        @(posedge clk_400m);
-        s_dl_update <= '{NUM_CC{1}};
-        @(posedge clk_400m);
-        s_dl_update <= '{NUM_CC{0}};
-        #10;
+          begin : set_sof
+            @(posedge clk_491m52);
+            dl_radio_start_10ms <= 1;
+            @(posedge clk_491m52);
+            dl_radio_start_10ms <= 0;
+            #10;
+          end
 
-        repeat(3) begin
-            len = load_packet();
-            i_axi4s_vip.IF.master_send(len, TDATA, TKEEP, TUSER);
-        end
-        $display("Send 1 symbol OK");
+          begin : set_sop
+              #100;
+              repeat(10) begin
+                @(posedge clk_400m);
+                s_dl_update <= '{NUM_CC{1}};
+                @(posedge clk_400m);
+                s_dl_update <= '{NUM_CC{0}};
+                repeat(14685 - 2) @(posedge clk_400m);
+              end
+          end
+
+          begin : set_dl_data
+            #200;
+            repeat(3) begin
+                len = load_packet();
+                i_axi4s_vip.IF.master_send(len, TDATA, TKEEP, TUSER);
+                #100;
+            end
+            $display("Send 1 symbol OK");
+          end
+
+        join
 
         #(1000);
         $finish(2);

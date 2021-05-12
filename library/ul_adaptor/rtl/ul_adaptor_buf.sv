@@ -45,7 +45,6 @@ module ul_adaptor_buf #(
 
 
   logic [13:0] buffer_wr_ctrl  [8];
-  logic [12:0] buffer_rd_addr_s[LAYER_NUMBER_C];
 
   ul_adaptor_ctrl inst_ul_adaptor_ctrl (
       .clk             (clk_491m_i),
@@ -84,7 +83,7 @@ module ul_adaptor_buf #(
           .buffer_mem_we     (buffer_mem_we[ii]),
           .buffer_mem_data_o (buffer_mem_data_o[ii]),
           .buffer_wr_ctrl_i  (buffer_wr_ctrl[ii]),
-          .buffer_rd_addr_i  (buffer_rd_addr_s[ii]),
+          .buffer_rd_addr_i  (buffer_rd_addr_i[ii]),
           .buffer_rd_en_i    (buffer_rd_en_i[ii]),
           .idata_i           (ul_di_i[ii]),
           .qdata_i           (ul_dq_i[ii]),
