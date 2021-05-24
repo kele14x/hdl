@@ -82,7 +82,7 @@ module ul_adaptor_buf #(
           .buffer_mem_data_i (buffer_mem_data_i[ii]),
           .buffer_mem_we     (buffer_mem_we[ii]),
           .buffer_mem_data_o (buffer_mem_data_o[ii]),
-          .buffer_wr_ctrl_i  (buffer_wr_ctrl[ii]),
+          .buffer_wr_ctrl_i  ({1'b0, buffer_wr_ctrl[ii]}),
           .buffer_rd_addr_i  (buffer_rd_addr_i[ii]),
           .buffer_rd_en_i    (buffer_rd_en_i[ii]),
           .idata_i           (ul_di_i[ii]),

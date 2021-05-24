@@ -8,7 +8,7 @@ module ul_adaptor_gearbox_bfp9_reader #(
     input var         clk,
     input var         rst,
     //
-    input var         fram_radio_start_10ms,
+    input var         ul_radio_start_10ms,
     input var         ul_update            [NUM_CC],
     // FIFO
     input var  [23:0] fram_req_data,
@@ -148,9 +148,9 @@ module ul_adaptor_gearbox_bfp9_reader #(
       always_ff @(posedge clk) begin
         if (rst) begin
           wait_for_sync[i] <= 1'b0;
-        end else if (fram_radio_start_10ms && ul_update[i]) begin
+        end else if (ul_radio_start_10ms && ul_update[i]) begin
           wait_for_sync[i] <= 1'b0;
-        end else if (fram_radio_start_10ms) begin
+        end else if (ul_radio_start_10ms) begin
           wait_for_sync[i] <= 1'b1;
         end else if (ul_update[i]) begin
           wait_for_sync[i] <= 1'b0;
@@ -160,7 +160,7 @@ module ul_adaptor_gearbox_bfp9_reader #(
       always_ff @(posedge clk) begin
         if (rst) begin
           uram_bank[i] <= 1'b0;
-        end else if (fram_radio_start_10ms) begin
+        end else if (ul_radio_start_10ms) begin
           uram_bank[i] <= 1'b0;
         end else if (ul_update[i] && wait_for_sync[i]) begin
           // this the case that ul_update arrives late than up_radio_start_10ms

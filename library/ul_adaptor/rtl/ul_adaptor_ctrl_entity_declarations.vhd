@@ -97,33 +97,6 @@ use work.conv_pkg.all;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-entity sysgen_concat_66806053f1 is
-  port (
-    in0 : in std_logic_vector((2 - 1) downto 0);
-    in1 : in std_logic_vector((13 - 1) downto 0);
-    y : out std_logic_vector((15 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_concat_66806053f1;
-architecture behavior of sysgen_concat_66806053f1
-is
-  signal in0_1_23: unsigned((2 - 1) downto 0);
-  signal in1_1_27: unsigned((13 - 1) downto 0);
-  signal y_2_1_concat: unsigned((15 - 1) downto 0);
-begin
-  in0_1_23 <= std_logic_vector_to_unsigned(in0);
-  in1_1_27 <= std_logic_vector_to_unsigned(in1);
-  y_2_1_concat <= std_logic_vector_to_unsigned(unsigned_to_std_logic_vector(in0_1_23) & unsigned_to_std_logic_vector(in1_1_27));
-  y <= unsigned_to_std_logic_vector(y_2_1_concat);
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
 entity sysgen_concat_a365dd9af1 is
   port (
     in0 : in std_logic_vector((2 - 1) downto 0);
@@ -181,25 +154,6 @@ architecture behavior of sysgen_constant_0a05339443
 is
 begin
   op <= "01";
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-entity sysgen_constant_9b1ea5803d is
-  port (
-    op : out std_logic_vector((13 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_constant_9b1ea5803d;
-architecture behavior of sysgen_constant_9b1ea5803d
-is
-begin
-  op <= "1111111111111";
 end behavior;
 
 library work;
@@ -749,19 +703,19 @@ use work.conv_pkg.all;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-entity sysgen_relational_d3d9d53335 is
+entity sysgen_relational_9c9f115dea is
   port (
-    a : in std_logic_vector((15 - 1) downto 0);
-    b : in std_logic_vector((15 - 1) downto 0);
+    a : in std_logic_vector((16 - 1) downto 0);
+    b : in std_logic_vector((16 - 1) downto 0);
     op : out std_logic_vector((1 - 1) downto 0);
     clk : in std_logic;
     ce : in std_logic;
     clr : in std_logic);
-end sysgen_relational_d3d9d53335;
-architecture behavior of sysgen_relational_d3d9d53335
+end sysgen_relational_9c9f115dea;
+architecture behavior of sysgen_relational_9c9f115dea
 is
-  signal a_1_31: unsigned((15 - 1) downto 0);
-  signal b_1_34: unsigned((15 - 1) downto 0);
+  signal a_1_31: unsigned((16 - 1) downto 0);
+  signal b_1_34: unsigned((16 - 1) downto 0);
   type array_type_op_mem_37_22 is array (0 to (1 - 1)) of boolean;
   signal op_mem_37_22: array_type_op_mem_37_22 := (
     0 => false);
@@ -878,6 +832,112 @@ architecture behavior of ul_adaptor_ctrl_xlslice is
 begin
     y <= x(new_msb downto new_lsb);
 end  behavior;
+
+library work;
+use work.conv_pkg.all;
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+entity sysgen_constant_682e3d000d is
+  port (
+    op : out std_logic_vector((16 - 1) downto 0);
+    clk : in std_logic;
+    ce : in std_logic;
+    clr : in std_logic);
+end sysgen_constant_682e3d000d;
+architecture behavior of sysgen_constant_682e3d000d
+is
+begin
+  op <= "1000101000000000";
+end behavior;
+
+library work;
+use work.conv_pkg.all;
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+entity sysgen_constant_e86e69a387 is
+  port (
+    op : out std_logic_vector((16 - 1) downto 0);
+    clk : in std_logic;
+    ce : in std_logic;
+    clr : in std_logic);
+end sysgen_constant_e86e69a387;
+architecture behavior of sysgen_constant_e86e69a387
+is
+begin
+  op <= "0010001101000000";
+end behavior;
+
+library work;
+use work.conv_pkg.all;
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+entity sysgen_constant_996f61694d is
+  port (
+    op : out std_logic_vector((16 - 1) downto 0);
+    clk : in std_logic;
+    ce : in std_logic;
+    clr : in std_logic);
+end sysgen_constant_996f61694d;
+architecture behavior of sysgen_constant_996f61694d
+is
+begin
+  op <= "0100010110000000";
+end behavior;
+
+library work;
+use work.conv_pkg.all;
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+entity sysgen_mux_51d0269415 is
+  port (
+    sel : in std_logic_vector((2 - 1) downto 0);
+    d0 : in std_logic_vector((16 - 1) downto 0);
+    d1 : in std_logic_vector((16 - 1) downto 0);
+    d2 : in std_logic_vector((16 - 1) downto 0);
+    d3 : in std_logic_vector((16 - 1) downto 0);
+    y : out std_logic_vector((16 - 1) downto 0);
+    clk : in std_logic;
+    ce : in std_logic;
+    clr : in std_logic);
+end sysgen_mux_51d0269415;
+architecture behavior of sysgen_mux_51d0269415
+is
+  signal sel_1_20: std_logic_vector((2 - 1) downto 0);
+  signal d0_1_24: std_logic_vector((16 - 1) downto 0);
+  signal d1_1_27: std_logic_vector((16 - 1) downto 0);
+  signal d2_1_30: std_logic_vector((16 - 1) downto 0);
+  signal d3_1_33: std_logic_vector((16 - 1) downto 0);
+  signal unregy_join_6_1: std_logic_vector((16 - 1) downto 0);
+begin
+  sel_1_20 <= sel;
+  d0_1_24 <= d0;
+  d1_1_27 <= d1;
+  d2_1_30 <= d2;
+  d3_1_33 <= d3;
+  proc_switch_6_1: process (d0_1_24, d1_1_27, d2_1_30, d3_1_33, sel_1_20)
+  is
+  begin
+    case sel_1_20 is 
+      when "00" =>
+        unregy_join_6_1 <= d0_1_24;
+      when "01" =>
+        unregy_join_6_1 <= d1_1_27;
+      when "10" =>
+        unregy_join_6_1 <= d2_1_30;
+      when others =>
+        unregy_join_6_1 <= d3_1_33;
+    end case;
+  end process proc_switch_6_1;
+  y <= unregy_join_6_1;
+end behavior;
 
 library work;
 use work.conv_pkg.all;
@@ -1033,17 +1093,17 @@ use work.conv_pkg.all;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-entity sysgen_constant_4e26739311 is
+entity sysgen_constant_20276dd56f is
   port (
-    op : out std_logic_vector((14 - 1) downto 0);
+    op : out std_logic_vector((16 - 1) downto 0);
     clk : in std_logic;
     ce : in std_logic;
     clr : in std_logic);
-end sysgen_constant_4e26739311;
-architecture behavior of sysgen_constant_4e26739311
+end sysgen_constant_20276dd56f;
+architecture behavior of sysgen_constant_20276dd56f
 is
 begin
-  op <= "00000000000000";
+  op <= "0000000000000000";
 end behavior;
 
 library work;
@@ -1052,26 +1112,24 @@ use work.conv_pkg.all;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-entity sysgen_relational_9143db1fee is
+entity sysgen_relational_34f04b2278 is
   port (
-    a : in std_logic_vector((15 - 1) downto 0);
-    b : in std_logic_vector((14 - 1) downto 0);
+    a : in std_logic_vector((16 - 1) downto 0);
+    b : in std_logic_vector((16 - 1) downto 0);
     op : out std_logic_vector((1 - 1) downto 0);
     clk : in std_logic;
     ce : in std_logic;
     clr : in std_logic);
-end sysgen_relational_9143db1fee;
-architecture behavior of sysgen_relational_9143db1fee
+end sysgen_relational_34f04b2278;
+architecture behavior of sysgen_relational_34f04b2278
 is
-  signal a_1_31: unsigned((15 - 1) downto 0);
-  signal b_1_34: unsigned((14 - 1) downto 0);
-  signal cast_14_17: unsigned((15 - 1) downto 0);
+  signal a_1_31: unsigned((16 - 1) downto 0);
+  signal b_1_34: unsigned((16 - 1) downto 0);
   signal result_14_3_rel: boolean;
 begin
   a_1_31 <= std_logic_vector_to_unsigned(a);
   b_1_34 <= std_logic_vector_to_unsigned(b);
-  cast_14_17 <= u2u_cast(b_1_34, 0, 15, 0);
-  result_14_3_rel <= a_1_31 /= cast_14_17;
+  result_14_3_rel <= a_1_31 /= b_1_34;
   op <= boolean_to_vector(result_14_3_rel);
 end behavior;
 
@@ -1869,6 +1927,15 @@ entity ul_adaptor_ctrl_xlcounter_free is
  		  ); 
  end component;
 
+ component ul_adaptor_ctrl_c_counter_binary_v12_0_i2
+    port ( 
+      clk: in std_logic;
+      ce: in std_logic;
+      SINIT: in std_logic;
+      q: out std_logic_vector(op_width - 1 downto 0) 
+ 		  ); 
+ end component;
+
 -- synthesis translate_off
    constant zeroVec: std_logic_vector(op_width - 1 downto 0) := (others => '0');
    constant oneVec: std_logic_vector(op_width - 1 downto 0) := (others => '1');
@@ -1899,6 +1966,16 @@ entity ul_adaptor_ctrl_xlcounter_free is
 
  comp1: if ((core_name0 = "ul_adaptor_ctrl_c_counter_binary_v12_0_i1")) generate 
   core_instance1:ul_adaptor_ctrl_c_counter_binary_v12_0_i1
+   port map ( 
+        clk => clk,
+        ce => core_ce,
+        SINIT => core_sinit,
+        q => op_net
+  ); 
+   end generate;
+
+ comp2: if ((core_name0 = "ul_adaptor_ctrl_c_counter_binary_v12_0_i2")) generate 
+  core_instance2:ul_adaptor_ctrl_c_counter_binary_v12_0_i2
    port map ( 
         clk => clk,
         ce => core_ce,

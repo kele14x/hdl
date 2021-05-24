@@ -127,10 +127,10 @@ module ul_adaptor_gearbox_bfp9_comp (
   end
 
   always_ff @(posedge clk) begin
-    comp_mantissa_pre_0_i <= re_data_d[7][15:0] >> (exp_pre - 1);  // re0_i
-    comp_mantissa_pre_0_q <= re_data_d[7][31:16] >> (exp_pre - 1);  // re0_q
-    comp_mantissa_pre_1_i <= re_data_d[7][47:32] >> (exp_pre - 1);  // re1_i
-    comp_mantissa_pre_1_q <= re_data_d[7][63:48] >> (exp_pre - 1);  // re1_q
+    comp_mantissa_pre_0_i <= {re_data_d[7][15: 0], 1'b0} >> (exp_pre);  // re0_i
+    comp_mantissa_pre_0_q <= {re_data_d[7][31:16], 1'b0} >> (exp_pre);  // re0_q
+    comp_mantissa_pre_1_i <= {re_data_d[7][47:32], 1'b0} >> (exp_pre);  // re1_i
+    comp_mantissa_pre_1_q <= {re_data_d[7][63:48], 1'b0} >> (exp_pre);  // re1_q
   end
 
   // Rounding stage

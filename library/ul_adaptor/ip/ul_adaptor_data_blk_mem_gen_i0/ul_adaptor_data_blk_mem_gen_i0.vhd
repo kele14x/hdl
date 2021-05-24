@@ -272,7 +272,7 @@ signal  buf_bweb         : std_logic_vector(8 downto 0);
     buf_ena      <=  '1';
     buf_wea      <=  wea;
     buf_addra    <=  "00000000000" & addra(12 downto 1);
-    buf_dina     <=  "00000000" & dina;
+    buf_dina     <=  "00000000" & dina(31 downto 0) & dina(31 downto 0);
     buf_bwea     <=   "011110000" when (addra(0) ='1') else "000001111";
     buf_enb      <=  '1';
     buf_web      <=  web;
@@ -295,8 +295,8 @@ generic map (
     EN_ECC_RD_B                   => "FALSE",             
     EN_ECC_WR_A                   => "FALSE",             
     EN_ECC_WR_B                   => "FALSE",             
-    IREG_PRE_A                    => "TRUE",              
-    IREG_PRE_B                    => "TRUE",              
+    IREG_PRE_A                    => "FALSE",              
+    IREG_PRE_B                    => "FALSE",              
     IS_CLK_INVERTED               => '0',                 
     IS_EN_A_INVERTED              => '0',                 
     IS_EN_B_INVERTED              => '0',                 

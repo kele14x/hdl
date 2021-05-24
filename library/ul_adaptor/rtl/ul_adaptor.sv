@@ -55,20 +55,21 @@ module ul_adaptor #(
   logic        ram_rden                [NUM_CC][NUM_UL_LAYER];
   logic [63:0] ram_data                [NUM_CC][NUM_UL_LAYER];
 
-  logic        fram_radio_start_10ms_s [NUM_CC];
+  logic        ul_radio_start_10ms [NUM_CC];
 
 
+  // We will get two SOP from DFE module (each for one CC). We assume they
+  // are same so we only use [0].
   xpm_cdc_pulse #(
       .DEST_SYNC_FF  (4),
       .INIT_SYNC_FF  (0),
       .REG_OUTPUT    (1),
       .RST_USED      (1),
       .SIM_ASSERT_CHK(0)
-  )
- xpm_cdc_pulse_inst (
+  ) xpm_cdc_pulse_inst (
       .src_clk   (clk_491m52),
       .src_rst   (rst_491m52),
-      .src_pulse (fram_radio_start_10ms_s[0]),
+      .src_pulse (ul_radio_start_10ms[0]),
       .dest_clk  (clk_400m),
       .dest_rst  (rst_400m),
       .dest_pulse(fram_radio_start_10ms)
@@ -83,7 +84,7 @@ module ul_adaptor #(
       .clk_400m             (clk_400m),
       .rst_400m             (rst_400m),
       // ul timing
-      .fram_radio_start_10ms(fram_radio_start_10ms_s[0]),
+      .ul_radio_start_10ms  (ul_radio_start_10ms[0]),
       .ul_update            (s_ul_update),
       // ul data
       .m_fram_data_tdata    (m_fram_data_tdata),
@@ -134,7 +135,7 @@ module ul_adaptor #(
           .ul_dq_i                   (ul_data_q[i]),
           // Internal Interface
           //===================
-          .ul_buf_ready_o            (fram_radio_start_10ms_s[i]),
+          .ul_buf_ready_o            (ul_radio_start_10ms[i]),
           //
           .buffer_rd_addr_i          (ram_addr[i]),
           .buffer_rd_en_i            (ram_rden[i]),

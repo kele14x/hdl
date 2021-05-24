@@ -5,7 +5,7 @@ module ul_adaptor_gearbox_bfp9 #(
     input var         clk,
     input var         rst,
     //
-    input var         fram_radio_start_10ms,
+    input var         ul_radio_start_10ms,
     input var         ul_update            [NUM_CC],
     // AXIS
     output var [63:0] m_axis_tdata,
@@ -45,7 +45,7 @@ module ul_adaptor_gearbox_bfp9 #(
       .clk                  (clk),
       .rst                  (rst),
       //
-      .fram_radio_start_10ms(fram_radio_start_10ms),
+      .ul_radio_start_10ms  (ul_radio_start_10ms),
       .ul_update            (ul_update),
       // FIFO
       .fram_req_data        (fram_req_data),

@@ -9,7 +9,7 @@ module ul_adaptor_gearbox #(
     input var         clk_400m,
     input var         rst_400m,
     // ul timing
-    input var         fram_radio_start_10ms,
+    input var         ul_radio_start_10ms,
     input var         ul_update            [      NUM_CC],
     // ul data
     output var [63:0] m_fram_data_tdata    [NUM_UL_LAYER],
@@ -94,7 +94,7 @@ module ul_adaptor_gearbox #(
           .src_rst(rst_400m),
           .src_pulse(ul_update[cc]),
           .dest_clk(clk_491m52),
-          .dest_rst(rst_400m),
+          .dest_rst(rst_491m52),
           .dest_pulse(ul_update_sync[cc])
       );
 
@@ -133,8 +133,8 @@ module ul_adaptor_gearbox #(
           .clk                  (clk_491m52),
           .rst                  (rst_491m52),
           // ul timing
-          .fram_radio_start_10ms(fram_radio_start_10ms),
-          .ul_update            (ul_update),
+          .ul_radio_start_10ms  (ul_radio_start_10ms),
+          .ul_update            (ul_update_sync),
           // ul data
           .m_axis_tdata         (s_axis_tdata_raw[i]),
           .m_axis_tkeep         (s_axis_tkeep_raw[i]),
@@ -157,8 +157,8 @@ module ul_adaptor_gearbox #(
           .clk                  (clk_491m52),
           .rst                  (rst_491m52),
           // ul timing
-          .fram_radio_start_10ms(fram_radio_start_10ms),
-          .ul_update            (ul_update),
+          .ul_radio_start_10ms  (ul_radio_start_10ms),
+          .ul_update            (ul_update_sync),
           // ul data
           .m_axis_tdata         (s_axis_tdata_bfp9[i]),
           .m_axis_tkeep         (s_axis_tkeep_bfp9[i]),

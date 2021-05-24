@@ -14,20 +14,20 @@ entity ul_adaptor_ctrl_counter_2 is
   );
 end ul_adaptor_ctrl_counter_2;
 architecture structural of ul_adaptor_ctrl_counter_2 is 
-  signal constant2_op_net : std_logic_vector( 14-1 downto 0 );
-  signal constant15_op_net : std_logic_vector( 15-1 downto 0 );
-  signal logical1_y_net : std_logic_vector( 1-1 downto 0 );
-  signal relational11_op_net : std_logic_vector( 1-1 downto 0 );
-  signal relational1_op_net : std_logic_vector( 1-1 downto 0 );
-  signal relational2_op_net : std_logic_vector( 1-1 downto 0 );
-  signal slice1_y_net : std_logic_vector( 2-1 downto 0 );
-  signal slice3_y_net : std_logic_vector( 13-1 downto 0 );
-  signal ul_sop_ahead_3_i_net : std_logic_vector( 1-1 downto 0 );
   signal counter12_op_net : std_logic_vector( 15-1 downto 0 );
   signal logical_y_net : std_logic_vector( 1-1 downto 0 );
-  signal mux36_y_net : std_logic_vector( 2-1 downto 0 );
-  signal clk_net : std_logic;
   signal ce_net : std_logic;
+  signal logical1_y_net : std_logic_vector( 1-1 downto 0 );
+  signal constant2_op_net : std_logic_vector( 14-1 downto 0 );
+  signal mux36_y_net : std_logic_vector( 2-1 downto 0 );
+  signal ul_sop_ahead_3_i_net : std_logic_vector( 1-1 downto 0 );
+  signal constant15_op_net : std_logic_vector( 15-1 downto 0 );
+  signal relational11_op_net : std_logic_vector( 1-1 downto 0 );
+  signal clk_net : std_logic;
+  signal relational1_op_net : std_logic_vector( 1-1 downto 0 );
+  signal relational2_op_net : std_logic_vector( 1-1 downto 0 );
+  signal slice3_y_net : std_logic_vector( 13-1 downto 0 );
+  signal slice1_y_net : std_logic_vector( 2-1 downto 0 );
 begin
   cnt <= counter12_op_net;
   valid <= logical_y_net;
@@ -141,24 +141,24 @@ entity ul_adaptor_ctrl_counter_4 is
     sof : in std_logic_vector( 1-1 downto 0 );
     clk_1 : in std_logic;
     ce_1 : in std_logic;
-    cnt : out std_logic_vector( 15-1 downto 0 )
+    cnt : out std_logic_vector( 16-1 downto 0 )
   );
 end ul_adaptor_ctrl_counter_4;
 architecture structural of ul_adaptor_ctrl_counter_4 is 
-  signal counter12_op_net : std_logic_vector( 15-1 downto 0 );
+  signal counter12_op_net : std_logic_vector( 16-1 downto 0 );
   signal ul_sof_ahead_3_i_net : std_logic_vector( 1-1 downto 0 );
-  signal ce_net : std_logic;
   signal logical_y_net : std_logic_vector( 1-1 downto 0 );
-  signal constant15_op_net : std_logic_vector( 14-1 downto 0 );
   signal clk_net : std_logic;
-  signal relational11_op_net : std_logic_vector( 1-1 downto 0 );
+  signal constant15_op_net : std_logic_vector( 16-1 downto 0 );
+  signal ce_net : std_logic;
   signal register1_q_net : std_logic_vector( 1-1 downto 0 );
+  signal relational11_op_net : std_logic_vector( 1-1 downto 0 );
 begin
   cnt <= counter12_op_net;
   ul_sof_ahead_3_i_net <= sof;
   clk_net <= clk_1;
   ce_net <= ce_1;
-  constant15 : entity work.sysgen_constant_4e26739311 
+  constant15 : entity work.sysgen_constant_20276dd56f 
   port map (
     clk => '0',
     ce => '0',
@@ -167,9 +167,9 @@ begin
   );
   counter12 : entity work.ul_adaptor_ctrl_xlcounter_free 
   generic map (
-    core_name0 => "ul_adaptor_ctrl_c_counter_binary_v12_0_i1",
+    core_name0 => "ul_adaptor_ctrl_c_counter_binary_v12_0_i2",
     op_arith => xlUnsigned,
-    op_width => 15
+    op_width => 16
   )
   port map (
     clr => '0',
@@ -201,7 +201,7 @@ begin
     ce => ce_net,
     q => register1_q_net
   );
-  relational11 : entity work.sysgen_relational_9143db1fee 
+  relational11 : entity work.sysgen_relational_34f04b2278 
   port map (
     clk => '0',
     ce => '0',
@@ -225,15 +225,15 @@ end ul_adaptor_ctrl_10bit_order_rev;
 architecture structural of ul_adaptor_ctrl_10bit_order_rev is 
   signal slice6_y_net : std_logic_vector( 10-1 downto 0 );
   signal concat_y_net : std_logic_vector( 10-1 downto 0 );
-  signal slice1_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice5_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice9_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice8_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice6_y_net_x0 : std_logic_vector( 1-1 downto 0 );
-  signal slice4_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice7_y_net : std_logic_vector( 1-1 downto 0 );
   signal slice2_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice6_y_net_x0 : std_logic_vector( 1-1 downto 0 );
+  signal slice9_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice7_y_net : std_logic_vector( 1-1 downto 0 );
   signal slice3_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice4_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice5_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice1_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice8_y_net : std_logic_vector( 1-1 downto 0 );
   signal slice10_y_net : std_logic_vector( 1-1 downto 0 );
 begin
   index_o <= concat_y_net;
@@ -378,18 +378,18 @@ entity ul_adaptor_ctrl_11bit_order_rev is
   );
 end ul_adaptor_ctrl_11bit_order_rev;
 architecture structural of ul_adaptor_ctrl_11bit_order_rev is 
-  signal slice33_y_net : std_logic_vector( 11-1 downto 0 );
-  signal slice8_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice4_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice3_y_net : std_logic_vector( 1-1 downto 0 );
   signal concat_y_net : std_logic_vector( 11-1 downto 0 );
   signal slice2_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice3_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice4_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice33_y_net : std_logic_vector( 11-1 downto 0 );
   signal slice1_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice5_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice6_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice10_y_net : std_logic_vector( 1-1 downto 0 );
   signal slice7_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice5_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice8_y_net : std_logic_vector( 1-1 downto 0 );
   signal slice9_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice10_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice6_y_net : std_logic_vector( 1-1 downto 0 );
   signal slice11_y_net : std_logic_vector( 1-1 downto 0 );
 begin
   index_o <= concat_y_net;
@@ -547,16 +547,16 @@ entity ul_adaptor_ctrl_9bit_order_rev is
 end ul_adaptor_ctrl_9bit_order_rev;
 architecture structural of ul_adaptor_ctrl_9bit_order_rev is 
   signal slice2_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice4_y_net : std_logic_vector( 1-1 downto 0 );
   signal concat_y_net : std_logic_vector( 9-1 downto 0 );
-  signal slice5_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice6_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice8_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice9_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice31_y_net : std_logic_vector( 9-1 downto 0 );
   signal slice1_y_net : std_logic_vector( 1-1 downto 0 );
   signal slice3_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice4_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice5_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice6_y_net : std_logic_vector( 1-1 downto 0 );
   signal slice7_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice8_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice31_y_net : std_logic_vector( 9-1 downto 0 );
+  signal slice9_y_net : std_logic_vector( 1-1 downto 0 );
 begin
   index_o <= concat_y_net;
   slice31_y_net <= index_i;
@@ -691,20 +691,20 @@ entity ul_adaptor_ctrl_sb_bit_order_rev is
   );
 end ul_adaptor_ctrl_sb_bit_order_rev;
 architecture structural of ul_adaptor_ctrl_sb_bit_order_rev is 
-  signal reinterpret_output_port_net : std_logic_vector( 12-1 downto 0 );
   signal convert2_dout_net : std_logic_vector( 12-1 downto 0 );
   signal convert3_dout_net : std_logic_vector( 12-1 downto 0 );
+  signal reinterpret_output_port_net : std_logic_vector( 12-1 downto 0 );
   signal mux_y_net : std_logic_vector( 12-1 downto 0 );
-  signal counter12_op_net : std_logic_vector( 15-1 downto 0 );
   signal clk_net : std_logic;
+  signal counter12_op_net : std_logic_vector( 15-1 downto 0 );
+  signal convert9_dout_net : std_logic_vector( 2-1 downto 0 );
   signal ce_net : std_logic;
   signal concat_y_net : std_logic_vector( 10-1 downto 0 );
-  signal concat_y_net_x0 : std_logic_vector( 11-1 downto 0 );
-  signal slice33_y_net : std_logic_vector( 11-1 downto 0 );
+  signal slice31_y_net : std_logic_vector( 9-1 downto 0 );
   signal concat_y_net_x1 : std_logic_vector( 9-1 downto 0 );
   signal slice6_y_net : std_logic_vector( 10-1 downto 0 );
-  signal slice31_y_net : std_logic_vector( 9-1 downto 0 );
-  signal convert9_dout_net : std_logic_vector( 2-1 downto 0 );
+  signal concat_y_net_x0 : std_logic_vector( 11-1 downto 0 );
+  signal slice33_y_net : std_logic_vector( 11-1 downto 0 );
   signal convert_dout_net : std_logic_vector( 12-1 downto 0 );
   signal convert1_dout_net : std_logic_vector( 12-1 downto 0 );
 begin
@@ -885,54 +885,56 @@ entity ul_adaptor_ctrl_struct is
   );
 end ul_adaptor_ctrl_struct;
 architecture structural of ul_adaptor_ctrl_struct is 
-  signal constant29_op_net : std_logic_vector( 2-1 downto 0 );
-  signal constant26_op_net : std_logic_vector( 2-1 downto 0 );
-  signal concat5_y_net : std_logic_vector( 15-1 downto 0 );
-  signal concat7_y_net : std_logic_vector( 6-1 downto 0 );
+  signal slice16_y_net : std_logic_vector( 2-1 downto 0 );
+  signal slice33_y_net : std_logic_vector( 12-1 downto 0 );
+  signal constant17_op_net : std_logic_vector( 16-1 downto 0 );
+  signal constant16_op_net : std_logic_vector( 16-1 downto 0 );
+  signal constant18_op_net : std_logic_vector( 16-1 downto 0 );
+  signal inverter4_op_net : std_logic_vector( 1-1 downto 0 );
+  signal logical2_y_net : std_logic_vector( 1-1 downto 0 );
+  signal inverter3_op_net : std_logic_vector( 1-1 downto 0 );
+  signal slice27_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice26_y_net : std_logic_vector( 1-1 downto 0 );
+  signal relational5_op_net : std_logic_vector( 1-1 downto 0 );
+  signal relational4_op_net : std_logic_vector( 1-1 downto 0 );
+  signal slice6_y_net : std_logic_vector( 1-1 downto 0 );
+  signal logical4_y_net : std_logic_vector( 1-1 downto 0 );
+  signal slice31_y_net : std_logic_vector( 1-1 downto 0 );
+  signal rom2_data_net : std_logic_vector( 36-1 downto 0 );
+  signal relational3_op_net : std_logic_vector( 1-1 downto 0 );
+  signal slice7_y_net : std_logic_vector( 2-1 downto 0 );
+  signal slice45_y_net : std_logic_vector( 12-1 downto 0 );
+  signal mux6_y_net : std_logic_vector( 16-1 downto 0 );
+  signal slice44_y_net : std_logic_vector( 12-1 downto 0 );
+  signal ul_sof_ahead_3_i_net : std_logic_vector( 1-1 downto 0 );
+  signal clk_net : std_logic;
+  signal mux_y_net : std_logic_vector( 12-1 downto 0 );
+  signal convert9_dout_net : std_logic_vector( 2-1 downto 0 );
+  signal rat_mode_i_net : std_logic_vector( 2-1 downto 0 );
+  signal ce_net : std_logic;
+  signal logical_y_net : std_logic_vector( 1-1 downto 0 );
+  signal concat1_y_net : std_logic_vector( 14-1 downto 0 );
+  signal bw_sel_i_net : std_logic_vector( 4-1 downto 0 );
+  signal register10_q_net : std_logic_vector( 1-1 downto 0 );
+  signal ul_sop_ahead_3_i_net : std_logic_vector( 1-1 downto 0 );
+  signal counter12_op_net_x0 : std_logic_vector( 15-1 downto 0 );
+  signal mux36_y_net : std_logic_vector( 2-1 downto 0 );
+  signal symbol_cnt1_op_net : std_logic_vector( 9-1 downto 0 );
+  signal counter12_op_net : std_logic_vector( 16-1 downto 0 );
   signal constant30_op_net : std_logic_vector( 2-1 downto 0 );
-  signal slice8_y_net : std_logic_vector( 1-1 downto 0 );
+  signal constant26_op_net : std_logic_vector( 2-1 downto 0 );
+  signal register37_q_net : std_logic_vector( 1-1 downto 0 );
+  signal rom1_data_net : std_logic_vector( 12-1 downto 0 );
+  signal addsub1_s_net : std_logic_vector( 12-1 downto 0 );
+  signal register36_q_net : std_logic_vector( 12-1 downto 0 );
+  signal mux9_y_net : std_logic_vector( 12-1 downto 0 );
+  signal addsub2_s_net : std_logic_vector( 12-1 downto 0 );
+  signal concat7_y_net : std_logic_vector( 6-1 downto 0 );
   signal logical3_y_net : std_logic_vector( 1-1 downto 0 );
   signal concat4_y_net : std_logic_vector( 8-1 downto 0 );
   signal register6_q_net : std_logic_vector( 2-1 downto 0 );
-  signal constant3_op_net : std_logic_vector( 13-1 downto 0 );
-  signal inverter4_op_net : std_logic_vector( 1-1 downto 0 );
-  signal logical2_y_net : std_logic_vector( 1-1 downto 0 );
-  signal relational5_op_net : std_logic_vector( 1-1 downto 0 );
-  signal logical4_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice6_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice31_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice27_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice26_y_net : std_logic_vector( 1-1 downto 0 );
-  signal relational4_op_net : std_logic_vector( 1-1 downto 0 );
-  signal inverter3_op_net : std_logic_vector( 1-1 downto 0 );
-  signal slice44_y_net : std_logic_vector( 12-1 downto 0 );
-  signal relational3_op_net : std_logic_vector( 1-1 downto 0 );
-  signal rom2_data_net : std_logic_vector( 36-1 downto 0 );
-  signal slice45_y_net : std_logic_vector( 12-1 downto 0 );
-  signal slice7_y_net : std_logic_vector( 2-1 downto 0 );
-  signal rat_mode_i_net : std_logic_vector( 2-1 downto 0 );
-  signal symbol_cnt1_op_net : std_logic_vector( 9-1 downto 0 );
-  signal bw_sel_i_net : std_logic_vector( 4-1 downto 0 );
-  signal register10_q_net : std_logic_vector( 1-1 downto 0 );
-  signal ul_sof_ahead_3_i_net : std_logic_vector( 1-1 downto 0 );
-  signal ul_sop_ahead_3_i_net : std_logic_vector( 1-1 downto 0 );
-  signal ce_net : std_logic;
-  signal counter12_op_net_x0 : std_logic_vector( 15-1 downto 0 );
-  signal logical_y_net : std_logic_vector( 1-1 downto 0 );
-  signal mux36_y_net : std_logic_vector( 2-1 downto 0 );
-  signal counter12_op_net : std_logic_vector( 15-1 downto 0 );
-  signal concat1_y_net : std_logic_vector( 14-1 downto 0 );
-  signal mux_y_net : std_logic_vector( 12-1 downto 0 );
-  signal clk_net : std_logic;
-  signal rom1_data_net : std_logic_vector( 12-1 downto 0 );
-  signal register36_q_net : std_logic_vector( 12-1 downto 0 );
-  signal register37_q_net : std_logic_vector( 1-1 downto 0 );
-  signal convert9_dout_net : std_logic_vector( 2-1 downto 0 );
-  signal addsub1_s_net : std_logic_vector( 12-1 downto 0 );
-  signal addsub2_s_net : std_logic_vector( 12-1 downto 0 );
-  signal mux9_y_net : std_logic_vector( 12-1 downto 0 );
-  signal slice16_y_net : std_logic_vector( 2-1 downto 0 );
-  signal slice33_y_net : std_logic_vector( 12-1 downto 0 );
+  signal constant29_op_net : std_logic_vector( 2-1 downto 0 );
+  signal slice8_y_net : std_logic_vector( 1-1 downto 0 );
 begin
   buffer_wr_ctrl <= concat1_y_net;
   bw_sel_i_net <= bw_sel_i;
@@ -1052,15 +1054,6 @@ begin
     in1 => register6_q_net,
     y => concat4_y_net
   );
-  concat5 : entity work.sysgen_concat_66806053f1 
-  port map (
-    clk => '0',
-    ce => '0',
-    clr => '0',
-    in0 => mux36_y_net,
-    in1 => constant3_op_net,
-    y => concat5_y_net
-  );
   concat7 : entity work.sysgen_concat_a365dd9af1 
   port map (
     clk => '0',
@@ -1083,13 +1076,6 @@ begin
     ce => '0',
     clr => '0',
     op => constant29_op_net
-  );
-  constant3 : entity work.sysgen_constant_9b1ea5803d 
-  port map (
-    clk => '0',
-    ce => '0',
-    clr => '0',
-    op => constant3_op_net
   );
   constant30 : entity work.sysgen_constant_80cd7947b0 
   port map (
@@ -1269,11 +1255,11 @@ begin
     ce => ce_net,
     q => register6_q_net
   );
-  relational3 : entity work.sysgen_relational_d3d9d53335 
+  relational3 : entity work.sysgen_relational_9c9f115dea 
   port map (
     clr => '0',
     a => counter12_op_net,
-    b => concat5_y_net,
+    b => mux6_y_net,
     clk => clk_net,
     ce => ce_net,
     op => relational3_op_net
@@ -1420,6 +1406,39 @@ begin
     ce => ce_net,
     op => symbol_cnt1_op_net
   );
+  constant16 : entity work.sysgen_constant_682e3d000d 
+  port map (
+    clk => '0',
+    ce => '0',
+    clr => '0',
+    op => constant16_op_net
+  );
+  constant17 : entity work.sysgen_constant_e86e69a387 
+  port map (
+    clk => '0',
+    ce => '0',
+    clr => '0',
+    op => constant17_op_net
+  );
+  constant18 : entity work.sysgen_constant_996f61694d 
+  port map (
+    clk => '0',
+    ce => '0',
+    clr => '0',
+    op => constant18_op_net
+  );
+  mux6 : entity work.sysgen_mux_51d0269415 
+  port map (
+    clk => '0',
+    ce => '0',
+    clr => '0',
+    sel => mux36_y_net,
+    d0 => constant17_op_net,
+    d1 => constant18_op_net,
+    d2 => constant16_op_net,
+    d3 => constant16_op_net,
+    y => mux6_y_net
+  );
 end structural;
 -- Generated from Simulink block 
 library IEEE;
@@ -1469,7 +1488,7 @@ entity ul_adaptor_ctrl is
 end ul_adaptor_ctrl;
 architecture structural of ul_adaptor_ctrl is 
   attribute core_generation_info : string;
-  attribute core_generation_info of structural : architecture is "ul_adaptor_ctrl,sysgen_core_2018_3,{,compilation=HDL Netlist,block_icon_display=Default,family=zynquplusRFSOC,part=xczu29dr,speed=-2LVI-i,package=ffvf1760,synthesis_language=vhdl,hdl_library=work,synthesis_strategy=Vivado Synthesis Defaults,implementation_strategy=Performance_Explore,testbench=0,interface_doc=0,ce_clr=0,clock_period=2.03451,system_simulink_period=2.03451e-09,waveform_viewer=0,axilite_interface=0,ip_catalog_plugin=0,hwcosim_burst_mode=0,simulation_time=0.0001,addsub=2,concat=7,constant=7,convert=5,counter=3,inv=2,logical=6,mux=3,register=5,reinterpret=1,relational=7,slice=45,sprom=2,}";
+  attribute core_generation_info of structural : architecture is "ul_adaptor_ctrl,sysgen_core_2018_3,{,compilation=HDL Netlist,block_icon_display=Default,family=zynquplusRFSOC,part=xczu29dr,speed=-2LVI-i,package=ffvf1760,synthesis_language=vhdl,hdl_library=work,synthesis_strategy=Vivado Synthesis Defaults,implementation_strategy=Performance_Explore,testbench=0,interface_doc=0,ce_clr=0,clock_period=2.03451,system_simulink_period=2.03451e-09,waveform_viewer=0,axilite_interface=0,ip_catalog_plugin=0,hwcosim_burst_mode=0,simulation_time=0.0001,addsub=2,concat=6,constant=9,convert=5,counter=3,inv=2,logical=6,mux=4,register=5,reinterpret=1,relational=7,slice=45,sprom=2,}";
   signal clk_1_net : std_logic;
   signal ce_1_net : std_logic;
 begin

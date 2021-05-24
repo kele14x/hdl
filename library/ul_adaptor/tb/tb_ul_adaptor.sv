@@ -52,17 +52,7 @@ module tb_ul_adaptor ();
   logic [11:0] cnt = 0;
 
   initial begin : init_symbol_mem
-    logic [2:0] exp;
-    logic [8:0] mantissa;
-
-    for (int addr = 0; addr < 4096; addr++) begin
-      exp = $urandom();
-      for (int i = 0; i < 2; i++) begin
-        mantissa = $urandom();
-        SYMBOL_MEM[addr][i*16+15-:16] = (mantissa << exp);
-      end
-    end
-
+    $readmemh("symbols.mem", SYMBOL_MEM, 0, 4095);
   end
 
   // Clock and reset generation
@@ -146,9 +136,11 @@ module tb_ul_adaptor ();
             repeat (4096) begin
               // One sample, takes 4 ticks to set
               @(posedge clk_491m52);
-              {ul_data_q[0][0], ul_data_i[0][0]} <= SYMBOL_MEM[cnt++];
+//              {ul_data_q[0][0], ul_data_i[0][0]} <= SYMBOL_MEM[cnt++];
+              {ul_data_q[0][0], ul_data_i[0][0]} <= 32'hDEADBEEF;
               repeat (3) @(posedge clk_491m52);
             end
+            wait(1 == 0);
             // Wait CP time
             if (sym == 0) begin
               repeat (352 * 4) @(posedge clk_491m52);
