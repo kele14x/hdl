@@ -1255,4 +1255,76 @@ module eth_if_sim #(
       .ctrl_compression_mode(ctrl_compression_mode)
   );
 
+
+  srs_adaptor_sim #(
+    .NUM_ETH_PORT (NUM_ETH_PORT),
+    .NUM_SRS_LAYER(64),
+    .NUM_CC       (NUM_CC)
+  ) i_srs_adaptor_sim (
+    // Interface with DFE
+    //===================
+    .clk_491m52       (clk_491m52),
+    .rst_491m52       (rst_491m52),
+    // SRS Section Header
+    .srs_buf_numsymbol(),
+    .srs_buf_symbol   (),
+    .srs_buf_valid    (),
+    // SRS data request
+    .srs_req_layer    (),
+    .srs_req_symbol   (),
+    .srs_req_cc       (),
+    .srs_req_valid    (),
+    // SRS data
+    .srs_data         (), // {4'b exponent, 9'b mantissa Q, 9'b mantissa I}
+    .srs_sop          (),
+    .srs_eop          (),
+    // Interface with XORIF
+    //=====================
+    .clk_400m         (clk_400m),
+    .rst_400m         (rst_400m),
+    // ORAN Parse Port
+    .m_t_header_offset_valid(m_t_header_offset_valid)    ,
+    .m_runt_packet_len      (m_runt_packet_len)          ,
+    .m_rtc_pc_id(m_rtc_pc_id)                ,
+    .m_concat(m_concat)                   ,
+    .m_messagetype(m_messagetype)              ,
+    .m_seqid(m_seqid)                    ,
+    .m_subseqid(m_subseqid)                 ,
+    .m_ebit(m_ebit)                     ,
+    .m_payloadsize(m_payloadsize)              ,
+    .m_packet_in_window(m_packet_in_window)         ,
+    .m_offset_in_symbol(m_offset_in_symbol)         ,
+    //
+    .m_radio_app_head_valid(m_radio_app_head_valid)     ,
+    .m_datadirection(m_datadirection)            ,
+    .m_numsections(m_numsections)              ,
+    .m_sectiontype(m_sectiontype)              ,
+    .m_filterindex(m_filterindex)              ,
+    .m_frameid(m_frameid)                  ,
+    .m_subframeid(m_subframeid)               ,
+    .m_slotid(m_slotid)                   ,
+    .m_symbolid(m_symbolid)                 ,
+    .m_udcomphdr(m_udcomphdr)                ,
+    .m_timeoffset(m_timeoffset)               ,
+    .m_framestructure(m_framestructure)           ,
+    .m_cplength(m_cplength)                 ,
+    //
+    .m_section_header_valid(m_section_header_valid)     ,
+    .m_numsymbol(m_numsymbol)                ,
+    .m_numprbc(m_numprbc)                  ,
+    .m_startprbc(m_startprbc)                ,
+    .m_sectionid(m_sectionid)                ,
+    .m_rb(m_rb)                       ,
+    .m_remask(m_remask)                   ,
+    .m_beamid15(m_beamid15)                 ,
+    .m_freqoffset(m_freqoffset)               ,
+    // UNSOL port
+    .s00_fram_unsol_tdata(s00_fram_unsol_tdata),
+    .s00_fram_unsol_tkeep(s00_fram_unsol_tkeep),
+    .s00_fram_unsol_tvalid(s00_fram_unsol_tvalid),
+    .s00_fram_unsol_tlast(s00_fram_unsol_tlast),
+    .s00_fram_unsol_tready(s00_fram_unsol_tready),
+    .s00_fram_unsol_tuser(s00_fram_unsol_tuser)
+    );
+
 endmodule
