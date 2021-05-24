@@ -11,6 +11,7 @@ module tb_dl_adaptor ();
     logic          rst_400m;
 
     // Timing ports
+    logic          defm_radio_start_10ms;
     logic          s_dl_update          [      NUM_CC] = '{NUM_CC{0}};
 
     // 4 branch/layer stream; CC shared
