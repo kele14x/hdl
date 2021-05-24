@@ -77,7 +77,7 @@ module tb_adaptor ();
   // Simulation signals
   //=====================
 
-  int          fin;
+  int          fin, fout;
 
   logic [63:0] TDATA                     [        1000];
   logic [ 7:0] TKEEP                     [        1000];
@@ -365,14 +365,34 @@ module tb_adaptor ();
       @(posedge clk_400m);
       m_fram_data_req[0] <= {1'b1, 9'd119, 8'd119, 3'd0, 4'd0};
       @(posedge clk_400m);
-      m_fram_data_req[0] <= {1'b1, 9'd238, 8'd53,  3'd0, 4'd0};
+      m_fram_data_req[0] <= {1'b1, 9'd238, 8'd35,  3'd0, 4'd0};
       @(posedge clk_400m);
       m_fram_data_req[0] <= '0;
     end
   end
 
+  // Log UL packet
+  
+  initial begin
+    fout = $fopen("m_fram_data.txt", "w");
+    if (fout == 0) begin
+      $error("Error open file");
+      $finish();
+    end
+    $fwrite(fout, "tdata, tkeep, tvalid, tlast, tready\n");
+    
+    wait(rst_400m ==0);
+    forever begin
+      @(posedge clk_400m);
+      if (m_fram_data_tvalid[0] && m_fram_data_tready[0]) begin
+        $fwrite(fout, "%16x, %2x, %0x, %0x, %0x\n", m_fram_data_tdata[0], m_fram_data_tkeep[0], m_fram_data_tvalid[0], m_fram_data_tlast[0], m_fram_data_tready[0]);
+      end
+    end
+  end
+
   final begin
     $fclose(fin);
+    $fclose(fout);
   end
 
 endmodule
