@@ -15,7 +15,7 @@ module srs_adaptor_gearbox (
     input var         rst_400m,
     // Frame request
     input var  [ 2:0] fram_req_eth_port,
-    input var  [63:0] fram_header,
+    input var  [63:0] fram_req_header,
     input var  [ 8:0] fram_req_start_rb,
     input var  [ 7:0] fram_req_num_rb,
     input var         fram_req_valid,
@@ -74,7 +74,7 @@ module srs_adaptor_gearbox (
       // Frame Request
       //==============
       .fram_req_eth_port  (fram_req_eth_port),
-      .fram_header        (fram_header),
+      .fram_req_header    (fram_req_header),
       .fram_req_start_rb  (fram_req_start_rb),
       .fram_req_num_rb    (fram_req_num_rb),
       .fram_req_valid     (fram_req_valid),

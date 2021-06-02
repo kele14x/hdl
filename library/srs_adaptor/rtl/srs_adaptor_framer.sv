@@ -6,11 +6,9 @@ module srs_adaptor_framer (
     // Frame Request
     //==============
     input var  [ 2:0] fram_req_eth_port,
-    input var  [63:0] fram_header,
-    //
+    input var  [63:0] fram_req_header,
     input var  [ 8:0] fram_req_start_rb,
     input var  [ 7:0] fram_req_num_rb,
-    //
     input var         fram_req_valid,
     output var        fram_req_ready,
     // BRAM
@@ -108,7 +106,7 @@ module srs_adaptor_framer (
 
   logic [95:0] bram_data_d;
   logic [ 2:0] bram_re_state;
-  
+
   logic [63:0] tdata;
 
   logic [15:0] ecpri_axc_id;
@@ -135,7 +133,7 @@ module srs_adaptor_framer (
 
   always_ff @(posedge clk) begin
     if (state == S_PRE3) begin  // state_next == S_PRE4
-      m_fram_unsol_tdata <= fram_header;
+      m_fram_unsol_tdata <= fram_req_header;
     end else if (state == S_PRE4 && m_fram_unsol_tready) begin  // state_next == S_OUT
       m_fram_unsol_tdata <= byte_reverse(tdata);
     end else if (state == S_OUT && m_fram_unsol_tready) begin
@@ -210,7 +208,7 @@ module srs_adaptor_framer (
   end
 
   // RTC/PC ID
-  assign ecpri_axc_id  = fram_header[63:48];
+  assign ecpri_axc_id  = fram_req_header[63:48];
 
   // 1 RB requires 3.5 words, which is 28 byte, plus 8-byte header
   assign packet_length = fram_req_num_rb * 28 + 8;
@@ -272,7 +270,7 @@ module srs_adaptor_framer (
   assign bram_addr = bram_re_cnt[11:2];
 
   assign bram_rden = (state == S_PRE1) || (state == S_PRE2) || (state == S_PRE3) ||
-        ((state == S_PRE4) && m_fram_unsol_tready) || 
+        ((state == S_PRE4) && m_fram_unsol_tready) ||
         ((state == S_OUT) && m_fram_unsol_tready) ||
         ((state == S_POST1) && m_fram_unsol_tready) ||
         ((state == S_POST2) && m_fram_unsol_tready) ||
