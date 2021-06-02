@@ -106,15 +106,9 @@ module pc_cfr_pd #(
   end
 
   always_ff @(posedge clk) begin
-    if ((state_det == S_POS) && ~(g1 || g2)) begin
-      peak_r_pre     <= state_max;
-      peak_phase_pre <= state_phase;
-      peak_theta_pre <= state_theta;
-    end else begin
-      peak_r_pre     <= 'd0;
-      peak_phase_pre <= 1'b0;
-      peak_theta_pre <= 'd0;
-    end
+    peak_r_pre     <= state_max;
+    peak_phase_pre <= state_phase;
+    peak_theta_pre <= state_theta;
   end
 
   assign peak_lt_threshold = ctrl_enable && peak_valid_pre && (peak_r_pre > ctrl_pd_threshold);
