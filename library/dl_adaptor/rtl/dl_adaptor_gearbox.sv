@@ -46,17 +46,17 @@ module dl_adaptor_gearbox #(
   logic        m_axis_tready_raw [NUM_DL_LAYER];
   logic        m_axis_tready_bfp9[NUM_DL_LAYER];
 
-  logic [63:0] gb_data_raw       [NUM_DL_LAYER][      NUM_CC];
-  logic        gb_valid_raw      [NUM_DL_LAYER][      NUM_CC];
-  logic [11:0] gb_re_raw         [NUM_DL_LAYER][      NUM_CC];
+  logic [63:0] gb_data_raw       [NUM_DL_LAYER] [NUM_CC];
+  logic        gb_valid_raw      [NUM_DL_LAYER] [NUM_CC];
+  logic [11:0] gb_re_raw         [NUM_DL_LAYER] [NUM_CC];
 
-  logic [63:0] gb_data_bfp9      [NUM_DL_LAYER][      NUM_CC];
-  logic        gb_valid_bfp9     [NUM_DL_LAYER][      NUM_CC];
-  logic [11:0] gb_re_bfp9        [NUM_DL_LAYER][      NUM_CC];
+  logic [63:0] gb_data_bfp9      [NUM_DL_LAYER] [NUM_CC];
+  logic        gb_valid_bfp9     [NUM_DL_LAYER] [NUM_CC];
+  logic [11:0] gb_re_bfp9        [NUM_DL_LAYER] [NUM_CC];
 
 
   generate
-    for (genvar i = 0; i < NUM_DL_LAYER; i++) begin: g_ly
+    for (genvar i = 0; i < NUM_DL_LAYER; i++) begin : g_ly
 
       // DL packets are firstly feed into a FIFO. This is FIFO is used to do the
       // backward press across two time domain. It's a little bit complex, so
@@ -140,14 +140,24 @@ module dl_adaptor_gearbox #(
     for (genvar i = 0; i < NUM_DL_LAYER; i++) begin
 
       for (genvar j = 0; j < NUM_CC; j++) begin
-        assign gb_data[j][i] = (ctrl_compression_mode[0] == 0) ? gb_data_raw[i][j] :
-                        (ctrl_compression_mode[0] == 1) ? gb_data_bfp9[i][j] : {'0};
 
-        assign gb_valid[j][i] = (ctrl_compression_mode[0] == 0) ? gb_valid_raw[i][j] :
-                            (ctrl_compression_mode[0] == 1) ? gb_valid_bfp9[i][j] : {'0};
+        always_ff @(posedge clk_400m) begin
+          gb_data[j][i] <= (ctrl_compression_mode[0] == 0) ? gb_data_raw[i][j] :
+                          (ctrl_compression_mode[0] == 1) ? gb_data_bfp9[i][j] : {
+            '0
+          };
 
-        assign gb_re[j][i] = (ctrl_compression_mode[0] == 0) ? gb_re_raw[i][j] :
-                        (ctrl_compression_mode[0] == 1) ? gb_re_bfp9[i][j] : {'0};
+          gb_valid[j][i] <= (ctrl_compression_mode[0] == 0) ? gb_valid_raw[i][j] :
+                              (ctrl_compression_mode[0] == 1) ? gb_valid_bfp9[i][j] : {
+            '0
+          };
+
+          gb_re[j][i] <= (ctrl_compression_mode[0] == 0) ? gb_re_raw[i][j] :
+                          (ctrl_compression_mode[0] == 1) ? gb_re_bfp9[i][j] : {
+            '0
+          };
+        end
+
       end
 
     end
@@ -157,7 +167,7 @@ module dl_adaptor_gearbox #(
 
   int fifo_wr_cnt, fifo_rd_cnt;
 
-  always_ff @ (posedge clk_400m) begin
+  always_ff @(posedge clk_400m) begin
     if (rst_400m) begin
       fifo_wr_cnt = 0;
     end else begin
@@ -171,7 +181,7 @@ module dl_adaptor_gearbox #(
     end
   end
 
-  always_ff @ (posedge clk_491m52) begin
+  always_ff @(posedge clk_491m52) begin
     if (rst_491m52) begin
       fifo_rd_cnt = 0;
     end else begin

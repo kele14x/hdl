@@ -31,6 +31,21 @@ module dl_adaptor_gearbox_raw #(
   logic [7:0] tuser_num_rb;  // Not used
   logic [9:0] tuser_start_rb;
 
+  function automatic logic [63:0] byte_reverse(input logic [63:0] data);
+    begin
+      return {
+        data[7:0],
+        data[15:8],
+        data[23:16],
+        data[31:24],
+        data[39:32],
+        data[47:40],
+        data[55:48],
+        data[63:56]
+      };
+    end
+  endfunction
+
   // Xilinx PG370, Page 57, Chapter 3, Section x Downlink U-Plane Data Ports
   assign {
     tuser_component_carrier,
@@ -48,7 +63,7 @@ module dl_adaptor_gearbox_raw #(
     for (genvar i = 0; i < NUM_CC; i++) begin
 
       always_ff @(posedge clk) begin
-        gb_data[i] <= s_axis_tdata;
+        gb_data[i] <= byte_reverse(s_axis_tdata);
       end
 
       always_ff @(posedge clk) begin

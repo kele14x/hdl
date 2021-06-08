@@ -372,7 +372,7 @@ module tb_adaptor ();
   end
 
   // Log UL packet
-  
+
   initial begin
     fout = $fopen("m_fram_data.txt", "w");
     if (fout == 0) begin
@@ -380,7 +380,7 @@ module tb_adaptor ();
       $finish();
     end
     $fwrite(fout, "tdata, tkeep, tvalid, tlast, tready\n");
-    
+
     wait(rst_400m ==0);
     forever begin
       @(posedge clk_400m);

@@ -134,7 +134,7 @@ module dl_adaptor #(
 
 
   generate
-    for (genvar i = 0; i < NUM_CC; i++) begin: g_buf
+    for (genvar i = 0; i < NUM_CC; i++) begin : g_buf
 
       // Not `gb_sos` is expected to arrive few ticks after
       // `dl_radio_start_10ms`. And `gb_data` should be few ticks more late.

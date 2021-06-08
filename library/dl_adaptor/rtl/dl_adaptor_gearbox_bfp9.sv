@@ -58,8 +58,14 @@ module dl_adaptor_gearbox_bfp9 #(
   function automatic logic [63:0] byte_reverse(input logic [63:0] data);
     begin
       return {
-        data[7:0], data[15:8], data[23:16], data[31:24],
-        data[39:32], data[47:40], data[55:48], data[63:56]
+        data[7:0],
+        data[15:8],
+        data[23:16],
+        data[31:24],
+        data[39:32],
+        data[47:40],
+        data[55:48],
+        data[63:56]
       };
     end
   endfunction
@@ -96,7 +102,7 @@ module dl_adaptor_gearbox_bfp9 #(
 
   always_comb begin
     if (state >= 11) begin
-      state_next = 0; // failt recovery
+      state_next = 0;  // failt recovery
     end else if (go_next && (state == 0 || state == 1 || state == 3 ||
       state == 5 || state == 6 || state == 8 ||
       state == 10) && s_axis_tlast) begin
@@ -211,7 +217,9 @@ module dl_adaptor_gearbox_bfp9 #(
     for (genvar i = 0; i < NUM_CC; i++) begin
 
       always_ff @(posedge clk) begin
-        gb_data[i] <= {10'b0, gb_data_exp, gb_data_q1, gb_data_i1, 10'b0, gb_data_exp, gb_data_q0, gb_data_i0};
+        gb_data[i] <= {
+          10'b0, gb_data_exp, gb_data_q1, gb_data_i1, 10'b0, gb_data_exp, gb_data_q0, gb_data_i0
+        };
       end
 
       always_ff @(posedge clk) begin

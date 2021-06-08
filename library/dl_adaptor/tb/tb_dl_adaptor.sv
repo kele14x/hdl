@@ -1,6 +1,6 @@
 `timescale 1 ns / 1 ps `default_nettype none
 
-module tb_dl_adaptor ();
+module tb_dl_adaptor;
 
     parameter int NUM_CC = 1;
     parameter int NUM_DL_LAYER = 1;
@@ -152,14 +152,14 @@ module tb_dl_adaptor ();
         end
         // Skip first line which is table header
         $fgets(line, fin);
-        
+
         i_axi4s_vip.set_master_mode();
         i_axi4s_vip.IF.reset();
 
         wait(rst_400m == 0);
         #1000;
 
-        fork 
+        fork
 
           begin : set_sof
             @(posedge clk_491m52);
