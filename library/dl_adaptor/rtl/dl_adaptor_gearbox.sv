@@ -141,7 +141,7 @@ module dl_adaptor_gearbox #(
 
       for (genvar j = 0; j < NUM_CC; j++) begin
 
-        always_ff @(posedge clk_400m) begin
+        always_ff @(posedge clk_491m52) begin
           gb_data[j][i] <= (ctrl_compression_mode[0] == 0) ? gb_data_raw[i][j] :
                           (ctrl_compression_mode[0] == 1) ? gb_data_bfp9[i][j] : {
             '0
