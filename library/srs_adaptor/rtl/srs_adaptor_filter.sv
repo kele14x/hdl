@@ -1,3 +1,6 @@
+// file: srs_adaptor_filter.sv
+// brief: This block will looking at the ORAN parse port from XORIF IP core. All
+//        needed information should appear on this port (not on message body).
 `timescale 1 ns / 1 ps `default_nettype none
 
 module srs_adaptor_filter (
@@ -43,16 +46,17 @@ module srs_adaptor_filter (
     input var  [23:0] s_freqoffset,
     // SRS Information
     //================
-    output var        srs_valid,
     output var [15:0] srs_rtc_pc_id,
     output var [ 3:0] srs_cc,
-    output var [ 3:0] srs_subframeid,
-    output var [ 5:0] srs_slotid,
-    output var [ 7:0] srs_symbolid,
+    output var [11:0] srs_symbol,
     output var [ 3:0] srs_numsymbol,
     output var [ 7:0] srs_numprbc,
     output var [ 9:0] srs_startprbc,
-    output var [11:0] srs_sectionid
+    output var [11:0] srs_sectionid,
+    output var        srs_valid,
+    // Control
+    //========
+    input var  [ 1:0] ctrl_numerology
 );
 
 
@@ -78,6 +82,9 @@ module srs_adaptor_filter (
 
   logic t_header_is_ok, radio_app_head_is_ok, section_header_is_ok;
 
+  logic [3:0] s_subframeid_r;
+  logic [5:0] s_slotid_r;
+  logic [5:0] s_symbolid_r;
 
   // SRS Message Filter Condition
 
@@ -101,9 +108,10 @@ module srs_adaptor_filter (
 
   always_comb begin : p_state_next
     case (state)
-      S_TRANS: state_next = ~s_t_header_offset_valid ? S_TRANS : ~t_header_is_ok       ? S_TRANS : S_APP;
-      S_APP:   state_next = ~s_radio_app_head_valid  ? S_APP   : ~radio_app_head_is_ok ? S_TRANS : S_SEC;
-      S_SEC:   state_next = ~s_section_header_valid  ? S_SEC   : ~section_header_is_ok ? S_TRANS : S_VALID;
+      S_TRANS: state_next = ~s_t_header_offset_valid ? S_TRANS : ~t_header_is_ok ? S_TRANS : S_APP;
+      S_APP: state_next = ~s_radio_app_head_valid ? S_APP : ~radio_app_head_is_ok ? S_TRANS : S_SEC;
+      S_SEC:
+      state_next = ~s_section_header_valid ? S_SEC : ~section_header_is_ok ? S_TRANS : S_VALID;
       S_VALID: state_next = S_TRANS;
       default: state_next = S_TRANS;
     endcase
@@ -111,6 +119,14 @@ module srs_adaptor_filter (
 
 
   // Output
+
+  always_ff @(posedge clk) begin
+    if (s_radio_app_head_valid) begin
+      s_subframeid_r <= s_subframeid;
+      s_slotid_r     <= s_slotid;
+      s_symbolid_r   <= s_symbolid;
+    end
+  end
 
   always_ff @(posedge clk) begin
     if (rst) begin
@@ -123,12 +139,10 @@ module srs_adaptor_filter (
   always_ff @(posedge clk) begin
     if (state_next == S_VALID) begin
       srs_rtc_pc_id <= s_rtc_pc_id;
-      srs_cc <= s_rtc_pc_id[11:8];
-      srs_subframeid <= s_subframeid;
-      srs_slotid <= s_slotid;
-      srs_symbolid <= s_symbolid;
+      srs_cc        <= s_rtc_pc_id[11:8];
+      srs_symbol    <= (s_subframeid_r * 2 + s_slotid_r) * 7 * (2 ** ctrl_numerology) + s_symbolid_r;
       srs_numsymbol <= s_numsymbol;
-      srs_numprbc <= s_numprbc;
+      srs_numprbc   <= s_numprbc;
       srs_startprbc <= s_startprbc;
       srs_sectionid <= s_sectionid;
     end

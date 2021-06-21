@@ -45,7 +45,7 @@ module srs_adaptor_writer (
     if (rst) begin
       wr_addr <= '0;
     end else if (srs_valid) begin
-      wr_addr <= synced ? wr_addr + 1 : '0; 
+      wr_addr <= synced ? wr_addr + 1 : '0;
     end
   end
 

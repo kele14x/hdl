@@ -31,45 +31,45 @@ module tb_srs_adaptor;
   logic        rst_400m;
 
   // UL Timing
-  logic [11:0] s_ul_sym_num           [      NUM_CC] = '{NUM_CC{'0}};
-  logic        s_ul_update            [      NUM_CC] = '{NUM_CC{'0}};
+  logic [11:0] s_ul_sym_num            [      NUM_CC] = '{NUM_CC{'0}};
+  logic        s_ul_update             [      NUM_CC] = '{NUM_CC{'0}};
 
   // ORAN Parse Port
-  logic        s_t_header_offset_valid[NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic        s_runt_packet_len      [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [15:0] s_rtc_pc_id            [NUM_ETH_PORT] = '{NUM_ETH_PORT{'d64}};
-  logic        s_concat               [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [ 2:0] s_messagetype          [NUM_ETH_PORT] = '{NUM_ETH_PORT{'d2}};
-  logic [ 7:0] s_seqid                [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [ 6:0] s_subseqid             [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic        s_ebit                 [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [15:0] s_payloadsize          [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic        s_packet_in_window     [NUM_ETH_PORT] = '{NUM_ETH_PORT{'d1}};
-  logic [11:0] s_offset_in_symbol     [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic        s_t_header_offset_valid [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic        s_runt_packet_len       [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [15:0] s_rtc_pc_id             [NUM_ETH_PORT] = '{NUM_ETH_PORT{'d64}};
+  logic        s_concat                [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [ 2:0] s_messagetype           [NUM_ETH_PORT] = '{NUM_ETH_PORT{'d2}};
+  logic [ 7:0] s_seqid                 [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [ 6:0] s_subseqid              [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic        s_ebit                  [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [15:0] s_payloadsize           [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic        s_packet_in_window      [NUM_ETH_PORT] = '{NUM_ETH_PORT{'d1}};
+  logic [11:0] s_offset_in_symbol      [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
   //
-  logic        s_radio_app_head_valid [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic        s_datadirection        [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [ 7:0] s_numsections          [NUM_ETH_PORT] = '{NUM_ETH_PORT{'d1}};
-  logic [ 2:0] s_sectiontype          [NUM_ETH_PORT] = '{NUM_ETH_PORT{'d1}};
-  logic [ 3:0] s_filterindex          [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [ 7:0] s_frameid              [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [ 3:0] s_subframeid           [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [ 5:0] s_slotid               [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [ 5:0] s_symbolid             [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [ 7:0] s_udcomphdr            [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [15:0] s_timeoffset           [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [ 7:0] s_framestructure       [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [15:0] s_cplength             [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic        s_radio_app_head_valid  [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic        s_datadirection         [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [ 7:0] s_numsections           [NUM_ETH_PORT] = '{NUM_ETH_PORT{'d1}};
+  logic [ 2:0] s_sectiontype           [NUM_ETH_PORT] = '{NUM_ETH_PORT{'d1}};
+  logic [ 3:0] s_filterindex           [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [ 7:0] s_frameid               [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [ 3:0] s_subframeid            [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [ 5:0] s_slotid                [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [ 5:0] s_symbolid              [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [ 7:0] s_udcomphdr             [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [15:0] s_timeoffset            [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [ 7:0] s_framestructure        [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [15:0] s_cplength              [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
   //
-  logic        s_section_header_valid [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [ 3:0] s_numsymbol            [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [ 7:0] s_numprbc              [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [ 9:0] s_startprbc            [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [11:0] s_sectionid            [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic        s_rb                   [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [11:0] s_remask               [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [14:0] s_beamid15             [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
-  logic [23:0] s_freqoffset           [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic        s_section_header_valid  [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [ 3:0] s_numsymbol             [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [ 7:0] s_numprbc               [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [ 9:0] s_startprbc             [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [11:0] s_sectionid             [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic        s_rb                    [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [11:0] s_remask                [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [14:0] s_beamid15              [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
+  logic [23:0] s_freqoffset            [NUM_ETH_PORT] = '{NUM_ETH_PORT{'0}};
 
   // UNSOL Port
   logic [63:0] m_fram_unsol_tdata;

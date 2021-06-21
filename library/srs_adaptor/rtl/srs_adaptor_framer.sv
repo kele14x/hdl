@@ -112,20 +112,102 @@ module srs_adaptor_framer (
   logic [15:0] ecpri_axc_id;
   logic [12:0] packet_length;
 
-  function [63:0] data_gb(input logic [2:0] state, input logic [95:0] data, input logic [95:0] data_d);
-    case(state)
-      3'd3:    return {4'b0, data[21:18], data[8:0], data[17:9], data[32:24], data[41:33], data[56:48], data[65:57], data[80:79]};
-      3'd4:    return {data_d[78:72], data_d[89:81], data[8:0], data[17:9], data[32:24], data[41:33], data[56:48], data[65:63]};
-      3'd5:    return {data_d[62:57], data_d[80:72], data_d[89:81], data[8:0], data[17:9], data[32:24], data[41:33], data[56:53]};
-      3'd6:    return {data_d[52:48], data_d[65:57], data_d[80:72], data_d[89:81], 4'b0, data[21:18], data[8:0], data[17:9], data[32:27]};
-      3'd0:    return {data_d[26:24], data_d[41:33], data_d[56:48], data_d[65:57], data_d[80:72], data_d[89:81], data[8:0], data[17:11]};
-      3'd1:    return {data_d[10:9], data_d[32:24], data_d[41:33], data_d[56:48], data_d[65:57], data_d[80:72], data_d[89:81], data[7:0]};
-      default: return {data_d[8:8], data_d[17:9], data_d[32:24], data_d[41:33], data_d[56:48], data_d[65:57], data_d[80:72], data_d[89:81]}; // 2
+  function [63:0] data_gb(input logic [2:0] state, input logic [95:0] data,
+                          input logic [95:0] data_d);
+    case (state)
+      3'd3:
+      return {
+        4'b0,
+        data[21:18],
+        data[8:0],
+        data[17:9],
+        data[32:24],
+        data[41:33],
+        data[56:48],
+        data[65:57],
+        data[80:79]
+      };
+      3'd4:
+      return {
+        data_d[78:72],
+        data_d[89:81],
+        data[8:0],
+        data[17:9],
+        data[32:24],
+        data[41:33],
+        data[56:48],
+        data[65:63]
+      };
+      3'd5:
+      return {
+        data_d[62:57],
+        data_d[80:72],
+        data_d[89:81],
+        data[8:0],
+        data[17:9],
+        data[32:24],
+        data[41:33],
+        data[56:53]
+      };
+      3'd6:
+      return {
+        data_d[52:48],
+        data_d[65:57],
+        data_d[80:72],
+        data_d[89:81],
+        4'b0,
+        data[21:18],
+        data[8:0],
+        data[17:9],
+        data[32:27]
+      };
+      3'd0:
+      return {
+        data_d[26:24],
+        data_d[41:33],
+        data_d[56:48],
+        data_d[65:57],
+        data_d[80:72],
+        data_d[89:81],
+        data[8:0],
+        data[17:11]
+      };
+      3'd1:
+      return {
+        data_d[10:9],
+        data_d[32:24],
+        data_d[41:33],
+        data_d[56:48],
+        data_d[65:57],
+        data_d[80:72],
+        data_d[89:81],
+        data[7:0]
+      };
+      default:
+      return {
+        data_d[8:8],
+        data_d[17:9],
+        data_d[32:24],
+        data_d[41:33],
+        data_d[56:48],
+        data_d[65:57],
+        data_d[80:72],
+        data_d[89:81]
+      };  // 2
     endcase
   endfunction
 
   function [63:0] byte_reverse(input logic [63:0] data);
-    return {data[7:0], data[15:8], data[23:16], data[31:24], data[39:32], data[47:40], data[55:48], data[63:56]};
+    return {
+      data[7:0],
+      data[15:8],
+      data[23:16],
+      data[31:24],
+      data[39:32],
+      data[47:40],
+      data[55:48],
+      data[63:56]
+    };
   endfunction
 
 
