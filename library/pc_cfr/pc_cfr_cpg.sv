@@ -63,6 +63,9 @@ module pc_cfr_cpg #(
   logic signed [    DATA_WIDTH-1:0] cpw_rd_data_i;
   logic signed [    DATA_WIDTH-1:0] cpw_rd_data_q;
 
+  logic signed [    DATA_WIDTH-1:0] cpw_rd_data_i_d;
+  logic signed [    DATA_WIDTH-1:0] cpw_rd_data_q_d;
+
   // State of CPG stage
 
   logic state_busy;
@@ -164,11 +167,21 @@ module pc_cfr_cpg #(
   (* keep_hierarchy="yes" *)
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(2)
-  ) i_delay (
+      .PIPELINE_STAGES(3)
+  ) i_delay_state_iq (
       .clk (clk),
       .din ({state_q, state_i}),
       .dout({state_q_d, state_i_d})
+  );
+
+  (* keep_hierarchy="yes" *)
+  reg_pipeline #(
+      .DATA_WIDTH     (DATA_WIDTH * 2),
+      .PIPELINE_STAGES(1)
+  ) i_delay_cpw_rd_data_iq (
+      .clk (clk),
+      .din ({cpw_rd_data_q, cpw_rd_data_i}),
+      .dout({cpw_rd_data_q_d, cpw_rd_data_i_d})
   );
 
   (* keep_hierarchy="yes" *)
@@ -184,8 +197,8 @@ module pc_cfr_cpg #(
       .ar (state_i_d),
       .ai (state_q_d),
       //
-      .br (cpw_rd_data_i),
-      .bi (cpw_rd_data_q),
+      .br (cpw_rd_data_i_d),
+      .bi (cpw_rd_data_q_d),
       //
       .pr (delta_i),
       .pi (delta_q),

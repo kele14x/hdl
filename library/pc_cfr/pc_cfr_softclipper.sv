@@ -90,7 +90,7 @@ module pc_cfr_softclipper #(
   (* keep_hierarchy="yes" *)
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(73)
+      .PIPELINE_STAGES(74)
   ) i_delay (
       .clk (clk),
       .din ({data_q_in, data_i_in}),
