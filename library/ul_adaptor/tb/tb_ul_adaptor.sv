@@ -36,7 +36,7 @@ module tb_ul_adaptor ();
 
   logic [ 3:0] ctrl_bandwidth            [      NUM_CC] = '{NUM_CC{4'b0}};
   logic [ 1:0] ctrl_numerology           [      NUM_CC] = '{NUM_CC{2'b0}};
-  logic [ 1:0] ctrl_compression_mode     [      NUM_CC] = '{NUM_CC{2'b1}};
+  logic [ 1:0] ctrl_compression_mode     [      NUM_CC] = '{NUM_CC{2'b0}};
   //
   logic [ 1:0] buffer_mem_ctrl_en        [      NUM_CC] = '{NUM_CC{2'b0}};
   logic [11:0] buffer_mem_addr_i         [      NUM_CC]                         [NUM_UL_LAYER] = '{NUM_CC{'{NUM_UL_LAYER{'0}}}};
@@ -136,8 +136,7 @@ module tb_ul_adaptor ();
             repeat (4096) begin
               // One sample, takes 4 ticks to set
               @(posedge clk_491m52);
-//              {ul_data_q[0][0], ul_data_i[0][0]} <= SYMBOL_MEM[cnt++];
-              {ul_data_q[0][0], ul_data_i[0][0]} <= 32'hDEADBEEF;
+              {ul_data_q[0][0], ul_data_i[0][0]} <= SYMBOL_MEM[cnt++];
               repeat (3) @(posedge clk_491m52);
             end
             wait(1 == 0);
@@ -158,7 +157,7 @@ module tb_ul_adaptor ();
   //=============
 
   initial begin
-  
+
     fork
 
       //++++++++++++++++++
@@ -187,7 +186,7 @@ module tb_ul_adaptor ();
             @(posedge clk_400m);
             if (fram_radio_start_10ms) break;
           end
-          
+
           for (int slot = 0; slot < 20; slot++) begin
             for (int sym = 0; sym < 14; sym++) begin
               @(posedge clk_400m);

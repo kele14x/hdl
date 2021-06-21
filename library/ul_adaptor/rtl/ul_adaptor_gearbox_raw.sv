@@ -25,6 +25,31 @@ module ul_adaptor_gearbox_raw #(
 );
 
 
+  function automatic logic [63:0] byte_reverse(input logic [63:0] data);
+    begin
+      return {
+        data[7:0],
+        data[15:8],
+        data[23:16],
+        data[31:24],
+        data[39:32],
+        data[47:40],
+        data[55:48],
+        data[63:56]
+      };
+    end
+  endfunction
+
+  function automatic logic [63:0] byte2_reverse(input logic [63:0] data);
+    begin
+      return {
+        data[15:0],
+        data[31:16],
+        data[47:32],
+        data[63:48]
+      };
+    end
+  endfunction
 
   // fram_req signal mapping
   //------------------------
@@ -220,7 +245,7 @@ module ul_adaptor_gearbox_raw #(
   end
 
   always_ff @(posedge clk) begin
-    re_valid_d[0] <= busy;
+    re_valid_d[0] <= busy && (re_pair_cnt <= 5);
     for (int i = 1; i < 5; i++) begin
       re_valid_d[i] <= re_valid_d[i-1];
     end
@@ -238,9 +263,9 @@ module ul_adaptor_gearbox_raw #(
   //-------------
 
   always_ff @(posedge clk) begin
-    m_axis_tdata <= uram_data[re_cc_pre[3]];
+    m_axis_tdata <= byte_reverse(byte2_reverse(uram_data[re_cc_pre[3]]));
   end
-  
+
   assign m_axis_tkeep  = '1;
   assign m_axis_tvalid = re_valid_d[4];
   assign m_axis_tlast  = re_done_d[4];

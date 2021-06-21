@@ -6,7 +6,7 @@ add_files -norecurse ./ip/ul_adaptor_ctrl_c_addsub_v12_0_i0/ul_adaptor_ctrl_c_ad
 add_files -norecurse ./ip/ul_adaptor_ctrl_c_addsub_v12_0_i1/ul_adaptor_ctrl_c_addsub_v12_0_i1.xci
 add_files -norecurse ./ip/ul_adaptor_ctrl_c_counter_binary_v12_0_i0/ul_adaptor_ctrl_c_counter_binary_v12_0_i0.xci
 add_files -norecurse ./ip/ul_adaptor_ctrl_c_counter_binary_v12_0_i1/ul_adaptor_ctrl_c_counter_binary_v12_0_i1.xci
-add_files -norecurse ./ip/ul_adaptor_ctrl_c_counter_binary_v12_0_i1/ul_adaptor_ctrl_c_counter_binary_v12_0_i2.xci
+add_files -norecurse ./ip/ul_adaptor_ctrl_c_counter_binary_v12_0_i2/ul_adaptor_ctrl_c_counter_binary_v12_0_i2.xci
 add_files -norecurse ./ip/ul_adaptor_ctrl_dist_mem_gen_i0/ul_adaptor_ctrl_dist_mem_gen_i0.xci
 add_files -norecurse ./ip/ul_adaptor_ctrl_dist_mem_gen_i0_vivado.coe
 add_files -norecurse ./ip/ul_adaptor_ctrl_dist_mem_gen_i1/ul_adaptor_ctrl_dist_mem_gen_i1.xci
