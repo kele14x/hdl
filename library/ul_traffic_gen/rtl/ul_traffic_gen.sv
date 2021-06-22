@@ -229,10 +229,10 @@ module ul_traffic_gen (
     if (rst) begin
       ul_sop_ahead_3 <= 1'b0;
     end else begin
-      ul_sop_ahead_3 <= (csr_cnt == 0 && symbol_tick_cnt == 0);
+      ul_sop_ahead_3 <= (csr_cnt == 0 && symbol_tick_cnt == 0 && state == S_SYMBOL);
     end
   end
 
 endmodule
 
-`default_nettype none
+`default_nettype wire

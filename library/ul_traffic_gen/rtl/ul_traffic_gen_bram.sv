@@ -45,4 +45,4 @@ module ul_traffic_gen_bram #(
 
 endmodule
 
-`default_nettype none
+`default_nettype wire

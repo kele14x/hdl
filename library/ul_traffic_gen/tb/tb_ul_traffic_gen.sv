@@ -37,4 +37,4 @@ module tb_ul_traffic_gen ();
 
 endmodule
 
-`default_nettype none
+`default_nettype wire
