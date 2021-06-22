@@ -27,7 +27,6 @@ module ul_adaptor #(
     // Interface with DFE
     //===================
     input var         clk_491m52,
-    input var         rst_491m52,
     //
     input var         ul_sof_ahead_3       [      NUM_CC],
     input var         ul_sop_ahead_3       [      NUM_CC],
@@ -46,6 +45,7 @@ module ul_adaptor #(
     output var [31:0] buffer_mem_data_o    [      NUM_CC][NUM_UL_LAYER]
 );
 
+  logic        rst_491m52;
 
   logic [11:0] ram_addr_s              [NUM_UL_LAYER][NUM_CC];
   logic        ram_rden_s              [NUM_UL_LAYER][NUM_CC];
@@ -73,6 +73,16 @@ module ul_adaptor #(
       .dest_clk  (clk_400m),
       .dest_rst  (rst_400m),
       .dest_pulse(fram_radio_start_10ms)
+  );
+
+  xpm_cdc_async_rst #(
+      .DEST_SYNC_FF   (2),
+      .INIT_SYNC_FF   (0),
+      .RST_ACTIVE_HIGH(1)
+  ) xpm_cdc_async_rst_inst (
+      .src_arst (rst_400m),
+      .dest_clk (clk_491m52),
+      .dest_arst(rst_491m52)
   );
 
   ul_adaptor_gearbox #(

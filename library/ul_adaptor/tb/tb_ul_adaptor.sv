@@ -21,7 +21,7 @@ module tb_ul_adaptor ();
   logic [ 7:0] m_fram_data_tkeep         [NUM_UL_LAYER];
   logic        m_fram_data_tvalid        [NUM_UL_LAYER];
   logic        m_fram_data_tlast         [NUM_UL_LAYER];
-  logic        m_fram_data_tready        [NUM_UL_LAYER] = '{NUM_UL_LAYER{1'b1}};
+  logic        m_fram_data_tready        [NUM_UL_LAYER] = '{NUM_UL_LAYER{1'b0}};
   // FIFO
   logic [24:0] m_fram_data_req           [NUM_UL_LAYER] = '{NUM_UL_LAYER{'0}};
 
@@ -44,6 +44,7 @@ module tb_ul_adaptor ();
   logic        buffer_mem_we             [      NUM_CC]                         [NUM_UL_LAYER] = '{NUM_CC{'{NUM_UL_LAYER{'0}}}};
   logic [31:0] buffer_mem_data_o         [      NUM_CC]                         [NUM_UL_LAYER];
 
+  logic ul_radio_start_10ms = 0;
 
   // One OFDM symbol data
   //=====================
@@ -84,74 +85,6 @@ module tb_ul_adaptor ();
     rst_491m52 = 0;
   end
 
-  // Generate UL data
-  //=================
-
-  initial begin
-    wait(rst_491m52 == 0);
-    #100;
-
-    fork
-
-      //++++++++++++++++++
-      begin : gen_sof
-        forever begin
-          // Set ul_sof_ahead_3 every radio frame (10ms)
-          @(posedge clk_491m52);
-          ul_sof_ahead_3 <= '{NUM_CC{1'b1}};
-          @(posedge clk_491m52);
-          ul_sof_ahead_3 <= '{NUM_CC{1'b0}};
-          repeat (4915200 - 2) @(posedge clk_491m52);
-        end
-      end
-
-      //++++++++++++++++++
-      begin : gen_sop
-        forever begin
-          // One slot (0.5ms or 14 symbols)
-          for (int sym = 0; sym < 14; sym++) begin
-            // One symbol
-            @(posedge clk_491m52);
-            ul_sop_ahead_3 <= '{NUM_CC{1'b1}};
-            @(posedge clk_491m52);
-            ul_sop_ahead_3 <= '{NUM_CC{1'b0}};
-            // Wait N tick, which is 4096 + CP time
-            if (sym == 0) begin
-              repeat ((4096 + 352) * 4 - 2) @(posedge clk_491m52);
-            end else begin
-              repeat ((4096 + 288) * 4 - 2) @(posedge clk_491m52);
-            end
-          end
-        end
-      end
-
-      //++++++++++++++++++
-      begin : gen_ul_data
-        // wait 3 ticks
-        repeat (3) @(posedge clk_491m52);
-        forever begin
-          // One slot (0.5ms or 14 symbols)
-          for (int sym = 0; sym < 14; sym++) begin
-            // One symbol
-            repeat (4096) begin
-              // One sample, takes 4 ticks to set
-              @(posedge clk_491m52);
-              {ul_data_q[0][0], ul_data_i[0][0]} <= SYMBOL_MEM[cnt++];
-              repeat (3) @(posedge clk_491m52);
-            end
-            wait(1 == 0);
-            // Wait CP time
-            if (sym == 0) begin
-              repeat (352 * 4) @(posedge clk_491m52);
-            end else begin
-              repeat (288 * 4) @(posedge clk_491m52);
-            end
-          end
-        end
-      end
-
-    join
-  end
 
   // XORIF Simply
   //=============
@@ -179,6 +112,29 @@ module tb_ul_adaptor ();
         end
       end
 
+      //++++++++++++++
+      begin : gen_m_fram_data_tready
+        forever begin
+          forever begin
+            @(posedge clk_400m);
+            if (s_ul_update[0]) break;
+          end
+          
+          repeat(3) begin
+            repeat(1000) begin
+              @(posedge clk_400m);
+              m_fram_data_tready[0] <= 1'b1;
+              if (m_fram_data_tvalid[0] == 1 && m_fram_data_tlast[0] == 1) break;
+            end
+            m_fram_data_tready[0] <= 1'b0;
+            repeat(2) begin
+              @(posedge clk_400m);
+              m_fram_data_tready[0] <= 1'b0;
+            end
+          end
+        end
+      end
+
       //++++++++++++++++
       begin : gen_s_ul_update
         forever begin
@@ -200,6 +156,16 @@ module tb_ul_adaptor ();
         end
       end
 
+      //++++++++++++
+      begin : gen_ul_radio_start_10ms
+        wait(rst_491m52 == 0);
+        #1000;
+        @(posedge clk_491m52);
+        ul_radio_start_10ms <= 1;
+        @(posedge clk_491m52);
+        ul_radio_start_10ms <= 0;
+      end
+
     join
   end
 
@@ -211,6 +177,20 @@ module tb_ul_adaptor ();
       .NUM_UL_LAYER(NUM_UL_LAYER)
   ) UUT (
       .*
+  );
+
+  ul_traffic_gen i_ul_traffic_gen (
+    .clk                (clk_491m52),
+    .rst                (rst_491m52),
+    //
+    .ul_radio_start_10ms(ul_radio_start_10ms),
+    //
+    .ul_sof_ahead_3     (ul_sof_ahead_3[0]),
+    .ul_sop_ahead_3     (ul_sop_ahead_3[0]),
+    .ul_data_i          (ul_data_i[0][0]),
+    .ul_data_q          (ul_data_q[0][0]),
+    // Control
+    .ctrl_numerology    (ctrl_numerology[0])
   );
 
 endmodule

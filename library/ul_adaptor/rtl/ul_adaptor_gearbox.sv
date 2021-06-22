@@ -104,7 +104,6 @@ module ul_adaptor_gearbox #(
   generate
     for (genvar i = 0; i < NUM_UL_LAYER; i++) begin : g_ly
 
-
       ul_adaptor_req_fifo i_ul_adaptor_req_fifo (
           .rst   (rst_400m),
           // Write side
