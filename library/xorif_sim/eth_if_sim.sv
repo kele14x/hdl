@@ -66,7 +66,6 @@ module eth_if_sim #(
     //==========================
     // Clock and Rest
     input var         eth_port_clk          [NUM_ETH_PORT],
-    input var         eth_port_rst          [NUM_ETH_PORT],
     // To MAC
     output var [63:0] m_eth_fram_tdata      [NUM_ETH_PORT],
     output var [ 7:0] m_eth_fram_tkeep      [NUM_ETH_PORT],
@@ -105,263 +104,334 @@ module eth_if_sim #(
     input var         dl_radio_start_10ms,
     input var         ul_radio_start_10ms,
     // DL data
-    output var        dl_sof            [NUM_CC],
-    output var        dl_sos            [NUM_CC],
-    output var [15:0] dl_data_i         [NUM_CC][NUM_DL_LAYER],
-    output var [15:0] dl_data_q         [NUM_CC][NUM_DL_LAYER],
-    output var        dl_valid          [NUM_CC]
+    output var        dl_sof                [      NUM_CC],
+    output var        dl_sos                [      NUM_CC],
+    output var [15:0] dl_data_i             [      NUM_CC][NUM_DL_LAYER],
+    output var [15:0] dl_data_q             [      NUM_CC][NUM_DL_LAYER],
+    output var        dl_valid              [      NUM_CC],
     // UL data
+    input var         ul_sof_ahead_3        [      NUM_CC],
+    input var         ul_sop_ahead_3        [      NUM_CC],
+    input var  [15:0] ul_data_i             [      NUM_CC][NUM_UL_LAYER],
+    input var  [15:0] ul_data_q             [      NUM_CC][NUM_UL_LAYER]
 );
+
+
+  localparam int IP_NUM_CC = 2;  // Number of carrier components
+  localparam int IP_NUM_ETH_PORT = 2;  // Number of Ethernet ports
+  localparam int IP_NUM_DL_LAYER = 16;  // Number of DL layers
+  localparam int IP_NUM_UL_LAYER = 8;  // Number of Ul layers
 
   // Radio IP signal
   //----------------
 
-  // Early BID ports
-  logic [ 31:0] m00_defm_ebid_tdata;
-  logic         m00_defm_ebid_tvalid;
-  logic         m00_defm_ebid_tlast;
-  logic         m00_defm_ebid_tready;
+  bit eth_port_clk_s[IP_NUM_ETH_PORT];
 
-  logic [ 31:0] m00_fram_ebid_tdata;
-  logic         m00_fram_ebid_tvalid;
-  logic         m00_fram_ebid_tlast;
-  logic         m00_fram_ebid_tready;
+  // To MAC
+  bit [63:0] m_eth_fram_tdata_s[IP_NUM_ETH_PORT];
+  bit [7:0] m_eth_fram_tkeep_s[IP_NUM_ETH_PORT];
+  bit m_eth_fram_tvalid_s[IP_NUM_ETH_PORT];
+  bit m_eth_fram_tlast_s[IP_NUM_ETH_PORT];
+  bit m_eth_fram_tready_s[IP_NUM_ETH_PORT];
+  // From MAC
+  bit s_eth_mac_tuser_s[IP_NUM_ETH_PORT];
+  bit s_eth_mac_bad_fcs_s[IP_NUM_ETH_PORT];
+  bit [79:0] s_eth_mac_tstamp_out_s[IP_NUM_ETH_PORT];
+  bit s_eth_mac_tstamp_valid_s[IP_NUM_ETH_PORT];
+  //
+  bit [63:0] s_eth_defm_tdata_s[IP_NUM_ETH_PORT];
+  bit [7:0] s_eth_defm_tkeep_s[IP_NUM_ETH_PORT];
+  bit s_eth_defm_tvalid_s[IP_NUM_ETH_PORT];
+  bit s_eth_defm_tlast_s[IP_NUM_ETH_PORT];
+  // To DMA
+  bit [63:0] m_message_tdata_s[IP_NUM_ETH_PORT];
+  bit [7:0] m_message_tkeep_s[IP_NUM_ETH_PORT];
+  bit m_message_tvalid_s[IP_NUM_ETH_PORT];
+  bit m_message_tlast_s[IP_NUM_ETH_PORT];
+  bit m_message_tready_s[IP_NUM_ETH_PORT];
+  bit [79:0] m_message_ts_tdata_s[IP_NUM_ETH_PORT];
+  bit m_message_ts_tvalid_s[IP_NUM_ETH_PORT];
+
+  // Early BID ports
+  bit [31:0] m00_defm_ebid_tdata;
+  bit m00_defm_ebid_tvalid;
+  bit m00_defm_ebid_tlast;
+  bit m00_defm_ebid_tready = 1;
+
+  bit [31:0] m00_fram_ebid_tdata;
+  bit m00_fram_ebid_tvalid;
+  bit m00_fram_ebid_tlast;
+  bit m00_fram_ebid_tready = 1;
 
   // PRACH C plane messages
-  logic         m0_prach_tvalid;
-  logic         m0_prach_tready;
-  logic [3 : 0] m0_prach_cc;
-  logic [7 : 0] m0_prach_ss;
-  logic [ 11:0] m0_prach_section_id;
-  logic [3 : 0] m0_prach_return_port;
-  logic [3 : 0] m0_prach_filter_index;
-  logic [3 : 0] m0_prach_sf;
-  logic [5 : 0] m0_prach_sl;
-  logic [5 : 0] m0_prach_sy;
-  logic [ 15:0] m0_prach_time_offset;
-  logic [7 : 0] m0_prach_frame_structure;
-  logic [ 15:0] m0_prach_cp_length;
-  logic [7 : 0] m0_prach_udcomphdr;
-  logic         m0_prach_rb;
-  logic         m0_prach_syminc;
-  logic [9 : 0] m0_prach_start_prbc;
-  logic [7 : 0] m0_prach_num_prbc;
-  logic [ 11:0] m0_prach_remask;
-  logic [3 : 0] m0_prach_num_symbol;
-  logic [ 14:0] m0_prach_beamid;
-  logic [ 23:0] m0_prach_freqoffset;
+  bit m0_prach_tvalid;
+  bit m0_prach_tready = 1;
+  bit [3 : 0] m0_prach_cc;
+  bit [7 : 0] m0_prach_ss;
+  bit [11:0] m0_prach_section_id;
+  bit [3 : 0] m0_prach_return_port;
+  bit [3 : 0] m0_prach_filter_index;
+  bit [3 : 0] m0_prach_sf;
+  bit [5 : 0] m0_prach_sl;
+  bit [5 : 0] m0_prach_sy;
+  bit [15:0] m0_prach_time_offset;
+  bit [7 : 0] m0_prach_frame_structure;
+  bit [15:0] m0_prach_cp_length;
+  bit [7 : 0] m0_prach_udcomphdr;
+  bit m0_prach_rb;
+  bit m0_prach_syminc;
+  bit [9 : 0] m0_prach_start_prbc;
+  bit [7 : 0] m0_prach_num_prbc;
+  bit [11:0] m0_prach_remask;
+  bit [3 : 0] m0_prach_num_symbol;
+  bit [14:0] m0_prach_beamid;
+  bit [23:0] m0_prach_freqoffset;
 
   // Timer ports
-  logic [ 11:0] m_ul_sym_num               [      NUM_CC];
-  logic [ 11:0] m_ul_cta_sym_num           [      NUM_CC];
-  logic         m_ul_update                [      NUM_CC];
-  logic [ 11:0] m_dl_sym_num               [      NUM_CC];
-  logic [ 11:0] m_dl_cta_sym_num           [      NUM_CC];
-  logic         m_dl_update                [      NUM_CC];
-  logic         m_ul_toggle                [      NUM_CC];
-  logic         m_dl_toggle                [      NUM_CC];
-  logic         m_cc_enable                [      NUM_CC];
-  logic         m_cc_reload                [      NUM_CC];
+  bit [11:0] m_ul_sym_num[IP_NUM_CC];
+  bit [11:0] m_ul_cta_sym_num[IP_NUM_CC];
+  bit m_ul_update[IP_NUM_CC];
+  bit [11:0] m_dl_sym_num[IP_NUM_CC];
+  bit [11:0] m_dl_cta_sym_num[IP_NUM_CC];
+  bit m_dl_update[IP_NUM_CC];
+  bit m_ul_toggle[IP_NUM_CC];
+  bit m_dl_toggle[IP_NUM_CC];
+  bit m_cc_enable[IP_NUM_CC];
+  bit m_cc_reload[IP_NUM_CC];
 
   // Uplink data to core from DFE
-  logic [ 63:0] s_fram_data_tdata          [NUM_UL_LAYER];
-  logic [  7:0] s_fram_data_tkeep          [NUM_UL_LAYER];
-  logic         s_fram_data_tvalid         [NUM_UL_LAYER];
-  logic         s_fram_data_tlast          [NUM_UL_LAYER];
-  logic         s_fram_data_tready         [NUM_UL_LAYER];
+  bit [63:0] s_fram_data_tdata[IP_NUM_UL_LAYER];
+  bit [7:0] s_fram_data_tkeep[IP_NUM_UL_LAYER];
+  bit s_fram_data_tvalid[IP_NUM_UL_LAYER];
+  bit s_fram_data_tlast[IP_NUM_UL_LAYER];
+  bit s_fram_data_tready[IP_NUM_UL_LAYER];
   // Core request for uplink data
-  logic [ 24:0] s_fram_data_req            [NUM_UL_LAYER];
+  bit [24:0] s_fram_data_req[IP_NUM_UL_LAYER];
 
-  logic         m_fram_bid_valid           [NUM_UL_LAYER];
-  logic         m_fram_bid_tlast           [NUM_UL_LAYER];
-  logic         m_fram_bid_ready           [NUM_UL_LAYER];
-  logic         m_fram_bid_off             [NUM_UL_LAYER];
-  logic [ 14:0] m_fram_bid_beamid15        [NUM_UL_LAYER];
-  logic [ 11:0] m_fram_bid_remask          [NUM_UL_LAYER];
-  logic         m_fram_bid_rb              [NUM_UL_LAYER];
-  logic [  9:0] m_fram_bid_start_prbc      [NUM_UL_LAYER];
-  logic [  7:0] m_fram_bid_num_prbc        [NUM_UL_LAYER];
-  logic [  3:0] m_fram_bid_num_symbol      [NUM_UL_LAYER];
-  logic [  7:0] m_fram_bid_cc_id           [NUM_UL_LAYER];
-  logic [ 23:0] m_fram_bid_frequency_offset[NUM_UL_LAYER];
-  logic [ 15:0] m_fram_bid_time_offset     [NUM_UL_LAYER];
-  logic [  7:0] m_fram_bid_frame_structure [NUM_UL_LAYER];
-  logic [ 15:0] m_fram_bid_cp_length       [NUM_UL_LAYER];
+  bit m_fram_bid_valid[IP_NUM_UL_LAYER];
+  bit m_fram_bid_tlast[IP_NUM_UL_LAYER];
+  bit m_fram_bid_ready[IP_NUM_UL_LAYER] = '{IP_NUM_UL_LAYER{1'b1}};
+  bit m_fram_bid_off[IP_NUM_UL_LAYER];
+  bit [14:0] m_fram_bid_beamid15[IP_NUM_UL_LAYER];
+  bit [11:0] m_fram_bid_remask[IP_NUM_UL_LAYER];
+  bit m_fram_bid_rb[IP_NUM_UL_LAYER];
+  bit [9:0] m_fram_bid_start_prbc[IP_NUM_UL_LAYER];
+  bit [7:0] m_fram_bid_num_prbc[IP_NUM_UL_LAYER];
+  bit [3:0] m_fram_bid_num_symbol[IP_NUM_UL_LAYER];
+  bit [7:0] m_fram_bid_cc_id[IP_NUM_UL_LAYER];
+  bit [23:0] m_fram_bid_frequency_offset[IP_NUM_UL_LAYER];
+  bit [15:0] m_fram_bid_time_offset[IP_NUM_UL_LAYER];
+  bit [7:0] m_fram_bid_frame_structure[IP_NUM_UL_LAYER];
+  bit [15:0] m_fram_bid_cp_length[IP_NUM_UL_LAYER];
 
   // UNSOL
-  logic [ 63:0] s00_fram_unsol_tdata;
-  logic [  7:0] s00_fram_unsol_tkeep;
-  logic         s00_fram_unsol_tvalid;
-  logic         s00_fram_unsol_tlast;
-  logic         s00_fram_unsol_tready;
-  logic [ 31:0] s00_fram_unsol_tuser;
+  bit [63:0] s00_fram_unsol_tdata;
+  bit [7:0] s00_fram_unsol_tkeep;
+  bit s00_fram_unsol_tvalid;
+  bit s00_fram_unsol_tlast;
+  bit s00_fram_unsol_tready;
+  bit [31:0] s00_fram_unsol_tuser;
 
   // PRACH
-  logic [ 63:0] s00_fram_prach_tdata;
-  logic [  7:0] s00_fram_prach_tkeep;
-  logic         s00_fram_prach_tvalid;
-  logic         s00_fram_prach_tlast;
-  logic         s00_fram_prach_tready;
-  logic [ 31:0] s00_fram_prach_tuser;
+  bit [63:0] s00_fram_prach_tdata;
+  bit [7:0] s00_fram_prach_tkeep;
+  bit s00_fram_prach_tvalid;
+  bit s00_fram_prach_tlast;
+  bit s00_fram_prach_tready;
+  bit [31:0] s00_fram_prach_tuser;
 
   // Downlink U-Plane data from core to DFE
-  logic [ 63:0] m_defm_data_tdata          [NUM_DL_LAYER];
-  logic [  7:0] m_defm_data_tkeep          [NUM_DL_LAYER];
-  logic         m_defm_data_tvalid         [NUM_DL_LAYER];
-  logic         m_defm_data_tlast          [NUM_DL_LAYER];
-  logic         m_defm_data_tready         [NUM_DL_LAYER];
-  logic [ 30:0] m_defm_data_tuser          [NUM_DL_LAYER];
+  bit [63:0] m_defm_data_tdata[IP_NUM_DL_LAYER];
+  bit [7:0] m_defm_data_tkeep[IP_NUM_DL_LAYER];
+  bit m_defm_data_tvalid[IP_NUM_DL_LAYER];
+  bit m_defm_data_tlast[IP_NUM_DL_LAYER];
+  bit m_defm_data_tready[IP_NUM_DL_LAYER] = '{IP_NUM_DL_LAYER{1'b1}};
+  bit [30:0] m_defm_data_tuser[IP_NUM_DL_LAYER];
 
   // DL BID
-  logic         m_defm_bid_valid           [NUM_DL_LAYER];
-  logic         m_defm_bid_tlast           [NUM_DL_LAYER];
-  logic         m_defm_bid_ready           [NUM_DL_LAYER];
-  logic         m_defm_bid_off             [NUM_DL_LAYER];
-  logic [ 14:0] m_defm_bid_beamid15        [NUM_DL_LAYER];
-  logic [ 11:0] m_defm_bid_remask          [NUM_DL_LAYER];
-  logic         m_defm_bid_rb              [NUM_DL_LAYER];
-  logic [  9:0] m_defm_bid_start_prbc      [NUM_DL_LAYER];
-  logic [  7:0] m_defm_bid_num_prbc        [NUM_DL_LAYER];
-  logic [  3:0] m_defm_bid_num_symbol      [NUM_DL_LAYER];
-  logic [  7:0] m_defm_bid_cc_id           [NUM_DL_LAYER];
-  logic [ 23:0] m_defm_bid_frequency_offset[NUM_DL_LAYER];
-  logic [ 15:0] m_defm_bid_time_offset     [NUM_DL_LAYER];
-  logic [  7:0] m_defm_bid_frame_structure [NUM_DL_LAYER];
-  logic [ 15:0] m_defm_bid_cp_length       [NUM_DL_LAYER];
+  bit m_defm_bid_valid[IP_NUM_DL_LAYER];
+  bit m_defm_bid_tlast[IP_NUM_DL_LAYER];
+  bit m_defm_bid_ready[IP_NUM_DL_LAYER] = '{IP_NUM_DL_LAYER{1'b1}};
+  bit m_defm_bid_off[IP_NUM_DL_LAYER];
+  bit [14:0] m_defm_bid_beamid15[IP_NUM_DL_LAYER];
+  bit [11:0] m_defm_bid_remask[IP_NUM_DL_LAYER];
+  bit m_defm_bid_rb[IP_NUM_DL_LAYER];
+  bit [9:0] m_defm_bid_start_prbc[IP_NUM_DL_LAYER];
+  bit [7:0] m_defm_bid_num_prbc[IP_NUM_DL_LAYER];
+  bit [3:0] m_defm_bid_num_symbol[IP_NUM_DL_LAYER];
+  bit [7:0] m_defm_bid_cc_id[IP_NUM_DL_LAYER];
+  bit [23:0] m_defm_bid_frequency_offset[IP_NUM_DL_LAYER];
+  bit [15:0] m_defm_bid_time_offset[IP_NUM_DL_LAYER];
+  bit [7:0] m_defm_bid_frame_structure[IP_NUM_DL_LAYER];
+  bit [15:0] m_defm_bid_cp_length[IP_NUM_DL_LAYER];
 
   // O-RAM Parse Port
-  logic         m_t_header_offset_valid    [NUM_ETH_PORT];
-  logic         m_runt_packet_len          [NUM_ETH_PORT];
-  logic [ 15:0] m_rtc_pc_id                [NUM_ETH_PORT];
-  logic         m_concat                   [NUM_ETH_PORT];
-  logic [  2:0] m_messagetype              [NUM_ETH_PORT];
-  logic [  7:0] m_seqid                    [NUM_ETH_PORT];
-  logic [  6:0] m_subseqid                 [NUM_ETH_PORT];
-  logic         m_ebit                     [NUM_ETH_PORT];
-  logic [ 15:0] m_payloadsize              [NUM_ETH_PORT];
-  logic         m_packet_in_window         [NUM_ETH_PORT];
-  logic [ 11:0] m_offset_in_symbol         [NUM_ETH_PORT];
+  bit m_t_header_offset_valid[IP_NUM_ETH_PORT];
+  bit m_runt_packet_len[IP_NUM_ETH_PORT];
+  bit [15:0] m_rtc_pc_id[IP_NUM_ETH_PORT];
+  bit m_concat[IP_NUM_ETH_PORT];
+  bit [2:0] m_messagetype[IP_NUM_ETH_PORT];
+  bit [7:0] m_seqid[IP_NUM_ETH_PORT];
+  bit [6:0] m_subseqid[IP_NUM_ETH_PORT];
+  bit m_ebit[IP_NUM_ETH_PORT];
+  bit [15:0] m_payloadsize[IP_NUM_ETH_PORT];
+  bit m_packet_in_window[IP_NUM_ETH_PORT];
+  bit [11:0] m_offset_in_symbol[IP_NUM_ETH_PORT];
 
-  logic         m_radio_app_head_valid     [NUM_ETH_PORT];
-  logic         m_datadirection            [NUM_ETH_PORT];
-  logic [  7:0] m_numsections              [NUM_ETH_PORT];
-  logic [  2:0] m_sectiontype              [NUM_ETH_PORT];
-  logic [  3:0] m_filterindex              [NUM_ETH_PORT];
-  logic [  7:0] m_frameid                  [NUM_ETH_PORT];
-  logic [  3:0] m_subframeid               [NUM_ETH_PORT];
-  logic [  5:0] m_slotid                   [NUM_ETH_PORT];
-  logic [  5:0] m_symbolid                 [NUM_ETH_PORT];
-  logic [  7:0] m_udcomphdr                [NUM_ETH_PORT];
-  logic [ 15:0] m_timeoffset               [NUM_ETH_PORT];
-  logic [  7:0] m_framestructure           [NUM_ETH_PORT];
-  logic [ 15:0] m_cplength                 [NUM_ETH_PORT];
+  bit m_radio_app_head_valid[IP_NUM_ETH_PORT];
+  bit m_datadirection[IP_NUM_ETH_PORT];
+  bit [7:0] m_numsections[IP_NUM_ETH_PORT];
+  bit [2:0] m_sectiontype[IP_NUM_ETH_PORT];
+  bit [3:0] m_filterindex[IP_NUM_ETH_PORT];
+  bit [7:0] m_frameid[IP_NUM_ETH_PORT];
+  bit [3:0] m_subframeid[IP_NUM_ETH_PORT];
+  bit [5:0] m_slotid[IP_NUM_ETH_PORT];
+  bit [5:0] m_symbolid[IP_NUM_ETH_PORT];
+  bit [7:0] m_udcomphdr[IP_NUM_ETH_PORT];
+  bit [15:0] m_timeoffset[IP_NUM_ETH_PORT];
+  bit [7:0] m_framestructure[IP_NUM_ETH_PORT];
+  bit [15:0] m_cplength[IP_NUM_ETH_PORT];
 
-  logic         m_section_header_valid     [NUM_ETH_PORT];
-  logic [  3:0] m_numsymbol                [NUM_ETH_PORT];
-  logic [  7:0] m_numprbc                  [NUM_ETH_PORT];
-  logic [  9:0] m_startprbc                [NUM_ETH_PORT];
-  logic [ 11:0] m_sectionid                [NUM_ETH_PORT];
-  logic         m_rb                       [NUM_ETH_PORT];
-  logic [ 11:0] m_remask                   [NUM_ETH_PORT];
-  logic [ 14:0] m_beamid15                 [NUM_ETH_PORT];
-  logic [ 23:0] m_freqoffset               [NUM_ETH_PORT];
+  bit m_section_header_valid[IP_NUM_ETH_PORT];
+  bit [3:0] m_numsymbol[IP_NUM_ETH_PORT];
+  bit [7:0] m_numprbc[IP_NUM_ETH_PORT];
+  bit [9:0] m_startprbc[IP_NUM_ETH_PORT];
+  bit [11:0] m_sectionid[IP_NUM_ETH_PORT];
+  bit m_rb[IP_NUM_ETH_PORT];
+  bit [11:0] m_remask[IP_NUM_ETH_PORT];
+  bit [14:0] m_beamid15[IP_NUM_ETH_PORT];
+  bit [23:0] m_freqoffset[IP_NUM_ETH_PORT];
 
-  logic [ 63:0] m_beamweights_tdata        [NUM_ETH_PORT];
-  logic         m_beamweights_tvalid       [NUM_ETH_PORT];
-  logic         m_beamweights_tlast        [NUM_ETH_PORT];
-  logic         m_beamweights_tuser        [NUM_ETH_PORT];
+  bit [63:0] m_beamweights_tdata[IP_NUM_ETH_PORT];
+  bit m_beamweights_tvalid[IP_NUM_ETH_PORT];
+  bit m_beamweights_tlast[IP_NUM_ETH_PORT];
+  bit m_beamweights_tuser[IP_NUM_ETH_PORT];
 
-  logic [ 63:0] m_raw_cplane_tdata         [NUM_ETH_PORT];
-  logic         m_raw_cplane_tvalid        [NUM_ETH_PORT];
-  logic         m_raw_cplane_tuser         [NUM_ETH_PORT];
-  logic         m_raw_cplane_tlast         [NUM_ETH_PORT];
-  logic [  7:0] m_raw_cplane_tkeep         [NUM_ETH_PORT];
+  bit [63:0] m_raw_cplane_tdata[IP_NUM_ETH_PORT];
+  bit m_raw_cplane_tvalid[IP_NUM_ETH_PORT];
+  bit m_raw_cplane_tuser[IP_NUM_ETH_PORT];
+  bit m_raw_cplane_tlast[IP_NUM_ETH_PORT];
+  bit [7:0] m_raw_cplane_tkeep[IP_NUM_ETH_PORT];
 
-  logic [ 26:0] m_unsupport_ext_tuser      [NUM_ETH_PORT];
-  logic [ 63:0] m_unsupport_ext_tdata      [NUM_ETH_PORT];
-  logic         m_unsupport_ext_tvalid     [NUM_ETH_PORT];
-  logic [  7:0] m_unsupport_ext_tkeep      [NUM_ETH_PORT];
-  logic         m_unsupport_ext_tlast      [NUM_ETH_PORT];
+  bit [26:0] m_unsupport_ext_tuser[IP_NUM_ETH_PORT];
+  bit [63:0] m_unsupport_ext_tdata[IP_NUM_ETH_PORT];
+  bit m_unsupport_ext_tvalid[IP_NUM_ETH_PORT];
+  bit [7:0] m_unsupport_ext_tkeep[IP_NUM_ETH_PORT];
+  bit m_unsupport_ext_tlast[IP_NUM_ETH_PORT];
 
   // SSB Data
-  logic [ 63:0] m_ssb_data_tdata;
-  logic [  7:0] m_ssb_data_tkeep;
-  logic         m_ssb_data_tvalid;
-  logic         m_ssb_data_tlast;
-  logic         m_ssb_data_tready;
-  logic [ 30:0] m_ssb_data_tuser;
+  bit [63:0] m_ssb_data_tdata;
+  bit [7:0] m_ssb_data_tkeep;
+  bit m_ssb_data_tvalid;
+  bit m_ssb_data_tlast;
+  bit m_ssb_data_tready = 1;
+  bit [30:0] m_ssb_data_tuser;
 
   // SSB Early BeamID generation
-  logic [ 31:0] m_ssb_ebid_tdata;
-  logic         m_ssb_ebid_tvalid;
-  logic         m_ssb_ebid_tlast;
-  logic         m_ssb_ebid_tready;
+  bit [31:0] m_ssb_ebid_tdata;
+  bit m_ssb_ebid_tvalid;
+  bit m_ssb_ebid_tlast;
+  bit m_ssb_ebid_tready = 1;
 
   // SSB beamid fwd interface
-  logic         m_ssb_bid_tvalid;
-  logic         m_ssb_bid_tlast;
-  logic         m_ssb_bid_tready;
-  logic         m_ssb_bid_off;
-  logic [ 14:0] m_ssb_bid_beamid15;
-  logic [ 11:0] m_ssb_bid_remask;
-  logic         m_ssb_bid_rb;
-  logic [  9:0] m_ssb_bid_start_prbc;
-  logic [  7:0] m_ssb_bid_num_prbc;
-  logic [  3:0] m_ssb_bid_num_symbol;
-  logic [  7:0] m_ssb_bid_cc_id;
-  logic [ 23:0] m_ssb_bid_frequency_offset;
-  logic [ 15:0] m_ssb_bid_time_offset;
-  logic [  7:0] m_ssb_bid_frame_structure;
-  logic [ 15:0] m_ssb_bid_cp_length;
+  bit m_ssb_bid_tvalid;
+  bit m_ssb_bid_tlast;
+  bit m_ssb_bid_tready = 1;
+  bit m_ssb_bid_off;
+  bit [14:0] m_ssb_bid_beamid15;
+  bit [11:0] m_ssb_bid_remask;
+  bit m_ssb_bid_rb;
+  bit [9:0] m_ssb_bid_start_prbc;
+  bit [7:0] m_ssb_bid_num_prbc;
+  bit [3:0] m_ssb_bid_num_symbol;
+  bit [7:0] m_ssb_bid_cc_id;
+  bit [23:0] m_ssb_bid_frequency_offset;
+  bit [15:0] m_ssb_bid_time_offset;
+  bit [7:0] m_ssb_bid_frame_structure;
+  bit [15:0] m_ssb_bid_cp_length;
 
   // Reset to XORIF IP
-  logic         defm_reset;
-  logic         fram_reset;
+  bit defm_reset;
+  bit fram_reset;
 
   // Reset from XORIF IP
-  logic         defm_reset_active;
-  logic         fram_reset_active          [NUM_ETH_PORT];
+  bit defm_reset_active;
+  bit fram_reset_active[IP_NUM_ETH_PORT];
 
   // Timer to XORIF IP
-  logic         defm_radio_start_10ms;
-  logic         fram_radio_start_10ms;
+  bit defm_radio_start_10ms;
+  bit fram_radio_start_10ms;
 
   // Ready status from XORIF IP
-  logic         defm_ready;
-  logic         fram_ready;
+  bit defm_ready;
+  bit fram_ready;
 
   // Others signals
   //---------------
 
   // TODO: connect
-  logic [3:0] ctrl_bandwidth             [      NUM_CC] = '{NUM_CC{0}};
-  logic [1:0] ctrl_numerology            [      NUM_CC] = '{NUM_CC{1}};
-  logic [1:0] ctrl_compression_mode      [      NUM_CC] = '{NUM_CC{1}};
+  bit [3:0] ctrl_bandwidth[NUM_CC] = '{NUM_CC{0}};
+  bit [1:0] ctrl_numerology[NUM_CC] = '{NUM_CC{0}};
+  bit [1:0] ctrl_compression_mode[NUM_CC] = '{NUM_CC{0}};
+
+  bit [1:0] buffer_mem_ctrl_en[NUM_CC];
+  bit [11:0] buffer_mem_addr_i[NUM_CC][NUM_UL_LAYER];
+  bit [31:0] buffer_mem_data_i[NUM_CC][NUM_UL_LAYER];
+  bit buffer_mem_we[NUM_CC][NUM_UL_LAYER];
+  bit [31:0] buffer_mem_data_o[NUM_CC][NUM_UL_LAYER];
 
 
   // TODO: Reset generator
-
   assign defm_reset = rst_400m;
   assign fram_reset = rst_400m;
 
-  // Symbol timing generation
 
-  symbol_timing i_symbol_timing (
-      // Adaptor Timer
-      //==============
-      .clk_491m52           (clk_491m52),
-      .rst_491m52           (rst_491m52),
-      // Timing base
-      .dl_radio_start_10ms  (dl_radio_start_10ms),
-      .ul_radio_start_10ms  (ul_radio_start_10ms),
-      // XORIF Timer
-      //============
-      .clk_400m             (clk_400m),
-      .rst_400m             (rst_400m),
+  // Modules
+  //========
+
+  generate
+    for (genvar i = 0; i < NUM_ETH_PORT; i++) begin
+
+      assign eth_port_clk_s[i]           = eth_port_clk[i];
+
+      // To MAC
+      assign m_eth_fram_tdata[i]         = m_eth_fram_tdata_s[i];
+      assign m_eth_fram_tkeep[i]         = m_eth_fram_tkeep_s[i];
+      assign m_eth_fram_tvalid[i]        = m_eth_fram_tvalid_s[i];
+      assign m_eth_fram_tlast[i]         = m_eth_fram_tlast_s[i];
+      assign m_eth_fram_tready_s[i]      = m_eth_fram_tready[i];
+
+      // From MAC
+      assign s_eth_mac_tuser_s[i]        = s_eth_mac_tuser[i];
+      assign s_eth_mac_bad_fcs_s[i]      = s_eth_mac_bad_fcs[i];
+      assign s_eth_mac_tstamp_out_s[i]   = s_eth_mac_tstamp_out[i];
+      assign s_eth_mac_tstamp_valid_s[i] = s_eth_mac_tstamp_valid[i];
       //
-      .defm_radio_start_10ms(defm_radio_start_10ms),
-      .fram_radio_start_10ms(fram_radio_start_10ms)
-  );
+      assign s_eth_defm_tdata_s[i]       = s_eth_defm_tdata[i];
+      assign s_eth_defm_tkeep_s[i]       = s_eth_defm_tkeep[i];
+      assign s_eth_defm_tvalid_s[i]      = s_eth_defm_tvalid[i];
+      assign s_eth_defm_tlast_s[i]       = s_eth_defm_tlast[i];
+
+      // To DMA
+      assign m_message_tdata[i]          = m_message_tdata_s[i];
+      assign m_message_tkeep[i]          = m_message_tkeep_s[i];
+      assign m_message_tvalid[i]         = m_message_tvalid_s[i];
+      assign m_message_tlast[i]          = m_message_tlast_s[i];
+      assign m_message_tready_s[i]       = m_message_tready[i];
+      assign m_message_ts_tdata[i]       = m_message_ts_tdata_s[i];
+      assign m_message_ts_tvalid[i]      = m_message_ts_tvalid_s[i];
+
+    end
+  endgenerate
+
+  generate
+    for (genvar i = NUM_ETH_PORT; i < IP_NUM_ETH_PORT; i++) begin
+      assign eth_port_clk_s[i] = eth_port_clk[0];
+
+      assign m_eth_fram_tready_s[i] = 1'b1;
+      assign m_message_tready_s[i] = 1'b1;
+    end
+  endgenerate
 
   oran_radio_if i_oran_radio_if (
       .m00_defm_ebid_tdata           (m00_defm_ebid_tdata),
@@ -992,32 +1062,32 @@ module eth_if_sim #(
       .m015_defm_bid_frame_structure (m_defm_bid_frame_structure[15]),
       .m015_defm_bid_cp_length       (m_defm_bid_cp_length[15]),
       //
-      .tx0_eth_port_clk              (eth_port_clk[0]),
+      .tx0_eth_port_clk              (eth_port_clk_s[0]),
       .fram0_reset_active            (fram_reset_active[0]),
       //
-      .m0_eth_fram_tdata             (m_eth_fram_tdata[0]),
-      .m0_eth_fram_tkeep             (m_eth_fram_tkeep[0]),
-      .m0_eth_fram_tvalid            (m_eth_fram_tvalid[0]),
-      .m0_eth_fram_tlast             (m_eth_fram_tlast[0]),
-      .m0_eth_fram_tready            (m_eth_fram_tready[0]),
+      .m0_eth_fram_tdata             (m_eth_fram_tdata_s[0]),
+      .m0_eth_fram_tkeep             (m_eth_fram_tkeep_s[0]),
+      .m0_eth_fram_tvalid            (m_eth_fram_tvalid_s[0]),
+      .m0_eth_fram_tlast             (m_eth_fram_tlast_s[0]),
+      .m0_eth_fram_tready            (m_eth_fram_tready_s[0]),
       //
-      .s0_eth_mac_tuser              (s_eth_mac_tuser[0]),
-      .s0_eth_mac_bad_fcs            (s_eth_mac_bad_fcs[0]),
-      .s0_eth_mac_tstamp_out         (s_eth_mac_tstamp_out[0]),
-      .s0_eth_mac_tstamp_valid       (s_eth_mac_tstamp_valid[0]),
+      .s0_eth_mac_tuser              (s_eth_mac_tuser_s[0]),
+      .s0_eth_mac_bad_fcs            (s_eth_mac_bad_fcs_s[0]),
+      .s0_eth_mac_tstamp_out         (s_eth_mac_tstamp_out_s[0]),
+      .s0_eth_mac_tstamp_valid       (s_eth_mac_tstamp_valid_s[0]),
       //
-      .s0_eth_defm_tdata             (s_eth_defm_tdata[0]),
-      .s0_eth_defm_tkeep             (s_eth_defm_tkeep[0]),
-      .s0_eth_defm_tvalid            (s_eth_defm_tvalid[0]),
-      .s0_eth_defm_tlast             (s_eth_defm_tlast[0]),
+      .s0_eth_defm_tdata             (s_eth_defm_tdata_s[0]),
+      .s0_eth_defm_tkeep             (s_eth_defm_tkeep_s[0]),
+      .s0_eth_defm_tvalid            (s_eth_defm_tvalid_s[0]),
+      .s0_eth_defm_tlast             (s_eth_defm_tlast_s[0]),
       //
-      .m0_message_tdata              (m_message_tdata[0]),
-      .m0_message_tkeep              (m_message_tkeep[0]),
-      .m0_message_tvalid             (m_message_tvalid[0]),
-      .m0_message_tlast              (m_message_tlast[0]),
-      .m0_message_tready             (m_message_tready[0]),
-      .m0_message_ts_tdata           (m_message_ts_tdata[0]),
-      .m0_message_ts_tvalid          (m_message_ts_tvalid[0]),
+      .m0_message_tdata              (m_message_tdata_s[0]),
+      .m0_message_tkeep              (m_message_tkeep_s[0]),
+      .m0_message_tvalid             (m_message_tvalid_s[0]),
+      .m0_message_tlast              (m_message_tlast_s[0]),
+      .m0_message_tready             (m_message_tready_s[0]),
+      .m0_message_ts_tdata           (m_message_ts_tdata_s[0]),
+      .m0_message_ts_tvalid          (m_message_ts_tvalid_s[0]),
       //
       .m0_t_header_offset_valid      (m_t_header_offset_valid[0]),
       .m0_runt_packet_len            (m_runt_packet_len[0]),
@@ -1072,32 +1142,32 @@ module eth_if_sim #(
       .m0_unsupport_ext_tkeep        (m_unsupport_ext_tkeep[0]),
       .m0_unsupport_ext_tlast        (m_unsupport_ext_tlast[0]),
       //
-      .tx1_eth_port_clk              (eth_port_clk[1]),
+      .tx1_eth_port_clk              (eth_port_clk_s[1]),
       .fram1_reset_active            (fram_reset_active[1]),
       //
-      .m1_eth_fram_tdata             (m_eth_fram_tdata[1]),
-      .m1_eth_fram_tkeep             (m_eth_fram_tkeep[1]),
-      .m1_eth_fram_tvalid            (m_eth_fram_tvalid[1]),
-      .m1_eth_fram_tlast             (m_eth_fram_tlast[1]),
-      .m1_eth_fram_tready            (m_eth_fram_tready[1]),
+      .m1_eth_fram_tdata             (m_eth_fram_tdata_s[1]),
+      .m1_eth_fram_tkeep             (m_eth_fram_tkeep_s[1]),
+      .m1_eth_fram_tvalid            (m_eth_fram_tvalid_s[1]),
+      .m1_eth_fram_tlast             (m_eth_fram_tlast_s[1]),
+      .m1_eth_fram_tready            (m_eth_fram_tready_s[1]),
       //
-      .s1_eth_mac_tuser              (s_eth_mac_tuser[1]),
-      .s1_eth_mac_bad_fcs            (s_eth_mac_bad_fcs[1]),
-      .s1_eth_mac_tstamp_out         (s_eth_mac_tstamp_out[1]),
-      .s1_eth_mac_tstamp_valid       (s_eth_mac_tstamp_valid[1]),
+      .s1_eth_mac_tuser              (s_eth_mac_tuser_s[1]),
+      .s1_eth_mac_bad_fcs            (s_eth_mac_bad_fcs_s[1]),
+      .s1_eth_mac_tstamp_out         (s_eth_mac_tstamp_out_s[1]),
+      .s1_eth_mac_tstamp_valid       (s_eth_mac_tstamp_valid_s[1]),
       //
-      .s1_eth_defm_tdata             (s_eth_defm_tdata[1]),
-      .s1_eth_defm_tkeep             (s_eth_defm_tkeep[1]),
-      .s1_eth_defm_tvalid            (s_eth_defm_tvalid[1]),
-      .s1_eth_defm_tlast             (s_eth_defm_tlast[1]),
+      .s1_eth_defm_tdata             (s_eth_defm_tdata_s[1]),
+      .s1_eth_defm_tkeep             (s_eth_defm_tkeep_s[1]),
+      .s1_eth_defm_tvalid            (s_eth_defm_tvalid_s[1]),
+      .s1_eth_defm_tlast             (s_eth_defm_tlast_s[1]),
       //
-      .m1_message_tdata              (m_message_tdata[1]),
-      .m1_message_tkeep              (m_message_tkeep[1]),
-      .m1_message_tvalid             (m_message_tvalid[1]),
-      .m1_message_tlast              (m_message_tlast[1]),
-      .m1_message_tready             (m_message_tready[1]),
-      .m1_message_ts_tdata           (m_message_ts_tdata[1]),
-      .m1_message_ts_tvalid          (m_message_ts_tvalid[1]),
+      .m1_message_tdata              (m_message_tdata_s[1]),
+      .m1_message_tkeep              (m_message_tkeep_s[1]),
+      .m1_message_tvalid             (m_message_tvalid_s[1]),
+      .m1_message_tlast              (m_message_tlast_s[1]),
+      .m1_message_tready             (m_message_tready_s[1]),
+      .m1_message_ts_tdata           (m_message_ts_tdata_s[1]),
+      .m1_message_ts_tvalid          (m_message_ts_tvalid_s[1]),
       //
       .m1_t_header_offset_valid      (m_t_header_offset_valid[1]),
       .m1_runt_packet_len            (m_runt_packet_len[1]),
@@ -1221,110 +1291,46 @@ module eth_if_sim #(
       .s_axi_rready                  (s00_axi_rready)
   );
 
-
-  dl_adaptor_sim i_dl_adaptor_sim (
+  ul_adaptor #(
+      .NUM_CC      (NUM_CC),
+      .NUM_UL_LAYER(NUM_UL_LAYER)
+  ) i_ul_adaptor (
       // Interface with XORIF
       //=====================
       .clk_400m             (clk_400m),
       .rst_400m             (rst_400m),
       //
-      .defm_radio_start_10ms(defm_radio_start_10ms),
-      .s_dl_update          (m_dl_update),
+      .fram_radio_start_10ms(fram_radio_start_10ms),
+      .s_ul_update          (m_ul_update[0:NUM_CC-1]),
       //
-      .s_defm_data_tdata    (m_defm_data_tdata),
-      .s_defm_data_tkeep    (m_defm_data_tkeep),
-      .s_defm_data_tvalid   (m_defm_data_tvalid),
-      .s_defm_data_tlast    (m_defm_data_tlast),
-      .s_defm_data_tready   (m_defm_data_tready),
-      .s_defm_data_tuser    (m_defm_data_tuser),
+      .m_fram_data_tdata    (s_fram_data_tdata[0:NUM_UL_LAYER-1]),
+      .m_fram_data_tkeep    (s_fram_data_tkeep[0:NUM_UL_LAYER-1]),
+      .m_fram_data_tvalid   (s_fram_data_tvalid[0:NUM_UL_LAYER-1]),
+      .m_fram_data_tlast    (s_fram_data_tlast[0:NUM_UL_LAYER-1]),
+      .m_fram_data_tready   (s_fram_data_tready[0:NUM_UL_LAYER-1]),
+      //
+      .m_fram_data_req      (s_fram_data_req[0:NUM_UL_LAYER-1]),
       // Interface with DFE
       //===================
       .clk_491m52           (clk_491m52),
-      .rst_491m52           (rst_491m52),
       //
-      .dl_radio_start_10ms  (dl_radio_start_10ms),
-      //
-      .dl_sof               (dl_sof),
-      .dl_sos               (dl_sos),
-      .dl_data_i            (dl_data_i),
-      .dl_data_q            (dl_data_q),
-      .dl_valid             (dl_valid),
+      .ul_sof_ahead_3       (ul_sof_ahead_3),
+      .ul_sop_ahead_3       (ul_sop_ahead_3),
+      .ul_data_i            (ul_data_i),
+      .ul_data_q            (ul_data_q),
       // Control Interface
+      //==================
       .ctrl_bandwidth       (ctrl_bandwidth),
       .ctrl_numerology      (ctrl_numerology),
-      .ctrl_compression_mode(ctrl_compression_mode)
+      .ctrl_compression_mode(ctrl_compression_mode),
+      //
+      .buffer_mem_ctrl_en   (buffer_mem_ctrl_en),
+      .buffer_mem_addr_i    (buffer_mem_addr_i),
+      .buffer_mem_data_i    (buffer_mem_data_i),
+      .buffer_mem_we        (buffer_mem_we),
+      .buffer_mem_data_o    (buffer_mem_data_o)
   );
 
-
-  srs_adaptor_sim #(
-    .NUM_ETH_PORT (NUM_ETH_PORT),
-    .NUM_SRS_LAYER(64),
-    .NUM_CC       (NUM_CC)
-  ) i_srs_adaptor_sim (
-    // Interface with DFE
-    //===================
-    .clk_491m52       (clk_491m52),
-    .rst_491m52       (rst_491m52),
-    // SRS Section Header
-    .srs_buf_numsymbol(),
-    .srs_buf_symbol   (),
-    .srs_buf_valid    (),
-    // SRS data request
-    .srs_req_layer    (),
-    .srs_req_symbol   (),
-    .srs_req_cc       (),
-    .srs_req_valid    (),
-    // SRS data
-    .srs_data         (), // {4'b exponent, 9'b mantissa Q, 9'b mantissa I}
-    .srs_sop          (),
-    .srs_eop          (),
-    // Interface with XORIF
-    //=====================
-    .clk_400m         (clk_400m),
-    .rst_400m         (rst_400m),
-    // ORAN Parse Port
-    .m_t_header_offset_valid(m_t_header_offset_valid)    ,
-    .m_runt_packet_len      (m_runt_packet_len)          ,
-    .m_rtc_pc_id(m_rtc_pc_id)                ,
-    .m_concat(m_concat)                   ,
-    .m_messagetype(m_messagetype)              ,
-    .m_seqid(m_seqid)                    ,
-    .m_subseqid(m_subseqid)                 ,
-    .m_ebit(m_ebit)                     ,
-    .m_payloadsize(m_payloadsize)              ,
-    .m_packet_in_window(m_packet_in_window)         ,
-    .m_offset_in_symbol(m_offset_in_symbol)         ,
-    //
-    .m_radio_app_head_valid(m_radio_app_head_valid)     ,
-    .m_datadirection(m_datadirection)            ,
-    .m_numsections(m_numsections)              ,
-    .m_sectiontype(m_sectiontype)              ,
-    .m_filterindex(m_filterindex)              ,
-    .m_frameid(m_frameid)                  ,
-    .m_subframeid(m_subframeid)               ,
-    .m_slotid(m_slotid)                   ,
-    .m_symbolid(m_symbolid)                 ,
-    .m_udcomphdr(m_udcomphdr)                ,
-    .m_timeoffset(m_timeoffset)               ,
-    .m_framestructure(m_framestructure)           ,
-    .m_cplength(m_cplength)                 ,
-    //
-    .m_section_header_valid(m_section_header_valid)     ,
-    .m_numsymbol(m_numsymbol)                ,
-    .m_numprbc(m_numprbc)                  ,
-    .m_startprbc(m_startprbc)                ,
-    .m_sectionid(m_sectionid)                ,
-    .m_rb(m_rb)                       ,
-    .m_remask(m_remask)                   ,
-    .m_beamid15(m_beamid15)                 ,
-    .m_freqoffset(m_freqoffset)               ,
-    // UNSOL port
-    .s00_fram_unsol_tdata(s00_fram_unsol_tdata),
-    .s00_fram_unsol_tkeep(s00_fram_unsol_tkeep),
-    .s00_fram_unsol_tvalid(s00_fram_unsol_tvalid),
-    .s00_fram_unsol_tlast(s00_fram_unsol_tlast),
-    .s00_fram_unsol_tready(s00_fram_unsol_tready),
-    .s00_fram_unsol_tuser(s00_fram_unsol_tuser)
-    );
-
 endmodule
+
+`default_nettype wire

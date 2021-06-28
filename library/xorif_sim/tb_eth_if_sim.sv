@@ -2,128 +2,138 @@
 module tb_eth_if_sim;
 
   // The number of ethernet ports for ORAN_IF
-  parameter int NUM_ETH_PORT = 2;
+  parameter int NUM_ETH_PORT = 1;
   // The number of CCs for ORAN_IF
-  parameter int NUM_CC = 2;
+  parameter int NUM_CC = 1;
   // The number of DL layers
-  parameter int NUM_DL_LAYER = 16;
+  parameter int NUM_DL_LAYER = 1;
   // The number of Ul layers
-  parameter int NUM_UL_LAYER = 8;
+  parameter int NUM_UL_LAYER = 1;
 
   // Ethernet Interface
   //===================
 
-  logic        eth_port_clk            [NUM_ETH_PORT];
-  logic        eth_port_rst            [NUM_ETH_PORT];
+  bit        eth_port_clk            [NUM_ETH_PORT];
+  bit        eth_port_rst            [NUM_ETH_PORT];
 
-  logic [63:0] m_eth_fram_tdata        [NUM_ETH_PORT];
-  logic [ 7:0] m_eth_fram_tkeep        [NUM_ETH_PORT];
-  logic        m_eth_fram_tvalid       [NUM_ETH_PORT];
-  logic        m_eth_fram_tlast        [NUM_ETH_PORT];
-  logic        m_eth_fram_tready       [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b1}};
+  bit [63:0] m_eth_fram_tdata        [NUM_ETH_PORT];
+  bit [ 7:0] m_eth_fram_tkeep        [NUM_ETH_PORT];
+  bit        m_eth_fram_tvalid       [NUM_ETH_PORT];
+  bit        m_eth_fram_tlast        [NUM_ETH_PORT];
+  bit        m_eth_fram_tready       [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b1}};
 
-  logic        s_eth_mac_tuser         [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b0}};
-  logic        s_eth_mac_bad_fcs       [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b0}};;
-  logic [79:0] s_eth_mac_tstamp_out    [NUM_ETH_PORT] = '{NUM_ETH_PORT{80'b0}};;
-  logic        s_eth_mac_tstamp_valid  [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b0}};;
+  bit        s_eth_mac_tuser         [NUM_ETH_PORT];
+  bit        s_eth_mac_bad_fcs       [NUM_ETH_PORT];
+
+  bit [79:0] s_eth_mac_tstamp_out    [NUM_ETH_PORT];
+
+  bit        s_eth_mac_tstamp_valid  [NUM_ETH_PORT];
+
   //
-  logic [63:0] s_eth_defm_tdata        [NUM_ETH_PORT];
-  logic [ 7:0] s_eth_defm_tkeep        [NUM_ETH_PORT];
-  logic        s_eth_defm_tvalid       [NUM_ETH_PORT];
-  logic        s_eth_defm_tlast        [NUM_ETH_PORT];
+  bit [63:0] s_eth_defm_tdata        [NUM_ETH_PORT];
+  bit [ 7:0] s_eth_defm_tkeep        [NUM_ETH_PORT];
+  bit        s_eth_defm_tvalid       [NUM_ETH_PORT];
+  bit        s_eth_defm_tlast        [NUM_ETH_PORT];
 
-  logic [63:0] m_message_tdata         [NUM_ETH_PORT];
-  logic [ 7:0] m_message_tkeep         [NUM_ETH_PORT];
-  logic        m_message_tvalid        [NUM_ETH_PORT];
-  logic        m_message_tlast         [NUM_ETH_PORT];
-  logic        m_message_tready        [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b1}};;
-  logic [79:0] m_message_ts_tdata      [NUM_ETH_PORT];
-  logic        m_message_ts_tvalid     [NUM_ETH_PORT];
+  bit [63:0] m_message_tdata         [NUM_ETH_PORT];
+  bit [ 7:0] m_message_tkeep         [NUM_ETH_PORT];
+  bit        m_message_tvalid        [NUM_ETH_PORT];
+  bit        m_message_tlast         [NUM_ETH_PORT];
+  bit        m_message_tready        [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b1}};
+
+  bit [79:0] m_message_ts_tdata      [NUM_ETH_PORT];
+  bit        m_message_ts_tvalid     [NUM_ETH_PORT];
 
   // Internal Bus Interface
   //=======================
 
-  logic        clk_400m;
-  logic        rst_400m;
+  bit        clk_400m;
+  bit        rst_400m;
 
   // Radio Bus Interface
   //====================
 
-  logic        clk_491m52;
-  logic        rst_491m52;
+  bit        clk_491m52;
+  bit        rst_491m52;
 
-  logic        dl_radio_start_10ms = 0;
-  logic        ul_radio_start_10ms = 0;
+  bit        dl_radio_start_10ms = 0;
+  bit        ul_radio_start_10ms = 0;
 
-    // DL data
-  logic        dl_sof            [NUM_CC];
-  logic        dl_sos            [NUM_CC];
-  logic [15:0] dl_data_i         [NUM_CC][NUM_DL_LAYER];
-  logic [15:0] dl_data_q         [NUM_CC][NUM_DL_LAYER];
-  logic        dl_valid          [NUM_CC];
+  // DL data
+  bit        dl_sof                  [      NUM_CC];
+  bit        dl_sos                  [      NUM_CC];
+  bit [15:0] dl_data_i               [      NUM_CC]                         [NUM_DL_LAYER];
+  bit [15:0] dl_data_q               [      NUM_CC]                         [NUM_DL_LAYER];
+  bit        dl_valid                [      NUM_CC];
+
+  // UL data
+  bit        ul_sof_ahead_3          [      NUM_CC];
+  bit        ul_sop_ahead_3          [      NUM_CC];
+  bit [15:0] ul_data_i               [      NUM_CC]                         [NUM_UL_LAYER];
+  bit [15:0] ul_data_q               [      NUM_CC]                         [NUM_UL_LAYER];
 
   // AXI-Lite Control/Status
   //========================
 
-  logic        aclk;
-  logic        aresetn;
+  bit        aclk;
+  bit        aresetn;
 
-  logic [15:0] s00_axi_awaddr;
-  logic [ 2:0] s00_axi_awprot;
-  logic        s00_axi_awvalid;
-  logic        s00_axi_awready;
+  bit [15:0] s00_axi_awaddr;
+  bit [ 2:0] s00_axi_awprot;
+  bit        s00_axi_awvalid;
+  bit        s00_axi_awready;
   //
-  logic [31:0] s00_axi_wdata;
-  logic [ 3:0] s00_axi_wstrb;
-  logic        s00_axi_wvalid;
-  logic        s00_axi_wready;
+  bit [31:0] s00_axi_wdata;
+  bit [ 3:0] s00_axi_wstrb;
+  bit        s00_axi_wvalid;
+  bit        s00_axi_wready;
   //
-  logic [ 1:0] s00_axi_bresp;
-  logic        s00_axi_bvalid;
-  logic        s00_axi_bready;
+  bit [ 1:0] s00_axi_bresp;
+  bit        s00_axi_bvalid;
+  bit        s00_axi_bready;
   //
-  logic [15:0] s00_axi_araddr;
-  logic [ 2:0] s00_axi_arprot;
-  logic        s00_axi_arvalid;
-  logic        s00_axi_arready;
+  bit [15:0] s00_axi_araddr;
+  bit [ 2:0] s00_axi_arprot;
+  bit        s00_axi_arvalid;
+  bit        s00_axi_arready;
   //
-  logic [31:0] s00_axi_rdata;
-  logic [ 1:0] s00_axi_rresp;
-  logic        s00_axi_rvalid;
-  logic        s00_axi_rready;
+  bit [31:0] s00_axi_rdata;
+  bit [ 1:0] s00_axi_rresp;
+  bit        s00_axi_rvalid;
+  bit        s00_axi_rready;
   // interrupt pin
-  logic        s00_interrupt;
+  bit        s00_interrupt;
 
-  logic [15:0] s01_axi_awaddr;
-  logic [ 2:0] s01_axi_awprot;
-  logic        s01_axi_awvalid;
-  logic        s01_axi_awready;
+  bit [15:0] s01_axi_awaddr;
+  bit [ 2:0] s01_axi_awprot;
+  bit        s01_axi_awvalid;
+  bit        s01_axi_awready;
   //
-  logic [31:0] s01_axi_wdata;
-  logic [ 3:0] s01_axi_wstrb;
-  logic        s01_axi_wvalid;
-  logic        s01_axi_wready;
+  bit [31:0] s01_axi_wdata;
+  bit [ 3:0] s01_axi_wstrb;
+  bit        s01_axi_wvalid;
+  bit        s01_axi_wready;
   //
-  logic [ 1:0] s01_axi_bresp;
-  logic        s01_axi_bvalid;
-  logic        s01_axi_bready;
+  bit [ 1:0] s01_axi_bresp;
+  bit        s01_axi_bvalid;
+  bit        s01_axi_bready;
   //
-  logic [15:0] s01_axi_araddr;
-  logic [ 2:0] s01_axi_arprot;
-  logic        s01_axi_arvalid;
-  logic        s01_axi_arready;
+  bit [15:0] s01_axi_araddr;
+  bit [ 2:0] s01_axi_arprot;
+  bit        s01_axi_arvalid;
+  bit        s01_axi_arready;
   //
-  logic [31:0] s01_axi_rdata;
-  logic [ 1:0] s01_axi_rresp;
-  logic        s01_axi_rvalid;
-  logic        s01_axi_rready;
+  bit [31:0] s01_axi_rdata;
+  bit [ 1:0] s01_axi_rresp;
+  bit        s01_axi_rvalid;
+  bit        s01_axi_rready;
   // interrupt pin
-  logic        s01_interrupt;
+  bit        s01_interrupt;
 
   // Simulation Signals
   //===================
 
-  logic        axi_done = 0;
+  bit        axi_done = 0;
 
 
   // Registers Configuration Tasks
@@ -187,14 +197,14 @@ module tb_eth_if_sim;
 
       $display("Start configure eth_* register for Ethernet port %0d", i);
       // ETH_PORTS(X), 0xA000 + 0x100 * (X)
-      // eth_dest_addr
-      axi_write(32'hA000 + 32'h100 * i, 32'h22334455);
+      // eth_dest_addr (DU Address)
+      axi_write(32'hA000 + 32'h100 * i, 32'h22334488);
       axi_write(32'hA004 + 32'h100 * i, 32'h0011);
-      // eth_src_addr
-      axi_write(32'hA008 + 32'h100 * i, 32'h22334488);
+      // eth_src_addr (RU Address)
+      axi_write(32'hA008 + 32'h100 * i, 32'h22334455);
       axi_write(32'hA00C + 32'h100 * i, 32'h0011);
       // eth_vlan
-      axi_write(32'hA010 + 32'h100 * i, 32'h0002);
+      axi_write(32'hA010 + 32'h100 * i, 32'h0001);
       // eth_ipv4_0
       axi_write(32'hA030 + 32'h100 * i, 32'h54);
       // eth_ipv4_1
@@ -246,13 +256,14 @@ module tb_eth_if_sim;
 
     // TODO: configure interrupt registers
 
+    // fram_reset
+    axi_write(32'h2000, 32'h1);
+    axi_write(32'h2000, 32'h0);
+
     // Framer, 0x2000 and 0x2200
     // fram_protocol
     axi_write(32'h2200, 32'h10);  // with VLAN
     //axi_write(32'h2200, 32'h0); // w/o VLAN
-    // fram_reset
-    axi_write(32'h2000, 32'h1);
-    axi_write(32'h2000, 32'h0);
 
     // De-Framer, 0x6000 ~ 0x6050
     // defm_err_packet_filter
@@ -276,11 +287,11 @@ module tb_eth_if_sim;
     // setup_cnt
     axi_write(32'hE600, 32'd7200);
     // setup_sf
-    axi_write(32'hE608, 32'h2);
+    axi_write(32'hE608, 32'h7);
     // setup_sl
     axi_write(32'hE60C, 32'h0);
     // setup_sy
-    axi_write(32'hE610, 32'hD);
+    axi_write(32'hE610, 32'h6);
     // oran_timer_sim_cfg
     axi_write(32'hE604, 32'h0);
   endtask
@@ -289,7 +300,7 @@ module tb_eth_if_sim;
     logic [31:0] data;
     for (int i = 0; i < 1; i++) begin
       $display("Start configure CC registers for CC %0d", i);
-      // CC(X), 0xE100 + 0x100 * (X)
+      // CC(X), 0xE100 + 0x70 * (X)
       // oran_cc_config
       axi_write(32'hE100 + 32'h70 * i, 32'h10111);
       // cc_dl_ctrl_offsets
@@ -303,9 +314,11 @@ module tb_eth_if_sim;
       // oran_cc_num_sym_config
       axi_write(32'hE114 + 32'h70 * i, 32'h15120400);
       // pran_cc_ul_compression
-      axi_write(32'hE118 + 32'h70 * i, 32'h119);
+      //axi_write(32'hE118 + 32'h70 * i, 32'h100); // raw
+      axi_write(32'hE118 + 32'h70 * i, 32'h100);  // bfp9
       // oran_cc_dl_compression
-      axi_write(32'hE11C + 32'h70 * i, 32'h119);
+      //axi_write(32'hE11C + 32'h70 * i, 32'h100); // raw
+      axi_write(32'hE11C + 32'h70 * i, 32'h100);  // bfp9
       // cc_ul_setup_c_abs_symbol
       axi_write(32'hE120 + 32'h70 * i, 32'h6);
       // cc_ul_setup_c_cycles
@@ -323,7 +336,7 @@ module tb_eth_if_sim;
       // cc_max_symbols
       axi_write(32'hE158 + 32'h70 * i, 32'h118);
       // cc_num_ctrl_per_symbol_dl
-      axi_write(32'hE160 + 32'h70 * i, 32'h0A);
+      axi_write(32'hE160 + 32'h70 * i, 32'hA);
       // cc_num_ctrl_per_symbol_ul
       axi_write(32'hE164 + 32'h70 * i, 32'h30);
       // cc_modvals_dl
@@ -337,8 +350,10 @@ module tb_eth_if_sim;
     // TODO: cc_dl_data_unroll_offset
     axi_write(32'hE500, 32'h0);
     axi_write(32'hE504, 32'h71E);
-    axi_write(32'hE505, 32'hE3C);
+    axi_write(32'hE508, 32'hE3C);
     axi_write(32'hE50C, 32'h115A);
+    // axi_write(32'hE510, 32'h1C78);
+    // axi_write(32'hE514, 32'h2396);
 
     // TODO: cc_ssb_data_unroll_offset
 
@@ -459,7 +474,7 @@ module tb_eth_if_sim;
   // ETH reset
   initial begin
     eth_port_rst = '{NUM_ETH_PORT{1'b1}};
-    repeat(100) @(posedge eth_port_clk[0]);
+    repeat (100) @(posedge eth_port_clk[0]);
     eth_port_rst = '{NUM_ETH_PORT{1'b0}};
   end
 
@@ -487,7 +502,7 @@ module tb_eth_if_sim;
     $display("Done AXI registers configuration");
     axi_done = 1;
 
-    #(100 * 1000 - $time()); // wait to 100 us
+    #(50 * 1000 - $time());  // wait to 50 us
     $display("Enable and reload CC");
     // cc_reload
     axi_write(32'hE000, 32'h1);
@@ -506,8 +521,8 @@ module tb_eth_if_sim;
   //---------------------
 
   initial begin
-    #(100 * 1000);  // wait to 100 us
-    g_eth_injector[0].eth_injector_i.play_pcap("test_1640.pcap");
+    #(150 * 1000);  // wait to 150 us
+    g_eth_injector[0].eth_injector_i.play_pcap("ul_c_raw.pcap");
     #1000;
     $finish();
   end
@@ -623,6 +638,20 @@ module tb_eth_if_sim;
       .NUM_UL_LAYER(NUM_UL_LAYER)
   ) DUT (
       .*
+  );
+
+  ul_traffic_gen i_ul_traffic_gen (
+      .clk                (clk_491m52),
+      .rst                (rst_491m52),
+      //
+      .ul_radio_start_10ms(ul_radio_start_10ms),
+      //
+      .ul_sof_ahead_3     (ul_sof_ahead_3[0]),
+      .ul_sop_ahead_3     (ul_sop_ahead_3[0]),
+      .ul_data_i          (ul_data_i[0][0]),
+      .ul_data_q          (ul_data_q[0][0]),
+      // Control
+      .ctrl_numerology    ('0)
   );
 
 endmodule
