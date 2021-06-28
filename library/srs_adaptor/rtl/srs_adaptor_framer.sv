@@ -14,9 +14,9 @@ module srs_adaptor_framer (
     // BRAM
     //=====
     // Latency = 3
-    output var [ 9:0] bram_addr,  // 0 ~ 1024
-    output var        bram_rden,  // !connect to all registers in output pipe
-    input var  [95:0] bram_data,  // 4 RE
+    output var [ 9:0] bram_addr,            // 0 ~ 1024
+    output var        bram_rden,            // !connect to all registers in output pipe
+    input var  [95:0] bram_data,            // 4 RE
     // UNSOL port
     //===========
     output var [63:0] m_fram_unsol_tdata,

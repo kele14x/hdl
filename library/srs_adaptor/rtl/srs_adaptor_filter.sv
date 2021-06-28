@@ -48,7 +48,14 @@ module srs_adaptor_filter (
     //================
     output var [15:0] srs_rtc_pc_id,
     output var [ 3:0] srs_cc,
+    output var [ 5:0] srs_layer,
+    //
+    output var [ 7:0] srs_frameid,
+    output var [ 3:0] srs_subframid,
+    output var [ 5:0] srs_slotid,
+    output var [ 5:0] srs_symbolid,
     output var [11:0] srs_symbol,
+    //
     output var [ 3:0] srs_numsymbol,
     output var [ 7:0] srs_numprbc,
     output var [ 9:0] srs_startprbc,
@@ -64,39 +71,38 @@ module srs_adaptor_filter (
   //====
   // This FSM is used to extract SRS configuration C-Plane message from XORIF.
   // The necessary information of SRS message are:
+  //  rtcID[7:6] = 1 (RU Port ID for SRS) 
   //  messageType = 2 (C-Plane message)
   //  Packet in window
   //  Packet with good length
   //  dataDirction = 0 (UL)
   //  sectionType = 1 (Generic for DL/UL, but we use it for SRS)
-  //  sectionID = 0
 
   typedef enum int {
-    S_TRANS,
-    S_APP,
-    S_SEC,
-    S_VALID
+    S_TRANS,  // wait for transcation header valid
+    S_APP,    // wait application header valid
+    S_SEC,    // wait section header valid
+    S_VALID   // output
   } state_t;
 
   state_t state, state_next;
 
   logic t_header_is_ok, radio_app_head_is_ok, section_header_is_ok;
 
-  logic [3:0] s_subframeid_r;
-  logic [5:0] s_slotid_r;
-  logic [5:0] s_symbolid_r;
-
   // SRS Message Filter Condition
 
   // TODO: SRS message is filtered by s_rtc_pc_id, need to check
-  assign t_header_is_ok = s_messagetype == 2 && s_packet_in_window && ~s_runt_packet_len && s_rtc_pc_id == 64;
+  assign t_header_is_ok = s_messagetype == 2 && s_packet_in_window && ~s_runt_packet_len && s_rtc_pc_id[7:6] == 2'b01;
 
   assign radio_app_head_is_ok = s_datadirection == 0 && s_sectiontype == 1;
 
   assign section_header_is_ok = 1;
 
+  logic [1:0] mu;
 
   // FSM
+  //====
+  // Note this FSM assume s_numsections is always 1. If not, this FSM needs minor change.
 
   always_ff @(posedge clk) begin
     if (rst) begin
@@ -108,25 +114,27 @@ module srs_adaptor_filter (
 
   always_comb begin : p_state_next
     case (state)
-      S_TRANS: state_next = ~s_t_header_offset_valid ? S_TRANS : ~t_header_is_ok ? S_TRANS : S_APP;
-      S_APP: state_next = ~s_radio_app_head_valid ? S_APP : ~radio_app_head_is_ok ? S_TRANS : S_SEC;
-      S_SEC:
-      state_next = ~s_section_header_valid ? S_SEC : ~section_header_is_ok ? S_TRANS : S_VALID;
-      S_VALID: state_next = S_TRANS;
-      default: state_next = S_TRANS;
+      S_TRANS: begin
+        state_next = ~s_t_header_offset_valid ? S_TRANS : ~t_header_is_ok ? S_TRANS : S_APP;
+      end
+      S_APP: begin
+        state_next = ~s_radio_app_head_valid ? S_APP : ~radio_app_head_is_ok ? S_TRANS : S_SEC;
+      end
+      S_SEC: begin
+        state_next = ~s_section_header_valid ? S_SEC : ~section_header_is_ok ? S_TRANS : S_VALID;
+      end
+      S_VALID: begin
+        state_next = S_TRANS;
+      end
+      default: begin
+        state_next = S_TRANS;
+      end
     endcase
   end
 
 
   // Output
-
-  always_ff @(posedge clk) begin
-    if (s_radio_app_head_valid) begin
-      s_subframeid_r <= s_subframeid;
-      s_slotid_r     <= s_slotid;
-      s_symbolid_r   <= s_symbolid;
-    end
-  end
+  //=======
 
   always_ff @(posedge clk) begin
     if (rst) begin
@@ -137,10 +145,33 @@ module srs_adaptor_filter (
   end
 
   always_ff @(posedge clk) begin
-    if (state_next == S_VALID) begin
+    if (s_t_header_offset_valid) begin
       srs_rtc_pc_id <= s_rtc_pc_id;
       srs_cc        <= s_rtc_pc_id[11:8];
-      srs_symbol    <= (s_subframeid_r * 2 + s_slotid_r) * 7 * (2 ** ctrl_numerology) + s_symbolid_r;
+      srs_layer     <= s_rtc_pc_id[5:0];
+    end
+  end
+
+  always_comb begin
+    case (ctrl_numerology)
+      0:       mu = 1;
+      1:       mu = 0;
+      default: mu = 2;
+    endcase
+  end
+
+  always_ff @(posedge clk) begin
+    if (s_radio_app_head_valid) begin
+      srs_frameid   <= s_frameid;
+      srs_subframid <= s_subframeid;
+      srs_slotid    <= s_slotid;
+      srs_symbolid  <= s_symbolid;
+    end
+    srs_symbol <= (s_subframeid * 2 + s_slotid) * 7 * (2 ** mu) + s_symbolid;
+  end
+
+  always_ff @(posedge clk) begin
+    if (s_section_header_valid) begin
       srs_numsymbol <= s_numsymbol;
       srs_numprbc   <= s_numprbc;
       srs_startprbc <= s_startprbc;

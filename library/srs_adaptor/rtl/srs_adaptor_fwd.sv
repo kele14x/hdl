@@ -1,7 +1,9 @@
 // file: srs_adaptor_fwd.sv
 // brief: Forward necessary SRS C-Plane message to next module as SRS
-//        configuration.
-// TODO: Be smart enough to not forward same message twice or more
+//        configuration. It tries to be smart enough to not forward same
+//        message twice or more.
+// note: This module assume two SRS C-Plane message will not arrive too close.
+//
 `timescale 1 ns / 1 ps `default_nettype none
 
 module srs_adaptor_fwd (
@@ -26,11 +28,24 @@ module srs_adaptor_fwd (
 );
 
 
-  // SRS C-Plane message CDC to clk_491m52
-  //======================================
+  localparam DataWidth = (4 + 12 + 4);
 
+  // CDC
+  //=====
+  // SRS C-Plane message CDC to clk_491m52
+
+  logic [DataWidth-1:0] srs_in_reg, srs_in;
   logic srs_send;
   logic srs_rcv;
+
+  assign srs_in = {srs_cc, srs_symbol, srs_numsymbol};
+
+  always_ff @(posedge clk_400m) begin
+    if (srs_valid) begin
+      srs_in_reg <= srs_in;
+    end
+  end
+
 
   // Put all data into a CDC handshake buffer, assume the incoming SRS message
   // will not come too offen, so we have enough time to forward it to next
@@ -38,7 +53,7 @@ module srs_adaptor_fwd (
   always_ff @(posedge clk_400m) begin
     if (rst_400m) begin
       srs_send <= 1'b0;
-    end else if (srs_valid) begin
+    end else if (srs_valid && (srs_in != srs_in_reg)) begin
       srs_send <= 1'b1;
     end else if (srs_rcv) begin
       srs_send <= 1'b0;
@@ -53,7 +68,7 @@ module srs_adaptor_fwd (
       .INIT_SYNC_FF  (0),
       .SIM_ASSERT_CHK(0),
       .SRC_SYNC_FF   (2),
-      .WIDTH         (20)
+      .WIDTH         (DataWidth)
   ) xpm_cdc_handshake_inst (
       .src_clk (clk_400m),
       .src_in  ({srs_cc, srs_symbol, srs_numsymbol}),

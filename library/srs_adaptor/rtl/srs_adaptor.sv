@@ -20,7 +20,7 @@ module srs_adaptor #(
     output var [11:0] srs_req_symbol,
     output var        srs_req_valid,
     // SRS data
-    input var  [21:0] srs_data,  // {4E, 9Q, 9I}
+    input var  [21:0] srs_data,                               // {4E, 9Q, 9I}
     input var         srs_valid,
     input var         srs_sop,
     input var         srs_eop,
@@ -73,13 +73,16 @@ module srs_adaptor #(
     output var        m_fram_unsol_tvalid,
     output var        m_fram_unsol_tlast,
     input var         m_fram_unsol_tready,
-    output var [31:0] m_fram_unsol_tuser
+    output var [31:0] m_fram_unsol_tuser,
+    // Control
+    //========
+    input var  [ 1:0] ctrl_numerology
 );
 
 
   logic [15:0] srs_flt_rtc_pc_id [NUM_ETH_PORT];
   logic [ 3:0] srs_flt_cc        [NUM_ETH_PORT];
-  logic [ 3:0] srs_flt_symbol    [NUM_ETH_PORT];
+  logic [11:0] srs_flt_symbol    [NUM_ETH_PORT];
   logic [ 3:0] srs_flt_numsymbol [NUM_ETH_PORT];
   logic [ 7:0] srs_flt_numprbc   [NUM_ETH_PORT];
   logic [ 9:0] srs_flt_startprbc [NUM_ETH_PORT];
@@ -89,7 +92,7 @@ module srs_adaptor #(
   logic [15:0] srs_mux_rtc_pc_id;
   logic [ 3:0] srs_mux_cc;
   logic [ 3:0] srs_mux_symbol;
-  logic [ 3:0] srs_mux_numsymbol;
+  logic [11:0] srs_mux_numsymbol;
   logic [ 7:0] srs_mux_numprbc;
   logic [ 9:0] srs_mux_startprbc;
   logic [11:0] srs_mux_sectionid;
@@ -150,14 +153,17 @@ module srs_adaptor #(
           .s_freqoffset           (s_freqoffset[i]),
           // SRS Information
           //================
-          .srs_valid              (srs_flt_valid[i]),
           .srs_rtc_pc_id          (srs_flt_rtc_pc_id[i]),
           .srs_cc                 (srs_flt_cc[i]),
           .srs_symbol             (srs_flt_symbol[i]),
           .srs_numsymbol          (srs_flt_numsymbol[i]),
           .srs_numprbc            (srs_flt_numprbc[i]),
           .srs_startprbc          (srs_flt_startprbc[i]),
-          .srs_sectionid          (srs_flt_sectionid[i])
+          .srs_sectionid          (srs_flt_sectionid[i]),
+          .srs_valid              (srs_flt_valid[i]),
+          // Control
+          //========
+          .ctrl_numerology        (ctrl_numerology)
       );
 
     end
@@ -222,16 +228,16 @@ module srs_adaptor #(
       // UL Timing
       .s_ul_sym_num     (s_ul_sym_num),
       .s_ul_update      (s_ul_update),
-      // SRS Filter
-      .srs_rtc_pc_id    (srs_mux_rtc_pc_id),
-      .srs_cc           (srs_mux_cc),
-      .srs_subframeid   (srs_mux_symbol),
-      .srs_numsymbol    (srs_mux_numsymbol),
-      .srs_numprbc      (srs_mux_numprbc),
-      .srs_startprbc    (srs_mux_startprbc),
-      .srs_sectionid    (srs_mux_sectionid),
-      .srs_ethport      (srs_mux_ethport),
-      .srs_valid        (srs_mux_valid),
+      // SRS Mux
+      .srs_mux_rtc_pc_id(srs_mux_rtc_pc_id),
+      .srs_mux_cc       (srs_mux_cc),
+      .srs_mux_symbol   (srs_mux_symbol),
+      .srs_mux_numsymbol(srs_mux_numsymbol),
+      .srs_mux_numprbc  (srs_mux_numprbc),
+      .srs_mux_startprbc(srs_mux_startprbc),
+      .srs_mux_sectionid(srs_mux_sectionid),
+      .srs_mux_ethport  (srs_mux_ethport),
+      .srs_mux_valid    (srs_mux_valid),
       // Frame request
       .fram_req_eth_port(fram_req_eth_port),
       .fram_req_header  (fram_req_header),
@@ -243,6 +249,10 @@ module srs_adaptor #(
       //==========================
       .clk_491m52       (clk_491m52),
       .rst_491m52       (rst_491m52),
+      //
+      .srs_valid        (srs_valid),
+      .srs_sop          (srs_sop),
+      .srs_eop          (srs_eop),
       // SRS Request
       .srs_req_cc       (srs_req_cc),
       .srs_req_layer    (srs_req_layer),
@@ -278,7 +288,6 @@ module srs_adaptor #(
       .m_fram_unsol_tready(m_fram_unsol_tready),
       .m_fram_unsol_tuser (m_fram_unsol_tuser)
   );
-
 
 endmodule
 

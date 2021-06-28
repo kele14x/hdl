@@ -6,7 +6,7 @@ module srs_adaptor_writer (
     input var         clk,
     input var         rst,
     //
-    input var  [23:0] srs_data,  // {4'b exponent, 9'b mantissa Q, 9'b mantissa I}
+    input var  [23:0] srs_data,   // {4'b exponent, 9'b mantissa Q, 9'b mantissa I}
     input var         srs_valid,
     input var         srs_eop,
     //
