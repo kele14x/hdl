@@ -278,7 +278,7 @@ module pc_cfr #(
   );
 
   // Soft clipper
-  // 142 clock tick latency
+  // 143 clock tick latency
 
   pc_cfr_softclipper #(
       .DATA_WIDTH    (DATA_WIDTH),

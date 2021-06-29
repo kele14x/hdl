@@ -22,7 +22,7 @@
 module tb_cmult ();
 
   localparam int TestVectorLength = 4096;
-  localparam int DutLatency = 7;
+  localparam int DutLatency = 8;
 
   localparam int AWidth = 16;
   localparam int BWidth = 16;
