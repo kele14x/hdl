@@ -87,7 +87,6 @@ module pc_cfr_softclipper #(
   assign ctrl_cpw_rd_data_i = ctrl_cpw_rd_data_i_s[0];
   assign ctrl_cpw_rd_data_q = ctrl_cpw_rd_data_q_s[0];
 
-  (* keep_hierarchy="yes" *)
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
       .PIPELINE_STAGES(75)
@@ -99,7 +98,6 @@ module pc_cfr_softclipper #(
 
   generate
     for (genvar i = 0; i < NUM_CPG; i++) begin : g_cpgs
-      (* keep_hierarchy="yes" *)
       pc_cfr_cpg #(
           .DATA_WIDTH    (DATA_WIDTH),
           .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH)

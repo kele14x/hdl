@@ -47,23 +47,18 @@ module srs_adaptor_filter (
     // SRS Information
     //================
     output var [15:0] srs_rtc_pc_id,
-    output var [ 3:0] srs_cc,
-    output var [ 5:0] srs_layer,
     //
     output var [ 7:0] srs_frameid,
-    output var [ 3:0] srs_subframid,
+    output var [ 3:0] srs_subframeid,
     output var [ 5:0] srs_slotid,
     output var [ 5:0] srs_symbolid,
-    output var [11:0] srs_symbol,
     //
     output var [ 3:0] srs_numsymbol,
     output var [ 7:0] srs_numprbc,
     output var [ 9:0] srs_startprbc,
     output var [11:0] srs_sectionid,
-    output var        srs_valid,
-    // Control
-    //========
-    input var  [ 1:0] ctrl_numerology
+    //
+    output var        srs_valid
 );
 
 
@@ -91,14 +86,14 @@ module srs_adaptor_filter (
 
   // SRS Message Filter Condition
 
-  // TODO: SRS message is filtered by s_rtc_pc_id, need to check
+  // {2-bit DU_Port_ID, 3-bit RandSector_ID, 3-bit CC_ID, 8-bit RU_Port_ID}
+  // SRS: RU_Port_ID from 0x40 to 0x7F
   assign t_header_is_ok = s_messagetype == 2 && s_packet_in_window && ~s_runt_packet_len && s_rtc_pc_id[7:6] == 2'b01;
 
   assign radio_app_head_is_ok = s_datadirection == 0 && s_sectiontype == 1;
 
   assign section_header_is_ok = 1;
 
-  logic [1:0] mu;
 
   // FSM
   //====
@@ -147,27 +142,16 @@ module srs_adaptor_filter (
   always_ff @(posedge clk) begin
     if (s_t_header_offset_valid) begin
       srs_rtc_pc_id <= s_rtc_pc_id;
-      srs_cc        <= s_rtc_pc_id[11:8];
-      srs_layer     <= s_rtc_pc_id[5:0];
     end
-  end
-
-  always_comb begin
-    case (ctrl_numerology)
-      0:       mu = 1;
-      1:       mu = 0;
-      default: mu = 2;
-    endcase
   end
 
   always_ff @(posedge clk) begin
     if (s_radio_app_head_valid) begin
       srs_frameid   <= s_frameid;
-      srs_subframid <= s_subframeid;
+      srs_subframeid <= s_subframeid;
       srs_slotid    <= s_slotid;
       srs_symbolid  <= s_symbolid;
     end
-    srs_symbol <= (s_subframeid * 2 + s_slotid) * 7 * (2 ** mu) + s_symbolid;
   end
 
   always_ff @(posedge clk) begin

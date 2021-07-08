@@ -6,6 +6,7 @@ module srs_adaptor_framer (
     // Frame Request
     //==============
     input var  [ 2:0] fram_req_eth_port,
+    input var  [15:0] fram_req_rtc_pc_id,
     input var  [63:0] fram_req_header,
     input var  [ 8:0] fram_req_start_rb,
     input var  [ 7:0] fram_req_num_rb,
@@ -109,7 +110,6 @@ module srs_adaptor_framer (
 
   logic [63:0] tdata;
 
-  logic [15:0] ecpri_axc_id;
   logic [12:0] packet_length;
 
   function [63:0] data_gb(input logic [2:0] state, input logic [95:0] data,
@@ -285,15 +285,12 @@ module srs_adaptor_framer (
     if (rst) begin
       m_fram_unsol_tuser <= 1'b0;
     end else if (state == S_IDLE && fram_req_valid) begin
-      m_fram_unsol_tuser <= {ecpri_axc_id, fram_req_eth_port, packet_length};
+      m_fram_unsol_tuser <= {fram_req_rtc_pc_id, fram_req_eth_port, packet_length};
     end
   end
 
-  // RTC/PC ID
-  assign ecpri_axc_id  = fram_req_header[63:48];
-
   // 1 RB requires 3.5 words, which is 28 byte, plus 8-byte header
-  assign packet_length = fram_req_num_rb * 28 + 8;
+  assign packet_length = (fram_req_num_rb == 0 ? 273 : fram_req_num_rb) * 28 + 8;
 
 
   // BRAM Reader
@@ -326,7 +323,7 @@ module srs_adaptor_framer (
 
   always_ff @(posedge clk) begin
     if (state == S_IDLE && fram_req_valid) begin
-      bram_re_end <= (fram_req_start_rb + fram_req_num_rb) * 12 - 4;
+      bram_re_end <= (fram_req_start_rb + (fram_req_num_rb == 0 ? 273 : fram_req_num_rb)) * 12 - 4;
     end
   end
 

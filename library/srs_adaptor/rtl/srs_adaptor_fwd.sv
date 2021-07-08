@@ -12,7 +12,7 @@ module srs_adaptor_fwd (
     input var         clk_400m,
     input var         rst_400m,
     // SRS Filter
-    input var  [ 3:0] srs_cc,
+    input var  [ 2:0] srs_cc,
     input var  [11:0] srs_symbol,
     input var  [ 3:0] srs_numsymbol,
     input var         srs_valid,
@@ -21,30 +21,21 @@ module srs_adaptor_fwd (
     input var         clk_491m52,
     input var         rst_491m52,
     // SRS Configuration Forward
-    output var [ 3:0] srs_cfg_cc,
+    output var [ 2:0] srs_cfg_cc,
     output var [11:0] srs_cfg_symbol,
     output var [ 3:0] srs_cfg_numsymbol,
     output var        srs_cfg_valid
 );
 
 
-  localparam DataWidth = (4 + 12 + 4);
+  localparam DataWidth = ($size(srs_cc) + $size(srs_symbol) + $size(srs_numsymbol));
 
   // CDC
   //=====
   // SRS C-Plane message CDC to clk_491m52
 
-  logic [DataWidth-1:0] srs_in_reg, srs_in;
   logic srs_send;
   logic srs_rcv;
-
-  assign srs_in = {srs_cc, srs_symbol, srs_numsymbol};
-
-  always_ff @(posedge clk_400m) begin
-    if (srs_valid) begin
-      srs_in_reg <= srs_in;
-    end
-  end
 
 
   // Put all data into a CDC handshake buffer, assume the incoming SRS message
@@ -53,7 +44,7 @@ module srs_adaptor_fwd (
   always_ff @(posedge clk_400m) begin
     if (rst_400m) begin
       srs_send <= 1'b0;
-    end else if (srs_valid && (srs_in != srs_in_reg)) begin
+    end else if (srs_valid) begin
       srs_send <= 1'b1;
     end else if (srs_rcv) begin
       srs_send <= 1'b0;

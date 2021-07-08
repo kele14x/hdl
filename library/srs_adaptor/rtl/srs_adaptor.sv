@@ -10,20 +10,20 @@ module srs_adaptor #(
     input var         clk_491m52,
     input var         rst_491m52,
     // SRS Section Header
-    output var [ 3:0] srs_cfg_cc,
+    output var [ 2:0] srs_cfg_cc,
     output var [11:0] srs_cfg_symbol,
     output var [ 3:0] srs_cfg_numsymbol,
     output var        srs_cfg_valid,
     // SRS data request
-    output var [ 3:0] srs_req_cc,
+    output var [ 2:0] srs_req_cc,
     output var [ 5:0] srs_req_layer,
     output var [11:0] srs_req_symbol,
     output var        srs_req_valid,
     // SRS data
-    input var  [21:0] srs_data,                               // {4E, 9Q, 9I}
-    input var         srs_valid,
-    input var         srs_sop,
-    input var         srs_eop,
+    input var  [23:0] srs_data_tdata,                         // {4E, 9Q, 9I}
+    input var         srs_data_tlast,
+    input var         srs_data_tvalid,
+    output var        srs_data_tready,
     // Interface with XORIF
     //=====================
     input var         clk_400m,
@@ -76,36 +76,94 @@ module srs_adaptor #(
     output var [31:0] m_fram_unsol_tuser,
     // Control
     //========
-    input var  [ 1:0] ctrl_numerology
+    // M-Plane SRS Configration
+    input var  [15:0] ctrl_srs_rtc_pc_id,
+    //
+    input var  [ 7:0] ctrl_srs_frameid,
+    input var  [ 3:0] ctrl_srs_subframeid,
+    input var  [ 5:0] ctrl_srs_slotid,
+    input var  [ 5:0] ctrl_srs_symbolid,
+    //
+    input var  [11:0] ctrl_srs_numsymbol,
+    input var  [ 7:0] ctrl_srs_numprbc,
+    input var  [ 9:0] ctrl_srs_startprbc,
+    input var  [11:0] ctrl_srs_sectionid,
+    //
+    input var  [ 2:0] ctrl_srs_ethport,
+    //
+    input var         ctrl_srs_valid,
+    // Mu
+    input var  [ 1:0] ctrl_numerology        [      NUM_CC]
 );
 
 
-  logic [15:0] srs_flt_rtc_pc_id [NUM_ETH_PORT];
-  logic [ 3:0] srs_flt_cc        [NUM_ETH_PORT];
-  logic [11:0] srs_flt_symbol    [NUM_ETH_PORT];
-  logic [ 3:0] srs_flt_numsymbol [NUM_ETH_PORT];
-  logic [ 7:0] srs_flt_numprbc   [NUM_ETH_PORT];
-  logic [ 9:0] srs_flt_startprbc [NUM_ETH_PORT];
-  logic [11:0] srs_flt_sectionid [NUM_ETH_PORT];
-  logic        srs_flt_valid     [NUM_ETH_PORT];
+  // SRS Filter output
+  logic [15:0] srs_flt_rtc_pc_id  [NUM_ETH_PORT];
+  logic [ 3:0] srs_flt_cc         [NUM_ETH_PORT];
+  //
+  logic [ 7:0] srs_flt_frameid    [NUM_ETH_PORT];
+  logic [ 3:0] srs_flt_subframeid [NUM_ETH_PORT];
+  logic [ 5:0] srs_flt_slotid     [NUM_ETH_PORT];
+  logic [ 5:0] srs_flt_symbolid   [NUM_ETH_PORT];
+  //
+  logic [ 3:0] srs_flt_numsymbol  [NUM_ETH_PORT];
+  logic [ 7:0] srs_flt_numprbc    [NUM_ETH_PORT];
+  logic [ 9:0] srs_flt_startprbc  [NUM_ETH_PORT];
+  logic [11:0] srs_flt_sectionid  [NUM_ETH_PORT];
+  //
+  logic        srs_flt_valid      [NUM_ETH_PORT];
 
+  // SRS Mux output
   logic [15:0] srs_mux_rtc_pc_id;
   logic [ 3:0] srs_mux_cc;
-  logic [ 3:0] srs_mux_symbol;
+  //
+  logic [ 7:0] srs_mux_frameid;
+  logic [ 3:0] srs_mux_subframeid;
+  logic [ 5:0] srs_mux_slotid;
+  logic [ 5:0] srs_mux_symbolid;
+  logic [11:0] srs_mux_symbol;
+  //
   logic [11:0] srs_mux_numsymbol;
   logic [ 7:0] srs_mux_numprbc;
   logic [ 9:0] srs_mux_startprbc;
   logic [11:0] srs_mux_sectionid;
-  logic [ 3:0] srs_mux_ethport;
+  //
+  logic [ 2:0] srs_mux_ethport;
+  //
   logic        srs_mux_valid;
 
+  // Send it to runner
+  logic [15:0] srs_run_rtc_pc_id;
+  logic [ 3:0] srs_run_cc;
+  //
+  logic [ 7:0] srs_run_frameid;
+  logic [ 3:0] srs_run_subframeid;
+  logic [ 3:0] srs_run_slotid;
+  logic [ 3:0] srs_run_symbolid;
+  logic [11:0] srs_run_symbol;
+  //
+  logic [ 7:0] srs_run_numprbc;
+  logic [ 9:0] srs_run_startprbc;
+  logic [11:0] srs_run_sectionid;
+  //
+  logic [ 2:0] srs_run_ethport;
+  //
+  logic        srs_run_valid;
+  logic        srs_run_ready;
+
+  // BRAM
+  logic [ 9:0] bram_addr;
+  logic        bram_rden;
+  logic [95:0] bram_data;
+
+  // Framer
   logic [ 2:0] fram_req_eth_port;
+  logic [15:0] fram_req_rtc_pc_id;
   logic [63:0] fram_req_header;
   logic [ 8:0] fram_req_start_rb;
   logic [ 7:0] fram_req_num_rb;
   logic        fram_req_valid;
   logic        fram_req_ready;
-
 
   generate
     for (genvar i = 0; i < NUM_ETH_PORT; i++) begin : g_filter
@@ -154,16 +212,18 @@ module srs_adaptor #(
           // SRS Information
           //================
           .srs_rtc_pc_id          (srs_flt_rtc_pc_id[i]),
-          .srs_cc                 (srs_flt_cc[i]),
-          .srs_symbol             (srs_flt_symbol[i]),
+          //
+          .srs_frameid            (srs_flt_frameid[i]),
+          .srs_subframeid         (srs_flt_subframeid[i]),
+          .srs_slotid             (srs_flt_slotid[i]),
+          .srs_symbolid           (srs_flt_symbolid[i]),
+          //
           .srs_numsymbol          (srs_flt_numsymbol[i]),
           .srs_numprbc            (srs_flt_numprbc[i]),
           .srs_startprbc          (srs_flt_startprbc[i]),
           .srs_sectionid          (srs_flt_sectionid[i]),
-          .srs_valid              (srs_flt_valid[i]),
-          // Control
-          //========
-          .ctrl_numerology        (ctrl_numerology)
+          //
+          .srs_valid              (srs_flt_valid[i])
       );
 
     end
@@ -174,27 +234,61 @@ module srs_adaptor #(
   ) i_mux (
       // XORIF
       //======
-      .clk              (clk_400m),
-      .rst              (rst_400m),
+      .clk                (clk_400m),
+      .rst                (rst_400m),
       // SRS Filter
-      .srs_flt_rtc_pc_id(srs_flt_rtc_pc_id),
-      .srs_flt_cc       (srs_flt_cc),
-      .srs_flt_symbol   (srs_flt_symbol),
-      .srs_flt_numsymbol(srs_flt_numsymbol),
-      .srs_flt_numprbc  (srs_flt_numprbc),
-      .srs_flt_startprbc(srs_flt_startprbc),
-      .srs_flt_sectionid(srs_flt_sectionid),
-      .srs_flt_valid    (srs_flt_valid),
+      //===========
+      .srs_flt_rtc_pc_id  (srs_flt_rtc_pc_id),
+      //
+      .srs_flt_frameid    (srs_flt_frameid),
+      .srs_flt_subframeid (srs_flt_subframeid),
+      .srs_flt_slotid     (srs_flt_slotid),
+      .srs_flt_symbolid   (srs_flt_symbolid),
+      //
+      .srs_flt_numsymbol  (srs_flt_numsymbol),
+      .srs_flt_numprbc    (srs_flt_numprbc),
+      .srs_flt_startprbc  (srs_flt_startprbc),
+      .srs_flt_sectionid  (srs_flt_sectionid),
+      //
+      .srs_flt_valid      (srs_flt_valid),
       // SRS MUX
-      .srs_mux_rtc_pc_id(srs_mux_rtc_pc_id),
-      .srs_mux_cc       (srs_mux_cc),
-      .srs_mux_symbol   (srs_mux_symbol),
-      .srs_mux_numsymbol(srs_mux_numsymbol),
-      .srs_mux_numprbc  (srs_mux_numprbc),
-      .srs_mux_startprbc(srs_mux_startprbc),
-      .srs_mux_sectionid(srs_mux_sectionid),
-      .srs_mux_ethport  (srs_mux_ethport),
-      .srs_mux_valid    (srs_mux_valid)
+      //========
+      .srs_mux_rtc_pc_id  (srs_mux_rtc_pc_id),
+      .srs_mux_cc         (srs_mux_cc),
+      //
+      .srs_mux_frameid    (srs_mux_frameid),
+      .srs_mux_subframeid (srs_mux_subframeid),
+      .srs_mux_slotid     (srs_mux_slotid),
+      .srs_mux_symbolid   (srs_mux_symbolid),
+      .srs_mux_symbol     (srs_mux_symbol),
+      //
+      .srs_mux_numsymbol  (srs_mux_numsymbol),
+      .srs_mux_numprbc    (srs_mux_numprbc),
+      .srs_mux_startprbc  (srs_mux_startprbc),
+      .srs_mux_sectionid  (srs_mux_sectionid),
+      //
+      .srs_mux_ethport    (srs_mux_ethport),
+      //
+      .srs_mux_valid      (srs_mux_valid),
+      // Control
+      //========
+      .ctrl_srs_rtc_pc_id (ctrl_srs_rtc_pc_id),
+      //
+      .ctrl_srs_frameid   (ctrl_srs_frameid),
+      .ctrl_srs_subframeid(ctrl_srs_subframeid),
+      .ctrl_srs_slotid    (ctrl_srs_slotid),
+      .ctrl_srs_symbolid  (ctrl_srs_symbolid),
+      //
+      .ctrl_srs_numsymbol (ctrl_srs_numsymbol),
+      .ctrl_srs_numprbc   (ctrl_srs_numprbc),
+      .ctrl_srs_startprbc (ctrl_srs_startprbc),
+      .ctrl_srs_sectionid (ctrl_srs_sectionid),
+      //
+      .ctrl_srs_ethport   (ctrl_srs_ethport),
+      //
+      .ctrl_srs_valid     (ctrl_srs_valid),
+      //
+      .ctrl_numerology    (ctrl_numerology)
   );
 
   srs_adaptor_fwd i_fwd (
@@ -223,58 +317,114 @@ module srs_adaptor #(
   ) i_controller (
       // XORIF
       //======
-      .clk_400m         (clk_400m),
-      .rst_400m         (rst_400m),
+      .clk               (clk_400m),
+      .rst               (rst_400m),
       // UL Timing
-      .s_ul_sym_num     (s_ul_sym_num),
-      .s_ul_update      (s_ul_update),
+      .s_ul_sym_num      (s_ul_sym_num),
+      .s_ul_update       (s_ul_update),
       // SRS Mux
-      .srs_mux_rtc_pc_id(srs_mux_rtc_pc_id),
-      .srs_mux_cc       (srs_mux_cc),
-      .srs_mux_symbol   (srs_mux_symbol),
-      .srs_mux_numsymbol(srs_mux_numsymbol),
-      .srs_mux_numprbc  (srs_mux_numprbc),
-      .srs_mux_startprbc(srs_mux_startprbc),
-      .srs_mux_sectionid(srs_mux_sectionid),
-      .srs_mux_ethport  (srs_mux_ethport),
-      .srs_mux_valid    (srs_mux_valid),
-      // Frame request
-      .fram_req_eth_port(fram_req_eth_port),
-      .fram_req_header  (fram_req_header),
-      .fram_req_start_rb(fram_req_start_rb),
-      .fram_req_num_rb  (fram_req_num_rb),
-      .fram_req_valid   (fram_req_valid),
-      .fram_req_ready   (fram_req_ready),
-      // DFE
-      //==========================
-      .clk_491m52       (clk_491m52),
-      .rst_491m52       (rst_491m52),
+      .srs_mux_rtc_pc_id (srs_mux_rtc_pc_id),
+      .srs_mux_cc        (srs_mux_cc),
       //
-      .srs_valid        (srs_valid),
-      .srs_sop          (srs_sop),
-      .srs_eop          (srs_eop),
-      // SRS Request
-      .srs_req_cc       (srs_req_cc),
-      .srs_req_layer    (srs_req_layer),
-      .srs_req_symbol   (srs_req_symbol),
-      .srs_req_valid    (srs_req_valid)
+      .srs_mux_frameid   (srs_mux_frameid),
+      .srs_mux_subframeid(srs_mux_subframeid),
+      .srs_mux_slotid    (srs_mux_slotid),
+      .srs_mux_symbolid  (srs_mux_symbolid),
+      .srs_mux_symbol    (srs_mux_symbol),
+      //
+      .srs_mux_numsymbol (srs_mux_numsymbol),
+      .srs_mux_numprbc   (srs_mux_numprbc),
+      .srs_mux_startprbc (srs_mux_startprbc),
+      .srs_mux_sectionid (srs_mux_sectionid),
+      //
+      .srs_mux_ethport   (srs_mux_ethport),
+      //
+      .srs_mux_valid     (srs_mux_valid),
+      // Runner
+      //=======
+      .srs_run_rtc_pc_id (srs_run_rtc_pc_id),
+      .srs_run_cc        (srs_run_cc),
+      //
+      .srs_run_frameid   (srs_run_frameid),
+      .srs_run_subframeid(srs_run_subframeid),
+      .srs_run_slotid    (srs_run_slotid),
+      .srs_run_symbolid  (srs_run_symbolid),
+      .srs_run_symbol    (srs_run_symbol),
+      //
+      .srs_run_numprbc   (srs_run_numprbc),
+      .srs_run_startprbc (srs_run_startprbc),
+      .srs_run_sectionid (srs_run_sectionid),
+      //
+      .srs_run_ethport   (srs_run_ethport),
+      //
+      .srs_run_valid     (srs_run_valid),
+      .srs_run_ready     (srs_run_ready)
   );
 
-  srs_adaptor_gearbox i_gearbox (
+  srs_adaptor_runner i_runner (
+      // 400M
+      //======
+      .clk_400m          (clk_400m),
+      .rst_400m          (rst_400m),
+      // SRS Request
+      .srs_run_rtc_pc_id (srs_run_rtc_pc_id),
+      .srs_run_cc        (srs_run_cc),
+      //
+      .srs_run_frameid   (srs_run_frameid),
+      .srs_run_subframeid(srs_run_subframeid),
+      .srs_run_slotid    (srs_run_slotid),
+      .srs_run_symbolid  (srs_run_symbolid),
+      .srs_run_symbol    (srs_run_symbol),
+      //
+      .srs_run_numprbc   (srs_run_numprbc),
+      .srs_run_startprbc (srs_run_startprbc),
+      .srs_run_sectionid (srs_run_sectionid),
+      //
+      .srs_run_ethport   (srs_run_ethport),
+      //
+      .srs_run_valid     (srs_run_valid),
+      .srs_run_ready     (srs_run_ready),
+      // Frame Request
+      //==============
+      .fram_req_eth_port (fram_req_eth_port),
+      .fram_req_rtc_pc_id(fram_req_rtc_pc_id),
+      .fram_req_header   (fram_req_header),
+      .fram_req_start_rb (fram_req_start_rb),
+      .fram_req_num_rb   (fram_req_num_rb),
+      .fram_req_valid    (fram_req_valid),
+      .fram_req_ready    (fram_req_ready),
+      //
+      .bram_rd_addr      (bram_addr),
+      .bram_rd_rden      (bram_rden),
+      .bram_rd_data      (bram_data),
       // DFE
       //====
-      .clk_491m52         (clk_491m52),
-      .rst_491m52         (rst_491m52),
+      .clk_491m52        (clk_491m52),
+      .rst_491m52        (rst_491m52),
       //
-      .srs_data           (srs_data),  // {4'b exponent, 9'b mantissa Q, 9'b mantissa I}
-      .srs_valid          (srs_valid),
-      .srs_eop            (srs_eop),
-      // XORIF
-      //=======
-      .clk_400m           (clk_400m),
-      .rst_400m           (rst_400m),
+      .srs_data_tdata    (srs_data_tdata),
+      .srs_data_tlast    (srs_data_tlast),
+      .srs_data_tvalid   (srs_data_tvalid),
+      .srs_data_tready   (srs_data_tready),
+      // SRS Request
+      .srs_req_cc        (srs_req_cc),
+      .srs_req_layer     (srs_req_layer),
+      .srs_req_symbol    (srs_req_symbol),
+      .srs_req_valid     (srs_req_valid)
+  );
+
+  srs_adaptor_framer i_framer (
+      // DFE
+      //====
+      .clk                (clk_400m),
+      .rst                (rst_400m),
+      //
+      .bram_addr          (bram_addr),  // {4'b exponent, 9'b mantissa Q, 9'b mantissa I}
+      .bram_rden          (bram_rden),
+      .bram_data          (bram_data),
       // Frame request
       .fram_req_eth_port  (fram_req_eth_port),
+      .fram_req_rtc_pc_id (fram_req_rtc_pc_id),
       .fram_req_header    (fram_req_header),
       .fram_req_start_rb  (fram_req_start_rb),
       .fram_req_num_rb    (fram_req_num_rb),

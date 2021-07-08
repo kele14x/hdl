@@ -6,9 +6,9 @@ module srs_adaptor_writer (
     input var         clk,
     input var         rst,
     //
-    input var  [23:0] srs_data,   // {4'b exponent, 9'b mantissa Q, 9'b mantissa I}
-    input var         srs_valid,
-    input var         srs_eop,
+    input var  [23:0] srs_data_tdata,   // {4'b exponent, 9'b mantissa Q, 9'b mantissa I}
+    input var         srs_data_tvalid,
+    input var         srs_data_tlast,
     //
     output var [11:0] wr_addr,
     output var        wr_en,
@@ -27,8 +27,8 @@ module srs_adaptor_writer (
 
   always_comb begin
     case (synced)
-      1'b0:    synced_next = srs_valid ? 1'b1 : 1'b0;
-      1'b1:    synced_next = (srs_valid && srs_eop) ? 1'b0 : 1'b1;
+      1'b0:    synced_next = srs_data_tvalid ? 1'b1 : 1'b0;
+      1'b1:    synced_next = (srs_data_tvalid && srs_data_tlast) ? 1'b0 : 1'b1;
       default: synced_next = 1'b0;
     endcase
   end
@@ -37,20 +37,20 @@ module srs_adaptor_writer (
     if (rst) begin
       wr_en <= 0;
     end else begin
-      wr_en <= srs_valid;
+      wr_en <= srs_data_tvalid;
     end
   end
 
   always_ff @(posedge clk) begin
     if (rst) begin
       wr_addr <= '0;
-    end else if (srs_valid) begin
+    end else if (srs_data_tvalid) begin
       wr_addr <= synced ? wr_addr + 1 : '0;
     end
   end
 
   always_ff @(posedge clk) begin
-    wr_data <= srs_data;
+    wr_data <= srs_data_tdata;
   end
 
 endmodule

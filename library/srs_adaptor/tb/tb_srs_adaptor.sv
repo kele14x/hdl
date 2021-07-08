@@ -14,22 +14,22 @@ module tb_srs_adaptor;
   logic        rst_491m52;
 
   // SRS Configuration
-  logic [ 3:0] srs_cfg_cc;
+  logic [ 2:0] srs_cfg_cc;
   logic [11:0] srs_cfg_symbol;
   logic [ 3:0] srs_cfg_numsymbol;
   logic        srs_cfg_valid;
 
   // SRS Data Request
-  logic [ 3:0] srs_req_cc;
+  logic [ 2:0] srs_req_cc;
   logic [ 5:0] srs_req_layer;
   logic [11:0] srs_req_symbol;
   logic        srs_req_valid;
 
   // SRS Data
-  logic [23:0] srs_data = 0;
-  logic        srs_valid = 0;
-  logic        srs_sop = 0;
-  logic        srs_eop = 0;
+  logic [23:0] srs_data_tdata = 0;
+  logic        srs_data_tvalid = 0;
+  logic        srs_data_tready;
+  logic        srs_data_tlast = 0;
 
   // XORIF Clock & Reset
   logic        clk_400m;
@@ -84,8 +84,28 @@ module tb_srs_adaptor;
   logic        m_fram_unsol_tready = 1;
   logic [31:0] m_fram_unsol_tuser;
 
-  logic [ 1:0] ctrl_numerology = 0;  // 0 for 30 kHz SCS
+  // Control ports
+  logic [15:0] ctrl_srs_rtc_pc_id;
+  //
+  logic [ 7:0] ctrl_srs_frameid;
+  logic [ 3:0] ctrl_srs_subframeid;
+  logic [ 5:0] ctrl_srs_slotid;
+  logic [ 5:0] ctrl_srs_symbolid;
+  //
+  logic [11:0] ctrl_srs_numsymbol;
+  logic [ 7:0] ctrl_srs_numprbc;
+  logic [ 9:0] ctrl_srs_startprbc;
+  logic [11:0] ctrl_srs_sectionid;
+  //
+  logic [ 3:0] ctrl_srs_ethport;
+  //
+  logic        ctrl_srs_valid = 0;
+  // 
+  logic [ 1:0] ctrl_numerology [NUM_CC] = '{0, 0};  // 0 for 30 kHz SCS
 
+
+  // Tasks
+  //======
 
   task automatic srs_c_message(input [3:0] cc, input [5:0] layer, input [7:0] frameid,
                                input [3:0] subframeid, input [5:0] slotid, input [5:0] symbolid,
@@ -168,7 +188,7 @@ module tb_srs_adaptor;
 
 
     for (int layer = 0; layer < 64; layer++) begin
-      srs_c_message(0, layer, 0, 0, 0, 1, 3, 273, 0, 0);
+      srs_c_message(0, layer, 0, 0, 0, 1, 3, 0, 0, 0);
     end
 
     #1000;
@@ -178,6 +198,24 @@ module tb_srs_adaptor;
     $finish();
   end
 
+
+  initial begin
+    forever begin
+      @(posedge clk_491m52);
+      if (srs_req_valid) begin
+        for (int i = 0; i < 3276; i++) begin
+          @(posedge clk_491m52);
+          srs_data_tdata <= i;
+          srs_data_tvalid <= 1'b1;
+          srs_data_tlast <= i == 3275;
+        end
+        @(posedge clk_491m52);
+        srs_data_tdata <= 0;
+        srs_data_tvalid <= 0;
+        srs_data_tlast <= 0;
+      end
+    end
+  end
 
   // UUT
   //====

@@ -139,7 +139,6 @@ module pc_cfr_cpg #(
   assign cpw_rd_en   = state_busy;
   assign cpw_rd_addr = {state_addr, ~state_phase};
 
-  (* keep_hierarchy="yes" *)
   bram_tdp #(
       .ADDR_WIDTH    (CPW_ADDR_WIDTH),
       .DATA_WIDTH    (DATA_WIDTH * 2),
@@ -164,7 +163,6 @@ module pc_cfr_cpg #(
       .doutb({cpw_rd_data_q, cpw_rd_data_i})
   );
 
-  (* keep_hierarchy="yes" *)
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
       .PIPELINE_STAGES(3)
@@ -174,7 +172,6 @@ module pc_cfr_cpg #(
       .dout({state_q_d, state_i_d})
   );
 
-  (* keep_hierarchy="yes" *)
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
       .PIPELINE_STAGES(1)
@@ -184,7 +181,6 @@ module pc_cfr_cpg #(
       .dout({cpw_rd_data_q_d, cpw_rd_data_i_d})
   );
 
-  (* keep_hierarchy="yes" *)
   cmult #(
       .AWIDTH (DATA_WIDTH),
       .BWIDTH (DATA_WIDTH),
@@ -206,7 +202,6 @@ module pc_cfr_cpg #(
       .ovf(  /* Not Used */)
   );
 
-  (* keep_hierarchy="yes" *)
   adder #(
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (DATA_WIDTH),
@@ -222,7 +217,6 @@ module pc_cfr_cpg #(
       .ovf    (  /* Not Used */)
   );
 
-  (* keep_hierarchy="yes" *)
   adder #(
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (DATA_WIDTH),
