@@ -115,7 +115,7 @@ module srs_adaptor #(
 
   // SRS Mux output
   logic [15:0] srs_mux_rtc_pc_id;
-  logic [ 3:0] srs_mux_cc;
+  logic [ 2:0] srs_mux_cc;
   //
   logic [ 7:0] srs_mux_frameid;
   logic [ 3:0] srs_mux_subframeid;
@@ -123,7 +123,7 @@ module srs_adaptor #(
   logic [ 5:0] srs_mux_symbolid;
   logic [11:0] srs_mux_symbol;
   //
-  logic [11:0] srs_mux_numsymbol;
+  logic [ 3:0] srs_mux_numsymbol;
   logic [ 7:0] srs_mux_numprbc;
   logic [ 9:0] srs_mux_startprbc;
   logic [11:0] srs_mux_sectionid;
@@ -134,12 +134,12 @@ module srs_adaptor #(
 
   // Send it to runner
   logic [15:0] srs_run_rtc_pc_id;
-  logic [ 3:0] srs_run_cc;
+  logic [ 2:0] srs_run_cc;
   //
   logic [ 7:0] srs_run_frameid;
   logic [ 3:0] srs_run_subframeid;
-  logic [ 3:0] srs_run_slotid;
-  logic [ 3:0] srs_run_symbolid;
+  logic [ 5:0] srs_run_slotid;
+  logic [ 5:0] srs_run_symbolid;
   logic [11:0] srs_run_symbol;
   //
   logic [ 7:0] srs_run_numprbc;
@@ -152,7 +152,7 @@ module srs_adaptor #(
   logic        srs_run_ready;
 
   // BRAM
-  logic [ 9:0] bram_addr;
+  logic [10:0] bram_addr;
   logic        bram_rden;
   logic [95:0] bram_data;
 
@@ -160,14 +160,16 @@ module srs_adaptor #(
   logic [ 2:0] fram_req_eth_port;
   logic [15:0] fram_req_rtc_pc_id;
   logic [63:0] fram_req_header;
-  logic [ 8:0] fram_req_start_rb;
+  logic [ 9:0] fram_req_start_rb;
   logic [ 7:0] fram_req_num_rb;
+  logic        fram_req_bank;
   logic        fram_req_valid;
   logic        fram_req_ready;
 
   generate
     for (genvar i = 0; i < NUM_ETH_PORT; i++) begin : g_filter
-
+    
+      (* keep_hierarchy="yes" *)
       srs_adaptor_filter i_filter (
           // Interface with XORIF
           //=====================
@@ -229,6 +231,7 @@ module srs_adaptor #(
     end
   endgenerate
 
+  (* keep_hierarchy="yes" *)
   srs_adaptor_mux #(
       .NUM_ETH_PORT(NUM_ETH_PORT)
   ) i_mux (
@@ -272,25 +275,10 @@ module srs_adaptor #(
       .srs_mux_valid      (srs_mux_valid),
       // Control
       //========
-      .ctrl_srs_rtc_pc_id (ctrl_srs_rtc_pc_id),
-      //
-      .ctrl_srs_frameid   (ctrl_srs_frameid),
-      .ctrl_srs_subframeid(ctrl_srs_subframeid),
-      .ctrl_srs_slotid    (ctrl_srs_slotid),
-      .ctrl_srs_symbolid  (ctrl_srs_symbolid),
-      //
-      .ctrl_srs_numsymbol (ctrl_srs_numsymbol),
-      .ctrl_srs_numprbc   (ctrl_srs_numprbc),
-      .ctrl_srs_startprbc (ctrl_srs_startprbc),
-      .ctrl_srs_sectionid (ctrl_srs_sectionid),
-      //
-      .ctrl_srs_ethport   (ctrl_srs_ethport),
-      //
-      .ctrl_srs_valid     (ctrl_srs_valid),
-      //
       .ctrl_numerology    (ctrl_numerology)
   );
 
+  (* keep_hierarchy="yes" *)
   srs_adaptor_fwd i_fwd (
       // XORIF
       //======
@@ -312,6 +300,7 @@ module srs_adaptor #(
       .srs_cfg_valid    (srs_cfg_valid)
   );
 
+  (* keep_hierarchy="yes" *)
   srs_adaptor_controller #(
       .NUM_CC(NUM_CC)
   ) i_controller (
@@ -361,6 +350,7 @@ module srs_adaptor #(
       .srs_run_ready     (srs_run_ready)
   );
 
+  (* keep_hierarchy="yes" *)
   srs_adaptor_runner i_runner (
       // 400M
       //======
@@ -391,6 +381,7 @@ module srs_adaptor #(
       .fram_req_header   (fram_req_header),
       .fram_req_start_rb (fram_req_start_rb),
       .fram_req_num_rb   (fram_req_num_rb),
+      .fram_req_bank     (fram_req_bank),
       .fram_req_valid    (fram_req_valid),
       .fram_req_ready    (fram_req_ready),
       //
@@ -413,6 +404,7 @@ module srs_adaptor #(
       .srs_req_valid     (srs_req_valid)
   );
 
+  (* keep_hierarchy="yes" *)
   srs_adaptor_framer i_framer (
       // DFE
       //====
@@ -428,6 +420,7 @@ module srs_adaptor #(
       .fram_req_header    (fram_req_header),
       .fram_req_start_rb  (fram_req_start_rb),
       .fram_req_num_rb    (fram_req_num_rb),
+      .fram_req_bank      (fram_req_bank),
       .fram_req_valid     (fram_req_valid),
       .fram_req_ready     (fram_req_ready),
       // UNSOL port

@@ -97,7 +97,7 @@ module tb_srs_adaptor;
   logic [ 9:0] ctrl_srs_startprbc;
   logic [11:0] ctrl_srs_sectionid;
   //
-  logic [ 3:0] ctrl_srs_ethport;
+  logic [ 2:0] ctrl_srs_ethport;
   //
   logic        ctrl_srs_valid = 0;
   // 

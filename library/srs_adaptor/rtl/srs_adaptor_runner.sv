@@ -14,8 +14,8 @@ module srs_adaptor_runner (
     //
     input var  [ 7:0] srs_run_frameid,
     input var  [ 3:0] srs_run_subframeid,
-    input var  [ 3:0] srs_run_slotid,
-    input var  [ 3:0] srs_run_symbolid,
+    input var  [ 5:0] srs_run_slotid,
+    input var  [ 5:0] srs_run_symbolid,
     input var  [11:0] srs_run_symbol,
     //
     input var  [ 7:0] srs_run_numprbc,
@@ -33,10 +33,11 @@ module srs_adaptor_runner (
     output var [63:0] fram_req_header,
     output var [ 9:0] fram_req_start_rb,
     output var [ 7:0] fram_req_num_rb,
+    output var        fram_req_bank,
     output var        fram_req_valid,
     input var         fram_req_ready,
     //
-    input var  [ 9:0] bram_rd_addr,        // 0 ~ 1024
+    input var  [10:0] bram_rd_addr,        // 0 ~ 1024
     input var         bram_rd_rden,        // !connect to all registers in output pipe
     output var [95:0] bram_rd_data,        // 4 RE
     // DFE
@@ -59,6 +60,9 @@ module srs_adaptor_runner (
   // Signals
   //========
 
+  logic srs_run_bank;
+  logic srs_req_bank;
+  
   logic srs_data_ready;
   logic srs_data_done;
 
@@ -77,7 +81,7 @@ module srs_adaptor_runner (
 
   logic [31:0] oran_section_header;
 
-  logic [11:0] bram_wr_addr;
+  logic [12:0] bram_wr_addr;
   logic        bram_wr_en;
   logic [23:0] bram_wr_data;
 
@@ -129,8 +133,16 @@ module srs_adaptor_runner (
   //=====================
 
   always_ff @(posedge clk_400m) begin
+    if (rst_400m) begin
+      srs_run_bank <= 1'b0;
+    end else if (state == S_IDLE && srs_run_valid) begin
+      srs_run_bank <= ~srs_run_bank;
+    end
+  end
+
+  always_ff @(posedge clk_400m) begin
     if (state == S_IDLE && srs_run_valid) begin
-      srs_req_in <= {srs_run_cc, srs_run_rtc_pc_id[5:0], srs_run_symbol};
+      srs_req_in <= {srs_run_bank, srs_run_cc, srs_run_rtc_pc_id[5:0], srs_run_symbol};
     end
   end
 
@@ -152,7 +164,7 @@ module srs_adaptor_runner (
       .src_rcv (srs_req_rcv),
       //
       .dest_clk(clk_491m52),
-      .dest_out({srs_req_cc, srs_req_layer, srs_req_symbol}),
+      .dest_out({srs_req_bank, srs_req_cc, srs_req_layer, srs_req_symbol}),
       .dest_req(srs_req_valid),
       .dest_ack(  /* Not used */)
   );
@@ -189,10 +201,6 @@ module srs_adaptor_runner (
   // Wait framer done
   //=================
 
-  always_ff @(posedge clk_400m) begin
-    fram_req_valid <= (state_next == S_FRAM);
-  end
-
   assign oran_application_header = {
     oran_data_direction,
     oran_payload_version,
@@ -214,7 +222,12 @@ module srs_adaptor_runner (
       fram_req_header    <= {oran_application_header, oran_section_header};
       fram_req_start_rb  <= srs_run_startprbc;
       fram_req_num_rb    <= srs_run_numprbc;
+      fram_req_bank      <= srs_run_bank;
     end
+  end
+
+  always_ff @(posedge clk_400m) begin
+    fram_req_valid <= (state_next == S_FRAM);
   end
 
   srs_adaptor_writer i_srs_adaptor_writer (
@@ -227,10 +240,16 @@ module srs_adaptor_runner (
       .srs_data_tvalid(srs_data_tvalid),
       .srs_data_tlast (srs_data_tlast),
       //
-      .wr_addr        (bram_wr_addr),
+      .wr_addr        (bram_wr_addr[11:0]),
       .wr_en          (bram_wr_en),
       .wr_data        (bram_wr_data)
   );
+
+  always_ff @(posedge clk_491m52) begin
+    if (srs_req_valid) begin
+      bram_wr_addr[12] <= srs_req_bank;
+    end
+  end
 
   srs_adaptor_bram i_srs_adaptor_bram (
       // Write port

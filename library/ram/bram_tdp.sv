@@ -49,7 +49,7 @@ module bram_tdp #(
     output var [DATA_WIDTH-1:0] doutb
 );
 
-  logic [DATA_WIDTH-1:0] MEM           [2**ADDR_WIDTH];
+  logic [DATA_WIDTH-1:0] MEM             [2**ADDR_WIDTH];
   logic [DATA_WIDTH-1:0] ram_data_a = '0;
   logic [DATA_WIDTH-1:0] ram_data_b = '0;
 

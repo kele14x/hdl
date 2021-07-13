@@ -16,35 +16,47 @@
 //******************************************************************************
 
 // File: bram_sdp.sv
-// Brief: simplified simple dual port port memory
+// Brief: Simplified abstract simple dual port (SDP) memory.
 
 `timescale 1ns / 1ps `default_nettype none
 
 module bram_sdp #(
     parameter int    ADDR_WIDTH     = 10,
     parameter int    DATA_WIDTH     = 32,
-    parameter int    USE_OUTPUT_REG = 1,
+    parameter int    READ_LATENCY   = 3,  // 1 ~ 3
     parameter int    INIT_WORD      = '0,
     parameter string INIT_FILE      = ""
 ) (
     // Port A, write port
-    input var                   clka,
-    input var                   wea,
-    input var  [ADDR_WIDTH-1:0] addra,
-    input var  [DATA_WIDTH-1:0] dina,
+    input var                     clka,
+    input var                     ena,
+    input var  [DATA_WIDTH/8-1:0] wea,
+    input var  [  ADDR_WIDTH-1:0] addra,
+    input var  [  DATA_WIDTH-1:0] dina,
     // Port B, read port
-    input var                   clkb,
-    input var                   enb,
-    input var                   rstb,
-    input var  [ADDR_WIDTH-1:0] addrb,
-    output var [DATA_WIDTH-1:0] doutb
+    input var                     clkb,
+    input var                     enb  [READ_LATENCY],
+    input var                     rstb [READ_LATENCY],
+    input var  [  ADDR_WIDTH-1:0] addrb,
+    output var [  DATA_WIDTH-1:0] doutb
 );
 
-  logic [DATA_WIDTH-1:0] MEM          [2**ADDR_WIDTH];
-  logic [DATA_WIDTH-1:0] ram_data = '0;
+
+  // The Memory
+  logic [DATA_WIDTH-1:0] MEM      [2**ADDR_WIDTH];
+  
+  // Port B output pipeline
+  logic [DATA_WIDTH-1:0] regb [READ_LATENCY]= '{READ_LATENCY{'0}};
+
+
+  initial begin
+    assert(1 <= READ_LATENCY && READ_LATENCY <= 3)
+    else $error("READ_LATENCY should be within range 1 to 3.");
+  end
 
   // Initializes the memory values to a specified file or to all zeros to match
   // hardware
+  
   initial begin
     for (int i = 0; i < 2 ** ADDR_WIDTH; i = i + 1) begin
       MEM[i] = INIT_WORD;
@@ -55,52 +67,44 @@ module bram_sdp #(
   end
 
   // Write process
+  
   always_ff @(posedge clka) begin
-    if (wea) begin
-      MEM[addra] <= dina;
+    if (ena) begin
+      for (int i = 0; i < DATA_WIDTH/8; i++) begin
+        if (wea[i]) begin
+          MEM[addra][i*8+7-:8] <= dina[i*8+7-:8];
+        end
+      end
     end
   end
 
   // Read process
+  
+  // LATCH stage
   always_ff @(posedge clkb) begin
-    if (enb) begin
-      ram_data <= MEM[addrb];
+    if (rstb[0]) begin
+      regb[0] <= '0;
+    end else if (enb[0]) begin
+      regb[0] <= MEM[addrb];
     end
   end
 
-  // Output
+  // Additional clock cycle read latency improves clock-to-out timing
   generate
-    if (USE_OUTPUT_REG) begin : g_output_reg
-
-      // 2 clock cycle read latency with improve clock-to-out timing
-
-      logic [DATA_WIDTH-1:0] doutb_reg = '0;
-      logic                  enb_d = 1'b0;
-      logic                  rstb_d = 1'b0;
+    for (genvar i = 1; i < READ_LATENCY; i++) begin : g_output_reg
 
       always_ff @(posedge clkb) begin
-        enb_d  <= enb;
-        rstb_d <= rstb;
-      end
-
-      always_ff @(posedge clkb) begin
-        if (rstb_d) begin
-          doutb_reg <= '0;
-        end else if (enb_d) begin
-          doutb_reg <= ram_data;
+        if (rstb[i]) begin
+          regb[i] <= '0;
+        end else if (enb[i]) begin
+          regb[i] <= regb[i-1];
         end
       end
 
-      assign doutb = doutb_reg;
-
-    end else begin : g_no_output_reg
-
-      // 1 clock cycle read latency
-
-      assign doutb = ram_data;
-
     end
   endgenerate
+
+  assign doutb = regb[READ_LATENCY-1];
 
 endmodule
 

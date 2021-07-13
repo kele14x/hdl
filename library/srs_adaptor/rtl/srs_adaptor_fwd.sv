@@ -30,10 +30,12 @@ module srs_adaptor_fwd (
 
   localparam DataWidth = ($size(srs_cc) + $size(srs_symbol) + $size(srs_numsymbol));
 
+
   // CDC
   //=====
   // SRS C-Plane message CDC to clk_491m52
 
+  logic [DataWidth-1:0] srs_prev, srs_in, srs_out;
   logic srs_send;
   logic srs_rcv;
 
@@ -51,6 +53,18 @@ module srs_adaptor_fwd (
     end
   end
 
+  always_ff @(posedge clk_400m) begin
+    if (srs_valid) begin
+      srs_prev <= {srs_cc, srs_symbol, srs_numsymbol};
+    end
+  end
+
+  always_ff @(posedge clk_400m) begin
+    if (srs_valid && srs_in != srs_prev) begin
+      srs_in <= {srs_cc, srs_symbol, srs_numsymbol};
+    end
+  end
+
   // DEST_EXT_HSK = 0 will use internal handshake, so `dest_req` will be only
   // one tick pulse.
   xpm_cdc_handshake #(
@@ -62,15 +76,17 @@ module srs_adaptor_fwd (
       .WIDTH         (DataWidth)
   ) xpm_cdc_handshake_inst (
       .src_clk (clk_400m),
-      .src_in  ({srs_cc, srs_symbol, srs_numsymbol}),
+      .src_in  (srs_in),
       .src_send(srs_send),
       .src_rcv (srs_rcv),
       //
       .dest_clk(clk_491m52),
-      .dest_out({srs_cfg_cc, srs_cfg_symbol, srs_cfg_numsymbol}),
+      .dest_out(srs_out),
       .dest_req(srs_cfg_valid),
       .dest_ack(1'b0)
   );
+
+  assign {srs_cfg_cc, srs_cfg_symbol, srs_cfg_numsymbol} = srs_out;
 
 endmodule
 
