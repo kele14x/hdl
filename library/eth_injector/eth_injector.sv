@@ -22,7 +22,8 @@ module eth_injector #(
       .INIT_MODE  (1),
       .HAS_TKEEP  (1),
       .HAS_TLAST  (1),
-      .TDATA_WIDTH(TDATA_WIDTH)
+      .TDATA_WIDTH(TDATA_WIDTH),
+      .TUSER_WIDTH(1)
   ) i_vip (
       .aclk        (aclk),
       .aresetn     (aresetn),
@@ -39,9 +40,12 @@ module eth_injector #(
   pcap_handler_t pcap;
   pkt_buffer_t   pkt;
 
-  logic [TDATA_WIDTH-1:0] buf_tdata [1000];
-  logic [TDATA_WIDTH/8-1:0] buf_tkeep [1000];
-  int buf_len;
+  logic [TDATA_WIDTH-1:0]   buf_tdata [2000];
+  logic [TDATA_WIDTH/8-1:0] buf_tkeep [2000];
+  logic                     buf_tuser [2000];
+  
+  int     buf_bytes;
+  int     buf_len;
   longint wait_time;
   longint ts_shift;
 
@@ -69,7 +73,7 @@ module eth_injector #(
       #(wait_time);
   
       copy_pkg();
-      i_vip.IF.master_send(buf_len, buf_tdata, buf_tkeep);
+      i_vip.IF.master_send(buf_len, buf_tdata, buf_tkeep, buf_tuser);
 
       pkt = pcap_read_packet(pcap);
     end
@@ -77,10 +81,11 @@ module eth_injector #(
   endtask
 
   function automatic void copy_pkg();
-    buf_len = pkt.len % 8 == 0 ? pkt.len / 8 : pkt.len / 8 + 1;
+    buf_bytes = pkt.len == 64 ? 60 : pkt.len; // !! Bug workaround for packet less than 64-byte (C-Plane message)
+    buf_len = buf_bytes % 8 == 0 ? buf_bytes / 8 : buf_bytes / 8 + 1;
     for (int i = 0; i < buf_len; i++) begin
         for (int j = 0; j < 8; j++) begin
-            if (i*8+j < pkt.len) begin
+            if (i*8+j < buf_bytes) begin
                 buf_tdata[i][j*8+7-:8] = pkt.buffer[i*8+j];
                 buf_tkeep[i][j] = 1'b1;
             end else begin

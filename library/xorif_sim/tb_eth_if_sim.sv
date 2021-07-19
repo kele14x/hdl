@@ -8,7 +8,7 @@ module tb_eth_if_sim;
   // The number of DL layers
   parameter int NUM_DL_LAYER = 1;
   // The number of Ul layers
-  parameter int NUM_UL_LAYER = 1;
+  parameter int NUM_UL_LAYER = 2;
 
   // Ethernet Interface
   //===================
@@ -62,15 +62,15 @@ module tb_eth_if_sim;
   // DL data
   bit        dl_sof                  [      NUM_CC];
   bit        dl_sos                  [      NUM_CC];
-  bit [15:0] dl_data_i               [      NUM_CC]                         [NUM_DL_LAYER];
-  bit [15:0] dl_data_q               [      NUM_CC]                         [NUM_DL_LAYER];
+  bit [15:0] dl_data_i               [      NUM_CC][NUM_DL_LAYER];
+  bit [15:0] dl_data_q               [      NUM_CC][NUM_DL_LAYER];
   bit        dl_valid                [      NUM_CC];
 
   // UL data
-  bit        ul_sof_ahead_3          [      NUM_CC];
-  bit        ul_sop_ahead_3          [      NUM_CC];
-  bit [15:0] ul_data_i               [      NUM_CC]                         [NUM_UL_LAYER];
-  bit [15:0] ul_data_q               [      NUM_CC]                         [NUM_UL_LAYER];
+  bit        ul_sof_ahead_3        [      NUM_CC];
+  bit        ul_sop_ahead_3        [      NUM_CC];
+  bit [15:0] ul_data_i             [      NUM_CC][NUM_UL_LAYER];
+  bit [15:0] ul_data_q             [      NUM_CC][NUM_UL_LAYER];
 
   // AXI-Lite Control/Status
   //========================
@@ -282,16 +282,18 @@ module tb_eth_if_sim;
   //
   task simulation_config();
     logic [31:0] data;
-
+    automatic int start_symbol = 186;
+    
+    start_symbol = start_symbol % 280;
     $display("Start configure simulation only registers");
     // setup_cnt
     axi_write(32'hE600, 32'd7200);
     // setup_sf
-    axi_write(32'hE608, 32'h7);
+    axi_write(32'hE608, start_symbol / 28);
     // setup_sl
-    axi_write(32'hE60C, 32'h0);
+    axi_write(32'hE60C, (start_symbol % 28) / 14);
     // setup_sy
-    axi_write(32'hE610, 32'h6);
+    axi_write(32'hE610, start_symbol % 14);
     // oran_timer_sim_cfg
     axi_write(32'hE604, 32'h0);
   endtask
@@ -312,13 +314,13 @@ module tb_eth_if_sim;
       // cc_ul_ctrl_unrolled_offsets
       axi_write(32'hE110 + 32'h70 * i, 32'h0);
       // oran_cc_num_sym_config
-      axi_write(32'hE114 + 32'h70 * i, 32'h15120400);
+      axi_write(32'hE114 + 32'h70 * i, 32'h10100400);
       // pran_cc_ul_compression
       //axi_write(32'hE118 + 32'h70 * i, 32'h100); // raw
-      axi_write(32'hE118 + 32'h70 * i, 32'h100);  // bfp9
+      axi_write(32'hE118 + 32'h70 * i, 32'h119); // bfp9
       // oran_cc_dl_compression
       //axi_write(32'hE11C + 32'h70 * i, 32'h100); // raw
-      axi_write(32'hE11C + 32'h70 * i, 32'h100);  // bfp9
+      axi_write(32'hE11C + 32'h70 * i, 32'h119); // bfp9
       // cc_ul_setup_c_abs_symbol
       axi_write(32'hE120 + 32'h70 * i, 32'h6);
       // cc_ul_setup_c_cycles
@@ -338,11 +340,11 @@ module tb_eth_if_sim;
       // cc_num_ctrl_per_symbol_dl
       axi_write(32'hE160 + 32'h70 * i, 32'hA);
       // cc_num_ctrl_per_symbol_ul
-      axi_write(32'hE164 + 32'h70 * i, 32'h30);
+      axi_write(32'hE164 + 32'h70 * i, 32'h10);
       // cc_modvals_dl
-      axi_write(32'hE168 + 32'h70 * i, 32'hB4);
+      axi_write(32'hE168 + 32'h70 * i, 32'hA0);
       // cc_modvals_ul
-      axi_write(32'hE16C + 32'h70 * i, 32'h3F0);
+      axi_write(32'hE16C + 32'h70 * i, 32'h100);
     end
 
     // TODO: SSB related register
@@ -352,8 +354,8 @@ module tb_eth_if_sim;
     axi_write(32'hE504, 32'h71E);
     axi_write(32'hE508, 32'hE3C);
     axi_write(32'hE50C, 32'h115A);
-    // axi_write(32'hE510, 32'h1C78);
-    // axi_write(32'hE514, 32'h2396);
+    axi_write(32'hE510, 32'h1C78);
+    axi_write(32'hE514, 32'h2396);
 
     // TODO: cc_ssb_data_unroll_offset
 
@@ -508,7 +510,6 @@ module tb_eth_if_sim;
     axi_write(32'hE000, 32'h1);
     // cc_enable
     axi_write(32'hE004, 32'h1);
-
   end
 
   // Ends
@@ -522,7 +523,7 @@ module tb_eth_if_sim;
 
   initial begin
     #(150 * 1000);  // wait to 150 us
-    g_eth_injector[0].eth_injector_i.play_pcap("ul_c_raw.pcap");
+    g_eth_injector[0].eth_injector_i.play_pcap("pusch_BFP91.pcap");
     #1000;
     $finish();
   end
@@ -641,17 +642,17 @@ module tb_eth_if_sim;
   );
 
   ul_traffic_gen i_ul_traffic_gen (
-      .clk                (clk_491m52),
-      .rst                (rst_491m52),
-      //
-      .ul_radio_start_10ms(ul_radio_start_10ms),
-      //
-      .ul_sof_ahead_3     (ul_sof_ahead_3[0]),
-      .ul_sop_ahead_3     (ul_sop_ahead_3[0]),
-      .ul_data_i          (ul_data_i[0][0]),
-      .ul_data_q          (ul_data_q[0][0]),
-      // Control
-      .ctrl_numerology    ('0)
+    .clk                (clk_491m52),
+    .rst                (rst_491m52),
+    //
+    .ul_radio_start_10ms(ul_radio_start_10ms),
+    //
+    .ul_sof_ahead_3     (ul_sof_ahead_3[0]),
+    .ul_sop_ahead_3     (ul_sop_ahead_3[0]),
+    .ul_data_i          (ul_data_i[0][0]),
+    .ul_data_q          (ul_data_q[0][0]),
+    // Control
+    .ctrl_numerology    ('0)
   );
 
 endmodule

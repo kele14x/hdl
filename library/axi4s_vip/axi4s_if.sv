@@ -117,7 +117,7 @@ interface axi4s_if #(
     input int cnt, 
     input logic [TDATA_WIDTH-1:0] data[],
     input logic [TDATA_WIDTH/8-1:0] keep[],
-    input logic [TUSER_WIDTH-1:0] user[]
+    input logic [(TUSER_WIDTH == 0 ? 0 : (TUSER_WIDTH-1)):0] user[]
   );
     wait(aresetn);
 

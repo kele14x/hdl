@@ -103,7 +103,7 @@ module ul_adaptor_gearbox_bfp9_reader #(
     if (rst) begin
       rb_end <= '0;
     end else if (req_accept) begin
-      rb_end <= fram_req_start_rb + fram_req_num_rb;
+      rb_end <= fram_req_start_rb + (fram_req_num_rb == 0 ? 273 : fram_req_num_rb);
     end else if (busy_next) begin
       rb_end <= rb_end;
     end else begin

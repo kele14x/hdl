@@ -207,7 +207,11 @@ module ul_adaptor_gearbox #(
       assign fifo_wren[i] = s_axis_tvalid_s[i];
       assign s_axis_tready_s[i] = ~fifo_full[i];
 
-      assign {m_fram_data_tlast[i], m_fram_data_tkeep[i], m_fram_data_tdata[i]} = fifo_dout[i];
+      // Bug work around for XORIF, tlast should be exactly 1 tick
+      assign m_fram_data_tlast[i] = fifo_dout[i][72] && (~fifo_empty[i]);
+      assign m_fram_data_tkeep[i] = fifo_dout[i][71:64];
+      assign m_fram_data_tdata[i] = fifo_dout[i][63:0];
+      
       assign m_fram_data_tvalid[i] = ~fifo_empty[i];
       assign fifo_rden[i] = m_fram_data_tready[i];
 
