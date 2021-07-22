@@ -30,13 +30,13 @@ module bram_sdp #(
     // Port A, write port
     input var                     clka,
     input var                     ena,
-    input var  [DATA_WIDTH/8-1:0] wea,
+    input var                     wea,
     input var  [  ADDR_WIDTH-1:0] addra,
     input var  [  DATA_WIDTH-1:0] dina,
     // Port B, read port
     input var                     clkb,
-    input var                     enb  [READ_LATENCY],
-    input var                     rstb [READ_LATENCY],
+    input var  [READ_LATENCY-1:0] enb,
+    input var  [READ_LATENCY-1:0] rstb,
     input var  [  ADDR_WIDTH-1:0] addrb,
     output var [  DATA_WIDTH-1:0] doutb
 );
@@ -70,10 +70,8 @@ module bram_sdp #(
   
   always_ff @(posedge clka) begin
     if (ena) begin
-      for (int i = 0; i < DATA_WIDTH/8; i++) begin
-        if (wea[i]) begin
-          MEM[addra][i*8+7-:8] <= dina[i*8+7-:8];
-        end
+      if (wea) begin
+        MEM[addra] <= dina;
       end
     end
   end

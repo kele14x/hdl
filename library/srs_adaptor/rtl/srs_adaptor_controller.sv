@@ -62,9 +62,6 @@ module srs_adaptor_controller #(
   // SRS messages are buffered in a distrubution RAM, this enables more 
   // flexiable for multi sections.
 
-  (* ram_style="distributed" *)
-  logic                   buffer[128] = '{128{1'b0}};
-
   logic [            6:0] buffer_wr_addr;
   logic                   buffer_wr_en;
   logic [BufferWidth-1:0] buffer_wr_data;
@@ -148,7 +145,11 @@ module srs_adaptor_controller #(
   assign buffer_wr_en = srs_mux_valid;
 
 
-  srs_adaptor_ctrl_buffer i_buffer (
+  bram_sdp #(
+    .ADDR_WIDTH  (7),
+    .DATA_WIDTH  (BufferWidth),
+    .READ_LATENCY(3)
+  ) i_buffer (
     .clka (clk),           
     .ena  (buffer_wr_en),  
     .wea  (buffer_wr_en),  
@@ -156,36 +157,11 @@ module srs_adaptor_controller #(
     .dina (buffer_wr_data),
     //
     .clkb (clk),    
-    .enb  (buffer_rd_en),  
+    .enb  ({3 { buffer_rd_en }}),
+    .rstb ({3 { 1'b0 }}),
     .addrb(buffer_rd_addr),
     .doutb(buffer_rd_data) 
   );
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      buffer_wr_addr <= '0;
-    end else if (srs_mux_valid) begin
-      buffer_wr_addr <= buffer_wr_addr + 1;
-    end
-  end
-
-  always_ff @(posedge clk) begin
-    if (buffer_wr_en) begin
-      buffer[buffer_wr_addr] <= 1'b1;
-    end
-  end
-
-  always_ff @(posedge clk) begin
-    if (buffer_rd_en) begin
-      srs_buf_valid <= buffer[buffer_rd_addr];
-    end
-  end
-
-  always_ff @(posedge clk) begin
-    if (buffer_rd_en && buffer_rd_clr) begin
-      buffer[buffer_rd_addr] <= 1'b0;
-    end
-  end
 
 
   // FSM
