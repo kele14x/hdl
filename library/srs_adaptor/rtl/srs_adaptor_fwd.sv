@@ -39,6 +39,11 @@ module srs_adaptor_fwd (
   logic srs_send;
   logic srs_rcv;
 
+  logic srs_new;
+
+  assign srs_new = srs_valid && !srs_send && !srs_rcv && {
+    srs_cc, srs_symbol, srs_numsymbol
+  } != srs_prev;
 
   // Put all data into a CDC handshake buffer, assume the incoming SRS message
   // will not come too offen, so we have enough time to forward it to next
@@ -46,7 +51,7 @@ module srs_adaptor_fwd (
   always_ff @(posedge clk_400m) begin
     if (rst_400m) begin
       srs_send <= 1'b0;
-    end else if (srs_valid) begin
+    end else if (srs_new) begin
       srs_send <= 1'b1;
     end else if (srs_rcv) begin
       srs_send <= 1'b0;
@@ -54,13 +59,19 @@ module srs_adaptor_fwd (
   end
 
   always_ff @(posedge clk_400m) begin
-    if (srs_valid) begin
+    if (rst_400m) begin
+      srs_prev <= 0;
+    end
+    if (srs_new) begin
       srs_prev <= {srs_cc, srs_symbol, srs_numsymbol};
     end
   end
 
   always_ff @(posedge clk_400m) begin
-    if (srs_valid && srs_in != srs_prev) begin
+    if (rst_400m) begin
+      srs_in <= '0;
+    end
+    if (srs_new) begin
       srs_in <= {srs_cc, srs_symbol, srs_numsymbol};
     end
   end

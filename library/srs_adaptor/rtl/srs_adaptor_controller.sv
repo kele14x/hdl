@@ -59,7 +59,7 @@ module srs_adaptor_controller #(
   // Signals
   //========
 
-  // SRS messages are buffered in a distrubution RAM, this enables more 
+  // SRS messages are buffered in a distrubution RAM, this enables more
   // flexiable for multi sections.
 
   logic [            6:0] buffer_wr_addr;
@@ -67,27 +67,29 @@ module srs_adaptor_controller #(
   logic [BufferWidth-1:0] buffer_wr_data;
 
   logic [            6:0] buffer_rd_addr;
-  logic                   buffer_rd_en;
+  logic [            2:0] buffer_rd_en;
   logic [BufferWidth-1:0] buffer_rd_data;
   logic                   buffer_rd_clr;
 
-  logic  [15:0] srs_buf_rtc_pc_id;
-  logic  [ 2:0] srs_buf_cc;
+  logic [           15:0] srs_buf_rtc_pc_id;
+  logic [            2:0] srs_buf_cc;
   //
-  logic  [ 7:0] srs_buf_frameid;
-  logic  [ 3:0] srs_buf_subframeid;
-  logic  [ 5:0] srs_buf_slotid;
-  logic  [ 5:0] srs_buf_symbolid;
-  logic  [11:0] srs_buf_symbol;              // 0 ~ 559
+  logic [            7:0] srs_buf_frameid;
+  logic [            3:0] srs_buf_subframeid;
+  logic [            5:0] srs_buf_slotid;
+  logic [            5:0] srs_buf_symbolid;
+  logic [           11:0] srs_buf_symbol;  // 0 ~ 559
   //
-  logic  [ 3:0] srs_buf_numsymbol;           // 1 ~ 3
-  logic  [ 7:0] srs_buf_numprbc;             // 0 ~ 275
-  logic  [ 9:0] srs_buf_startprbc;           // 0 ~ 275
-  logic  [11:0] srs_buf_sectionid;
+  logic [            3:0] srs_buf_numsymbol;  // 1 ~ 3
+  logic [            7:0] srs_buf_numprbc;  // 0 ~ 275
+  logic [            9:0] srs_buf_startprbc;  // 0 ~ 275
+  logic [           11:0] srs_buf_sectionid;
   //
-  logic  [ 2:0] srs_buf_ethport;             // 0 ~ 3
+  logic [            2:0] srs_buf_ethport;  // 0 ~ 3
   //
-  logic         srs_buf_valid;
+  logic                   srs_buf_valid;
+
+  logic                   srs_buf_valid_mem             [128] = '{128{1'b0}};
 
   // State Machine
 
@@ -96,13 +98,16 @@ module srs_adaptor_controller #(
     S_RD,
     S_D1,
     S_D2,
+    S_DATA,
     S_CHK,
     S_VALID,
     S_NEXT
   } state_t;
 
+  logic init_cc[NUM_CC];
+
   logic init_fsm, process_it;
-  
+
   state_t state, next_state;
 
   logic [ 2:0] current_cc;
@@ -144,23 +149,46 @@ module srs_adaptor_controller #(
 
   assign buffer_wr_en = srs_mux_valid;
 
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      buffer_wr_addr <= '0;
+    end else if (buffer_wr_en) begin
+      buffer_wr_addr <= buffer_wr_addr + 1;
+    end
+  end
 
+  always_ff @(posedge clk) begin
+    if (buffer_wr_en) begin
+      srs_buf_valid_mem[buffer_wr_addr] <= 1'b1;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      srs_buf_valid <= 1'b0;
+    end else if (buffer_rd_en[2]) begin
+      srs_buf_valid <= srs_buf_valid_mem[buffer_rd_addr];
+    end
+  end
+
+
+  (* keep_hierarchy="yes" *)
   bram_sdp #(
-    .ADDR_WIDTH  (7),
-    .DATA_WIDTH  (BufferWidth),
-    .READ_LATENCY(3)
+      .ADDR_WIDTH  (7),
+      .DATA_WIDTH  (BufferWidth),
+      .READ_LATENCY(3)
   ) i_buffer (
-    .clka (clk),           
-    .ena  (buffer_wr_en),  
-    .wea  (buffer_wr_en),  
-    .addra(buffer_wr_addr),
-    .dina (buffer_wr_data),
-    //
-    .clkb (clk),    
-    .enb  ({3 { buffer_rd_en }}),
-    .rstb ({3 { 1'b0 }}),
-    .addrb(buffer_rd_addr),
-    .doutb(buffer_rd_data) 
+      .clka (clk),
+      .ena  (buffer_wr_en),
+      .wea  (buffer_wr_en),
+      .addra(buffer_wr_addr),
+      .dina (buffer_wr_data),
+      //
+      .clkb (clk),
+      .enb  (buffer_rd_en),
+      .rstb ({3{1'b0}}),
+      .addrb(buffer_rd_addr),
+      .doutb(buffer_rd_data)
   );
 
 
@@ -180,7 +208,8 @@ module srs_adaptor_controller #(
       S_IDLE:  next_state = init_fsm ? S_RD : S_IDLE;
       S_RD:    next_state = S_D1;
       S_D1:    next_state = S_D2;
-      S_D2:    next_state = S_CHK;
+      S_D2:    next_state = S_DATA;
+      S_DATA:  next_state = S_CHK;
       S_CHK:   next_state = process_it ? S_VALID : S_NEXT;
       S_VALID: next_state = srs_run_ready ? S_NEXT : S_VALID;
       S_NEXT:  next_state = ~(&buffer_rd_addr) ? S_RD : S_IDLE;
@@ -192,23 +221,36 @@ module srs_adaptor_controller #(
   // Which Symbol to Process
   //========================
 
-  // Start of FSM
+  // Two CC may required to process at save time
+  generate
+    for (genvar i = 0; i < NUM_CC; i++) begin
+      always_comb begin
+        init_cc[i] = (state == S_IDLE) && s_ul_update[i] && (s_ul_sym_num[i] != current_symbol[i]);
+      end
+    end
+  endgenerate
+
+  // We will start of FSM at any CC is required
   always_comb begin
     init_fsm = 1'b0;
     for (int i = 0; i < NUM_CC; i++) begin
-      if (s_ul_update[i] && s_ul_sym_num[i] > current_symbol[i]) begin
+      if (init_cc[i]) begin
         init_fsm = 1'b1;
         break;
       end
     end
   end
-  
+
   // Which CC to process
   always_ff @(posedge clk) begin
-    for (int i = 0; i < NUM_CC; i++) begin
-      if (state == S_IDLE && s_ul_update[i] && s_ul_sym_num[i] > current_symbol[i]) begin
-        current_cc <= i;
-        break;
+    if (rst) begin
+      current_cc <= '0;
+    end else begin
+      for (int i = 0; i < NUM_CC; i++) begin
+        if (init_cc[i]) begin
+          current_cc <= i;
+          break;
+        end
       end
     end
   end
@@ -219,7 +261,7 @@ module srs_adaptor_controller #(
       current_symbol <= '{NUM_CC{'b0}};
     end else begin
       for (int i = 0; i < NUM_CC; i++) begin
-        if (state == S_IDLE && s_ul_update[i] && s_ul_sym_num[i] > current_symbol[i]) begin
+        if (init_cc[i]) begin
           current_symbol[i] <= s_ul_sym_num[i];
           break;
         end
@@ -227,9 +269,11 @@ module srs_adaptor_controller #(
     end
   end
 
-  assign process_it = srs_buf_valid && (current_cc == srs_buf_cc) &&
-    (current_symbol[current_cc] >= srs_buf_symbol) &&
-    (current_symbol[current_cc] <= srs_buf_symbol + srs_buf_numsymbol - 1);
+  always_ff @(posedge clk) begin
+    process_it <= srs_buf_valid && (current_cc == srs_buf_cc) &&
+      (current_symbol[current_cc] >= srs_buf_symbol) &&
+      (current_symbol[current_cc] <= srs_buf_symbol + srs_buf_numsymbol - 1);
+  end
 
   always_ff @(posedge clk) begin
     if (rst) begin
@@ -240,7 +284,9 @@ module srs_adaptor_controller #(
   end
 
   always_ff @(posedge clk) begin
-    buffer_rd_en <= next_state == S_RD;
+    buffer_rd_en[0] <= (next_state == S_RD);
+    buffer_rd_en[1] <= (next_state == S_D1);
+    buffer_rd_en[2] <= (next_state == S_D2);
   end
 
   always_ff @(posedge clk) begin

@@ -62,7 +62,7 @@ module srs_adaptor_runner (
 
   logic srs_run_bank;
   logic srs_req_bank;
-  
+
   logic srs_data_ready;
   logic srs_data_done;
 

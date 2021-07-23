@@ -361,7 +361,7 @@ module srs_adaptor_framer (
       bram_addr[10] <= fram_req_bank;
     end
   end
-  
+
   assign bram_rden = (state == S_PRE1) || (state == S_PRE2) || (state == S_PRE3) ||
         ((state == S_PRE4) && m_fram_unsol_tready) ||
         ((state == S_OUT) && m_fram_unsol_tready) ||
