@@ -1,12 +1,12 @@
 // file: srs_adaptor_runner.sv
-// brief: This module is SRS request executor, when it received SRS request 
+// brief: This module is SRS request executor, when it received SRS request
 //        infomation from `srs_run_*` ports, it do:
 //          1. Forward the request to DFE at `srs_req_*` ports
-//          2. Wait DFE module send back one symbol data from `srs_data_*` 
+//          2. Wait DFE module send back one symbol data from `srs_data_*`
 //             ports
-//          3. While DFE send data, write them to a BRAM buffer. It will also 
+//          3. While DFE send data, write them to a BRAM buffer. It will also
 //             handles the PING-PONG buffer switch
-//          4. After one symbol data is done, tell framer to pack it into a 
+//          4. After one symbol data is done, tell framer to pack it into a
 //             packet
 `timescale 1 ns / 1 ps `default_nettype none
 
@@ -67,9 +67,6 @@ module srs_adaptor_runner (
   // Signals
   //========
 
-  logic srs_run_bank;
-  logic srs_req_bank;
-
   // Data wait CDC
   logic srs_data_ready;
   logic srs_data_valid;
@@ -88,6 +85,8 @@ module srs_adaptor_runner (
 
   logic [31:0] oran_section_header;
 
+  logic srs_run_bank;
+
   logic [12:0] bram_wr_addr;
   logic        bram_wr_en;
   logic [23:0] bram_wr_data;
@@ -95,7 +94,6 @@ module srs_adaptor_runner (
   // Let do a single thread state machine first
   typedef enum int {
     S_IDLE,  // Nothing doing
-    S_REQ,   // Send request to DFE, wait CDC done
     S_WAIT,  // Wait data transfer start
     S_DATA,  // Wait data transfer done
     S_FRAM   // Send frame request to framer, wait framer done
@@ -104,7 +102,7 @@ module srs_adaptor_runner (
   state_t state, state_next;
 
   // Request CDC
-  logic [20:0] srs_req_in;
+  logic [20:0] srs_req_in; // width = 3 + 6 + 12
   logic        srs_req_send;
   logic        srs_req_rcv;
 
@@ -125,8 +123,7 @@ module srs_adaptor_runner (
 
   always_comb begin
     case (state)
-      S_IDLE:  state_next = srs_run_valid ? S_REQ : S_IDLE;
-      S_REQ:   state_next = srs_req_rcv ? S_WAIT : S_REQ;
+      S_IDLE:  state_next = srs_run_valid ? S_WAIT : S_IDLE;
       S_WAIT:  state_next = srs_data_valid ? S_DATA : (&srs_wait_cnt ? S_IDLE : S_WAIT);
       S_DATA:  state_next = srs_data_done ? S_FRAM : S_DATA;
       S_FRAM:  state_next = fram_req_ready ? S_IDLE : S_FRAM;
@@ -139,14 +136,56 @@ module srs_adaptor_runner (
   end
 
 
-  // Requst data from DFE
-  //=====================
+  // Send Requst to DFE
+  //===================
+
+  // When one SRS run request is accepted, register them at srs_req_in register
+  // since the data will not change
+  always_ff @(posedge clk_400m) begin
+    if (state == S_IDLE && srs_run_valid && ~srs_req_send) begin
+      srs_req_in <= {srs_run_cc, srs_run_rtc_pc_id[5:0], srs_run_symbol};
+    end
+  end
+
+  always_ff @(posedge clk_400m) begin
+    if (rst_400m) begin
+      srs_req_send <= '0;
+    end else if (state == S_IDLE && srs_run_valid && ~srs_req_send) begin
+      srs_req_send <= 1'b1;
+    end else if (srs_req_rcv) begin
+      srs_req_send <= 1'b0;
+    end
+  end
+
+
+  xpm_cdc_handshake #(
+      .DEST_EXT_HSK  (0),
+      .DEST_SYNC_FF  (2),
+      .INIT_SYNC_FF  (0),
+      .SIM_ASSERT_CHK(0),
+      .SRC_SYNC_FF   (2),
+      .WIDTH         (21)
+  ) xpm_cdc_srs_req (
+      .src_clk (clk_400m),
+      .src_in  (srs_req_in),
+      .src_send(srs_req_send),
+      .src_rcv (srs_req_rcv),
+      //
+      .dest_clk(clk_491m52),
+      .dest_out({srs_req_cc, srs_req_layer, srs_req_symbol}),
+      .dest_req(srs_req_valid),
+      .dest_ack(  /* Not used */)
+  );
+
+
+  // Get Data from DFE
+  //==================
 
   always_ff @(posedge clk_400m) begin
     srs_data_ready <= (state_next == S_DATA || state_next == S_WAIT);
   end
 
-  // When one symbol data is received, switch PING-PONG bank, then this 
+  // When one symbol data is received, switch PING-PONG bank, then this
   // information will send to framer, it will read right bank.
   always_ff @(posedge clk_400m) begin
     if (rst_400m) begin
@@ -157,33 +196,15 @@ module srs_adaptor_runner (
   end
 
   always_ff @(posedge clk_400m) begin
-    if (state == S_IDLE && srs_run_valid) begin
-      srs_req_in <= {srs_run_bank, srs_run_cc, srs_run_rtc_pc_id[5:0], srs_run_symbol};
+    if (rst_400m) begin
+      srs_wait_cnt <= '0;
+    end else if (state_next == S_WAIT) begin
+      srs_wait_cnt <= srs_wait_cnt + 1;
+    end else begin
+      srs_wait_cnt <= '0;
     end
   end
 
-  always_ff @(posedge clk_400m) begin
-    srs_req_send <= (state_next == S_REQ);
-  end
-
-  xpm_cdc_handshake #(
-      .DEST_EXT_HSK  (0),
-      .DEST_SYNC_FF  (2),
-      .INIT_SYNC_FF  (0),
-      .SIM_ASSERT_CHK(0),
-      .SRC_SYNC_FF   (2),
-      .WIDTH         (22)
-  ) xpm_cdc_srs_req (
-      .src_clk (clk_400m),
-      .src_in  (srs_req_in),
-      .src_send(srs_req_send),
-      .src_rcv (srs_req_rcv),
-      //
-      .dest_clk(clk_491m52),
-      .dest_out({srs_req_bank, srs_req_cc, srs_req_layer, srs_req_symbol}),
-      .dest_req(srs_req_valid),
-      .dest_ack(  /* Not used */)
-  );
 
   xpm_cdc_array_single #(
       .DEST_SYNC_FF  (4),
@@ -230,18 +251,52 @@ module srs_adaptor_runner (
       .dest_pulse(srs_data_done)
   );
 
+  xpm_cdc_array_single #(
+      .DEST_SYNC_FF  (4),
+      .INIT_SYNC_FF  (0),
+      .SIM_ASSERT_CHK(0),
+      .SRC_INPUT_REG (0),
+      .WIDTH         (1)
+  ) xpm_cdc_srs_run_bank (
+      .src_clk (  /* Not used */),
+      .src_in  (srs_run_bank),
+      .dest_clk(clk_491m52),
+      .dest_out(bram_wr_addr[12])
+  );
+
+  srs_adaptor_writer i_srs_adaptor_writer (
+      // DFE
+      //====
+      .clk            (clk_491m52),
+      .rst            (rst_491m52),
+      //
+      .srs_data_tdata (srs_data_tdata),  // {4'b exponent, 9'b mantissa Q, 9'b mantissa I}
+      .srs_data_tvalid(srs_data_tvalid),
+      .srs_data_tlast (srs_data_tlast),
+      //
+      .wr_addr        (bram_wr_addr[11:0]),
+      .wr_en          (bram_wr_en),
+      .wr_data        (bram_wr_data)
+  );
+
+  srs_adaptor_bram i_srs_adaptor_bram (
+      // Write port
+      .clka (clk_491m52),
+      .addra(bram_wr_addr),  // 0 ~ 4096
+      .ena  (bram_wr_en),
+      .wea  (bram_wr_en),  // 1 RE
+      .dina (bram_wr_data),
+      // Read port
+      .clkb (clk_400m),
+      .rstb (rst_400m),
+      .addrb(bram_rd_addr),  // 0 ~ 1024
+      .enb  (bram_rd_rden),  // !connect to all registers in output pipe
+      .doutb(bram_rd_data)
+  );
+
+
   // Wait framer done
   //=================
-
-  always_ff @(posedge clk_400m) begin
-    if (rst_400m) begin
-      srs_wait_cnt <= '0;
-    end else if (state_next == S_WAIT) begin
-      srs_wait_cnt <= srs_wait_cnt + 1;
-    end else begin
-      srs_wait_cnt <= '0;
-    end
-  end
 
   assign oran_application_header = {
     oran_data_direction,
@@ -271,42 +326,6 @@ module srs_adaptor_runner (
   always_ff @(posedge clk_400m) begin
     fram_req_valid <= (state_next == S_FRAM);
   end
-
-  srs_adaptor_writer i_srs_adaptor_writer (
-      // DFE
-      //====
-      .clk            (clk_491m52),
-      .rst            (rst_491m52),
-      //
-      .srs_data_tdata (srs_data_tdata),  // {4'b exponent, 9'b mantissa Q, 9'b mantissa I}
-      .srs_data_tvalid(srs_data_tvalid),
-      .srs_data_tlast (srs_data_tlast),
-      //
-      .wr_addr        (bram_wr_addr[11:0]),
-      .wr_en          (bram_wr_en),
-      .wr_data        (bram_wr_data)
-  );
-
-  always_ff @(posedge clk_491m52) begin
-    if (srs_req_valid) begin
-      bram_wr_addr[12] <= srs_req_bank;
-    end
-  end
-
-  srs_adaptor_bram i_srs_adaptor_bram (
-      // Write port
-      .clka (clk_491m52),
-      .addra(bram_wr_addr),  // 0 ~ 4096
-      .ena  (bram_wr_en),
-      .wea  (bram_wr_en),  // 1 RE
-      .dina (bram_wr_data),
-      // Read port
-      .clkb (clk_400m),
-      .rstb (rst_400m),
-      .addrb(bram_rd_addr),  // 0 ~ 1024
-      .enb  (bram_rd_rden),  // !connect to all registers in output pipe
-      .doutb(bram_rd_data)
-  );
 
 endmodule
 
