@@ -70,10 +70,7 @@ module srs_adaptor_runner (
   logic srs_run_bank;
   logic srs_req_bank;
 
-<<<<<<< HEAD
-=======
   // Data wait CDC
->>>>>>> 301f3d24cc6a315f6135c141182dd3d9bcd6e94b
   logic srs_data_ready;
   logic srs_data_valid;
   logic srs_data_done;
