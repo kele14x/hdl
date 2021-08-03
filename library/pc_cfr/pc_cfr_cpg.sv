@@ -46,9 +46,6 @@ module pc_cfr_cpg #(
   logic signed [    DATA_WIDTH-1:0] cpw_rd_data_i;
   logic signed [    DATA_WIDTH-1:0] cpw_rd_data_q;
 
-  logic signed [    DATA_WIDTH-1:0] cpw_rd_data_i_d;
-  logic signed [    DATA_WIDTH-1:0] cpw_rd_data_q_d;
-
   // State of CPG stage
   // `state1` is for channel 1, `state2` is for channel 2
 
@@ -96,12 +93,17 @@ module pc_cfr_cpg #(
 
   // `state*_phase` is phase of peak
   always_ff @(posedge clk) begin
-    {state1_q, state1_i} <= {state2_q, state2_i};
-    {state2_q, state2_i} <= (peak_valid_in && ~state1_busy) ? {
-      peak_q_in, peak_i_in
-    } : &state1_addr ? 'd0 : {
-      state1_q, state1_i
-    };
+    if (rst) begin
+      {state1_q, state1_i} <= '0;
+      {state2_q, state2_i} <= '0;
+    end else begin
+      {state1_q, state1_i} <= {state2_q, state2_i};
+      {state2_q, state2_i} <= (peak_valid_in && ~state1_busy) ? {
+        peak_q_in, peak_i_in
+      } : &state1_addr ? 'd0 : {
+        state1_q, state1_i
+      };
+    end
   end
 
   // If current stage's CPG is busy (state1's MSB is high), pass this peak to
@@ -133,7 +135,9 @@ module pc_cfr_cpg #(
   bram_tdp #(
       .ADDR_WIDTH    (CPW_ADDR_WIDTH),
       .DATA_WIDTH    (DATA_WIDTH * 2),
-      .USE_OUTPUT_REG(1),
+      .PORTA_LATENCY (3),
+      .PORTB_LATENCY (3),
+      .INIT_WORD     ('0),
       .INIT_FILE     ("")
   ) i_bram_tdp (
       //
@@ -164,15 +168,6 @@ module pc_cfr_cpg #(
       .dout({state2_q_d, state2_i_d})
   );
 
-  reg_pipeline #(
-      .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(1)
-  ) i_delay_cpw_rd_data_iq (
-      .clk (clk),
-      .din ({cpw_rd_data_q, cpw_rd_data_i}),
-      .dout({cpw_rd_data_q_d, cpw_rd_data_i_d})
-  );
-
   cmult #(
       .AWIDTH (DATA_WIDTH),
       .BWIDTH (DATA_WIDTH),
@@ -185,8 +180,8 @@ module pc_cfr_cpg #(
       .ar (state2_i_d),
       .ai (state2_q_d),
       //
-      .br (cpw_rd_data_i_d),
-      .bi (cpw_rd_data_q_d),
+      .br (cpw_rd_data_i),
+      .bi (cpw_rd_data_q),
       //
       .pr (delta_i),
       .pi (delta_q),

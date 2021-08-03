@@ -1,29 +1,12 @@
-//******************************************************************************
-// Copyright (C) 2020  kele14x
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-//******************************************************************************
-
 // File: tb_cfr_softclipping.sv
 // Brief: Test bench for module cfr_softclipping
 
 `timescale 1ns / 1ps `default_nettype none
 
-module tb_cfr_softclipping ();
+module tb_pc_cfr;
 
   localparam int TestVectorLength = 4096;
-  localparam int DutLatency = 183;
+  localparam int DutLatency = 184;
 
   localparam int DataWidth = 16;
   localparam int CpwAddrWidth = 8;
@@ -146,9 +129,13 @@ module tb_cfr_softclipping ();
           @(posedge clk);
           data_i_in <= data_i_in_mem[i];
           data_q_in <= data_q_in_mem[i];
+//          data_i_in <= i == 100 ? 10000 : 0;
+//          data_q_in <= i == 100 ? 10000 : 0;
           @(posedge clk);
-          data_i_in <= data_i_in2_mem[i];
-          data_q_in <= data_q_in2_mem[i];
+//          data_i_in <= data_i_in2_mem[i];
+//          data_q_in <= data_q_in2_mem[i];
+          data_i_in <= '0;
+          data_q_in <= '0;
         end
       end
 
@@ -159,8 +146,10 @@ module tb_cfr_softclipping ();
           data_i_out_ref <= data_i_out_mem[i];
           data_q_out_ref <= data_q_out_mem[i];
           @(posedge clk);
-          data_i_out_ref <= data_i_out2_mem[i];
-          data_q_out_ref <= data_q_out2_mem[i];
+//          data_i_out_ref <= data_i_out2_mem[i];
+//          data_q_out_ref <= data_q_out2_mem[i];
+          data_i_out_ref <= '0;
+          data_q_out_ref <= '0;
         end
       end
 
