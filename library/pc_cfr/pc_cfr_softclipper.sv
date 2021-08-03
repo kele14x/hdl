@@ -1,20 +1,3 @@
-//******************************************************************************
-// Copyright (C) 2020  kele14x
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-//******************************************************************************
-
 // File: cfr_cpg.sv
 // Brief: cfr_cpg is Canceling pulse generator. It' designed as cascade-able.
 
@@ -47,8 +30,11 @@ module pc_cfr_softclipper #(
     input var  logic                             ctrl_clk,
     input var  logic                             ctrl_rst,
     //
-    input var  logic                             ctrl_cpw_wr_en,
-    input var  logic        [CPW_ADDR_WIDTH-1:0] ctrl_cpw_wr_addr,
+    input var  logic        [CPW_ADDR_WIDTH-1:0] ctrl_cpw_addr,
+    input var  logic                             ctrl_cpw_en,
+    input var  logic                             ctrl_cpw_we,
+    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_i,
+    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_q,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
@@ -60,6 +46,9 @@ module pc_cfr_softclipper #(
   logic signed [DATA_WIDTH-1:0] peak_q_s    [NUM_CPG+1];
   logic                         peak_phase_s[NUM_CPG+1];
   logic                         peak_valid_s[NUM_CPG+1];
+
+  logic [DATA_WIDTH-1:0] ctrl_cpw_rd_data_i_s[NUM_CPG];
+  logic [DATA_WIDTH-1:0] ctrl_cpw_rd_data_q_s[NUM_CPG];
 
   // Connect input
 
@@ -78,10 +67,12 @@ module pc_cfr_softclipper #(
   assign peak_phase_out  = peak_phase_s[NUM_CPG];
   assign peak_valid_out  = peak_valid_s[NUM_CPG];
 
-  (* keep_hierarchy="yes" *)
+  assign ctrl_cpw_rd_data_i = ctrl_cpw_rd_data_i_s[0];
+  assign ctrl_cpw_rd_data_q = ctrl_cpw_rd_data_q_s[0];
+
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(136)
+      .PIPELINE_STAGES(137)
   ) i_delay (
       .clk (clk),
       .din ({data_q_in, data_i_in}),
@@ -90,7 +81,6 @@ module pc_cfr_softclipper #(
 
   generate
     for (genvar i = 0; i < NUM_CPG; i++) begin : g_cpgs
-      (* keep_hierarchy="yes" *)
       pc_cfr_cpg #(
           .DATA_WIDTH    (DATA_WIDTH),
           .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH)
@@ -117,8 +107,11 @@ module pc_cfr_softclipper #(
           .ctrl_clk   (ctrl_clk),
           .ctrl_rst   (ctrl_rst),
           //
-          .ctrl_cpw_wr_en    (ctrl_cpw_wr_en),
-          .ctrl_cpw_wr_addr  (ctrl_cpw_wr_addr),
+          .ctrl_cpw_addr     (ctrl_cpw_addr),
+          .ctrl_cpw_en       (ctrl_cpw_en),
+          .ctrl_cpw_we       (ctrl_cpw_we),
+          .ctrl_cpw_rd_data_i(ctrl_cpw_rd_data_i_s[i]),
+          .ctrl_cpw_rd_data_q(ctrl_cpw_rd_data_q_s[i]),
           .ctrl_cpw_wr_data_i(ctrl_cpw_wr_data_i),
           .ctrl_cpw_wr_data_q(ctrl_cpw_wr_data_q)
       );

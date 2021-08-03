@@ -1,20 +1,3 @@
-//******************************************************************************
-// Copyright (C) 2020  kele14x
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-//******************************************************************************
-
 // File: pc_cfr_cpg.sv
 // Brief: pc_cfr_cpg is Canceling Pulse Generator (CPG) for PC-CFR. It' designed
 //        as cascade-able.
@@ -47,8 +30,11 @@ module pc_cfr_cpg #(
     input var  logic                             ctrl_clk,
     input var  logic                             ctrl_rst,
     //
-    input var  logic                             ctrl_cpw_wr_en,
-    input var  logic        [CPW_ADDR_WIDTH-1:0] ctrl_cpw_wr_addr,
+    input var  logic        [CPW_ADDR_WIDTH-1:0] ctrl_cpw_addr,
+    input var  logic                             ctrl_cpw_en,
+    input var  logic                             ctrl_cpw_we,
+    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_i,
+    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_q,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
@@ -59,6 +45,9 @@ module pc_cfr_cpg #(
   logic        [CPW_ADDR_WIDTH-1:0] cpw_rd_addr;
   logic signed [    DATA_WIDTH-1:0] cpw_rd_data_i;
   logic signed [    DATA_WIDTH-1:0] cpw_rd_data_q;
+
+  logic signed [    DATA_WIDTH-1:0] cpw_rd_data_i_d;
+  logic signed [    DATA_WIDTH-1:0] cpw_rd_data_q_d;
 
   // State of CPG stage
   // `state1` is for channel 1, `state2` is for channel 2
@@ -107,19 +96,12 @@ module pc_cfr_cpg #(
 
   // `state*_phase` is phase of peak
   always_ff @(posedge clk) begin
-    if (rst) begin
-      state1_i <= 'd0;
-      state1_q <= 'd0;
-      state2_i <= 'd0;
-      state2_q <= 'd0;
-    end else begin
-      {state1_q, state1_i} <= {state2_q, state2_i};
-      {state2_q, state2_i} <= (peak_valid_in && ~state1_busy) ? {
-        peak_q_in, peak_i_in
-      } : &state1_addr ? 'd0 : {
-        state1_q, state1_i
-      };
-    end
+    {state1_q, state1_i} <= {state2_q, state2_i};
+    {state2_q, state2_i} <= (peak_valid_in && ~state1_busy) ? {
+      peak_q_in, peak_i_in
+    } : &state1_addr ? 'd0 : {
+      state1_q, state1_i
+    };
   end
 
   // If current stage's CPG is busy (state1's MSB is high), pass this peak to
@@ -148,37 +130,49 @@ module pc_cfr_cpg #(
   assign cpw_rd_en   = state2_busy;
   assign cpw_rd_addr = {state2_addr, ~state2_phase};
 
-  (* keep_hierarchy="yes" *)
-  bram_sdp #(
+  bram_tdp #(
       .ADDR_WIDTH    (CPW_ADDR_WIDTH),
       .DATA_WIDTH    (DATA_WIDTH * 2),
       .USE_OUTPUT_REG(1),
       .INIT_FILE     ("")
-  ) i_bram_sdp (
+  ) i_bram_tdp (
       //
       .clka (ctrl_clk),
-      .wea  (ctrl_cpw_wr_en),
-      .addra(ctrl_cpw_wr_addr),
+      .rsta (ctrl_rst),
+      .ena  (ctrl_cpw_en),
+      .wea  (ctrl_cpw_we),
+      .addra(ctrl_cpw_addr),
       .dina ({ctrl_cpw_wr_data_q, ctrl_cpw_wr_data_i}),
+      .douta({ctrl_cpw_rd_data_q, ctrl_cpw_rd_data_i}),
       //
       .clkb (clk),
-      .enb  (cpw_rd_en),
       .rstb (~cpw_rd_en),
+      .enb  (cpw_rd_en),
+      .web  (1'b0),
       .addrb(cpw_rd_addr),
+      .dinb ('0),
       .doutb({cpw_rd_data_q, cpw_rd_data_i})
   );
 
   (* keep_hierarchy="yes" *)
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(2)
-  ) i_delay (
+      .PIPELINE_STAGES(3)
+  ) i_delay_state_iq (
       .clk (clk),
       .din ({state2_q, state2_i}),
       .dout({state2_q_d, state2_i_d})
   );
 
-  (* keep_hierarchy="yes" *)
+  reg_pipeline #(
+      .DATA_WIDTH     (DATA_WIDTH * 2),
+      .PIPELINE_STAGES(1)
+  ) i_delay_cpw_rd_data_iq (
+      .clk (clk),
+      .din ({cpw_rd_data_q, cpw_rd_data_i}),
+      .dout({cpw_rd_data_q_d, cpw_rd_data_i_d})
+  );
+
   cmult #(
       .AWIDTH (DATA_WIDTH),
       .BWIDTH (DATA_WIDTH),
@@ -191,8 +185,8 @@ module pc_cfr_cpg #(
       .ar (state2_i_d),
       .ai (state2_q_d),
       //
-      .br (cpw_rd_data_i),
-      .bi (cpw_rd_data_q),
+      .br (cpw_rd_data_i_d),
+      .bi (cpw_rd_data_q_d),
       //
       .pr (delta_i),
       .pi (delta_q),
@@ -200,7 +194,6 @@ module pc_cfr_cpg #(
       .ovf(  /* Not Used */)
   );
 
-  (* keep_hierarchy="yes" *)
   adder #(
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (DATA_WIDTH),
@@ -216,7 +209,6 @@ module pc_cfr_cpg #(
       .ovf    (  /* Not Used */)
   );
 
-  (* keep_hierarchy="yes" *)
   adder #(
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (DATA_WIDTH),

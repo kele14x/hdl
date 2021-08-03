@@ -43,6 +43,8 @@ module cfr_hardclipping #(
   localparam int Iterations = 7;
   localparam int DataPathLatency = Iterations * 2 + 8;
 
+  logic local_rst;
+
   logic                         ctrl_enable_s;
   logic        [  DATA_WIDTH:0] ctrl_threshold_s;
 
@@ -88,6 +90,17 @@ module cfr_hardclipping #(
     .dest_out(ctrl_threshold_s)
   );
 
+  // Reset CDC
+
+  cdc_async_rst_sync #(
+      .SYNC_FF(4),
+      .RST_ACTIVE_HIGH(1)
+  ) i_cdc_async_rst_sync (
+      .clk(clk),
+      .async_rst_in(rst),
+      .sync_rst_out(local_rst)
+  );
+
   // Delay input data for `DataPathLatency` clocks
 
   reg_pipeline #(
@@ -108,7 +121,7 @@ module cfr_hardclipping #(
       .CTRL_WIDTH          (1)
   ) i_cordic_cart2pol (
       .clk     (clk),
-      .rst     (rst),
+      .rst     (local_rst),
       //
       .xin     (data_i_in),
       .yin     (data_q_in),
@@ -143,7 +156,7 @@ module cfr_hardclipping #(
       .COMPENSATION_SCALING(1)
   ) i_cordic_pol2cart (
       .clk     (clk),
-      .rst     (rst),
+      .rst     (local_rst),
       //
       .r       (delta_r[DATA_WIDTH:0]),
       .theta   (delta_theta),
@@ -156,10 +169,35 @@ module cfr_hardclipping #(
 
   // Output signal is delayed original signal subtract delta
 
-  always_ff @(posedge clk) begin
-    data_i_out <= data_i_in_d - delta_i[DATA_WIDTH-1:0];
-    data_q_out <= data_q_in_d - delta_q[DATA_WIDTH-1:0];
-  end
+  adder #(
+      .A_WIDTH (DATA_WIDTH),
+      .B_WIDTH (DATA_WIDTH),
+      .P_WIDTH (DATA_WIDTH),
+      .SRA_BITS(0)
+  ) i_adder_i (
+      .clk    (clk),
+      .rst    (local_rst),
+      .a      (data_i_in_d),
+      .b      (delta_i[DATA_WIDTH-1:0]),
+      .add_sub(1'b1),
+      .p      (data_i_out),
+      .ovf    (  /* Not Used */)
+  );
+
+  adder #(
+      .A_WIDTH (DATA_WIDTH),
+      .B_WIDTH (DATA_WIDTH),
+      .P_WIDTH (DATA_WIDTH),
+      .SRA_BITS(0)
+  ) i_adder_q (
+      .clk    (clk),
+      .rst    (local_rst),
+      .a      (data_q_in_d),
+      .b      (delta_q[DATA_WIDTH-1:0]),
+      .add_sub(1'b1),
+      .p      (data_q_out),
+      .ovf    (  /* Not Used */)
+  );
 
 endmodule
 

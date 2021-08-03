@@ -1,0 +1,7 @@
+[main]
+description = "Crest Factor Reduction (CFR) using hard clipping method"
+
+[fileset rtl_files]
+files =
+  cfr_hardclipping.sv
+file_type =

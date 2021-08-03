@@ -1,20 +1,3 @@
-//******************************************************************************
-// Copyright (C) 2020  kele14x
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-//******************************************************************************
-
 // File: pc_cfr_pd.sv
 // Brief: pc_cfr_pd Peak Detector for `pc_cfr` module
 
@@ -114,24 +97,18 @@ module pc_cfr_pd #(
   end
 
   always_ff @(posedge clk) begin
-    if ((state1_det == S_POS) && ~(g1 || g2)) begin
       peak_r_pre     <= state1_max;
       peak_phase_pre <= state1_phase;
       peak_theta_pre <= state1_theta;
-    end else begin
-      peak_r_pre     <= 'd0;
-      peak_phase_pre <= 1'b0;
-      peak_theta_pre <= 'd0;
-    end
   end
 
-  assign peak_lt_threshold = (peak_valid_pre && peak_r_pre > ctrl_pd_threshold);
+  assign peak_lt_threshold = ctrl_enable && peak_valid_pre && (peak_r_pre > ctrl_pd_threshold);
 
   always_ff @(posedge clk) begin
     peak_valid <= peak_lt_threshold ? 1'b1 : 1'b0;
-    peak_r     <= peak_lt_threshold ? (peak_r_pre - ctrl_clipping_threshold) : 'd0;
-    peak_phase <= peak_lt_threshold ? peak_phase_pre : 'd0;
-    peak_theta <= peak_lt_threshold ? peak_theta_pre : 'd0;
+    peak_r     <= (peak_r_pre - ctrl_clipping_threshold);
+    peak_phase <= peak_phase_pre;
+    peak_theta <= peak_theta_pre;
   end
 
 endmodule
