@@ -1,27 +1,24 @@
 # Create project, override if exist
-create_project project_1 ./prj -part xczu21dr-ffvd1156-2-e -force
+create_project project_1 ./prj -part xczu49dr-ffvf1760-2lvi-i -force
 
 # Add source files
-add_files -norecurse ./../axi4l_ipif/axi4l_ipif_top.sv
 add_files -norecurse ./../cdc/cdc_array_single.sv
+add_files -norecurse ./../cdc/cdc_async_rst_sync.sv
 add_files -norecurse ./../cfr_hardclipping/cfr_hardclipping.sv
 add_files -norecurse ./../cmult/cmult.sv
 add_files -norecurse ./../cordic_cart2pol/cordic_cart2pol.sv
 add_files -norecurse ./../cordic_pol2cart/cordic_pol2cart.sv
-add_files -norecurse ./../cordic_rotate/cordic_rotate.sv
 add_files -norecurse ./../cordic_rotate/cordic_rotate.sv
 add_files -norecurse ./../hb_up2/hb_up2_int2.sv
 add_files -norecurse ./../pc_cfr/pc_cfr.sv
 add_files -norecurse ./../pc_cfr/pc_cfr_cpg.sv
 add_files -norecurse ./../pc_cfr/pc_cfr_pd.sv
 add_files -norecurse ./../pc_cfr/pc_cfr_softclipper.sv
+add_files -norecurse ./../ram/bram_tdp.sv
 add_files -norecurse ./../util/adder.sv
-add_files -norecurse ./../util/bram_sdp.sv
 add_files -norecurse ./../util/reg_pipeline.sv
 add_files -norecurse ./cfr.sv
 add_files -norecurse ./cfr_branch.sv
-add_files -norecurse ./cfr_ipif_mux.sv
-add_files -norecurse ./cfr_regs.sv
 update_compile_order -fileset sources_1
 
 # Add constrain files
