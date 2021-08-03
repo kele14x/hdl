@@ -22,15 +22,15 @@
 `timescale 1 ns / 1 ps `default_nettype none
 
 module cdc_array_single #(
-  parameter int DEST_SYNC_FF  = 2,
-  parameter int INIT_SYNC_FF  = 0,
-  parameter int SRC_INPUT_REG = 1,
-  parameter int WIDTH         = 1
+    parameter int DEST_SYNC_FF  = 2,
+    parameter int INIT_SYNC_FF  = 0,
+    parameter int SRC_INPUT_REG = 1,
+    parameter int WIDTH         = 1
 ) (
-  input  var             src_clk ,
-  input  var [WIDTH-1:0] src_in  ,
-  input  var             dest_clk,
-  output var [WIDTH-1:0] dest_out
+    input var              src_clk,
+    input var  [WIDTH-1:0] src_in,
+    input var              dest_clk,
+    output var [WIDTH-1:0] dest_out
 );
 
   initial begin : drc_check
@@ -39,7 +39,7 @@ module cdc_array_single #(
       $error("[%m]: DEST_SYNC_FF (%0d) is outside of valid range of 2-10. %m", DEST_SYNC_FF);
     end
 
-    if (!(INIT_SYNC_FF==0) && !(INIT_SYNC_FF==1)) begin
+    if (!(INIT_SYNC_FF == 0) && !(INIT_SYNC_FF == 1)) begin
       $error("[%m]: INIT_SYNC_FF (%0d) is outside of valid range. %m", INIT_SYNC_FF);
     end
 
@@ -56,7 +56,7 @@ module cdc_array_single #(
 
   logic [WIDTH-1:0] src_ff;
 
-  (* ASYNC_REG = "TRUE" *) logic  [WIDTH-1:0] sync_ff [DEST_SYNC_FF];
+  (* ASYNC_REG = "TRUE" *)logic [WIDTH-1:0] sync_ff[DEST_SYNC_FF];
 
 
   generate
@@ -69,7 +69,7 @@ module cdc_array_single #(
         end
       end
 
-      always_ff @ (posedge src_clk) begin
+      always_ff @(posedge src_clk) begin
         src_ff <= src_in;
       end
 

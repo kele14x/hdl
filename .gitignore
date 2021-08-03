@@ -1,2 +1,6 @@
 # Vivado
 library/*/prj/
+
+# Editor
+*.swp
+*~

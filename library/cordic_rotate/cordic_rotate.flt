@@ -1,0 +1,9 @@
+../util/reg_pipeline.sv
+cordic_rotate.sv
+
+tb_cordic_rotate.sv
+test_cordic_rotate_input_theta.txt
+test_cordic_rotate_input_xin.txt
+test_cordic_rotate_input_yin.txt
+test_cordic_rotate_output_xout.txt
+test_cordic_rotate_output_yout.txt
