@@ -2,7 +2,7 @@
 create_project project_1 ./prj -part xczu21dr-ffvd1156-2-e -force
 
 # Add source files
-add_files -norecurse ./hb_up2.sv
+add_files -norecurse ./hb_up2_int2_p2.sv
 update_compile_order -fileset sources_1
 
 # Add simulation only files
@@ -10,12 +10,12 @@ add_files -fileset sim_1 -norecurse ./test_hb_up2_input_xin.txt
 add_files -fileset sim_1 -norecurse ./test_hb_up2_input_coe.txt
 add_files -fileset sim_1 -norecurse ./test_hb_up2_output_yout.txt
 add_files -fileset sim_1 -norecurse ./test_hb_up2_output_ovf.txt
-add_files -fileset sim_1 -norecurse ./tb_hb_up2.sv
+add_files -fileset sim_1 -norecurse ./tb_hb_up2_int2_p2.sv
 update_compile_order -fileset sim_1
 
 # Add constrain files
-add_files -fileset constrs_1 -norecurse ./hb_up2_int2_ooc.xdc
-set_property USED_IN {synthesis implementation out_of_context} [get_files ./hb_up2_int2_ooc.xdc]
+add_files -fileset constrs_1 -norecurse ./hb_up2_ooc.xdc
+set_property USED_IN {synthesis implementation out_of_context} [get_files ./hb_up2_ooc.xdc]
 
 # Project property
 set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} -value {-mode out_of_context} -objects [get_runs synth_1]

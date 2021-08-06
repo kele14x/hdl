@@ -7,7 +7,7 @@ module hb_up2_int2_p2 #(
     parameter int COE_WIDTH = 16,
     parameter int NUM_UNIQUE_COE = 2,
     parameter signed [COE_WIDTH-1:0] COE_NUMS[NUM_UNIQUE_COE] = {
-      16'h03B8, 16'h508E
+      -2788, 19030
     },
     parameter int YOUT_WIDTH = 16,
     parameter int SRA_BITS = 15
@@ -24,10 +24,10 @@ module hb_up2_int2_p2 #(
 );
 
   localparam int RND = (1 <<< (SRA_BITS - 1));
-  localparam int BASE = ((NUM_UNIQUE_COE + 1) / 2) + 
-    (((NUM_UNIQUE_COE + 1) % 2) != 0); // ceil((N+1)/2)
-  localparam int TAPS = BASE*4+NUM_UNIQUE_COE*2 > BASE*4+10 ? 
-    BASE*4+NUM_UNIQUE_COE*2 : BASE*4+10;
+  localparam int BASE = ((NUM_UNIQUE_COE) / 2) + 
+    (((NUM_UNIQUE_COE) % 2) != 0) + 1; // ceil(N/2) + 1
+  localparam int TAPS = BASE*4+NUM_UNIQUE_COE*2 > BASE*4+6 ? 
+    BASE*4+NUM_UNIQUE_COE*2 : BASE*4+6;
 
   logic signed [        XIN_WIDTH-1:0] xin_d[TAPS];
 
@@ -42,8 +42,8 @@ module hb_up2_int2_p2 #(
   // Delay taps, tools can automatically absorb registers into DSP and duplicate
   // registers if needed
   always_ff @(posedge clk) begin
-    xin_d[0] <= xin0;
-    xin_d[1] <= xin1;
+    xin_d[0] <= xin1;
+    xin_d[1] <= xin0;
     for (int i = 2; i < TAPS; i++) begin
       xin_d[i] <= xin_d[i-2];
     end
@@ -52,7 +52,7 @@ module hb_up2_int2_p2 #(
   function automatic int x_idx(input int ith, input int stage);
     begin
       int ret;
-      ret = BASE * 2 - ith; // time index
+      ret = BASE * 2 - ith - 1; // time index
       ret = (ret / 2) * 4 + (ret % 2) + 2; 
       ret = ret - stage * 2; // data index 
       return ret;
@@ -78,9 +78,9 @@ module hb_up2_int2_p2 #(
   endgenerate
 
   always_ff @(posedge clk) begin
-    yout0 <= xin_d[BASE*4+8];
+    yout0 <= xin_d[BASE*4+5];
     yout1 <= preg0[0][YOUT_WIDTH+SRA_BITS-1:SRA_BITS];
-    yout2 <= xin_d[BASE*4+5];
+    yout2 <= xin_d[BASE*4+4];
     yout3 <= preg1[0][YOUT_WIDTH+SRA_BITS-1:SRA_BITS];
   end
 

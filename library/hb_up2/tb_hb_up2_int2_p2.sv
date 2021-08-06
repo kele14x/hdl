@@ -1,9 +1,9 @@
 // File: tb_hb_up2.sv
-// Brief: Test bench for hb_up2
+// Brief: Test bench for hb_up2_int2_p2
 
 `timescale 1 ns / 1 ps `default_nettype none
 
-module tb_hb_up2_p2 ();
+module tb_hb_up2_int2_p2 ();
 
   localparam int ClkPeriod = 10;
   localparam int DutLatency = 6;
@@ -11,8 +11,8 @@ module tb_hb_up2_p2 ();
 
   localparam int XinWidth = 16;
   localparam int CoeWidth = 16;
-  localparam int NumUniqueCoe = 3;
-  localparam signed [CoeWidth-1:0] CoeNums[NumUniqueCoe] = {-8000, 2000, 10000};
+  localparam int NumUniqueCoe = 2;
+  localparam signed [CoeWidth-1:0] CoeNums[NumUniqueCoe] = {-2788, 19030};
   localparam int YoutWidth = 16;
   localparam int SraBits = 15;
 
@@ -33,9 +33,9 @@ module tb_hb_up2_p2 ();
   logic                 ovf_mem [TestVectorLength * 2];
 
   initial begin
-    $readmemh("test_hb_up2_xin.txt", xin_mem, 0, TestVectorLength - 1);
-    $readmemh("test_hb_up2_yout.txt", yout_mem, 0, TestVectorLength * 2 - 1);
-    $readmemh("test_hb_up2_ovf.txt", ovf_mem, 0, TestVectorLength * 2 - 1);
+    $readmemh("test_hb_up2_input_xin.txt", xin_mem, 0, TestVectorLength - 1);
+    $readmemh("test_hb_up2_output_yout.txt", yout_mem, 0, TestVectorLength * 2 - 1);
+    $readmemh("test_hb_up2_output_ovf.txt", ovf_mem, 0, TestVectorLength * 2 - 1);
   end
 
   always begin
@@ -63,10 +63,10 @@ module tb_hb_up2_p2 ();
       begin : p_feed_input
         for (int i = 0; i < TestVectorLength/2; i++) begin
           @(posedge clk);
-//          xin0 <= xin_mem[i];
-//          xin1 <= xin_mem[i+1];
-          xin0 <= (i == 0) ? 16384 : 0;
-          xin1 <= 0;
+          xin0 <= xin_mem[2*i];
+          xin1 <= xin_mem[2*i+1];
+//          xin0 <= 0;
+//          xin1 <= (i == 100) ? 16384 : 0;
           @(posedge clk);
           xin0 <= 0;
           xin1 <= 0;
@@ -79,9 +79,9 @@ module tb_hb_up2_p2 ();
           @(posedge clk);
           yout0_ref <= (i == 0) ? 0 : yout_mem[4*i-1];
           yout1_ref <= yout_mem[4*i];
-          yout2_ref <= yout_mem[4*i];
-          yout3_ref <= yout_mem[4*i];
-          ovf_ref   <= ((i == 0) ? 0 : ovf_mem[4*i-1]) | ovf_mem[4*i];
+          yout2_ref <= yout_mem[4*i+1];
+          yout3_ref <= yout_mem[4*i+2];
+          ovf_ref   <= ((i == 0) ? 0 : ovf_mem[4*i-1]) | ovf_mem[4*i] | ovf_mem[4*i+1] | ovf_mem[4*i+2];
           @(posedge clk);
           yout0_ref <= 0;
           yout1_ref <= 0;
