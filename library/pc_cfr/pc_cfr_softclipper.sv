@@ -39,33 +39,33 @@ module pc_cfr_softclipper #(
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
 
-  logic        [DATA_WIDTH-1:0] data_i_s    [NUM_CPG+1];
-  logic        [DATA_WIDTH-1:0] data_q_s    [NUM_CPG+1];
+  logic        [DATA_WIDTH-1:0] data_i_s            [NUM_CPG+1];
+  logic        [DATA_WIDTH-1:0] data_q_s            [NUM_CPG+1];
 
-  logic signed [DATA_WIDTH-1:0] peak_i_s    [NUM_CPG+1];
-  logic signed [DATA_WIDTH-1:0] peak_q_s    [NUM_CPG+1];
-  logic                         peak_phase_s[NUM_CPG+1];
-  logic                         peak_valid_s[NUM_CPG+1];
+  logic signed [DATA_WIDTH-1:0] peak_i_s            [NUM_CPG+1];
+  logic signed [DATA_WIDTH-1:0] peak_q_s            [NUM_CPG+1];
+  logic                         peak_phase_s        [NUM_CPG+1];
+  logic                         peak_valid_s        [NUM_CPG+1];
 
-  logic [DATA_WIDTH-1:0] ctrl_cpw_rd_data_i_s[NUM_CPG];
-  logic [DATA_WIDTH-1:0] ctrl_cpw_rd_data_q_s[NUM_CPG];
+  logic        [DATA_WIDTH-1:0] ctrl_cpw_rd_data_i_s[  NUM_CPG];
+  logic        [DATA_WIDTH-1:0] ctrl_cpw_rd_data_q_s[  NUM_CPG];
 
   // Connect input
 
-  assign peak_i_s[0]     = peak_i_in;
-  assign peak_q_s[0]     = peak_q_in;
-  assign peak_phase_s[0] = peak_phase_in;
-  assign peak_valid_s[0] = peak_valid_in;
+  assign peak_i_s[0]        = peak_i_in;
+  assign peak_q_s[0]        = peak_q_in;
+  assign peak_phase_s[0]    = peak_phase_in;
+  assign peak_valid_s[0]    = peak_valid_in;
 
   // Connect output
 
-  assign data_i_out      = data_i_s[NUM_CPG];
-  assign data_q_out      = data_q_s[NUM_CPG];
+  assign data_i_out         = data_i_s[NUM_CPG];
+  assign data_q_out         = data_q_s[NUM_CPG];
 
-  assign peak_i_out      = peak_i_s[NUM_CPG];
-  assign peak_q_out      = peak_q_s[NUM_CPG];
-  assign peak_phase_out  = peak_phase_s[NUM_CPG];
-  assign peak_valid_out  = peak_valid_s[NUM_CPG];
+  assign peak_i_out         = peak_i_s[NUM_CPG];
+  assign peak_q_out         = peak_q_s[NUM_CPG];
+  assign peak_phase_out     = peak_phase_s[NUM_CPG];
+  assign peak_valid_out     = peak_valid_s[NUM_CPG];
 
   assign ctrl_cpw_rd_data_i = ctrl_cpw_rd_data_i_s[0];
   assign ctrl_cpw_rd_data_q = ctrl_cpw_rd_data_q_s[0];
@@ -104,8 +104,8 @@ module pc_cfr_softclipper #(
           .peak_phase_out    (peak_phase_s[i+1]),
           .peak_valid_out    (peak_valid_s[i+1]),
           //
-          .ctrl_clk   (ctrl_clk),
-          .ctrl_rst   (ctrl_rst),
+          .ctrl_clk          (ctrl_clk),
+          .ctrl_rst          (ctrl_rst),
           //
           .ctrl_cpw_addr     (ctrl_cpw_addr),
           .ctrl_cpw_en       (ctrl_cpw_en),

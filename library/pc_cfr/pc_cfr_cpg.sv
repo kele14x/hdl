@@ -87,7 +87,8 @@ module pc_cfr_cpg #(
       state2_phase <= 'd0;
     end else begin
       state1_phase <= state2_phase;
-      state2_phase <= (peak_valid_in && ~state1_busy) ? peak_phase_in : &state1_addr ? '0 : state1_phase;;
+      state2_phase <= (peak_valid_in && ~state1_busy) ? peak_phase_in :
+        &state1_addr ? '0 : state1_phase;
     end
   end
 
@@ -133,12 +134,12 @@ module pc_cfr_cpg #(
   assign cpw_rd_addr = {state2_addr, ~state2_phase};
 
   bram_tdp #(
-      .ADDR_WIDTH    (CPW_ADDR_WIDTH),
-      .DATA_WIDTH    (DATA_WIDTH * 2),
-      .PORTA_LATENCY (3),
-      .PORTB_LATENCY (3),
-      .INIT_WORD     ('0),
-      .INIT_FILE     ("")
+      .ADDR_WIDTH   (CPW_ADDR_WIDTH),
+      .DATA_WIDTH   (DATA_WIDTH * 2),
+      .PORTA_LATENCY(3),
+      .PORTB_LATENCY(3),
+      .INIT_WORD    ('0),
+      .INIT_FILE    ("")
   ) i_bram_tdp (
       //
       .clka (ctrl_clk),

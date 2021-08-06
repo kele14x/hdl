@@ -25,10 +25,12 @@ module pc_cfr_pd #(
     input var  logic [DATA_WIDTH:0] ctrl_clipping_threshold
 );
 
-  enum logic {
+  typedef enum int {
     S_NEG,
     S_POS
-  } state1_det, state2_det;
+  } state_t;
+
+  state_t state1_det, state2_det;
 
   logic [DATA_WIDTH:0] state1_max, state2_max;
   logic [ITERATIONS:0] state1_theta, state2_theta;
@@ -97,9 +99,9 @@ module pc_cfr_pd #(
   end
 
   always_ff @(posedge clk) begin
-      peak_r_pre     <= state1_max;
-      peak_phase_pre <= state1_phase;
-      peak_theta_pre <= state1_theta;
+    peak_r_pre     <= state1_max;
+    peak_phase_pre <= state1_phase;
+    peak_theta_pre <= state1_theta;
   end
 
   assign peak_lt_threshold = ctrl_enable && peak_valid_pre && (peak_r_pre > ctrl_pd_threshold);

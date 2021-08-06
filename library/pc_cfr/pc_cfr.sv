@@ -8,7 +8,7 @@
 module pc_cfr #(
     parameter int DATA_WIDTH     = 16,
     //
-    parameter int CPW_ADDR_WIDTH = 8 ,
+    parameter int CPW_ADDR_WIDTH = 8,
     parameter int CPW_DATA_WIDTH = 16
 ) (
     // Data Interface
@@ -26,9 +26,9 @@ module pc_cfr #(
     input var  logic                      ctrl_clk,
     input var  logic                      ctrl_rst,
     // Scalar
-    input var  logic                      ctrl_enable,  // 1 = enable, 0 = bypass
+    input var  logic                      ctrl_enable,              // 1 = enable, 0 = bypass
     input var  logic [      DATA_WIDTH:0] ctrl_clipping_threshold,  // unsigned
-    input var  logic [      DATA_WIDTH:0] ctrl_pd_threshold,  // unsigned
+    input var  logic [      DATA_WIDTH:0] ctrl_pd_threshold,        // unsigned
     // Cancellation pulse write port
     input var  logic [CPW_ADDR_WIDTH-1:0] ctrl_cpw_addr,
     input var  logic                      ctrl_cpw_en,
@@ -41,17 +41,26 @@ module pc_cfr #(
 
 
   localparam int Iterations = 7;
-  localparam int DataPathLatency = 16 + 10 + 4 + 10;
-  logic local_rst;
+  localparam int DataPathLatency = 16 + 6 + 10 + 4 + 10;
+  logic                         local_rst;
 
-  logic                      ctrl_enable_s;
-  logic [      DATA_WIDTH:0] ctrl_clipping_threshold_s;
-  logic [      DATA_WIDTH:0] ctrl_pd_threshold_s;
+  logic                         ctrl_enable_s;
+  logic        [  DATA_WIDTH:0] ctrl_clipping_threshold_s;
+  logic        [  DATA_WIDTH:0] ctrl_pd_threshold_s;
 
-  logic signed [DATA_WIDTH-1:0] data_i_p0;
-  logic signed [DATA_WIDTH-1:0] data_i_p1;
-  logic signed [DATA_WIDTH-1:0] data_q_p0;
-  logic signed [DATA_WIDTH-1:0] data_q_p1;
+  logic signed [DATA_WIDTH-1:0] data_up2_i_p0;
+  logic signed [DATA_WIDTH-1:0] data_up2_i_p1;
+  logic signed [DATA_WIDTH-1:0] data_up2_q_p0;
+  logic signed [DATA_WIDTH-1:0] data_up2_q_p1;
+
+  logic signed [DATA_WIDTH-1:0] data_up4_i_p0;
+  logic signed [DATA_WIDTH-1:0] data_up4_i_p1;
+  logic signed [DATA_WIDTH-1:0] data_up4_i_p2;
+  logic signed [DATA_WIDTH-1:0] data_up4_i_p3;
+  logic signed [DATA_WIDTH-1:0] data_up4_q_p0;
+  logic signed [DATA_WIDTH-1:0] data_up4_q_p1;
+  logic signed [DATA_WIDTH-1:0] data_up4_q_p2;
+  logic signed [DATA_WIDTH-1:0] data_up4_q_p3;
 
   logic        [  Iterations:0] data_theta_p0;
   logic signed [DATA_WIDTH+1:0] data_r_p0;
@@ -59,6 +68,12 @@ module pc_cfr #(
   logic        [  Iterations:0] data_theta_p1;
   logic signed [DATA_WIDTH+1:0] data_r_p1;
 
+  logic        [  Iterations:0] data_theta_p2;
+  logic signed [DATA_WIDTH+1:0] data_r_p2;
+
+  logic        [  Iterations:0] data_theta_p3;
+  logic signed [DATA_WIDTH+1:0] data_r_p3;
+  
   logic        [  Iterations:0] peak_theta;
   logic signed [  DATA_WIDTH:0] peak_r;
 
@@ -71,56 +86,58 @@ module pc_cfr #(
   logic signed [DATA_WIDTH-1:0] data_i_in_d;
   logic signed [DATA_WIDTH-1:0] data_q_in_d;
 
+
   // Ctrl interface CDC
 
   cdc_array_single #(
-    .DEST_SYNC_FF (2),
-    .INIT_SYNC_FF (0),
-    .SRC_INPUT_REG(0),
-    .WIDTH        (1)
+      .DEST_SYNC_FF (2),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
+      .WIDTH        (1)
   ) i_cdc_array_single_ctrl_enable (
-    .src_clk (1'b0),
-    .src_in  (ctrl_enable),
-    .dest_clk(clk),
-    .dest_out(ctrl_enable_s)
+      .src_clk (1'b0),
+      .src_in  (ctrl_enable),
+      .dest_clk(clk),
+      .dest_out(ctrl_enable_s)
   );
 
   cdc_array_single #(
-    .DEST_SYNC_FF (2),
-    .INIT_SYNC_FF (0),
-    .SRC_INPUT_REG(0),
-    .WIDTH        (DATA_WIDTH+1)
+      .DEST_SYNC_FF (2),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
+      .WIDTH        (DATA_WIDTH + 1)
   ) i_cdc_array_single_ctrl_clipping_threshold (
-    .src_clk (1'b0),
-    .src_in  (ctrl_clipping_threshold),
-    .dest_clk(clk),
-    .dest_out(ctrl_clipping_threshold_s)
+      .src_clk (1'b0),
+      .src_in  (ctrl_clipping_threshold),
+      .dest_clk(clk),
+      .dest_out(ctrl_clipping_threshold_s)
   );
 
   cdc_array_single #(
-    .DEST_SYNC_FF (2),
-    .INIT_SYNC_FF (0),
-    .SRC_INPUT_REG(0),
-    .WIDTH        (DATA_WIDTH+1)
+      .DEST_SYNC_FF (2),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
+      .WIDTH        (DATA_WIDTH + 1)
   ) i_cdc_array_single_ctrl_pd_threshold (
-    .src_clk (1'b0),
-    .src_in  (ctrl_pd_threshold),
-    .dest_clk(clk),
-    .dest_out(ctrl_pd_threshold_s)
+      .src_clk (1'b0),
+      .src_in  (ctrl_pd_threshold),
+      .dest_clk(clk),
+      .dest_out(ctrl_pd_threshold_s)
   );
 
   // Reset CDC
 
   cdc_async_rst_sync #(
-      .SYNC_FF(4),
+      .SYNC_FF        (4),
       .RST_ACTIVE_HIGH(1)
   ) i_cdc_async_rst_sync (
-      .clk(clk),
+      .clk         (clk),
       .async_rst_in(rst),
       .sync_rst_out(local_rst)
   );
 
-  // Up-sample by 2?
+
+  // Up-sample by 2
   // 16 clock tick impulse latency
 
   hb_up2_int2 #(
@@ -134,8 +151,8 @@ module pc_cfr #(
       .clk  (clk),
       .rst  (local_rst),
       .xin  (data_i_in),
-      .yout0(data_i_p0),
-      .yout1(data_i_p1),
+      .yout0(data_up2_i_p0),
+      .yout1(data_up2_i_p1),
       .ovf  (  /* Not used */)
   );
 
@@ -150,10 +167,53 @@ module pc_cfr #(
       .clk  (clk),
       .rst  (local_rst),
       .xin  (data_q_in),
-      .yout0(data_q_p0),
-      .yout1(data_q_p1),
+      .yout0(data_up2_q_p0),
+      .yout1(data_up2_q_p1),
       .ovf  (  /* Not used */)
   );
+
+
+  // Up-sample by 2 again
+  // 6 clock tick impulse latency
+
+  hb_up2_int2_p2 #(
+      .XIN_WIDTH     (DATA_WIDTH),
+      .COE_WIDTH     (16),
+      .NUM_UNIQUE_COE(2),
+      .COE_NUMS      ({-2788, 19030}),
+      .YOUT_WIDTH    (DATA_WIDTH),
+      .SRA_BITS      (15)
+  ) i_up2_2_i (
+      .clk  (clk),
+      .rst  (local_rst),
+      .xin0 (data_up2_i_p0),
+      .xin1 (data_up2_i_p1),
+      .yout0(data_up4_i_p0),
+      .yout1(data_up4_i_p1),
+      .yout2(data_up4_i_p2),
+      .yout3(data_up4_i_p3),
+      .ovf  (  /* Not used */)
+  );
+
+  hb_up2_int2_p2 #(
+      .XIN_WIDTH     (DATA_WIDTH),
+      .COE_WIDTH     (16),
+      .NUM_UNIQUE_COE(2),
+      .COE_NUMS      ({-2788, 19030}),
+      .YOUT_WIDTH    (DATA_WIDTH),
+      .SRA_BITS      (15)
+  ) i_up2_2_q (
+      .clk  (clk),
+      .rst  (local_rst),
+      .xin0 (data_up2_q_p0),
+      .xin1 (data_up2_q_p1),
+      .yout0(data_up4_q_p0),
+      .yout1(data_up4_q_p1),
+      .yout2(data_up4_q_p2),
+      .yout3(data_up4_q_p3),
+      .ovf  (  /* Not used */)
+  );
+
 
   // Convert input data into "theta and r" format.
   // 10 clock tick latency
@@ -167,13 +227,13 @@ module pc_cfr #(
       .clk     (clk),
       .rst     (local_rst),
       //
-      .xin     (data_i_p0),
-      .yin     (data_q_p0),
+      .xin     (data_up4_i_p0),
+      .yin     (data_up4_q_p0),
       .ctrl_in (1'b0),
       //
       .theta   (data_theta_p0),
       .r       (data_r_p0),
-      .ctrl_out(/* Not used */)
+      .ctrl_out(  /* Not used */)
   );
 
   cordic_cart2pol #(
@@ -184,14 +244,51 @@ module pc_cfr #(
       .clk     (clk),
       .rst     (local_rst),
       //
-      .xin     (data_i_p1),
-      .yin     (data_q_p1),
+      .xin     (data_up4_i_p1),
+      .yin     (data_up4_q_p1),
       .ctrl_in (1'b0),
       //
       .theta   (data_theta_p1),
       .r       (data_r_p1),
-      .ctrl_out(/* Not used */)
+      .ctrl_out(  /* Not used */)
   );
+
+  cordic_cart2pol #(
+      .DATA_WIDTH          (DATA_WIDTH),
+      .CTRL_WIDTH          (1),
+      .ITERATIONS          (Iterations),
+      .COMPENSATION_SCALING(1)
+  ) i_cordic_cart2pol_p2 (
+      .clk     (clk),
+      .rst     (local_rst),
+      //
+      .xin     (data_up4_i_p0),
+      .yin     (data_up4_q_p0),
+      .ctrl_in (1'b0),
+      //
+      .theta   (data_theta_p2),
+      .r       (data_r_p2),
+      .ctrl_out(  /* Not used */)
+  );
+
+  cordic_cart2pol #(
+      .DATA_WIDTH          (DATA_WIDTH),
+      .CTRL_WIDTH          (1),
+      .ITERATIONS          (Iterations),
+      .COMPENSATION_SCALING(1)
+  ) i_cordic_cart2pol_p3 (
+      .clk     (clk),
+      .rst     (local_rst),
+      //
+      .xin     (data_up4_i_p0),
+      .yin     (data_up4_q_p0),
+      .ctrl_in (1'b0),
+      //
+      .theta   (data_theta_p3),
+      .r       (data_r_p3),
+      .ctrl_out(  /* Not used */)
+  );
+
 
   // Peak detector,
   // 4 clock tick latency
@@ -218,6 +315,7 @@ module pc_cfr #(
       .ctrl_clipping_threshold(ctrl_clipping_threshold_s)
   );
 
+
   // Rotate the delta vector back to i & q
   // 10 clock tick latency
 
@@ -236,7 +334,7 @@ module pc_cfr #(
       //
       .xout    (peak_i),
       .yout    (peak_q),
-      .ctrl_out(/* Not used */)
+      .ctrl_out(  /* Not used */)
   );
 
   reg_pipeline #(

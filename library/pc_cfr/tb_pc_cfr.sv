@@ -48,12 +48,14 @@ module tb_pc_cfr;
   logic signed [   DataWidth-1:0] data_q_out_mem          [TestVectorLength];
   logic signed [   DataWidth-1:0] data_q_out2_mem         [TestVectorLength];
 
-  logic signed [DataWidth-1:0] cancellation_pulse_i_mem [2**CpwAddrWidth];
-  logic signed [DataWidth-1:0] cancellation_pulse_q_mem [2**CpwAddrWidth];
+  logic signed [   DataWidth-1:0] cancellation_pulse_i_mem[ 2**CpwAddrWidth];
+  logic signed [   DataWidth-1:0] cancellation_pulse_q_mem[ 2**CpwAddrWidth];
 
   initial begin
-    $readmemh("test_pc_cfr_cancellation_pulse_i.txt", cancellation_pulse_i_mem, 0, 2**CpwAddrWidth - 1);
-    $readmemh("test_pc_cfr_cancellation_pulse_q.txt", cancellation_pulse_q_mem, 0, 2**CpwAddrWidth - 1);
+    $readmemh("test_pc_cfr_cancellation_pulse_i.txt", cancellation_pulse_i_mem, 0,
+              2 ** CpwAddrWidth - 1);
+    $readmemh("test_pc_cfr_cancellation_pulse_q.txt", cancellation_pulse_q_mem, 0,
+              2 ** CpwAddrWidth - 1);
     //
     $readmemh("test_pc_cfr_data_i_in.txt", data_i_in_mem, 0, TestVectorLength - 1);
     $readmemh("test_pc_cfr_data_i_in2.txt", data_i_in2_mem, 0, TestVectorLength - 1);
@@ -107,7 +109,7 @@ module tb_pc_cfr;
 
     #100;
     // Set cancellation pulse
-    for (int i = 0; i < 2**CpwAddrWidth; i++) begin
+    for (int i = 0; i < 2 ** CpwAddrWidth; i++) begin
       @(posedge ctrl_clk);
       ctrl_cpw_addr <= i;
       ctrl_cpw_en <= 1'b1;
@@ -129,11 +131,11 @@ module tb_pc_cfr;
           @(posedge clk);
           data_i_in <= data_i_in_mem[i];
           data_q_in <= data_q_in_mem[i];
-//          data_i_in <= i == 100 ? 10000 : 0;
-//          data_q_in <= i == 100 ? 10000 : 0;
+          //          data_i_in <= i == 100 ? 10000 : 0;
+          //          data_q_in <= i == 100 ? 10000 : 0;
           @(posedge clk);
-//          data_i_in <= data_i_in2_mem[i];
-//          data_q_in <= data_q_in2_mem[i];
+          //          data_i_in <= data_i_in2_mem[i];
+          //          data_q_in <= data_q_in2_mem[i];
           data_i_in <= '0;
           data_q_in <= '0;
         end
@@ -146,8 +148,8 @@ module tb_pc_cfr;
           data_i_out_ref <= data_i_out_mem[i];
           data_q_out_ref <= data_q_out_mem[i];
           @(posedge clk);
-//          data_i_out_ref <= data_i_out2_mem[i];
-//          data_q_out_ref <= data_q_out2_mem[i];
+          //          data_i_out_ref <= data_i_out2_mem[i];
+          //          data_q_out_ref <= data_q_out2_mem[i];
           data_i_out_ref <= '0;
           data_q_out_ref <= '0;
         end
