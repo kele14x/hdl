@@ -282,7 +282,7 @@ module tb_eth_if_sim;
   //
   task simulation_config();
     logic [31:0] data;
-    automatic int start_symbol = 186;
+    automatic int start_symbol = 24;
     
     start_symbol = start_symbol % 280;
     $display("Start configure simulation only registers");
@@ -316,11 +316,11 @@ module tb_eth_if_sim;
       // oran_cc_num_sym_config
       axi_write(32'hE114 + 32'h70 * i, 32'h10100400);
       // pran_cc_ul_compression
-      //axi_write(32'hE118 + 32'h70 * i, 32'h100); // raw
-      axi_write(32'hE118 + 32'h70 * i, 32'h119); // bfp9
+      axi_write(32'hE118 + 32'h70 * i, 32'h100); // raw
+//      axi_write(32'hE118 + 32'h70 * i, 32'h119); // bfp9
       // oran_cc_dl_compression
-      //axi_write(32'hE11C + 32'h70 * i, 32'h100); // raw
-      axi_write(32'hE11C + 32'h70 * i, 32'h119); // bfp9
+      axi_write(32'hE11C + 32'h70 * i, 32'h100); // raw
+//      axi_write(32'hE11C + 32'h70 * i, 32'h119); // bfp9
       // cc_ul_setup_c_abs_symbol
       axi_write(32'hE120 + 32'h70 * i, 32'h6);
       // cc_ul_setup_c_cycles
@@ -523,7 +523,7 @@ module tb_eth_if_sim;
 
   initial begin
     #(150 * 1000);  // wait to 150 us
-    g_eth_injector[0].eth_injector_i.play_pcap("pusch_BFP91.pcap");
+    g_eth_injector[0].eth_injector_i.play_pcap("test.pcap");
     #1000;
     $finish();
   end

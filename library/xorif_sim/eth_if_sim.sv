@@ -372,7 +372,7 @@ module eth_if_sim #(
   // TODO: connect
   bit [  3:0] ctrl_bandwidth             [         NUM_CC] = '{NUM_CC{0}};
   bit [  1:0] ctrl_numerology            [         NUM_CC] = '{NUM_CC{0}};
-  bit [  1:0] ctrl_compression_mode      [         NUM_CC] = '{NUM_CC{1}};
+  bit [  1:0] ctrl_compression_mode      [         NUM_CC] = '{NUM_CC{0}};
 
   bit [ 1:0] buffer_mem_ctrl_en   [      NUM_CC];
   bit [11:0] buffer_mem_addr_i    [      NUM_CC][NUM_UL_LAYER];
