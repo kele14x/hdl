@@ -80,8 +80,8 @@ module pc_cfr #(
   logic signed [DATA_WIDTH+2:0] peak_i;
   logic signed [DATA_WIDTH+2:0] peak_q;
 
-  logic peak_valid, peak_valid_d;
-  logic peak_phase, peak_phase_d;
+  logic       peak_valid, peak_valid_d;
+  logic [1:0] peak_phase, peak_phase_d;
 
   logic signed [DATA_WIDTH-1:0] data_i_in_d;
   logic signed [DATA_WIDTH-1:0] data_q_in_d;
@@ -262,8 +262,8 @@ module pc_cfr #(
       .clk     (clk),
       .rst     (local_rst),
       //
-      .xin     (data_up4_i_p0),
-      .yin     (data_up4_q_p0),
+      .xin     (data_up4_i_p2),
+      .yin     (data_up4_q_p2),
       .ctrl_in (1'b0),
       //
       .theta   (data_theta_p2),
@@ -280,8 +280,8 @@ module pc_cfr #(
       .clk     (clk),
       .rst     (local_rst),
       //
-      .xin     (data_up4_i_p0),
-      .yin     (data_up4_q_p0),
+      .xin     (data_up4_i_p3),
+      .yin     (data_up4_q_p3),
       .ctrl_in (1'b0),
       //
       .theta   (data_theta_p3),
@@ -302,8 +302,12 @@ module pc_cfr #(
       //
       .data_r_p0              (data_r_p0[DATA_WIDTH:0]),
       .data_r_p1              (data_r_p1[DATA_WIDTH:0]),
+      .data_r_p2              (data_r_p2[DATA_WIDTH:0]),
+      .data_r_p3              (data_r_p3[DATA_WIDTH:0]),
       .data_theta_p0          (data_theta_p0),
       .data_theta_p1          (data_theta_p1),
+      .data_theta_p2          (data_theta_p2),
+      .data_theta_p3          (data_theta_p3),
       //
       .peak_theta             (peak_theta),
       .peak_r                 (peak_r),
@@ -338,7 +342,7 @@ module pc_cfr #(
   );
 
   reg_pipeline #(
-      .DATA_WIDTH     (2),
+      .DATA_WIDTH     (3),
       .PIPELINE_STAGES(10)
   ) i_delay_peak (
       .clk (clk),

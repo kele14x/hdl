@@ -12,18 +12,28 @@ module pc_cfr_pd #(
     //
     input var  logic [DATA_WIDTH:0] data_r_p0,
     input var  logic [DATA_WIDTH:0] data_r_p1,
+    input var  logic [DATA_WIDTH:0] data_r_p2,
+    input var  logic [DATA_WIDTH:0] data_r_p3,
     input var  logic [ITERATIONS:0] data_theta_p0,
     input var  logic [ITERATIONS:0] data_theta_p1,
+    input var  logic [ITERATIONS:0] data_theta_p2,
+    input var  logic [ITERATIONS:0] data_theta_p3,
     //
     output var logic [DATA_WIDTH:0] peak_r,
     output var logic [ITERATIONS:0] peak_theta,
-    output var logic                peak_phase,
+    output var logic [         1:0] peak_phase,
     output var logic                peak_valid,
     //
     input var  logic                ctrl_enable,
     input var  logic [DATA_WIDTH:0] ctrl_pd_threshold,
     input var  logic [DATA_WIDTH:0] ctrl_clipping_threshold
 );
+
+
+  logic [DATA_WIDTH:0] data_r_p01, data_r_p23, data_r_p0123;
+  logic [ITERATIONS:0] data_theta_p01, data_theta_p23, data_theta_p0123;
+  logic [         1:0] data_phase;
+  logic g01, g23;
 
   typedef enum int {
     S_NEG,
@@ -32,22 +42,63 @@ module pc_cfr_pd #(
 
   state_t state1_det, state2_det;
 
+  logic gm;
+
   logic [DATA_WIDTH:0] state1_max, state2_max;
   logic [ITERATIONS:0] state1_theta, state2_theta;
-  logic state1_phase, state2_phase;
+  logic [         1:0] state1_phase, state2_phase;
 
-  logic g1, g2, g3;
 
   logic [DATA_WIDTH:0] peak_r_pre;
   logic [ITERATIONS:0] peak_theta_pre;
-  logic                peak_phase_pre;
+  logic [         1:0] peak_phase_pre;
   logic                peak_valid_pre;
 
   logic                peak_lt_threshold;
 
-  assign g1 = data_r_p0 >= state1_max;
-  assign g2 = data_r_p1 >= state1_max;
-  assign g3 = data_r_p1 >= data_r_p0;
+
+  // Max 1 out of 4
+
+  always_ff @(posedge clk) begin
+    if (data_r_p0 >= data_r_p1) begin
+      data_r_p01     <= data_r_p0;
+      data_theta_p01 <= data_theta_p0;
+      g01             <= 1'b0;
+    end else begin
+      data_r_p01     <= data_r_p1;
+      data_theta_p01 <= data_theta_p1;
+      g01             <= 1'b1;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (data_r_p2 >= data_r_p3) begin
+      data_r_p23     <= data_r_p2;
+      data_theta_p23 <= data_theta_p2;
+      g23             <= 1'b0;
+    end else begin
+      data_r_p23     <= data_r_p3;
+      data_theta_p23 <= data_theta_p3;
+      g23             <= 1'b1;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (data_r_p01 >= data_r_p23) begin
+      data_r_p0123     <= data_r_p01;
+      data_theta_p0123 <= data_theta_p01;
+      data_phase       <= {1'b0, g01};
+    end else begin
+      data_r_p0123     <= data_r_p23;
+      data_theta_p0123 <= data_theta_p23;
+      data_phase       <= {1'b1, g23};
+    end
+  end
+
+
+  // Peak detector
+
+  assign gm = data_r_p0123 >= state1_max;
 
   always_ff @(posedge clk) begin
     if (rst) begin
@@ -56,8 +107,8 @@ module pc_cfr_pd #(
     end else begin
       state1_det <= state2_det;
       case (state1_det)
-        S_POS:   state2_det <= (g1 || g2) ? S_POS : S_NEG;
-        S_NEG:   state2_det <= (g1 || g2) ? S_POS : S_NEG;
+        S_POS:   state2_det <= gm ? S_POS : S_NEG;
+        S_NEG:   state2_det <= gm ? S_POS : S_NEG;
         default: state2_det <= S_NEG;
       endcase
     end
@@ -69,7 +120,17 @@ module pc_cfr_pd #(
       state2_max <= 'd0;
     end else begin
       state1_max <= state2_max;
-      state2_max <= g3 ? data_r_p1 : data_r_p0;
+      state2_max <= data_r_p0123;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      state1_theta <= 'd0;
+      state2_theta <= 'd0;
+    end else begin
+      state1_theta <= state2_theta;
+      state2_theta <= data_theta_p0123;
     end
   end
 
@@ -79,23 +140,12 @@ module pc_cfr_pd #(
       state2_phase <= 'd0;
     end else begin
       state1_phase <= state2_phase;
-      state2_phase <= g3 ? 1'b1 : 1'b0;
-    end
-  end
-
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      state1_theta <= 'd0;
-      state2_theta <= 'd0;
-    end else begin
-      state1_theta <= state2_theta;
-      state2_theta <= g3 ? data_theta_p1 : data_theta_p0;
+      state2_phase <= data_phase;
     end
   end
 
   always_ff @(posedge clk) begin
-    peak_valid_pre <= (state1_det == S_POS) && ~(g1 || g2);
+    peak_valid_pre <= (state1_det == S_POS) && ~gm;
   end
 
   always_ff @(posedge clk) begin

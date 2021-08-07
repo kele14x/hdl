@@ -16,7 +16,7 @@ module pc_cfr_softclipper #(
     //
     input var  logic signed [    DATA_WIDTH-1:0] peak_i_in,
     input var  logic signed [    DATA_WIDTH-1:0] peak_q_in,
-    input var  logic                             peak_phase_in,
+    input var  logic        [               1:0] peak_phase_in,
     input var  logic                             peak_valid_in,
     //
     output var logic signed [    DATA_WIDTH-1:0] data_i_out,
@@ -24,7 +24,7 @@ module pc_cfr_softclipper #(
     //
     output var logic signed [    DATA_WIDTH-1:0] peak_i_out,
     output var logic signed [    DATA_WIDTH-1:0] peak_q_out,
-    output var logic                             peak_phase_out,
+    output var logic        [               1:0] peak_phase_out,
     output var logic                             peak_valid_out,
     // Cancellation pulse write port
     input var  logic                             ctrl_clk,
@@ -44,7 +44,7 @@ module pc_cfr_softclipper #(
 
   logic signed [DATA_WIDTH-1:0] peak_i_s            [NUM_CPG+1];
   logic signed [DATA_WIDTH-1:0] peak_q_s            [NUM_CPG+1];
-  logic                         peak_phase_s        [NUM_CPG+1];
+  logic        [           1:0] peak_phase_s        [NUM_CPG+1];
   logic                         peak_valid_s        [NUM_CPG+1];
 
   logic        [DATA_WIDTH-1:0] ctrl_cpw_rd_data_i_s[  NUM_CPG];
@@ -72,7 +72,7 @@ module pc_cfr_softclipper #(
 
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(138)
+      .PIPELINE_STAGES(78)
   ) i_delay (
       .clk (clk),
       .din ({data_q_in, data_i_in}),

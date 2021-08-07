@@ -16,7 +16,7 @@ module pc_cfr_cpg #(
     //
     input var  logic signed [    DATA_WIDTH-1:0] peak_i_in,
     input var  logic signed [    DATA_WIDTH-1:0] peak_q_in,
-    input var  logic                             peak_phase_in,
+    input var  logic        [               1:0] peak_phase_in,
     input var  logic                             peak_valid_in,
     //
     output var logic signed [    DATA_WIDTH-1:0] data_i_out,
@@ -24,7 +24,7 @@ module pc_cfr_cpg #(
     //
     output var logic signed [    DATA_WIDTH-1:0] peak_i_out,
     output var logic signed [    DATA_WIDTH-1:0] peak_q_out,
-    output var logic                             peak_phase_out,
+    output var logic        [               1:0]  peak_phase_out,
     output var logic                             peak_valid_out,
     // Cancellation pulse write port
     input var  logic                             ctrl_clk,
@@ -50,8 +50,8 @@ module pc_cfr_cpg #(
   // `state1` is for channel 1, `state2` is for channel 2
 
   logic state1_busy, state2_busy;
-  logic [CPW_ADDR_WIDTH-2:0] state1_addr, state2_addr;
-  logic state1_phase, state2_phase;
+  logic [CPW_ADDR_WIDTH-3:0] state1_addr, state2_addr;
+  logic [               1:0] state1_phase, state2_phase;
   logic [DATA_WIDTH-1:0] state1_i, state1_q, state2_i, state2_q, state2_i_d, state2_q_d;
 
   logic [DATA_WIDTH-1:0] delta_i, delta_q;
@@ -131,7 +131,7 @@ module pc_cfr_cpg #(
   end
 
   assign cpw_rd_en   = state2_busy;
-  assign cpw_rd_addr = {state2_addr, ~state2_phase};
+  assign cpw_rd_addr = {state2_addr, (2'b11 - state2_phase)};
 
   bram_tdp #(
       .ADDR_WIDTH   (CPW_ADDR_WIDTH),

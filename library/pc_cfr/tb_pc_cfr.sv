@@ -129,13 +129,13 @@ module tb_pc_cfr;
       begin : feed_input
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
-          data_i_in <= data_i_in_mem[i];
-          data_q_in <= data_q_in_mem[i];
-          //          data_i_in <= i == 100 ? 10000 : 0;
-          //          data_q_in <= i == 100 ? 10000 : 0;
+          // data_i_in <= data_i_in_mem[i];
+          // data_q_in <= data_q_in_mem[i];
+          data_i_in <= i == 100 ? 10000 : 0;
+          data_q_in <= i == 100 ? 10000 : 0;
           @(posedge clk);
-          //          data_i_in <= data_i_in2_mem[i];
-          //          data_q_in <= data_q_in2_mem[i];
+          // data_i_in <= data_i_in2_mem[i];
+          // data_q_in <= data_q_in2_mem[i];
           data_i_in <= '0;
           data_q_in <= '0;
         end
@@ -148,8 +148,8 @@ module tb_pc_cfr;
           data_i_out_ref <= data_i_out_mem[i];
           data_q_out_ref <= data_q_out_mem[i];
           @(posedge clk);
-          //          data_i_out_ref <= data_i_out2_mem[i];
-          //          data_q_out_ref <= data_q_out2_mem[i];
+          // data_i_out_ref <= data_i_out2_mem[i];
+          // data_q_out_ref <= data_q_out2_mem[i];
           data_i_out_ref <= '0;
           data_q_out_ref <= '0;
         end
