@@ -40,10 +40,10 @@ module bram_tdp #(
   logic [DATA_WIDTH-1:0] ram_data_b[PORTB_LATENCY];
 
   logic                  ena_r[PORTA_LATENCY];
-  logic                  enb_r[PORTA_LATENCY];
+  logic                  enb_r[PORTB_LATENCY];
 
   logic                  rsta_r[PORTA_LATENCY];
-  logic                  rstb_r[PORTA_LATENCY];
+  logic                  rstb_r[PORTB_LATENCY];
 
   // synthesis translate_off
 

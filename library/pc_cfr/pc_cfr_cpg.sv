@@ -24,7 +24,7 @@ module pc_cfr_cpg #(
     //
     output var logic signed [    DATA_WIDTH-1:0] peak_i_out,
     output var logic signed [    DATA_WIDTH-1:0] peak_q_out,
-    output var logic        [               1:0]  peak_phase_out,
+    output var logic        [               1:0] peak_phase_out,
     output var logic                             peak_valid_out,
     // Cancellation pulse write port
     input var  logic                             ctrl_clk,
@@ -52,7 +52,8 @@ module pc_cfr_cpg #(
   logic state1_busy, state2_busy;
   logic [CPW_ADDR_WIDTH-3:0] state1_addr, state2_addr;
   logic [               1:0] state1_phase, state2_phase;
-  logic [DATA_WIDTH-1:0] state1_i, state1_q, state2_i, state2_q, state2_i_d, state2_q_d;
+  logic [    DATA_WIDTH-1:0] state1_i, state1_q, state2_i, state2_q  = '0;
+  logic [    DATA_WIDTH-1:0] state2_i_d, state2_q_d;
 
   logic [DATA_WIDTH-1:0] delta_i, delta_q;
 
@@ -94,17 +95,12 @@ module pc_cfr_cpg #(
 
   // `state*_phase` is phase of peak
   always_ff @(posedge clk) begin
-    if (rst) begin
-      {state1_q, state1_i} <= '0;
-      {state2_q, state2_i} <= '0;
-    end else begin
-      {state1_q, state1_i} <= {state2_q, state2_i};
-      {state2_q, state2_i} <= (peak_valid_in && ~state1_busy) ? {
-        peak_q_in, peak_i_in
-      } : &state1_addr ? 'd0 : {
-        state1_q, state1_i
-      };
-    end
+    {state1_q, state1_i} <= {state2_q, state2_i};
+    {state2_q, state2_i} <= (peak_valid_in && ~state1_busy) ? {
+      peak_q_in, peak_i_in
+    } : &state1_addr ? 'd0 : {
+      state1_q, state1_i
+    };
   end
 
   // If current stage's CPG is busy (state1's MSB is high), pass this peak to
@@ -136,7 +132,7 @@ module pc_cfr_cpg #(
   bram_tdp #(
       .ADDR_WIDTH   (CPW_ADDR_WIDTH),
       .DATA_WIDTH   (DATA_WIDTH * 2),
-      .PORTA_LATENCY(3),
+      .PORTA_LATENCY(1),
       .PORTB_LATENCY(3),
       .INIT_WORD    ('0),
       .INIT_FILE    ("")
