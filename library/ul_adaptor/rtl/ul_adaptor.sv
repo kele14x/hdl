@@ -64,7 +64,7 @@ module ul_adaptor #(
       .DEST_SYNC_FF  (4),
       .INIT_SYNC_FF  (0),
       .REG_OUTPUT    (1),
-      .RST_USED      (1),
+      .RST_USED      (0),
       .SIM_ASSERT_CHK(0)
   ) xpm_cdc_pulse_inst (
       .src_clk   (clk_491m52),
@@ -76,7 +76,7 @@ module ul_adaptor #(
   );
 
   xpm_cdc_async_rst #(
-      .DEST_SYNC_FF   (2),
+      .DEST_SYNC_FF   (4),
       .INIT_SYNC_FF   (0),
       .RST_ACTIVE_HIGH(1)
   ) xpm_cdc_async_rst_inst (
