@@ -12,10 +12,10 @@ add_files -norecurse ./../hb_up2/hb_up2.sv
 add_files -norecurse ./../util/adder.sv
 add_files -norecurse ./../util/bram_tdp.sv
 add_files -norecurse ./../util/reg_pipeline.sv
-add_files -norecurse ./pc_cfr.sv
-add_files -norecurse ./pc_cfr_cpg.sv
-add_files -norecurse ./pc_cfr_pd.sv
-add_files -norecurse ./pc_cfr_softclipper.sv
+add_files -norecurse ./cfr_pc.sv
+add_files -norecurse ./cfr_pc_cpg.sv
+add_files -norecurse ./cfr_pc_pd.sv
+add_files -norecurse ./cfr_pc_softclipper.sv
 update_compile_order -fileset sources_1
 
 # Add simulation only files
