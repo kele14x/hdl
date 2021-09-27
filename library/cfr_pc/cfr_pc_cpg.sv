@@ -1,10 +1,10 @@
-// File: pc_cfr_cpg.sv
-// Brief: pc_cfr_cpg is Canceling Pulse Generator (CPG) for PC-CFR. It' designed
+// File: cfr_pc_cpg.sv
+// Brief: cfr_pc_cpg is Canceling Pulse Generator (CPG) for PC-CFR. It' designed
 //        as cascade-able.
 
 `timescale 1ns / 1ps `default_nettype none
 
-module pc_cfr_cpg #(
+module cfr_pc_cpg #(
     parameter int DATA_WIDTH     = 16,
     parameter int CPW_ADDR_WIDTH = 8
 ) (
@@ -51,9 +51,9 @@ module pc_cfr_cpg #(
 
   // State of CPG stage
 
-  logic state_busy;
-  logic [CPW_ADDR_WIDTH-2:0] state_addr;
-  logic state_phase;
+  logic                             state_busy;
+  logic        [CPW_ADDR_WIDTH-2:0] state_addr;
+  logic                             state_phase;
   logic [DATA_WIDTH-1:0] state_i, state_q, state_i_d, state_q_d;
 
   logic [DATA_WIDTH-1:0] delta_i, delta_q;
@@ -83,17 +83,21 @@ module pc_cfr_cpg #(
     if (rst) begin
       state_phase <= 'd0;
     end else begin
-      state_phase <= (peak_valid_in && ~state_busy) ? peak_phase_in : &state_addr ? '0 : state_phase;;
+      state_phase <= (peak_valid_in && ~state_busy) ? peak_phase_in : &state_addr ? '0 : state_phase;
     end
   end
 
   // `state*_phase` is phase of peak
   always_ff @(posedge clk) begin
-    {state_q, state_i} <= (peak_valid_in && ~state_busy) ? {
-      peak_q_in, peak_i_in
-    } : &state_addr ? 'd0 : {
-      state_q, state_i
-    };
+    if (rst) begin
+      {state_q, state_i} <= '0;
+    end else begin
+      {state_q, state_i} <= (peak_valid_in && ~state_busy) ? {
+        peak_q_in, peak_i_in
+      } : &state_addr ? 'd0 : {
+        state_q, state_i
+      };
+    end
   end
 
   // If current stage's CPG is busy (state's MSB is high), pass this peak to

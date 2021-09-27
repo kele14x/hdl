@@ -1,12 +1,12 @@
-// File: tb_cfr_softclipping.sv
-// Brief: Test bench for module cfr_softclipping
+// File: tb_cfr_pc.sv
+// Brief: Test bench for module cfr_pc
 
 `timescale 1ns / 1ps `default_nettype none
 
-module tb_cfr_softclipping ();
+module tb_cfr_pc ();
 
   localparam int TestVectorLength = 4096;
-  localparam int DutLatency = 111;
+  localparam int DutLatency = 129;
 
   localparam int DataWidth = 16;
   localparam int CpwAddrWidth = 8;
@@ -24,6 +24,7 @@ module tb_cfr_softclipping ();
   logic                           ctrl_rst;
 
   logic                           ctrl_enable;
+  logic        [             3:0] ctrl_spacing;
   logic        [     DataWidth:0] ctrl_clipping_threshold;
   logic        [     DataWidth:0] ctrl_pd_threshold;
 
@@ -39,22 +40,27 @@ module tb_cfr_softclipping ();
   logic signed [   DataWidth-1:0] data_i_out_ref;
   logic signed [   DataWidth-1:0] data_q_out_ref;
 
+  logic signed [   DataWidth-1:0] data_i_out_err;
+  logic signed [   DataWidth-1:0] data_q_out_err;
+
   logic signed [   DataWidth-1:0] data_i_in_mem           [TestVectorLength];
   logic signed [   DataWidth-1:0] data_q_in_mem           [TestVectorLength];
   logic signed [   DataWidth-1:0] data_i_out_mem          [TestVectorLength];
   logic signed [   DataWidth-1:0] data_q_out_mem          [TestVectorLength];
 
-  logic signed [DataWidth-1:0] cancellation_pulse_i_mem [2**CpwAddrWidth];
-  logic signed [DataWidth-1:0] cancellation_pulse_q_mem [2**CpwAddrWidth];
+  logic signed [   DataWidth-1:0] cancellation_pulse_i_mem[ 2**CpwAddrWidth];
+  logic signed [   DataWidth-1:0] cancellation_pulse_q_mem[ 2**CpwAddrWidth];
 
   initial begin
-    $readmemh("test_pc_cfr_cancellation_pulse_i.txt", cancellation_pulse_i_mem, 0, 2**CpwAddrWidth - 1);
-    $readmemh("test_pc_cfr_cancellation_pulse_q.txt", cancellation_pulse_q_mem, 0, 2**CpwAddrWidth - 1);
+    $readmemh("test_cfr_pc_cancellation_pulse_i.txt", cancellation_pulse_i_mem, 0,
+              2 ** CpwAddrWidth - 1);
+    $readmemh("test_cfr_pc_cancellation_pulse_q.txt", cancellation_pulse_q_mem, 0,
+              2 ** CpwAddrWidth - 1);
     //
-    $readmemh("test_pc_cfr_data_i_in.txt", data_i_in_mem, 0, TestVectorLength - 1);
-    $readmemh("test_pc_cfr_data_q_in.txt", data_q_in_mem, 0, TestVectorLength - 1);
-    $readmemh("test_pc_cfr_data_i_out.txt", data_i_out_mem, 0, TestVectorLength - 1);
-    $readmemh("test_pc_cfr_data_q_out.txt", data_q_out_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cfr_pc_data_i_in.txt", data_i_in_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cfr_pc_data_q_in.txt", data_q_in_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cfr_pc_data_i_out.txt", data_i_out_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cfr_pc_data_q_out.txt", data_q_out_mem, 0, TestVectorLength - 1);
   end
 
   initial begin
@@ -73,6 +79,7 @@ module tb_cfr_softclipping ();
     data_i_in = 0;
     data_q_in = 0;
     ctrl_enable = 1;
+    ctrl_spacing = 1;
     ctrl_clipping_threshold = 13818;
     ctrl_pd_threshold = 13818;
     ctrl_cpw_addr = 0;
@@ -85,12 +92,15 @@ module tb_cfr_softclipping ();
     ctrl_rst = 0;
   end
 
-  pc_cfr #(
+  cfr_pc #(
       .DATA_WIDTH    (DataWidth),
       .CPW_ADDR_WIDTH(CpwAddrWidth)
   ) DUT (
       .*
   );
+
+  assign data_i_out_err = data_i_out - data_i_out_ref;
+  assign data_q_out_err = data_q_out - data_q_out_ref;
 
   initial begin
     $display("**************************");
@@ -100,7 +110,7 @@ module tb_cfr_softclipping ();
 
     #100;
     // Set cancellation pulse
-    for (int i = 0; i < 2**CpwAddrWidth; i++) begin
+    for (int i = 0; i < 2 ** CpwAddrWidth; i++) begin
       @(posedge ctrl_clk);
       ctrl_cpw_addr <= i;
       ctrl_cpw_en <= 1'b1;
@@ -120,8 +130,8 @@ module tb_cfr_softclipping ();
       begin : feed_input
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
-//          data_i_in <= (i == 0) ? 100000 : 0;
-//          data_q_in <= 0;
+          //          data_i_in <= (i == 0) ? 100000 : 0;
+          //          data_q_in <= 0;
           data_i_in <= data_i_in_mem[i];
           data_q_in <= data_q_in_mem[i];
         end
@@ -140,12 +150,12 @@ module tb_cfr_softclipping ();
         repeat (DutLatency + 1) @(posedge clk);
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
-          if (data_i_out != data_i_out_ref) begin
+          if (data_i_out_err) begin
             $warning(
                 "\"data_i_out\" mismatch with golden reference, time = %t, i = %d, expected = %d, got = %d",
                 $time, i, data_i_out_ref, data_i_out);
           end
-          if (data_q_out != data_q_out_ref) begin
+          if (data_q_out_err) begin
             $warning(
                 "\"data_q_out\" mismatch with golden reference, time = %t, i = %d, expected = %d, got = %d",
                 $time, i, data_q_out_ref, data_q_out);

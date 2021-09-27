@@ -1,14 +1,14 @@
-// File: pc_cfr.sv
-// Brief: pc_cfr performs PC-CFR on input signal. This module is designed with
+// File: cfr_pc.sv
+// Brief: cfr_pc performs PC-CFR on input signal. This module is designed with
 //        clock to sample rate ratio (CSR) = 2, and interface is 2 channel
 //        interleaved. That is CH1/CH2/CH1/CH2...
 
 `timescale 1ns / 1ps `default_nettype none
 
-module pc_cfr #(
+module cfr_pc #(
     parameter int DATA_WIDTH     = 16,
     //
-    parameter int CPW_ADDR_WIDTH = 8 ,
+    parameter int CPW_ADDR_WIDTH = 8,
     parameter int CPW_DATA_WIDTH = 16
 ) (
     // Data Interface
@@ -26,9 +26,10 @@ module pc_cfr #(
     input var  logic                      ctrl_clk,
     input var  logic                      ctrl_rst,
     // Scalar
-    input var  logic                      ctrl_enable,  // 1 = enable, 0 = bypass
+    input var  logic                      ctrl_enable,              // 1 = enable, 0 = bypass
+    input var  logic [               3:0] ctrl_spacing,             // min spacing between peaks
     input var  logic [      DATA_WIDTH:0] ctrl_clipping_threshold,  // unsigned
-    input var  logic [      DATA_WIDTH:0] ctrl_pd_threshold,  // unsigned
+    input var  logic [      DATA_WIDTH:0] ctrl_pd_threshold,        // unsigned
     // Cancellation pulse write port
     input var  logic [CPW_ADDR_WIDTH-1:0] ctrl_cpw_addr,
     input var  logic                      ctrl_cpw_en,
@@ -41,13 +42,14 @@ module pc_cfr #(
 
 
   localparam int Iterations = 7;
-  localparam int DataPathLatency = 9 + 10 + 3 + 10;
+  localparam int DataPathLatency = 9 + 10 + 19 + 10;
 
-  logic local_rst;
+  logic                         local_rst;
 
-  logic                      ctrl_enable_s;
-  logic [      DATA_WIDTH:0] ctrl_clipping_threshold_s;
-  logic [      DATA_WIDTH:0] ctrl_pd_threshold_s;
+  logic                         ctrl_enable_s;
+  logic        [           3:0] ctrl_spacing_s;
+  logic        [  DATA_WIDTH:0] ctrl_clipping_threshold_s;
+  logic        [  DATA_WIDTH:0] ctrl_pd_threshold_s;
 
   logic signed [DATA_WIDTH-1:0] data_i_p0;
   logic signed [DATA_WIDTH-1:0] data_i_p1;
@@ -75,39 +77,51 @@ module pc_cfr #(
   // Ctrl interface CDC
 
   cdc_array_single #(
-    .DEST_SYNC_FF (2),
-    .INIT_SYNC_FF (0),
-    .SRC_INPUT_REG(0),
-    .WIDTH        (1)
+      .DEST_SYNC_FF (2),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
+      .WIDTH        (1)
   ) i_cdc_array_single_ctrl_enable (
-    .src_clk (1'b0),
-    .src_in  (ctrl_enable),
-    .dest_clk(clk),
-    .dest_out(ctrl_enable_s)
+      .src_clk (1'b0),
+      .src_in  (ctrl_enable),
+      .dest_clk(clk),
+      .dest_out(ctrl_enable_s)
   );
 
   cdc_array_single #(
-    .DEST_SYNC_FF (2),
-    .INIT_SYNC_FF (0),
-    .SRC_INPUT_REG(0),
-    .WIDTH        (DATA_WIDTH+1)
+      .DEST_SYNC_FF (2),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
+      .WIDTH        (4)
+  ) i_cdc_array_single_ctrl_spacing (
+      .src_clk (1'b0),
+      .src_in  (ctrl_spacing),
+      .dest_clk(clk),
+      .dest_out(ctrl_spacing_s)
+  );
+
+  cdc_array_single #(
+      .DEST_SYNC_FF (2),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
+      .WIDTH        (DATA_WIDTH + 1)
   ) i_cdc_array_single_ctrl_clipping_threshold (
-    .src_clk (1'b0),
-    .src_in  (ctrl_clipping_threshold),
-    .dest_clk(clk),
-    .dest_out(ctrl_clipping_threshold_s)
+      .src_clk (1'b0),
+      .src_in  (ctrl_clipping_threshold),
+      .dest_clk(clk),
+      .dest_out(ctrl_clipping_threshold_s)
   );
 
   cdc_array_single #(
-    .DEST_SYNC_FF (2),
-    .INIT_SYNC_FF (0),
-    .SRC_INPUT_REG(0),
-    .WIDTH        (DATA_WIDTH+1)
+      .DEST_SYNC_FF (2),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
+      .WIDTH        (DATA_WIDTH + 1)
   ) i_cdc_array_single_ctrl_pd_threshold (
-    .src_clk (1'b0),
-    .src_in  (ctrl_pd_threshold),
-    .dest_clk(clk),
-    .dest_out(ctrl_pd_threshold_s)
+      .src_clk (1'b0),
+      .src_in  (ctrl_pd_threshold),
+      .dest_clk(clk),
+      .dest_out(ctrl_pd_threshold_s)
   );
 
   // Reset CDC
@@ -174,7 +188,7 @@ module pc_cfr #(
       //
       .theta   (data_theta_p0),
       .r       (data_r_p0),
-      .ctrl_out(/* Not used */)
+      .ctrl_out(  /* Not used */)
   );
 
   cordic_cart2pol #(
@@ -191,16 +205,16 @@ module pc_cfr #(
       //
       .theta   (data_theta_p1),
       .r       (data_r_p1),
-      .ctrl_out(/* Not used */)
+      .ctrl_out(  /* Not used */)
   );
 
   // Peak detector,
-  // 3 clock tick latency
+  // 19 clock tick latency
 
-  pc_cfr_pd #(
+  cfr_pc_pd #(
       .ITERATIONS(Iterations),
       .DATA_WIDTH(DATA_WIDTH)
-  ) i_pc_cfr_pd (
+  ) i_cfr_pc_pd (
       .clk                    (clk),
       .rst                    (local_rst),
       //
@@ -215,6 +229,7 @@ module pc_cfr #(
       .peak_phase             (peak_phase),
       //
       .ctrl_enable            (ctrl_enable_s),
+      .ctrl_spacing           (ctrl_spacing_s),
       .ctrl_pd_threshold      (ctrl_pd_threshold_s),
       .ctrl_clipping_threshold(ctrl_clipping_threshold_s)
   );
@@ -237,7 +252,7 @@ module pc_cfr #(
       //
       .xout    (peak_i),
       .yout    (peak_q),
-      .ctrl_out(/* Not used */)
+      .ctrl_out(  /* Not used */)
   );
 
   reg_pipeline #(
@@ -263,11 +278,11 @@ module pc_cfr #(
   // Soft clipper
   // 143 clock tick latency
 
-  pc_cfr_softclipper #(
+  cfr_pc_softclipper #(
       .DATA_WIDTH    (DATA_WIDTH),
       .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH),
       .NUM_CPG       (6)
-  ) i_pc_cfr_softclipper (
+  ) i_cfr_pc_softclipper (
       .clk               (clk),
       .rst               (local_rst),
       //
