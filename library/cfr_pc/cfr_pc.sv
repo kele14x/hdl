@@ -34,8 +34,6 @@ module cfr_pc #(
     input var  logic [CPW_ADDR_WIDTH-1:0] ctrl_cpw_addr,
     input var  logic                      ctrl_cpw_en,
     input var  logic                      ctrl_cpw_we,
-    output var logic [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_i,
-    output var logic [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_q,
     input var  logic [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
     input var  logic [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
@@ -308,8 +306,6 @@ module cfr_pc #(
       .ctrl_cpw_addr     (ctrl_cpw_addr),
       .ctrl_cpw_en       (ctrl_cpw_en),
       .ctrl_cpw_we       (ctrl_cpw_we),
-      .ctrl_cpw_rd_data_i(ctrl_cpw_rd_data_i),
-      .ctrl_cpw_rd_data_q(ctrl_cpw_rd_data_q),
       .ctrl_cpw_wr_data_i(ctrl_cpw_wr_data_i),
       .ctrl_cpw_wr_data_q(ctrl_cpw_wr_data_q)
   );

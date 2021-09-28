@@ -9,7 +9,8 @@ add_files -norecurse ./../cordic_cart2pol/cordic_cart2pol.sv
 add_files -norecurse ./../cordic_pol2cart/cordic_pol2cart.sv
 add_files -norecurse ./../cordic_rotate/cordic_rotate.sv
 add_files -norecurse ./../hb_up2/hb_up2.sv
-add_files -norecurse ./../ram/bram_tdp.sv
+add_files -norecurse ./../ram/bram_sdp.sv
+add_files -norecurse ./../ram/bram_sdp_pipe.sv
 add_files -norecurse ./../util/adder.sv
 add_files -norecurse ./../util/reg_pipeline.sv
 add_files -norecurse ./cfr_pc_cpg.sv

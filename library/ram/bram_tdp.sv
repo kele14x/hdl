@@ -1,20 +1,3 @@
-//******************************************************************************
-// Copyright (C) 2020  kele14x
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-//******************************************************************************
-
 // File: bram_tdp.sv
 // Brief: Simplified True Dual Port Memory. Which means RAM with two ports, and
 //        both ports can be used to write and read. However, each port only has
@@ -27,31 +10,44 @@
 module bram_tdp #(
     parameter int    ADDR_WIDTH     = 10,
     parameter int    DATA_WIDTH     = 32,
-    parameter int    USE_OUTPUT_REG = 1,
+    parameter int    READ_LATENCY_A = 3,
+    parameter int    READ_LATENCY_B = 3,
     parameter int    INIT_WORD      = '0,
     parameter string INIT_FILE      = ""
 ) (
     // Port A
-    input var                   clka,
-    input var                   rsta,
-    input var                   ena,
-    input var                   wea,
-    input var  [ADDR_WIDTH-1:0] addra,
-    input var  [DATA_WIDTH-1:0] dina,
-    output var [DATA_WIDTH-1:0] douta,
+    input var                       clka,
+    input var  [READ_LATENCY_A-1:0] rsta,
+    input var  [READ_LATENCY_A-1:0] ena,
+    input var                       wea,
+    input var  [    ADDR_WIDTH-1:0] addra,
+    input var  [    DATA_WIDTH-1:0] dina,
+    output var [    DATA_WIDTH-1:0] douta,
     // Port B
-    input var                   clkb,
-    input var                   rstb,
-    input var                   enb,
-    input var                   web,
-    input var  [ADDR_WIDTH-1:0] addrb,
-    input var  [DATA_WIDTH-1:0] dinb,
-    output var [DATA_WIDTH-1:0] doutb
+    input var                       clkb,
+    input var  [READ_LATENCY_B-1:0] rstb,
+    input var  [READ_LATENCY_B-1:0] enb,
+    input var                       web,
+    input var  [    ADDR_WIDTH-1:0] addrb,
+    input var  [    DATA_WIDTH-1:0] dinb,
+    output var [    DATA_WIDTH-1:0] doutb
 );
 
-  logic [DATA_WIDTH-1:0] MEM             [2**ADDR_WIDTH];
-  logic [DATA_WIDTH-1:0] ram_data_a = '0;
-  logic [DATA_WIDTH-1:0] ram_data_b = '0;
+
+  initial begin
+    assert (1 <= READ_LATENCY_A && READ_LATENCY_A <= 3)
+    else $error("READ_LATENCY_A should be within range 1 to 3.");
+    assert (1 <= READ_LATENCY_B && READ_LATENCY_B <= 3)
+    else $error("READ_LATENCY_B should be within range 1 to 3.");
+  end
+
+  // The Memory
+  logic [DATA_WIDTH-1:0] MEM [ 2**ADDR_WIDTH];
+
+  // Port A output pipeline
+  logic [DATA_WIDTH-1:0] rega[READ_LATENCY_A] = '{READ_LATENCY_A{'0}};
+  // Port B output pipeline
+  logic [DATA_WIDTH-1:0] regb[READ_LATENCY_B] = '{READ_LATENCY_B{'0}};
 
 
   // Initializes the memory values to a specified file or to all zeros to match
@@ -68,13 +64,13 @@ module bram_tdp #(
   // Memory write
 
   always_ff @(posedge clka) begin
-    if (ena && wea) begin
+    if (ena[0] && wea) begin
       MEM[addra] <= dina;
     end
   end
 
   always_ff @(posedge clkb) begin
-    if (enb && web) begin
+    if (enb[0] && web) begin
       MEM[addrb] <= dinb;
     end
   end
@@ -82,70 +78,48 @@ module bram_tdp #(
   // Port A read
 
   always_ff @(posedge clka) begin
-    if (ena) begin
-      ram_data_a <= MEM[addra];
+    if (rsta[0]) begin
+      rega[0] <= '0;
+    end else if (ena[0]) begin
+      rega[0] <= MEM[addra];
     end
   end
 
   // Read B read
 
   always_ff @(posedge clkb) begin
-    if (enb) begin
-      ram_data_b <= MEM[addrb];
+    if (rstb[0]) begin
+      regb[0] <= '0;
+    end else if (enb[0]) begin
+      regb[0] <= MEM[addrb];
     end
   end
 
-  // Output
+  // Additional clock cycle read latency improves clock-to-out timing
   generate
-    if (USE_OUTPUT_REG) begin : g_output_reg
-
-      // 2 clock cycle read latency with improve clock-to-out timing
-
-      logic [DATA_WIDTH-1:0] douta_reg = '0;
-      logic [DATA_WIDTH-1:0] doutb_reg = '0;
-      logic                  ena_d = 1'b0;
-      logic                  enb_d = 1'b0;
-      logic                  rsta_d = 1'b0;
-      logic                  rstb_d = 1'b0;
-
+    for (genvar i = 1; i < READ_LATENCY_B; i++) begin : g_pipeline_a
       always_ff @(posedge clka) begin
-        ena_d  <= ena;
-        rsta_d <= rsta;
-      end
-
-      always_ff @(posedge clkb) begin
-        enb_d  <= enb;
-        rstb_d <= rstb;
-      end
-
-      always_ff @(posedge clka) begin
-        if (rsta_d) begin
-          douta_reg <= '0;
-        end else if (ena_d) begin
-          douta_reg <= ram_data_a;
+        if (rsta[i]) begin
+          rega[i] <= '0;
+        end else if (ena[i]) begin
+          rega[i] <= rega[i-1];
         end
       end
+    end
 
+    for (genvar i = 1; i < READ_LATENCY_B; i++) begin : g_pipeline_b
       always_ff @(posedge clkb) begin
-        if (rstb_d) begin
-          doutb_reg <= '0;
-        end else if (enb_d) begin
-          doutb_reg <= ram_data_b;
+        if (rstb[i]) begin
+          regb[i] <= '0;
+        end else if (enb[i]) begin
+          regb[i] <= regb[i-1];
         end
       end
-
-      assign douta = douta_reg;
-      assign doutb = doutb_reg;
-
-    end else begin : g_no_output_reg
-
-      // 1 clock cycle read latency
-
-      assign douta = ram_data_a;
-      assign doutb = ram_data_b;
-
     end
   endgenerate
+
+  assign douta = rega[READ_LATENCY_A-1];
+  assign doutb = regb[READ_LATENCY_B-1];
 
 endmodule
 

@@ -33,8 +33,6 @@ module cfr_pc_cpg #(
     input var  logic        [CPW_ADDR_WIDTH-1:0] ctrl_cpw_addr,
     input var  logic                             ctrl_cpw_en,
     input var  logic                             ctrl_cpw_we,
-    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_i,
-    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_q,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
@@ -83,7 +81,8 @@ module cfr_pc_cpg #(
     if (rst) begin
       state_phase <= 'd0;
     end else begin
-      state_phase <= (peak_valid_in && ~state_busy) ? peak_phase_in : &state_addr ? '0 : state_phase;
+      state_phase <= (peak_valid_in && ~state_busy) ? peak_phase_in :
+        &state_addr ? '0 : state_phase;
     end
   end
 
@@ -126,27 +125,23 @@ module cfr_pc_cpg #(
   assign cpw_rd_en   = state_busy;
   assign cpw_rd_addr = {state_addr, ~state_phase};
 
-  bram_tdp #(
-      .ADDR_WIDTH    (CPW_ADDR_WIDTH),
-      .DATA_WIDTH    (DATA_WIDTH * 2),
-      .USE_OUTPUT_REG(1),
-      .INIT_FILE     ("")
-  ) i_bram_tdp (
+  bram_sdp_pipe #(
+      .ADDR_WIDTH  (CPW_ADDR_WIDTH),
+      .DATA_WIDTH  (DATA_WIDTH * 2),
+      .READ_LATENCY(2),
+      .INIT_FILE   ("")
+  ) i_bram_sdp_pipe (
       //
       .clka (ctrl_clk),
-      .rsta (ctrl_rst),
       .ena  (ctrl_cpw_en),
       .wea  (ctrl_cpw_we),
       .addra(ctrl_cpw_addr),
       .dina ({ctrl_cpw_wr_data_q, ctrl_cpw_wr_data_i}),
-      .douta({ctrl_cpw_rd_data_q, ctrl_cpw_rd_data_i}),
       //
       .clkb (clk),
       .rstb (~cpw_rd_en),
       .enb  (cpw_rd_en),
-      .web  (1'b0),
       .addrb(cpw_rd_addr),
-      .dinb ('0),
       .doutb({cpw_rd_data_q, cpw_rd_data_i})
   );
 

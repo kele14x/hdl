@@ -151,14 +151,12 @@ module tb_cfr_pc ();
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
           if (data_i_out_err) begin
-            $warning(
-                "\"data_i_out\" mismatch with golden reference, time = %t, i = %d, expected = %d, got = %d",
-                $time, i, data_i_out_ref, data_i_out);
+            $warning("\"data_i_out\" mismatch with golden reference, ", "time = %t, ", $time,
+                     "i = %d, ", i, "expected = %d, ", data_i_out_ref, "got = %d", data_i_out);
           end
           if (data_q_out_err) begin
-            $warning(
-                "\"data_q_out\" mismatch with golden reference, time = %t, i = %d, expected = %d, got = %d",
-                $time, i, data_q_out_ref, data_q_out);
+            $warning("\"data_q_out\" mismatch with golden reference, ", "time = %t, ", $time,
+                     "i = %d, ", i, "expected = %d, ", data_q_out_ref, "got = %d", data_q_out);
           end
         end
       end

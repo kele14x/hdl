@@ -33,8 +33,6 @@ module cfr_pc_softclipper #(
     input var  logic        [CPW_ADDR_WIDTH-1:0] ctrl_cpw_addr,
     input var  logic                             ctrl_cpw_en,
     input var  logic                             ctrl_cpw_we,
-    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_i,
-    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_q,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
@@ -52,23 +50,21 @@ module cfr_pc_softclipper #(
 
   // Connect input
 
-  assign peak_i_s[0]        = peak_i_in;
-  assign peak_q_s[0]        = peak_q_in;
-  assign peak_phase_s[0]    = peak_phase_in;
-  assign peak_valid_s[0]    = peak_valid_in;
+  assign peak_i_s[0]     = peak_i_in;
+  assign peak_q_s[0]     = peak_q_in;
+  assign peak_phase_s[0] = peak_phase_in;
+  assign peak_valid_s[0] = peak_valid_in;
 
   // Connect output
 
-  assign data_i_out         = data_i_s[NUM_CPG];
-  assign data_q_out         = data_q_s[NUM_CPG];
+  assign data_i_out      = data_i_s[NUM_CPG];
+  assign data_q_out      = data_q_s[NUM_CPG];
 
-  assign peak_i_out         = peak_i_s[NUM_CPG];
-  assign peak_q_out         = peak_q_s[NUM_CPG];
-  assign peak_phase_out     = peak_phase_s[NUM_CPG];
-  assign peak_valid_out     = peak_valid_s[NUM_CPG];
+  assign peak_i_out      = peak_i_s[NUM_CPG];
+  assign peak_q_out      = peak_q_s[NUM_CPG];
+  assign peak_phase_out  = peak_phase_s[NUM_CPG];
+  assign peak_valid_out  = peak_valid_s[NUM_CPG];
 
-  assign ctrl_cpw_rd_data_i = ctrl_cpw_rd_data_i_s[0];
-  assign ctrl_cpw_rd_data_q = ctrl_cpw_rd_data_q_s[0];
 
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
@@ -110,8 +106,6 @@ module cfr_pc_softclipper #(
           .ctrl_cpw_addr     (ctrl_cpw_addr),
           .ctrl_cpw_en       (ctrl_cpw_en),
           .ctrl_cpw_we       (ctrl_cpw_we),
-          .ctrl_cpw_rd_data_i(ctrl_cpw_rd_data_i_s[i]),
-          .ctrl_cpw_rd_data_q(ctrl_cpw_rd_data_q_s[i]),
           .ctrl_cpw_wr_data_i(ctrl_cpw_wr_data_i),
           .ctrl_cpw_wr_data_q(ctrl_cpw_wr_data_q)
       );
