@@ -1,5 +1,5 @@
 // File: bram_sdp_pipe.sv
-// Brief: Simplified Simple Dual Port Memory, but with control (enable and
+// Brief: Simplified Simple Dual Port (SDP) memory, but with control (enable and
 //        reset) signal pipelined.
 
 `timescale 1ns / 1ps `default_nettype none

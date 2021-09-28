@@ -1,5 +1,5 @@
 // File: bram_sdp.sv
-// Brief: Simplified abstract simple dual port (SDP) memory. Port A is the
+// Brief: Simplified Simple Dual Port (SDP) memory. Port A is the
 //        write port, port B is the read port. Each port has dedicated address
 //        port.
 

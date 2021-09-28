@@ -1,5 +1,5 @@
 // File: bram_sp_pipe.sv
-// Brief: Simplified Signle Port (SP) Memory, but with control (enable and
+// Brief: Simplified Single Port (SP) Memory, but with control (enable and
 //        reset) signal pipelined.
 
 `timescale 1ns / 1ps `default_nettype none

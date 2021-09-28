@@ -21,9 +21,15 @@ module cfr #(
     // Data input
     input var  [    DATA_WIDTH-1:0] data_i_in                     [NUM_BRANCH],
     input var  [    DATA_WIDTH-1:0] data_q_in                     [NUM_BRANCH],
+    input var                       data_valid_in                             ,
+    input var                       data_sof_in                               ,
+    input var                       data_sop_in                               ,
     // Data output
     output var [    DATA_WIDTH-1:0] data_i_out                    [NUM_BRANCH],
     output var [    DATA_WIDTH-1:0] data_q_out                    [NUM_BRANCH],
+    output var                      data_valid_out                            ,
+    output var                      data_sof_out                              ,
+    output var                      data_sop_out                              ,
     // Control Interface
     //------------------
     input var                       ctrl_clk,
@@ -92,6 +98,16 @@ module cfr #(
 
     end
   endgenerate
+
+  reg_pipeline #(
+      .DATA_WIDTH     (3),
+      .PIPELINE_STAGES(129 + 23)
+  ) i_reg_pipeline (
+      .clk (clk),
+      .din ({data_sof_in, data_sop_in, data_valid_in}),
+      .dout({data_sof_out, data_sop_out, data_valid_out})
+  );
+
 endmodule
 
 `default_nettype wire

@@ -1,5 +1,5 @@
 // File: bram_sp.sv
-// Brief: Simplified abstract signle port (SP) memory.
+// Brief: Simplified Single Port (SP) Memory.
 
 `timescale 1ns / 1ps `default_nettype none
 
