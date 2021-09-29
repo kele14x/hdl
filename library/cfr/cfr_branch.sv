@@ -4,15 +4,10 @@
 `timescale 1ns / 1ps `default_nettype none
 
 module cfr_branch #(
-    parameter int ID              = 0,
-    //
-    parameter int IPIF_ADDR_WIDTH = 10,
-    parameter int IPIF_DATA_WIDTH = 32,
-    //
-    parameter int DATA_WIDTH      = 16,
-    //
-    parameter int CPW_ADDR_WIDTH  = 8,
-    parameter int CPW_DATA_WIDTH  = 16
+    parameter int ID             = 0,
+    parameter int DATA_WIDTH     = 16,
+    parameter int CPW_ADDR_WIDTH = 8,
+    parameter int CPW_DATA_WIDTH = 16
 ) (
     // Data Interface
     //---------------

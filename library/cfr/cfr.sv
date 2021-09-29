@@ -4,14 +4,9 @@
 `timescale 1ns / 1ps `default_nettype none
 
 module cfr #(
-    parameter int AXI_ADDR_WIDTH = 17,
-    parameter int AXI_DATA_WIDTH = 32,
-    //
     parameter int DATA_WIDTH     = 16,
-    //
     parameter int CPW_ADDR_WIDTH = 8,
     parameter int CPW_DATA_WIDTH = 16,
-    //
     parameter int NUM_BRANCH     = 16
 ) (
     // Data Interface
@@ -21,15 +16,15 @@ module cfr #(
     // Data input
     input var  [    DATA_WIDTH-1:0] data_i_in                     [NUM_BRANCH],
     input var  [    DATA_WIDTH-1:0] data_q_in                     [NUM_BRANCH],
-    input var                       data_valid_in                             ,
-    input var                       data_sof_in                               ,
-    input var                       data_sop_in                               ,
+    input var                       data_valid_in,
+    input var                       data_sof_in,
+    input var                       data_sop_in,
     // Data output
     output var [    DATA_WIDTH-1:0] data_i_out                    [NUM_BRANCH],
     output var [    DATA_WIDTH-1:0] data_q_out                    [NUM_BRANCH],
-    output var                      data_valid_out                            ,
-    output var                      data_sof_out                              ,
-    output var                      data_sop_out                              ,
+    output var                      data_valid_out,
+    output var                      data_sof_out,
+    output var                      data_sop_out,
     // Control Interface
     //------------------
     input var                       ctrl_clk,
@@ -57,15 +52,10 @@ module cfr #(
     for (genvar i = 0; i < NUM_BRANCH; i++) begin : g_branch
 
       cfr_branch #(
-          .ID             (i),
-          //
-          .IPIF_ADDR_WIDTH(AXI_ADDR_WIDTH - 7),
-          .IPIF_DATA_WIDTH(AXI_DATA_WIDTH),
-          //
-          .DATA_WIDTH     (DATA_WIDTH),
-          //
-          .CPW_ADDR_WIDTH (CPW_ADDR_WIDTH),
-          .CPW_DATA_WIDTH (CPW_DATA_WIDTH)
+          .ID            (i),
+          .DATA_WIDTH    (DATA_WIDTH),
+          .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH),
+          .CPW_DATA_WIDTH(CPW_DATA_WIDTH)
       ) i_cfr_branch (
           .clk                           (clk),
           .rst                           (rst),

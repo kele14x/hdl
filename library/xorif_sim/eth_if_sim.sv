@@ -1,9 +1,10 @@
 `timescale 1 ns / 1 ps `default_nettype none
 module eth_if_sim #(
-    parameter int NUM_CC       = 2,  // Number of carrier components
-    parameter int NUM_ETH_PORT = 2,  // Number of Ethernet ports
-    parameter int NUM_DL_LAYER = 16,  // Number of DL layers
-    parameter int NUM_UL_LAYER = 8  // Number of Ul layers
+    parameter int NUM_CC        = 2,   // Number of carrier components
+    parameter int NUM_ETH_PORT  = 2,   // Number of Ethernet ports
+    parameter int NUM_DL_LAYER  = 16,  // Number of DL layers
+    parameter int NUM_UL_LAYER  = 8,   // Number of UL layers
+    parameter int NUM_SRS_LAYER = 64   // Number of SRS layers
 ) (
     // AXI-Lite Control/Status
     input var         aclk,
@@ -113,7 +114,22 @@ module eth_if_sim #(
     input var         ul_sof_ahead_3        [      NUM_CC],
     input var         ul_sop_ahead_3        [      NUM_CC],
     input var  [15:0] ul_data_i             [      NUM_CC][NUM_UL_LAYER],
-    input var  [15:0] ul_data_q             [      NUM_CC][NUM_UL_LAYER]
+    input var  [15:0] ul_data_q             [      NUM_CC][NUM_UL_LAYER],
+    // SRS Section Header
+    output var [ 2:0] srs_cfg_cc,
+    output var [11:0] srs_cfg_symbol,
+    output var [ 3:0] srs_cfg_numsymbol,
+    output var        srs_cfg_valid,
+    // SRS data request
+    output var [ 2:0] srs_req_cc,
+    output var [ 5:0] srs_req_layer,
+    output var [11:0] srs_req_symbol,
+    output var        srs_req_valid,
+    // SRS data
+    input var  [23:0] srs_data_tdata,                         // {4E, 9Q, 9I}
+    input var         srs_data_tlast,
+    input var         srs_data_tvalid,
+    output var        srs_data_tready
 );
 
 
@@ -372,7 +388,7 @@ module eth_if_sim #(
   // TODO: connect
   bit [  3:0] ctrl_bandwidth             [         NUM_CC] = '{NUM_CC{0}};
   bit [  1:0] ctrl_numerology            [         NUM_CC] = '{NUM_CC{0}};
-  bit [  1:0] ctrl_compression_mode      [         NUM_CC] = '{NUM_CC{0}};
+  bit [  1:0] ctrl_compression_mode      [         NUM_CC] = '{NUM_CC{1}};
 
   bit [ 1:0] buffer_mem_ctrl_en   [      NUM_CC];
   bit [11:0] buffer_mem_addr_i    [      NUM_CC][NUM_UL_LAYER];
@@ -1329,6 +1345,103 @@ module eth_if_sim #(
       .buffer_mem_data_i    (buffer_mem_data_i),
       .buffer_mem_we        (buffer_mem_we),
       .buffer_mem_data_o    (buffer_mem_data_o)
+  );
+
+
+  srs_adaptor #(
+    .NUM_CC       (NUM_CC       ),
+    .NUM_ETH_PORT (NUM_ETH_PORT ),
+    .NUM_SRS_LAYER(NUM_SRS_LAYER)
+  ) i_srs_adaptor (
+    // Interface with DFE
+    //===================
+    .clk_491m52             (clk_491m52                               ),
+    .rst_491m52             (rst_491m52                               ),
+    // SRS Section Header
+    .srs_cfg_cc             (srs_cfg_cc                               ),
+    .srs_cfg_symbol         (srs_cfg_symbol                           ),
+    .srs_cfg_numsymbol      (srs_cfg_numsymbol                        ),
+    .srs_cfg_valid          (srs_cfg_valid                            ),
+    // SRS data request
+    .srs_req_cc             (srs_req_cc                               ),
+    .srs_req_layer          (srs_req_layer                            ),
+    .srs_req_symbol         (srs_req_symbol                           ),
+    .srs_req_valid          (srs_req_valid                            ),
+    // SRS data
+    .srs_data_tdata         (srs_data_tdata                           ),
+    .srs_data_tlast         (srs_data_tlast                           ),
+    .srs_data_tvalid        (srs_data_tvalid                          ),
+    .srs_data_tready        (srs_data_tready                          ),
+    // Interface with XORIF
+    //=====================
+    .clk_400m               (clk_400m                                 ),
+    .rst_400m               (rst_400m                                 ),
+    // UL Timing
+    .s_ul_sym_num           (m_ul_sym_num[0:NUM_CC-1]                 ),
+    .s_ul_update            (m_ul_update[0:NUM_CC-1]                  ),
+    // ORAN Parse Port
+    .s_t_header_offset_valid(m_t_header_offset_valid[0:NUM_ETH_PORT-1]),
+    .s_runt_packet_len      (m_runt_packet_len[0:NUM_ETH_PORT-1]      ),
+    .s_rtc_pc_id            (m_rtc_pc_id[0:NUM_ETH_PORT-1]            ),
+    .s_concat               (m_concat[0:NUM_ETH_PORT-1]               ),
+    .s_messagetype          (m_messagetype[0:NUM_ETH_PORT-1]          ),
+    .s_seqid                (m_seqid[0:NUM_ETH_PORT-1]                ),
+    .s_subseqid             (m_subseqid[0:NUM_ETH_PORT-1]             ),
+    .s_ebit                 (m_ebit[0:NUM_ETH_PORT-1]                 ),
+    .s_payloadsize          (m_payloadsize[0:NUM_ETH_PORT-1]          ),
+    .s_packet_in_window     (m_packet_in_window[0:NUM_ETH_PORT-1]     ),
+    .s_offset_in_symbol     (m_offset_in_symbol[0:NUM_ETH_PORT-1]     ),
+    //
+    .s_radio_app_head_valid (m_radio_app_head_valid[0:NUM_ETH_PORT-1] ),
+    .s_datadirection        (m_datadirection[0:NUM_ETH_PORT-1]        ),
+    .s_numsections          (m_numsections[0:NUM_ETH_PORT-1]          ),
+    .s_sectiontype          (m_sectiontype[0:NUM_ETH_PORT-1]          ),
+    .s_filterindex          (m_filterindex[0:NUM_ETH_PORT-1]          ),
+    .s_frameid              (m_frameid[0:NUM_ETH_PORT-1]              ),
+    .s_subframeid           (m_subframeid[0:NUM_ETH_PORT-1]           ),
+    .s_slotid               (m_slotid[0:NUM_ETH_PORT-1]               ),
+    .s_symbolid             (m_symbolid[0:NUM_ETH_PORT-1]             ),
+    .s_udcomphdr            (m_udcomphdr[0:NUM_ETH_PORT-1]            ),
+    .s_timeoffset           (m_timeoffset[0:NUM_ETH_PORT-1]           ),
+    .s_framestructure       (m_framestructure[0:NUM_ETH_PORT-1]       ),
+    .s_cplength             (m_cplength[0:NUM_ETH_PORT-1]             ),
+    //
+    .s_section_header_valid (m_section_header_valid[0:NUM_ETH_PORT-1] ),
+    .s_numsymbol            (m_numsymbol[0:NUM_ETH_PORT-1]            ),
+    .s_numprbc              (m_numprbc[0:NUM_ETH_PORT-1]              ),
+    .s_startprbc            (m_startprbc[0:NUM_ETH_PORT-1]            ),
+    .s_sectionid            (m_sectionid[0:NUM_ETH_PORT-1]            ),
+    .s_rb                   (m_rb[0:NUM_ETH_PORT-1]                   ),
+    .s_remask               (m_remask[0:NUM_ETH_PORT-1]               ),
+    .s_beamid15             (m_beamid15[0:NUM_ETH_PORT-1]             ),
+    .s_freqoffset           (m_freqoffset[0:NUM_ETH_PORT-1]           ),
+    // UNSOL port
+    .m_fram_unsol_tdata     (s00_fram_unsol_tdata                     ),
+    .m_fram_unsol_tkeep     (s00_fram_unsol_tkeep                     ),
+    .m_fram_unsol_tvalid    (s00_fram_unsol_tvalid                    ),
+    .m_fram_unsol_tlast     (s00_fram_unsol_tlast                     ),
+    .m_fram_unsol_tready    (s00_fram_unsol_tready                    ),
+    .m_fram_unsol_tuser     (s00_fram_unsol_tuser                     ),
+    // Control
+    //========
+    // M-Plane SRS Configuration
+    .ctrl_srs_rtc_pc_id     (                                         ),
+    //
+    .ctrl_srs_frameid       (                                         ),
+    .ctrl_srs_subframeid    (                                         ),
+    .ctrl_srs_slotid        (                                         ),
+    .ctrl_srs_symbolid      (                                         ),
+    //
+    .ctrl_srs_numsymbol     (                                         ),
+    .ctrl_srs_numprbc       (                                         ),
+    .ctrl_srs_startprbc     (                                         ),
+    .ctrl_srs_sectionid     (                                         ),
+    //
+    .ctrl_srs_ethport       (                                         ),
+    //
+    .ctrl_srs_valid         (                                         ),
+    // Mu
+    .ctrl_numerology        ('{NUM_CC{2'b00}}                         )
   );
 
 endmodule

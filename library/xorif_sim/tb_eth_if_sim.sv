@@ -384,15 +384,15 @@ module tb_eth_if_sim;
       // oran_cc_num_sym_config
       axi_write(32'hE114 + 32'h70 * i, 32'h18180300);
       // pran_cc_ul_compression
-      axi_write(32'hE118 + 32'h70 * i, 32'h100); // raw
-//      axi_write(32'hE118 + 32'h70 * i, 32'h119); // bfp9
+      //axi_write(32'hE118 + 32'h70 * i, 32'h100); // raw
+      axi_write(32'hE118 + 32'h70 * i, 32'h119); // bfp9
       // oran_cc_dl_compression
-      axi_write(32'hE11C + 32'h70 * i, 32'h100); // raw
-//      axi_write(32'hE11C + 32'h70 * i, 32'h119); // bfp9
+      //axi_write(32'hE11C + 32'h70 * i, 32'h100); // raw
+      axi_write(32'hE11C + 32'h70 * i, 32'h119); // bfp9
       // cc_ul_setup_c_abs_symbol
       axi_write(32'hE120 + 32'h70 * i, 32'h6);
       // cc_ul_setup_c_cycles
-      axi_write(32'hE124 + 32'h70 * i, 32'h2244);
+      axi_write(32'hE124 + 32'h70 * i, 32'h2246);
       // cc_ul_setup_d_cycles
       axi_write(32'hE128 + 32'h70 * i, 32'h2249);
       // cc_dl_setup_c_abs_symbol
@@ -590,6 +590,7 @@ module tb_eth_if_sim;
     common_config();
     eth_config();
     cc_config();
+
     $display("Done AXI registers configuration");
     axi_done = 1;
 

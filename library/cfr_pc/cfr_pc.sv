@@ -125,10 +125,10 @@ module cfr_pc #(
   // Reset CDC
 
   cdc_async_rst_sync #(
-      .SYNC_FF(4),
+      .SYNC_FF        (4),
       .RST_ACTIVE_HIGH(1)
   ) i_cdc_async_rst_sync (
-      .clk(clk),
+      .clk         (clk),
       .async_rst_in(rst),
       .sync_rst_out(local_rst)
   );
