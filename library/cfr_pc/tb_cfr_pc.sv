@@ -31,8 +31,6 @@ module tb_cfr_pc ();
   logic        [CpwAddrWidth-1:0] ctrl_cpw_addr;
   logic                           ctrl_cpw_en;
   logic                           ctrl_cpw_we;
-  logic        [   DataWidth-1:0] ctrl_cpw_rd_data_i;
-  logic        [   DataWidth-1:0] ctrl_cpw_rd_data_q;
   logic        [   DataWidth-1:0] ctrl_cpw_wr_data_i;
   logic        [   DataWidth-1:0] ctrl_cpw_wr_data_q;
 

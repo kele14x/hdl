@@ -51,8 +51,9 @@ module cfr_pc_cpg #(
 
   logic                             state_busy;
   logic        [CPW_ADDR_WIDTH-2:0] state_addr;
-  logic                             state_phase;
-  logic [DATA_WIDTH-1:0] state_i, state_q, state_i_d, state_q_d;
+  logic                             state_phase = '0;
+  logic [DATA_WIDTH-1:0] state_i = '0, state_q = '0;
+  logic [DATA_WIDTH-1:0] state_i_d, state_q_d;
 
   logic [DATA_WIDTH-1:0] delta_i, delta_q;
 
@@ -67,35 +68,22 @@ module cfr_pc_cpg #(
     end
   end
 
-  // `state*_addr` will move from 0 to 'hFF
+  // `state_addr` will move from 0 to 'hFF
   always_ff @(posedge clk) begin
-    if (rst) begin
-      state_addr <= 'd0;
-    end else begin
-      state_addr <= state_busy ? state_addr + 1 : &state_addr ? '0 : state_addr;
+    state_addr <= state_busy ? state_addr + 1 : '0;
+  end
+
+  // `state_phase` is phase of peak
+  always_ff @(posedge clk) begin
+    if (peak_valid_in && ~state_busy) begin
+      state_phase <=  peak_phase_in;
     end
   end
 
-  // `state*_phase` is phase of peak
+  // `state_i/q` is i/q value of peak
   always_ff @(posedge clk) begin
-    if (rst) begin
-      state_phase <= 'd0;
-    end else begin
-      state_phase <= (peak_valid_in && ~state_busy) ? peak_phase_in :
-        &state_addr ? '0 : state_phase;
-    end
-  end
-
-  // `state*_phase` is phase of peak
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      {state_q, state_i} <= '0;
-    end else begin
-      {state_q, state_i} <= (peak_valid_in && ~state_busy) ? {
-        peak_q_in, peak_i_in
-      } : &state_addr ? 'd0 : {
-        state_q, state_i
-      };
+    if (peak_valid_in && ~state_busy) begin
+      {state_q, state_i} <= {peak_q_in, peak_i_in};
     end
   end
 
@@ -115,10 +103,6 @@ module cfr_pc_cpg #(
       peak_i_out     <= peak_i_in;
       peak_q_out     <= peak_q_in;
       peak_phase_out <= peak_phase_in;
-    end else begin
-      peak_i_out     <= 'd0;
-      peak_q_out     <= 'd0;
-      peak_phase_out <= 'd0;
     end
   end
 
