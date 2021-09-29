@@ -244,6 +244,7 @@ module srs_adaptor #(
 
   (* keep_hierarchy="yes" *)
   srs_adaptor_mux #(
+      .NUM_CC      (NUM_CC),
       .NUM_ETH_PORT(NUM_ETH_PORT)
   ) i_mux (
       // XORIF

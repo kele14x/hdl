@@ -1,5 +1,5 @@
-# File: cfr_softclipping.xdc
-# Brief: Out-of-context constraints for module cfr_softclipping
+# File: cfr_pc_ooc.xdc
+# Brief: Out-of-context constraints for module cfr_pc
 create_clock -name clk -period 2 [get_ports clk]
 create_clock -name ctrl_clk -period 10 [get_ports ctrl_clk]
 set_clock_groups -asynchronous -group clk -group ctrl_clk

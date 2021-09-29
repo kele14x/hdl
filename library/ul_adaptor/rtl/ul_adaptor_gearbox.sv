@@ -87,7 +87,7 @@ module ul_adaptor_gearbox #(
           .DEST_SYNC_FF  (4),
           .INIT_SYNC_FF  (0),
           .REG_OUTPUT    (1),
-          .RST_USED      (1),
+          .RST_USED      (0),
           .SIM_ASSERT_CHK(0)
       ) i_cdc_ul_update (
           .src_clk(clk_400m),

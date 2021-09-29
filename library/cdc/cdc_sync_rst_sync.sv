@@ -3,6 +3,7 @@
 //        synchronize an asynchronous reset signal into specified clock domain.
 //        The reset output will assert and release (leave reset) synchronously
 //        with `clk`.
+
 `timescale 1 ns / 1 ps `default_nettype none
 
 module cdc_sync_rst_sync #(

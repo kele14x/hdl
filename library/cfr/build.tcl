@@ -11,10 +11,10 @@ add_files -norecurse ./../cordic_pol2cart/cordic_pol2cart.sv
 add_files -norecurse ./../cordic_rotate/cordic_rotate.sv
 add_files -norecurse ./../hb_up2/hb_up2_int2.sv
 add_files -norecurse ./../hb_up2/hb_up2_int2_p2.sv
-add_files -norecurse ./../pc_cfr/pc_cfr.sv
-add_files -norecurse ./../pc_cfr/pc_cfr_cpg.sv
-add_files -norecurse ./../pc_cfr/pc_cfr_pd.sv
-add_files -norecurse ./../pc_cfr/pc_cfr_softclipper.sv
+add_files -norecurse ./../cfr_pc/cfr_pc.sv
+add_files -norecurse ./../cfr_pc/cfr_pc_cpg.sv
+add_files -norecurse ./../cfr_pc/cfr_pc_pd.sv
+add_files -norecurse ./../cfr_pc/cfr_pc_softclipper.sv
 add_files -norecurse ./../ram/bram_tdp.sv
 add_files -norecurse ./../util/adder.sv
 add_files -norecurse ./../util/reg_pipeline.sv

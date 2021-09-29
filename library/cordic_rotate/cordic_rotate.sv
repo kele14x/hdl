@@ -1,5 +1,6 @@
 // File: cordic_rotate.sv
 // Brief: Rotate input using CORDIC-based approximation
+
 `timescale 1ns / 1ps `default_nettype none
 
 module cordic_rotate #(

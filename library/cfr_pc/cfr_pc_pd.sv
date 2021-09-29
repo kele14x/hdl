@@ -1,9 +1,9 @@
-// File: pc_cfr_pd.sv
-// Brief: pc_cfr_pd Peak Detector for `pc_cfr` module
+// File: cfr_pc_pd.sv
+// Brief: cfr_pc_pd Peak Detector for `cfr_pc` module
 
 `timescale 1ns / 1ps `default_nettype none
 
-module pc_cfr_pd #(
+module cfr_pc_pd #(
     parameter int ITERATIONS = 7,
     parameter int DATA_WIDTH = 16
 ) (

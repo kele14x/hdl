@@ -86,9 +86,7 @@ module ul_adaptor_gearbox_bfp9_reader #(
   assign req_done = ((rb_cnt == (rb_end - 1)) && (re_pair_cnt == 5));
 
   always_ff @(posedge clk) begin
-    if (rst) begin
-      rb_cnt <= '0;
-    end else if (req_accept) begin
+    if (req_accept) begin
       rb_cnt <= fram_req_start_rb;
     end else if (busy_next && (re_pair_cnt == 5)) begin
       rb_cnt <= rb_cnt + 1;
@@ -100,9 +98,7 @@ module ul_adaptor_gearbox_bfp9_reader #(
   end
 
   always_ff @(posedge clk) begin
-    if (rst) begin
-      rb_end <= '0;
-    end else if (req_accept) begin
+    if (req_accept) begin
       rb_end <= fram_req_start_rb + (fram_req_num_rb == 0 ? 273 : fram_req_num_rb);
     end else if (busy_next) begin
       rb_end <= rb_end;
@@ -112,9 +108,7 @@ module ul_adaptor_gearbox_bfp9_reader #(
   end
 
   always_ff @(posedge clk) begin
-    if (rst) begin
-      re_pair_cnt <= '0;
-    end else if (req_accept) begin
+    if (req_accept) begin
       re_pair_cnt <= '0;
     end else if (busy_next) begin
       re_pair_cnt <= ((re_pair_cnt == 5) ? 0 : re_pair_cnt + 1);
@@ -124,9 +118,7 @@ module ul_adaptor_gearbox_bfp9_reader #(
   end
 
   always_ff @(posedge clk) begin
-    if (rst) begin
-      rb_cc <= 0;
-    end else if (req_accept) begin
+    if (req_accept) begin
       rb_cc <= fram_req_cc;
     end
   end
@@ -172,9 +164,7 @@ module ul_adaptor_gearbox_bfp9_reader #(
       end
 
       always_ff @(posedge clk) begin
-        if (rst) begin
-          uram_addr_r[i] <= '0;
-        end else if (busy && (rb_cc == i)) begin
+        if (busy && (rb_cc == i)) begin
           uram_addr_r[i] <= (rb_cnt << 2) + (rb_cnt << 1) + re_pair_cnt;
           // rb_cnt * 6 + re_pari_cnt
         end else begin

@@ -1,8 +1,7 @@
 // File: cordic_rotation.sv
 // Brief: Rotate input using CORDIC-based approximation
-`timescale 1ns / 1ps
-//
-`default_nettype none
+
+`timescale 1ns / 1ps `default_nettype none
 
 module cmult #(
     parameter int AWIDTH  = 16,

@@ -1,5 +1,6 @@
 // File: cordic_pol2cart.sv
 // Brief: CORDIC-based approximation of polar-to-Cartesian conversion
+
 `timescale 1ns / 1ps `default_nettype none
 
 module cordic_pol2cart #(

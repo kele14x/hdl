@@ -3,7 +3,7 @@
 
 `timescale 1ns / 1ps `default_nettype none
 
-module tb_pc_cfr;
+module tb_cfr_pc;
 
   localparam int TestVectorLength = 4096;
   localparam int DutLatency = 130;
@@ -52,19 +52,19 @@ module tb_pc_cfr;
   logic signed [   DataWidth-1:0] cancellation_pulse_q_mem[ 2**CpwAddrWidth];
 
   initial begin
-    $readmemh("test_pc_cfr_cancellation_pulse_i.txt", cancellation_pulse_i_mem, 0,
+    $readmemh("test_cfr_pc_cancellation_pulse_i.txt", cancellation_pulse_i_mem, 0,
               2 ** CpwAddrWidth - 1);
-    $readmemh("test_pc_cfr_cancellation_pulse_q.txt", cancellation_pulse_q_mem, 0,
+    $readmemh("test_cfr_pc_cancellation_pulse_q.txt", cancellation_pulse_q_mem, 0,
               2 ** CpwAddrWidth - 1);
     //
-    $readmemh("test_pc_cfr_data_i_in.txt", data_i_in_mem, 0, TestVectorLength - 1);
-    $readmemh("test_pc_cfr_data_i_in2.txt", data_i_in2_mem, 0, TestVectorLength - 1);
-    $readmemh("test_pc_cfr_data_q_in.txt", data_q_in_mem, 0, TestVectorLength - 1);
-    $readmemh("test_pc_cfr_data_q_in2.txt", data_q_in2_mem, 0, TestVectorLength - 1);
-    $readmemh("test_pc_cfr_data_i_out.txt", data_i_out_mem, 0, TestVectorLength - 1);
-    $readmemh("test_pc_cfr_data_i_out2.txt", data_i_out2_mem, 0, TestVectorLength - 1);
-    $readmemh("test_pc_cfr_data_q_out.txt", data_q_out_mem, 0, TestVectorLength - 1);
-    $readmemh("test_pc_cfr_data_q_out2.txt", data_q_out2_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cfr_pc_data_i_in.txt", data_i_in_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cfr_pc_data_i_in2.txt", data_i_in2_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cfr_pc_data_q_in.txt", data_q_in_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cfr_pc_data_q_in2.txt", data_q_in2_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cfr_pc_data_i_out.txt", data_i_out_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cfr_pc_data_i_out2.txt", data_i_out2_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cfr_pc_data_q_out.txt", data_q_out_mem, 0, TestVectorLength - 1);
+    $readmemh("test_cfr_pc_data_q_out2.txt", data_q_out2_mem, 0, TestVectorLength - 1);
   end
 
   always begin
@@ -94,7 +94,7 @@ module tb_pc_cfr;
     ctrl_rst = 0;
   end
 
-  pc_cfr #(
+  cfr_pc #(
       .DATA_WIDTH    (DataWidth),
       .CPW_ADDR_WIDTH(CpwAddrWidth)
   ) DUT (

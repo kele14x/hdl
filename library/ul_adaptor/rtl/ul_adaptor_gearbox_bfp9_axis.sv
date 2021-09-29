@@ -63,9 +63,7 @@ module ul_adaptor_gearbox_bfp9_axis (
   end
 
   always_ff @(posedge clk) begin
-    if (rst) begin
-      m_axis_tdata <= '0;
-    end else if (tvalid) begin
+    if (tvalid) begin
       m_axis_tdata <= byte_reverse(tdata);
     end
   end

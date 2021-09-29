@@ -1,11 +1,11 @@
-// File: pc_cfr.sv
-// Brief: pc_cfr performs PC-CFR on input signal. This module is designed with
+// File: cfr_pc.sv
+// Brief: cfr_pc performs PC-CFR on input signal. This module is designed with
 //        clock to sample rate ratio (CSR) = 2, and interface is 2 channel
 //        interleaved. That is CH1/CH2/CH1/CH2...
 
 `timescale 1ns / 1ps `default_nettype none
 
-module pc_cfr #(
+module cfr_pc #(
     parameter int DATA_WIDTH     = 16,
     //
     parameter int CPW_ADDR_WIDTH = 8,
@@ -293,10 +293,10 @@ module pc_cfr #(
   // Peak detector,
   // 4 clock tick latency
 
-  pc_cfr_pd #(
+  cfr_pc_pd #(
       .ITERATIONS(Iterations),
       .DATA_WIDTH(DATA_WIDTH)
-  ) i_pc_cfr_pd (
+  ) i_cfr_pc_pd (
       .clk                    (clk),
       .rst                    (local_rst),
       //
@@ -364,11 +364,11 @@ module pc_cfr #(
   // Soft clipper
   // 143 clock tick latency
 
-  pc_cfr_softclipper #(
+  cfr_pc_softclipper #(
       .DATA_WIDTH    (DATA_WIDTH),
       .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH),
       .NUM_CPG       (6)
-  ) i_pc_cfr_softclipper (
+  ) i_cfr_pc_softclipper (
       .clk               (clk),
       .rst               (local_rst),
       //

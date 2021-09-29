@@ -1,10 +1,10 @@
-// File: pc_cfr_cpg.sv
-// Brief: pc_cfr_cpg is Canceling Pulse Generator (CPG) for PC-CFR. It' designed
+// File: cfr_pc_cpg.sv
+// Brief: cfr_pc_cpg is Canceling Pulse Generator (CPG) for PC-CFR. It' designed
 //        as cascade-able.
 
 `timescale 1ns / 1ps `default_nettype none
 
-module pc_cfr_cpg #(
+module cfr_pc_cpg #(
     parameter int DATA_WIDTH     = 16,
     parameter int CPW_ADDR_WIDTH = 8
 ) (
