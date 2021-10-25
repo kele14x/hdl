@@ -1,20 +1,3 @@
-//******************************************************************************
-// Copyright (C) 2020  kele14x
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-//******************************************************************************
-
 // File: cfr_hardclipping.sv
 // Brief: cfr_hardclipping performs brick-wall dynamic range limiting to input.
 //        Dynamic range limiting suppresses the signal that cross the given
@@ -92,13 +75,15 @@ module cfr_hardclipping #(
 
   // Reset CDC
 
-  cdc_async_rst_sync #(
-      .SYNC_FF(4),
-      .RST_ACTIVE_HIGH(1)
-  ) i_cdc_async_rst_sync (
-      .clk(clk),
-      .async_rst_in(rst),
-      .sync_rst_out(local_rst)
+  xpm_cdc_sync_rst #(
+      .DEST_SYNC_FF   (4),
+      .INIT           (1),
+      .INIT_SYNC_FF   (0),
+      .SIM_ASSERT_CHK (0)
+  ) i_cdc_sync_rst (
+      .src_rst (rst),
+      .dest_clk(clk),
+      .dest_rst(local_rst)
   );
 
   // Delay input data for `DataPathLatency` clocks

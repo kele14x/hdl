@@ -1,0 +1,115 @@
+// File: tb_hb_up2.sv
+// Brief: Test bench for hb_up2_int2_p2
+
+`timescale 1 ns / 1 ps `default_nettype none
+
+module tb_hb_up2_int2_p2 ();
+
+  localparam int ClkPeriod = 10;
+  localparam int DutLatency = 6;
+  localparam int TestVectorLength = 4096;
+
+  localparam int XinWidth = 16;
+  localparam int CoeWidth = 16;
+  localparam int NumUniqueCoe = 2;
+  localparam signed [CoeWidth-1:0] CoeNums[NumUniqueCoe] = {-2788, 19030};
+  localparam int YoutWidth = 16;
+  localparam int SraBits = 15;
+
+  logic                clk;
+  logic                rst;
+
+  logic [XinWidth-1:0] xin0;
+  logic [XinWidth-1:0] xin1;
+
+  logic [YoutWidth-1:0] yout0, yout0_ref;
+  logic [YoutWidth-1:0] yout1, yout1_ref;
+  logic [YoutWidth-1:0] yout2, yout2_ref;
+  logic [YoutWidth-1:0] yout3, yout3_ref;
+  logic ovf, ovf_ref;
+
+  logic [ XinWidth-1:0] xin_mem [    TestVectorLength];
+  logic [YoutWidth-1:0] yout_mem[TestVectorLength * 2];
+  logic                 ovf_mem [TestVectorLength * 2];
+
+  initial begin
+    $readmemh("test_hb_up2_input_xin.txt", xin_mem, 0, TestVectorLength - 1);
+    $readmemh("test_hb_up2_output_yout.txt", yout_mem, 0, TestVectorLength * 2 - 1);
+    $readmemh("test_hb_up2_output_ovf.txt", ovf_mem, 0, TestVectorLength * 2 - 1);
+  end
+
+  always begin
+    clk = 0;
+    #(ClkPeriod / 2);
+    clk = 1;
+    #(ClkPeriod / 2);
+  end
+
+  initial begin
+    rst = 1;
+    #100;
+    rst = 0;
+  end
+
+  initial begin
+    $display("*****************");
+    $display("Simulation start.");
+    wait(rst == 0);
+    xin0 <= 0;
+    xin1 <= 0;
+    #1000;
+    @(posedge clk);
+    fork
+      begin : p_feed_input
+        for (int i = 0; i < TestVectorLength/2; i++) begin
+          @(posedge clk);
+          xin0 <= xin_mem[2*i];
+          xin1 <= xin_mem[2*i+1];
+//          xin0 <= 0;
+//          xin1 <= (i == 100) ? 16384 : 0;
+          @(posedge clk);
+          xin0 <= 0;
+          xin1 <= 0;
+        end
+      end
+
+      begin : g_gen_ref
+        repeat (DutLatency) @(posedge clk);
+        for (int i = 0; i < TestVectorLength/2; i++) begin
+          @(posedge clk);
+          yout0_ref <= (i == 0) ? 0 : yout_mem[4*i-1];
+          yout1_ref <= yout_mem[4*i];
+          yout2_ref <= yout_mem[4*i+1];
+          yout3_ref <= yout_mem[4*i+2];
+          ovf_ref   <= ((i == 0) ? 0 : ovf_mem[4*i-1]) | ovf_mem[4*i] | ovf_mem[4*i+1] | ovf_mem[4*i+2];
+          @(posedge clk);
+          yout0_ref <= 0;
+          yout1_ref <= 0;
+          yout2_ref <= 0;
+          yout3_ref <= 0;
+          ovf_ref   <= 0;
+        end
+      end
+
+    join
+
+    #1000;
+    $display("Simulation ends.");
+    $finish(2);
+  end
+
+
+  hb_up2_int2_p2 #(
+      .XIN_WIDTH     (XinWidth),
+      .COE_WIDTH     (CoeWidth),
+      .NUM_UNIQUE_COE(NumUniqueCoe),
+      .COE_NUMS      (CoeNums),
+      .YOUT_WIDTH    (YoutWidth),
+      .SRA_BITS      (SraBits)
+  ) DUT (
+      .*
+  );
+
+endmodule
+
+`default_nettype wire
