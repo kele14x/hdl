@@ -11,9 +11,9 @@ module tb_eth_if_sim;
   parameter int NUM_UL_LAYER = 4;
 
   // Ethernet Port Clock Interval in PS
-  parameter real ETH_CLK_INTERVAL_PS = 6400;
+  parameter real ETH_CLK_INTERVAL_PS = 2560;
   // Core Clock Interval in PS
-  parameter real CORE_CLK_INTERVAL_PS = 4069;
+  parameter real CORE_CLK_INTERVAL_PS = 2500;
 
 
   // Ethernet Interface
@@ -67,7 +67,7 @@ module tb_eth_if_sim;
 
   // DL data
   bit        dl_sof                  [      NUM_CC];
-  bit        dl_sos                  [      NUM_CC];
+  bit        dl_sop                  [      NUM_CC];
   bit [15:0] dl_data_i               [      NUM_CC][NUM_DL_LAYER];
   bit [15:0] dl_data_q               [      NUM_CC][NUM_DL_LAYER];
   bit        dl_valid                [      NUM_CC];
@@ -362,7 +362,7 @@ module tb_eth_if_sim;
   //
   task simulation_config();
     logic [31:0] data;
-    automatic int start_symbol = 72;
+    automatic int start_symbol = 78;
 
     start_symbol = start_symbol % 280;
     $display("Start configure simulation only registers");
@@ -645,7 +645,7 @@ module tb_eth_if_sim;
 
   initial begin
     #(150 * 1000);  // wait to 150 us
-    g_eth_injector[0].eth_injector_i.play_pcap("dl_test.pcap");
+    g_eth_injector[0].eth_injector_i.play_pcap("test_dl_prb_118.pcap");
     #1000;
     $finish();
   end
