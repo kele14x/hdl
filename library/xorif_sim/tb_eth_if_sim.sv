@@ -6,9 +6,15 @@ module tb_eth_if_sim;
   // The number of CCs for ORAN_IF
   parameter int NUM_CC = 1;
   // The number of DL layers
-  parameter int NUM_DL_LAYER = 1;
+  parameter int NUM_DL_LAYER = 4;
   // The number of Ul layers
-  parameter int NUM_UL_LAYER = 2;
+  parameter int NUM_UL_LAYER = 4;
+
+  // Ethernet Port Clock Interval in PS
+  parameter real ETH_CLK_INTERVAL_PS = 6400;
+  // Core Clock Interval in PS
+  parameter real CORE_CLK_INTERVAL_PS = 4069;
+
 
   // Ethernet Interface
   //===================
@@ -67,6 +73,11 @@ module tb_eth_if_sim;
   bit        dl_valid                [      NUM_CC];
 
   // UL data
+  bit        ul_sof_ahead_3_s;
+  bit        ul_sop_ahead_3_s;
+  bit [15:0] ul_data_i_s;
+  bit [15:0] ul_data_q_s;
+
   bit        ul_sof_ahead_3        [      NUM_CC];
   bit        ul_sop_ahead_3        [      NUM_CC];
   bit [15:0] ul_data_i             [      NUM_CC][NUM_UL_LAYER];
@@ -87,7 +98,11 @@ module tb_eth_if_sim;
   bit         srs_data_tlast;
   bit         srs_data_tvalid;
   bit         srs_data_tready;
-    
+
+  bit [  3:0] ctrl_bandwidth             [         NUM_CC] = '{NUM_CC{0}};
+  bit [  1:0] ctrl_numerology            [         NUM_CC] = '{NUM_CC{0}};
+  bit [  1:0] ctrl_compression_mode      [         NUM_CC] = '{NUM_CC{1}};
+
   // AXI-Lite Control/Status
   //========================
 
@@ -220,7 +235,7 @@ module tb_eth_if_sim;
       axi_write(32'hA008 + 32'h100 * i, 32'h22334455);
       axi_write(32'hA00C + 32'h100 * i, 32'h0011);
       // eth_vlan
-      axi_write(32'hA010 + 32'h100 * i, 32'hE005);
+      axi_write(32'hA010 + 32'h100 * i, 32'hE00E);
       // eth_ipv4_0
       axi_write(32'hA030 + 32'h100 * i, 32'h54);
       // eth_ipv4_1
@@ -313,33 +328,33 @@ module tb_eth_if_sim;
     // defm_cid_du_mask
     axi_write(32'h6034, 32'hF);
     
-    // TODO: Check this
-    // [7:2] 0 = User, 4 = SSB, 8 = PRACH
-    // [1:0] SS (Layer)
+
+    // 0x00 ~ 0x0F UL/DL SS (Layer)
+    // 0x20 ~ 0x23 PRACH
+    // 0x40 ~ 0x7F SRS (no support)
 
     // defm_cid_ss_mask
-    axi_write(32'h6038, 32'h1F);
+    axi_write(32'h6038, 32'h0F);
 
     // defm_cid_u_mask
-    axi_write(32'h603C, 32'hE0);
+    axi_write(32'h603C, 32'hF0);
     // defm_cid_u_value
-    axi_write(32'h6040, 32'h0);
+    axi_write(32'h6040, 32'h00);
     
     // defm_cid_prach_mask
-    axi_write(32'h6044, 32'hE0);
+    axi_write(32'h6044, 32'hF0);
     // defm_cid_prach_value
     axi_write(32'h6048, 32'h20);
     
     // defm_cid_ssb_mask
-    axi_write(32'h604C, 32'hE0);
+    axi_write(32'h604C, 32'hF0);
     // defm_cid_ssb_value
-    axi_write(32'h6050, 32'h30);
+    axi_write(32'h6050, 32'h80);
     
     // defm_cid_lte_mask
-    axi_write(32'h6054, 32'hE0);
+    axi_write(32'h6054, 32'hF0);
     // defm_cid_lte_value
-    axi_write(32'h6058, 32'h50);
-    
+    axi_write(32'h6058, 32'hC0);
   endtask
 
   //
@@ -347,8 +362,8 @@ module tb_eth_if_sim;
   //
   task simulation_config();
     logic [31:0] data;
-    automatic int start_symbol = 46;
-    
+    automatic int start_symbol = 72;
+
     start_symbol = start_symbol % 280;
     $display("Start configure simulation only registers");
     // setup_cnt
@@ -368,29 +383,29 @@ module tb_eth_if_sim;
   //
   task cc_config();
     logic [31:0] data;
-    for (int i = 0; i < 1; i++) begin
+    for (int i = 0; i < NUM_CC; i++) begin
       $display("Start configure CC registers for CC %0d", i);
       // CC(X), 0xE100 + 0x70 * (X)
       // oran_cc_config
       axi_write(32'hE100 + 32'h70 * i, 32'h10111);
       // cc_dl_ctrl_offsets
-      axi_write(32'hE104 + 32'h70 * i, 32'h0);
+      axi_write(32'hE104 + 32'h70 * i, 32'h300 * i);
       // cc_dl_ctrl_unrolled_offsets
-      axi_write(32'hE108 + 32'h70 * i, 32'h0);
+      axi_write(32'hE108 + 32'h70 * i, 32'h20 * i);
       // cc_ul_ctrl_offsets
-      axi_write(32'hE10C + 32'h70 * i, 32'h0);
+      axi_write(32'hE10C + 32'h70 * i, 32'h300 * i);
       // cc_ul_ctrl_unrolled_offsets
-      axi_write(32'hE110 + 32'h70 * i, 32'h0);
+      axi_write(32'hE110 + 32'h70 * i, 32'h20 * i);
       // oran_cc_num_sym_config
-      axi_write(32'hE114 + 32'h70 * i, 32'h18180300);
+      axi_write(32'hE114 + 32'h70 * i, 32'h18180300 + 32'h3 * i);
       // pran_cc_ul_compression
-      axi_write(32'hE118 + 32'h70 * i, 32'h100); // raw
-//      axi_write(32'hE118 + 32'h70 * i, 32'h119); // bfp9
+//      axi_write(32'hE118 + 32'h70 * i, 32'h100); // raw
+      axi_write(32'hE118 + 32'h70 * i, 32'h119); // bfp9
       // oran_cc_dl_compression
-      axi_write(32'hE11C + 32'h70 * i, 32'h100); // raw
-//      axi_write(32'hE11C + 32'h70 * i, 32'h119); // bfp9
+//      axi_write(32'hE11C + 32'h70 * i, 32'h100); // raw
+      axi_write(32'hE11C + 32'h70 * i, 32'h119); // bfp9
       // cc_ul_setup_c_abs_symbol
-      axi_write(32'hE120 + 32'h70 * i, 32'h6);
+      axi_write(32'hE120 + 32'h70 * i, 32'h2);
       // cc_ul_setup_c_cycles
       axi_write(32'hE124 + 32'h70 * i, 32'h2244);
       // cc_ul_setup_d_cycles
@@ -402,21 +417,21 @@ module tb_eth_if_sim;
       // cc_dl_setup_d_cycles
       axi_write(32'hE138 + 32'h70 * i, 32'h1D7D);
       // cc_ul_base_offset
-      axi_write(32'hE140 + 32'h70 * i, 32'h0);
+      axi_write(32'hE140 + 32'h70 * i, 32'h20 * i);
       // cc_ul_bidf_c_abs_symbol
-      axi_write(32'hE144 + 32'h70 * i, 32'h5);
+      axi_write(32'hE144 + 32'h70 * i, 32'h2);
       // cc_ul_bidf_c_cycles
       axi_write(32'hE148 + 32'h70 * i, 32'h1B3B);
       // cc_max_symbols
       axi_write(32'hE158 + 32'h70 * i, 32'h118);
       // cc_num_ctrl_per_symbol_dl
-      axi_write(32'hE160 + 32'h70 * i, 32'h50);
+      axi_write(32'hE160 + 32'h70 * i, 32'h20);
       // cc_num_ctrl_per_symbol_ul
-      axi_write(32'hE164 + 32'h70 * i, 32'h50);
+      axi_write(32'hE164 + 32'h70 * i, 32'h20);
       // cc_modvals_dl
-      axi_write(32'hE168 + 32'h70 * i, 32'h780);
+      axi_write(32'hE168 + 32'h70 * i, 32'h300);
       // cc_modvals_ul
-      axi_write(32'hE16C + 32'h70 * i, 32'h780);
+      axi_write(32'hE16C + 32'h70 * i, 32'h300);
     end
 
     // cc_dl_data_unroll_offset
@@ -426,6 +441,13 @@ module tb_eth_if_sim;
     axi_write(32'hE50C, 32'h115A);
     axi_write(32'hE510, 32'h1C78);
     axi_write(32'hE514, 32'h2396);
+
+//    axi_write(32'hE500, 32'h0);
+//    axi_write(32'hE500, 32'h3BF);
+//    axi_write(32'hE500, 32'h77E);
+//    axi_write(32'hE500, 32'hB3D);
+//    axi_write(32'hE500, 32'hEFC);
+//    axi_write(32'hE500, 32'h12BB);
 
     // TODO: SSB related register
 
@@ -514,7 +536,7 @@ module tb_eth_if_sim;
   initial begin
     clk_400m = 0;
     forever begin
-      #(1.25) clk_400m = ~clk_400m;
+      #(CORE_CLK_INTERVAL_PS/2000) clk_400m = ~clk_400m;
     end
   end
 
@@ -532,7 +554,7 @@ module tb_eth_if_sim;
       initial begin
         eth_port_clk[i] = 0;
         forever begin
-          #(1.28) eth_port_clk[i] = ~eth_port_clk[i];
+          #(ETH_CLK_INTERVAL_PS/2000) eth_port_clk[i] = ~eth_port_clk[i];
         end
       end
     end
@@ -599,11 +621,15 @@ module tb_eth_if_sim;
     
     forever begin
       // Wait interrupt
-      @(posedge s00_interrupt);
-      $display("Warning: Interrupt is assert!");
-      axi_read(16'h0018, data);
-      $display("Interrupt status: 0x%0x", data);
-      // TODO: interrupt action
+      @(posedge aclk);
+      if (s00_interrupt) begin
+        $display("Warning: Interrupt is assert!");
+        axi_read(16'h0018, data);
+        $display("Interrupt status: 0x%0x", data);
+        // Clear master interupt enable
+        axi_write(16'h0010, 32'h0);
+        axi_write(16'h0010, 32'h1);
+      end
     end
   end
 
@@ -618,7 +644,7 @@ module tb_eth_if_sim;
 
   initial begin
     #(150 * 1000);  // wait to 150 us
-    g_eth_injector[0].eth_injector_i.play_pcap("test_srs.pcap");
+    g_eth_injector[0].eth_injector_i.play_pcap("dl_test.pcap");
     #1000;
     $finish();
   end
@@ -742,13 +768,24 @@ module tb_eth_if_sim;
     //
     .ul_radio_start_10ms(ul_radio_start_10ms),
     //
-    .ul_sof_ahead_3     (ul_sof_ahead_3[0]),
-    .ul_sop_ahead_3     (ul_sop_ahead_3[0]),
-    .ul_data_i          (ul_data_i[0][0]),
-    .ul_data_q          (ul_data_q[0][0]),
+    .ul_sof_ahead_3     (ul_sof_ahead_3_s),
+    .ul_sop_ahead_3     (ul_sop_ahead_3_s),
+    .ul_data_i          (ul_data_i_s),
+    .ul_data_q          (ul_data_q_s),
     // Control
     .ctrl_numerology    ('0)
   );
+
+  generate
+    for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_ul_s
+      assign ul_sof_ahead_3[cc] = ul_sof_ahead_3_s;
+      assign ul_sop_ahead_3[cc] = ul_sop_ahead_3_s;
+      for (genvar ss = 0; ss < NUM_UL_LAYER; ss++) begin
+        assign ul_data_i[cc][ss] = ul_data_i_s;
+        assign ul_data_q[cc][ss] = ul_data_q_s;
+      end
+    end
+  endgenerate
 
 endmodule
 
