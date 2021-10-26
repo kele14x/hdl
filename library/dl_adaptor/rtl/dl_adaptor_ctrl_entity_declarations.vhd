@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
--- System Generator version 2018.3 VHDL source file.
+-- System Generator version 2020.2 VHDL source file.
 --
--- Copyright(C) 2018 by Xilinx, Inc.  All rights reserved.  This
+-- Copyright(C) 2020 by Xilinx, Inc.  All rights reserved.  This
 -- text/file contains proprietary, confidential information of Xilinx,
 -- Inc., is distributed under license from Xilinx, Inc., and may be used,
 -- copied and/or disclosed only pursuant to the terms of a valid license
@@ -30,87 +30,9 @@
 -- sole risk and will be unsupported.
 --
 -- This copyright and support notice must be retained as part of this
--- text at all times.  (c) Copyright 1995-2018 Xilinx, Inc.  All rights
+-- text at all times.  (c) Copyright 1995-2020 Xilinx, Inc.  All rights
 -- reserved.
 -------------------------------------------------------------------
-
-library work;
-use work.conv_pkg.all;
-
----------------------------------------------------------------------
---
---  Filename      : xlregister.vhd
---
---  Description   : VHDL description of an arbitrary wide register.
---                  Unlike the delay block, an initial value is
---                  specified and is considered valid at the start
---                  of simulation.  The register is only one word
---                  deep.
---
---  Mod. History  : Removed valid bit logic from wrapper.
---                : Changed VHDL to use a bit_vector generic for its
---
----------------------------------------------------------------------
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-library work;
-use work.conv_pkg.all;
-
-
-entity dl_adaptor_ctrl_xlregister is
-
-   generic (d_width          : integer := 5;          -- Width of d input
-            init_value       : bit_vector := b"00");  -- Binary init value string
-
-   port (d   : in std_logic_vector (d_width-1 downto 0);
-         rst : in std_logic_vector(0 downto 0) := "0";
-         en  : in std_logic_vector(0 downto 0) := "1";
-         ce  : in std_logic;
-         clk : in std_logic;
-         q   : out std_logic_vector (d_width-1 downto 0));
-
-end dl_adaptor_ctrl_xlregister;
-
-architecture behavior of dl_adaptor_ctrl_xlregister is
-
-   component synth_reg_w_init
-      generic (width      : integer;
-               init_index : integer;
-               init_value : bit_vector;
-               latency    : integer);
-      port (i   : in std_logic_vector(width-1 downto 0);
-            ce  : in std_logic;
-            clr : in std_logic;
-            clk : in std_logic;
-            o   : out std_logic_vector(width-1 downto 0));
-   end component; -- end synth_reg_w_init
-
-   -- synthesis translate_off
-   signal real_d, real_q           : real;    -- For debugging info ports
-   -- synthesis translate_on
-   signal internal_clr             : std_logic;
-   signal internal_ce              : std_logic;
-
-begin
-
-   internal_clr <= rst(0) and ce;
-   internal_ce  <= en(0) and ce;
-
-   -- Synthesizable behavioral model
-   synth_reg_inst : synth_reg_w_init
-      generic map (width      => d_width,
-                   init_index => 2,
-                   init_value => init_value,
-                   latency    => 1)
-      port map (i   => d,
-                ce  => internal_ce,
-                clr => internal_clr,
-                clk => clk,
-                o   => q);
-
-end architecture behavior;
-
 
 library work;
 use work.conv_pkg.all;
@@ -1114,6 +1036,84 @@ begin
   pipe_16_22_push_front_pop_back_en <= '1';
   y <= pipe_16_22_back;
 end behavior;
+
+library work;
+use work.conv_pkg.all;
+
+---------------------------------------------------------------------
+--
+--  Filename      : xlregister.vhd
+--
+--  Description   : VHDL description of an arbitrary wide register.
+--                  Unlike the delay block, an initial value is
+--                  specified and is considered valid at the start
+--                  of simulation.  The register is only one word
+--                  deep.
+--
+--  Mod. History  : Removed valid bit logic from wrapper.
+--                : Changed VHDL to use a bit_vector generic for its
+--
+---------------------------------------------------------------------
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+library work;
+use work.conv_pkg.all;
+
+
+entity dl_adaptor_ctrl_xlregister is
+
+   generic (d_width          : integer := 5;          -- Width of d input
+            init_value       : bit_vector := b"00");  -- Binary init value string
+
+   port (d   : in std_logic_vector (d_width-1 downto 0);
+         rst : in std_logic_vector(0 downto 0) := "0";
+         en  : in std_logic_vector(0 downto 0) := "1";
+         ce  : in std_logic;
+         clk : in std_logic;
+         q   : out std_logic_vector (d_width-1 downto 0));
+
+end dl_adaptor_ctrl_xlregister;
+
+architecture behavior of dl_adaptor_ctrl_xlregister is
+
+   component synth_reg_w_init
+      generic (width      : integer;
+               init_index : integer;
+               init_value : bit_vector;
+               latency    : integer);
+      port (i   : in std_logic_vector(width-1 downto 0);
+            ce  : in std_logic;
+            clr : in std_logic;
+            clk : in std_logic;
+            o   : out std_logic_vector(width-1 downto 0));
+   end component; -- end synth_reg_w_init
+
+   -- synthesis translate_off
+   signal real_d, real_q           : real;    -- For debugging info ports
+   -- synthesis translate_on
+   signal internal_clr             : std_logic;
+   signal internal_ce              : std_logic;
+
+begin
+
+   internal_clr <= rst(0) and ce;
+   internal_ce  <= en(0) and ce;
+
+   -- Synthesizable behavioral model
+   synth_reg_inst : synth_reg_w_init
+      generic map (width      => d_width,
+                   init_index => 2,
+                   init_value => init_value,
+                   latency    => 1)
+      port map (i   => d,
+                ce  => internal_ce,
+                clr => internal_clr,
+                clk => clk,
+                o   => q);
+
+end architecture behavior;
+
 
 library work;
 use work.conv_pkg.all;
