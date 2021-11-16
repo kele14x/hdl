@@ -4,7 +4,7 @@
 
 module tb_ul_adaptor ();
 
-  parameter int NUM_CC = 1;
+  parameter int NUM_CC = 2;
   parameter int NUM_UL_LAYER = 1;
 
   // DUT Signals
@@ -28,15 +28,21 @@ module tb_ul_adaptor ();
   // DFE
   logic        clk_491m52;
   logic        rst_491m52;
-  // URAM
-  logic        ul_sof_ahead_3            [      NUM_CC] = '{NUM_CC{1'b0}};
-  logic        ul_sop_ahead_3            [      NUM_CC] = '{NUM_CC{1'b0}};
+
+  logic        ul_sof_ahead_3            [      NUM_CC];
+  logic        ul_sop_ahead_3            [      NUM_CC];
   logic [15:0] ul_data_i                 [      NUM_CC]                         [NUM_UL_LAYER];
   logic [15:0] ul_data_q                 [      NUM_CC]                         [NUM_UL_LAYER];
 
+  logic        ul_sof_ahead_3_s;
+  logic        ul_sop_ahead_3_s;
+  logic [15:0] ul_data_i_s;
+  logic [15:0] ul_data_q_s;
+
+  // Control
   logic [ 3:0] ctrl_bandwidth            [      NUM_CC] = '{NUM_CC{4'b0}};
   logic [ 1:0] ctrl_numerology           [      NUM_CC] = '{NUM_CC{2'b0}};
-  logic [ 1:0] ctrl_compression_mode     [      NUM_CC] = '{NUM_CC{2'b0}};
+  logic [ 1:0] ctrl_compression_mode     [      NUM_CC] = '{NUM_CC{2'b1}};
   //
   logic [ 1:0] buffer_mem_ctrl_en        [      NUM_CC] = '{NUM_CC{2'b0}};
   logic [11:0] buffer_mem_addr_i         [      NUM_CC]                         [NUM_UL_LAYER] = '{NUM_CC{'{NUM_UL_LAYER{'0}}}};
@@ -46,15 +52,6 @@ module tb_ul_adaptor ();
 
   logic ul_radio_start_10ms = 0;
 
-  // One OFDM symbol data
-  //=====================
-
-  logic [31:0] SYMBOL_MEM                [        4096];
-  logic [11:0] cnt = 0;
-
-  initial begin : init_symbol_mem
-    $readmemh("symbols.mem", SYMBOL_MEM, 0, 4095);
-  end
 
   // Clock and reset generation
   //===========================
@@ -94,6 +91,12 @@ module tb_ul_adaptor ();
     fork
 
       //++++++++++++++++++
+      // Set m_fram_data_req
+      // m_fram_data_req[   24]: Request is valid. Single cycle pulse, must be accepted.
+      // m_fram_data_req[23:15]: Starting RB.
+      // m_fram_data_req[14: 7]: Number of RBs requested.
+      // m_fram_data_req[ 6: 4]: Component carrier number.
+      // m_fram_data_req[ 3: 0]: Unused (set to 0).
       begin : gen_fram_req
         forever begin
           forever begin
@@ -101,14 +104,14 @@ module tb_ul_adaptor ();
             if (s_ul_update[0]) break;
           end
 
-          @(posedge clk_400m);
-          m_fram_data_req[0] <= {1'b1, 9'd0,   8'd119, 3'd0, 4'd0};
-          @(posedge clk_400m);
-          m_fram_data_req[0] <= {1'b1, 9'd119, 8'd119, 3'd0, 4'd0};
-          @(posedge clk_400m);
-          m_fram_data_req[0] <= {1'b1, 9'd238, 8'd53,  3'd0, 4'd0};
-          @(posedge clk_400m);
-          m_fram_data_req[0] <= '0;
+          for (int cc = 0; cc < NUM_CC; cc++) begin
+            @(posedge clk_400m);
+            m_fram_data_req[0] <= {1'b1, 9'd0,   8'd137, cc[2:0], 4'd0};
+            @(posedge clk_400m);
+            m_fram_data_req[0] <= {1'b1, 9'd137, 8'd136, cc[2:0], 4'd0};
+            @(posedge clk_400m);
+            m_fram_data_req[0] <= '0;
+          end
         end
       end
 
@@ -119,8 +122,8 @@ module tb_ul_adaptor ();
             @(posedge clk_400m);
             if (s_ul_update[0]) break;
           end
-          
-          repeat(3) begin
+
+          repeat(4) begin
             repeat(1000) begin
               @(posedge clk_400m);
               m_fram_data_tready[0] <= 1'b1;
@@ -185,13 +188,26 @@ module tb_ul_adaptor ();
     //
     .ul_radio_start_10ms(ul_radio_start_10ms),
     //
-    .ul_sof_ahead_3     (ul_sof_ahead_3[0]),
-    .ul_sop_ahead_3     (ul_sop_ahead_3[0]),
-    .ul_data_i          (ul_data_i[0][0]),
-    .ul_data_q          (ul_data_q[0][0]),
+    .ul_sof_ahead_3     (ul_sof_ahead_3_s),
+    .ul_sop_ahead_3     (ul_sop_ahead_3_s),
+    .ul_data_i          (ul_data_i_s),
+    .ul_data_q          (ul_data_q_s),
     // Control
     .ctrl_numerology    (ctrl_numerology[0])
   );
+
+  generate
+    for(genvar cc = 0; cc < NUM_CC; cc++) begin : g_cc
+
+      assign ul_sof_ahead_3[cc] = ul_sof_ahead_3_s;
+      assign ul_sop_ahead_3[cc] = ul_sop_ahead_3_s;
+
+      for(genvar layer = 0; layer < NUM_UL_LAYER; layer++) begin : g_layer
+        assign ul_data_i[cc][layer] = ul_data_i_s;
+        assign ul_data_q[cc][layer] = ul_data_q_s;
+      end
+    end
+  endgenerate
 
 endmodule
 
