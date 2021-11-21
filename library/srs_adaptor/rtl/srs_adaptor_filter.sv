@@ -88,7 +88,7 @@ module srs_adaptor_filter (
 
   // {2-bit DU_Port_ID, 3-bit RandSector_ID, 3-bit CC_ID, 8-bit RU_Port_ID}
   // SRS: RU_Port_ID from 0x40 to 0x7F
-  assign t_header_is_ok = s_messagetype == 2 && s_packet_in_window && ~s_runt_packet_len && s_rtc_pc_id[7:6] == 2'b01;
+  assign t_header_is_ok = s_messagetype == 2 && s_offset_in_symbol > 1 && ~s_runt_packet_len && s_rtc_pc_id[7:6] == 2'b01;
 
   assign radio_app_head_is_ok = s_datadirection == 0 && s_sectiontype == 1;
 

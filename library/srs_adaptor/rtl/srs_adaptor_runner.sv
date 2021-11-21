@@ -85,7 +85,7 @@ module srs_adaptor_runner (
 
   logic [31:0] oran_section_header;
 
-  logic srs_run_bank;
+  logic        srs_run_bank;
 
   logic [12:0] bram_wr_addr;
   logic        bram_wr_en;
@@ -102,11 +102,11 @@ module srs_adaptor_runner (
   state_t state, state_next;
 
   // Request CDC
-  logic [20:0] srs_req_in; // width = 3 + 6 + 12
+  logic [20:0] srs_req_in;  // width = 3 + 6 + 12
   logic        srs_req_send;
   logic        srs_req_rcv;
 
-  logic [7:0]  srs_wait_cnt;
+  logic [ 7:0] srs_wait_cnt;
 
 
   // FSM
@@ -270,7 +270,7 @@ module srs_adaptor_runner (
       .clk            (clk_491m52),
       .rst            (rst_491m52),
       //
-      .srs_data_tdata (srs_data_tdata),  // {4'b exponent, 9'b mantissa Q, 9'b mantissa I}
+      .srs_data_tdata (srs_data_tdata),      // {4'b exponent, 9'b mantissa Q, 9'b mantissa I}
       .srs_data_tvalid(srs_data_tvalid),
       .srs_data_tlast (srs_data_tlast),
       //
@@ -284,13 +284,13 @@ module srs_adaptor_runner (
       .clka (clk_491m52),
       .addra(bram_wr_addr),  // 0 ~ 4096
       .ena  (bram_wr_en),
-      .wea  (bram_wr_en),  // 1 RE
+      .wea  (bram_wr_en),    // 1 RE
       .dina (bram_wr_data),
       // Read port
       .clkb (clk_400m),
       .rstb (rst_400m),
       .addrb(bram_rd_addr),  // 0 ~ 1024
-      .enb  (bram_rd_rden),  // !connect to all registers in output pipe
+      .enb  (bram_rd_rden),  // connect to all registers in output pipe
       .doutb(bram_rd_data)
   );
 
