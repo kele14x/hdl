@@ -68,6 +68,8 @@ module srs_adaptor_controller #(
   logic                   buffer_wr_en;
   logic [BufferWidth-1:0] buffer_wr_data;
 
+  logic                   buffer_clr_en;
+
   logic [            6:0] buffer_rd_addr;
   logic [            2:0] buffer_rd_en;
   logic [BufferWidth-1:0] buffer_rd_data;
@@ -158,12 +160,20 @@ module srs_adaptor_controller #(
     end
   end
 
+  // SRS message will be write into a SDP BRAM, but the valid flag will be
+  // write into a DRAM, this is because DRAM is vary easy to set and clear
+  // at same time and cause less power.
+
+  // Valid buffer set and clear
   always_ff @(posedge clk) begin
     if (buffer_wr_en) begin
       srs_buf_valid_mem[buffer_wr_addr] <= 1'b1;
+    end else if (buffer_clr_en) begin
+      srs_buf_valid_mem[buffer_rd_addr] <= 1'b0;
     end
   end
 
+  // Valid buffer readout
   always_ff @(posedge clk) begin
     if (rst) begin
       srs_buf_valid <= 1'b0;
@@ -172,7 +182,17 @@ module srs_adaptor_controller #(
     end
   end
 
+  // We do not actually clear the buffer meemory, instead we clear the valid 
+  // flag memory, which is more suitable and easy.
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      buffer_clr_en <= 1'b0;
+    end else begin
+      buffer_clr_en <= (state == S_CHK && process_it);    
+    end
+  end
 
+  // SRS message write to this buffer, it will never be clear
   (* keep_hierarchy="yes" *)
   bram_sdp #(
       .ADDR_WIDTH  (7),
@@ -279,7 +299,7 @@ module srs_adaptor_controller #(
   always_ff @(posedge clk) begin
     if (rst) begin
       buffer_rd_addr <= 0;
-    end else if (state == S_RD) begin
+    end else if (state == S_NEXT) begin
       buffer_rd_addr <= buffer_rd_addr + 1;
     end
   end

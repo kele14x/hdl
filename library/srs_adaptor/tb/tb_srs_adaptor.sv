@@ -217,42 +217,54 @@ module tb_srs_adaptor;
     rst_491m52 <= 0;
   end
 
+  // Configuration sender
   initial begin
     wait (rst_400m == 0);
     wait (rst_491m52 == 0);
 
+    // Simluate S-Plane Message
+    //for (int layer = 0; layer < 64; layer++) begin
+    //  srs_c_message(0, layer, 0, 0, 0, 1, 3, 0, 0, 0, 0);
+    //end
 
-    //    for (int layer = 0; layer < 64; layer++) begin
-    //      srs_c_message(0, layer, 0, 0, 0, 1, 3, 0, 0, 0, 0);
-    //    end
-
+    // Simulate M-Plane Configuration
     srs_m_message(0, 0, 0, 1, 1, 13, 1, 0, 0, 0, 0);
-    srs_m_message(1, 0, 0, 1, 1, 13, 1, 0, 0, 0, 0);
+    //srs_m_message(1, 0, 0, 1, 1, 13, 1, 0, 0, 0, 0);
 
-    for (int sym = 0; sym < 280; sym++) begin
-      #1000;
-      update_sym(sym);
-    end
-
-    #100000;
+    // Run two radio frame
+    #(2 * 10 * 1000 * 1000);
     $finish();
   end
 
+  // Symbol number updater
+  initial begin
+    wait (rst_400m == 0);
+    wait (rst_491m52 == 0);
 
+    forever begin
+      for (int sym = 0; sym < 280; sym++) begin
+        #(35.714 * 1000);
+        update_sym(sym);
+      end
+    end
+
+  end
+
+  // SRS data responser
   initial begin
     forever begin
       @(posedge clk_491m52);
       if (srs_req_valid) begin
-        for (int i = 0; i < 3276; i++) begin
-          @(posedge clk_491m52);
-          srs_data_tdata  <= i;
-          srs_data_tvalid <= 1'b1;
-          srs_data_tlast  <= i == 3275;
-        end
-        @(posedge clk_491m52);
-        srs_data_tdata  <= 0;
-        srs_data_tvalid <= 0;
-        srs_data_tlast  <= 0;
+//        for (int i = 0; i < 3276; i++) begin
+//          @(posedge clk_491m52);
+//          srs_data_tdata  <= i;
+//          srs_data_tvalid <= 1'b1;
+//          srs_data_tlast  <= i == 3275;
+//        end
+//        @(posedge clk_491m52);
+//        srs_data_tdata  <= 0;
+//        srs_data_tvalid <= 0;
+//        srs_data_tlast  <= 0;
       end
     end
   end
