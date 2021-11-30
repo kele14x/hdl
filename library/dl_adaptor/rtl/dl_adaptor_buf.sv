@@ -20,8 +20,8 @@ module dl_adaptor_buf #(
     // DL data output to DFE
     output var        dl_sof_o,
     output var        dl_sop_o,
-    output var        dl_sof_ahead_7_o,
-    output var        dl_sop_ahead_7_o,
+    output var        dl_sof_ahead_9_o,
+    output var        dl_sop_ahead_9_o,
     output var [15:0] dl_di_o                   [LAYER_NUMBER_C],
     output var [15:0] dl_dq_o                   [LAYER_NUMBER_C],
     output var        dl_valid_o,
@@ -40,6 +40,7 @@ module dl_adaptor_buf #(
     input var  [ 1:0] compression_mode,
     // Buffer access
     input var  [ 1:0] buffer_mem_ctrl_en,
+    input var  [ 8:0] dfe_dl_adaptor_mem_symbol_no_sel,
     input var  [11:0] buffer_mem_addr_i         [LAYER_NUMBER_C],
     input var  [31:0] buffer_mem_data_i         [LAYER_NUMBER_C],
     input var         buffer_mem_we             [LAYER_NUMBER_C],
@@ -47,6 +48,9 @@ module dl_adaptor_buf #(
 );
 
   logic [14:0] buffer_rd_ctrl[16];
+  logic [ 1:0] buffer_mem_ctrl_en_s;
+  logic        buffer_mem_ctrl_override;
+  logic [ 8:0] symbol_no_s;
 
   dl_adaptor_ctrl inst_dl_adaptor_ctrl (
       .clk             (clk_491m_i),
@@ -57,11 +61,11 @@ module dl_adaptor_buf #(
       .sof0_i          (dl_data_sof_i),
       .sof_o           (dl_sof_o),
       .sop_o           (dl_sop_o),
-      .sof_ahead_7_o   (dl_sof_ahead_7_o),
-      .sop_ahead_7_o   (dl_sop_ahead_7_o),
+      .sof_ahead_9_o   (dl_sof_ahead_9_o),
+      .sop_ahead_9_o   (dl_sop_ahead_9_o),
       .valid_o         (dl_valid_o),
       .subframe_no_o   (  /* Not used */),
-      .symbol_no_o     (  /* Not used */),
+      .symbol_no_o     (symbol_no_s),
       .buffer_rd_ctrl0 (buffer_rd_ctrl[0]),
       .buffer_rd_ctrl1 (buffer_rd_ctrl[1]),
       .buffer_rd_ctrl2 (buffer_rd_ctrl[2]),
@@ -80,6 +84,18 @@ module dl_adaptor_buf #(
       .buffer_rd_ctrl15(buffer_rd_ctrl[15])
   );
 
+  always_ff @(posedge clk_491m_i) begin
+    if (symbol_no_s == dfe_dl_adaptor_mem_symbol_no_sel && buffer_mem_ctrl_en[1] == 1'b1) begin
+      buffer_mem_ctrl_override <= 1'b1;
+    end else if (buffer_mem_ctrl_en[1] == 1'b0) begin
+      buffer_mem_ctrl_override <= 1'b0;
+    end else begin
+      buffer_mem_ctrl_override <= buffer_mem_ctrl_override;
+    end
+  end
+
+  assign buffer_mem_ctrl_en_s = {buffer_mem_ctrl_override, buffer_mem_ctrl_en[0]};
+  
   generate
     for (genvar i = 0; i < LAYER_NUMBER_C; i++) begin
 
@@ -88,7 +104,7 @@ module dl_adaptor_buf #(
           .compression_mode  (compression_mode),
           .buffer_rd_ctrl_i  (buffer_rd_ctrl[i]),
           .buffer_mem_addr_i (buffer_mem_addr_i[i]),
-          .buffer_mem_ctrl_en(buffer_mem_ctrl_en),
+          .buffer_mem_ctrl_en(buffer_mem_ctrl_en_s),
           .buffer_mem_data_i (buffer_mem_data_i[i]),
           .buffer_mem_we     (buffer_mem_we[i]),
           .buffer_mem_data_o (buffer_mem_data_o[i]),

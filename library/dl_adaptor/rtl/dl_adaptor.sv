@@ -34,8 +34,8 @@ module dl_adaptor #(
     // 2 CC port, each will have interleaved 4 layer data
     output var        dl_sof               [      NUM_CC],
     output var        dl_sop               [      NUM_CC],
-    output var        dl_sof_ahead_7       [      NUM_CC],
-    output var        dl_sop_ahead_7       [      NUM_CC],
+    output var        dl_sof_ahead_9       [      NUM_CC],
+    output var        dl_sop_ahead_9       [      NUM_CC],
     output var [15:0] dl_data_i            [      NUM_CC][NUM_DL_LAYER],
     output var [15:0] dl_data_q            [      NUM_CC][NUM_DL_LAYER],
     output var        dl_valid             [      NUM_CC],
@@ -46,6 +46,7 @@ module dl_adaptor #(
     input var  [ 1:0] ctrl_compression_mode[      NUM_CC],
     //
     input var  [ 1:0] buffer_mem_ctrl_en   [      NUM_CC],
+    input var  [ 8:0] dfe_dl_adaptor_mem_symbol_no_sel,
     input var  [11:0] buffer_mem_addr_i    [      NUM_CC][NUM_DL_LAYER],
     input var  [31:0] buffer_mem_data_i    [      NUM_CC][NUM_DL_LAYER],
     input var         buffer_mem_we        [      NUM_CC][NUM_DL_LAYER],
@@ -157,8 +158,8 @@ module dl_adaptor #(
           // Data output to DFE
           .dl_sof_o                  (dl_sof[i]),
           .dl_sop_o                  (dl_sop[i]),
-          .dl_sof_ahead_7_o          (dl_sof_ahead_7[i]),
-          .dl_sop_ahead_7_o          (dl_sop_ahead_7[i]),
+          .dl_sof_ahead_9_o          (dl_sof_ahead_9[i]),
+          .dl_sop_ahead_9_o          (dl_sop_ahead_9[i]),
           .dl_di_o                   (dl_data_i[i]),
           .dl_dq_o                   (dl_data_q[i]),
           .dl_valid_o                (dl_valid[i]),
@@ -175,6 +176,7 @@ module dl_adaptor #(
           .compression_mode          (ctrl_compression_mode[i]),  // Compression mode
           //
           .buffer_mem_ctrl_en        (buffer_mem_ctrl_en[i]),
+          .dfe_dl_adaptor_mem_symbol_no_sel(dfe_dl_adaptor_mem_symbol_no_sel),
           .buffer_mem_addr_i         (buffer_mem_addr_i[i]),
           .buffer_mem_data_i         (buffer_mem_data_i[i]),
           .buffer_mem_we             (buffer_mem_we[i]),

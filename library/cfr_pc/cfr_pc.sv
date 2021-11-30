@@ -6,6 +6,7 @@
 `timescale 1ns / 1ps `default_nettype none
 
 module cfr_pc #(
+    parameter int CSR            = 1,
     parameter int DATA_WIDTH     = 16,
     //
     parameter int CPW_ADDR_WIDTH = 8,
@@ -27,24 +28,26 @@ module cfr_pc #(
     input var  logic                      ctrl_rst,
     // Scalar
     input var  logic                      ctrl_enable,              // 1 = enable, 0 = bypass
+    input var  logic [               3:0] ctrl_spacing,             // min spacing between peaks
     input var  logic [      DATA_WIDTH:0] ctrl_clipping_threshold,  // unsigned
     input var  logic [      DATA_WIDTH:0] ctrl_pd_threshold,        // unsigned
     // Cancellation pulse write port
     input var  logic [CPW_ADDR_WIDTH-1:0] ctrl_cpw_addr,
     input var  logic                      ctrl_cpw_en,
     input var  logic                      ctrl_cpw_we,
-    output var logic [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_i,
-    output var logic [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_q,
     input var  logic [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
     input var  logic [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
 
 
   localparam int Iterations = 7;
-  localparam int DataPathLatency = 16 + 6 + 10 + 4 + 10;
+  localparam int DataPathLatency = CSR == 1 ? 9 + 10 + 19 + 10 :
+                                   16 + 6 + 10 + 4 +10;
+
   logic                         local_rst;
 
   logic                         ctrl_enable_s;
+  logic        [           3:0] ctrl_spacing_s;
   logic        [  DATA_WIDTH:0] ctrl_clipping_threshold_s;
   logic        [  DATA_WIDTH:0] ctrl_pd_threshold_s;
 
@@ -105,6 +108,18 @@ module cfr_pc #(
       .DEST_SYNC_FF (2),
       .INIT_SYNC_FF (0),
       .SRC_INPUT_REG(0),
+      .WIDTH        (4)
+  ) i_cdc_array_single_ctrl_spacing (
+      .src_clk (1'b0),
+      .src_in  (ctrl_spacing),
+      .dest_clk(clk),
+      .dest_out(ctrl_spacing_s)
+  );
+
+  cdc_array_single #(
+      .DEST_SYNC_FF (2),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (DATA_WIDTH + 1)
   ) i_cdc_array_single_ctrl_clipping_threshold (
       .src_clk (1'b0),
@@ -137,83 +152,126 @@ module cfr_pc #(
   );
 
 
-  // Up-sample by 2
-  // 16 clock tick impulse latency
+  generate
+    if (CSR == 1) begin: g_csr1
 
-  hb_up2_int2 #(
-      .XIN_WIDTH     (DATA_WIDTH),
-      .COE_WIDTH     (16),
-      .NUM_UNIQUE_COE(5),
-      .COE_NUMS      ({952, -1609, 3090, -6260, 20622}),
-      .YOUT_WIDTH    (DATA_WIDTH),
-      .SRA_BITS      (15)
-  ) i_up2_i (
-      .clk  (clk),
-      .rst  (local_rst),
-      .xin  (data_i_in),
-      .yout0(data_up2_i_p0),
-      .yout1(data_up2_i_p1),
-      .ovf  (  /* Not used */)
-  );
+      // Up-sample by 2
+      // 9 clock tick impulse latency
 
-  hb_up2_int2 #(
-      .XIN_WIDTH     (DATA_WIDTH),
-      .COE_WIDTH     (16),
-      .NUM_UNIQUE_COE(5),
-      .COE_NUMS      ({952, -1609, 3090, -6260, 20622}),
-      .YOUT_WIDTH    (DATA_WIDTH),
-      .SRA_BITS      (15)
-  ) i_up2_q (
-      .clk  (clk),
-      .rst  (local_rst),
-      .xin  (data_q_in),
-      .yout0(data_up2_q_p0),
-      .yout1(data_up2_q_p1),
-      .ovf  (  /* Not used */)
-  );
+      hb_up2 #(
+          .XIN_WIDTH     (DATA_WIDTH),
+          .COE_WIDTH     (16),
+          .NUM_UNIQUE_COE(3),
+          .COE_NUMS      ({1277, -4710, 20014}),
+          .YOUT_WIDTH    (DATA_WIDTH),
+          .SRA_BITS      (15)
+      ) i_up2_i (
+          .clk  (clk),
+          .rst  (local_rst),
+          .xin  (data_i_in),
+          .yout0(data_up2_i_p0),
+          .yout1(data_up2_i_p1),
+          .ovf  (  /* Not used */)
+      );
+
+      hb_up2 #(
+          .XIN_WIDTH     (DATA_WIDTH),
+          .COE_WIDTH     (16),
+          .NUM_UNIQUE_COE(3),
+          .COE_NUMS      ({1277, -4710, 20014}),
+          .YOUT_WIDTH    (DATA_WIDTH),
+          .SRA_BITS      (15)
+      ) i_up2_q (
+          .clk  (clk),
+          .rst  (local_rst),
+          .xin  (data_q_in),
+          .yout0(data_up2_q_p0),
+          .yout1(data_up2_q_p1),
+          .ovf  (  /* Not used */)
+      );
+    
+    end else begin
+
+      // Up-sample by 2
+      // 16 clock tick impulse latency
+
+      hb_up2_int2 #(
+          .XIN_WIDTH     (DATA_WIDTH),
+          .COE_WIDTH     (16),
+          .NUM_UNIQUE_COE(5),
+          .COE_NUMS      ({952, -1609, 3090, -6260, 20622}),
+          .YOUT_WIDTH    (DATA_WIDTH),
+          .SRA_BITS      (15)
+      ) i_up2_i (
+          .clk  (clk),
+          .rst  (local_rst),
+          .xin  (data_i_in),
+          .yout0(data_up2_i_p0),
+          .yout1(data_up2_i_p1),
+          .ovf  (  /* Not used */)
+      );
+
+      hb_up2_int2 #(
+          .XIN_WIDTH     (DATA_WIDTH),
+          .COE_WIDTH     (16),
+          .NUM_UNIQUE_COE(5),
+          .COE_NUMS      ({952, -1609, 3090, -6260, 20622}),
+          .YOUT_WIDTH    (DATA_WIDTH),
+          .SRA_BITS      (15)
+      ) i_up2_q (
+          .clk  (clk),
+          .rst  (local_rst),
+          .xin  (data_q_in),
+          .yout0(data_up2_q_p0),
+          .yout1(data_up2_q_p1),
+          .ovf  (  /* Not used */)
+      );
 
 
-  // Up-sample by 2 again
-  // 6 clock tick impulse latency
+      // Up-sample by 2 again
+      // 6 clock tick impulse latency
 
-  hb_up2_int2_p2 #(
-      .XIN_WIDTH     (DATA_WIDTH),
-      .COE_WIDTH     (16),
-      .NUM_UNIQUE_COE(2),
-      .COE_NUMS      ({-2788, 19030}),
-      .YOUT_WIDTH    (DATA_WIDTH),
-      .SRA_BITS      (15)
-  ) i_up2_2_i (
-      .clk  (clk),
-      .rst  (local_rst),
-      .xin0 (data_up2_i_p0),
-      .xin1 (data_up2_i_p1),
-      .yout0(data_up4_i_p0),
-      .yout1(data_up4_i_p1),
-      .yout2(data_up4_i_p2),
-      .yout3(data_up4_i_p3),
-      .ovf  (  /* Not used */)
-  );
+      hb_up2_int2_p2 #(
+          .XIN_WIDTH     (DATA_WIDTH),
+          .COE_WIDTH     (16),
+          .NUM_UNIQUE_COE(2),
+          .COE_NUMS      ({-2788, 19030}),
+          .YOUT_WIDTH    (DATA_WIDTH),
+          .SRA_BITS      (15)
+      ) i_up2_2_i (
+          .clk  (clk),
+          .rst  (local_rst),
+          .xin0 (data_up2_i_p0),
+          .xin1 (data_up2_i_p1),
+          .yout0(data_up4_i_p0),
+          .yout1(data_up4_i_p1),
+          .yout2(data_up4_i_p2),
+          .yout3(data_up4_i_p3),
+          .ovf  (  /* Not used */)
+      );
 
-  hb_up2_int2_p2 #(
-      .XIN_WIDTH     (DATA_WIDTH),
-      .COE_WIDTH     (16),
-      .NUM_UNIQUE_COE(2),
-      .COE_NUMS      ({-2788, 19030}),
-      .YOUT_WIDTH    (DATA_WIDTH),
-      .SRA_BITS      (15)
-  ) i_up2_2_q (
-      .clk  (clk),
-      .rst  (local_rst),
-      .xin0 (data_up2_q_p0),
-      .xin1 (data_up2_q_p1),
-      .yout0(data_up4_q_p0),
-      .yout1(data_up4_q_p1),
-      .yout2(data_up4_q_p2),
-      .yout3(data_up4_q_p3),
-      .ovf  (  /* Not used */)
-  );
+      hb_up2_int2_p2 #(
+          .XIN_WIDTH     (DATA_WIDTH),
+          .COE_WIDTH     (16),
+          .NUM_UNIQUE_COE(2),
+          .COE_NUMS      ({-2788, 19030}),
+          .YOUT_WIDTH    (DATA_WIDTH),
+          .SRA_BITS      (15)
+      ) i_up2_2_q (
+          .clk  (clk),
+          .rst  (local_rst),
+          .xin0 (data_up2_q_p0),
+          .xin1 (data_up2_q_p1),
+          .yout0(data_up4_q_p0),
+          .yout1(data_up4_q_p1),
+          .yout2(data_up4_q_p2),
+          .yout3(data_up4_q_p3),
+          .ovf  (  /* Not used */)
+      );
 
+    end
+  endgenerate
+   
 
   // Convert input data into "theta and r" format.
   // 10 clock tick latency
@@ -253,47 +311,54 @@ module cfr_pc #(
       .ctrl_out(  /* Not used */)
   );
 
-  cordic_cart2pol #(
-      .DATA_WIDTH          (DATA_WIDTH),
-      .CTRL_WIDTH          (1),
-      .ITERATIONS          (Iterations),
-      .COMPENSATION_SCALING(1)
-  ) i_cordic_cart2pol_p2 (
-      .clk     (clk),
-      .rst     (local_rst),
-      //
-      .xin     (data_up4_i_p2),
-      .yin     (data_up4_q_p2),
-      .ctrl_in (1'b0),
-      //
-      .theta   (data_theta_p2),
-      .r       (data_r_p2),
-      .ctrl_out(  /* Not used */)
-  );
+  generate
+    if (CSR > 1) begin : g_cordic
 
-  cordic_cart2pol #(
-      .DATA_WIDTH          (DATA_WIDTH),
-      .CTRL_WIDTH          (1),
-      .ITERATIONS          (Iterations),
-      .COMPENSATION_SCALING(1)
-  ) i_cordic_cart2pol_p3 (
-      .clk     (clk),
-      .rst     (local_rst),
-      //
-      .xin     (data_up4_i_p3),
-      .yin     (data_up4_q_p3),
-      .ctrl_in (1'b0),
-      //
-      .theta   (data_theta_p3),
-      .r       (data_r_p3),
-      .ctrl_out(  /* Not used */)
-  );
+      cordic_cart2pol #(
+          .DATA_WIDTH          (DATA_WIDTH),
+          .CTRL_WIDTH          (1),
+          .ITERATIONS          (Iterations),
+          .COMPENSATION_SCALING(1)
+      ) i_cordic_cart2pol_p2 (
+          .clk     (clk),
+          .rst     (local_rst),
+          //
+          .xin     (data_up4_i_p2),
+          .yin     (data_up4_q_p2),
+          .ctrl_in (1'b0),
+          //
+          .theta   (data_theta_p2),
+          .r       (data_r_p2),
+          .ctrl_out(  /* Not used */)
+      );
+
+      cordic_cart2pol #(
+          .DATA_WIDTH          (DATA_WIDTH),
+          .CTRL_WIDTH          (1),
+          .ITERATIONS          (Iterations),
+          .COMPENSATION_SCALING(1)
+      ) i_cordic_cart2pol_p3 (
+          .clk     (clk),
+          .rst     (local_rst),
+          //
+          .xin     (data_up4_i_p3),
+          .yin     (data_up4_q_p3),
+          .ctrl_in (1'b0),
+          //
+          .theta   (data_theta_p3),
+          .r       (data_r_p3),
+          .ctrl_out(  /* Not used */)
+      );
+
+    end
+  endgenerate
 
 
   // Peak detector,
-  // 4 clock tick latency
+  // 19 clock tick latency
 
   cfr_pc_pd #(
+      .CSR       (CSR),
       .ITERATIONS(Iterations),
       .DATA_WIDTH(DATA_WIDTH)
   ) i_cfr_pc_pd (
@@ -315,6 +380,7 @@ module cfr_pc #(
       .peak_phase             (peak_phase),
       //
       .ctrl_enable            (ctrl_enable_s),
+      .ctrl_spacing           (ctrl_spacing_s),
       .ctrl_pd_threshold      (ctrl_pd_threshold_s),
       .ctrl_clipping_threshold(ctrl_clipping_threshold_s)
   );

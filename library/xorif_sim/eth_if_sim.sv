@@ -1,10 +1,14 @@
 `timescale 1 ns / 1 ps `default_nettype none
 module eth_if_sim #(
-    parameter int NUM_CC        = 2,   // Number of carrier components
-    parameter int NUM_ETH_PORT  = 2,   // Number of Ethernet ports
-    parameter int NUM_DL_LAYER  = 16,  // Number of DL layers
-    parameter int NUM_UL_LAYER  = 8,   // Number of UL layers
-    parameter int NUM_SRS_LAYER = 64   // Number of SRS layers
+    parameter int NUM_CC        = 1,  // Number of carrier components
+    parameter int NUM_ETH_PORT  = 1,  // Number of Ethernet ports
+    parameter int NUM_DL_LAYER  = 4,  // Number of DL layers
+    parameter int NUM_UL_LAYER  = 4,  // Number of Ul layers
+    parameter int NUM_SRS_LAYER = 64,
+    //
+    parameter int HAS_DL_ADAPTOR = 1,
+    parameter int HAS_UL_ADAPTOR = 0,
+    parameter int HAS_SRS_ADAPTOR = 0
 ) (
     // AXI-Lite Control/Status
     input var         aclk,
@@ -106,7 +110,7 @@ module eth_if_sim #(
     input var         ul_radio_start_10ms,
     // DL data
     output var        dl_sof                [      NUM_CC],
-    output var        dl_sos                [      NUM_CC],
+    output var        dl_sop                [      NUM_CC],
     output var [15:0] dl_data_i             [      NUM_CC][NUM_DL_LAYER],
     output var [15:0] dl_data_q             [      NUM_CC][NUM_DL_LAYER],
     output var        dl_valid              [      NUM_CC],
@@ -115,6 +119,12 @@ module eth_if_sim #(
     input var         ul_sop_ahead_3        [      NUM_CC],
     input var  [15:0] ul_data_i             [      NUM_CC][NUM_UL_LAYER],
     input var  [15:0] ul_data_q             [      NUM_CC][NUM_UL_LAYER],
+
+    // CTRL
+    input var  [  3:0] ctrl_bandwidth       [         NUM_CC],
+    input var  [  1:0] ctrl_numerology      [         NUM_CC],
+    input var  [  1:0] ctrl_compression_mode[         NUM_CC],
+
     // SRS Section Header
     output var [ 2:0] srs_cfg_cc,
     output var [11:0] srs_cfg_symbol,
@@ -261,7 +271,7 @@ module eth_if_sim #(
   bit [  7:0] m_defm_data_tkeep          [IP_NUM_DL_LAYER];
   bit         m_defm_data_tvalid         [IP_NUM_DL_LAYER];
   bit         m_defm_data_tlast          [IP_NUM_DL_LAYER];
-  bit         m_defm_data_tready         [IP_NUM_DL_LAYER] = '{IP_NUM_DL_LAYER{1'b1}};
+  bit         m_defm_data_tready         [IP_NUM_DL_LAYER];
   bit [ 30:0] m_defm_data_tuser          [IP_NUM_DL_LAYER];
 
   // DL BID
@@ -385,18 +395,6 @@ module eth_if_sim #(
   // Others signals
   //---------------
 
-  // TODO: connect
-  bit [  3:0] ctrl_bandwidth             [         NUM_CC] = '{NUM_CC{0}};
-  bit [  1:0] ctrl_numerology            [         NUM_CC] = '{NUM_CC{0}};
-  bit [  1:0] ctrl_compression_mode      [         NUM_CC] = '{NUM_CC{1}};
-
-  bit [ 1:0] buffer_mem_ctrl_en   [      NUM_CC];
-  bit [11:0] buffer_mem_addr_i    [      NUM_CC][NUM_UL_LAYER];
-  bit [31:0] buffer_mem_data_i    [      NUM_CC][NUM_UL_LAYER];
-  bit        buffer_mem_we        [      NUM_CC][NUM_UL_LAYER];
-  bit [31:0] buffer_mem_data_o    [      NUM_CC][NUM_UL_LAYER];
-
-
   // TODO: Reset generator
   assign defm_reset = rst_400m;
   assign fram_reset = rst_400m;
@@ -440,10 +438,10 @@ module eth_if_sim #(
     end
   endgenerate
 
-  generate 
+  generate
     for(genvar i = NUM_ETH_PORT; i < IP_NUM_ETH_PORT; i++) begin
       assign eth_port_clk_s[i]  = eth_port_clk[0];
-      
+
       assign m_eth_fram_tready_s[i] = 1'b1;
       assign m_message_tready_s[i] = 1'b1;
     end
@@ -493,17 +491,17 @@ module eth_if_sim #(
       .m0_dl_toggle                  (m_dl_toggle[0]),
       .m0_cc_enable                  (m_cc_enable[0]),
       .m0_cc_reload                  (m_cc_reload[0]),
-      //
-      .m1_ul_sym_num                 (m_ul_sym_num[1]),
-      .m1_ul_cta_sym_num             (m_ul_cta_sym_num[1]),
-      .m1_ul_update                  (m_ul_update[1]),
-      .m1_dl_sym_num                 (m_dl_sym_num[1]),
-      .m1_dl_cta_sym_num             (m_dl_cta_sym_num[1]),
-      .m1_dl_update                  (m_dl_update[1]),
-      .m1_ul_toggle                  (m_ul_toggle[1]),
-      .m1_dl_toggle                  (m_dl_toggle[1]),
-      .m1_cc_enable                  (m_cc_enable[1]),
-      .m1_cc_reload                  (m_cc_reload[1]),
+//      //
+//      .m1_ul_sym_num                 (m_ul_sym_num[1]),
+//      .m1_ul_cta_sym_num             (m_ul_cta_sym_num[1]),
+//      .m1_ul_update                  (m_ul_update[1]),
+//      .m1_dl_sym_num                 (m_dl_sym_num[1]),
+//      .m1_dl_cta_sym_num             (m_dl_cta_sym_num[1]),
+//      .m1_dl_update                  (m_dl_update[1]),
+//      .m1_ul_toggle                  (m_ul_toggle[1]),
+//      .m1_dl_toggle                  (m_dl_toggle[1]),
+//      .m1_cc_enable                  (m_cc_enable[1]),
+//      .m1_cc_reload                  (m_cc_reload[1]),
       //
       .s000_fram_data_tdata          (s_fram_data_tdata[0]),
       .s000_fram_data_tkeep          (s_fram_data_tkeep[0]),
@@ -601,101 +599,101 @@ module eth_if_sim #(
       .m003_fram_bid_frame_structure (m_fram_bid_frame_structure[3]),
       .m003_fram_bid_cp_length       (m_fram_bid_cp_length[3]),
       //
-      .s004_fram_data_tdata          (s_fram_data_tdata[4]),
-      .s004_fram_data_tkeep          (s_fram_data_tkeep[4]),
-      .s004_fram_data_tvalid         (s_fram_data_tvalid[4]),
-      .s004_fram_data_tlast          (s_fram_data_tlast[4]),
-      .s004_fram_data_tready         (s_fram_data_tready[4]),
-      //
-      .s004_fram_data_req            (s_fram_data_req[4]),
-      //
-      .m004_fram_bid_valid           (m_fram_bid_valid[4]),
-      .m004_fram_bid_tlast           (m_fram_bid_tlast[4]),
-      .m004_fram_bid_ready           (m_fram_bid_ready[4]),
-      .m004_fram_bid_off             (m_fram_bid_off[4]),
-      .m004_fram_bid_beamid15        (m_fram_bid_beamid15[4]),
-      .m004_fram_bid_remask          (m_fram_bid_remask[4]),
-      .m004_fram_bid_rb              (m_fram_bid_rb[4]),
-      .m004_fram_bid_start_prbc      (m_fram_bid_start_prbc[4]),
-      .m004_fram_bid_num_prbc        (m_fram_bid_num_prbc[4]),
-      .m004_fram_bid_num_symbol      (m_fram_bid_num_symbol[4]),
-      .m004_fram_bid_cc_id           (m_fram_bid_cc_id[4]),
-      .m004_fram_bid_frequency_offset(m_fram_bid_frequency_offset[4]),
-      .m004_fram_bid_time_offset     (m_fram_bid_time_offset[4]),
-      .m004_fram_bid_frame_structure (m_fram_bid_frame_structure[4]),
-      .m004_fram_bid_cp_length       (m_fram_bid_cp_length[4]),
-      //
-      .s005_fram_data_tdata          (s_fram_data_tdata[5]),
-      .s005_fram_data_tkeep          (s_fram_data_tkeep[5]),
-      .s005_fram_data_tvalid         (s_fram_data_tvalid[5]),
-      .s005_fram_data_tlast          (s_fram_data_tlast[5]),
-      .s005_fram_data_tready         (s_fram_data_tready[5]),
-      //
-      .s005_fram_data_req            (s_fram_data_req[5]),
-      //
-      .m005_fram_bid_valid           (m_fram_bid_valid[5]),
-      .m005_fram_bid_tlast           (m_fram_bid_tlast[5]),
-      .m005_fram_bid_ready           (m_fram_bid_ready[5]),
-      .m005_fram_bid_off             (m_fram_bid_off[5]),
-      .m005_fram_bid_beamid15        (m_fram_bid_beamid15[5]),
-      .m005_fram_bid_remask          (m_fram_bid_remask[5]),
-      .m005_fram_bid_rb              (m_fram_bid_rb[5]),
-      .m005_fram_bid_start_prbc      (m_fram_bid_start_prbc[5]),
-      .m005_fram_bid_num_prbc        (m_fram_bid_num_prbc[5]),
-      .m005_fram_bid_num_symbol      (m_fram_bid_num_symbol[5]),
-      .m005_fram_bid_cc_id           (m_fram_bid_cc_id[5]),
-      .m005_fram_bid_frequency_offset(m_fram_bid_frequency_offset[5]),
-      .m005_fram_bid_time_offset     (m_fram_bid_time_offset[5]),
-      .m005_fram_bid_frame_structure (m_fram_bid_frame_structure[5]),
-      .m005_fram_bid_cp_length       (m_fram_bid_cp_length[5]),
-      //
-      .s006_fram_data_tdata          (s_fram_data_tdata[6]),
-      .s006_fram_data_tkeep          (s_fram_data_tkeep[6]),
-      .s006_fram_data_tvalid         (s_fram_data_tvalid[6]),
-      .s006_fram_data_tlast          (s_fram_data_tlast[6]),
-      .s006_fram_data_tready         (s_fram_data_tready[6]),
-      //
-      .s006_fram_data_req            (s_fram_data_req[6]),
-      //
-      .m006_fram_bid_valid           (m_fram_bid_valid[6]),
-      .m006_fram_bid_tlast           (m_fram_bid_tlast[6]),
-      .m006_fram_bid_ready           (m_fram_bid_ready[6]),
-      .m006_fram_bid_off             (m_fram_bid_off[6]),
-      .m006_fram_bid_beamid15        (m_fram_bid_beamid15[6]),
-      .m006_fram_bid_remask          (m_fram_bid_remask[6]),
-      .m006_fram_bid_rb              (m_fram_bid_rb[6]),
-      .m006_fram_bid_start_prbc      (m_fram_bid_start_prbc[6]),
-      .m006_fram_bid_num_prbc        (m_fram_bid_num_prbc[6]),
-      .m006_fram_bid_num_symbol      (m_fram_bid_num_symbol[6]),
-      .m006_fram_bid_cc_id           (m_fram_bid_cc_id[6]),
-      .m006_fram_bid_frequency_offset(m_fram_bid_frequency_offset[6]),
-      .m006_fram_bid_time_offset     (m_fram_bid_time_offset[6]),
-      .m006_fram_bid_frame_structure (m_fram_bid_frame_structure[6]),
-      .m006_fram_bid_cp_length       (m_fram_bid_cp_length[6]),
-      //
-      .s007_fram_data_tdata          (s_fram_data_tdata[7]),
-      .s007_fram_data_tkeep          (s_fram_data_tkeep[7]),
-      .s007_fram_data_tvalid         (s_fram_data_tvalid[7]),
-      .s007_fram_data_tlast          (s_fram_data_tlast[7]),
-      .s007_fram_data_tready         (s_fram_data_tready[7]),
-      //
-      .s007_fram_data_req            (s_fram_data_req[7]),
-      //
-      .m007_fram_bid_valid           (m_fram_bid_valid[7]),
-      .m007_fram_bid_tlast           (m_fram_bid_tlast[7]),
-      .m007_fram_bid_ready           (m_fram_bid_ready[7]),
-      .m007_fram_bid_off             (m_fram_bid_off[7]),
-      .m007_fram_bid_beamid15        (m_fram_bid_beamid15[7]),
-      .m007_fram_bid_remask          (m_fram_bid_remask[7]),
-      .m007_fram_bid_rb              (m_fram_bid_rb[7]),
-      .m007_fram_bid_start_prbc      (m_fram_bid_start_prbc[7]),
-      .m007_fram_bid_num_prbc        (m_fram_bid_num_prbc[7]),
-      .m007_fram_bid_num_symbol      (m_fram_bid_num_symbol[7]),
-      .m007_fram_bid_cc_id           (m_fram_bid_cc_id[7]),
-      .m007_fram_bid_frequency_offset(m_fram_bid_frequency_offset[7]),
-      .m007_fram_bid_time_offset     (m_fram_bid_time_offset[7]),
-      .m007_fram_bid_frame_structure (m_fram_bid_frame_structure[7]),
-      .m007_fram_bid_cp_length       (m_fram_bid_cp_length[7]),
+//      .s004_fram_data_tdata          (s_fram_data_tdata[4]),
+//      .s004_fram_data_tkeep          (s_fram_data_tkeep[4]),
+//      .s004_fram_data_tvalid         (s_fram_data_tvalid[4]),
+//      .s004_fram_data_tlast          (s_fram_data_tlast[4]),
+//      .s004_fram_data_tready         (s_fram_data_tready[4]),
+//      //
+//      .s004_fram_data_req            (s_fram_data_req[4]),
+//      //
+//      .m004_fram_bid_valid           (m_fram_bid_valid[4]),
+//      .m004_fram_bid_tlast           (m_fram_bid_tlast[4]),
+//      .m004_fram_bid_ready           (m_fram_bid_ready[4]),
+//      .m004_fram_bid_off             (m_fram_bid_off[4]),
+//      .m004_fram_bid_beamid15        (m_fram_bid_beamid15[4]),
+//      .m004_fram_bid_remask          (m_fram_bid_remask[4]),
+//      .m004_fram_bid_rb              (m_fram_bid_rb[4]),
+//      .m004_fram_bid_start_prbc      (m_fram_bid_start_prbc[4]),
+//      .m004_fram_bid_num_prbc        (m_fram_bid_num_prbc[4]),
+//      .m004_fram_bid_num_symbol      (m_fram_bid_num_symbol[4]),
+//      .m004_fram_bid_cc_id           (m_fram_bid_cc_id[4]),
+//      .m004_fram_bid_frequency_offset(m_fram_bid_frequency_offset[4]),
+//      .m004_fram_bid_time_offset     (m_fram_bid_time_offset[4]),
+//      .m004_fram_bid_frame_structure (m_fram_bid_frame_structure[4]),
+//      .m004_fram_bid_cp_length       (m_fram_bid_cp_length[4]),
+//      //
+//      .s005_fram_data_tdata          (s_fram_data_tdata[5]),
+//      .s005_fram_data_tkeep          (s_fram_data_tkeep[5]),
+//      .s005_fram_data_tvalid         (s_fram_data_tvalid[5]),
+//      .s005_fram_data_tlast          (s_fram_data_tlast[5]),
+//      .s005_fram_data_tready         (s_fram_data_tready[5]),
+//      //
+//      .s005_fram_data_req            (s_fram_data_req[5]),
+//      //
+//      .m005_fram_bid_valid           (m_fram_bid_valid[5]),
+//      .m005_fram_bid_tlast           (m_fram_bid_tlast[5]),
+//      .m005_fram_bid_ready           (m_fram_bid_ready[5]),
+//      .m005_fram_bid_off             (m_fram_bid_off[5]),
+//      .m005_fram_bid_beamid15        (m_fram_bid_beamid15[5]),
+//      .m005_fram_bid_remask          (m_fram_bid_remask[5]),
+//      .m005_fram_bid_rb              (m_fram_bid_rb[5]),
+//      .m005_fram_bid_start_prbc      (m_fram_bid_start_prbc[5]),
+//      .m005_fram_bid_num_prbc        (m_fram_bid_num_prbc[5]),
+//      .m005_fram_bid_num_symbol      (m_fram_bid_num_symbol[5]),
+//      .m005_fram_bid_cc_id           (m_fram_bid_cc_id[5]),
+//      .m005_fram_bid_frequency_offset(m_fram_bid_frequency_offset[5]),
+//      .m005_fram_bid_time_offset     (m_fram_bid_time_offset[5]),
+//      .m005_fram_bid_frame_structure (m_fram_bid_frame_structure[5]),
+//      .m005_fram_bid_cp_length       (m_fram_bid_cp_length[5]),
+//      //
+//      .s006_fram_data_tdata          (s_fram_data_tdata[6]),
+//      .s006_fram_data_tkeep          (s_fram_data_tkeep[6]),
+//      .s006_fram_data_tvalid         (s_fram_data_tvalid[6]),
+//      .s006_fram_data_tlast          (s_fram_data_tlast[6]),
+//      .s006_fram_data_tready         (s_fram_data_tready[6]),
+//      //
+//      .s006_fram_data_req            (s_fram_data_req[6]),
+//      //
+//      .m006_fram_bid_valid           (m_fram_bid_valid[6]),
+//      .m006_fram_bid_tlast           (m_fram_bid_tlast[6]),
+//      .m006_fram_bid_ready           (m_fram_bid_ready[6]),
+//      .m006_fram_bid_off             (m_fram_bid_off[6]),
+//      .m006_fram_bid_beamid15        (m_fram_bid_beamid15[6]),
+//      .m006_fram_bid_remask          (m_fram_bid_remask[6]),
+//      .m006_fram_bid_rb              (m_fram_bid_rb[6]),
+//      .m006_fram_bid_start_prbc      (m_fram_bid_start_prbc[6]),
+//      .m006_fram_bid_num_prbc        (m_fram_bid_num_prbc[6]),
+//      .m006_fram_bid_num_symbol      (m_fram_bid_num_symbol[6]),
+//      .m006_fram_bid_cc_id           (m_fram_bid_cc_id[6]),
+//      .m006_fram_bid_frequency_offset(m_fram_bid_frequency_offset[6]),
+//      .m006_fram_bid_time_offset     (m_fram_bid_time_offset[6]),
+//      .m006_fram_bid_frame_structure (m_fram_bid_frame_structure[6]),
+//      .m006_fram_bid_cp_length       (m_fram_bid_cp_length[6]),
+//      //
+//      .s007_fram_data_tdata          (s_fram_data_tdata[7]),
+//      .s007_fram_data_tkeep          (s_fram_data_tkeep[7]),
+//      .s007_fram_data_tvalid         (s_fram_data_tvalid[7]),
+//      .s007_fram_data_tlast          (s_fram_data_tlast[7]),
+//      .s007_fram_data_tready         (s_fram_data_tready[7]),
+//      //
+//      .s007_fram_data_req            (s_fram_data_req[7]),
+//      //
+//      .m007_fram_bid_valid           (m_fram_bid_valid[7]),
+//      .m007_fram_bid_tlast           (m_fram_bid_tlast[7]),
+//      .m007_fram_bid_ready           (m_fram_bid_ready[7]),
+//      .m007_fram_bid_off             (m_fram_bid_off[7]),
+//      .m007_fram_bid_beamid15        (m_fram_bid_beamid15[7]),
+//      .m007_fram_bid_remask          (m_fram_bid_remask[7]),
+//      .m007_fram_bid_rb              (m_fram_bid_rb[7]),
+//      .m007_fram_bid_start_prbc      (m_fram_bid_start_prbc[7]),
+//      .m007_fram_bid_num_prbc        (m_fram_bid_num_prbc[7]),
+//      .m007_fram_bid_num_symbol      (m_fram_bid_num_symbol[7]),
+//      .m007_fram_bid_cc_id           (m_fram_bid_cc_id[7]),
+//      .m007_fram_bid_frequency_offset(m_fram_bid_frequency_offset[7]),
+//      .m007_fram_bid_time_offset     (m_fram_bid_time_offset[7]),
+//      .m007_fram_bid_frame_structure (m_fram_bid_frame_structure[7]),
+//      .m007_fram_bid_cp_length       (m_fram_bid_cp_length[7]),
       //
       .s00_fram_unsol_tdata          (s00_fram_unsol_tdata),
       .s00_fram_unsol_tkeep          (s00_fram_unsol_tkeep),
@@ -802,281 +800,281 @@ module eth_if_sim #(
       .m003_defm_bid_frame_structure (m_defm_bid_frame_structure[03]),
       .m003_defm_bid_cp_length       (m_defm_bid_cp_length[03]),
       //
-      .m004_defm_data_tdata          (m_defm_data_tdata[04]),
-      .m004_defm_data_tkeep          (m_defm_data_tkeep[04]),
-      .m004_defm_data_tvalid         (m_defm_data_tvalid[04]),
-      .m004_defm_data_tlast          (m_defm_data_tlast[04]),
-      .m004_defm_data_tready         (m_defm_data_tready[04]),
-      .m004_defm_data_tuser          (m_defm_data_tuser[04]),
-      //
-      .m004_defm_bid_valid           (m_defm_bid_valid[04]),
-      .m004_defm_bid_tlast           (m_defm_bid_tlast[04]),
-      .m004_defm_bid_ready           (m_defm_bid_ready[04]),
-      .m004_defm_bid_off             (m_defm_bid_off[04]),
-      .m004_defm_bid_beamid15        (m_defm_bid_beamid15[04]),
-      .m004_defm_bid_remask          (m_defm_bid_remask[04]),
-      .m004_defm_bid_rb              (m_defm_bid_rb[04]),
-      .m004_defm_bid_start_prbc      (m_defm_bid_start_prbc[04]),
-      .m004_defm_bid_num_prbc        (m_defm_bid_num_prbc[04]),
-      .m004_defm_bid_num_symbol      (m_defm_bid_num_symbol[04]),
-      .m004_defm_bid_cc_id           (m_defm_bid_cc_id[04]),
-      .m004_defm_bid_frequency_offset(m_defm_bid_frequency_offset[04]),
-      .m004_defm_bid_time_offset     (m_defm_bid_time_offset[04]),
-      .m004_defm_bid_frame_structure (m_defm_bid_frame_structure[04]),
-      .m004_defm_bid_cp_length       (m_defm_bid_cp_length[04]),
-      //
-      .m005_defm_data_tdata          (m_defm_data_tdata[05]),
-      .m005_defm_data_tkeep          (m_defm_data_tkeep[05]),
-      .m005_defm_data_tvalid         (m_defm_data_tvalid[05]),
-      .m005_defm_data_tlast          (m_defm_data_tlast[05]),
-      .m005_defm_data_tready         (m_defm_data_tready[05]),
-      .m005_defm_data_tuser          (m_defm_data_tuser[05]),
-      //
-      .m005_defm_bid_valid           (m_defm_bid_valid[05]),
-      .m005_defm_bid_tlast           (m_defm_bid_tlast[05]),
-      .m005_defm_bid_ready           (m_defm_bid_ready[05]),
-      .m005_defm_bid_off             (m_defm_bid_off[05]),
-      .m005_defm_bid_beamid15        (m_defm_bid_beamid15[05]),
-      .m005_defm_bid_remask          (m_defm_bid_remask[05]),
-      .m005_defm_bid_rb              (m_defm_bid_rb[05]),
-      .m005_defm_bid_start_prbc      (m_defm_bid_start_prbc[05]),
-      .m005_defm_bid_num_prbc        (m_defm_bid_num_prbc[05]),
-      .m005_defm_bid_num_symbol      (m_defm_bid_num_symbol[05]),
-      .m005_defm_bid_cc_id           (m_defm_bid_cc_id[05]),
-      .m005_defm_bid_frequency_offset(m_defm_bid_frequency_offset[05]),
-      .m005_defm_bid_time_offset     (m_defm_bid_time_offset[05]),
-      .m005_defm_bid_frame_structure (m_defm_bid_frame_structure[05]),
-      .m005_defm_bid_cp_length       (m_defm_bid_cp_length[05]),
-      //
-      .m006_defm_data_tdata          (m_defm_data_tdata[06]),
-      .m006_defm_data_tkeep          (m_defm_data_tkeep[06]),
-      .m006_defm_data_tvalid         (m_defm_data_tvalid[06]),
-      .m006_defm_data_tlast          (m_defm_data_tlast[06]),
-      .m006_defm_data_tready         (m_defm_data_tready[06]),
-      .m006_defm_data_tuser          (m_defm_data_tuser[06]),
-      //
-      .m006_defm_bid_valid           (m_defm_bid_valid[06]),
-      .m006_defm_bid_tlast           (m_defm_bid_tlast[06]),
-      .m006_defm_bid_ready           (m_defm_bid_ready[06]),
-      .m006_defm_bid_off             (m_defm_bid_off[06]),
-      .m006_defm_bid_beamid15        (m_defm_bid_beamid15[06]),
-      .m006_defm_bid_remask          (m_defm_bid_remask[06]),
-      .m006_defm_bid_rb              (m_defm_bid_rb[06]),
-      .m006_defm_bid_start_prbc      (m_defm_bid_start_prbc[06]),
-      .m006_defm_bid_num_prbc        (m_defm_bid_num_prbc[06]),
-      .m006_defm_bid_num_symbol      (m_defm_bid_num_symbol[06]),
-      .m006_defm_bid_cc_id           (m_defm_bid_cc_id[06]),
-      .m006_defm_bid_frequency_offset(m_defm_bid_frequency_offset[06]),
-      .m006_defm_bid_time_offset     (m_defm_bid_time_offset[06]),
-      .m006_defm_bid_frame_structure (m_defm_bid_frame_structure[06]),
-      .m006_defm_bid_cp_length       (m_defm_bid_cp_length[06]),
-      //
-      .m007_defm_data_tdata          (m_defm_data_tdata[07]),
-      .m007_defm_data_tkeep          (m_defm_data_tkeep[07]),
-      .m007_defm_data_tvalid         (m_defm_data_tvalid[07]),
-      .m007_defm_data_tlast          (m_defm_data_tlast[07]),
-      .m007_defm_data_tready         (m_defm_data_tready[07]),
-      .m007_defm_data_tuser          (m_defm_data_tuser[07]),
-      //
-      .m007_defm_bid_valid           (m_defm_bid_valid[07]),
-      .m007_defm_bid_tlast           (m_defm_bid_tlast[07]),
-      .m007_defm_bid_ready           (m_defm_bid_ready[07]),
-      .m007_defm_bid_off             (m_defm_bid_off[07]),
-      .m007_defm_bid_beamid15        (m_defm_bid_beamid15[07]),
-      .m007_defm_bid_remask          (m_defm_bid_remask[07]),
-      .m007_defm_bid_rb              (m_defm_bid_rb[07]),
-      .m007_defm_bid_start_prbc      (m_defm_bid_start_prbc[07]),
-      .m007_defm_bid_num_prbc        (m_defm_bid_num_prbc[07]),
-      .m007_defm_bid_num_symbol      (m_defm_bid_num_symbol[07]),
-      .m007_defm_bid_cc_id           (m_defm_bid_cc_id[07]),
-      .m007_defm_bid_frequency_offset(m_defm_bid_frequency_offset[07]),
-      .m007_defm_bid_time_offset     (m_defm_bid_time_offset[07]),
-      .m007_defm_bid_frame_structure (m_defm_bid_frame_structure[07]),
-      .m007_defm_bid_cp_length       (m_defm_bid_cp_length[07]),
-      //
-      .m008_defm_data_tdata          (m_defm_data_tdata[08]),
-      .m008_defm_data_tkeep          (m_defm_data_tkeep[08]),
-      .m008_defm_data_tvalid         (m_defm_data_tvalid[08]),
-      .m008_defm_data_tlast          (m_defm_data_tlast[08]),
-      .m008_defm_data_tready         (m_defm_data_tready[08]),
-      .m008_defm_data_tuser          (m_defm_data_tuser[08]),
-      //
-      .m008_defm_bid_valid           (m_defm_bid_valid[08]),
-      .m008_defm_bid_tlast           (m_defm_bid_tlast[08]),
-      .m008_defm_bid_ready           (m_defm_bid_ready[08]),
-      .m008_defm_bid_off             (m_defm_bid_off[08]),
-      .m008_defm_bid_beamid15        (m_defm_bid_beamid15[08]),
-      .m008_defm_bid_remask          (m_defm_bid_remask[08]),
-      .m008_defm_bid_rb              (m_defm_bid_rb[08]),
-      .m008_defm_bid_start_prbc      (m_defm_bid_start_prbc[08]),
-      .m008_defm_bid_num_prbc        (m_defm_bid_num_prbc[08]),
-      .m008_defm_bid_num_symbol      (m_defm_bid_num_symbol[08]),
-      .m008_defm_bid_cc_id           (m_defm_bid_cc_id[08]),
-      .m008_defm_bid_frequency_offset(m_defm_bid_frequency_offset[08]),
-      .m008_defm_bid_time_offset     (m_defm_bid_time_offset[08]),
-      .m008_defm_bid_frame_structure (m_defm_bid_frame_structure[08]),
-      .m008_defm_bid_cp_length       (m_defm_bid_cp_length[08]),
-      //
-      .m009_defm_data_tdata          (m_defm_data_tdata[09]),
-      .m009_defm_data_tkeep          (m_defm_data_tkeep[09]),
-      .m009_defm_data_tvalid         (m_defm_data_tvalid[09]),
-      .m009_defm_data_tlast          (m_defm_data_tlast[09]),
-      .m009_defm_data_tready         (m_defm_data_tready[09]),
-      .m009_defm_data_tuser          (m_defm_data_tuser[09]),
-      //
-      .m009_defm_bid_valid           (m_defm_bid_valid[09]),
-      .m009_defm_bid_tlast           (m_defm_bid_tlast[09]),
-      .m009_defm_bid_ready           (m_defm_bid_ready[09]),
-      .m009_defm_bid_off             (m_defm_bid_off[09]),
-      .m009_defm_bid_beamid15        (m_defm_bid_beamid15[09]),
-      .m009_defm_bid_remask          (m_defm_bid_remask[09]),
-      .m009_defm_bid_rb              (m_defm_bid_rb[09]),
-      .m009_defm_bid_start_prbc      (m_defm_bid_start_prbc[09]),
-      .m009_defm_bid_num_prbc        (m_defm_bid_num_prbc[09]),
-      .m009_defm_bid_num_symbol      (m_defm_bid_num_symbol[09]),
-      .m009_defm_bid_cc_id           (m_defm_bid_cc_id[09]),
-      .m009_defm_bid_frequency_offset(m_defm_bid_frequency_offset[09]),
-      .m009_defm_bid_time_offset     (m_defm_bid_time_offset[09]),
-      .m009_defm_bid_frame_structure (m_defm_bid_frame_structure[09]),
-      .m009_defm_bid_cp_length       (m_defm_bid_cp_length[09]),
-      //
-      .m010_defm_data_tdata          (m_defm_data_tdata[10]),
-      .m010_defm_data_tkeep          (m_defm_data_tkeep[10]),
-      .m010_defm_data_tvalid         (m_defm_data_tvalid[10]),
-      .m010_defm_data_tlast          (m_defm_data_tlast[10]),
-      .m010_defm_data_tready         (m_defm_data_tready[10]),
-      .m010_defm_data_tuser          (m_defm_data_tuser[10]),
-      //
-      .m010_defm_bid_valid           (m_defm_bid_valid[10]),
-      .m010_defm_bid_tlast           (m_defm_bid_tlast[10]),
-      .m010_defm_bid_ready           (m_defm_bid_ready[10]),
-      .m010_defm_bid_off             (m_defm_bid_off[10]),
-      .m010_defm_bid_beamid15        (m_defm_bid_beamid15[10]),
-      .m010_defm_bid_remask          (m_defm_bid_remask[10]),
-      .m010_defm_bid_rb              (m_defm_bid_rb[10]),
-      .m010_defm_bid_start_prbc      (m_defm_bid_start_prbc[10]),
-      .m010_defm_bid_num_prbc        (m_defm_bid_num_prbc[10]),
-      .m010_defm_bid_num_symbol      (m_defm_bid_num_symbol[10]),
-      .m010_defm_bid_cc_id           (m_defm_bid_cc_id[10]),
-      .m010_defm_bid_frequency_offset(m_defm_bid_frequency_offset[10]),
-      .m010_defm_bid_time_offset     (m_defm_bid_time_offset[10]),
-      .m010_defm_bid_frame_structure (m_defm_bid_frame_structure[10]),
-      .m010_defm_bid_cp_length       (m_defm_bid_cp_length[10]),
-      //
-      .m011_defm_data_tdata          (m_defm_data_tdata[11]),
-      .m011_defm_data_tkeep          (m_defm_data_tkeep[11]),
-      .m011_defm_data_tvalid         (m_defm_data_tvalid[11]),
-      .m011_defm_data_tlast          (m_defm_data_tlast[11]),
-      .m011_defm_data_tready         (m_defm_data_tready[11]),
-      .m011_defm_data_tuser          (m_defm_data_tuser[11]),
-      //
-      .m011_defm_bid_valid           (m_defm_bid_valid[11]),
-      .m011_defm_bid_tlast           (m_defm_bid_tlast[11]),
-      .m011_defm_bid_ready           (m_defm_bid_ready[11]),
-      .m011_defm_bid_off             (m_defm_bid_off[11]),
-      .m011_defm_bid_beamid15        (m_defm_bid_beamid15[11]),
-      .m011_defm_bid_remask          (m_defm_bid_remask[11]),
-      .m011_defm_bid_rb              (m_defm_bid_rb[11]),
-      .m011_defm_bid_start_prbc      (m_defm_bid_start_prbc[11]),
-      .m011_defm_bid_num_prbc        (m_defm_bid_num_prbc[11]),
-      .m011_defm_bid_num_symbol      (m_defm_bid_num_symbol[11]),
-      .m011_defm_bid_cc_id           (m_defm_bid_cc_id[11]),
-      .m011_defm_bid_frequency_offset(m_defm_bid_frequency_offset[11]),
-      .m011_defm_bid_time_offset     (m_defm_bid_time_offset[11]),
-      .m011_defm_bid_frame_structure (m_defm_bid_frame_structure[11]),
-      .m011_defm_bid_cp_length       (m_defm_bid_cp_length[11]),
-      //
-      .m012_defm_data_tdata          (m_defm_data_tdata[12]),
-      .m012_defm_data_tkeep          (m_defm_data_tkeep[12]),
-      .m012_defm_data_tvalid         (m_defm_data_tvalid[12]),
-      .m012_defm_data_tlast          (m_defm_data_tlast[12]),
-      .m012_defm_data_tready         (m_defm_data_tready[12]),
-      .m012_defm_data_tuser          (m_defm_data_tuser[12]),
-      //
-      .m012_defm_bid_valid           (m_defm_bid_valid[12]),
-      .m012_defm_bid_tlast           (m_defm_bid_tlast[12]),
-      .m012_defm_bid_ready           (m_defm_bid_ready[12]),
-      .m012_defm_bid_off             (m_defm_bid_off[12]),
-      .m012_defm_bid_beamid15        (m_defm_bid_beamid15[12]),
-      .m012_defm_bid_remask          (m_defm_bid_remask[12]),
-      .m012_defm_bid_rb              (m_defm_bid_rb[12]),
-      .m012_defm_bid_start_prbc      (m_defm_bid_start_prbc[12]),
-      .m012_defm_bid_num_prbc        (m_defm_bid_num_prbc[12]),
-      .m012_defm_bid_num_symbol      (m_defm_bid_num_symbol[12]),
-      .m012_defm_bid_cc_id           (m_defm_bid_cc_id[12]),
-      .m012_defm_bid_frequency_offset(m_defm_bid_frequency_offset[12]),
-      .m012_defm_bid_time_offset     (m_defm_bid_time_offset[12]),
-      .m012_defm_bid_frame_structure (m_defm_bid_frame_structure[12]),
-      .m012_defm_bid_cp_length       (m_defm_bid_cp_length[12]),
-      //
-      .m013_defm_data_tdata          (m_defm_data_tdata[13]),
-      .m013_defm_data_tkeep          (m_defm_data_tkeep[13]),
-      .m013_defm_data_tvalid         (m_defm_data_tvalid[13]),
-      .m013_defm_data_tlast          (m_defm_data_tlast[13]),
-      .m013_defm_data_tready         (m_defm_data_tready[13]),
-      .m013_defm_data_tuser          (m_defm_data_tuser[13]),
-      //
-      .m013_defm_bid_valid           (m_defm_bid_valid[13]),
-      .m013_defm_bid_tlast           (m_defm_bid_tlast[13]),
-      .m013_defm_bid_ready           (m_defm_bid_ready[13]),
-      .m013_defm_bid_off             (m_defm_bid_off[13]),
-      .m013_defm_bid_beamid15        (m_defm_bid_beamid15[13]),
-      .m013_defm_bid_remask          (m_defm_bid_remask[13]),
-      .m013_defm_bid_rb              (m_defm_bid_rb[13]),
-      .m013_defm_bid_start_prbc      (m_defm_bid_start_prbc[13]),
-      .m013_defm_bid_num_prbc        (m_defm_bid_num_prbc[13]),
-      .m013_defm_bid_num_symbol      (m_defm_bid_num_symbol[13]),
-      .m013_defm_bid_cc_id           (m_defm_bid_cc_id[13]),
-      .m013_defm_bid_frequency_offset(m_defm_bid_frequency_offset[13]),
-      .m013_defm_bid_time_offset     (m_defm_bid_time_offset[13]),
-      .m013_defm_bid_frame_structure (m_defm_bid_frame_structure[13]),
-      .m013_defm_bid_cp_length       (m_defm_bid_cp_length[13]),
-      //
-      .m014_defm_data_tdata          (m_defm_data_tdata[14]),
-      .m014_defm_data_tkeep          (m_defm_data_tkeep[14]),
-      .m014_defm_data_tvalid         (m_defm_data_tvalid[14]),
-      .m014_defm_data_tlast          (m_defm_data_tlast[14]),
-      .m014_defm_data_tready         (m_defm_data_tready[14]),
-      .m014_defm_data_tuser          (m_defm_data_tuser[14]),
-      //
-      .m014_defm_bid_valid           (m_defm_bid_valid[14]),
-      .m014_defm_bid_tlast           (m_defm_bid_tlast[14]),
-      .m014_defm_bid_ready           (m_defm_bid_ready[14]),
-      .m014_defm_bid_off             (m_defm_bid_off[14]),
-      .m014_defm_bid_beamid15        (m_defm_bid_beamid15[14]),
-      .m014_defm_bid_remask          (m_defm_bid_remask[14]),
-      .m014_defm_bid_rb              (m_defm_bid_rb[14]),
-      .m014_defm_bid_start_prbc      (m_defm_bid_start_prbc[14]),
-      .m014_defm_bid_num_prbc        (m_defm_bid_num_prbc[14]),
-      .m014_defm_bid_num_symbol      (m_defm_bid_num_symbol[14]),
-      .m014_defm_bid_cc_id           (m_defm_bid_cc_id[14]),
-      .m014_defm_bid_frequency_offset(m_defm_bid_frequency_offset[14]),
-      .m014_defm_bid_time_offset     (m_defm_bid_time_offset[14]),
-      .m014_defm_bid_frame_structure (m_defm_bid_frame_structure[14]),
-      .m014_defm_bid_cp_length       (m_defm_bid_cp_length[14]),
-      //
-      .m015_defm_data_tdata          (m_defm_data_tdata[15]),
-      .m015_defm_data_tkeep          (m_defm_data_tkeep[15]),
-      .m015_defm_data_tvalid         (m_defm_data_tvalid[15]),
-      .m015_defm_data_tlast          (m_defm_data_tlast[15]),
-      .m015_defm_data_tready         (m_defm_data_tready[15]),
-      .m015_defm_data_tuser          (m_defm_data_tuser[15]),
-      //
-      .m015_defm_bid_valid           (m_defm_bid_valid[15]),
-      .m015_defm_bid_tlast           (m_defm_bid_tlast[15]),
-      .m015_defm_bid_ready           (m_defm_bid_ready[15]),
-      .m015_defm_bid_off             (m_defm_bid_off[15]),
-      .m015_defm_bid_beamid15        (m_defm_bid_beamid15[15]),
-      .m015_defm_bid_remask          (m_defm_bid_remask[15]),
-      .m015_defm_bid_rb              (m_defm_bid_rb[15]),
-      .m015_defm_bid_start_prbc      (m_defm_bid_start_prbc[15]),
-      .m015_defm_bid_num_prbc        (m_defm_bid_num_prbc[15]),
-      .m015_defm_bid_num_symbol      (m_defm_bid_num_symbol[15]),
-      .m015_defm_bid_cc_id           (m_defm_bid_cc_id[15]),
-      .m015_defm_bid_frequency_offset(m_defm_bid_frequency_offset[15]),
-      .m015_defm_bid_time_offset     (m_defm_bid_time_offset[15]),
-      .m015_defm_bid_frame_structure (m_defm_bid_frame_structure[15]),
-      .m015_defm_bid_cp_length       (m_defm_bid_cp_length[15]),
+//      .m004_defm_data_tdata          (m_defm_data_tdata[04]),
+//      .m004_defm_data_tkeep          (m_defm_data_tkeep[04]),
+//      .m004_defm_data_tvalid         (m_defm_data_tvalid[04]),
+//      .m004_defm_data_tlast          (m_defm_data_tlast[04]),
+//      .m004_defm_data_tready         (m_defm_data_tready[04]),
+//      .m004_defm_data_tuser          (m_defm_data_tuser[04]),
+//      //
+//      .m004_defm_bid_valid           (m_defm_bid_valid[04]),
+//      .m004_defm_bid_tlast           (m_defm_bid_tlast[04]),
+//      .m004_defm_bid_ready           (m_defm_bid_ready[04]),
+//      .m004_defm_bid_off             (m_defm_bid_off[04]),
+//      .m004_defm_bid_beamid15        (m_defm_bid_beamid15[04]),
+//      .m004_defm_bid_remask          (m_defm_bid_remask[04]),
+//      .m004_defm_bid_rb              (m_defm_bid_rb[04]),
+//      .m004_defm_bid_start_prbc      (m_defm_bid_start_prbc[04]),
+//      .m004_defm_bid_num_prbc        (m_defm_bid_num_prbc[04]),
+//      .m004_defm_bid_num_symbol      (m_defm_bid_num_symbol[04]),
+//      .m004_defm_bid_cc_id           (m_defm_bid_cc_id[04]),
+//      .m004_defm_bid_frequency_offset(m_defm_bid_frequency_offset[04]),
+//      .m004_defm_bid_time_offset     (m_defm_bid_time_offset[04]),
+//      .m004_defm_bid_frame_structure (m_defm_bid_frame_structure[04]),
+//      .m004_defm_bid_cp_length       (m_defm_bid_cp_length[04]),
+//      //
+//      .m005_defm_data_tdata          (m_defm_data_tdata[05]),
+//      .m005_defm_data_tkeep          (m_defm_data_tkeep[05]),
+//      .m005_defm_data_tvalid         (m_defm_data_tvalid[05]),
+//      .m005_defm_data_tlast          (m_defm_data_tlast[05]),
+//      .m005_defm_data_tready         (m_defm_data_tready[05]),
+//      .m005_defm_data_tuser          (m_defm_data_tuser[05]),
+//      //
+//      .m005_defm_bid_valid           (m_defm_bid_valid[05]),
+//      .m005_defm_bid_tlast           (m_defm_bid_tlast[05]),
+//      .m005_defm_bid_ready           (m_defm_bid_ready[05]),
+//      .m005_defm_bid_off             (m_defm_bid_off[05]),
+//      .m005_defm_bid_beamid15        (m_defm_bid_beamid15[05]),
+//      .m005_defm_bid_remask          (m_defm_bid_remask[05]),
+//      .m005_defm_bid_rb              (m_defm_bid_rb[05]),
+//      .m005_defm_bid_start_prbc      (m_defm_bid_start_prbc[05]),
+//      .m005_defm_bid_num_prbc        (m_defm_bid_num_prbc[05]),
+//      .m005_defm_bid_num_symbol      (m_defm_bid_num_symbol[05]),
+//      .m005_defm_bid_cc_id           (m_defm_bid_cc_id[05]),
+//      .m005_defm_bid_frequency_offset(m_defm_bid_frequency_offset[05]),
+//      .m005_defm_bid_time_offset     (m_defm_bid_time_offset[05]),
+//      .m005_defm_bid_frame_structure (m_defm_bid_frame_structure[05]),
+//      .m005_defm_bid_cp_length       (m_defm_bid_cp_length[05]),
+//      //
+//      .m006_defm_data_tdata          (m_defm_data_tdata[06]),
+//      .m006_defm_data_tkeep          (m_defm_data_tkeep[06]),
+//      .m006_defm_data_tvalid         (m_defm_data_tvalid[06]),
+//      .m006_defm_data_tlast          (m_defm_data_tlast[06]),
+//      .m006_defm_data_tready         (m_defm_data_tready[06]),
+//      .m006_defm_data_tuser          (m_defm_data_tuser[06]),
+//      //
+//      .m006_defm_bid_valid           (m_defm_bid_valid[06]),
+//      .m006_defm_bid_tlast           (m_defm_bid_tlast[06]),
+//      .m006_defm_bid_ready           (m_defm_bid_ready[06]),
+//      .m006_defm_bid_off             (m_defm_bid_off[06]),
+//      .m006_defm_bid_beamid15        (m_defm_bid_beamid15[06]),
+//      .m006_defm_bid_remask          (m_defm_bid_remask[06]),
+//      .m006_defm_bid_rb              (m_defm_bid_rb[06]),
+//      .m006_defm_bid_start_prbc      (m_defm_bid_start_prbc[06]),
+//      .m006_defm_bid_num_prbc        (m_defm_bid_num_prbc[06]),
+//      .m006_defm_bid_num_symbol      (m_defm_bid_num_symbol[06]),
+//      .m006_defm_bid_cc_id           (m_defm_bid_cc_id[06]),
+//      .m006_defm_bid_frequency_offset(m_defm_bid_frequency_offset[06]),
+//      .m006_defm_bid_time_offset     (m_defm_bid_time_offset[06]),
+//      .m006_defm_bid_frame_structure (m_defm_bid_frame_structure[06]),
+//      .m006_defm_bid_cp_length       (m_defm_bid_cp_length[06]),
+//      //
+//      .m007_defm_data_tdata          (m_defm_data_tdata[07]),
+//      .m007_defm_data_tkeep          (m_defm_data_tkeep[07]),
+//      .m007_defm_data_tvalid         (m_defm_data_tvalid[07]),
+//      .m007_defm_data_tlast          (m_defm_data_tlast[07]),
+//      .m007_defm_data_tready         (m_defm_data_tready[07]),
+//      .m007_defm_data_tuser          (m_defm_data_tuser[07]),
+//      //
+//      .m007_defm_bid_valid           (m_defm_bid_valid[07]),
+//      .m007_defm_bid_tlast           (m_defm_bid_tlast[07]),
+//      .m007_defm_bid_ready           (m_defm_bid_ready[07]),
+//      .m007_defm_bid_off             (m_defm_bid_off[07]),
+//      .m007_defm_bid_beamid15        (m_defm_bid_beamid15[07]),
+//      .m007_defm_bid_remask          (m_defm_bid_remask[07]),
+//      .m007_defm_bid_rb              (m_defm_bid_rb[07]),
+//      .m007_defm_bid_start_prbc      (m_defm_bid_start_prbc[07]),
+//      .m007_defm_bid_num_prbc        (m_defm_bid_num_prbc[07]),
+//      .m007_defm_bid_num_symbol      (m_defm_bid_num_symbol[07]),
+//      .m007_defm_bid_cc_id           (m_defm_bid_cc_id[07]),
+//      .m007_defm_bid_frequency_offset(m_defm_bid_frequency_offset[07]),
+//      .m007_defm_bid_time_offset     (m_defm_bid_time_offset[07]),
+//      .m007_defm_bid_frame_structure (m_defm_bid_frame_structure[07]),
+//      .m007_defm_bid_cp_length       (m_defm_bid_cp_length[07]),
+//      //
+//      .m008_defm_data_tdata          (m_defm_data_tdata[08]),
+//      .m008_defm_data_tkeep          (m_defm_data_tkeep[08]),
+//      .m008_defm_data_tvalid         (m_defm_data_tvalid[08]),
+//      .m008_defm_data_tlast          (m_defm_data_tlast[08]),
+//      .m008_defm_data_tready         (m_defm_data_tready[08]),
+//      .m008_defm_data_tuser          (m_defm_data_tuser[08]),
+//      //
+//      .m008_defm_bid_valid           (m_defm_bid_valid[08]),
+//      .m008_defm_bid_tlast           (m_defm_bid_tlast[08]),
+//      .m008_defm_bid_ready           (m_defm_bid_ready[08]),
+//      .m008_defm_bid_off             (m_defm_bid_off[08]),
+//      .m008_defm_bid_beamid15        (m_defm_bid_beamid15[08]),
+//      .m008_defm_bid_remask          (m_defm_bid_remask[08]),
+//      .m008_defm_bid_rb              (m_defm_bid_rb[08]),
+//      .m008_defm_bid_start_prbc      (m_defm_bid_start_prbc[08]),
+//      .m008_defm_bid_num_prbc        (m_defm_bid_num_prbc[08]),
+//      .m008_defm_bid_num_symbol      (m_defm_bid_num_symbol[08]),
+//      .m008_defm_bid_cc_id           (m_defm_bid_cc_id[08]),
+//      .m008_defm_bid_frequency_offset(m_defm_bid_frequency_offset[08]),
+//      .m008_defm_bid_time_offset     (m_defm_bid_time_offset[08]),
+//      .m008_defm_bid_frame_structure (m_defm_bid_frame_structure[08]),
+//      .m008_defm_bid_cp_length       (m_defm_bid_cp_length[08]),
+//      //
+//      .m009_defm_data_tdata          (m_defm_data_tdata[09]),
+//      .m009_defm_data_tkeep          (m_defm_data_tkeep[09]),
+//      .m009_defm_data_tvalid         (m_defm_data_tvalid[09]),
+//      .m009_defm_data_tlast          (m_defm_data_tlast[09]),
+//      .m009_defm_data_tready         (m_defm_data_tready[09]),
+//      .m009_defm_data_tuser          (m_defm_data_tuser[09]),
+//      //
+//      .m009_defm_bid_valid           (m_defm_bid_valid[09]),
+//      .m009_defm_bid_tlast           (m_defm_bid_tlast[09]),
+//      .m009_defm_bid_ready           (m_defm_bid_ready[09]),
+//      .m009_defm_bid_off             (m_defm_bid_off[09]),
+//      .m009_defm_bid_beamid15        (m_defm_bid_beamid15[09]),
+//      .m009_defm_bid_remask          (m_defm_bid_remask[09]),
+//      .m009_defm_bid_rb              (m_defm_bid_rb[09]),
+//      .m009_defm_bid_start_prbc      (m_defm_bid_start_prbc[09]),
+//      .m009_defm_bid_num_prbc        (m_defm_bid_num_prbc[09]),
+//      .m009_defm_bid_num_symbol      (m_defm_bid_num_symbol[09]),
+//      .m009_defm_bid_cc_id           (m_defm_bid_cc_id[09]),
+//      .m009_defm_bid_frequency_offset(m_defm_bid_frequency_offset[09]),
+//      .m009_defm_bid_time_offset     (m_defm_bid_time_offset[09]),
+//      .m009_defm_bid_frame_structure (m_defm_bid_frame_structure[09]),
+//      .m009_defm_bid_cp_length       (m_defm_bid_cp_length[09]),
+//      //
+//      .m010_defm_data_tdata          (m_defm_data_tdata[10]),
+//      .m010_defm_data_tkeep          (m_defm_data_tkeep[10]),
+//      .m010_defm_data_tvalid         (m_defm_data_tvalid[10]),
+//      .m010_defm_data_tlast          (m_defm_data_tlast[10]),
+//      .m010_defm_data_tready         (m_defm_data_tready[10]),
+//      .m010_defm_data_tuser          (m_defm_data_tuser[10]),
+//      //
+//      .m010_defm_bid_valid           (m_defm_bid_valid[10]),
+//      .m010_defm_bid_tlast           (m_defm_bid_tlast[10]),
+//      .m010_defm_bid_ready           (m_defm_bid_ready[10]),
+//      .m010_defm_bid_off             (m_defm_bid_off[10]),
+//      .m010_defm_bid_beamid15        (m_defm_bid_beamid15[10]),
+//      .m010_defm_bid_remask          (m_defm_bid_remask[10]),
+//      .m010_defm_bid_rb              (m_defm_bid_rb[10]),
+//      .m010_defm_bid_start_prbc      (m_defm_bid_start_prbc[10]),
+//      .m010_defm_bid_num_prbc        (m_defm_bid_num_prbc[10]),
+//      .m010_defm_bid_num_symbol      (m_defm_bid_num_symbol[10]),
+//      .m010_defm_bid_cc_id           (m_defm_bid_cc_id[10]),
+//      .m010_defm_bid_frequency_offset(m_defm_bid_frequency_offset[10]),
+//      .m010_defm_bid_time_offset     (m_defm_bid_time_offset[10]),
+//      .m010_defm_bid_frame_structure (m_defm_bid_frame_structure[10]),
+//      .m010_defm_bid_cp_length       (m_defm_bid_cp_length[10]),
+//      //
+//      .m011_defm_data_tdata          (m_defm_data_tdata[11]),
+//      .m011_defm_data_tkeep          (m_defm_data_tkeep[11]),
+//      .m011_defm_data_tvalid         (m_defm_data_tvalid[11]),
+//      .m011_defm_data_tlast          (m_defm_data_tlast[11]),
+//      .m011_defm_data_tready         (m_defm_data_tready[11]),
+//      .m011_defm_data_tuser          (m_defm_data_tuser[11]),
+//      //
+//      .m011_defm_bid_valid           (m_defm_bid_valid[11]),
+//      .m011_defm_bid_tlast           (m_defm_bid_tlast[11]),
+//      .m011_defm_bid_ready           (m_defm_bid_ready[11]),
+//      .m011_defm_bid_off             (m_defm_bid_off[11]),
+//      .m011_defm_bid_beamid15        (m_defm_bid_beamid15[11]),
+//      .m011_defm_bid_remask          (m_defm_bid_remask[11]),
+//      .m011_defm_bid_rb              (m_defm_bid_rb[11]),
+//      .m011_defm_bid_start_prbc      (m_defm_bid_start_prbc[11]),
+//      .m011_defm_bid_num_prbc        (m_defm_bid_num_prbc[11]),
+//      .m011_defm_bid_num_symbol      (m_defm_bid_num_symbol[11]),
+//      .m011_defm_bid_cc_id           (m_defm_bid_cc_id[11]),
+//      .m011_defm_bid_frequency_offset(m_defm_bid_frequency_offset[11]),
+//      .m011_defm_bid_time_offset     (m_defm_bid_time_offset[11]),
+//      .m011_defm_bid_frame_structure (m_defm_bid_frame_structure[11]),
+//      .m011_defm_bid_cp_length       (m_defm_bid_cp_length[11]),
+//      //
+//      .m012_defm_data_tdata          (m_defm_data_tdata[12]),
+//      .m012_defm_data_tkeep          (m_defm_data_tkeep[12]),
+//      .m012_defm_data_tvalid         (m_defm_data_tvalid[12]),
+//      .m012_defm_data_tlast          (m_defm_data_tlast[12]),
+//      .m012_defm_data_tready         (m_defm_data_tready[12]),
+//      .m012_defm_data_tuser          (m_defm_data_tuser[12]),
+//      //
+//      .m012_defm_bid_valid           (m_defm_bid_valid[12]),
+//      .m012_defm_bid_tlast           (m_defm_bid_tlast[12]),
+//      .m012_defm_bid_ready           (m_defm_bid_ready[12]),
+//      .m012_defm_bid_off             (m_defm_bid_off[12]),
+//      .m012_defm_bid_beamid15        (m_defm_bid_beamid15[12]),
+//      .m012_defm_bid_remask          (m_defm_bid_remask[12]),
+//      .m012_defm_bid_rb              (m_defm_bid_rb[12]),
+//      .m012_defm_bid_start_prbc      (m_defm_bid_start_prbc[12]),
+//      .m012_defm_bid_num_prbc        (m_defm_bid_num_prbc[12]),
+//      .m012_defm_bid_num_symbol      (m_defm_bid_num_symbol[12]),
+//      .m012_defm_bid_cc_id           (m_defm_bid_cc_id[12]),
+//      .m012_defm_bid_frequency_offset(m_defm_bid_frequency_offset[12]),
+//      .m012_defm_bid_time_offset     (m_defm_bid_time_offset[12]),
+//      .m012_defm_bid_frame_structure (m_defm_bid_frame_structure[12]),
+//      .m012_defm_bid_cp_length       (m_defm_bid_cp_length[12]),
+//      //
+//      .m013_defm_data_tdata          (m_defm_data_tdata[13]),
+//      .m013_defm_data_tkeep          (m_defm_data_tkeep[13]),
+//      .m013_defm_data_tvalid         (m_defm_data_tvalid[13]),
+//      .m013_defm_data_tlast          (m_defm_data_tlast[13]),
+//      .m013_defm_data_tready         (m_defm_data_tready[13]),
+//      .m013_defm_data_tuser          (m_defm_data_tuser[13]),
+//      //
+//      .m013_defm_bid_valid           (m_defm_bid_valid[13]),
+//      .m013_defm_bid_tlast           (m_defm_bid_tlast[13]),
+//      .m013_defm_bid_ready           (m_defm_bid_ready[13]),
+//      .m013_defm_bid_off             (m_defm_bid_off[13]),
+//      .m013_defm_bid_beamid15        (m_defm_bid_beamid15[13]),
+//      .m013_defm_bid_remask          (m_defm_bid_remask[13]),
+//      .m013_defm_bid_rb              (m_defm_bid_rb[13]),
+//      .m013_defm_bid_start_prbc      (m_defm_bid_start_prbc[13]),
+//      .m013_defm_bid_num_prbc        (m_defm_bid_num_prbc[13]),
+//      .m013_defm_bid_num_symbol      (m_defm_bid_num_symbol[13]),
+//      .m013_defm_bid_cc_id           (m_defm_bid_cc_id[13]),
+//      .m013_defm_bid_frequency_offset(m_defm_bid_frequency_offset[13]),
+//      .m013_defm_bid_time_offset     (m_defm_bid_time_offset[13]),
+//      .m013_defm_bid_frame_structure (m_defm_bid_frame_structure[13]),
+//      .m013_defm_bid_cp_length       (m_defm_bid_cp_length[13]),
+//      //
+//      .m014_defm_data_tdata          (m_defm_data_tdata[14]),
+//      .m014_defm_data_tkeep          (m_defm_data_tkeep[14]),
+//      .m014_defm_data_tvalid         (m_defm_data_tvalid[14]),
+//      .m014_defm_data_tlast          (m_defm_data_tlast[14]),
+//      .m014_defm_data_tready         (m_defm_data_tready[14]),
+//      .m014_defm_data_tuser          (m_defm_data_tuser[14]),
+//      //
+//      .m014_defm_bid_valid           (m_defm_bid_valid[14]),
+//      .m014_defm_bid_tlast           (m_defm_bid_tlast[14]),
+//      .m014_defm_bid_ready           (m_defm_bid_ready[14]),
+//      .m014_defm_bid_off             (m_defm_bid_off[14]),
+//      .m014_defm_bid_beamid15        (m_defm_bid_beamid15[14]),
+//      .m014_defm_bid_remask          (m_defm_bid_remask[14]),
+//      .m014_defm_bid_rb              (m_defm_bid_rb[14]),
+//      .m014_defm_bid_start_prbc      (m_defm_bid_start_prbc[14]),
+//      .m014_defm_bid_num_prbc        (m_defm_bid_num_prbc[14]),
+//      .m014_defm_bid_num_symbol      (m_defm_bid_num_symbol[14]),
+//      .m014_defm_bid_cc_id           (m_defm_bid_cc_id[14]),
+//      .m014_defm_bid_frequency_offset(m_defm_bid_frequency_offset[14]),
+//      .m014_defm_bid_time_offset     (m_defm_bid_time_offset[14]),
+//      .m014_defm_bid_frame_structure (m_defm_bid_frame_structure[14]),
+//      .m014_defm_bid_cp_length       (m_defm_bid_cp_length[14]),
+//      //
+//      .m015_defm_data_tdata          (m_defm_data_tdata[15]),
+//      .m015_defm_data_tkeep          (m_defm_data_tkeep[15]),
+//      .m015_defm_data_tvalid         (m_defm_data_tvalid[15]),
+//      .m015_defm_data_tlast          (m_defm_data_tlast[15]),
+//      .m015_defm_data_tready         (m_defm_data_tready[15]),
+//      .m015_defm_data_tuser          (m_defm_data_tuser[15]),
+//      //
+//      .m015_defm_bid_valid           (m_defm_bid_valid[15]),
+//      .m015_defm_bid_tlast           (m_defm_bid_tlast[15]),
+//      .m015_defm_bid_ready           (m_defm_bid_ready[15]),
+//      .m015_defm_bid_off             (m_defm_bid_off[15]),
+//      .m015_defm_bid_beamid15        (m_defm_bid_beamid15[15]),
+//      .m015_defm_bid_remask          (m_defm_bid_remask[15]),
+//      .m015_defm_bid_rb              (m_defm_bid_rb[15]),
+//      .m015_defm_bid_start_prbc      (m_defm_bid_start_prbc[15]),
+//      .m015_defm_bid_num_prbc        (m_defm_bid_num_prbc[15]),
+//      .m015_defm_bid_num_symbol      (m_defm_bid_num_symbol[15]),
+//      .m015_defm_bid_cc_id           (m_defm_bid_cc_id[15]),
+//      .m015_defm_bid_frequency_offset(m_defm_bid_frequency_offset[15]),
+//      .m015_defm_bid_time_offset     (m_defm_bid_time_offset[15]),
+//      .m015_defm_bid_frame_structure (m_defm_bid_frame_structure[15]),
+//      .m015_defm_bid_cp_length       (m_defm_bid_cp_length[15]),
       //
       .tx0_eth_port_clk              (eth_port_clk_s[0]),
       .fram0_reset_active            (fram_reset_active[0]),
@@ -1158,86 +1156,86 @@ module eth_if_sim #(
       .m0_unsupport_ext_tkeep        (m_unsupport_ext_tkeep[0]),
       .m0_unsupport_ext_tlast        (m_unsupport_ext_tlast[0]),
       //
-      .tx1_eth_port_clk              (eth_port_clk_s[1]),
-      .fram1_reset_active            (fram_reset_active[1]),
-      //
-      .m1_eth_fram_tdata             (m_eth_fram_tdata_s[1]),
-      .m1_eth_fram_tkeep             (m_eth_fram_tkeep_s[1]),
-      .m1_eth_fram_tvalid            (m_eth_fram_tvalid_s[1]),
-      .m1_eth_fram_tlast             (m_eth_fram_tlast_s[1]),
-      .m1_eth_fram_tready            (m_eth_fram_tready_s[1]),
-      //
-      .s1_eth_mac_tuser              (s_eth_mac_tuser_s[1]),
-      .s1_eth_mac_bad_fcs            (s_eth_mac_bad_fcs_s[1]),
-      .s1_eth_mac_tstamp_out         (s_eth_mac_tstamp_out_s[1]),
-      .s1_eth_mac_tstamp_valid       (s_eth_mac_tstamp_valid_s[1]),
-      //
-      .s1_eth_defm_tdata             (s_eth_defm_tdata_s[1]),
-      .s1_eth_defm_tkeep             (s_eth_defm_tkeep_s[1]),
-      .s1_eth_defm_tvalid            (s_eth_defm_tvalid_s[1]),
-      .s1_eth_defm_tlast             (s_eth_defm_tlast_s[1]),
-      //
-      .m1_message_tdata              (m_message_tdata_s[1]),
-      .m1_message_tkeep              (m_message_tkeep_s[1]),
-      .m1_message_tvalid             (m_message_tvalid_s[1]),
-      .m1_message_tlast              (m_message_tlast_s[1]),
-      .m1_message_tready             (m_message_tready_s[1]),
-      .m1_message_ts_tdata           (m_message_ts_tdata_s[1]),
-      .m1_message_ts_tvalid          (m_message_ts_tvalid_s[1]),
-      //
-      .m1_t_header_offset_valid      (m_t_header_offset_valid[1]),
-      .m1_runt_packet_len            (m_runt_packet_len[1]),
-      .m1_rtc_pc_id                  (m_rtc_pc_id[1]),
-      .m1_concat                     (m_concat[1]),
-      .m1_messagetype                (m_messagetype[1]),
-      .m1_seqid                      (m_seqid[1]),
-      .m1_subseqid                   (m_subseqid[1]),
-      .m1_ebit                       (m_ebit[1]),
-      .m1_payloadsize                (m_payloadsize[1]),
-      .m1_packet_in_window           (m_packet_in_window[1]),
-      .m1_offset_in_symbol           (m_offset_in_symbol[1]),
-      //
-      .m1_radio_app_head_valid       (m_radio_app_head_valid[1]),
-      .m1_datadirection              (m_datadirection[1]),
-      .m1_numsections                (m_numsections[1]),
-      .m1_sectiontype                (m_sectiontype[1]),
-      .m1_filterindex                (m_filterindex[1]),
-      .m1_frameid                    (m_frameid[1]),
-      .m1_subframeid                 (m_subframeid[1]),
-      .m1_slotid                     (m_slotid[1]),
-      .m1_symbolid                   (m_symbolid[1]),
-      .m1_udcomphdr                  (m_udcomphdr[1]),
-      .m1_timeoffset                 (m_timeoffset[1]),
-      .m1_framestructure             (m_framestructure[1]),
-      .m1_cplength                   (m_cplength[1]),
-      //
-      .m1_section_header_valid       (m_section_header_valid[1]),
-      .m1_numsymbol                  (m_numsymbol[1]),
-      .m1_numprbc                    (m_numprbc[1]),
-      .m1_startprbc                  (m_startprbc[1]),
-      .m1_sectionid                  (m_sectionid[1]),
-      .m1_rb                         (m_rb[1]),
-      .m1_remask                     (m_remask[1]),
-      .m1_beamid15                   (m_beamid15[1]),
-      .m1_freqoffset                 (m_freqoffset[1]),
-      //
-      .m1_beamweights_tdata          (m_beamweights_tdata[1]),
-      .m1_beamweights_tvalid         (m_beamweights_tvalid[1]),
-      .m1_beamweights_tlast          (m_beamweights_tlast[1]),
-      .m1_beamweights_tuser          (m_beamweights_tuser[1]),
-      //
-      .m1_raw_cplane_tdata           (m_raw_cplane_tdata[1]),
-      .m1_raw_cplane_tvalid          (m_raw_cplane_tvalid[1]),
-      .m1_raw_cplane_tuser           (m_raw_cplane_tuser[1]),
-      .m1_raw_cplane_tlast           (m_raw_cplane_tlast[1]),
-      .m1_raw_cplane_tkeep           (m_raw_cplane_tkeep[1]),
-      //
-      .m1_unsupport_ext_tuser        (m_unsupport_ext_tuser[1]),
-      .m1_unsupport_ext_tdata        (m_unsupport_ext_tdata[1]),
-      .m1_unsupport_ext_tvalid       (m_unsupport_ext_tvalid[1]),
-      .m1_unsupport_ext_tkeep        (m_unsupport_ext_tkeep[1]),
-      .m1_unsupport_ext_tlast        (m_unsupport_ext_tlast[1]),
-      //
+//      .tx1_eth_port_clk              (eth_port_clk_s[1]),
+//      .fram1_reset_active            (fram_reset_active[1]),
+//      //
+//      .m1_eth_fram_tdata             (m_eth_fram_tdata_s[1]),
+//      .m1_eth_fram_tkeep             (m_eth_fram_tkeep_s[1]),
+//      .m1_eth_fram_tvalid            (m_eth_fram_tvalid_s[1]),
+//      .m1_eth_fram_tlast             (m_eth_fram_tlast_s[1]),
+//      .m1_eth_fram_tready            (m_eth_fram_tready_s[1]),
+//      //
+//      .s1_eth_mac_tuser              (s_eth_mac_tuser_s[1]),
+//      .s1_eth_mac_bad_fcs            (s_eth_mac_bad_fcs_s[1]),
+//      .s1_eth_mac_tstamp_out         (s_eth_mac_tstamp_out_s[1]),
+//      .s1_eth_mac_tstamp_valid       (s_eth_mac_tstamp_valid_s[1]),
+//      //
+//      .s1_eth_defm_tdata             (s_eth_defm_tdata_s[1]),
+//      .s1_eth_defm_tkeep             (s_eth_defm_tkeep_s[1]),
+//      .s1_eth_defm_tvalid            (s_eth_defm_tvalid_s[1]),
+//      .s1_eth_defm_tlast             (s_eth_defm_tlast_s[1]),
+//      //
+//      .m1_message_tdata              (m_message_tdata_s[1]),
+//      .m1_message_tkeep              (m_message_tkeep_s[1]),
+//      .m1_message_tvalid             (m_message_tvalid_s[1]),
+//      .m1_message_tlast              (m_message_tlast_s[1]),
+//      .m1_message_tready             (m_message_tready_s[1]),
+//      .m1_message_ts_tdata           (m_message_ts_tdata_s[1]),
+//      .m1_message_ts_tvalid          (m_message_ts_tvalid_s[1]),
+//      //
+//      .m1_t_header_offset_valid      (m_t_header_offset_valid[1]),
+//      .m1_runt_packet_len            (m_runt_packet_len[1]),
+//      .m1_rtc_pc_id                  (m_rtc_pc_id[1]),
+//      .m1_concat                     (m_concat[1]),
+//      .m1_messagetype                (m_messagetype[1]),
+//      .m1_seqid                      (m_seqid[1]),
+//      .m1_subseqid                   (m_subseqid[1]),
+//      .m1_ebit                       (m_ebit[1]),
+//      .m1_payloadsize                (m_payloadsize[1]),
+//      .m1_packet_in_window           (m_packet_in_window[1]),
+//      .m1_offset_in_symbol           (m_offset_in_symbol[1]),
+//      //
+//      .m1_radio_app_head_valid       (m_radio_app_head_valid[1]),
+//      .m1_datadirection              (m_datadirection[1]),
+//      .m1_numsections                (m_numsections[1]),
+//      .m1_sectiontype                (m_sectiontype[1]),
+//      .m1_filterindex                (m_filterindex[1]),
+//      .m1_frameid                    (m_frameid[1]),
+//      .m1_subframeid                 (m_subframeid[1]),
+//      .m1_slotid                     (m_slotid[1]),
+//      .m1_symbolid                   (m_symbolid[1]),
+//      .m1_udcomphdr                  (m_udcomphdr[1]),
+//      .m1_timeoffset                 (m_timeoffset[1]),
+//      .m1_framestructure             (m_framestructure[1]),
+//      .m1_cplength                   (m_cplength[1]),
+//      //
+//      .m1_section_header_valid       (m_section_header_valid[1]),
+//      .m1_numsymbol                  (m_numsymbol[1]),
+//      .m1_numprbc                    (m_numprbc[1]),
+//      .m1_startprbc                  (m_startprbc[1]),
+//      .m1_sectionid                  (m_sectionid[1]),
+//      .m1_rb                         (m_rb[1]),
+//      .m1_remask                     (m_remask[1]),
+//      .m1_beamid15                   (m_beamid15[1]),
+//      .m1_freqoffset                 (m_freqoffset[1]),
+//      //
+//      .m1_beamweights_tdata          (m_beamweights_tdata[1]),
+//      .m1_beamweights_tvalid         (m_beamweights_tvalid[1]),
+//      .m1_beamweights_tlast          (m_beamweights_tlast[1]),
+//      .m1_beamweights_tuser          (m_beamweights_tuser[1]),
+//      //
+//      .m1_raw_cplane_tdata           (m_raw_cplane_tdata[1]),
+//      .m1_raw_cplane_tvalid          (m_raw_cplane_tvalid[1]),
+//      .m1_raw_cplane_tuser           (m_raw_cplane_tuser[1]),
+//      .m1_raw_cplane_tlast           (m_raw_cplane_tlast[1]),
+//      .m1_raw_cplane_tkeep           (m_raw_cplane_tkeep[1]),
+//      //
+//      .m1_unsupport_ext_tuser        (m_unsupport_ext_tuser[1]),
+//      .m1_unsupport_ext_tdata        (m_unsupport_ext_tdata[1]),
+//      .m1_unsupport_ext_tvalid       (m_unsupport_ext_tvalid[1]),
+//      .m1_unsupport_ext_tkeep        (m_unsupport_ext_tkeep[1]),
+//      .m1_unsupport_ext_tlast        (m_unsupport_ext_tlast[1]),
+//      //
       .defm_reset                    (defm_reset),
       .fram_reset                    (fram_reset),
       //
@@ -1307,142 +1305,199 @@ module eth_if_sim #(
       .s_axi_rready                  (s00_axi_rready)
   );
 
-  ul_adaptor #(
-      .NUM_CC      (NUM_CC),
-      .NUM_UL_LAYER(NUM_UL_LAYER)
-  ) i_ul_adaptor (
-      // Interface with XORIF
-      //=====================
-      .clk_400m             (clk_400m),
-      .rst_400m             (rst_400m),
-      //
-      .fram_radio_start_10ms(fram_radio_start_10ms),
-      .s_ul_update          (m_ul_update[0:NUM_CC-1]),
-      //
-      .m_fram_data_tdata    (s_fram_data_tdata[0:NUM_UL_LAYER-1]),
-      .m_fram_data_tkeep    (s_fram_data_tkeep[0:NUM_UL_LAYER-1]),
-      .m_fram_data_tvalid   (s_fram_data_tvalid[0:NUM_UL_LAYER-1]),
-      .m_fram_data_tlast    (s_fram_data_tlast[0:NUM_UL_LAYER-1]),
-      .m_fram_data_tready   (s_fram_data_tready[0:NUM_UL_LAYER-1]),
-      //
-      .m_fram_data_req      (s_fram_data_req[0:NUM_UL_LAYER-1]),
-      // Interface with DFE
-      //===================
-      .clk_491m52           (clk_491m52),
-      //
-      .ul_sof_ahead_3       (ul_sof_ahead_3),
-      .ul_sop_ahead_3       (ul_sop_ahead_3),
-      .ul_data_i            (ul_data_i),
-      .ul_data_q            (ul_data_q),
-      // Control Interface
-      //==================
-      .ctrl_bandwidth       (ctrl_bandwidth),
-      .ctrl_numerology      (ctrl_numerology),
-      .ctrl_compression_mode(ctrl_compression_mode),
-      //
-      .buffer_mem_ctrl_en   (buffer_mem_ctrl_en),
-      .buffer_mem_addr_i    (buffer_mem_addr_i),
-      .buffer_mem_data_i    (buffer_mem_data_i),
-      .buffer_mem_we        (buffer_mem_we),
-      .buffer_mem_data_o    (buffer_mem_data_o)
-  );
+
+  generate 
+    if (HAS_DL_ADAPTOR) begin : g_dl_adaptor
+
+      dl_adaptor #(
+        .NUM_CC      (NUM_CC),
+        .NUM_DL_LAYER(NUM_DL_LAYER)
+      ) i_dl_adaptor (
+        // Interface with XORIF
+        //=====================
+        // Note, connect these ports to XORIF same name ports
+        .clk_400m             (clk_400m),
+        .rst_400m             (rst_400m),
+        // Timing ports
+        .defm_radio_start_10ms(defm_radio_start_10ms),
+        .s_dl_update          (m_dl_update[0:NUM_CC-1]),
+        // 16 branch/layer stream, CC shared
+        .s_defm_data_tdata    (m_defm_data_tdata[0:NUM_DL_LAYER-1]),
+        .s_defm_data_tkeep    (m_defm_data_tkeep[0:NUM_DL_LAYER-1]),
+        .s_defm_data_tvalid   (m_defm_data_tvalid[0:NUM_DL_LAYER-1]),
+        .s_defm_data_tlast    (m_defm_data_tlast[0:NUM_DL_LAYER-1]),
+        .s_defm_data_tready   (m_defm_data_tready[0:NUM_DL_LAYER-1]),
+        .s_defm_data_tuser    (m_defm_data_tuser[0:NUM_DL_LAYER-1]),
+        // Interface with DFE
+        //===================
+        .clk_491m52           (clk_491m52),
+        .rst_491m52           (rst_491m52),
+        // DL symbol timing
+        // This is base line of DL timing
+        .dl_radio_start_10ms  (dl_radio_start_10ms),
+        // 2 CC port, each will have interleaved 4 layer data
+        .dl_sof               (dl_sof),
+        .dl_sop               (dl_sop),
+        .dl_sof_ahead_7       (  /* open */),
+        .dl_sop_ahead_7       (  /* open */),
+        .dl_data_i            (dl_data_i),
+        .dl_data_q            (dl_data_q),
+        .dl_valid             (dl_valid),
+        // Control Interface
+        //==================
+        .ctrl_bandwidth       (ctrl_bandwidth),
+        .ctrl_numerology      (ctrl_numerology),
+        .ctrl_compression_mode(ctrl_compression_mode),
+        //
+        .buffer_mem_ctrl_en   ('{NUM_CC{2'b0}}),
+        .buffer_mem_addr_i    ('{NUM_CC{'{NUM_DL_LAYER{12'b0}}}}),
+        .buffer_mem_data_i    ('{NUM_CC{'{NUM_DL_LAYER{32'b0}}}}),
+        .buffer_mem_we        ('{NUM_CC{'{NUM_DL_LAYER{1'b0}}}}),
+        .buffer_mem_data_o    (  /* Not used */)
+      );
+
+    end
+  endgenerate
 
 
-  srs_adaptor #(
-    .NUM_CC       (NUM_CC       ),
-    .NUM_ETH_PORT (NUM_ETH_PORT ),
-    .NUM_SRS_LAYER(NUM_SRS_LAYER)
-  ) i_srs_adaptor (
-    // Interface with DFE
-    //===================
-    .clk_491m52             (clk_491m52                               ),
-    .rst_491m52             (rst_491m52                               ),
-    // SRS Section Header
-    .srs_cfg_cc             (srs_cfg_cc                               ),
-    .srs_cfg_symbol         (srs_cfg_symbol                           ),
-    .srs_cfg_numsymbol      (srs_cfg_numsymbol                        ),
-    .srs_cfg_valid          (srs_cfg_valid                            ),
-    // SRS data request
-    .srs_req_cc             (srs_req_cc                               ),
-    .srs_req_layer          (srs_req_layer                            ),
-    .srs_req_symbol         (srs_req_symbol                           ),
-    .srs_req_valid          (srs_req_valid                            ),
-    // SRS data
-    .srs_data_tdata         (srs_data_tdata                           ),
-    .srs_data_tlast         (srs_data_tlast                           ),
-    .srs_data_tvalid        (srs_data_tvalid                          ),
-    .srs_data_tready        (srs_data_tready                          ),
-    // Interface with XORIF
-    //=====================
-    .clk_400m               (clk_400m                                 ),
-    .rst_400m               (rst_400m                                 ),
-    // UL Timing
-    .s_ul_sym_num           (m_ul_sym_num[0:NUM_CC-1]                 ),
-    .s_ul_update            (m_ul_update[0:NUM_CC-1]                  ),
-    // ORAN Parse Port
-    .s_t_header_offset_valid(m_t_header_offset_valid[0:NUM_ETH_PORT-1]),
-    .s_runt_packet_len      (m_runt_packet_len[0:NUM_ETH_PORT-1]      ),
-    .s_rtc_pc_id            (m_rtc_pc_id[0:NUM_ETH_PORT-1]            ),
-    .s_concat               (m_concat[0:NUM_ETH_PORT-1]               ),
-    .s_messagetype          (m_messagetype[0:NUM_ETH_PORT-1]          ),
-    .s_seqid                (m_seqid[0:NUM_ETH_PORT-1]                ),
-    .s_subseqid             (m_subseqid[0:NUM_ETH_PORT-1]             ),
-    .s_ebit                 (m_ebit[0:NUM_ETH_PORT-1]                 ),
-    .s_payloadsize          (m_payloadsize[0:NUM_ETH_PORT-1]          ),
-    .s_packet_in_window     (m_packet_in_window[0:NUM_ETH_PORT-1]     ),
-    .s_offset_in_symbol     (m_offset_in_symbol[0:NUM_ETH_PORT-1]     ),
-    //
-    .s_radio_app_head_valid (m_radio_app_head_valid[0:NUM_ETH_PORT-1] ),
-    .s_datadirection        (m_datadirection[0:NUM_ETH_PORT-1]        ),
-    .s_numsections          (m_numsections[0:NUM_ETH_PORT-1]          ),
-    .s_sectiontype          (m_sectiontype[0:NUM_ETH_PORT-1]          ),
-    .s_filterindex          (m_filterindex[0:NUM_ETH_PORT-1]          ),
-    .s_frameid              (m_frameid[0:NUM_ETH_PORT-1]              ),
-    .s_subframeid           (m_subframeid[0:NUM_ETH_PORT-1]           ),
-    .s_slotid               (m_slotid[0:NUM_ETH_PORT-1]               ),
-    .s_symbolid             (m_symbolid[0:NUM_ETH_PORT-1]             ),
-    .s_udcomphdr            (m_udcomphdr[0:NUM_ETH_PORT-1]            ),
-    .s_timeoffset           (m_timeoffset[0:NUM_ETH_PORT-1]           ),
-    .s_framestructure       (m_framestructure[0:NUM_ETH_PORT-1]       ),
-    .s_cplength             (m_cplength[0:NUM_ETH_PORT-1]             ),
-    //
-    .s_section_header_valid (m_section_header_valid[0:NUM_ETH_PORT-1] ),
-    .s_numsymbol            (m_numsymbol[0:NUM_ETH_PORT-1]            ),
-    .s_numprbc              (m_numprbc[0:NUM_ETH_PORT-1]              ),
-    .s_startprbc            (m_startprbc[0:NUM_ETH_PORT-1]            ),
-    .s_sectionid            (m_sectionid[0:NUM_ETH_PORT-1]            ),
-    .s_rb                   (m_rb[0:NUM_ETH_PORT-1]                   ),
-    .s_remask               (m_remask[0:NUM_ETH_PORT-1]               ),
-    .s_beamid15             (m_beamid15[0:NUM_ETH_PORT-1]             ),
-    .s_freqoffset           (m_freqoffset[0:NUM_ETH_PORT-1]           ),
-    // UNSOL port
-    .m_fram_unsol_tdata     (s00_fram_unsol_tdata                     ),
-    .m_fram_unsol_tkeep     (s00_fram_unsol_tkeep                     ),
-    .m_fram_unsol_tvalid    (s00_fram_unsol_tvalid                    ),
-    .m_fram_unsol_tlast     (s00_fram_unsol_tlast                     ),
-    .m_fram_unsol_tready    (s00_fram_unsol_tready                    ),
-    .m_fram_unsol_tuser     (s00_fram_unsol_tuser                     ),
-    // Control
-    //========
-    // M-Plane SRS Configuration
-    .ctrl_srs_rtc_pc_id     (                                         ),
-    //
-    .ctrl_srs_frameid       (                                         ),
-    .ctrl_srs_subframeid    (                                         ),
-    .ctrl_srs_slotid        (                                         ),
-    .ctrl_srs_symbolid      (                                         ),
-    //
-    .ctrl_srs_numsymbol     (                                         ),
-    .ctrl_srs_numprbc       (                                         ),
-    .ctrl_srs_startprbc     (                                         ),
-    .ctrl_srs_sectionid     (                                         ),
-    //
-    .ctrl_srs_ethport       (                                         ),
-    //
-    .ctrl_srs_valid         (                                         ),
-    // Mu
-    .ctrl_numerology        ('{NUM_CC{2'b00}}                         )
-  );
+  generate 
+    if (HAS_UL_ADAPTOR) begin
+      ul_adaptor #(
+          .NUM_CC      (NUM_CC),
+          .NUM_UL_LAYER(NUM_UL_LAYER)
+      ) i_ul_adaptor (
+          // Interface with XORIF
+          //=====================
+          .clk_400m             (clk_400m),
+          .rst_400m             (rst_400m),
+          //
+          .fram_radio_start_10ms(fram_radio_start_10ms),
+          .s_ul_update          (m_ul_update[0:NUM_CC-1]),
+          //
+          .m_fram_data_tdata    (s_fram_data_tdata[0:NUM_UL_LAYER-1]),
+          .m_fram_data_tkeep    (s_fram_data_tkeep[0:NUM_UL_LAYER-1]),
+          .m_fram_data_tvalid   (s_fram_data_tvalid[0:NUM_UL_LAYER-1]),
+          .m_fram_data_tlast    (s_fram_data_tlast[0:NUM_UL_LAYER-1]),
+          .m_fram_data_tready   (s_fram_data_tready[0:NUM_UL_LAYER-1]),
+          //
+          .m_fram_data_req      (s_fram_data_req[0:NUM_UL_LAYER-1]),
+          // Interface with DFE
+          //===================
+          .clk_491m52           (clk_491m52),
+          //
+          .ul_sof_ahead_3       (ul_sof_ahead_3),
+          .ul_sop_ahead_3       (ul_sop_ahead_3),
+          .ul_data_i            (ul_data_i),
+          .ul_data_q            (ul_data_q),
+          // Control Interface
+          //==================
+          .ctrl_bandwidth       (ctrl_bandwidth),
+          .ctrl_numerology      (ctrl_numerology),
+          .ctrl_compression_mode(ctrl_compression_mode)
+      );
+    end
+  endgenerate
+
+  generate 
+    if (HAS_SRS_ADAPTOR) begin
+    
+      srs_adaptor #(
+        .NUM_CC       (NUM_CC       ),
+        .NUM_ETH_PORT (NUM_ETH_PORT ),
+        .NUM_SRS_LAYER(NUM_SRS_LAYER)
+      ) i_srs_adaptor (
+        // Interface with DFE
+        //===================
+        .clk_491m52             (clk_491m52                               ),
+        .rst_491m52             (rst_491m52                               ),
+        // SRS Section Header
+        .srs_cfg_cc             (srs_cfg_cc                               ),
+        .srs_cfg_symbol         (srs_cfg_symbol                           ),
+        .srs_cfg_numsymbol      (srs_cfg_numsymbol                        ),
+        .srs_cfg_valid          (srs_cfg_valid                            ),
+        // SRS data request
+        .srs_req_cc             (srs_req_cc                               ),
+        .srs_req_layer          (srs_req_layer                            ),
+        .srs_req_symbol         (srs_req_symbol                           ),
+        .srs_req_valid          (srs_req_valid                            ),
+        // SRS data
+        .srs_data_tdata         (srs_data_tdata                           ),
+        .srs_data_tlast         (srs_data_tlast                           ),
+        .srs_data_tvalid        (srs_data_tvalid                          ),
+        .srs_data_tready        (srs_data_tready                          ),
+        // Interface with XORIF
+        //=====================
+        .clk_400m               (clk_400m                                 ),
+        .rst_400m               (rst_400m                                 ),
+        // UL Timing
+        .s_ul_sym_num           (m_ul_sym_num[0:NUM_CC-1]                 ),
+        .s_ul_update            (m_ul_update[0:NUM_CC-1]                  ),
+        // ORAN Parse Port
+        .s_t_header_offset_valid(m_t_header_offset_valid[0:NUM_ETH_PORT-1]),
+        .s_runt_packet_len      (m_runt_packet_len[0:NUM_ETH_PORT-1]      ),
+        .s_rtc_pc_id            (m_rtc_pc_id[0:NUM_ETH_PORT-1]            ),
+        .s_concat               (m_concat[0:NUM_ETH_PORT-1]               ),
+        .s_messagetype          (m_messagetype[0:NUM_ETH_PORT-1]          ),
+        .s_seqid                (m_seqid[0:NUM_ETH_PORT-1]                ),
+        .s_subseqid             (m_subseqid[0:NUM_ETH_PORT-1]             ),
+        .s_ebit                 (m_ebit[0:NUM_ETH_PORT-1]                 ),
+        .s_payloadsize          (m_payloadsize[0:NUM_ETH_PORT-1]          ),
+        .s_packet_in_window     (m_packet_in_window[0:NUM_ETH_PORT-1]     ),
+        .s_offset_in_symbol     (m_offset_in_symbol[0:NUM_ETH_PORT-1]     ),
+        //
+        .s_radio_app_head_valid (m_radio_app_head_valid[0:NUM_ETH_PORT-1] ),
+        .s_datadirection        (m_datadirection[0:NUM_ETH_PORT-1]        ),
+        .s_numsections          (m_numsections[0:NUM_ETH_PORT-1]          ),
+        .s_sectiontype          (m_sectiontype[0:NUM_ETH_PORT-1]          ),
+        .s_filterindex          (m_filterindex[0:NUM_ETH_PORT-1]          ),
+        .s_frameid              (m_frameid[0:NUM_ETH_PORT-1]              ),
+        .s_subframeid           (m_subframeid[0:NUM_ETH_PORT-1]           ),
+        .s_slotid               (m_slotid[0:NUM_ETH_PORT-1]               ),
+        .s_symbolid             (m_symbolid[0:NUM_ETH_PORT-1]             ),
+        .s_udcomphdr            (m_udcomphdr[0:NUM_ETH_PORT-1]            ),
+        .s_timeoffset           (m_timeoffset[0:NUM_ETH_PORT-1]           ),
+        .s_framestructure       (m_framestructure[0:NUM_ETH_PORT-1]       ),
+        .s_cplength             (m_cplength[0:NUM_ETH_PORT-1]             ),
+        //
+        .s_section_header_valid (m_section_header_valid[0:NUM_ETH_PORT-1] ),
+        .s_numsymbol            (m_numsymbol[0:NUM_ETH_PORT-1]            ),
+        .s_numprbc              (m_numprbc[0:NUM_ETH_PORT-1]              ),
+        .s_startprbc            (m_startprbc[0:NUM_ETH_PORT-1]            ),
+        .s_sectionid            (m_sectionid[0:NUM_ETH_PORT-1]            ),
+        .s_rb                   (m_rb[0:NUM_ETH_PORT-1]                   ),
+        .s_remask               (m_remask[0:NUM_ETH_PORT-1]               ),
+        .s_beamid15             (m_beamid15[0:NUM_ETH_PORT-1]             ),
+        .s_freqoffset           (m_freqoffset[0:NUM_ETH_PORT-1]           ),
+        // UNSOL port
+        .m_fram_unsol_tdata     (s00_fram_unsol_tdata                     ),
+        .m_fram_unsol_tkeep     (s00_fram_unsol_tkeep                     ),
+        .m_fram_unsol_tvalid    (s00_fram_unsol_tvalid                    ),
+        .m_fram_unsol_tlast     (s00_fram_unsol_tlast                     ),
+        .m_fram_unsol_tready    (s00_fram_unsol_tready                    ),
+        .m_fram_unsol_tuser     (s00_fram_unsol_tuser                     ),
+        // Control
+        //========
+        // M-Plane SRS Configuration
+        .ctrl_srs_rtc_pc_id     (                                         ),
+        //
+        .ctrl_srs_frameid       (                                         ),
+        .ctrl_srs_subframeid    (                                         ),
+        .ctrl_srs_slotid        (                                         ),
+        .ctrl_srs_symbolid      (                                         ),
+        //
+        .ctrl_srs_numsymbol     (                                         ),
+        .ctrl_srs_numprbc       (                                         ),
+        .ctrl_srs_startprbc     (                                         ),
+        .ctrl_srs_sectionid     (                                         ),
+        //
+        .ctrl_srs_ethport       (                                         ),
+        //
+        .ctrl_srs_valid         (                                         ),
+        // Mu
+        .ctrl_numerology        ('{NUM_CC{2'b00}}                         )
+      );
+    end
+  endgenerate
 
 endmodule
 

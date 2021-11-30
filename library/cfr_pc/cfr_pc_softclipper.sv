@@ -1,5 +1,5 @@
-// File: cfr_pc_softclipper.sv
-// Brief: cfr_pc_softclipper is soft clipper
+// File: cfr_cpg.sv
+// Brief: cfr_cpg is Canceling pulse generator. It' designed as cascade-able.
 
 `timescale 1ns / 1ps `default_nettype none
 
@@ -33,8 +33,6 @@ module cfr_pc_softclipper #(
     input var  logic        [CPW_ADDR_WIDTH-1:0] ctrl_cpw_addr,
     input var  logic                             ctrl_cpw_en,
     input var  logic                             ctrl_cpw_we,
-    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_i,
-    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_q,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
@@ -110,8 +108,6 @@ module cfr_pc_softclipper #(
           .ctrl_cpw_addr     (ctrl_cpw_addr),
           .ctrl_cpw_en       (ctrl_cpw_en),
           .ctrl_cpw_we       (ctrl_cpw_we),
-          .ctrl_cpw_rd_data_i(ctrl_cpw_rd_data_i_s[i]),
-          .ctrl_cpw_rd_data_q(ctrl_cpw_rd_data_q_s[i]),
           .ctrl_cpw_wr_data_i(ctrl_cpw_wr_data_i),
           .ctrl_cpw_wr_data_q(ctrl_cpw_wr_data_q)
       );

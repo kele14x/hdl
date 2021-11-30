@@ -8,9 +8,9 @@ add_files -norecurse ./../cmult/cmult.sv
 add_files -norecurse ./../cordic_cart2pol/cordic_cart2pol.sv
 add_files -norecurse ./../cordic_pol2cart/cordic_pol2cart.sv
 add_files -norecurse ./../cordic_rotate/cordic_rotate.sv
-add_files -norecurse ./../hb_up2/hb_up2_int2_p2.sv
-add_files -norecurse ./../hb_up2/hb_up2_int2.sv
-add_files -norecurse ./../ram/bram_tdp.sv
+add_files -norecurse ./../hb_up2/hb_up2.sv
+add_files -norecurse ./../ram/bram_sdp.sv
+add_files -norecurse ./../ram/bram_sdp_pipe.sv
 add_files -norecurse ./../util/adder.sv
 add_files -norecurse ./../util/reg_pipeline.sv
 add_files -norecurse ./cfr_pc_cpg.sv
@@ -23,13 +23,9 @@ update_compile_order -fileset sources_1
 add_files -fileset sim_1 -norecurse ./test_cfr_pc_cancellation_pulse_i.txt
 add_files -fileset sim_1 -norecurse ./test_cfr_pc_cancellation_pulse_q.txt
 add_files -fileset sim_1 -norecurse ./test_cfr_pc_data_i_in.txt
-add_files -fileset sim_1 -norecurse ./test_cfr_pc_data_i_in2.txt
-add_files -fileset sim_1 -norecurse ./test_cfr_pc_data_i_out.txt
-add_files -fileset sim_1 -norecurse ./test_cfr_pc_data_i_out2.txt
 add_files -fileset sim_1 -norecurse ./test_cfr_pc_data_q_in.txt
-add_files -fileset sim_1 -norecurse ./test_cfr_pc_data_q_in2.txt
+add_files -fileset sim_1 -norecurse ./test_cfr_pc_data_i_out.txt
 add_files -fileset sim_1 -norecurse ./test_cfr_pc_data_q_out.txt
-add_files -fileset sim_1 -norecurse ./test_cfr_pc_data_q_out2.txt
 add_files -fileset sim_1 -norecurse ./tb_cfr_pc.sv
 update_compile_order -fileset sim_1
 
@@ -39,6 +35,7 @@ set_property USED_IN {synthesis implementation out_of_context} [get_files ./cfr_
 
 # Project property
 set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} -value {-mode out_of_context} -objects [get_runs synth_1]
+set_property -name {STEPS.SYNTH_DESIGN.ARGS.FLATTEN_HIERARCHY} -value {none} -objects [get_runs synth_1]
 
 # Run simulation
 launch_simulation

@@ -1,3 +1,5 @@
+// file: srs_adaptor_controller.sv
+// brief: This module controls when to run the processing of SRS symbol.
 `timescale 1 ns / 1 ps `default_nettype none
 
 module srs_adaptor_controller #(
@@ -11,23 +13,23 @@ module srs_adaptor_controller #(
     input var  [11:0] s_ul_sym_num      [NUM_CC],
     input var         s_ul_update       [NUM_CC],
     // SRS Mux
-    input var  [15:0] srs_mux_rtc_pc_id,
-    input var  [ 2:0] srs_mux_cc,
+    input var  [15:0] srs_gen_rtc_pc_id,
+    input var  [ 2:0] srs_gen_cc,
     //
-    input var  [ 7:0] srs_mux_frameid,
-    input var  [ 3:0] srs_mux_subframeid,
-    input var  [ 5:0] srs_mux_slotid,
-    input var  [ 5:0] srs_mux_symbolid,
-    input var  [11:0] srs_mux_symbol,              // 0 ~ 559
+    input var  [ 7:0] srs_gen_frameid,
+    input var  [ 3:0] srs_gen_subframeid,
+    input var  [ 5:0] srs_gen_slotid,
+    input var  [ 5:0] srs_gen_symbolid,
+    input var  [11:0] srs_gen_symbol,              // 0 ~ 559
     //
-    input var  [ 3:0] srs_mux_numsymbol,           // 1 ~ 3
-    input var  [ 7:0] srs_mux_numprbc,             // 0 ~ 275
-    input var  [ 9:0] srs_mux_startprbc,           // 0 ~ 275
-    input var  [11:0] srs_mux_sectionid,
+    input var  [ 3:0] srs_gen_numsymbol,           // 1 ~ 3
+    input var  [ 7:0] srs_gen_numprbc,             // 0 ~ 275
+    input var  [ 9:0] srs_gen_startprbc,           // 0 ~ 275
+    input var  [11:0] srs_gen_sectionid,
     //
-    input var  [ 2:0] srs_mux_ethport,             // 0 ~ 3
+    input var  [ 2:0] srs_gen_ethport,             // 0 ~ 3
     //
-    input var         srs_mux_valid,
+    input var         srs_gen_valid,
     // Runner
     //=======
     output var [15:0] srs_run_rtc_pc_id,
@@ -66,10 +68,11 @@ module srs_adaptor_controller #(
   logic                   buffer_wr_en;
   logic [BufferWidth-1:0] buffer_wr_data;
 
+  logic                   buffer_clr_en;
+
   logic [            6:0] buffer_rd_addr;
   logic [            2:0] buffer_rd_en;
   logic [BufferWidth-1:0] buffer_rd_data;
-  logic                   buffer_rd_clr;
 
   logic [           15:0] srs_buf_rtc_pc_id;
   logic [            2:0] srs_buf_cc;
@@ -118,18 +121,18 @@ module srs_adaptor_controller #(
   //==============
 
   assign buffer_wr_data = {
-    srs_mux_rtc_pc_id,
-    srs_mux_cc,
-    srs_mux_frameid,
-    srs_mux_subframeid,
-    srs_mux_slotid,
-    srs_mux_symbolid,
-    srs_mux_symbol,
-    srs_mux_numsymbol,
-    srs_mux_numprbc,
-    srs_mux_startprbc,
-    srs_mux_sectionid,
-    srs_mux_ethport
+    srs_gen_rtc_pc_id,
+    srs_gen_cc,
+    srs_gen_frameid,
+    srs_gen_subframeid,
+    srs_gen_slotid,
+    srs_gen_symbolid,
+    srs_gen_symbol,
+    srs_gen_numsymbol,
+    srs_gen_numprbc,
+    srs_gen_startprbc,
+    srs_gen_sectionid,
+    srs_gen_ethport
   };
 
   assign {
@@ -147,7 +150,7 @@ module srs_adaptor_controller #(
     srs_buf_ethport
   } = buffer_rd_data;
 
-  assign buffer_wr_en = srs_mux_valid;
+  assign buffer_wr_en = srs_gen_valid;
 
   always_ff @(posedge clk) begin
     if (rst) begin
@@ -157,12 +160,20 @@ module srs_adaptor_controller #(
     end
   end
 
+  // SRS message will be write into a SDP BRAM, but the valid flag will be
+  // write into a DRAM, this is because DRAM is vary easy to set and clear
+  // at same time and cause less power.
+
+  // Valid buffer set and clear
   always_ff @(posedge clk) begin
     if (buffer_wr_en) begin
       srs_buf_valid_mem[buffer_wr_addr] <= 1'b1;
+    end else if (buffer_clr_en) begin
+      srs_buf_valid_mem[buffer_rd_addr] <= 1'b0;
     end
   end
 
+  // Valid buffer readout
   always_ff @(posedge clk) begin
     if (rst) begin
       srs_buf_valid <= 1'b0;
@@ -171,7 +182,17 @@ module srs_adaptor_controller #(
     end
   end
 
+  // We do not actually clear the buffer meemory, instead we clear the valid 
+  // flag memory, which is more suitable and easy.
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      buffer_clr_en <= 1'b0;
+    end else begin
+      buffer_clr_en <= (state == S_CHK && process_it);    
+    end
+  end
 
+  // SRS message write to this buffer, it will never be clear
   (* keep_hierarchy="yes" *)
   bram_sdp #(
       .ADDR_WIDTH  (7),
@@ -278,7 +299,7 @@ module srs_adaptor_controller #(
   always_ff @(posedge clk) begin
     if (rst) begin
       buffer_rd_addr <= 0;
-    end else if (state == S_RD) begin
+    end else if (state == S_NEXT) begin
       buffer_rd_addr <= buffer_rd_addr + 1;
     end
   end
@@ -287,10 +308,6 @@ module srs_adaptor_controller #(
     buffer_rd_en[0] <= (next_state == S_RD);
     buffer_rd_en[1] <= (next_state == S_D1);
     buffer_rd_en[2] <= (next_state == S_D2);
-  end
-
-  always_ff @(posedge clk) begin
-    buffer_rd_clr <= 1'b0;
   end
 
 

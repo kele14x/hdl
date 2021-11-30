@@ -1,3 +1,6 @@
+// file: srs_adaptor_framer.sv
+// brief: At SRS framer request, this module read out one symbol data from BRAM
+//        buffer, and format it into AXIS packet.
 `timescale 1 ns / 1 ps `default_nettype none
 
 module srs_adaptor_framer (

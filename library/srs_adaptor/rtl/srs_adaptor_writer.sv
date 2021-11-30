@@ -1,3 +1,7 @@
+// file: srs_adaptor_write.sv
+// brief: When a packet of SRS message arrives, it will write it into a BRAM
+//        buffer. Generally this module generates the write address and write
+//        enable signal.
 `timescale 1 ns / 1 ps `default_nettype none
 
 module srs_adaptor_writer (

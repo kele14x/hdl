@@ -33,8 +33,6 @@ module cfr_pc_cpg #(
     input var  logic        [CPW_ADDR_WIDTH-1:0] ctrl_cpw_addr,
     input var  logic                             ctrl_cpw_en,
     input var  logic                             ctrl_cpw_we,
-    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_i,
-    output var logic        [    DATA_WIDTH-1:0] ctrl_cpw_rd_data_q,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_i,
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
@@ -46,8 +44,10 @@ module cfr_pc_cpg #(
   logic signed [    DATA_WIDTH-1:0] cpw_rd_data_i;
   logic signed [    DATA_WIDTH-1:0] cpw_rd_data_q;
 
+  logic signed [    DATA_WIDTH-1:0] cpw_rd_data_i_d;
+  logic signed [    DATA_WIDTH-1:0] cpw_rd_data_q_d;
+
   // State of CPG stage
-  // `state1` is for channel 1, `state2` is for channel 2
 
   logic state1_busy, state2_busy;
   logic [CPW_ADDR_WIDTH-3:0] state1_addr, state2_addr;
@@ -62,16 +62,19 @@ module cfr_pc_cpg #(
 
   always_ff @(posedge clk) begin
     if (rst) begin
+      state_busy <= 'd0;
       state1_busy <= 'd0;
       state2_busy <= 'd0;
     end else begin
+      state_busy <= (peak_valid_in && ~state_busy) ? 1'b1 : &state_addr ? 1'b0 : state_busy;
       state1_busy <= state2_busy;
       state2_busy <= (peak_valid_in && ~state1_busy) ? 1'b1 : &state1_addr ? 1'b0 : state1_busy;
     end
   end
 
-  // `state*_addr` will move from 0 to 'hFF
+  // `state_addr` will move from 0 to 'hFF
   always_ff @(posedge clk) begin
+    state_addr <= state_busy ? state_addr + 1 : '0;
     if (rst) begin
       state1_addr <= 'd0;
       state2_addr <= 'd0;
@@ -81,7 +84,7 @@ module cfr_pc_cpg #(
     end
   end
 
-  // `state*_phase` is phase of peak
+  // `state_phase` is phase of peak
   always_ff @(posedge clk) begin
     if (rst) begin
       state1_phase <= 'd0;
@@ -93,7 +96,7 @@ module cfr_pc_cpg #(
     end
   end
 
-  // `state*_phase` is phase of peak
+  // `state_i/q` is i/q value of peak
   always_ff @(posedge clk) begin
     {state1_q, state1_i} <= {state2_q, state2_i};
     {state2_q, state2_i} <= (peak_valid_in && ~state1_busy) ? {
@@ -103,40 +106,34 @@ module cfr_pc_cpg #(
     };
   end
 
-  // If current stage's CPG is busy (state1's MSB is high), pass this peak to
+  // If current stage's CPG is busy (state's MSB is high), pass this peak to
   // next CPG.
 
   always_ff @(posedge clk) begin
     if (rst) begin
       peak_valid_out <= 1'b0;
     end else begin
-      peak_valid_out <= peak_valid_in && state1_busy;
+      peak_valid_out <= peak_valid_in && state_busy;
     end
   end
 
   always_ff @(posedge clk) begin
-    if (peak_valid_in && state1_busy) begin
+    if (peak_valid_in && state_busy) begin
       peak_i_out     <= peak_i_in;
       peak_q_out     <= peak_q_in;
       peak_phase_out <= peak_phase_in;
-    end else begin
-      peak_i_out     <= 'd0;
-      peak_q_out     <= 'd0;
-      peak_phase_out <= 'd0;
     end
   end
 
   assign cpw_rd_en   = state2_busy;
   assign cpw_rd_addr = {state2_addr, (2'b11 - state2_phase)};
 
-  bram_tdp #(
+  bram_sdp_pipe #(
       .ADDR_WIDTH   (CPW_ADDR_WIDTH),
       .DATA_WIDTH   (DATA_WIDTH * 2),
-      .PORTA_LATENCY(1),
-      .PORTB_LATENCY(3),
-      .INIT_WORD    ('0),
+      .READ_LATENCY (2),
       .INIT_FILE    ("")
-  ) i_bram_tdp (
+  ) i_bram_sdp_pipe (
       //
       .clka (ctrl_clk),
       .rsta (ctrl_rst),
@@ -144,25 +141,30 @@ module cfr_pc_cpg #(
       .wea  (ctrl_cpw_we),
       .addra(ctrl_cpw_addr),
       .dina ({ctrl_cpw_wr_data_q, ctrl_cpw_wr_data_i}),
-      .douta({ctrl_cpw_rd_data_q, ctrl_cpw_rd_data_i}),
       //
       .clkb (clk),
       .rstb (~cpw_rd_en),
       .enb  (cpw_rd_en),
-      .web  (1'b0),
       .addrb(cpw_rd_addr),
-      .dinb ('0),
       .doutb({cpw_rd_data_q, cpw_rd_data_i})
   );
 
-  (* keep_hierarchy="yes" *)
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
       .PIPELINE_STAGES(3)
   ) i_delay_state_iq (
       .clk (clk),
-      .din ({state2_q, state2_i}),
-      .dout({state2_q_d, state2_i_d})
+      .din ({state_q, state_i}),
+      .dout({state_q_d, state_i_d})
+  );
+
+  reg_pipeline #(
+      .DATA_WIDTH     (DATA_WIDTH * 2),
+      .PIPELINE_STAGES(1)
+  ) i_delay_cpw_rd_data_iq (
+      .clk (clk),
+      .din ({cpw_rd_data_q, cpw_rd_data_i}),
+      .dout({cpw_rd_data_q_d, cpw_rd_data_i_d})
   );
 
   cmult #(
@@ -174,11 +176,11 @@ module cfr_pc_cpg #(
       .clk(clk),
       .rst(rst),
       //
-      .ar (state2_i_d),
-      .ai (state2_q_d),
+      .ar (state_i_d),
+      .ai (state_q_d),
       //
-      .br (cpw_rd_data_i),
-      .bi (cpw_rd_data_q),
+      .br (cpw_rd_data_i_d),
+      .bi (cpw_rd_data_q_d),
       //
       .pr (delta_i),
       .pi (delta_q),

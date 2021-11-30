@@ -104,9 +104,16 @@ module dl_adaptor_gearbox_bfp9 #(
     if (state >= 11) begin
       state_next = 0;  // failt recovery
     end else if (go_next && (state == 0 || state == 1 || state == 3 ||
-      state == 5 || state == 6 || state == 8 ||
-      state == 10) && s_axis_tlast) begin
+      state == 6 || state == 8) && s_axis_tlast) begin
+      // Normally we should not see TLAST at those states, but so we need to end
+      // the FSM here.
       state_next = 0;
+    end else if (go_next && state == 5 && s_axis_tlast) begin
+      // The case odd number of RBs.
+      state_next = 0;
+    end else if (go_next && state == 10 && s_axis_tlast) begin
+      // The case even number of RBs.
+      state_next = 11;
     end else if (go_next && state == 11) begin
       state_next = 0;
     end else if (go_next) begin

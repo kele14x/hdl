@@ -8,6 +8,7 @@ add_files -norecurse ./rtl/srs_adaptor_controller.sv
 add_files -norecurse ./rtl/srs_adaptor_filter.sv
 add_files -norecurse ./rtl/srs_adaptor_framer.sv
 add_files -norecurse ./rtl/srs_adaptor_fwd.sv
+add_files -norecurse ./rtl/srs_adaptor_gen.sv
 add_files -norecurse ./rtl/srs_adaptor_mux.sv
 add_files -norecurse ./rtl/srs_adaptor_runner.sv
 add_files -norecurse ./rtl/srs_adaptor_writer.sv

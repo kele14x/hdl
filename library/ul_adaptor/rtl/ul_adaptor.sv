@@ -3,6 +3,21 @@
 //        streams from DFE module. Each stream contains bit-reversed data from
 //        FFT process.
 //        Output are 8 streams. Each stream contains all CCs data for one layer.
+//
+//                                 +------------+
+//                                 |            |
+//           fram_radio_start_10ms |            |  ul_sof
+//          <----------------------+            |<--------
+//                                 |            |
+//                                 |            |
+//                       ul_update | ul_adaptor |
+//          ---------------------->|            |
+//                                 |            |
+//                   fram_data_req |            |
+//          ---------------------->|            |
+//                                 |            |
+//                                 +------------+
+//
 `timescale 1 ns / 1 ps `default_nettype none
 
 module ul_adaptor #(
@@ -47,15 +62,15 @@ module ul_adaptor #(
 
   logic        rst_491m52;
 
-  logic [11:0] ram_addr_s              [NUM_UL_LAYER][NUM_CC];
-  logic        ram_rden_s              [NUM_UL_LAYER][NUM_CC];
-  logic [63:0] ram_data_s              [NUM_UL_LAYER][NUM_CC];
+  logic [11:0] ram_addr_s         [NUM_UL_LAYER] [      NUM_CC];
+  logic        ram_rden_s         [NUM_UL_LAYER] [      NUM_CC];
+  logic [63:0] ram_data_s         [NUM_UL_LAYER] [      NUM_CC];
 
-  logic [11:0] ram_addr                [NUM_CC][NUM_UL_LAYER];
-  logic        ram_rden                [NUM_CC][NUM_UL_LAYER];
-  logic [63:0] ram_data                [NUM_CC][NUM_UL_LAYER];
+  logic [11:0] ram_addr           [      NUM_CC] [NUM_UL_LAYER];
+  logic        ram_rden           [      NUM_CC] [NUM_UL_LAYER];
+  logic [63:0] ram_data           [      NUM_CC] [NUM_UL_LAYER];
 
-  logic        ul_radio_start_10ms [NUM_CC];
+  logic        ul_radio_start_10ms[      NUM_CC];
 
 
   // We will get two SOP from DFE module (each for one CC). We assume they
@@ -120,8 +135,8 @@ module ul_adaptor #(
   generate
     for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_cc
       for (genvar ly = 0; ly < NUM_UL_LAYER; ly++) begin : g_ly
-        assign ram_addr[cc][ly] = ram_addr_s[ly][cc];
-        assign ram_rden[cc][ly] = ram_rden_s[ly][cc];
+        assign ram_addr[cc][ly]   = ram_addr_s[ly][cc];
+        assign ram_rden[cc][ly]   = ram_rden_s[ly][cc];
         assign ram_data_s[ly][cc] = ram_data[cc][ly];
       end
     end

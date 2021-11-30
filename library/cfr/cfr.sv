@@ -31,6 +31,7 @@ module cfr #(
     input var                       ctrl_rst,
     //
     input var                       ctrl_pc_cfr_enable            [NUM_BRANCH],
+    input var  [               3:0] ctrl_pc_cfr_spacing           [NUM_BRANCH],
     input var  [      DATA_WIDTH:0] ctrl_pc_cfr_clipping_threshold[NUM_BRANCH],
     input var  [      DATA_WIDTH:0] ctrl_pc_cfr_detect_threshold  [NUM_BRANCH],
     //
@@ -69,6 +70,7 @@ module cfr #(
           .ctrl_rst                      (ctrl_rst),
           //
           .ctrl_pc_cfr_enable            (ctrl_pc_cfr_enable[i]),
+          .ctrl_pc_cfr_spacing           (ctrl_pc_cfr_spacing[i]),
           .ctrl_pc_cfr_clipping_threshold(ctrl_pc_cfr_clipping_threshold[i]),
           .ctrl_pc_cfr_detect_threshold  (ctrl_pc_cfr_detect_threshold[i]),
           //
@@ -89,7 +91,7 @@ module cfr #(
 
   reg_pipeline #(
       .DATA_WIDTH     (3),
-      .PIPELINE_STAGES(130 + 23)
+      .PIPELINE_STAGES(129 + 23)
   ) i_reg_pipeline (
       .clk (clk),
       .din ({data_sof_in, data_sop_in, data_valid_in}),

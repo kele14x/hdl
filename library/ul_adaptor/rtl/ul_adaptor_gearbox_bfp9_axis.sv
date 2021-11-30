@@ -63,25 +63,15 @@ module ul_adaptor_gearbox_bfp9_axis (
   end
 
   always_ff @(posedge clk) begin
-    if (tvalid) begin
-      m_axis_tdata <= byte_reverse(tdata);
-    end
+    m_axis_tdata <= byte_reverse(tdata);
   end
 
   always_ff @(posedge clk) begin
-    if (rst) begin
-      m_axis_tkeep <= '0;
-    end else begin
-      m_axis_tkeep <= comp_done_odd ? 8'h0F : 8'hFF;
-    end
+    m_axis_tkeep <= comp_done_odd ? 8'h0F : 8'hFF;
   end
 
   always_ff @(posedge clk) begin
-    if (rst) begin
-      m_axis_tvalid <= '0;
-    end else begin
-      m_axis_tvalid <= tvalid;
-    end
+    m_axis_tvalid <= tvalid;
   end
 
   always_ff @(posedge clk) begin
@@ -89,11 +79,7 @@ module ul_adaptor_gearbox_bfp9_axis (
   end
 
   always_ff @(posedge clk) begin
-    if (rst) begin
-      m_axis_tlast <= '0;
-    end else begin
-      m_axis_tlast <= comp_done_odd || (comp_done && comp_cnt == 11);
-    end
+    m_axis_tlast <= comp_done_odd || (comp_done && comp_cnt == 11);
   end
 
 endmodule
