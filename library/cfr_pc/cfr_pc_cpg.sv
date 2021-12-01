@@ -5,6 +5,9 @@
 `timescale 1ns / 1ps `default_nettype none
 
 module cfr_pc_cpg #(
+    parameter int CSR            = 2,
+    parameter int PHASE_WIDTH    = 2,
+    //
     parameter int DATA_WIDTH     = 16,
     parameter int CPW_ADDR_WIDTH = 8
 ) (
@@ -16,7 +19,7 @@ module cfr_pc_cpg #(
     //
     input var  logic signed [    DATA_WIDTH-1:0] peak_i_in,
     input var  logic signed [    DATA_WIDTH-1:0] peak_q_in,
-    input var  logic        [               1:0] peak_phase_in,
+    input var  logic        [   PHASE_WIDTH-1:0] peak_phase_in,
     input var  logic                             peak_valid_in,
     //
     output var logic signed [    DATA_WIDTH-1:0] data_i_out,
@@ -24,7 +27,7 @@ module cfr_pc_cpg #(
     //
     output var logic signed [    DATA_WIDTH-1:0] peak_i_out,
     output var logic signed [    DATA_WIDTH-1:0] peak_q_out,
-    output var logic        [               1:0] peak_phase_out,
+    output var logic        [   PHASE_WIDTH-1:0] peak_phase_out,
     output var logic                             peak_valid_out,
     // Cancellation pulse write port
     input var  logic                             ctrl_clk,
@@ -49,62 +52,88 @@ module cfr_pc_cpg #(
 
   // State of CPG stage
 
-  logic state1_busy, state2_busy;
-  logic [CPW_ADDR_WIDTH-3:0] state1_addr, state2_addr;
-  logic [               1:0] state1_phase, state2_phase;
-  logic [    DATA_WIDTH-1:0] state1_i, state1_q, state2_i, state2_q  = '0;
-  logic [    DATA_WIDTH-1:0] state2_i_d, state2_q_d;
+  logic                      state_busy [CSR];
+  logic [CPW_ADDR_WIDTH-3:0] state_addr [CSR];
+
+  logic [    DATA_WIDTH-1:0] state_i    [CSR];
+  logic [    DATA_WIDTH-1:0] state_q    [CSR];
+  logic [   PHASE_WIDTH-1:0] state_phase[CSR];
+  
+  logic [    DATA_WIDTH-1:0] state_i_d, state_q_d;
 
   logic [DATA_WIDTH-1:0] delta_i, delta_q;
+
 
   // State transfer, the basic idea is `state1_*` is for current channel, which
   // is aligned with `peak_*_in`.
 
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      state_busy <= 'd0;
-      state1_busy <= 'd0;
-      state2_busy <= 'd0;
-    end else begin
-      state_busy <= (peak_valid_in && ~state_busy) ? 1'b1 : &state_addr ? 1'b0 : state_busy;
-      state1_busy <= state2_busy;
-      state2_busy <= (peak_valid_in && ~state1_busy) ? 1'b1 : &state1_addr ? 1'b0 : state1_busy;
-    end
-  end
+  generate
+    for(genvar ii = 0; ii < CSR; ii++) begin: g_interleave  
+      if (ii == 0) begin: g_first
 
-  // `state_addr` will move from 0 to 'hFF
-  always_ff @(posedge clk) begin
-    state_addr <= state_busy ? state_addr + 1 : '0;
-    if (rst) begin
-      state1_addr <= 'd0;
-      state2_addr <= 'd0;
-    end else begin
-      state1_addr <= state2_addr;
-      state2_addr <= state1_busy ? state1_addr + 1 : &state1_addr ? '0 : state1_addr;
-    end
-  end
+        always_ff @(posedge clk) begin
+          if (rst) begin
+            state_busy[ii]  <= 'd0;
+          end else begin
+            if (peak_valid_in && ~state_busy[CSR-1]) begin
+              state_busy[ii] <= 1'b1;
+            end else if (&state_addr[CSR-1]) begin
+              state_busy[ii] <= 1'b0;
+            end else begin
+              state_busy[ii] <= state_busy[CSR-1];
+            end
+          end
+        end
 
-  // `state_phase` is phase of peak
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      state1_phase <= 'd0;
-      state2_phase <= 'd0;
-    end else begin
-      state1_phase <= state2_phase;
-      state2_phase <= (peak_valid_in && ~state1_busy) ? peak_phase_in :
-        &state1_addr ? '0 : state1_phase;
-    end
-  end
+        // `state_addr` will move from 0 to 'hFF
+        always_ff @(posedge clk) begin
+          if (state_busy[CSR-1]) begin
+            state_addr[ii] <= state_addr[CSR-1] + 1;
+          end else begin
+            state_addr[ii] <= '0;
+          end
+        end
+ 
+        // `state_i/q` is i/q value of peak
+        always_ff @(posedge clk) begin
+          if (peak_valid_in && ~state_busy[CSR-1]) begin
+            {state_q[ii], state_i[ii]} <= {peak_q_in, peak_i_in};
+          end else begin
+            {state_q[ii], state_i[ii]} <= {state_q[CSR-1], state_i[CSR-1]};
+          end
+        end
+  
+        // `state_phase` is phase of peak
+        always_ff @(posedge clk) begin
+          if (peak_valid_in && ~state_busy[CSR-1]) begin
+            state_phase[ii] <= peak_phase_in;
+          end else begin
+            state_phase[ii] <= state_phase[CSR-1];
+          end
+        end
+  
+      end else begin: g_left
 
-  // `state_i/q` is i/q value of peak
-  always_ff @(posedge clk) begin
-    {state1_q, state1_i} <= {state2_q, state2_i};
-    {state2_q, state2_i} <= (peak_valid_in && ~state1_busy) ? {
-      peak_q_in, peak_i_in
-    } : &state1_addr ? 'd0 : {
-      state1_q, state1_i
-    };
-  end
+        always_ff @(posedge clk) begin
+          state_busy[ii] <= state_busy[ii-1];
+        end
+
+        always_ff @(posedge clk) begin
+          state_addr[ii] <= state_addr[ii-1];
+        end
+        
+        always_ff @(posedge clk) begin
+          {state_q[ii], state_i[ii]} <= {state_q[ii-1], state_i[ii-1]};
+        end
+        
+        always_ff @(posedge clk) begin
+          state_phase[ii] <= state_phase[ii-1];
+        end
+        
+      end // if
+    end // for
+  endgenerate 
+
 
   // If current stage's CPG is busy (state's MSB is high), pass this peak to
   // next CPG.
@@ -113,20 +142,18 @@ module cfr_pc_cpg #(
     if (rst) begin
       peak_valid_out <= 1'b0;
     end else begin
-      peak_valid_out <= peak_valid_in && state_busy;
+      peak_valid_out <= peak_valid_in && state_busy[0];
     end
   end
 
   always_ff @(posedge clk) begin
-    if (peak_valid_in && state_busy) begin
-      peak_i_out     <= peak_i_in;
-      peak_q_out     <= peak_q_in;
-      peak_phase_out <= peak_phase_in;
-    end
+    peak_i_out     <= peak_i_in;
+    peak_q_out     <= peak_q_in;
+    peak_phase_out <= peak_phase_in;
   end
 
-  assign cpw_rd_en   = state2_busy;
-  assign cpw_rd_addr = {state2_addr, (2'b11 - state2_phase)};
+  assign cpw_rd_en   = state_busy[0];
+  assign cpw_rd_addr = {state_addr[0], ({PHASE_WIDTH{1'b1}} - state_phase[0])};
 
   bram_sdp_pipe #(
       .ADDR_WIDTH   (CPW_ADDR_WIDTH),
