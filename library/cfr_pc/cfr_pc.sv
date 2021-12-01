@@ -85,6 +85,7 @@ module cfr_pc #(
   logic signed [DATA_WIDTH-1:0] data_up_q_px [UP_FACTOR];
 
   logic signed [DATA_WIDTH+1:0] data_r_px     [UP_FACTOR];
+  logic signed [  DATA_WIDTH:0] data_r_px_s   [UP_FACTOR];
   logic        [  Iterations:0] data_theta_px [UP_FACTOR];
 
   logic        [DATA_WIDTH:0] peak_r;
@@ -374,10 +375,13 @@ module cfr_pc #(
           .yin     (data_up_q_px[pp]),
           .ctrl_in (1'b0),
           //
-          .theta   (data_theta_px[pp]),
           .r       (data_r_px[pp]),
+          .theta   (data_theta_px[pp]),
           .ctrl_out(  /* Not used */)
       );
+
+      // Truncate 1 MSB
+      assign data_r_px_s[pp] = data_r_px[pp][DATA_WIDTH:0];
 
     end
   endgenerate
@@ -394,7 +398,7 @@ module cfr_pc #(
       .clk                    (clk),
       .rst                    (local_rst),
       //
-      .data_r_px              (data_r_px),
+      .data_r_px              (data_r_px_s),
       .data_theta_px          (data_theta_px),
       //
       .peak_r                 (peak_r),

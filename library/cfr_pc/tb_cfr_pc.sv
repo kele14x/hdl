@@ -8,8 +8,12 @@ module tb_cfr_pc;
   localparam int TestVectorLength = 4096;
   localparam int DutLatency = 130;
 
+  localparam int Csr = 2;
+  localparam int UpFactor = 2;
+  //
   localparam int DataWidth = 16;
   localparam int CpwAddrWidth = 8;
+  localparam int CpwDataWidth = 16;
 
   logic                           clk;
   logic                           rst;
@@ -24,14 +28,13 @@ module tb_cfr_pc;
   logic                           ctrl_rst;
 
   logic                           ctrl_enable;
+  logic        [             3:0] ctrl_spacing;
   logic        [     DataWidth:0] ctrl_clipping_threshold;
   logic        [     DataWidth:0] ctrl_pd_threshold;
 
   logic        [CpwAddrWidth-1:0] ctrl_cpw_addr;
   logic                           ctrl_cpw_en;
   logic                           ctrl_cpw_we;
-  logic        [   DataWidth-1:0] ctrl_cpw_rd_data_i;
-  logic        [   DataWidth-1:0] ctrl_cpw_rd_data_q;
   logic        [   DataWidth-1:0] ctrl_cpw_wr_data_i;
   logic        [   DataWidth-1:0] ctrl_cpw_wr_data_q;
 
@@ -40,13 +43,9 @@ module tb_cfr_pc;
   logic signed [   DataWidth-1:0] data_q_out_ref;
 
   logic signed [   DataWidth-1:0] data_i_in_mem           [TestVectorLength];
-  logic signed [   DataWidth-1:0] data_i_in2_mem          [TestVectorLength];
   logic signed [   DataWidth-1:0] data_q_in_mem           [TestVectorLength];
-  logic signed [   DataWidth-1:0] data_q_in2_mem          [TestVectorLength];
   logic signed [   DataWidth-1:0] data_i_out_mem          [TestVectorLength];
-  logic signed [   DataWidth-1:0] data_i_out2_mem         [TestVectorLength];
   logic signed [   DataWidth-1:0] data_q_out_mem          [TestVectorLength];
-  logic signed [   DataWidth-1:0] data_q_out2_mem         [TestVectorLength];
 
   logic signed [   DataWidth-1:0] cancellation_pulse_i_mem[ 2**CpwAddrWidth];
   logic signed [   DataWidth-1:0] cancellation_pulse_q_mem[ 2**CpwAddrWidth];
@@ -58,13 +57,9 @@ module tb_cfr_pc;
               2 ** CpwAddrWidth - 1);
     //
     $readmemh("test_cfr_pc_data_i_in.txt", data_i_in_mem, 0, TestVectorLength - 1);
-    $readmemh("test_cfr_pc_data_i_in2.txt", data_i_in2_mem, 0, TestVectorLength - 1);
     $readmemh("test_cfr_pc_data_q_in.txt", data_q_in_mem, 0, TestVectorLength - 1);
-    $readmemh("test_cfr_pc_data_q_in2.txt", data_q_in2_mem, 0, TestVectorLength - 1);
     $readmemh("test_cfr_pc_data_i_out.txt", data_i_out_mem, 0, TestVectorLength - 1);
-    $readmemh("test_cfr_pc_data_i_out2.txt", data_i_out2_mem, 0, TestVectorLength - 1);
     $readmemh("test_cfr_pc_data_q_out.txt", data_q_out_mem, 0, TestVectorLength - 1);
-    $readmemh("test_cfr_pc_data_q_out2.txt", data_q_out2_mem, 0, TestVectorLength - 1);
   end
 
   always begin
@@ -82,6 +77,7 @@ module tb_cfr_pc;
     data_i_in = 0;
     data_q_in = 0;
     ctrl_enable = 1;
+    ctrl_spacing = 1;
     ctrl_clipping_threshold = 13818;
     ctrl_pd_threshold = 13818;
     ctrl_cpw_addr = 0;
@@ -95,8 +91,11 @@ module tb_cfr_pc;
   end
 
   cfr_pc #(
+      .CSR           (Csr),
+      .UP_FACTOR     (UpFactor),
       .DATA_WIDTH    (DataWidth),
-      .CPW_ADDR_WIDTH(CpwAddrWidth)
+      .CPW_ADDR_WIDTH(CpwAddrWidth),
+      .CPW_DATA_WIDTH(CpwDataWidth)
   ) DUT (
       .*
   );
@@ -129,13 +128,11 @@ module tb_cfr_pc;
       begin : feed_input
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
-          data_i_in <= data_i_in_mem[i];
-          data_q_in <= data_q_in_mem[i];
-          // data_i_in <= i == 100 ? 10000 : 0;
-          // data_q_in <= i == 100 ? 10000 : 0;
+//          data_i_in <= data_i_in_mem[i];
+//          data_q_in <= data_q_in_mem[i];
+           data_i_in <= i == 100 ? 10000 : 0;
+           data_q_in <= i == 100 ? 10000 : 0;
           @(posedge clk);
-          // data_i_in <= data_i_in2_mem[i];
-          // data_q_in <= data_q_in2_mem[i];
           data_i_in <= '0;
           data_q_in <= '0;
         end
@@ -148,8 +145,6 @@ module tb_cfr_pc;
           data_i_out_ref <= data_i_out_mem[i];
           data_q_out_ref <= data_q_out_mem[i];
           @(posedge clk);
-          // data_i_out_ref <= data_i_out2_mem[i];
-          // data_q_out_ref <= data_q_out2_mem[i];
           data_i_out_ref <= '0;
           data_q_out_ref <= '0;
         end

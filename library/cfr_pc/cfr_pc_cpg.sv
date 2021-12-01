@@ -159,11 +159,11 @@ module cfr_pc_cpg #(
       .ADDR_WIDTH   (CPW_ADDR_WIDTH),
       .DATA_WIDTH   (DATA_WIDTH * 2),
       .READ_LATENCY (2),
+      .INIT_WORD    ('0),
       .INIT_FILE    ("")
   ) i_bram_sdp_pipe (
       //
       .clka (ctrl_clk),
-      .rsta (ctrl_rst),
       .ena  (ctrl_cpw_en),
       .wea  (ctrl_cpw_we),
       .addra(ctrl_cpw_addr),
@@ -181,7 +181,7 @@ module cfr_pc_cpg #(
       .PIPELINE_STAGES(3)
   ) i_delay_state_iq (
       .clk (clk),
-      .din ({state_q, state_i}),
+      .din ({state_q[0], state_i[0]}),
       .dout({state_q_d, state_i_d})
   );
 

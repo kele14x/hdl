@@ -55,8 +55,8 @@ module cfr_pc_pd #(
   // Select the max from multi-phase
   max_parallel #(
       .NUM_INPUT (UP_FACTOR),
-      .DATA_WIDTH(DATA_WIDTH),
-      .CTRL_WIDTH(ITERATIONS)
+      .DATA_WIDTH(DATA_WIDTH+1),
+      .CTRL_WIDTH(ITERATIONS+1)
   ) i_max_pipeline (
       .clk     (clk),
       .rst     (rst),
