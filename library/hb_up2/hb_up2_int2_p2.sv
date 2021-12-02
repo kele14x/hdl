@@ -24,12 +24,11 @@ module hb_up2_int2_p2 #(
 
 
   localparam int RND = (1 <<< (SRA_BITS - 1));
-  localparam int BASE = ((NUM_UNIQUE_COE) / 2) +
-    (((NUM_UNIQUE_COE) % 2) != 0) + 1; // ceil(N/2) + 1
-  localparam int TAPS = BASE*4+NUM_UNIQUE_COE*2 > BASE*4+6 ?
-    BASE*4+NUM_UNIQUE_COE*2 : BASE*4+6;
+  localparam int BASE = (NUM_UNIQUE_COE + 1) / 2 + 1;  // ceil(N/2) + 1
+  localparam int TAPS = BASE * 4 + NUM_UNIQUE_COE * 2 > BASE * 4 + 6 ?
+      BASE * 4 + NUM_UNIQUE_COE * 2 : BASE * 4 + 6;
 
-  localparam int Latency = (BASE * 4 + 5) / 2 + 2;
+  localparam int Latency = BASE * 2 + 4;
 
   logic signed [        XIN_WIDTH-1:0] xin_d [          TAPS];
 
@@ -97,8 +96,8 @@ module hb_up2_int2_p2 #(
       always_ff @(posedge clk) begin
         ovf <= ~(&preg0[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1] ||
                  &(~preg0[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1])) ||
-               ~(&preg1[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1] ||
-                 &(~preg1[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1]));
+            ~(&preg1[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1] ||
+              &(~preg1[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1]));
       end
 
     end

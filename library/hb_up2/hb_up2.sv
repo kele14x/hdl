@@ -1,5 +1,6 @@
 // File: hb_up2.sv
 // Brief: Half band up-sample by 2.
+
 `timescale 1 ns / 1 ps `default_nettype none
 
 module hb_up2 #(

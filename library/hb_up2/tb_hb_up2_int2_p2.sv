@@ -16,7 +16,7 @@ module tb_hb_up2_int2_p2 ();
   localparam int SraBits = 15;
 
   localparam int ImpulseLatency = DUT.Latency;
-  localparam int DutLatency = ImpulseLatency - (NumUniqueCoe * 2 + 2) / 4;
+  localparam int DutLatency = ImpulseLatency - NumUniqueCoe - 1;
   
   logic                clk;
   logic                rst;
