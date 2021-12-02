@@ -52,14 +52,14 @@ module cfr_pc_cpg #(
 
   // State of CPG stage
 
-  logic                      state_busy [CSR];
-  logic [CPW_ADDR_WIDTH-3:0] state_addr [CSR];
+  logic                             state_busy      [CSR];
+  logic        [CPW_ADDR_WIDTH-3:0] state_addr      [CSR];
 
-  logic [    DATA_WIDTH-1:0] state_i    [CSR];
-  logic [    DATA_WIDTH-1:0] state_q    [CSR];
-  logic [   PHASE_WIDTH-1:0] state_phase[CSR];
-  
-  logic [    DATA_WIDTH-1:0] state_i_d, state_q_d;
+  logic        [    DATA_WIDTH-1:0] state_i         [CSR];
+  logic        [    DATA_WIDTH-1:0] state_q         [CSR];
+  logic        [   PHASE_WIDTH-1:0] state_phase     [CSR];
+
+  logic [DATA_WIDTH-1:0] state_i_d, state_q_d;
 
   logic [DATA_WIDTH-1:0] delta_i, delta_q;
 
@@ -68,12 +68,12 @@ module cfr_pc_cpg #(
   // is aligned with `peak_*_in`.
 
   generate
-    for(genvar ii = 0; ii < CSR; ii++) begin: g_interleave  
-      if (ii == 0) begin: g_first
+    for (genvar ii = 0; ii < CSR; ii++) begin : g_interleave
+      if (ii == 0) begin : g_first
 
         always_ff @(posedge clk) begin
           if (rst) begin
-            state_busy[ii]  <= 'd0;
+            state_busy[ii] <= 'd0;
           end else begin
             if (peak_valid_in && ~state_busy[CSR-1]) begin
               state_busy[ii] <= 1'b1;
@@ -93,7 +93,7 @@ module cfr_pc_cpg #(
             state_addr[ii] <= '0;
           end
         end
- 
+
         // `state_i/q` is i/q value of peak
         always_ff @(posedge clk) begin
           if (peak_valid_in && ~state_busy[CSR-1]) begin
@@ -102,7 +102,7 @@ module cfr_pc_cpg #(
             {state_q[ii], state_i[ii]} <= {state_q[CSR-1], state_i[CSR-1]};
           end
         end
-  
+
         // `state_phase` is phase of peak
         always_ff @(posedge clk) begin
           if (peak_valid_in && ~state_busy[CSR-1]) begin
@@ -111,8 +111,8 @@ module cfr_pc_cpg #(
             state_phase[ii] <= state_phase[CSR-1];
           end
         end
-  
-      end else begin: g_left
+
+      end else begin : g_left
 
         always_ff @(posedge clk) begin
           state_busy[ii] <= state_busy[ii-1];
@@ -121,18 +121,18 @@ module cfr_pc_cpg #(
         always_ff @(posedge clk) begin
           state_addr[ii] <= state_addr[ii-1];
         end
-        
+
         always_ff @(posedge clk) begin
           {state_q[ii], state_i[ii]} <= {state_q[ii-1], state_i[ii-1]};
         end
-        
+
         always_ff @(posedge clk) begin
           state_phase[ii] <= state_phase[ii-1];
         end
-        
-      end // if
-    end // for
-  endgenerate 
+
+      end  // if
+    end  // for
+  endgenerate
 
 
   // If current stage's CPG is busy (state's MSB is high), pass this peak to
@@ -156,11 +156,11 @@ module cfr_pc_cpg #(
   assign cpw_rd_addr = {state_addr[0], ({PHASE_WIDTH{1'b1}} - state_phase[0])};
 
   bram_sdp_pipe #(
-      .ADDR_WIDTH   (CPW_ADDR_WIDTH),
-      .DATA_WIDTH   (DATA_WIDTH * 2),
-      .READ_LATENCY (2),
-      .INIT_WORD    ('0),
-      .INIT_FILE    ("")
+      .ADDR_WIDTH  (CPW_ADDR_WIDTH),
+      .DATA_WIDTH  (DATA_WIDTH * 2),
+      .READ_LATENCY(2),
+      .INIT_WORD   ('0),
+      .INIT_FILE   ("")
   ) i_bram_sdp_pipe (
       //
       .clka (ctrl_clk),

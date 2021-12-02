@@ -1,14 +1,13 @@
-// File: hb_up2.sv
+// File: hb_up2_int2.sv
 // Brief: Half band up-sample by 2. Interleaved 2 channels.
+
 `timescale 1 ns / 1 ps `default_nettype none
 
 module hb_up2_int2 #(
     parameter int XIN_WIDTH = 16,
     parameter int COE_WIDTH = 16,
     parameter int NUM_UNIQUE_COE = 5,
-    parameter signed [COE_WIDTH-1:0] COE_NUMS[NUM_UNIQUE_COE] = {
-      16'h03B8, 16'hF9B7, 16'h0C12, 16'hE78C, 16'h508E
-    },
+    parameter signed [COE_WIDTH-1:0] COE_NUMS[NUM_UNIQUE_COE] = {952, -1609, 3090, -6260, 20622},
     parameter int YOUT_WIDTH = 16,
     parameter int SRA_BITS = 15
 ) (
@@ -20,7 +19,9 @@ module hb_up2_int2 #(
     output var logic                  ovf
 );
 
+
   localparam int RND = (1 <<< (SRA_BITS - 1));
+  localparam int Latency = NUM_UNIQUE_COE * 2 + 6;
 
   logic signed [        XIN_WIDTH-1:0] xin_d[NUM_UNIQUE_COE*4];
 
@@ -51,7 +52,7 @@ module hb_up2_int2 #(
   endgenerate
 
   always_ff @(posedge clk) begin
-    yout0 <= xin_d[14];
+    yout0 <= xin_d[NUM_UNIQUE_COE*2+4];
     yout1 <= preg[0][YOUT_WIDTH+SRA_BITS-1:SRA_BITS];
   end
 

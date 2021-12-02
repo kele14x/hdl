@@ -21,6 +21,7 @@ module max_parallel #(
 
 
   localparam int NumStage = $clog2(NUM_INPUT);
+  localparam int Latency = NumStage;
 
   generate
     for (genvar ii = 0; ii < NumStage; ii++) begin : g_stage

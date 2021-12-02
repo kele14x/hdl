@@ -19,6 +19,7 @@ module hb_up2 #(
 );
 
   localparam int RND = (1 <<< (SRA_BITS - 1));
+  localparam int Latency = NUM_UNIQUE_COE + 6;
 
   logic signed [        XIN_WIDTH-1:0] xin_d[NUM_UNIQUE_COE*4];
 

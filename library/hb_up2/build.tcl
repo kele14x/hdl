@@ -15,7 +15,7 @@ update_compile_order -fileset sim_1
 
 # Add constrain files
 add_files -fileset constrs_1 -norecurse ./hb_up2_ooc.xdc
-set_property USED_IN {synthesis implementation out_of_context} [get_files ./hb_up2_int2_ooc.xdc]
+set_property USED_IN {synthesis implementation out_of_context} [get_files ./hb_up2_ooc.xdc]
 
 # Project property
 set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} -value {-mode out_of_context} -objects [get_runs synth_1]

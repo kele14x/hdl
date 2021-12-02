@@ -3,8 +3,6 @@ create_project project_1 ./prj -part xczu21dr-ffvd1156-2-e -force
 
 # Add source files
 add_files -norecurse ./../adder/adder.sv
-add_files -norecurse ./../cdc/cdc_array_single.sv
-add_files -norecurse ./../cdc/cdc_async_rst_sync.sv
 add_files -norecurse ./../cmult/cmult.sv
 add_files -norecurse ./../cordic_cart2pol/cordic_cart2pol.sv
 add_files -norecurse ./../cordic_pol2cart/cordic_pol2cart.sv

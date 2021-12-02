@@ -6,7 +6,6 @@
 module tb_hb_up2 ();
 
   localparam int ClkPeriod = 10;
-  localparam int DutLatency = 6;
   localparam int TestVectorLength = 4096;
 
   localparam int XinWidth = 16;
@@ -15,6 +14,10 @@ module tb_hb_up2 ();
   localparam signed [CoeWidth-1:0] CoeNums[NumUniqueCoe] = {1277, -4710, 20014};
   localparam int YoutWidth = 16;
   localparam int SraBits = 15;
+
+  localparam int ImpulseLatency = DUT.Latency;
+  localparam int DutLatency = ImpulseLatency - NumUniqueCoe;
+
 
   logic                clk;
   logic                rst;
@@ -51,7 +54,7 @@ module tb_hb_up2 ();
   initial begin
     $display("*****************");
     $display("Simulation start.");
-    wait(rst == 0);
+    wait (rst == 0);
     xin <= 0;
     #1000;
     @(posedge clk);

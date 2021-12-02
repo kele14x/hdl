@@ -40,31 +40,31 @@ module cfr_pc_softclipper #(
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
 
-  logic        [ DATA_WIDTH-1:0] data_i_s            [NUM_CPG+1];
-  logic        [ DATA_WIDTH-1:0] data_q_s            [NUM_CPG+1];
+  logic        [ DATA_WIDTH-1:0] data_i_s    [NUM_CPG+1];
+  logic        [ DATA_WIDTH-1:0] data_q_s    [NUM_CPG+1];
 
-  logic signed [ DATA_WIDTH-1:0] peak_i_s            [NUM_CPG+1];
-  logic signed [ DATA_WIDTH-1:0] peak_q_s            [NUM_CPG+1];
-  logic        [PHASE_WIDTH-1:0] peak_phase_s        [NUM_CPG+1];
-  logic                          peak_valid_s        [NUM_CPG+1];
+  logic signed [ DATA_WIDTH-1:0] peak_i_s    [NUM_CPG+1];
+  logic signed [ DATA_WIDTH-1:0] peak_q_s    [NUM_CPG+1];
+  logic        [PHASE_WIDTH-1:0] peak_phase_s[NUM_CPG+1];
+  logic                          peak_valid_s[NUM_CPG+1];
 
 
   // Connect input
 
-  assign peak_i_s[0]        = peak_i_in;
-  assign peak_q_s[0]        = peak_q_in;
-  assign peak_phase_s[0]    = peak_phase_in;
-  assign peak_valid_s[0]    = peak_valid_in;
+  assign peak_i_s[0]     = peak_i_in;
+  assign peak_q_s[0]     = peak_q_in;
+  assign peak_phase_s[0] = peak_phase_in;
+  assign peak_valid_s[0] = peak_valid_in;
 
   // Connect output
 
-  assign data_i_out         = data_i_s[NUM_CPG];
-  assign data_q_out         = data_q_s[NUM_CPG];
+  assign data_i_out      = data_i_s[NUM_CPG];
+  assign data_q_out      = data_q_s[NUM_CPG];
 
-  assign peak_i_out         = peak_i_s[NUM_CPG];
-  assign peak_q_out         = peak_q_s[NUM_CPG];
-  assign peak_phase_out     = peak_phase_s[NUM_CPG];
-  assign peak_valid_out     = peak_valid_s[NUM_CPG];
+  assign peak_i_out      = peak_i_s[NUM_CPG];
+  assign peak_q_out      = peak_q_s[NUM_CPG];
+  assign peak_phase_out  = peak_phase_s[NUM_CPG];
+  assign peak_valid_out  = peak_valid_s[NUM_CPG];
 
 
   // Delay matches CPG chain, plut impulse delay

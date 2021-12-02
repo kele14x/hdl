@@ -6,16 +6,18 @@
 module tb_hb_up2_int2_p2 ();
 
   localparam int ClkPeriod = 10;
-  localparam int DutLatency = 6;
   localparam int TestVectorLength = 4096;
 
   localparam int XinWidth = 16;
   localparam int CoeWidth = 16;
-  localparam int NumUniqueCoe = 2;
-  localparam signed [CoeWidth-1:0] CoeNums[NumUniqueCoe] = {-2788, 19030};
+  localparam int NumUniqueCoe = 3;
+  localparam signed [CoeWidth-1:0] CoeNums[NumUniqueCoe] = {1277, -4710, 20014};
   localparam int YoutWidth = 16;
   localparam int SraBits = 15;
 
+  localparam int ImpulseLatency = DUT.Latency;
+  localparam int DutLatency = ImpulseLatency - (NumUniqueCoe * 2 + 2) / 4;
+  
   logic                clk;
   logic                rst;
 
@@ -77,11 +79,11 @@ module tb_hb_up2_int2_p2 ();
         repeat (DutLatency) @(posedge clk);
         for (int i = 0; i < TestVectorLength/2; i++) begin
           @(posedge clk);
-          yout0_ref <= (i == 0) ? 0 : yout_mem[4*i-1];
-          yout1_ref <= yout_mem[4*i];
-          yout2_ref <= yout_mem[4*i+1];
-          yout3_ref <= yout_mem[4*i+2];
-          ovf_ref   <= ((i == 0) ? 0 : ovf_mem[4*i-1]) | ovf_mem[4*i] | ovf_mem[4*i+1] | ovf_mem[4*i+2];
+          yout0_ref <= (i == 0) ? 0 : yout_mem[4*i-3];
+          yout1_ref <= (i == 0) ? 0 : yout_mem[4*i-2];
+          yout2_ref <= (i == 0) ? 0 : yout_mem[4*i-1];
+          yout3_ref <= yout_mem[4*i];
+          ovf_ref   <= ((i == 0) ? 0 : ovf_mem[4*i]) | ovf_mem[4*i-1] | ovf_mem[4*i-2] | ovf_mem[4*i-3];
           @(posedge clk);
           yout0_ref <= 0;
           yout1_ref <= 0;

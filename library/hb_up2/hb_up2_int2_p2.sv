@@ -1,14 +1,13 @@
 // File: hb_up2.sv
 // Brief: Half band up-sample by 2. Interleaved 2 channels.
+
 `timescale 1 ns / 1 ps `default_nettype none
 
 module hb_up2_int2_p2 #(
     parameter int XIN_WIDTH = 16,
     parameter int COE_WIDTH = 16,
-    parameter int NUM_UNIQUE_COE = 2,
-    parameter signed [COE_WIDTH-1:0] COE_NUMS[NUM_UNIQUE_COE] = {
-      -2788, 19030
-    },
+    parameter int NUM_UNIQUE_COE = 5,
+    parameter signed [COE_WIDTH-1:0] COE_NUMS[NUM_UNIQUE_COE] = {952, -1609, 3090, -6260, 20622},
     parameter int YOUT_WIDTH = 16,
     parameter int SRA_BITS = 15
 ) (
@@ -23,21 +22,24 @@ module hb_up2_int2_p2 #(
     output var logic                  ovf
 );
 
+
   localparam int RND = (1 <<< (SRA_BITS - 1));
-  localparam int BASE = ((NUM_UNIQUE_COE) / 2) + 
+  localparam int BASE = ((NUM_UNIQUE_COE) / 2) +
     (((NUM_UNIQUE_COE) % 2) != 0) + 1; // ceil(N/2) + 1
-  localparam int TAPS = BASE*4+NUM_UNIQUE_COE*2 > BASE*4+6 ? 
+  localparam int TAPS = BASE*4+NUM_UNIQUE_COE*2 > BASE*4+6 ?
     BASE*4+NUM_UNIQUE_COE*2 : BASE*4+6;
 
-  logic signed [        XIN_WIDTH-1:0] xin_d[TAPS];
+  localparam int Latency = (BASE * 4 + 5) / 2 + 2;
 
-  logic signed [          XIN_WIDTH:0] adreg0[  NUM_UNIQUE_COE];
-  logic signed [XIN_WIDTH+COE_WIDTH:0] mreg0 [  NUM_UNIQUE_COE];
-  logic signed [XIN_WIDTH+COE_WIDTH:0] preg0 [  NUM_UNIQUE_COE];
+  logic signed [        XIN_WIDTH-1:0] xin_d [          TAPS];
 
-  logic signed [          XIN_WIDTH:0] adreg1[  NUM_UNIQUE_COE];
-  logic signed [XIN_WIDTH+COE_WIDTH:0] mreg1 [  NUM_UNIQUE_COE];
-  logic signed [XIN_WIDTH+COE_WIDTH:0] preg1 [  NUM_UNIQUE_COE];
+  logic signed [          XIN_WIDTH:0] adreg0[NUM_UNIQUE_COE];
+  logic signed [XIN_WIDTH+COE_WIDTH:0] mreg0 [NUM_UNIQUE_COE];
+  logic signed [XIN_WIDTH+COE_WIDTH:0] preg0 [NUM_UNIQUE_COE];
+
+  logic signed [          XIN_WIDTH:0] adreg1[NUM_UNIQUE_COE];
+  logic signed [XIN_WIDTH+COE_WIDTH:0] mreg1 [NUM_UNIQUE_COE];
+  logic signed [XIN_WIDTH+COE_WIDTH:0] preg1 [NUM_UNIQUE_COE];
 
   // Delay taps, tools can automatically absorb registers into DSP and duplicate
   // registers if needed
@@ -52,9 +54,9 @@ module hb_up2_int2_p2 #(
   function automatic int x_idx(input int ith, input int stage);
     begin
       int ret;
-      ret = BASE * 2 - ith - 1; // time index
-      ret = (ret / 2) * 4 + (ret % 2) + 2; 
-      ret = ret - stage * 2; // data index 
+      ret = BASE * 2 - ith - 1;  // time index
+      ret = (ret / 2) * 4 + (ret % 2) + 2;
+      ret = ret - stage * 2;  // data index
       return ret;
     end
   endfunction
@@ -96,7 +98,7 @@ module hb_up2_int2_p2 #(
         ovf <= ~(&preg0[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1] ||
                  &(~preg0[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1])) ||
                ~(&preg1[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1] ||
-                 &(~preg1[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1]));;
+                 &(~preg1[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1]));
       end
 
     end

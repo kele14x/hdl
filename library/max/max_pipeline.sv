@@ -22,6 +22,9 @@ module max_pipeline #(
     output var logic        [   IDX_WIDTH:0] idx_out [NUM_INPUT/2]
 );
 
+
+  localparam int Latency = 1;
+
   generate
     for (genvar ii = 0; ii < NUM_INPUT / 2; ii++) begin : g_cmp
 

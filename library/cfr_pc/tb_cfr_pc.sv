@@ -15,6 +15,7 @@ module tb_cfr_pc;
   localparam int CpwAddrWidth = 8;
   localparam int CpwDataWidth = 16;
 
+
   logic                           clk;
   logic                           rst;
 
@@ -85,7 +86,7 @@ module tb_cfr_pc;
     ctrl_cpw_we = 0;
     ctrl_cpw_wr_data_i = 0;
     ctrl_cpw_wr_data_q = 0;
-    #10000;
+    #1000;
     rst = 0;
     ctrl_rst = 0;
   end
@@ -104,7 +105,7 @@ module tb_cfr_pc;
     $display("**************************");
     $display("Simulation starts.");
 
-    wait(rst == 0);
+    wait (rst == 0);
 
     #100;
     // Set cancellation pulse
@@ -128,10 +129,10 @@ module tb_cfr_pc;
       begin : feed_input
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
-//          data_i_in <= data_i_in_mem[i];
-//          data_q_in <= data_q_in_mem[i];
-           data_i_in <= i == 100 ? 10000 : 0;
-           data_q_in <= i == 100 ? 10000 : 0;
+          //          data_i_in <= data_i_in_mem[i];
+          //          data_q_in <= data_q_in_mem[i];
+          data_i_in <= i == 100 ? 10000 : 0;
+          data_q_in <= i == 100 ? 10000 : 0;
           @(posedge clk);
           data_i_in <= '0;
           data_q_in <= '0;
