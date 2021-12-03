@@ -25,6 +25,8 @@ module cmult #(
 );
 
 
+  localparam int Latency = 8;
+
   logic signed [AWIDTH-1:0] ar_d, ar_dd, ar_ddd, ar_dddd, ar_ddddd;
   logic signed [AWIDTH-1:0] ai_d, ai_dd, ai_ddd, ai_dddd, ai_ddddd;
 

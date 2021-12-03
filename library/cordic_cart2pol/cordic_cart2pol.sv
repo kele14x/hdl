@@ -1,7 +1,7 @@
 // File: cordic_cart2pol.sv
 // Breif: CORDIC-based approximation of cartesian-to-polar conversion
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module cordic_cart2pol #(
     parameter int DATA_WIDTH           = 16,

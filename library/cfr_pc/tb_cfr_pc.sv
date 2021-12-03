@@ -6,12 +6,13 @@
 module tb_cfr_pc;
 
   localparam int TestVectorLength = 4096;
-  localparam int DutLatency = 130;
+  localparam int DutLatency = 211;
 
   localparam int Csr = 2;
   localparam int UpFactor = 2;
   //
   localparam int DataWidth = 16;
+  localparam int NumCpg = 6;
   localparam int CpwAddrWidth = 8;
   localparam int CpwDataWidth = 16;
 
@@ -43,6 +44,9 @@ module tb_cfr_pc;
   logic signed [   DataWidth-1:0] data_i_out_ref;
   logic signed [   DataWidth-1:0] data_q_out_ref;
 
+  logic signed [   DataWidth-1:0] data_i_out_err;
+  logic signed [   DataWidth-1:0] data_q_out_err;
+
   logic signed [   DataWidth-1:0] data_i_in_mem           [TestVectorLength];
   logic signed [   DataWidth-1:0] data_q_in_mem           [TestVectorLength];
   logic signed [   DataWidth-1:0] data_i_out_mem          [TestVectorLength];
@@ -62,6 +66,9 @@ module tb_cfr_pc;
     $readmemh("test_cfr_pc_data_i_out.txt", data_i_out_mem, 0, TestVectorLength - 1);
     $readmemh("test_cfr_pc_data_q_out.txt", data_q_out_mem, 0, TestVectorLength - 1);
   end
+
+  assign data_i_out_err = data_i_out - data_i_out_ref;
+  assign data_q_out_err = data_q_out - data_q_out_ref;
 
   always begin
     clk = 0;
@@ -95,6 +102,7 @@ module tb_cfr_pc;
       .CSR           (Csr),
       .UP_FACTOR     (UpFactor),
       .DATA_WIDTH    (DataWidth),
+      .NUM_CPG       (NumCpg),
       .CPW_ADDR_WIDTH(CpwAddrWidth),
       .CPW_DATA_WIDTH(CpwDataWidth)
   ) DUT (
@@ -129,10 +137,10 @@ module tb_cfr_pc;
       begin : feed_input
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
-          //          data_i_in <= data_i_in_mem[i];
-          //          data_q_in <= data_q_in_mem[i];
-          data_i_in <= i == 100 ? 10000 : 0;
-          data_q_in <= i == 100 ? 10000 : 0;
+          data_i_in <= data_i_in_mem[i];
+          data_q_in <= data_q_in_mem[i];
+//          data_i_in <= i == 100 ? 10000 : 0;
+//          data_q_in <= i == 100 ? 10000 : 0;
           @(posedge clk);
           data_i_in <= '0;
           data_q_in <= '0;

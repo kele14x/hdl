@@ -2,11 +2,11 @@
 // Brief: cfr_pc_cpg is Canceling Pulse Generator (CPG) for PC-CFR. It' designed
 //        as cascade-able.
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module cfr_pc_cpg #(
     parameter int CSR            = 2,
-    parameter int PHASE_WIDTH    = 2,
+    parameter int PHASE_WIDTH    = 1,
     //
     parameter int DATA_WIDTH     = 16,
     parameter int CPW_ADDR_WIDTH = 8
@@ -41,31 +41,34 @@ module cfr_pc_cpg #(
 );
 
 
-  // BRAM read port
-  logic                             cpw_rd_en;
-  logic        [CPW_ADDR_WIDTH-1:0] cpw_rd_addr;
-  logic signed [    DATA_WIDTH-1:0] cpw_rd_data_i;
-  logic signed [    DATA_WIDTH-1:0] cpw_rd_data_q;
+  localparam int CpgLatency = 11 + 2 ** (CPW_ADDR_WIDTH - PHASE_WIDTH);
 
-  logic signed [    DATA_WIDTH-1:0] cpw_rd_data_i_d;
-  logic signed [    DATA_WIDTH-1:0] cpw_rd_data_q_d;
+  // BRAM read port
+  logic                                         cpw_rd_en;
+  logic        [            CPW_ADDR_WIDTH-1:0] cpw_rd_addr;
+  logic signed [                DATA_WIDTH-1:0] cpw_rd_data_i;
+  logic signed [                DATA_WIDTH-1:0] cpw_rd_data_q;
+
+  logic signed [                DATA_WIDTH-1:0] cpw_rd_data_i_d;
+  logic signed [                DATA_WIDTH-1:0] cpw_rd_data_q_d;
 
   // State of CPG stage
 
-  logic                             state_busy      [CSR];
-  logic        [CPW_ADDR_WIDTH-3:0] state_addr      [CSR];
+  logic                                         state_busy      [CSR] = '{CSR{1'b0}};
+  logic        [CPW_ADDR_WIDTH-PHASE_WIDTH-1:0] state_addr      [CSR] = '{CSR{'0}};
 
-  logic        [    DATA_WIDTH-1:0] state_i         [CSR];
-  logic        [    DATA_WIDTH-1:0] state_q         [CSR];
-  logic        [   PHASE_WIDTH-1:0] state_phase     [CSR];
+  logic        [                DATA_WIDTH-1:0] state_i         [CSR] = '{CSR{'0}};
+  logic        [                DATA_WIDTH-1:0] state_q         [CSR] = '{CSR{'0}};
+  logic        [               PHASE_WIDTH-1:0] state_phase     [CSR] = '{CSR{'0}};
 
   logic [DATA_WIDTH-1:0] state_i_d, state_q_d;
 
   logic [DATA_WIDTH-1:0] delta_i, delta_q;
 
 
-  // State transfer, the basic idea is `state1_*` is for current channel, which
-  // is aligned with `peak_*_in`.
+  // State transfer, the basic idea is `state_*[0]` is for current channel, which
+  // is updated after one tick after `peak_*_in`. Other interleaved channel just
+  // be put into "sleep".
 
   generate
     for (genvar ii = 0; ii < CSR; ii++) begin : g_interleave
@@ -135,14 +138,14 @@ module cfr_pc_cpg #(
   endgenerate
 
 
-  // If current stage's CPG is busy (state's MSB is high), pass this peak to
+  // If current stage's CPG is busy (`state_busy` is high), pass this peak to
   // next CPG.
 
   always_ff @(posedge clk) begin
     if (rst) begin
       peak_valid_out <= 1'b0;
     end else begin
-      peak_valid_out <= peak_valid_in && state_busy[0];
+      peak_valid_out <= peak_valid_in && state_busy[CSR-1];
     end
   end
 

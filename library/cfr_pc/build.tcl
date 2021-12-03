@@ -19,6 +19,7 @@ add_files -norecurse ./cfr_pc.sv
 add_files -norecurse ./cfr_pc_cpg.sv
 add_files -norecurse ./cfr_pc_pd.sv
 add_files -norecurse ./cfr_pc_softclipper.sv
+add_files -norecurse ./cfr_pc_upx.sv
 update_compile_order -fileset sources_1
 
 # Add simulation only files

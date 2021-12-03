@@ -1,26 +1,24 @@
 // File: cfr_pc.sv
 // Brief: cfr_pc performs PC-CFR on input signal.
-//        To integrate this module into your design, first select architecture
-//        related parameters, including:
-//
-//          - Clock to sample rate ratio (CSR), it impacts the interface
-//            and internal signal processing. Valid value is 1,2. If 1, use
-//            clock frequency same as input signal sampling rate. If 2, use 2x
-//            clock frequency of input signal sampling rate. Then the interface
-//            is 2 channel interleaved. That is CH1/CH2/CH1/CH2...
-//          - Up-sampling factor (UP_FACTOR). Valid range is 1, 2, 4. Internal
-//            up-sampling factor (if > 1) performed on input signal.
-//
-//        Do not change other parameters.
+//        Do not change parameters, they will not work.
 
 `timescale 1ns / 1ps `default_nettype none
 
 module cfr_pc #(
-    // Architecture parameters
+    // Architecture parameters:
+    // Clock to sample rate ratio (CSR), it impacts the interface
+    // and internal signal processing. Valid value is 1,2. If 1, use
+    // clock frequency same as input signal sampling rate. If 2, use 2x
+    // clock frequency of input signal sampling rate. Then the interface
+    // is 2 channel interleaved. That is CH1/CH2/CH1/CH2...
     parameter int CSR            = 2,
+    // Up-sampling factor (UP_FACTOR). Valid range is 1, 2, 4. Internal
+    // up-sampling factor (if > 1) performed on input signal.
     parameter int UP_FACTOR      = 2,
     // Data path parameters
     parameter int DATA_WIDTH     = 16,
+    // Number of CPGs
+    parameter int NUM_CPG        = 6,
     // Coefficient parameters
     parameter int CPW_ADDR_WIDTH = 8,
     parameter int CPW_DATA_WIDTH = 16
@@ -56,35 +54,37 @@ module cfr_pc #(
   // CORDIC iteration stages
   localparam int Iterations = 7;
   // Data path latency
-  // TODO:
-  localparam int DataPathLatency = CSR == 1 ? 9 + 10 + 19 + 10 : 16 + 6 + 10 + 4 + 10;
+  // TODO: Calculate delay value based on parameters
+  localparam int DataPathLatency = 12 + 10 + 35 + 10;
+
+  localparam int PhaseWidth = $clog2(UP_FACTOR);
 
 
-  logic                         local_rst;
+  logic                  local_rst;
 
-  logic                         ctrl_enable_s;
-  logic        [           3:0] ctrl_spacing_s;
-  logic        [  DATA_WIDTH:0] ctrl_clipping_threshold_s;
-  logic        [  DATA_WIDTH:0] ctrl_pd_threshold_s;
+  logic                  ctrl_enable_s;
+  logic [           3:0] ctrl_spacing_s;
+  logic [  DATA_WIDTH:0] ctrl_clipping_threshold_s;
+  logic [  DATA_WIDTH:0] ctrl_pd_threshold_s;
 
-  logic signed [DATA_WIDTH-1:0] data_up_i_px              [UP_FACTOR];
-  logic signed [DATA_WIDTH-1:0] data_up_q_px              [UP_FACTOR];
+  logic [DATA_WIDTH-1:0] data_up_i_px              [UP_FACTOR];
+  logic [DATA_WIDTH-1:0] data_up_q_px              [UP_FACTOR];
 
-  logic signed [DATA_WIDTH+1:0] data_r_px                 [UP_FACTOR];
-  logic signed [  DATA_WIDTH:0] data_r_px_s               [UP_FACTOR];
-  logic        [  Iterations:0] data_theta_px             [UP_FACTOR];
+  logic [DATA_WIDTH+1:0] data_r_px                 [UP_FACTOR];
+  logic [  DATA_WIDTH:0] data_r_px_s               [UP_FACTOR];
+  logic [  Iterations:0] data_theta_px             [UP_FACTOR];
 
-  logic        [  DATA_WIDTH:0] peak_r;
-  logic        [  Iterations:0] peak_theta;
+  logic [  DATA_WIDTH:0] peak_r;
+  logic [  Iterations:0] peak_theta;
 
-  logic signed [DATA_WIDTH+2:0] peak_i;
-  logic signed [DATA_WIDTH+2:0] peak_q;
+  logic [DATA_WIDTH+2:0] peak_i;
+  logic [DATA_WIDTH+2:0] peak_q;
 
   logic peak_valid, peak_valid_d;
-  logic [1:0] peak_phase, peak_phase_d;
+  logic [PhaseWidth-1:0] peak_phase, peak_phase_d;
 
-  logic signed [DATA_WIDTH-1:0] data_i_in_d;
-  logic signed [DATA_WIDTH-1:0] data_q_in_d;
+  logic [DATA_WIDTH-1:0] data_i_in_d;
+  logic [DATA_WIDTH-1:0] data_q_in_d;
 
 
   // Parameter checking
@@ -199,7 +199,7 @@ module cfr_pc #(
           .CTRL_WIDTH          (1),
           .ITERATIONS          (Iterations),
           .COMPENSATION_SCALING(1)
-      ) i_cordic_cart2pol_p0 (
+      ) i_cordic_cart2pol (
           .clk     (clk),
           .rst     (local_rst),
           //
@@ -224,6 +224,8 @@ module cfr_pc #(
 
   cfr_pc_pd #(
       .CSR       (CSR),
+      .UP_FACTOR (UP_FACTOR),
+      //
       .ITERATIONS(Iterations),
       .DATA_WIDTH(DATA_WIDTH)
   ) i_cfr_pc_pd (
@@ -267,7 +269,7 @@ module cfr_pc #(
   );
 
   reg_pipeline #(
-      .DATA_WIDTH     (3),
+      .DATA_WIDTH     (PhaseWidth + 1),
       .PIPELINE_STAGES(10)
   ) i_delay_peak (
       .clk (clk),
@@ -290,9 +292,12 @@ module cfr_pc #(
   // 143 clock tick latency
 
   cfr_pc_softclipper #(
+      .CSR           (CSR),
+      .PHASE_WIDTH   (PhaseWidth),
+      //
       .DATA_WIDTH    (DATA_WIDTH),
       .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH),
-      .NUM_CPG       (6)
+      .NUM_CPG       (NUM_CPG)
   ) i_cfr_pc_softclipper (
       .clk               (clk),
       .rst               (local_rst),

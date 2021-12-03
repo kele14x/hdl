@@ -1,11 +1,11 @@
 // File: cfr_cpg.sv
 // Brief: cfr_cpg is Canceling pulse generator. It' designed as cascade-able.
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module cfr_pc_softclipper #(
     parameter int CSR            = 2,
-    parameter int PHASE_WIDTH    = 2,
+    parameter int PHASE_WIDTH    = 1,
     //
     parameter int DATA_WIDTH     = 16,
     parameter int CPW_ADDR_WIDTH = 8,
@@ -40,6 +40,10 @@ module cfr_pc_softclipper #(
     input var  logic        [    DATA_WIDTH-1:0] ctrl_cpw_wr_data_q
 );
 
+
+  localparam int CpgLatency = 10 + 2 ** (CPW_ADDR_WIDTH - PHASE_WIDTH); 
+  localparam int Latency = CpgLatency + NUM_CPG;
+
   logic        [ DATA_WIDTH-1:0] data_i_s    [NUM_CPG+1];
   logic        [ DATA_WIDTH-1:0] data_q_s    [NUM_CPG+1];
 
@@ -70,7 +74,7 @@ module cfr_pc_softclipper #(
   // Delay matches CPG chain, plut impulse delay
   reg_pipeline #(
       .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(78)
+      .PIPELINE_STAGES(CpgLatency)
   ) i_delay (
       .clk (clk),
       .din ({data_q_in, data_i_in}),

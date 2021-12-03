@@ -13,13 +13,13 @@ module max_pipeline #(
     input var  logic                         clk,
     input var  logic                         rst,
     //
-    input var  logic signed [DATA_WIDTH-1:0] data_in [  NUM_INPUT],
-    input var  logic        [CTRL_WIDTH-1:0] ctrl_in [  NUM_INPUT],
-    input var  logic        [ IDX_WIDTH-1:0] idx_in  [  NUM_INPUT],
+    input var  logic [DATA_WIDTH-1:0] data_in [  NUM_INPUT],
+    input var  logic [CTRL_WIDTH-1:0] ctrl_in [  NUM_INPUT],
+    input var  logic [ IDX_WIDTH-1:0] idx_in  [  NUM_INPUT],
     //
-    output var logic signed [DATA_WIDTH-1:0] data_out[NUM_INPUT/2],
-    output var logic        [CTRL_WIDTH-1:0] ctrl_out[NUM_INPUT/2],
-    output var logic        [   IDX_WIDTH:0] idx_out [NUM_INPUT/2]
+    output var logic [DATA_WIDTH-1:0] data_out[NUM_INPUT/2],
+    output var logic [CTRL_WIDTH-1:0] ctrl_out[NUM_INPUT/2],
+    output var logic [   IDX_WIDTH:0] idx_out [NUM_INPUT/2]
 );
 
 
@@ -29,7 +29,7 @@ module max_pipeline #(
     for (genvar ii = 0; ii < NUM_INPUT / 2; ii++) begin : g_cmp
 
       always_ff @(posedge clk) begin
-        if (data_in[2*ii+1] > data_in[2*ii]) begin
+        if ($signed(data_in[2*ii+1]) > $signed(data_in[2*ii])) begin
           data_out[ii] <= data_in[2*ii+1];
           ctrl_out[ii] <= ctrl_in[2*ii+1];
           idx_out[ii]  <= {idx_in[2*ii+1], 1'b1};

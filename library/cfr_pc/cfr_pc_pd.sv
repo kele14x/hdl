@@ -12,25 +12,25 @@ module cfr_pc_pd #(
     parameter int ITERATIONS  = 7,
     parameter int DATA_WIDTH  = 16
 ) (
-    input var  logic                clk,
-    input var  logic                rst,
+    input var  logic                         clk,
+    input var  logic                         rst,
     //
-    input var  logic [DATA_WIDTH:0] data_r_px              [UP_FACTOR],
-    input var  logic [ITERATIONS:0] data_theta_px          [UP_FACTOR],
+    input var  logic [         DATA_WIDTH:0] data_r_px              [UP_FACTOR],
+    input var  logic [         ITERATIONS:0] data_theta_px          [UP_FACTOR],
     //
-    output var logic [DATA_WIDTH:0] peak_r,
-    output var logic [ITERATIONS:0] peak_theta,
-    output var logic [         1:0] peak_phase,
-    output var logic                peak_valid,
+    output var logic [         DATA_WIDTH:0] peak_r,
+    output var logic [         ITERATIONS:0] peak_theta,
+    output var logic [$clog2(UP_FACTOR)-1:0] peak_phase,
+    output var logic                         peak_valid,
     //
-    input var  logic                ctrl_enable,
-    input var  logic [         3:0] ctrl_spacing,
-    input var  logic [DATA_WIDTH:0] ctrl_pd_threshold,
-    input var  logic [DATA_WIDTH:0] ctrl_clipping_threshold
+    input var  logic                         ctrl_enable,
+    input var  logic [                  3:0] ctrl_spacing,
+    input var  logic [         DATA_WIDTH:0] ctrl_pd_threshold,
+    input var  logic [         DATA_WIDTH:0] ctrl_clipping_threshold
 );
 
   localparam int PhaseWidth = $clog2(UP_FACTOR);
-  localparam int Latency = i_max_parallel.Latency + 2 + MAX_SPACING * CSR;
+  localparam int Latency = 1 + 2 + MAX_SPACING * CSR;
 
   logic [  DATA_WIDTH:0] data_r;
   logic [  ITERATIONS:0] data_theta;

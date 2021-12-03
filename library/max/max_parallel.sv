@@ -11,12 +11,12 @@ module max_parallel #(
     input var  logic                                clk,
     input var  logic                                rst,
     //
-    input var  logic signed [       DATA_WIDTH-1:0] data_in [NUM_INPUT],
-    input var  logic        [       CTRL_WIDTH-1:0] ctrl_in [NUM_INPUT],
+    input var  logic [       DATA_WIDTH-1:0] data_in [NUM_INPUT],
+    input var  logic [       CTRL_WIDTH-1:0] ctrl_in [NUM_INPUT],
     //
-    output var logic signed [       DATA_WIDTH-1:0] data_out,
-    output var logic        [       CTRL_WIDTH-1:0] ctrl_out,
-    output var logic        [$clog2(NUM_INPUT)-1:0] idx_out
+    output var logic [       DATA_WIDTH-1:0] data_out,
+    output var logic [       CTRL_WIDTH-1:0] ctrl_out,
+    output var logic [$clog2(NUM_INPUT)-1:0] idx_out
 );
 
 
@@ -26,9 +26,9 @@ module max_parallel #(
   generate
     for (genvar ii = 0; ii < NumStage; ii++) begin : g_stage
 
-      logic signed [DATA_WIDTH-1:0] data_s[NUM_INPUT / (2**ii) / 2];
-      logic        [CTRL_WIDTH-1:0] ctrl_s[NUM_INPUT / (2**ii) / 2];
-      logic        [        ii+1:0] idx_s [NUM_INPUT / (2**ii) / 2];
+      logic [DATA_WIDTH-1:0] data_s[NUM_INPUT / (2**ii) / 2];
+      logic [CTRL_WIDTH-1:0] ctrl_s[NUM_INPUT / (2**ii) / 2];
+      logic [        ii+1:0] idx_s [NUM_INPUT / (2**ii) / 2];
 
       if (ii == 0) begin : g_first
 

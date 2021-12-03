@@ -22,6 +22,11 @@ module cfr_pc_upx #(
 );
 
 
+  localparam int Latency_1 = (UP_FACTOR < 2) ? 0 : (CSR == 1) ? 9 : 12;
+  localparam int Latency_2 = (UP_FACTOR < 4) ? 0 : (CSR == 1) ? 6 : 8;
+  localparam int Latency = Latency_1 + Latency_2;
+
+
   logic signed [DATA_WIDTH-1:0] data_up2_i_p0;
   logic signed [DATA_WIDTH-1:0] data_up2_i_p1;
   logic signed [DATA_WIDTH-1:0] data_up2_q_p0;
@@ -82,13 +87,13 @@ module cfr_pc_upx #(
       end else begin : g_csr2_up2
 
         // Up-sample by 2
-        // 16 clock tick impulse latency
+        // 12 clock tick impulse latency
 
         hb_up2_int2 #(
             .XIN_WIDTH     (DATA_WIDTH),
             .COE_WIDTH     (16),
-            .NUM_UNIQUE_COE(5),
-            .COE_NUMS      ({952, -1609, 3090, -6260, 20622}),
+            .NUM_UNIQUE_COE(3),
+            .COE_NUMS      ({1277, -4710, 20014}),
             .YOUT_WIDTH    (DATA_WIDTH),
             .SRA_BITS      (15)
         ) i_up2_i (
@@ -103,8 +108,8 @@ module cfr_pc_upx #(
         hb_up2_int2 #(
             .XIN_WIDTH     (DATA_WIDTH),
             .COE_WIDTH     (16),
-            .NUM_UNIQUE_COE(5),
-            .COE_NUMS      ({952, -1609, 3090, -6260, 20622}),
+            .NUM_UNIQUE_COE(3),
+            .COE_NUMS      ({1277, -4710, 20014}),
             .YOUT_WIDTH    (DATA_WIDTH),
             .SRA_BITS      (15)
         ) i_up2_q (
@@ -172,7 +177,7 @@ module cfr_pc_upx #(
       end else begin : g_csr2_up4
 
         // Up-sample by 2 again
-        // 6 clock tick impulse latency
+        // 8 clock tick impulse latency
 
         hb_up2_int2_p2 #(
             .XIN_WIDTH     (DATA_WIDTH),
