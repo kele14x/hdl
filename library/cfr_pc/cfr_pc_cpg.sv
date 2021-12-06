@@ -41,7 +41,7 @@ module cfr_pc_cpg #(
 );
 
 
-  localparam int CpgLatency = 11 + 2 ** (CPW_ADDR_WIDTH - PHASE_WIDTH);
+  localparam int CpgLatency = 12 + 2 ** (CPW_ADDR_WIDTH - PHASE_WIDTH);
 
   // BRAM read port
   logic                                         cpw_rd_en;
@@ -156,7 +156,7 @@ module cfr_pc_cpg #(
   end
 
   assign cpw_rd_en   = state_busy[0];
-  assign cpw_rd_addr = {state_addr[0], ({PHASE_WIDTH{1'b1}} - state_phase[0])};
+  assign cpw_rd_addr = {state_phase[0], state_addr[0]};
 
   bram_sdp_pipe #(
       .ADDR_WIDTH  (CPW_ADDR_WIDTH),

@@ -43,7 +43,7 @@ module cfr_pc_softclipper #(
 );
 
 
-  localparam int CpgLatency = 10 + 2 ** (CPW_ADDR_WIDTH - PHASE_WIDTH); 
+  localparam int CpgLatency = 12 + 2 ** (CPW_ADDR_WIDTH - PHASE_WIDTH);
   localparam int Latency = CpgLatency + NUM_CPG;
 
   logic        [ DATA_WIDTH-1:0] data_i_s    [NUM_CPG+1];

@@ -20,7 +20,7 @@ module cfr_pc #(
     // Number of CPGs
     parameter int NUM_CPG        = 6,
     // Coefficient parameters
-    parameter int CPW_ADDR_WIDTH = 8,
+    parameter int CPW_ADDR_WIDTH = 9,
     parameter int CPW_DATA_WIDTH = 16
 ) (
     // Data Interface

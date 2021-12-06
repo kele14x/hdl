@@ -6,14 +6,14 @@
 module tb_cfr_pc;
 
   localparam int TestVectorLength = 4096;
-  localparam int DutLatency = 211;
+  localparam int DutLatency = 341;
 
   localparam int Csr = 2;
   localparam int UpFactor = 2;
   //
   localparam int DataWidth = 16;
   localparam int NumCpg = 6;
-  localparam int CpwAddrWidth = 8;
+  localparam int CpwAddrWidth = 9;
   localparam int CpwDataWidth = 16;
 
 
@@ -139,8 +139,8 @@ module tb_cfr_pc;
           @(posedge clk);
           data_i_in <= data_i_in_mem[i];
           data_q_in <= data_q_in_mem[i];
-//          data_i_in <= i == 100 ? 10000 : 0;
-//          data_q_in <= i == 100 ? 10000 : 0;
+          // data_i_in <= i == 100 ? 10000 : 0;
+          // data_q_in <= i == 100 ? 10000 : 0;
           @(posedge clk);
           data_i_in <= '0;
           data_q_in <= '0;

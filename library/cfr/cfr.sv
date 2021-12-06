@@ -97,7 +97,7 @@ module cfr #(
 
   reg_pipeline #(
       .DATA_WIDTH     (3),
-      .PIPELINE_STAGES(211 + 23)
+      .PIPELINE_STAGES(341 + 23)
   ) i_reg_pipeline (
       .clk (clk),
       .din ({data_sof_in, data_sop_in, data_valid_in}),
