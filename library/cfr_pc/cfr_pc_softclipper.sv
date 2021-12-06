@@ -8,8 +8,10 @@ module cfr_pc_softclipper #(
     parameter int PHASE_WIDTH    = 1,
     //
     parameter int DATA_WIDTH     = 16,
-    parameter int CPW_ADDR_WIDTH = 8,
-    parameter int NUM_CPG        = 6
+    //
+    parameter int NUM_CPG        = 6,
+    //
+    parameter int CPW_ADDR_WIDTH = 8
 ) (
     input var  logic                             clk,
     input var  logic                             rst,

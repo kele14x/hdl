@@ -25,6 +25,7 @@ module cfr_hardclipping #(
 
   localparam int Iterations = 7;
   localparam int DataPathLatency = Iterations * 2 + 8;
+  localparam int Latency = DataPathLatency + 1;
 
   logic local_rst;
 
@@ -49,11 +50,12 @@ module cfr_hardclipping #(
 
   // CTRL CDC
 
-  cdc_array_single #(
-    .DEST_SYNC_FF (2),
-    .INIT_SYNC_FF (0),
-    .SRC_INPUT_REG(0),
-    .WIDTH        (1)
+  xpm_cdc_array_single #(
+    .DEST_SYNC_FF  (2),
+    .INIT_SYNC_FF  (0),
+    .SIM_ASSERT_CHK(0),
+    .SRC_INPUT_REG (0),
+    .WIDTH         (1)
   ) i_cdc_array_single_ctrl_enable (
     .src_clk (1'b0),
     .src_in  (ctrl_enable),
@@ -61,11 +63,12 @@ module cfr_hardclipping #(
     .dest_out(ctrl_enable_s)
   );
 
-  cdc_array_single #(
-    .DEST_SYNC_FF (2),
-    .INIT_SYNC_FF (0),
-    .SRC_INPUT_REG(0),
-    .WIDTH        (DATA_WIDTH + 1)
+  xpm_cdc_array_single #(
+    .DEST_SYNC_FF  (2),
+    .INIT_SYNC_FF  (0),
+    .SIM_ASSERT_CHK(0),
+    .SRC_INPUT_REG (0),
+    .WIDTH         (DATA_WIDTH + 1)
   ) i_cdc_array_single_ctrl_threshold (
     .src_clk (1'b0),
     .src_in  (ctrl_threshold),
@@ -75,15 +78,14 @@ module cfr_hardclipping #(
 
   // Reset CDC
 
-  xpm_cdc_sync_rst #(
+  xpm_cdc_async_rst #(
       .DEST_SYNC_FF   (4),
-      .INIT           (1),
       .INIT_SYNC_FF   (0),
-      .SIM_ASSERT_CHK (0)
+      .RST_ACTIVE_HIGH(1)
   ) i_cdc_sync_rst (
-      .src_rst (rst),
-      .dest_clk(clk),
-      .dest_rst(local_rst)
+      .src_arst (rst),
+      .dest_clk (clk),
+      .dest_arst(local_rst)
   );
 
   // Delay input data for `DataPathLatency` clocks

@@ -1,13 +1,16 @@
 // File: cfr.sv
 // Brief: CFR Top module
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module cfr #(
+    parameter int CSR            = 2,
+    parameter int UP_FACTOR      = 2,
     parameter int DATA_WIDTH     = 16,
+    parameter int NUM_CPG        = 6,
     parameter int CPW_ADDR_WIDTH = 8,
     parameter int CPW_DATA_WIDTH = 16,
-    parameter int NUM_BRANCH     = 8
+    parameter int NUM_BRANCH     = 2
 ) (
     // Data Interface
     //---------------
@@ -53,7 +56,10 @@ module cfr #(
 
       cfr_branch #(
           .ID            (i),
+          .CSR           (CSR),
+          .UP_FACTOR     (UP_FACTOR),
           .DATA_WIDTH    (DATA_WIDTH),
+          .NUM_CPG       (NUM_CPG),
           .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH),
           .CPW_DATA_WIDTH(CPW_DATA_WIDTH)
       ) i_cfr_branch (
@@ -91,7 +97,7 @@ module cfr #(
 
   reg_pipeline #(
       .DATA_WIDTH     (3),
-      .PIPELINE_STAGES(129 + 23)
+      .PIPELINE_STAGES(211 + 23)
   ) i_reg_pipeline (
       .clk (clk),
       .din ({data_sof_in, data_sop_in, data_valid_in}),

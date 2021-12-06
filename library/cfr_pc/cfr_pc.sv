@@ -2,7 +2,7 @@
 // Brief: cfr_pc performs PC-CFR on input signal.
 //        Do not change parameters, they will not work.
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module cfr_pc #(
     // Architecture parameters:
@@ -294,10 +294,9 @@ module cfr_pc #(
   cfr_pc_softclipper #(
       .CSR           (CSR),
       .PHASE_WIDTH   (PhaseWidth),
-      //
       .DATA_WIDTH    (DATA_WIDTH),
-      .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH),
-      .NUM_CPG       (NUM_CPG)
+      .NUM_CPG       (NUM_CPG),
+      .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH)
   ) i_cfr_pc_softclipper (
       .clk               (clk),
       .rst               (local_rst),

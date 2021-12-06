@@ -1,11 +1,14 @@
 // File: cfr_branch.sv
 // Brief: CFR for one branch (two antenna)
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module cfr_branch #(
     parameter int ID             = 0,
+    parameter int CSR            = 2,
+    parameter int UP_FACTOR      = 2,
     parameter int DATA_WIDTH     = 16,
+    parameter int NUM_CPG        = 6,
     parameter int CPW_ADDR_WIDTH = 8,
     parameter int CPW_DATA_WIDTH = 16
 ) (
@@ -47,7 +50,10 @@ module cfr_branch #(
 
 
   cfr_pc #(
+      .CSR           (CSR),
+      .UP_FACTOR     (UP_FACTOR),
       .DATA_WIDTH    (DATA_WIDTH),
+      .NUM_CPG       (NUM_CPG),
       .CPW_ADDR_WIDTH(CPW_ADDR_WIDTH),
       .CPW_DATA_WIDTH(CPW_DATA_WIDTH)
   ) i_cfr_pc (
