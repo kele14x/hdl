@@ -8,7 +8,7 @@ module cfr #(
     parameter int UP_FACTOR      = 2,
     parameter int DATA_WIDTH     = 16,
     parameter int NUM_CPG        = 6,
-    parameter int CPW_ADDR_WIDTH = 8,
+    parameter int CPW_ADDR_WIDTH = 9,
     parameter int CPW_DATA_WIDTH = 16,
     parameter int NUM_BRANCH     = 2
 ) (
