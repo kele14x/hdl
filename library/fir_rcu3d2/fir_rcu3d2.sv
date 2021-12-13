@@ -23,8 +23,8 @@ module fir_rcu3d2 #(
 );
 
 
-  localparam int Latency = NUM_UNIQUE_COE + 6;
-  localparam int Base = (NUM_UNIQUE_COE + 1) / 2 + 2;
+  localparam int Latency = NUM_UNIQUE_COE + 2;
+  localparam int Base = NUM_UNIQUE_COE + 1;
   localparam int RND = (1 <<< (SRA_BITS - 1));
 
   logic signed [        XIN_WIDTH-1:0] xin_d[Base*2];
@@ -40,6 +40,14 @@ module fir_rcu3d2 #(
   // Delay taps, tools can automatically absorb registers into DSP and duplicate
   // registers if needed
 
+  initial begin
+    assert(NUM_UNIQUE_COE % 2 == 0)
+    else begin
+      $error("NUM_UNIQUE_COE should be an even number");
+      $finish;
+    end
+  end
+
   always_ff @(posedge clk) begin
     xin_d[1] <= xin0;
     xin_d[0] <= xin1;
@@ -50,30 +58,37 @@ module fir_rcu3d2 #(
   end
 
   generate
-    for (genvar i = 0; i < NUM_UNIQUE_COE; i++) begin : g_dsp
+    for (genvar ii = 0; ii < NUM_UNIQUE_COE; ii++) begin : g_dsp1
 
-      int idx1 = (2*i < NUM_UNIQUE_COE) ? 2*i + 1 : (2*NUM_UNIQUE_COE - 2*i - 2);
-      int idx2 = (2*i < NUM_UNIQUE_COE) ? 2*i : (2*NUM_UNIQUE_COE - 2*i - 1);
+      int idx1 = (2*ii < NUM_UNIQUE_COE) ? 2*ii : (2*NUM_UNIQUE_COE - 2*ii - 1);
 
       always_ff @(posedge clk) begin
-        adreg1[i] <= xin_d[1];
-        mreg1[i]  <= adreg1[i] * COE_NUMS[idx1];
-        preg1[i]  <= mreg1[i] + ((i < NUM_UNIQUE_COE - 1) ? preg1[i+1] : RND);
+        adreg1[ii] <= xin_d[ii+1];
+        mreg1[ii]  <= adreg1[ii] * COE_NUMS[idx1];
+        preg1[ii]  <= mreg1[ii] + (ii == 0 ? RND : preg1[ii-1]);
       end
 
+    end
+  endgenerate
+
+  generate
+    for (genvar ii = 0; ii < NUM_UNIQUE_COE; ii++) begin : g_dsp2
+
+      int idx2 = (2*ii < NUM_UNIQUE_COE) ? 2*ii + 1 : (2*NUM_UNIQUE_COE - 2*ii - 2);
+
       always_ff @(posedge clk) begin
-        adreg2[i] <= xin_d[1];
-        mreg2[i]  <= adreg2[i] * COE_NUMS[idx2];
-        preg2[i]  <= mreg2[i] + ((i < NUM_UNIQUE_COE - 1) ? preg2[i+1] : RND);
+        adreg2[ii] <= xin_d[ii];
+        mreg2[ii]  <= adreg2[ii] * COE_NUMS[idx2];
+        preg2[ii]  <= mreg2[ii] + (ii == 0 ? RND : preg2[ii-1]);
       end
 
     end
   endgenerate
 
   always_ff @(posedge clk) begin
-    yout0 <= xin_d[NUM_UNIQUE_COE+4];
-    yout1 <= preg1[0][YOUT_WIDTH+SRA_BITS-1:SRA_BITS];
-    yout2 <= preg2[0][YOUT_WIDTH+SRA_BITS-1:SRA_BITS];
+    yout0 <= xin_d[2*NUM_UNIQUE_COE+1];
+    yout1 <= preg1[NUM_UNIQUE_COE-1][YOUT_WIDTH+SRA_BITS-1:SRA_BITS];
+    yout2 <= preg2[NUM_UNIQUE_COE-1][YOUT_WIDTH+SRA_BITS-1:SRA_BITS];
   end
 
   generate
