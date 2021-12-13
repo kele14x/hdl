@@ -8,7 +8,7 @@ module cfr #(
     parameter int UP_FACTOR      = 2,
     parameter int DATA_WIDTH     = 16,
     parameter int NUM_CPG        = 6,
-    parameter int CPW_ADDR_WIDTH = 8,
+    parameter int CPW_ADDR_WIDTH = 9,
     parameter int CPW_DATA_WIDTH = 16,
     parameter int NUM_BRANCH     = 2
 ) (
@@ -97,7 +97,7 @@ module cfr #(
 
   reg_pipeline #(
       .DATA_WIDTH     (3),
-      .PIPELINE_STAGES(211 + 23)
+      .PIPELINE_STAGES(341 + 23)
   ) i_reg_pipeline (
       .clk (clk),
       .din ({data_sof_in, data_sop_in, data_valid_in}),
