@@ -1,9 +1,9 @@
-// File: tb_hb_up2.sv
-// Brief: Test bench for hb_up2
+// File: tb_fir_rc_u3d2.sv
+// Brief: Test bench for fir_rc_u3d2
 
 `timescale 1 ns / 1 ps `default_nettype none
 
-module tb_fir_rcu3d2 ();
+module tb_fir_rc_u3d2 ();
 
   localparam int ClkPeriod = 10;
   localparam int TestVectorLength = 4096;
@@ -17,7 +17,7 @@ module tb_fir_rcu3d2 ();
   localparam int SraBits = 15;
 
   localparam int ImpulseLatency = DUT.Latency;
-  localparam int DutLatency = ImpulseLatency - NumUniqueCoe;
+  localparam int DutLatency = ImpulseLatency - NumUniqueCoe/2 + 2;
 
 
   logic                clk;
@@ -30,14 +30,14 @@ module tb_fir_rcu3d2 ();
   logic [YoutWidth-1:0] yout2, yout2_ref;
   logic ovf, ovf_ref;
 
-  logic [ XinWidth-1:0] xin_mem [    TestVectorLength];
-  logic [YoutWidth-1:0] yout_mem[TestVectorLength * 2];
-  logic                 ovf_mem [TestVectorLength * 2];
+  logic [ XinWidth-1:0] xin_mem [TestVectorLength];
+  logic [YoutWidth-1:0] yout_mem[TestVectorLength * 3 / 2];
+  logic                 ovf_mem [TestVectorLength * 3 / 2];
 
   initial begin
-    $readmemh("test_hb_up2_input_xin.txt", xin_mem, 0, TestVectorLength - 1);
-    $readmemh("test_hb_up2_output_yout.txt", yout_mem, 0, TestVectorLength * 3 / 2 - 1);
-    $readmemh("test_hb_up2_output_ovf.txt", ovf_mem, 0, TestVectorLength * 3 / 2 - 1);
+    $readmemh("test_fir_rc_input_xin.txt", xin_mem, 0, TestVectorLength - 1);
+    $readmemh("test_fir_rc_output_yout.txt", yout_mem, 0, TestVectorLength * 3 / 2 - 1);
+    $readmemh("test_fir_rc_output_ovf.txt", ovf_mem, 0, TestVectorLength * 3 / 2 - 1);
   end
 
   always begin
@@ -63,21 +63,23 @@ module tb_fir_rcu3d2 ();
     @(posedge clk);
     fork
       begin : p_feed_input
-        for (int i = 0; i < TestVectorLength; i++) begin
+        for (int i = 0; i < TestVectorLength / 2; i++) begin
           @(posedge clk);
-          xin0 <= i == 100 ? 32767 : 0;
-          xin1 <= 0;
+//          xin0 <= i == 100 ? 32767 : 0;
+//          xin1 <= 0;
+          xin0 <= xin_mem[i*2];
+          xin1 <= xin_mem[i*2+1];
         end
       end
 
       begin : g_gen_ref
         repeat (DutLatency) @(posedge clk);
-        for (int i = 0; i < TestVectorLength; i++) begin
+        for (int i = 0; i < TestVectorLength / 2; i++) begin
           @(posedge clk);
-          yout0_ref <= 0;
-          yout1_ref <= 0;
-          yout1_ref <= 0;
-          ovf_ref   <= 0;
+          yout0_ref <= yout_mem[i*3];
+          yout1_ref <= yout_mem[i*3+1];
+          yout2_ref <= yout_mem[i*3+2];
+          ovf_ref   <= ovf_mem[i*3] | ovf_mem[i*3+1] | ovf_mem[i*3+2];
         end
       end
 
@@ -89,7 +91,7 @@ module tb_fir_rcu3d2 ();
   end
 
 
-  fir_rcu3d2 #(
+  fir_rc_u3d2 #(
       .XIN_WIDTH     (XinWidth),
       .COE_WIDTH     (CoeWidth),
       .NUM_UNIQUE_COE(NumUniqueCoe),

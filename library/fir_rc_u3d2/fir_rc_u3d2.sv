@@ -1,9 +1,9 @@
-// File: hb_up2.sv
-// Brief: Half band up-sample by 2.
+// File: fir_rc_u3d2.sv
+// Brief: 3/2 rate change filer.
 
 `timescale 1 ns / 1 ps `default_nettype none
-
-module fir_rcu3d2 #(
+ 
+module fir_rc_u3d2 #(
     parameter int XIN_WIDTH = 16,
     parameter int COE_WIDTH = 16,
     parameter int NUM_UNIQUE_COE = 10,
@@ -100,10 +100,10 @@ module fir_rcu3d2 #(
     end else begin : g_ovf
 
       always_ff @(posedge clk) begin
-        ovf <= ~(&preg1[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1] ||
-                 &(~preg1[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1])) ||
-               ~(&preg2[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1] ||
-                 &(~preg2[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1]));
+        ovf <= ~(&preg1[NUM_UNIQUE_COE-1][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1] ||
+                 &(~preg1[NUM_UNIQUE_COE-1][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1])) ||
+               ~(&preg2[NUM_UNIQUE_COE-1][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1] ||
+                 &(~preg2[NUM_UNIQUE_COE-1][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1]));
       end
 
     end
