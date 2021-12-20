@@ -8,18 +8,26 @@ module srs_adaptor_framer (
     input var         rst,
     // Frame Request
     //==============
-    input var  [ 2:0] fram_req_eth_port,
     input var  [15:0] fram_req_rtc_pc_id,
-    input var  [63:0] fram_req_header,
-    input var  [ 9:0] fram_req_start_rb,
-    input var  [ 7:0] fram_req_num_rb,
-    input var         fram_req_bank,
+    //
+    input var  [ 7:0] fram_req_frameid,
+    input var  [ 3:0] fram_req_subframeid,
+    input var  [ 5:0] fram_req_slotid,
+    input var  [ 5:0] fram_req_symbolid,
+    //
+    input var  [ 3:0] fram_req_numsymbol,
+    input var  [ 7:0] fram_req_numprbc,
+    input var  [ 9:0] fram_req_startprbc,
+    input var  [11:0] fram_req_sectionid,
+    //
+    input var  [ 2:0] fram_req_ethport,
+    //
     input var         fram_req_valid,
     output var        fram_req_ready,
     // BRAM
     //=====
     // Latency = 3
-    output var [10:0] bram_addr,            // 0 ~ 1024
+    output var [ 9:0] bram_addr,            // 0 ~ 1024
     output var        bram_rden,            // !connect to all registers in output pipe
     input var  [95:0] bram_data,            // 4 RE
     // UNSOL port
@@ -33,11 +41,47 @@ module srs_adaptor_framer (
 );
 
 
+  // ORAN Header
+  //============
+
+  // Application Header (8-byte)
+  localparam logic [0:0] OranDataDirection = 1'b0;  // 0: UL; 1: DL;
+  localparam logic [2:0] OranPayloadVersion = 3'd1;
+  localparam logic [3:0] OranFilterIndex = 4'd0;
+
+  logic [31:0] oran_application_header;
+
+  // Section Header (8-byte)
+  localparam logic [0:0] OranRb = 1'b0;
+  localparam logic [0:0] OranSymbolInc = 1'b0;
+
+  logic [31:0] oran_section_header;
+
+  logic [63:0] fram_req_header;
+
+  assign oran_application_header = {
+    OranDataDirection,
+    OranPayloadVersion,
+    OranFilterIndex,
+    fram_req_frameid,
+    fram_req_subframeid,
+    fram_req_slotid,
+    fram_req_symbolid
+  };
+
+  assign oran_section_header = {
+    fram_req_sectionid, OranRb, OranSymbolInc, fram_req_startprbc, fram_req_numprbc
+  };
+
+  assign fram_req_header = {oran_application_header, oran_section_header};
+
+
   // FSM
   //====
 
   // Sending one packet require we send header (64-bit) then IQ data
   typedef enum int {
+    S_RST,
     S_IDLE,
     S_PRE1,
     S_PRE2,
@@ -51,6 +95,7 @@ module srs_adaptor_framer (
     S_LAST
   } state_t;
 
+  // S_RST  : under reset
   // S_IDLE : wait for fram request
   // S_PRE1 : request accepted, set BRAM read address and enable
   // S_PRE2 : address + 1, BRAM latency 1
@@ -67,9 +112,10 @@ module srs_adaptor_framer (
 
   logic iq_done;
 
+
   always_ff @(posedge clk) begin
     if (rst) begin
-      state <= S_IDLE;
+      state <= S_RST;
     end else begin
       state <= state_next;
     end
@@ -77,6 +123,7 @@ module srs_adaptor_framer (
 
   always_comb begin
     case (state)
+      S_RST:   state_next = S_IDLE;
       S_IDLE:  state_next = fram_req_valid ? S_PRE1 : S_IDLE;
       S_PRE1:  state_next = S_PRE2;
       S_PRE2:  state_next = S_PRE3;
@@ -88,7 +135,7 @@ module srs_adaptor_framer (
       S_POST3: state_next = ~m_fram_unsol_tready ? S_POST3 : S_POST4;
       S_POST4: state_next = ~m_fram_unsol_tready ? S_POST4 : S_LAST;
       S_LAST:  state_next = ~m_fram_unsol_tready ? S_LAST : S_IDLE;
-      default: state_next = S_IDLE;
+      default: state_next = S_RST;
     endcase
   end
 
@@ -118,8 +165,8 @@ module srs_adaptor_framer (
 
   logic [12:0] packet_length;
 
-  function [63:0] data_gb(input logic [2:0] state, input logic [95:0] data,
-                          input logic [95:0] data_d);
+  function automatic [63:0] data_gb(input logic [2:0] state, input logic [95:0] data,
+                                    input logic [95:0] data_d);
     case (state)
       3'd3:
       return {
@@ -203,7 +250,7 @@ module srs_adaptor_framer (
     endcase
   endfunction
 
-  function [63:0] byte_reverse(input logic [63:0] data);
+  function automatic [63:0] byte_reverse(input logic [63:0] data);
     return {
       data[7:0],
       data[15:8],
@@ -215,6 +262,7 @@ module srs_adaptor_framer (
       data[63:56]
     };
   endfunction
+
 
   always_ff @(posedge clk) begin
     if (fram_req_valid) begin
@@ -296,12 +344,12 @@ module srs_adaptor_framer (
     if (rst) begin
       m_fram_unsol_tuser <= 1'b0;
     end else if (state == S_IDLE && fram_req_valid) begin
-      m_fram_unsol_tuser <= {fram_req_rtc_pc_id, fram_req_eth_port, packet_length};
+      m_fram_unsol_tuser <= {fram_req_rtc_pc_id, fram_req_ethport, packet_length};
     end
   end
 
   // 1 RB requires 3.5 words, which is 28 byte, plus 8-byte header
-  assign packet_length = (fram_req_num_rb == 0 ? 273 : fram_req_num_rb) * 28 + 8;
+  assign packet_length = (fram_req_numprbc == 0 ? 273 : fram_req_numprbc) * 28 + 8;
 
 
   // BRAM Reader
@@ -315,7 +363,7 @@ module srs_adaptor_framer (
 
   always_ff @(posedge clk) begin
     if (state == S_IDLE && fram_req_valid) begin
-      bram_re_cnt <= fram_req_start_rb * 12;
+      bram_re_cnt <= fram_req_startprbc * 12;
     end else if (state == S_PRE1) begin
       bram_re_cnt <= bram_re_cnt + 4;
     end else if (state == S_PRE2) begin
@@ -334,7 +382,8 @@ module srs_adaptor_framer (
 
   always_ff @(posedge clk) begin
     if (state == S_IDLE && fram_req_valid) begin
-      bram_re_end <= (fram_req_start_rb + (fram_req_num_rb == 0 ? 273 : fram_req_num_rb)) * 12 - 4;
+      bram_re_end <= (fram_req_startprbc +
+          (fram_req_numprbc == 0 ? 273 : fram_req_numprbc)) * 12 - 4;
     end
   end
 
@@ -357,13 +406,7 @@ module srs_adaptor_framer (
     end
   end
 
-  assign bram_addr[9:0] = bram_re_cnt[11:2];
-
-  always_ff @(posedge clk) begin
-    if (fram_req_valid) begin
-      bram_addr[10] <= fram_req_bank;
-    end
-  end
+  assign bram_addr = bram_re_cnt[11:2];
 
   assign bram_rden = (state == S_PRE1) || (state == S_PRE2) || (state == S_PRE3) ||
         ((state == S_PRE4) && m_fram_unsol_tready) ||

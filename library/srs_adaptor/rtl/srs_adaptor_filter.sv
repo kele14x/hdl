@@ -3,7 +3,9 @@
 //        needed information should appear on this port (not on message body).
 `timescale 1 ns / 1 ps `default_nettype none
 
-module srs_adaptor_filter (
+module srs_adaptor_filter #(
+    parameter int NUM_CC = 2
+) (
     // Interface with XORIF
     //=====================
     input var         clk,
@@ -58,7 +60,10 @@ module srs_adaptor_filter (
     output var [ 9:0] srs_startprbc,
     output var [11:0] srs_sectionid,
     //
-    output var        srs_valid
+    output var        srs_valid,
+    // Ctrl Interface
+    //===============
+    input var  [ 1:0] ctrl_numerology        [NUM_CC]
 );
 
 
@@ -84,11 +89,21 @@ module srs_adaptor_filter (
 
   logic t_header_is_ok, radio_app_head_is_ok, section_header_is_ok;
 
+  logic [ 2:0] cc;
+  logic [ 1:0] mu;
+  logic [11:0] symbol;
+
+  // NR Symbol number calculation
+  assign cc = s_rtc_pc_id[10:8];
+  // 0 : 30 kHz SCS, 1: 15 khz SCS, others: 60 kHz SCS
+  assign mu = ctrl_numerology[cc] == 0 ? 1 : ctrl_numerology[cc] == 1 ? 0 : 2;
+  assign symbol = ((s_subframeid * (2 ** mu) + s_slotid) * 14 + s_symbolid);
+
   // SRS Message Filter Condition
 
   // {2-bit DU_Port_ID, 3-bit RandSector_ID, 3-bit CC_ID, 8-bit RU_Port_ID}
   // SRS: RU_Port_ID from 0x40 to 0x7F
-  assign t_header_is_ok = s_messagetype == 2 && s_offset_in_symbol > 1 && ~s_runt_packet_len && s_rtc_pc_id[7:6] == 2'b01;
+  assign t_header_is_ok = s_messagetype == 2 && ~s_runt_packet_len && s_rtc_pc_id[7:6] == 2'b01;
 
   assign radio_app_head_is_ok = s_datadirection == 0 && s_sectiontype == 1;
 
@@ -147,10 +162,10 @@ module srs_adaptor_filter (
 
   always_ff @(posedge clk) begin
     if (s_radio_app_head_valid) begin
-      srs_frameid   <= s_frameid;
+      srs_frameid    <= s_frameid;
       srs_subframeid <= s_subframeid;
-      srs_slotid    <= s_slotid;
-      srs_symbolid  <= s_symbolid;
+      srs_slotid     <= s_slotid;
+      srs_symbolid   <= s_symbolid;
     end
   end
 

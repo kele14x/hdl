@@ -2,7 +2,7 @@
 // Brief: Simplified True Dual Port Memory, but with control (enable and reset)
 //        signal pipelined.
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module bram_tdp_pipe #(
     parameter int    ADDR_WIDTH     = 10,

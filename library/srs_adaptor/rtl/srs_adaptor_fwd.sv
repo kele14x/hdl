@@ -6,11 +6,16 @@
 //
 `timescale 1 ns / 1 ps `default_nettype none
 
-module srs_adaptor_fwd (
+module srs_adaptor_fwd #(
+    parameter int NUM_CC = 2
+) (
     // XORIF
     //======
     input var         clk_400m,
     input var         rst_400m,
+    // UL Timing
+    input var  [11:0] s_ul_sym_num     [NUM_CC],
+    input var         s_ul_update      [NUM_CC],
     // SRS Filter
     input var  [ 2:0] srs_cc,
     input var  [11:0] srs_symbol,
@@ -58,20 +63,26 @@ module srs_adaptor_fwd (
     end
   end
 
+  // Buffer the forwarded message for this radio frame, it's more convenient not
+  // forward same information again and again.
   always_ff @(posedge clk_400m) begin
     if (rst_400m) begin
-      srs_prev <= 0;
-    end
-    if (srs_new) begin
+      srs_prev <= '1;
+    end else if (srs_new) begin
       srs_prev <= {srs_cc, srs_symbol, srs_numsymbol};
+    end else begin
+      for (int i = 0; i < NUM_CC; i++) begin
+        if (s_ul_update[i] && s_ul_sym_num[i] == 0) begin
+          srs_prev <= '1;
+        end
+      end
     end
   end
 
   always_ff @(posedge clk_400m) begin
     if (rst_400m) begin
       srs_in <= '0;
-    end
-    if (srs_new) begin
+    end else if (srs_new) begin
       srs_in <= {srs_cc, srs_symbol, srs_numsymbol};
     end
   end

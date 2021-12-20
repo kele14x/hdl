@@ -3,7 +3,9 @@
 `timescale 1 ns / 1 ps `default_nettype none
 
 module srs_adaptor_controller #(
-    parameter int NUM_CC = 2
+    parameter int NUM_CC      = 2,
+    parameter int NUM_LAYER   = 64,
+    parameter int NUM_SECTION = 8
 ) (
     // XORIF
     //======
@@ -13,34 +15,39 @@ module srs_adaptor_controller #(
     input var  [11:0] s_ul_sym_num      [NUM_CC],
     input var         s_ul_update       [NUM_CC],
     // SRS Mux
-    input var  [15:0] srs_gen_rtc_pc_id,
-    input var  [ 2:0] srs_gen_cc,
+    input var  [ 2:0] srs_mux_cc,
+    input var  [ 5:0] srs_mux_layer,
+    input var  [11:0] srs_mux_symbol,
     //
-    input var  [ 7:0] srs_gen_frameid,
-    input var  [ 3:0] srs_gen_subframeid,
-    input var  [ 5:0] srs_gen_slotid,
-    input var  [ 5:0] srs_gen_symbolid,
-    input var  [11:0] srs_gen_symbol,              // 0 ~ 559
+    input var  [15:0] srs_mux_rtc_pc_id,
     //
-    input var  [ 3:0] srs_gen_numsymbol,           // 1 ~ 3
-    input var  [ 7:0] srs_gen_numprbc,             // 0 ~ 275
-    input var  [ 9:0] srs_gen_startprbc,           // 0 ~ 275
-    input var  [11:0] srs_gen_sectionid,
+    input var  [ 7:0] srs_mux_frameid,
+    input var  [ 3:0] srs_mux_subframeid,
+    input var  [ 5:0] srs_mux_slotid,
+    input var  [ 5:0] srs_mux_symbolid,
     //
-    input var  [ 2:0] srs_gen_ethport,             // 0 ~ 3
+    input var  [ 3:0] srs_mux_numsymbol,           // 1 ~ 3
+    input var  [ 7:0] srs_mux_numprbc,             // 0 ~ 275
+    input var  [ 9:0] srs_mux_startprbc,           // 0 ~ 275
+    input var  [11:0] srs_mux_sectionid,
     //
-    input var         srs_gen_valid,
+    input var  [ 2:0] srs_mux_ethport,             // 0 ~ 3
+    //
+    input var         srs_mux_valid,
     // Runner
     //=======
-    output var [15:0] srs_run_rtc_pc_id,
     output var [ 2:0] srs_run_cc,
+    output var [ 5:0] srs_run_layer,
+    output var [11:0] srs_run_symbol,
+    //
+    output var [15:0] srs_run_rtc_pc_id,
     //
     output var [ 7:0] srs_run_frameid,
     output var [ 3:0] srs_run_subframeid,
     output var [ 5:0] srs_run_slotid,
     output var [ 5:0] srs_run_symbolid,
-    output var [11:0] srs_run_symbol,
     //
+    output var [ 3:0] srs_run_numsymbol,
     output var [ 7:0] srs_run_numprbc,
     output var [ 9:0] srs_run_startprbc,
     output var [11:0] srs_run_sectionid,
@@ -48,296 +55,391 @@ module srs_adaptor_controller #(
     output var [ 2:0] srs_run_ethport,
     //
     output var        srs_run_valid,
-    input var         srs_run_ready
+    input var         srs_run_ready,
+    // Control
+    //========
+    input var         ctrl_srs_en,
+    output var        error_fifo_full
 );
 
 
   // Local Parameters
   //=================
 
-  localparam int BufferWidth = 92;
+  localparam int CcWidth = $clog2(NUM_CC) == 0 ? 1 : $clog2(NUM_CC);  // 1
+  localparam int LayerWidth = $clog2(NUM_LAYER);  // 6
+  localparam int SectionWidth = $clog2(NUM_SECTION);  // 3
+
+  localparam int BufferAddrWidth = CcWidth + LayerWidth + SectionWidth;
+  localparam int BufferDataWidth = 99;
 
 
-  // Signals
-  //========
+  // SRS Control Message Buffer
+  //===========================
 
-  // SRS messages are buffered in a distrubution RAM, this enables more
-  // flexiable for multi sections.
+  logic [BufferAddrWidth-1:0] buffer_wr_addr;
+  logic                       buffer_wr_en;
+  logic [BufferDataWidth-1:0] buffer_wr_data;
 
-  logic [            6:0] buffer_wr_addr;
-  logic                   buffer_wr_en;
-  logic [BufferWidth-1:0] buffer_wr_data;
-
-  logic                   buffer_clr_en;
-
-  logic [            6:0] buffer_rd_addr;
-  logic [            2:0] buffer_rd_en;
-  logic [BufferWidth-1:0] buffer_rd_data;
-
-  logic [           15:0] srs_buf_rtc_pc_id;
-  logic [            2:0] srs_buf_cc;
-  //
-  logic [            7:0] srs_buf_frameid;
-  logic [            3:0] srs_buf_subframeid;
-  logic [            5:0] srs_buf_slotid;
-  logic [            5:0] srs_buf_symbolid;
-  logic [           11:0] srs_buf_symbol;  // 0 ~ 559
-  //
-  logic [            3:0] srs_buf_numsymbol;  // 1 ~ 3
-  logic [            7:0] srs_buf_numprbc;  // 0 ~ 275
-  logic [            9:0] srs_buf_startprbc;  // 0 ~ 275
-  logic [           11:0] srs_buf_sectionid;
-  //
-  logic [            2:0] srs_buf_ethport;  // 0 ~ 3
-  //
-  logic                   srs_buf_valid;
-
-  logic                   srs_buf_valid_mem             [128] = '{128{1'b0}};
-
-  // State Machine
-
-  typedef enum int {
-    S_IDLE,
-    S_RD,
-    S_D1,
-    S_D2,
-    S_DATA,
-    S_CHK,
-    S_VALID,
-    S_NEXT
-  } state_t;
-
-  logic init_cc[NUM_CC];
-
-  logic init_fsm, process_it;
-
-  state_t state, next_state;
-
-  logic [ 2:0] current_cc;
-  logic [11:0] current_symbol[NUM_CC];
+  logic [BufferAddrWidth-1:0] buffer_rd_addr;
+  logic                       buffer_rd_en;
+  logic                       buffer_clr_en;
+  logic [BufferDataWidth-1:0] buffer_rd_data;
 
 
-  // Buffer Writer
-  //==============
-
-  assign buffer_wr_data = {
-    srs_gen_rtc_pc_id,
-    srs_gen_cc,
-    srs_gen_frameid,
-    srs_gen_subframeid,
-    srs_gen_slotid,
-    srs_gen_symbolid,
-    srs_gen_symbol,
-    srs_gen_numsymbol,
-    srs_gen_numprbc,
-    srs_gen_startprbc,
-    srs_gen_sectionid,
-    srs_gen_ethport
-  };
-
-  assign {
-    srs_buf_rtc_pc_id,
-    srs_buf_cc,
-    srs_buf_frameid,
-    srs_buf_subframeid,
-    srs_buf_slotid,
-    srs_buf_symbolid,
-    srs_buf_symbol,
-    srs_buf_numsymbol,
-    srs_buf_numprbc,
-    srs_buf_startprbc,
-    srs_buf_sectionid,
-    srs_buf_ethport
-  } = buffer_rd_data;
-
-  assign buffer_wr_en = srs_gen_valid;
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      buffer_wr_addr <= '0;
-    end else if (buffer_wr_en) begin
-      buffer_wr_addr <= buffer_wr_addr + 1;
-    end
-  end
-
-  // SRS message will be write into a SDP BRAM, but the valid flag will be
-  // write into a DRAM, this is because DRAM is vary easy to set and clear
-  // at same time and cause less power.
-
-  // Valid buffer set and clear
-  always_ff @(posedge clk) begin
-    if (buffer_wr_en) begin
-      srs_buf_valid_mem[buffer_wr_addr] <= 1'b1;
-    end else if (buffer_clr_en) begin
-      srs_buf_valid_mem[buffer_rd_addr] <= 1'b0;
-    end
-  end
-
-  // Valid buffer readout
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      srs_buf_valid <= 1'b0;
-    end else if (buffer_rd_en[2]) begin
-      srs_buf_valid <= srs_buf_valid_mem[buffer_rd_addr];
-    end
-  end
-
-  // We do not actually clear the buffer meemory, instead we clear the valid 
-  // flag memory, which is more suitable and easy.
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      buffer_clr_en <= 1'b0;
-    end else begin
-      buffer_clr_en <= (state == S_CHK && process_it);    
-    end
-  end
-
-  // SRS message write to this buffer, it will never be clear
-  (* keep_hierarchy="yes" *)
-  bram_sdp #(
-      .ADDR_WIDTH  (7),
-      .DATA_WIDTH  (BufferWidth),
-      .READ_LATENCY(3)
-  ) i_buffer (
+  // SRS message write to this buffer
+  // It will be cleared once readout in C-Plane mode, but not be cleared in
+  // M-Plane mode.
+  srs_adaptor_controller_tdp i_srs_adaptor_controller_tdp (
       .clka (clk),
       .ena  (buffer_wr_en),
       .wea  (buffer_wr_en),
       .addra(buffer_wr_addr),
       .dina (buffer_wr_data),
+      .douta(  /* not used */),
       //
       .clkb (clk),
       .enb  (buffer_rd_en),
-      .rstb ({3{1'b0}}),
+      .web  (buffer_clr_en),
       .addrb(buffer_rd_addr),
+      .dinb (99'b0),
       .doutb(buffer_rd_data)
   );
 
 
-  // FSM
-  //====
+  // Buffer Write Address
+  // ====================
+  // Since at every symbol time, we need to loop the buffer and pick up the
+  // valid control message to process. To reduce the buffer traverse time, the
+  // control message must be stored based on CC and Layer.
+  //
+  // Every CC x Layer has few dedicate memory space (defined be NUM_SECTION).
+  // The write address is constructed by {CC, Layer, SectionIndex}. To avoid
+  // write address conflict, each CC x Layer should has it's own section index,
+  // which is a counter that increase by 1 every time a new control message is
+  // stored. Those section index may not be reset to 0, since in any case the
+  // whole buffer is looped.
+
+  logic [BufferAddrWidth-1:0] buffer_wr_addr_s;
+
+  logic [        CcWidth-1:0] buffer_wr_addr_cc;
+  logic [     LayerWidth-1:0] buffer_wr_addr_layer;
+  logic [   SectionWidth-1:0] buffer_wr_addr_section;
+
+  (* ram_style="distributed" *)
+  logic [   SectionWidth-1:0] section_index          [NUM_CC * NUM_LAYER];  // 128 depth
+
+
+  initial begin
+    for (int i = 0; i < NUM_CC * NUM_LAYER; i++) begin
+      section_index[i] <= '0;
+    end
+  end
+
+  assign buffer_wr_addr_cc      = srs_mux_cc[CcWidth-1:0];
+  assign buffer_wr_addr_layer   = srs_mux_layer[LayerWidth-1:0];
+  assign buffer_wr_addr_section = section_index[{buffer_wr_addr_cc, buffer_wr_addr_layer}];
+
+  assign buffer_wr_addr_s       = {buffer_wr_addr_cc, buffer_wr_addr_layer, buffer_wr_addr_section};
+
+  // section_index ram's asynchronous output (latency 0) has dirctly feedback
+  // to it's input, this enables write operation at every clock tick. The
+  // timing seems be fine.
+  always @(posedge clk) begin
+    if (srs_mux_valid) begin
+      section_index[{
+        buffer_wr_addr_cc, buffer_wr_addr_layer
+      }] <= section_index[{buffer_wr_addr_cc, buffer_wr_addr_layer}] + 1;
+    end
+  end
+
+
+  // Buffer Writer
+  //==============
+
+  typedef enum int {
+    S_WR_RST,
+    S_WR_INIT,
+    S_WR_CLR,
+    S_WR_WAIT,
+    S_WR_OP
+  } wr_state_t;
+
+  wr_state_t wr_state, wr_state_next;
+
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      state <= S_IDLE;
+      wr_state <= S_WR_RST;
     end else begin
-      state <= next_state;
+      wr_state <= wr_state_next;
     end
   end
 
   always_comb begin
-    case (state)
-      S_IDLE:  next_state = init_fsm ? S_RD : S_IDLE;
-      S_RD:    next_state = S_D1;
-      S_D1:    next_state = S_D2;
-      S_D2:    next_state = S_DATA;
-      S_DATA:  next_state = S_CHK;
-      S_CHK:   next_state = process_it ? S_VALID : S_NEXT;
-      S_VALID: next_state = srs_run_ready ? S_NEXT : S_VALID;
-      S_NEXT:  next_state = ~(&buffer_rd_addr) ? S_RD : S_IDLE;
-      default: next_state = S_IDLE;
+    case (wr_state)
+      S_WR_RST:  wr_state_next = S_WR_INIT;
+      S_WR_INIT: wr_state_next = S_WR_CLR;
+      S_WR_CLR:  wr_state_next = &buffer_wr_addr ? S_WR_WAIT : S_WR_CLR;
+      S_WR_WAIT: wr_state_next = ctrl_srs_en ? S_WR_OP : S_WR_WAIT;
+      S_WR_OP:   wr_state_next = ctrl_srs_en ? S_WR_OP : S_WR_RST;
+      default:   wr_state_next = S_WR_RST;
     endcase
   end
 
 
-  // Which Symbol to Process
-  //========================
+  always_ff @(posedge clk) begin
+    if (wr_state_next == S_WR_OP) begin
+      buffer_wr_data <= {
+        srs_mux_valid,
+        //
+        srs_mux_cc,
+        srs_mux_layer,
+        srs_mux_symbol,
+        //
+        srs_mux_rtc_pc_id,
+        //
+        srs_mux_frameid,
+        srs_mux_subframeid,
+        srs_mux_slotid,
+        srs_mux_symbolid,
+        //
+        srs_mux_numsymbol,
+        srs_mux_numprbc,
+        srs_mux_startprbc,
+        srs_mux_sectionid,
+        //
+        srs_mux_ethport
+      };
+    end else begin
+      buffer_wr_data <= '0;
+    end
+  end
 
-  // Two CC may required to process at save time
+  always_ff @(posedge clk) begin
+    if (wr_state_next == S_WR_OP) begin
+      buffer_wr_en <= srs_mux_valid;
+    end else if (wr_state_next == S_WR_CLR) begin
+      buffer_wr_en <= 1'b1;
+    end else begin
+      buffer_wr_en <= 1'b0;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (wr_state_next == S_WR_OP) begin
+      buffer_wr_addr <= buffer_wr_addr_s;
+    end else if (wr_state_next == S_WR_CLR) begin
+      buffer_wr_addr <= buffer_wr_addr + 1;
+    end else begin
+      buffer_wr_addr <= '1;
+    end
+  end
+
+
+  // Symbol to Process
+  //==================
+
+  logic                init_cc    [NUM_CC];
+
+  logic [CcWidth+11:0] fifo_din;
+  logic                fifo_full;
+  logic                fifo_wr_en;
+
+  logic                fifo_rd_en;
+  logic                fifo_empty;
+  logic [CcWidth+11:0] fifo_dout;
+
+
+  // FWFT FIFO with width (CcWidth + 12). We need this fifo since we may spend
+  // more than 1 symbol time to process all layer x all section control 
+  // message for one SRS symbol. In this case, we need to pick up the symbols 
+  // just missed. For none-SRS symbols, the FIFO should be just pushed and then
+  // pop empty. So any FIFO depth should be OK.
+  srs_adaptor_controller_fifo i_srs_adaptor_controller_fifo (
+      .clk        (clk),
+      .srst       (rst),
+      //
+      .din        (fifo_din),
+      .full       (fifo_full),
+      .wr_en      (fifo_wr_en),
+      //
+      .rd_en      (fifo_rd_en),
+      .empty      (fifo_empty),
+      .dout       (fifo_dout),
+      //
+      .wr_rst_busy(  /* not used */),
+      .rd_rst_busy(  /* not used */)
+  );
+
+
+  // Two CC may required to be processed at same time (in the case of same SC
+  // spacing). So request/ack handshake mechanism is used here.
   generate
-    for (genvar i = 0; i < NUM_CC; i++) begin
-      always_comb begin
-        init_cc[i] = (state == S_IDLE) && s_ul_update[i] && (s_ul_sym_num[i] != current_symbol[i]);
+    for (genvar cc = 0; cc < NUM_CC; cc++) begin
+
+      always_ff @(posedge clk) begin
+        if (s_ul_update[cc]) begin
+          init_cc[cc] <= 1'b1;
+        end else if (init_cc[cc]) begin
+          // First CC first
+          for (int i = 0; i <= cc; i++) begin
+            if (init_cc[i] && i < cc) begin
+              break;
+            end else begin
+              init_cc[cc] <= 1'b0;
+            end
+          end
+        end
       end
+
     end
   endgenerate
 
-  // We will start of FSM at any CC is required
-  always_comb begin
-    init_fsm = 1'b0;
-    for (int i = 0; i < NUM_CC; i++) begin
-      if (init_cc[i]) begin
-        init_fsm = 1'b1;
+  always_ff @(posedge clk) begin
+    for (int cc = 0; cc < NUM_CC; cc++) begin
+      if (init_cc[cc]) begin
+        fifo_din <= {cc[NUM_CC-1:0], s_ul_sym_num[cc]};
         break;
       end
     end
   end
 
-  // Which CC to process
   always_ff @(posedge clk) begin
-    if (rst) begin
-      current_cc <= '0;
-    end else begin
-      for (int i = 0; i < NUM_CC; i++) begin
-        if (init_cc[i]) begin
-          current_cc <= i;
-          break;
-        end
+    for (int cc = 0; cc < NUM_CC; cc++) begin
+      fifo_wr_en <= 1'b0;
+      if (init_cc[cc]) begin
+        fifo_wr_en <= 1'b1;
+        break;
       end
     end
   end
 
-  // Which symbol to process
+  // assume the FIFO will never full
+  assign error_fifo_full = fifo_full;
+
+
+  // Buffer Reader
+  //==============
+
+  typedef enum int {
+    S_RD_RST,
+    S_RD_IDLE,
+    S_RD_ADDR,
+    S_RD_D1,
+    S_RD_D2,
+    S_RD_DATA,
+    S_RD_CHK,
+    S_RD_VALID
+  } rd_state_t;
+
+  rd_state_t rd_state, rd_state_next;
+
+
+  logic process_it;
+
+  logic [2:0] current_cc;
+  logic [11:0] current_symbol;
+
+  logic [LayerWidth+SectionWidth-1:0] layer_section_cnt;
+
+  logic srs_run_valid_s;
+
+
   always_ff @(posedge clk) begin
     if (rst) begin
-      current_symbol <= '{NUM_CC{'b0}};
+      rd_state <= S_RD_RST;
     end else begin
-      for (int i = 0; i < NUM_CC; i++) begin
-        if (init_cc[i]) begin
-          current_symbol[i] <= s_ul_sym_num[i];
-          break;
-        end
-      end
+      rd_state <= rd_state_next;
     end
   end
 
-  always_ff @(posedge clk) begin
-    process_it <= srs_buf_valid && (current_cc == srs_buf_cc) &&
-      (current_symbol[current_cc] >= srs_buf_symbol) &&
-      (current_symbol[current_cc] <= srs_buf_symbol + srs_buf_numsymbol - 1);
+  always_comb begin
+    case (rd_state)
+      S_RD_RST: rd_state_next = S_RD_IDLE;
+      S_RD_IDLE: rd_state_next = ~fifo_empty ? S_RD_ADDR : S_RD_IDLE;
+      S_RD_ADDR: rd_state_next = S_RD_D1;
+      S_RD_D1: rd_state_next = S_RD_D2;
+      S_RD_D2: rd_state_next = S_RD_DATA;
+      S_RD_DATA: rd_state_next = S_RD_CHK;
+      S_RD_CHK:
+      rd_state_next = process_it ? S_RD_VALID : (&layer_section_cnt) ? S_RD_IDLE : S_RD_ADDR;
+      S_RD_VALID:
+      rd_state_next = ~srs_run_ready ? S_RD_VALID : (&layer_section_cnt) ? S_RD_IDLE : S_RD_ADDR;
+      default: rd_state_next = S_RD_RST;
+    endcase
   end
 
   always_ff @(posedge clk) begin
-    if (rst) begin
-      buffer_rd_addr <= 0;
-    end else if (state == S_NEXT) begin
-      buffer_rd_addr <= buffer_rd_addr + 1;
+    fifo_rd_en <= (rd_state_next == S_RD_IDLE);
+  end
+
+  always_ff @(posedge clk) begin
+    if (rd_state == S_RD_IDLE && ~fifo_empty) begin
+      {current_cc, current_symbol} <= fifo_dout;
     end
   end
 
+  // Flag the section that needs to process
+  // Remember we need to process all sections belong to same symbol, same cc, and
+  // same layer together. Then could we move to next layer, next cc.
+  // Thanks to the buffer is arranged in order, we could go pass the buffer for
+  // just one time.
   always_ff @(posedge clk) begin
-    buffer_rd_en[0] <= (next_state == S_RD);
-    buffer_rd_en[1] <= (next_state == S_D1);
-    buffer_rd_en[2] <= (next_state == S_D2);
+    process_it <= srs_run_valid_s &&
+      (current_cc == srs_run_cc) &&
+      (current_symbol >= srs_run_symbol) &&
+      (current_symbol <= srs_run_symbol + srs_run_numsymbol - 1);
+  end
+
+  // Read address
+  always_ff @(posedge clk) begin
+    if (rd_state_next == S_RD_ADDR) begin
+      layer_section_cnt <= layer_section_cnt + 1;
+    end else if (rd_state_next == S_RD_IDLE) begin
+      layer_section_cnt <= '1;
+    end else begin
+      layer_section_cnt <= layer_section_cnt;
+    end
+  end
+
+  assign buffer_rd_addr = {current_cc, layer_section_cnt};
+
+  // Read enable
+  always_ff @(posedge clk) begin
+    buffer_rd_en <= (rd_state_next == S_RD_ADDR) ||
+        (rd_state_next == S_RD_D1) ||
+        (rd_state_next == S_RD_D2) ||
+        (rd_state_next == S_RD_DATA) ||
+        (rd_state_next == S_RD_CHK);
+  end
+
+  // Clear the buffer memory
+  always_ff @(posedge clk) begin
+    buffer_clr_en <= (rd_state_next == S_RD_CHK) && process_it;
   end
 
 
   // Output
   //=======
 
-  always_ff @(posedge clk) begin
-    if (state == S_CHK && process_it) begin
-      srs_run_rtc_pc_id  <= srs_buf_rtc_pc_id;
-      srs_run_cc         <= srs_buf_cc;
+  assign {srs_run_valid_s,
       //
-      srs_run_frameid    <= srs_buf_frameid;
-      srs_run_subframeid <= srs_buf_subframeid;
-      srs_run_slotid     <= srs_buf_slotid;
-      srs_run_symbolid   <= srs_buf_symbolid;
-      srs_run_symbol     <= srs_buf_symbol;
+      srs_run_cc, srs_run_layer, srs_run_symbol,
       //
-      srs_run_numprbc    <= srs_buf_numprbc;
-      srs_run_startprbc  <= srs_buf_startprbc;
-      srs_run_sectionid  <= srs_buf_sectionid;
+      srs_run_rtc_pc_id,
       //
-      srs_run_ethport    <= srs_buf_ethport;
-    end
-  end
+      srs_run_frameid, srs_run_subframeid, srs_run_slotid, srs_run_symbolid,
+      //
+      srs_run_numsymbol, srs_run_numprbc, srs_run_startprbc, srs_run_sectionid,
+      //
+      srs_run_ethport} = buffer_rd_data;
 
   always_ff @(posedge clk) begin
     if (rst) begin
       srs_run_valid <= 1'b0;
     end else begin
-      srs_run_valid <= (next_state == S_VALID);
+      srs_run_valid <= (rd_state_next == S_RD_VALID);
     end
   end
 

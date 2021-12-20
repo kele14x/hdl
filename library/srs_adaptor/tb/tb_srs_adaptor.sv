@@ -5,7 +5,6 @@
 module tb_srs_adaptor;
 
   parameter int NUM_ETH_PORT = 2;
-  parameter int NUM_SRS_LAYER = 64;
   parameter int NUM_CC = 2;
 
   // DUT Signal
@@ -87,19 +86,21 @@ module tb_srs_adaptor;
   logic [31:0] m_fram_unsol_tuser;
 
   // Control ports
+  logic        ctrl_clk;
+  logic        ctrl_rst;
+  //
   logic        ctrl_srs_en = 1'b1;
   //
   logic        ctrl_srs_gen_en = 1'b1;
   //
   logic [15:0] ctrl_srs_rtc_pc_id;
-  logic [ 2:0] ctrl_srs_cc;
   //
   logic [ 7:0] ctrl_srs_frameid;
   logic [ 3:0] ctrl_srs_subframeid;
   logic [ 5:0] ctrl_srs_slotid;
   logic [ 5:0] ctrl_srs_symbolid;
   //
-  logic [11:0] ctrl_srs_numsymbol;
+  logic [ 3:0] ctrl_srs_numsymbol;
   logic [ 7:0] ctrl_srs_numprbc;
   logic [ 9:0] ctrl_srs_startprbc;
   logic [11:0] ctrl_srs_sectionid;
@@ -154,9 +155,8 @@ module tb_srs_adaptor;
                                input [3:0] numsymbol, input [7:0] numprbc, input [9:0] startprbc,
                                input [11:0] sectionid, input [2:0] ethport);
     begin
-      @(posedge clk_400m);
+      @(posedge ctrl_clk);
       ctrl_srs_rtc_pc_id <= {1'b0, 1'b0, cc[2:0], 2'b01, layer};
-      ctrl_srs_cc <= cc;
       //
       ctrl_srs_frameid <= frameid;
       ctrl_srs_subframeid <= subframeid;
@@ -171,8 +171,11 @@ module tb_srs_adaptor;
       ctrl_srs_ethport <= ethport;
       //
       ctrl_srs_valid <= 1'b1;
-      @(posedge clk_400m);
+
+      @(posedge ctrl_clk);
       ctrl_srs_valid <= 1'b0;
+
+      repeat(10) @(posedge ctrl_clk);
     end
   endtask
 
@@ -206,29 +209,51 @@ module tb_srs_adaptor;
   end
 
   initial begin
+    ctrl_clk = 0;
+    forever begin
+      #(5) ctrl_clk = ~ctrl_clk;
+    end
+  end
+
+
+  initial begin
     rst_400m = 1;
     repeat (100) @(posedge clk_400m);
-    rst_400m <= 0;
+    rst_400m = 0;
   end
 
   initial begin
     rst_491m52 = 1;
     repeat (100) @(posedge clk_491m52);
-    rst_491m52 <= 0;
+    rst_491m52 = 0;
   end
 
+  initial begin
+    ctrl_rst = 1;
+    repeat (100) @(posedge ctrl_clk);
+    ctrl_rst = 0;
+  end
+
+  //
   // Configuration sender
+  //=====================
+
   initial begin
     wait (rst_400m == 0);
     wait (rst_491m52 == 0);
-
+    wait (ctrl_rst == 0);
+    #3000;
     // Simluate S-Plane Message
     //for (int layer = 0; layer < 64; layer++) begin
     //  srs_c_message(0, layer, 0, 0, 0, 1, 3, 0, 0, 0, 0);
     //end
 
     // Simulate M-Plane Configuration
-    srs_m_message(0, 0, 0, 1, 1, 13, 1, 0, 0, 0, 0);
+    // cc, layer, frameid, subframeid, slotid, symbolid, numsymbol, numprbc, startprbc, sectionid, ethport
+    srs_m_message(0, 0, 0, 0, 0, 3, 1, 118, 0,   0, 0);
+    srs_m_message(0, 0, 0, 0, 0, 3, 1, 118, 118, 0, 0);
+    srs_m_message(0, 0, 0, 0, 0, 3, 1,  37, 236, 0, 0);
+
     //srs_m_message(1, 0, 0, 1, 1, 13, 1, 0, 0, 0, 0);
 
     // Run two radio frame
@@ -255,16 +280,16 @@ module tb_srs_adaptor;
     forever begin
       @(posedge clk_491m52);
       if (srs_req_valid) begin
-//        for (int i = 0; i < 3276; i++) begin
-//          @(posedge clk_491m52);
-//          srs_data_tdata  <= i;
-//          srs_data_tvalid <= 1'b1;
-//          srs_data_tlast  <= i == 3275;
-//        end
-//        @(posedge clk_491m52);
-//        srs_data_tdata  <= 0;
-//        srs_data_tvalid <= 0;
-//        srs_data_tlast  <= 0;
+        for (int i = 0; i < 3276; i++) begin
+          @(posedge clk_491m52);
+          srs_data_tdata  <= i;
+          srs_data_tvalid <= 1'b1;
+          srs_data_tlast  <= i == 3275;
+        end
+        @(posedge clk_491m52);
+        srs_data_tdata  <= 0;
+        srs_data_tvalid <= 0;
+        srs_data_tlast  <= 0;
       end
     end
   end
