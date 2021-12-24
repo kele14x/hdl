@@ -1,6 +1,6 @@
 // file: srs_adaptor_runner.sv
 // brief: This module is SRS request executor, when it received SRS request
-//        infomation from `srs_run_*` ports, it do:
+//        information from `srs_run_*` ports, it do:
 //          1. Forward the request to DFE at `srs_req_*` ports
 //          2. Wait DFE module send back one symbol data from `srs_data_*`
 //             ports
@@ -8,6 +8,8 @@
 //             handles the PING-PONG buffer switch
 //          4. After one symbol data is done, tell framer to pack it into a
 //             packet
+//        During the framer packing the packet, this runner could try to request
+//        next symbol data from DFE.
 `timescale 1 ns / 1 ps `default_nettype none
 
 module srs_adaptor_runner (
@@ -81,12 +83,15 @@ module srs_adaptor_runner (
   //========
 
   // Data wait CDC
+  // During the state machine, we need to checking the `srs_req_*` AXIS
+  // interface. However, the AXIS interface is on `clk_491m` clock doamin, so
+  // CDC is need here. These signals are CDCed signals at `clk_400m` doamin.
   logic srs_data_ready;
   logic srs_data_valid;
-  logic srs_data_done;
+  logic srs_data_done;  // last & valid
 
 
-  // Let do a single thread state machine first
+  // Runner state machine
   typedef enum int {
     S_RST,   // Under reset
     S_IDLE,  // Nothing doing
@@ -137,31 +142,42 @@ module srs_adaptor_runner (
 
   // Send Requst to DFE
   //===================
+  // This also covers CDC
 
-  assign srs_req_new = srs_run_valid && ~srs_req_send && ~srs_req_rcv && {
-      srs_run_cc, srs_run_layer, srs_run_symbol } != srs_req_prev;
+  assign srs_req_new = {srs_run_cc, srs_run_layer, srs_run_symbol} != srs_req_prev;
 
   // When one SRS run request is accepted, register them at srs_req_in register
-  // since the data will not change
+  // since the data will not change.
   always_ff @(posedge clk_400m) begin
-    if (srs_req_new) begin
-      srs_req_in <= {srs_run_cc, srs_run_layer, srs_run_symbol};
+    if (state == S_IDLE && srs_run_valid) begin
+      if (srs_req_new) begin
+        srs_req_in <= {srs_run_cc, srs_run_layer, srs_run_symbol};
+      end
     end
   end
 
+  // We do not want request same symbol again and again. If controller request
+  // differenct section of same symbol, we pass the request.
   always_ff @(posedge clk_400m) begin
     if (rst_400m) begin
       srs_req_prev <= '1;
-    end else if (srs_req_new) begin
-      srs_req_prev <= {srs_run_cc, srs_run_layer, srs_run_symbol};
+    end else if (state == S_IDLE && srs_run_valid) begin
+      if (srs_req_new) begin
+        srs_req_prev <= {srs_run_cc, srs_run_layer, srs_run_symbol};
+      end
     end
   end
 
+  // Set CDC HS send flag. It takes few clock ticks to complate the CDC HS.
+  // We assume the request will not come too offten so the previous CDC HS is
+  // always done. Thus we does not check `srs_req_send` and `srs_req_rcv`.
   always_ff @(posedge clk_400m) begin
     if (rst_400m) begin
       srs_req_send <= '0;
-    end else if (srs_req_new) begin
-      srs_req_send <= 1'b1;
+    end else if (state == S_IDLE && srs_run_valid) begin
+      if (srs_req_new) begin
+        srs_req_send <= 1'b1;
+      end
     end else if (srs_req_rcv) begin
       srs_req_send <= 1'b0;
     end
@@ -182,10 +198,12 @@ module srs_adaptor_runner (
       .src_rcv (srs_req_rcv),
       //
       .dest_clk(clk_491m52),
-      .dest_out({srs_req_cc, srs_req_layer, srs_req_symbol}),
+      .dest_out(srs_req_out),
       .dest_req(srs_req_valid),
       .dest_ack(  /* Not used */)
   );
+
+  assign {srs_req_cc, srs_req_layer, srs_req_symbol} = srs_req_out;
 
 
   // Get Data from DFE
@@ -216,12 +234,11 @@ module srs_adaptor_runner (
   end
 
 
-  xpm_cdc_array_single #(
+  xpm_cdc_single #(
       .DEST_SYNC_FF  (4),
       .INIT_SYNC_FF  (0),
       .SIM_ASSERT_CHK(0),
-      .SRC_INPUT_REG (0),
-      .WIDTH         (1)
+      .SRC_INPUT_REG (0)
   ) xpm_cdc_srs_data_tready (
       .src_clk (  /* Not used */),
       .src_in  (srs_data_ready),
@@ -271,11 +288,9 @@ module srs_adaptor_runner (
   end
 
   always_ff @(posedge clk_491m52) begin
-    if (rst_491m52) begin
+    if (~srs_data_tready) begin
       bram_wr_addr <= '0;
-    end else if (~srs_data_tready) begin
-      bram_wr_addr <= '0;
-    end else if (srs_data_tvalid) begin
+    end else if (bram_wr_en) begin
       bram_wr_addr <= bram_wr_addr + 1;
     end
   end

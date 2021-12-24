@@ -252,8 +252,8 @@ module srs_adaptor_controller #(
 
 
   // FWFT FIFO with width (CcWidth + 12). We need this fifo since we may spend
-  // more than 1 symbol time to process all layer x all section control 
-  // message for one SRS symbol. In this case, we need to pick up the symbols 
+  // more than 1 symbol time to process all layer x all section control
+  // message for one SRS symbol. In this case, we need to pick up the symbols
   // just missed. For none-SRS symbols, the FIFO should be just pushed and then
   // pop empty. So any FIFO depth should be OK.
   srs_adaptor_controller_fifo i_srs_adaptor_controller_fifo (
@@ -276,7 +276,7 @@ module srs_adaptor_controller #(
   // Two CC may required to be processed at same time (in the case of same SC
   // spacing). So request/ack handshake mechanism is used here.
   generate
-    for (genvar cc = 0; cc < NUM_CC; cc++) begin
+    for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_init_cc
 
       always_ff @(posedge clk) begin
         if (s_ul_update[cc]) begin

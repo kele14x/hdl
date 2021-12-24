@@ -1,7 +1,7 @@
 // file: srs_adaptor_mux.sv
 // brief: This block accept all SRS message from different Ethernet port, and
 //        MUX them into one port. The process is based on the fact that SRS
-//        messages will not coming from two or more Ethernet ports at same 
+//        messages will not coming from two or more Ethernet ports at same
 //        time.
 `timescale 1 ns / 1 ps `default_nettype none
 
@@ -80,8 +80,9 @@ module srs_adaptor_mux #(
   logic [11:0] srs_flt_symbol  [NUM_ETH_PORT];
   logic [11:0] ctrl_srs_symbol;
 
-  function [11:0] get_symbol(input [15:0] rtc_pc_id, input [3:0] subframeid, input [5:0] slotid,
-                             input [5:0] symbolid, input [1:0] ctrl_numerology[NUM_CC]);
+  function automatic [11:0] get_symbol(input logic [15:0] rtc_pc_id, input logic [3:0] subframeid,
+                                       input logic [5:0] slotid, input logic [5:0] symbolid,
+                                       input logic [1:0] ctrl_numerology[NUM_CC]);
     begin
       logic [2:0] cc;
       logic [1:0] mu;
@@ -96,7 +97,7 @@ module srs_adaptor_mux #(
 
 
   generate
-    for (genvar i = 0; i < NUM_ETH_PORT; i++) begin
+    for (genvar i = 0; i < NUM_ETH_PORT; i++) begin : g_symbol
       assign srs_flt_symbol[i] = get_symbol(
           srs_flt_rtc_pc_id[i],
           srs_flt_subframeid[i],

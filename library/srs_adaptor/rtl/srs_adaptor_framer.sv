@@ -144,20 +144,22 @@ module srs_adaptor_framer (
   //==============================
 
   // Will only accept next frame request when `S_IDLE` again.
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      fram_req_ready <= 1'b0;
-    end else begin
-      fram_req_ready <= (state_next == S_IDLE);
-    end
-  end
+  assign fram_req_ready = (state == S_IDLE);
 
 
   // AXIS Interface
   //===============
 
-  logic [95:0] bram_data_d;
+  // Besides the BIG state machine, we also need to keep track of the RE reading
+  // state. During 7 state, we need to read 24 REs and write 7 AXIS words. Since
+  // for BFP9, 7 AXIS words (7 * 64 = 448-bit) holds 2 RB (2 * 12 = 24 REs).
+  // The BRAM has capacity of read out 4 REs at a time。 For first 6 state, we
+  // set BRAM read address from K+0 to K+6. For last state, we set BRAM read
+  // address no change (K+6). So every 6th BRAM data will be readout twice.
   logic [ 2:0] bram_re_state;
+
+  // We need previous read out data to construct the next AXIS data.
+  logic [95:0] bram_data_d;
 
   logic [63:0] fram_req_header_reg;
 
@@ -170,83 +172,83 @@ module srs_adaptor_framer (
     case (state)
       3'd3:
       return {
-        4'b0,
-        data[21:18],
-        data[8:0],
-        data[17:9],
-        data[32:24],
-        data[41:33],
-        data[56:48],
-        data[65:57],
-        data[80:79]
+        4'b0,  // PAD
+        data[21:18],  // E
+        data[8:0],  // I0
+        data[17:9],  // Q0
+        data[32:24],  // I1
+        data[41:33],  // Q1
+        data[56:48],  // I2
+        data[65:57],  // Q2
+        data[80:79]  // I3 MSB2
       };
       3'd4:
       return {
-        data_d[78:72],
-        data_d[89:81],
-        data[8:0],
-        data[17:9],
-        data[32:24],
-        data[41:33],
-        data[56:48],
-        data[65:63]
+        data_d[78:72],  // I3 LSB7
+        data_d[89:81],  // Q3
+        data[8:0],  // I4
+        data[17:9],  // Q4
+        data[32:24],  // I5
+        data[41:33],  // Q5
+        data[56:48],  // I6
+        data[65:63]  // Q6 MSB3
       };
       3'd5:
       return {
-        data_d[62:57],
-        data_d[80:72],
-        data_d[89:81],
-        data[8:0],
-        data[17:9],
-        data[32:24],
-        data[41:33],
-        data[56:53]
+        data_d[62:57],  // Q6 LSB6
+        data_d[80:72],  // I7
+        data_d[89:81],  // Q7
+        data[8:0],  // I8
+        data[17:9],  // Q8
+        data[32:24],  // I9
+        data[41:33],  // Q9
+        data[56:53]  // I10 MSB4
       };
       3'd6:
       return {
-        data_d[52:48],
-        data_d[65:57],
-        data_d[80:72],
-        data_d[89:81],
-        4'b0,
-        data[21:18],
-        data[8:0],
-        data[17:9],
-        data[32:27]
+        data_d[52:48],  // I10 LSB5
+        data_d[65:57],  // Q10
+        data_d[80:72],  // I11
+        data_d[89:81],  // Q11
+        4'b0,  // PAD
+        data[21:18],  // E
+        data[8:0],  // I0
+        data[17:9],  // Q0
+        data[32:27]  // I1 MSB6
       };
       3'd0:
       return {
-        data_d[26:24],
-        data_d[41:33],
-        data_d[56:48],
-        data_d[65:57],
-        data_d[80:72],
-        data_d[89:81],
-        data[8:0],
-        data[17:11]
+        data_d[26:24],  // I1 LSB3
+        data_d[41:33],  // Q1
+        data_d[56:48],  // I2
+        data_d[65:57],  // Q2
+        data_d[80:72],  // I3
+        data_d[89:81],  // Q3
+        data[8:0],  // I4
+        data[17:11]  // Q4 MSB7
       };
       3'd1:
       return {
-        data_d[10:9],
-        data_d[32:24],
-        data_d[41:33],
-        data_d[56:48],
-        data_d[65:57],
-        data_d[80:72],
-        data_d[89:81],
-        data[7:0]
+        data_d[10:9],  // Q4 LSB2
+        data_d[32:24],  // I5
+        data_d[41:33],  // Q5
+        data_d[56:48],  // I6
+        data_d[65:57],  // Q6
+        data_d[80:72],  // I7
+        data_d[89:81],  // Q7
+        data[8:1]  // I8 MSB8
       };
-      default:
+      default:  // 3'd2
       return {
-        data_d[8:8],
-        data_d[17:9],
-        data_d[32:24],
-        data_d[41:33],
-        data_d[56:48],
-        data_d[65:57],
-        data_d[80:72],
-        data_d[89:81]
-      };  // 2
+        data[0:0],  // I8 LSB1
+        data[17:9],  // Q8
+        data[32:24],  // I9
+        data[41:33],  // Q9
+        data[56:48],  // I10
+        data[65:57],  // Q10
+        data[80:72],  // I11
+        data[89:81]  // Q11
+      };
     endcase
   endfunction
 
@@ -265,7 +267,7 @@ module srs_adaptor_framer (
 
 
   always_ff @(posedge clk) begin
-    if (fram_req_valid) begin
+    if (fram_req_valid && (state == S_IDLE)) begin
       fram_req_header_reg <= fram_req_header;
     end
   end
@@ -274,76 +276,55 @@ module srs_adaptor_framer (
 
   always_ff @(posedge clk) begin
     if (state == S_PRE3) begin  // state_next == S_PRE4
-      m_fram_unsol_tdata <= fram_req_header_reg;
+      m_fram_unsol_tdata <= byte_reverse(fram_req_header_reg);
     end else if (state == S_PRE4 && m_fram_unsol_tready) begin  // state_next == S_OUT
       m_fram_unsol_tdata <= byte_reverse(tdata);
-    end else if (state == S_OUT && m_fram_unsol_tready) begin
+    end else if (state == S_OUT && m_fram_unsol_tready) begin  // state_next == S_OUT | S_POST1
       m_fram_unsol_tdata <= byte_reverse(tdata);
-    end else if (state == S_POST1 && m_fram_unsol_tready) begin
+    end else if (state == S_POST1 && m_fram_unsol_tready) begin  // state_next == POST1 | S_POST2
       m_fram_unsol_tdata <= byte_reverse(tdata);
-    end else if (state == S_POST2 && m_fram_unsol_tready) begin
+    end else if (state == S_POST2 && m_fram_unsol_tready) begin  // state_next == POST2 | S_POST3
       m_fram_unsol_tdata <= byte_reverse(tdata);
-    end else if (state == S_POST3 && m_fram_unsol_tready) begin
+    end else if (state == S_POST3 && m_fram_unsol_tready) begin  // state_next == POST3 | S_POST4
       m_fram_unsol_tdata <= byte_reverse(tdata);
-    end else if (state == S_POST4 && m_fram_unsol_tready) begin  // state_next == S_LAST
+    end else if (state == S_POST4 && m_fram_unsol_tready) begin  // state_next == S_POST 4 | S_LAST
       m_fram_unsol_tdata <= byte_reverse(tdata);
     end else begin
       m_fram_unsol_tdata <= m_fram_unsol_tdata;
     end
   end
 
-  // If controller request odd number of RBs, last word only have 32-bit valid
-  // data, so tkeep should be set to 8'h0F.
+  // Generate TKEEP of AXIS data.
   always_ff @(posedge clk) begin
-    if (state_next == S_PRE4) begin
-      m_fram_unsol_tkeep <= '1;
-    end else if (state_next == S_OUT) begin
-      m_fram_unsol_tkeep <= '1;
-    end else if (state_next == S_POST1) begin
-      m_fram_unsol_tkeep <= '1;
-    end else if (state_next == S_POST2) begin
-      m_fram_unsol_tkeep <= '1;
-    end else if (state_next == S_POST3) begin
-      m_fram_unsol_tkeep <= '1;
-    end else if (state_next == S_POST4) begin
-      m_fram_unsol_tkeep <= '1;
-    end else if (state_next == S_LAST) begin
-      // TODO: last word may not all should be keep
-      m_fram_unsol_tkeep <= '1;
+    if (state_next == S_LAST) begin  // state == S_POST4
+      // For last word, maybe not all words should be keep. It depends one the
+      // number of RBs. If controller request even number of RBs, there will be
+      // integer words in AXIS packet. So, all bytes of last word should be
+      // keep. If controller request odd number of RBs, there will be one half
+      // word in AXIS packet, so only half of last word should be keep.
+      m_fram_unsol_tkeep <= (bram_re_state == 6) ? 4'b0011 : 4'b1111;
     end else begin
-      m_fram_unsol_tkeep <= m_fram_unsol_tkeep;
+      m_fram_unsol_tkeep <= '1;
     end
   end
 
   // `m_fram_unsol_tvalid` should be set when state is `S_PRE4` (Header)
   // and when state is `S_OUT` and `S_POSTx` (BRAM data).
   always_ff @(posedge clk) begin
-    if (rst) begin
-      m_fram_unsol_tvalid <= 1'b0;
-    end else begin
-      m_fram_unsol_tvalid <= (state_next == S_PRE4 ||
-                state_next == S_OUT || state_next == S_POST1 ||
-                state_next == S_POST2 || state_next == S_POST3 ||
-                state_next == S_POST4 || state_next == S_LAST);
-    end
+    m_fram_unsol_tvalid <= (state_next == S_PRE4 ||
+        state_next == S_OUT || state_next == S_POST1 ||
+        state_next == S_POST2 || state_next == S_POST3 ||
+        state_next == S_POST4 || state_next == S_LAST);
   end
 
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      m_fram_unsol_tlast <= 1'b0;
-    end else begin
-      m_fram_unsol_tlast <= (state_next == S_LAST);
-    end
-  end
+  assign m_fram_unsol_tlast = (state == S_LAST);
 
   // TUSER information. It will be set few ticks before tdata, but it's OK
   // [31:16] eAxC ID
   // [15:13] Ethernet Port
   // [12: 0] Incoming packet length in Bytes
   always_ff @(posedge clk) begin
-    if (rst) begin
-      m_fram_unsol_tuser <= 1'b0;
-    end else if (state == S_IDLE && fram_req_valid) begin
+    if ((state == S_IDLE) && fram_req_valid) begin
       m_fram_unsol_tuser <= {fram_req_rtc_pc_id, fram_req_ethport, packet_length};
     end
   end
@@ -374,7 +355,7 @@ module srs_adaptor_framer (
       bram_re_cnt <= ~m_fram_unsol_tready ? bram_re_cnt : bram_re_cnt + 4;
     end else if (state == S_OUT) begin
       bram_re_cnt <= ~m_fram_unsol_tready ? bram_re_cnt :
-                (bram_re_state == 5) ? bram_re_cnt : bram_re_cnt + 4;
+          (bram_re_state == 5) ? bram_re_cnt : bram_re_cnt + 4;
     end else begin
       bram_re_cnt <= '0;
     end
@@ -388,19 +369,35 @@ module srs_adaptor_framer (
   end
 
   always_ff @(posedge clk) begin
-    if (state == S_IDLE && fram_req_valid) begin
+    if (state == S_IDLE && fram_req_valid) begin  // state_next == S_PRE1
       bram_re_state <= 0;
-    end else if (state == S_PRE1) begin
+    end else if (state == S_PRE1) begin  // state_next == S_PRE2
       bram_re_state <= bram_re_state + 1;
-    end else if (state == S_PRE2) begin
+    end else if (state == S_PRE2) begin  // state_next == S_PRE3
       bram_re_state <= bram_re_state + 1;
-    end else if (state == S_PRE3) begin
+    end else if (state == S_PRE3) begin  // state_next == S_PRE4
       bram_re_state <= bram_re_state + 1;
-    end else if (state == S_PRE4) begin
-      bram_re_state <= ~m_fram_unsol_tready ? bram_re_state : bram_re_state + 1;
-    end else if (state == S_OUT) begin
+    end else if (state == S_PRE4) begin  // state_next == S_OUT
+      // From this tick, we need to check whether AXIS sink is ready
       bram_re_state <= ~m_fram_unsol_tready ? bram_re_state :
                 (bram_re_state == 6) ? 0 : bram_re_state + 1;
+    end else if (state == S_OUT) begin  // state_next == S_OUT | S_POST1
+      bram_re_state <= ~m_fram_unsol_tready ? bram_re_state :
+                (bram_re_state == 6) ? 0 : bram_re_state + 1;
+    end else if (state == S_POST1) begin  // state_next == S_POST1 | S_POST2
+      bram_re_state <= ~m_fram_unsol_tready ? bram_re_state :
+                (bram_re_state == 6) ? 0 : bram_re_state + 1;
+    end else if (state == S_POST2) begin  // state_next == S_POST2 | S_POST3
+      bram_re_state <= ~m_fram_unsol_tready ? bram_re_state :
+                (bram_re_state == 6) ? 0 : bram_re_state + 1;
+    end else if (state == S_POST3) begin  // state_next == S_POST3 | S_POST4
+      bram_re_state <= ~m_fram_unsol_tready ? bram_re_state :
+                (bram_re_state == 6) ? 0 : bram_re_state + 1;
+    end else if (state == S_POST4) begin  // state_next == S_POST4 | S_LAST
+      bram_re_state <= ~m_fram_unsol_tready ? bram_re_state :
+                (bram_re_state == 6) ? 0 : bram_re_state + 1;
+    end else if (state == S_LAST) begin  // state_next = S_IDLE
+      bram_re_state <= ~m_fram_unsol_tready ? bram_re_state : 0;
     end else begin
       bram_re_state <= '0;
     end

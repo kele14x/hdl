@@ -33,7 +33,7 @@ module srs_adaptor_fwd #(
 );
 
 
-  localparam DataWidth = ($size(srs_cc) + $size(srs_symbol) + $size(srs_numsymbol));
+  localparam int DataWidth = ($size(srs_cc) + $size(srs_symbol) + $size(srs_numsymbol));
 
 
   // CDC
@@ -51,7 +51,7 @@ module srs_adaptor_fwd #(
   } != srs_prev;
 
   // Put all data into a CDC handshake buffer, assume the incoming SRS message
-  // will not come too offen, so we have enough time to forward it to next
+  // will not come too often, so we have enough time to forward it to next
   // block. XPM_CDC_HANDSHAKE requires us deassert `srs_send` if seen `srs_rcv`
   always_ff @(posedge clk_400m) begin
     if (rst_400m) begin

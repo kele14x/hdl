@@ -71,7 +71,7 @@ module srs_adaptor_filter #(
   //====
   // This FSM is used to extract SRS configuration C-Plane message from XORIF.
   // The necessary information of SRS message are:
-  //  rtcID[7:6] = 1 (RU Port ID for SRS) 
+  //  rtcID[7:6] = 1 (RU Port ID for SRS)
   //  messageType = 2 (C-Plane message)
   //  Packet in window
   //  Packet with good length

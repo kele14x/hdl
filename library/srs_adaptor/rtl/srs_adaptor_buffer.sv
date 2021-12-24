@@ -27,12 +27,13 @@ module srs_adaptor_buffer (
   logic [12:0] bram_wr_addr_s;
   logic [10:0] bram_rd_addr_s;
 
-  xpm_cdc_array_single #(
-      .DEST_SYNC_FF  (4),
+
+  //
+  xpm_cdc_single #(
+      .DEST_SYNC_FF  (2),
       .INIT_SYNC_FF  (0),
       .SIM_ASSERT_CHK(0),
-      .SRC_INPUT_REG (0),
-      .WIDTH         (1)
+      .SRC_INPUT_REG (0)
   ) xpm_cdc_srs_run_bank (
       .src_clk (  /* Not used */),
       .src_in  (bram_bank),
@@ -43,6 +44,8 @@ module srs_adaptor_buffer (
   assign bram_wr_addr_s = {bram_bank_s, bram_wr_addr};
   assign bram_rd_addr_s = {~bram_bank, bram_rd_addr};
 
+  // Simple dual port RAM, 8192 * 24b or 2048 * 96b
+  // 1-bit MSB is ping-pong bank switch and hard synced
   srs_adaptor_runner_sdp i_srs_adaptor_runner_sdp (
       // Write port
       .clka (clk_491m52),

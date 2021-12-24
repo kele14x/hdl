@@ -115,10 +115,11 @@ module tb_srs_adaptor;
   // Tasks
   //======
 
-  task automatic srs_c_message(input [2:0] cc, input [5:0] layer, input [7:0] frameid,
-                               input [3:0] subframeid, input [5:0] slotid, input [5:0] symbolid,
-                               input [3:0] numsymbol, input [7:0] numprbc, input [9:0] startprbc,
-                               input [11:0] sectionid, input [2:0] ethport);
+  task automatic srs_c_message(
+      input logic [2:0] cc, input logic [5:0] layer, input logic [7:0] frameid,
+      input logic [3:0] subframeid, input logic [5:0] slotid, input logic [5:0] symbolid,
+      input logic [3:0] numsymbol, input logic [7:0] numprbc, input logic [9:0] startprbc,
+      input logic [11:0] sectionid, input logic [2:0] ethport);
     begin
       @(posedge clk_400m);
       s_t_header_offset_valid[ethport] <= 1;
@@ -150,10 +151,11 @@ module tb_srs_adaptor;
     end
   endtask
 
-  task automatic srs_m_message(input [2:0] cc, input [5:0] layer, input [7:0] frameid,
-                               input [3:0] subframeid, input [5:0] slotid, input [5:0] symbolid,
-                               input [3:0] numsymbol, input [7:0] numprbc, input [9:0] startprbc,
-                               input [11:0] sectionid, input [2:0] ethport);
+  task automatic srs_m_message(
+      input logic [2:0] cc, input logic [5:0] layer, input logic [7:0] frameid,
+      input logic [3:0] subframeid, input logic [5:0] slotid, input logic [5:0] symbolid,
+      input logic [3:0] numsymbol, input logic [7:0] numprbc, input logic [9:0] startprbc,
+      input logic [11:0] sectionid, input logic [2:0] ethport);
     begin
       @(posedge ctrl_clk);
       ctrl_srs_rtc_pc_id <= {1'b0, 1'b0, cc[2:0], 2'b01, layer};
@@ -175,12 +177,12 @@ module tb_srs_adaptor;
       @(posedge ctrl_clk);
       ctrl_srs_valid <= 1'b0;
 
-      repeat(10) @(posedge ctrl_clk);
+      repeat (10) @(posedge ctrl_clk);
     end
   endtask
 
 
-  task automatic update_sym(input [11:0] sym);
+  task automatic update_sym(input logic [11:0] sym);
     begin
       @(posedge clk_400m);
       s_ul_sym_num <= '{NUM_CC{sym}};
@@ -250,10 +252,13 @@ module tb_srs_adaptor;
 
     // Simulate M-Plane Configuration
     // cc, layer, frameid, subframeid, slotid, symbolid, numsymbol, numprbc, startprbc, sectionid, ethport
-    srs_m_message(0, 0, 0, 0, 0, 3, 1, 118, 0,   0, 0);
+    srs_m_message(0, 0, 0, 0, 0, 3, 1, 118, 0, 0, 0);
     srs_m_message(0, 0, 0, 0, 0, 3, 1, 118, 118, 0, 0);
-    srs_m_message(0, 0, 0, 0, 0, 3, 1,  37, 236, 0, 0);
-
+    srs_m_message(0, 0, 0, 0, 0, 3, 1, 37, 236, 0, 0);
+    //
+    srs_m_message(0, 1, 0, 0, 0, 3, 1, 118, 0, 0, 0);
+    srs_m_message(0, 1, 0, 0, 0, 3, 1, 118, 118, 0, 0);
+    srs_m_message(0, 1, 0, 0, 0, 3, 1, 37, 236, 0, 0);
     //srs_m_message(1, 0, 0, 1, 1, 13, 1, 0, 0, 0, 0);
 
     // Run two radio frame
@@ -282,7 +287,7 @@ module tb_srs_adaptor;
       if (srs_req_valid) begin
         for (int i = 0; i < 3276; i++) begin
           @(posedge clk_491m52);
-          srs_data_tdata  <= i;
+          srs_data_tdata  <= {6'b001111, i[8:0], i[8:0]};
           srs_data_tvalid <= 1'b1;
           srs_data_tlast  <= i == 3275;
         end
@@ -298,6 +303,19 @@ module tb_srs_adaptor;
   //====
 
   srs_adaptor UUT (.*);
+
+  srs_adaptor_unsol_checker i_checker (
+      // XORIF Clock & Reset
+      .clk                (clk_400m),
+      .rst                (rst_400m),
+      // UNSOL Port
+      .s_fram_unsol_tdata (m_fram_unsol_tdata),
+      .s_fram_unsol_tkeep (m_fram_unsol_tkeep),
+      .s_fram_unsol_tvalid(m_fram_unsol_tvalid),
+      .s_fram_unsol_tlast (m_fram_unsol_tlast),
+      .s_fram_unsol_tready(m_fram_unsol_tready),
+      .s_fram_unsol_tuser (m_fram_unsol_tuser)
+  );
 
 endmodule
 
