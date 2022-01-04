@@ -1,7 +1,7 @@
-// File: cmult.sv
-// Brief: 3-DSP complex multiplier.
+// File: cmult_chain.sv
+// Brief: Complex multiplier, chained together
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module cmult #(
     parameter int AWIDTH  = 16,
