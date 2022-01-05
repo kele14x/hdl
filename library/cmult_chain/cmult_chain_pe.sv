@@ -1,23 +1,22 @@
 // File: cmult_chain.sv
-// Brief: Complex multiplier, chained together.
+// Brief: Complex multiplier, chained together
 
 `timescale 1 ns / 1 ps `default_nettype none
 
-module cmult_chain #(
-    parameter int NUM_TAPS = 8,
-    parameter int AWIDTH   = 16,
-    parameter int BWIDTH   = 16,
-    parameter int PWIDTH   = 16,
-    parameter int SRABITS  = 15
+module cmult #(
+    parameter int AWIDTH  = 16,
+    parameter int BWIDTH  = 16,
+    parameter int PWIDTH  = 16,
+    parameter int SRABITS = 15
 ) (
     input var  logic              clk,
     input var  logic              rst,
     //
-    input var  logic [AWIDTH-1:0] ar   [NUM_TAPS],
-    input var  logic [AWIDTH-1:0] ai   [NUM_TAPS],
+    input var  logic [AWIDTH-1:0] ar,
+    input var  logic [AWIDTH-1:0] ai,
     //
-    input var  logic [BWIDTH-1:0] br   [NUM_TAPS],
-    input var  logic [BWIDTH-1:0] bi   [NUM_TAPS],
+    input var  logic [BWIDTH-1:0] br,
+    input var  logic [BWIDTH-1:0] bi,
     //
     output var logic [PWIDTH-1:0] pr,
     output var logic [PWIDTH-1:0] pi,
@@ -26,7 +25,7 @@ module cmult_chain #(
 );
 
 
-  localparam int Latency = NUM_TAPS + 4;
+  localparam int Latency = 8;
 
   logic signed [AWIDTH-1:0] ar_d, ar_dd, ar_ddd, ar_dddd, ar_ddddd;
   logic signed [AWIDTH-1:0] ai_d, ai_dd, ai_ddd, ai_dddd, ai_ddddd;

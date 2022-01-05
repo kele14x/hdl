@@ -59,6 +59,7 @@ module srs_adaptor_controller #(
     // Control
     //========
     input var         ctrl_srs_en,
+    input var         ctrl_srs_gen_en,
     output var        error_fifo_full
 );
 
@@ -415,9 +416,7 @@ module srs_adaptor_controller #(
   end
 
   // Clear the buffer memory
-  always_ff @(posedge clk) begin
-    buffer_clr_en <= (rd_state_next == S_RD_CHK) && process_it;
-  end
+  assign buffer_clr_en = (rd_state == S_RD_CHK) && process_it && ~ctrl_srs_gen_en;
 
 
   // Output

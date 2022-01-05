@@ -12,11 +12,16 @@
 //        next symbol data from DFE.
 `timescale 1 ns / 1 ps `default_nettype none
 
-module srs_adaptor_runner (
+module srs_adaptor_runner #(
+    parameter int NUM_CC = 2
+) (
     // 400M
     //======
     input var         clk_400m,
     input var         rst_400m,
+    // UL Timing
+    input var  [11:0] s_ul_sym_num     [NUM_CC],
+    input var         s_ul_update      [NUM_CC],
     // SRS Request
     input var  [ 2:0] srs_run_cc,
     input var  [ 5:0] srs_run_layer,
@@ -164,6 +169,12 @@ module srs_adaptor_runner (
     end else if (state == S_IDLE && srs_run_valid) begin
       if (srs_req_new) begin
         srs_req_prev <= {srs_run_cc, srs_run_layer, srs_run_symbol};
+      end
+    end else begin
+      for (int i = 0; i < NUM_CC; i++) begin
+        if (s_ul_update[i] && s_ul_sym_num[i] == 0) begin
+          srs_req_prev <= '1;
+        end
       end
     end
   end

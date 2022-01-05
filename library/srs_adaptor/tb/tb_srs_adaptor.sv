@@ -89,9 +89,9 @@ module tb_srs_adaptor;
   logic        ctrl_clk;
   logic        ctrl_rst;
   //
-  logic        ctrl_srs_en = 1'b1;
+  logic        ctrl_srs_en = 1'b0;
   //
-  logic        ctrl_srs_gen_en = 1'b1;
+  logic        ctrl_srs_gen_en = 1'b0;
   //
   logic [15:0] ctrl_srs_rtc_pc_id;
   //
@@ -245,6 +245,11 @@ module tb_srs_adaptor;
     wait (rst_491m52 == 0);
     wait (ctrl_rst == 0);
     #3000;
+
+    ctrl_srs_en <= 1'b1;
+    ctrl_srs_gen_en <= 1'b1;
+    #3000;
+
     // Simluate S-Plane Message
     //for (int layer = 0; layer < 64; layer++) begin
     //  srs_c_message(0, layer, 0, 0, 0, 1, 3, 0, 0, 0, 0);
@@ -253,13 +258,22 @@ module tb_srs_adaptor;
     // Simulate M-Plane Configuration
     // cc, layer, frameid, subframeid, slotid, symbolid, numsymbol, numprbc, startprbc, sectionid, ethport
     srs_m_message(0, 0, 0, 0, 0, 3, 1, 118, 0, 0, 0);
-    srs_m_message(0, 0, 0, 0, 0, 3, 1, 118, 118, 0, 0);
-    srs_m_message(0, 0, 0, 0, 0, 3, 1, 37, 236, 0, 0);
+//    srs_m_message(0, 0, 0, 0, 0, 3, 1, 118, 118, 0, 0);
+//    srs_m_message(0, 0, 0, 0, 0, 3, 1, 37, 236, 0, 0);
     //
-    srs_m_message(0, 1, 0, 0, 0, 3, 1, 118, 0, 0, 0);
-    srs_m_message(0, 1, 0, 0, 0, 3, 1, 118, 118, 0, 0);
-    srs_m_message(0, 1, 0, 0, 0, 3, 1, 37, 236, 0, 0);
+//    srs_m_message(0, 1, 0, 0, 0, 3, 1, 118, 0, 0, 0);
+//    srs_m_message(0, 1, 0, 0, 0, 3, 1, 118, 118, 0, 0);
+//    srs_m_message(0, 1, 0, 0, 0, 3, 1, 37, 236, 0, 0);
     //srs_m_message(1, 0, 0, 1, 1, 13, 1, 0, 0, 0, 0);
+
+    #(1 * 10 * 1000 * 1000);
+
+    ctrl_srs_en <= 1'b0;
+    ctrl_srs_gen_en <= 1'b0;
+    #1000;
+    ctrl_srs_en <= 1'b1;
+    ctrl_srs_gen_en <= 1'b1;
+    srs_m_message(0, 0, 0, 0, 0, 4, 1, 118, 0, 0, 0);
 
     // Run two radio frame
     #(2 * 10 * 1000 * 1000);
@@ -281,23 +295,23 @@ module tb_srs_adaptor;
   end
 
   // SRS data responser
-  initial begin
-    forever begin
-      @(posedge clk_491m52);
-      if (srs_req_valid) begin
-        for (int i = 0; i < 3276; i++) begin
-          @(posedge clk_491m52);
-          srs_data_tdata  <= {6'b001111, i[8:0], i[8:0]};
-          srs_data_tvalid <= 1'b1;
-          srs_data_tlast  <= i == 3275;
-        end
-        @(posedge clk_491m52);
-        srs_data_tdata  <= 0;
-        srs_data_tvalid <= 0;
-        srs_data_tlast  <= 0;
-      end
-    end
-  end
+//  initial begin
+//    forever begin
+//      @(posedge clk_491m52);
+//      if (srs_req_valid) begin
+//        for (int i = 0; i < 3276; i++) begin
+//          @(posedge clk_491m52);
+//          srs_data_tdata  <= {6'b001111, i[8:0], i[8:0]};
+//          srs_data_tvalid <= 1'b1;
+//          srs_data_tlast  <= i == 3275;
+//        end
+//        @(posedge clk_491m52);
+//        srs_data_tdata  <= 0;
+//        srs_data_tvalid <= 0;
+//        srs_data_tlast  <= 0;
+//      end
+//    end
+//  end
 
   // UUT
   //====

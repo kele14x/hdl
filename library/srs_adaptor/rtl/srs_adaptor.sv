@@ -541,14 +541,21 @@ module srs_adaptor #(
       .srs_run_valid     (srs_run_valid),
       .srs_run_ready     (srs_run_ready),
       //
-      .ctrl_srs_en       (ctrl_srs_en)
+      .ctrl_srs_en       (ctrl_srs_en_s),
+      .ctrl_srs_gen_en   (ctrl_srs_gen_en_s),
+      .error_fifo_full   (  /* not used */)
   );
 
-  srs_adaptor_runner i_runner (
+  srs_adaptor_runner #(
+      .NUM_CC(NUM_CC)
+  ) i_runner (
       // 400M
       //======
       .clk_400m           (clk_400m),
       .rst_400m           (rst_400m),
+      // UL Timing
+      .s_ul_sym_num       (s_ul_sym_num_r),
+      .s_ul_update        (s_ul_update_r),
       // SRS Request
       .srs_run_cc         (srs_run_cc),
       .srs_run_layer      (srs_run_layer),
