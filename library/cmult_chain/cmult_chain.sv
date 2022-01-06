@@ -13,11 +13,11 @@ module cmult_chain #(
     input var  logic              clk,
     input var  logic              rst,
     //
-    input var  logic [AWIDTH-1:0] ar   [NUM_TAPS],
-    input var  logic [AWIDTH-1:0] ai   [NUM_TAPS],
+    input var  logic [AWIDTH-1:0] ar [NUM_TAPS],
+    input var  logic [AWIDTH-1:0] ai [NUM_TAPS],
     //
-    input var  logic [BWIDTH-1:0] br   [NUM_TAPS],
-    input var  logic [BWIDTH-1:0] bi   [NUM_TAPS],
+    input var  logic [BWIDTH-1:0] br [NUM_TAPS],
+    input var  logic [BWIDTH-1:0] bi [NUM_TAPS],
     //
     output var logic [PWIDTH-1:0] pr,
     output var logic [PWIDTH-1:0] pi,
@@ -27,90 +27,72 @@ module cmult_chain #(
 
 
   localparam int Latency = NUM_TAPS + 4;
+  localparam int PWidthInt = AWIDTH + BWIDTH + $clog2(NUM_TAPS);
 
-  logic signed [AWIDTH-1:0] ar_d, ar_dd, ar_ddd, ar_dddd, ar_ddddd;
-  logic signed [AWIDTH-1:0] ai_d, ai_dd, ai_ddd, ai_dddd, ai_ddddd;
+  logic [PWidthInt-1:0] pc_int[NUM_TAPS+1];
+  logic [PWidthInt-1:0] pr_int[NUM_TAPS+1];
+  logic [PWidthInt-1:0] pi_int[NUM_TAPS+1];
 
-  logic signed [BWIDTH-1:0] bi_d, bi_dd, bi_ddd, bi_dddd;
-  logic signed [BWIDTH-1:0] br_d, br_dd, br_ddd, br_dddd;
+  logic ovf_r, ovf_i;
 
-  logic signed [AWIDTH:0] addcommon;
-  logic signed [BWIDTH:0] addr, addi;
-  logic signed [AWIDTH+BWIDTH:0] mult0, multr, multi, pr_int, pi_int;
-  logic signed [AWIDTH+BWIDTH:0] common, common_d, commonr1, commonr2;
-
-  // Delay taps, tools will automatically absorb registers into DSP and
-  // duplicate if needed
-  always_ff @(posedge clk) begin
-    ar_d     <= ar;
-    ar_dd    <= ar_d;
-    ar_ddd   <= ar_dd;
-    ar_dddd  <= ar_ddd;
-    ar_ddddd <= ar_dddd;
-    ai_d     <= ai;
-    ai_dd    <= ai_d;
-    ai_ddd   <= ai_dd;
-    ai_dddd  <= ai_ddd;
-    ai_ddddd <= ai_dddd;
-    br_d     <= br;
-    br_dd    <= br_d;
-    br_ddd   <= br_dd;
-    br_dddd  <= br_ddd;
-    bi_d     <= bi;
-    bi_dd    <= bi_d;
-    bi_ddd   <= bi_dd;
-    bi_dddd  <= bi_ddd;
-    common_d <= common;
-    commonr1 <= common_d;
-    commonr2 <= common_d;
-  end
-
-  // DSP1
-  // Common factor (ar - ai) * bi, shared for the calculations of the real and
-  // imaginary final products
-  always_ff @(posedge clk) begin
-    addcommon <= ar_d - ai_d;
-    mult0     <= addcommon * bi_dd;
-    common    <= mult0 + (1 << (SRABITS - 1));
-  end
-
-  // DSP2
-  // Real product ar * (br - bi) + (ar - ai) * bi = ar * br - ai * bi
-  always_ff @(posedge clk) begin
-    addr   <= br_dddd - bi_dddd;
-    multr  <= addr * ar_ddddd;
-    pr_int <= multr + commonr1;
-  end
-
-  // DSP3
-  // Imaginary product ai * (br + bi) + (ar - ai) * bi = ai * br + ar + bi
-  always_ff @(posedge clk) begin
-    addi   <= br_dddd + bi_dddd;
-    multi  <= addi * ai_ddddd;
-    pi_int <= multi + commonr2;
-  end
-
-  always_ff @(posedge clk) begin
-    pr <= pr_int[PWIDTH+SRABITS-1:SRABITS];
-    pi <= pi_int[PWIDTH+SRABITS-1:SRABITS];
-  end
+  assign pc_int[0] = (1 << (SRABITS - 1));
+  assign pr_int[0] = 0;
+  assign pi_int[0] = 0;
 
   generate
-    if (PWIDTH + SRABITS >= AWIDTH + BWIDTH + 1) begin : g_no_ovf
-
-      // Output is full width, no overflow will happen
-      assign ovf = 'b0;
-
-    end else begin : g_ovf
-
-      always_ff @(posedge clk) begin
-        ovf <= ~(&pr_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1] ||
-                &(~pr_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1])) || ~(
-                &pi_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1] || &(~pi_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1]));
-      end
-
+    for (genvar i = 0; i < NUM_TAPS; i++) begin
+      cmult_chain_pe #(
+          .AWIDTH(AWIDTH),
+          .BWIDTH(BWIDTH),
+          .PWIDTH(PWidthInt)
+      ) i_cmult_chain_pe (
+          .clk   (clk),
+          .rst   (rst),
+          .ar    (ar[i]),
+          .ai    (ai[i]),
+          .br    (br[i]),
+          .bi    (bi[i]),
+          .pc_in (pc_int[i]),
+          .pr_in (pr_int[i]),
+          .pi_in (pi_int[i]),
+          .pc_out(pc_int[i+1]),
+          .pr_out(pr_int[i+1]),
+          .pi_out(pi_int[i+1])
+      );
     end
   endgenerate
+
+  adder #(
+      .A_WIDTH (PWidthInt),
+      .B_WIDTH (PWidthInt),
+      .P_WIDTH (PWIDTH),
+      .SRA_BITS(SRABITS)
+  ) adder_r_i (
+      .clk    (clk),
+      .rst    (rst),
+      .a      (pc_int[NUM_TAPS]),
+      .b      (pr_int[NUM_TAPS]),
+      .add_sub(1'b1),
+      .p      (pr),
+      .ovf    (ovf_r)
+  );
+
+  adder #(
+      .A_WIDTH (PWidthInt),
+      .B_WIDTH (PWidthInt),
+      .P_WIDTH (PWIDTH),
+      .SRA_BITS(SRABITS)
+  ) adder_i_i (
+      .clk    (clk),
+      .rst    (rst),
+      .a      (pc_int[NUM_TAPS]),
+      .b      (pi_int[NUM_TAPS]),
+      .add_sub(1'b1),
+      .p      (pi),
+      .ovf    (ovf_i)
+  );
+
+  assign ovf = ovf_r || ovf_i;
 
 endmodule
 

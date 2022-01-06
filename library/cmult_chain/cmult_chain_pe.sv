@@ -3,65 +3,52 @@
 
 `timescale 1 ns / 1 ps `default_nettype none
 
-module cmult #(
-    parameter int AWIDTH  = 16,
-    parameter int BWIDTH  = 16,
-    parameter int PWIDTH  = 16,
-    parameter int SRABITS = 15
+module cmult_chain_pe #(
+    parameter int AWIDTH = 16,
+    parameter int BWIDTH = 16,
+    parameter int PWIDTH = 48
 ) (
-    input var  logic              clk,
-    input var  logic              rst,
+    input var  logic                     clk,
+    input var  logic                     rst,
     //
-    input var  logic [AWIDTH-1:0] ar,
-    input var  logic [AWIDTH-1:0] ai,
+    input var  logic signed [AWIDTH-1:0] ar,
+    input var  logic signed [AWIDTH-1:0] ai,
     //
-    input var  logic [BWIDTH-1:0] br,
-    input var  logic [BWIDTH-1:0] bi,
+    input var  logic signed [BWIDTH-1:0] br,
+    input var  logic signed [BWIDTH-1:0] bi,
     //
-    output var logic [PWIDTH-1:0] pr,
-    output var logic [PWIDTH-1:0] pi,
-    // Overflow indicator
-    output var logic              ovf
+    input var  logic signed [PWIDTH-1:0] pc_in,
+    input var  logic signed [PWIDTH-1:0] pr_in,
+    input var  logic signed [PWIDTH-1:0] pi_in,
+    //
+    output var logic signed [PWIDTH-1:0] pc_out,
+    output var logic signed [PWIDTH-1:0] pr_out,
+    output var logic signed [PWIDTH-1:0] pi_out
 );
 
 
-  localparam int Latency = 8;
+  localparam int Latency = 4;
 
-  logic signed [AWIDTH-1:0] ar_d, ar_dd, ar_ddd, ar_dddd, ar_ddddd;
-  logic signed [AWIDTH-1:0] ai_d, ai_dd, ai_ddd, ai_dddd, ai_ddddd;
+  logic signed [AWIDTH-1:0] ar_d, ar_dd;
+  logic signed [AWIDTH-1:0] ai_d, ai_dd;
 
-  logic signed [BWIDTH-1:0] bi_d, bi_dd, bi_ddd, bi_dddd;
-  logic signed [BWIDTH-1:0] br_d, br_dd, br_ddd, br_dddd;
+  logic signed [BWIDTH-1:0] br_d;
+  logic signed [BWIDTH-1:0] bi_d, bi_dd;
 
   logic signed [AWIDTH:0] addcommon;
   logic signed [BWIDTH:0] addr, addi;
-  logic signed [AWIDTH+BWIDTH:0] mult0, multr, multi, pr_int, pi_int;
-  logic signed [AWIDTH+BWIDTH:0] common, common_d, commonr1, commonr2;
+  logic signed [AWIDTH+BWIDTH:0] mult0, multr, multi;
 
   // Delay taps, tools will automatically absorb registers into DSP and
   // duplicate if needed
   always_ff @(posedge clk) begin
-    ar_d     <= ar;
-    ar_dd    <= ar_d;
-    ar_ddd   <= ar_dd;
-    ar_dddd  <= ar_ddd;
-    ar_ddddd <= ar_dddd;
-    ai_d     <= ai;
-    ai_dd    <= ai_d;
-    ai_ddd   <= ai_dd;
-    ai_dddd  <= ai_ddd;
-    ai_ddddd <= ai_dddd;
-    br_d     <= br;
-    br_dd    <= br_d;
-    br_ddd   <= br_dd;
-    br_dddd  <= br_ddd;
-    bi_d     <= bi;
-    bi_dd    <= bi_d;
-    bi_ddd   <= bi_dd;
-    bi_dddd  <= bi_ddd;
-    common_d <= common;
-    commonr1 <= common_d;
-    commonr2 <= common_d;
+    ar_d  <= ar;
+    ar_dd <= ar_d;
+    ai_d  <= ai;
+    ai_dd <= ai_d;
+    br_d  <= br;
+    bi_d  <= bi;
+    bi_dd <= bi_d;
   end
 
   // DSP1
@@ -70,46 +57,24 @@ module cmult #(
   always_ff @(posedge clk) begin
     addcommon <= ar_d - ai_d;
     mult0     <= addcommon * bi_dd;
-    common    <= mult0 + (1 << (SRABITS - 1));
+    pc_out    <= mult0 + $signed(pc_in);
   end
 
   // DSP2
   // Real product ar * (br - bi) + (ar - ai) * bi = ar * br - ai * bi
   always_ff @(posedge clk) begin
-    addr   <= br_dddd - bi_dddd;
-    multr  <= addr * ar_ddddd;
-    pr_int <= multr + commonr1;
+    addr   <= br_d - bi_d;
+    multr  <= addr * ar_dd;
+    pr_out <= multr + $signed(pr_in);
   end
 
   // DSP3
   // Imaginary product ai * (br + bi) + (ar - ai) * bi = ai * br + ar + bi
   always_ff @(posedge clk) begin
-    addi   <= br_dddd + bi_dddd;
-    multi  <= addi * ai_ddddd;
-    pi_int <= multi + commonr2;
+    addi   <= br_d + bi_d;
+    multi  <= addi * ai_dd;
+    pi_out <= multi + $signed(pi_in);
   end
-
-  always_ff @(posedge clk) begin
-    pr <= pr_int[PWIDTH+SRABITS-1:SRABITS];
-    pi <= pi_int[PWIDTH+SRABITS-1:SRABITS];
-  end
-
-  generate
-    if (PWIDTH + SRABITS >= AWIDTH + BWIDTH + 1) begin : g_no_ovf
-
-      // Output is full width, no overflow will happen
-      assign ovf = 'b0;
-
-    end else begin : g_ovf
-
-      always_ff @(posedge clk) begin
-        ovf <= ~(&pr_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1] ||
-                &(~pr_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1])) || ~(
-                &pi_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1] || &(~pi_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1]));
-      end
-
-    end
-  endgenerate
 
 endmodule
 

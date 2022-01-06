@@ -3,7 +3,7 @@
 
 `timescale 1 ns / 1 ps `default_nettype none
 
-module tb_cmult ();
+module tb_cmult_chain ();
 
   localparam int TestVectorLength = 4096;
   localparam int DutLatency = 8;
@@ -56,7 +56,7 @@ module tb_cmult ();
   initial begin
     $display("************************");
     $display("Simulation starts.");
-    wait(rst == 0);
+    wait (rst == 0);
     #100;
     @(posedge clk);
     fork
@@ -107,7 +107,7 @@ module tb_cmult ();
 
   end
 
-  cmult #(
+  cmult_chain #(
       .AWIDTH (AWidth),
       .BWIDTH (BWidth),
       .PWIDTH (PWidth),

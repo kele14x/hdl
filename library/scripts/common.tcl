@@ -31,6 +31,7 @@ proc hdl_prj_create {prj_name {prj_dir ./prj} {part xczu19eg-ffvc1760-2-i}} {
 
   # Project property
   set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} -value {-mode out_of_context} -objects [get_runs synth_1]
+  set_property AUTO_INCREMENTAL_CHECKPOINT 0 [get_runs synth_1]
 }
 
 ## Add all source files to current project.
@@ -42,17 +43,17 @@ proc hdl_prj_src_files {src_files} {
   foreach src_file $src_files {
     if {[file extension $src_file] eq ".xdc"} {
       # Specially, add .xdc files to constraint file set
-      if {[string match -nocase "*_ooc.xdc" $srcfile]} {
+      if {[string match -nocase "*_ooc.xdc" [file tail $src_file]]} {
+        put "add out of context constrains file: $src_file"
         add_files -norecurse -fileset constrs_1 $src_file
         set_property USED_IN {synthesis implementation out_of_context} [get_files $src_file]
-        put "add out of context constrains file: $src_file"
       } else {
-        add_files -norecurse -fileset constrs_1 $src_file
         put "add normal constrains file: $src_file"
+        add_files -norecurse -fileset constrs_1 $src_file
       }
     } else {
-      add_files -norecurse $src_file
       put "add design source file: $src_file"
+      add_files -norecurse $src_file
     }
   }
   update_compile_order -fileset sources_1
@@ -64,6 +65,7 @@ proc hdl_prj_src_files {src_files} {
 #
 proc hdl_prj_sim_files {sim_files} {
   foreach sim_file $sim_files {
+    put "add simulation source file: $sim_file"
     add_files -norecurse -fileset sim_1 $sim_file
   }
   update_compile_order -fileset sim_1

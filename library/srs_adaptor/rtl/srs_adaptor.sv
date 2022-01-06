@@ -6,13 +6,14 @@
 
 module srs_adaptor #(
     parameter int NUM_ETH_PORT = 2,
-    parameter int NUM_CC = 2
+    parameter int NUM_CC       = 2
 ) (
     // Interface with DFE
     //===================
-    input var         clk_491m52,
-    input var         rst_491m52,
     // SRS Section Header
+    input var         clk_184m32,
+    input var         rst_184m32,
+    // SRS Message
     output var [ 2:0] srs_cfg_cc,
     output var [11:0] srs_cfg_symbol,
     output var [ 3:0] srs_cfg_numsymbol,
@@ -22,6 +23,9 @@ module srs_adaptor #(
     output var [ 5:0] srs_req_layer,
     output var [11:0] srs_req_symbol,
     output var        srs_req_valid,
+    // SRS data response
+    input var         clk_491m52,
+    input var         rst_491m52,
     // SRS data
     input var  [23:0] srs_data_tdata,                         // {4E, 9Q, 9I}
     input var         srs_data_tlast,
@@ -227,6 +231,7 @@ module srs_adaptor #(
   // Control Signals CDC
   //====================
 
+  // ctrl_srs_en CDC
   xpm_cdc_single #(
       .DEST_SYNC_FF  (2),
       .INIT_SYNC_FF  (0),
@@ -239,6 +244,7 @@ module srs_adaptor #(
       .dest_out(ctrl_srs_en_s)
   );
 
+  // ctrl_srs_gen_en CDC
   xpm_cdc_single #(
       .DEST_SYNC_FF  (2),
       .INIT_SYNC_FF  (0),
@@ -251,6 +257,7 @@ module srs_adaptor #(
       .dest_out(ctrl_srs_gen_en_s)
   );
 
+  // SRS configuration CDC, using handshake
   xpm_cdc_handshake #(
       .DEST_EXT_HSK  (0),
       .DEST_SYNC_FF  (2),
@@ -302,6 +309,7 @@ module srs_adaptor #(
     end
   end
 
+  // ctrl_numerology CDC
   generate
     for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_cdc
       xpm_cdc_array_single #(
@@ -479,8 +487,8 @@ module srs_adaptor #(
       .srs_valid        (srs_mux_valid),
       // DFE
       //====
-      .clk_491m52       (clk_491m52),
-      .rst_491m52       (rst_491m52),
+      .clk_184m32       (clk_184m32),
+      .rst_184m32       (rst_184m32),
       // SRS Configuration Forward
       .srs_cfg_cc       (srs_cfg_cc),
       .srs_cfg_symbol   (srs_cfg_symbol),
@@ -597,13 +605,16 @@ module srs_adaptor #(
       .fram_req_ready     (fram_req_ready),
       // DFE
       //====
-      .clk_491m52         (clk_491m52),
-      .rst_491m52         (rst_491m52),
+      .clk_184m32         (clk_184m32),
+      .rst_184m32         (rst_184m32),
       // SRS Request
       .srs_req_cc         (srs_req_cc),
       .srs_req_layer      (srs_req_layer),
       .srs_req_symbol     (srs_req_symbol),
       .srs_req_valid      (srs_req_valid),
+      //
+      .clk_491m52         (clk_491m52),
+      .rst_491m52         (rst_491m52),
       //
       .srs_data_tdata     (srs_data_tdata),
       .srs_data_tlast     (srs_data_tlast),

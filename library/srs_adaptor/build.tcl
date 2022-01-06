@@ -1,40 +1,23 @@
-# Create project, override if exist
-create_project project_1 ./prj -part xczu19eg-ffvc1760-2-i -force
+source ../scripts/common.tcl
 
-# Add source files
-add_files -norecurse ./ip/srs_adaptor_controller_fifo/srs_adaptor_controller_fifo.xci
-add_files -norecurse ./ip/srs_adaptor_controller_tdp/srs_adaptor_controller_tdp.xci
-add_files -norecurse ./ip/srs_adaptor_runner_sdp/srs_adaptor_runner_sdp.xci
-add_files -norecurse ./rtl/srs_adaptor.sv
-add_files -norecurse ./rtl/srs_adaptor_buffer.sv
-add_files -norecurse ./rtl/srs_adaptor_controller.sv
-add_files -norecurse ./rtl/srs_adaptor_filter.sv
-add_files -norecurse ./rtl/srs_adaptor_framer.sv
-add_files -norecurse ./rtl/srs_adaptor_fwd.sv
-add_files -norecurse ./rtl/srs_adaptor_mux.sv
-add_files -norecurse ./rtl/srs_adaptor_runner.sv
-update_compile_order -fileset sources_1
+hdl_prj_create srs_adaptor
 
-# Add simulation only files
-add_files -fileset sim_1 -norecurse ./tb/tb_srs_adaptor.sv
-add_files -fileset sim_1 -norecurse ./tb/srs_adaptor_unsol_checker.sv
-update_compile_order -fileset sim_1
+hdl_prj_src_files [list \
+  "./constr/srs_adaptor_ooc.xdc" \
+  "./ip/srs_adaptor_controller_fifo/srs_adaptor_controller_fifo.xci" \
+  "./ip/srs_adaptor_controller_tdp/srs_adaptor_controller_tdp.xci" \
+  "./ip/srs_adaptor_runner_sdp/srs_adaptor_runner_sdp.xci" \
+  "./rtl/srs_adaptor.sv" \
+  "./rtl/srs_adaptor_buffer.sv" \
+  "./rtl/srs_adaptor_controller.sv" \
+  "./rtl/srs_adaptor_filter.sv" \
+  "./rtl/srs_adaptor_framer.sv" \
+  "./rtl/srs_adaptor_fwd.sv" \
+  "./rtl/srs_adaptor_mux.sv" \
+  "./rtl/srs_adaptor_runner.sv"]
 
-# Add constrain files
-add_files -fileset constrs_1 -norecurse ./constr/srs_adaptor_ooc.xdc
-set_property USED_IN {synthesis implementation out_of_context} [get_files ./constr/srs_adaptor_ooc.xdc]
+hdl_prj_sim_files [list \
+ "./tb/tb_srs_adaptor.sv" \
+ "./tb/srs_adaptor_unsol_checker.sv"]
 
-# Project property
-set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} -value {-mode out_of_context} -objects [get_runs synth_1]
-
-# Run simulation
-launch_simulation
-run all
-close_sim
-
-# Run synthesis
-launch_runs synth_1 -jobs 8
-wait_on_run synth_1
-
-# Start GUI
 start_gui

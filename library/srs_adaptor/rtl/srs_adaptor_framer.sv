@@ -302,9 +302,9 @@ module srs_adaptor_framer (
       // integer words in AXIS packet. So, all bytes of last word should be
       // keep. If controller request odd number of RBs, there will be one half
       // word in AXIS packet, so only half of last word should be keep.
-      m_fram_unsol_tkeep <= (bram_re_state == 6) ? 4'b0011 : 4'b1111;
+      m_fram_unsol_tkeep <= (bram_re_state == 6) ? 8'h0F : 8'hFF;
     end else begin
-      m_fram_unsol_tkeep <= '1;
+      m_fram_unsol_tkeep <= 8'hFF;
     end
   end
 

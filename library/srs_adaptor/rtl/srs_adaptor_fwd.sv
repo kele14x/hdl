@@ -23,8 +23,8 @@ module srs_adaptor_fwd #(
     input var         srs_valid,
     // DFE
     //====
-    input var         clk_491m52,
-    input var         rst_491m52,
+    input var         clk_184m32,
+    input var         rst_184m32,
     // SRS Configuration Forward
     output var [ 2:0] srs_cfg_cc,
     output var [11:0] srs_cfg_symbol,
@@ -38,7 +38,7 @@ module srs_adaptor_fwd #(
 
   // CDC
   //=====
-  // SRS C-Plane message CDC to clk_491m52
+  // SRS C-Plane message CDC to clk_184m32
 
   logic [DataWidth-1:0] srs_prev, srs_in, srs_out;
   logic srs_send;
@@ -102,7 +102,7 @@ module srs_adaptor_fwd #(
       .src_send(srs_send),
       .src_rcv (srs_rcv),
       //
-      .dest_clk(clk_491m52),
+      .dest_clk(clk_184m32),
       .dest_out(srs_out),
       .dest_req(srs_cfg_valid),
       .dest_ack(1'b0)

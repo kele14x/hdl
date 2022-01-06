@@ -63,13 +63,16 @@ module srs_adaptor_runner #(
     input var         fram_req_ready,
     // DFE
     //====
-    input var         clk_491m52,
-    input var         rst_491m52,
+    input var         clk_184m32,
+    input var         rst_184m32,
     // SRS Request
     output var [ 2:0] srs_req_cc,
     output var [ 5:0] srs_req_layer,
     output var [11:0] srs_req_symbol,
     output var        srs_req_valid,
+    //
+    input var         clk_491m52,
+    input var         rst_491m52,
     //
     input var  [23:0] srs_data_tdata,
     input var         srs_data_tlast,
@@ -89,8 +92,8 @@ module srs_adaptor_runner #(
 
   // Data wait CDC
   // During the state machine, we need to checking the `srs_req_*` AXIS
-  // interface. However, the AXIS interface is on `clk_491m` clock doamin, so
-  // CDC is need here. These signals are CDCed signals at `clk_400m` doamin.
+  // interface. However, the AXIS interface is on `clk_491m` clock domain, so
+  // CDC is need here. These signals are CDCed signals at `clk_400m` domain.
   logic srs_data_ready;
   logic srs_data_valid;
   logic srs_data_done;  // last & valid
@@ -145,8 +148,8 @@ module srs_adaptor_runner #(
   end
 
 
-  // Send Requst to DFE
-  //===================
+  // Send Request to DFE
+  //====================
   // This also covers CDC
 
   assign srs_req_new = {srs_run_cc, srs_run_layer, srs_run_symbol} != srs_req_prev;
@@ -162,7 +165,7 @@ module srs_adaptor_runner #(
   end
 
   // We do not want request same symbol again and again. If controller request
-  // differenct section of same symbol, we pass the request.
+  // different section of same symbol, we pass the request.
   always_ff @(posedge clk_400m) begin
     if (rst_400m) begin
       srs_req_prev <= '1;
@@ -179,8 +182,8 @@ module srs_adaptor_runner #(
     end
   end
 
-  // Set CDC HS send flag. It takes few clock ticks to complate the CDC HS.
-  // We assume the request will not come too offten so the previous CDC HS is
+  // Set CDC HS send flag. It takes few clock ticks to complete the CDC HS.
+  // We assume the request will not come too often so the previous CDC HS is
   // always done. Thus we does not check `srs_req_send` and `srs_req_rcv`.
   always_ff @(posedge clk_400m) begin
     if (rst_400m) begin
@@ -208,7 +211,7 @@ module srs_adaptor_runner #(
       .src_send(srs_req_send),
       .src_rcv (srs_req_rcv),
       //
-      .dest_clk(clk_491m52),
+      .dest_clk(clk_184m32),
       .dest_out(srs_req_out),
       .dest_req(srs_req_valid),
       .dest_ack(  /* Not used */)

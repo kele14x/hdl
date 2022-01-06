@@ -11,8 +11,8 @@ module tb_srs_adaptor;
   //===========
 
   // DFE Clock & Reset
-  logic        clk_491m52;
-  logic        rst_491m52;
+  logic        clk_184m32;
+  logic        rst_184m32;
 
   // SRS Configuration
   logic [ 2:0] srs_cfg_cc;
@@ -25,6 +25,10 @@ module tb_srs_adaptor;
   logic [ 5:0] srs_req_layer;
   logic [11:0] srs_req_symbol;
   logic        srs_req_valid;
+
+  // DFE Data Clock & Reset
+  logic        clk_491m52;
+  logic        rst_491m52;
 
   // SRS Data
   logic [23:0] srs_data_tdata = 0;
@@ -204,6 +208,13 @@ module tb_srs_adaptor;
   end
 
   initial begin
+    clk_184m32 = 0;
+    forever begin
+      #(2.713) clk_184m32 = ~clk_184m32;
+    end
+  end
+
+  initial begin
     clk_491m52 = 0;
     forever begin
       #(1.017) clk_491m52 = ~clk_491m52;
@@ -225,6 +236,12 @@ module tb_srs_adaptor;
   end
 
   initial begin
+    rst_184m32 = 1;
+    repeat (100) @(posedge clk_184m32);
+    rst_184m32 = 0;
+  end
+
+  initial begin
     rst_491m52 = 1;
     repeat (100) @(posedge clk_491m52);
     rst_491m52 = 0;
@@ -236,7 +253,7 @@ module tb_srs_adaptor;
     ctrl_rst = 0;
   end
 
-  //
+
   // Configuration sender
   //=====================
 
@@ -250,7 +267,7 @@ module tb_srs_adaptor;
     ctrl_srs_gen_en <= 1'b1;
     #3000;
 
-    // Simluate S-Plane Message
+    // Simulate S-Plane Message
     //for (int layer = 0; layer < 64; layer++) begin
     //  srs_c_message(0, layer, 0, 0, 0, 1, 3, 0, 0, 0, 0);
     //end
@@ -258,29 +275,22 @@ module tb_srs_adaptor;
     // Simulate M-Plane Configuration
     // cc, layer, frameid, subframeid, slotid, symbolid, numsymbol, numprbc, startprbc, sectionid, ethport
     srs_m_message(0, 0, 0, 0, 0, 3, 1, 118, 0, 0, 0);
-//    srs_m_message(0, 0, 0, 0, 0, 3, 1, 118, 118, 0, 0);
-//    srs_m_message(0, 0, 0, 0, 0, 3, 1, 37, 236, 0, 0);
+    srs_m_message(0, 0, 0, 0, 0, 3, 1, 118, 118, 0, 0);
+    srs_m_message(0, 0, 0, 0, 0, 3, 1, 37, 236, 0, 0);
     //
-//    srs_m_message(0, 1, 0, 0, 0, 3, 1, 118, 0, 0, 0);
-//    srs_m_message(0, 1, 0, 0, 0, 3, 1, 118, 118, 0, 0);
-//    srs_m_message(0, 1, 0, 0, 0, 3, 1, 37, 236, 0, 0);
-    //srs_m_message(1, 0, 0, 1, 1, 13, 1, 0, 0, 0, 0);
-
-    #(1 * 10 * 1000 * 1000);
-
-    ctrl_srs_en <= 1'b0;
-    ctrl_srs_gen_en <= 1'b0;
-    #1000;
-    ctrl_srs_en <= 1'b1;
-    ctrl_srs_gen_en <= 1'b1;
-    srs_m_message(0, 0, 0, 0, 0, 4, 1, 118, 0, 0, 0);
+    srs_m_message(0, 1, 0, 0, 0, 3, 1, 118, 0, 0, 0);
+    srs_m_message(0, 1, 0, 0, 0, 3, 1, 118, 118, 0, 0);
+    srs_m_message(0, 1, 0, 0, 0, 3, 1, 37, 236, 0, 0);
 
     // Run two radio frame
     #(2 * 10 * 1000 * 1000);
-    $finish();
+    $finish(2);
   end
 
+
   // Symbol number updater
+  //======================
+
   initial begin
     wait (rst_400m == 0);
     wait (rst_491m52 == 0);
@@ -294,29 +304,36 @@ module tb_srs_adaptor;
 
   end
 
+
   // SRS data responser
-//  initial begin
-//    forever begin
-//      @(posedge clk_491m52);
-//      if (srs_req_valid) begin
-//        for (int i = 0; i < 3276; i++) begin
-//          @(posedge clk_491m52);
-//          srs_data_tdata  <= {6'b001111, i[8:0], i[8:0]};
-//          srs_data_tvalid <= 1'b1;
-//          srs_data_tlast  <= i == 3275;
-//        end
-//        @(posedge clk_491m52);
-//        srs_data_tdata  <= 0;
-//        srs_data_tvalid <= 0;
-//        srs_data_tlast  <= 0;
-//      end
-//    end
-//  end
+  //===================
+
+  initial begin
+    forever begin
+      @(posedge clk_184m32);
+      if (srs_req_valid) begin
+        for (int i = 0; i < 3276; i++) begin
+          @(posedge clk_491m52);
+          srs_data_tdata  <= {6'b001111, i[8:0], i[8:0]};
+          srs_data_tvalid <= 1'b1;
+          srs_data_tlast  <= i == 3275;
+        end
+        @(posedge clk_491m52);
+        srs_data_tdata  <= 0;
+        srs_data_tvalid <= 0;
+        srs_data_tlast  <= 0;
+      end
+    end
+  end
 
   // UUT
   //====
 
   srs_adaptor UUT (.*);
+
+
+  // AXIS Checker
+  //=============
 
   srs_adaptor_unsol_checker i_checker (
       // XORIF Clock & Reset
