@@ -31,6 +31,7 @@ proc hdl_prj_create {prj_name {prj_dir ./prj} {part xczu19eg-ffvc1760-2-i}} {
 
   # Project property
   set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} -value {-mode out_of_context} -objects [get_runs synth_1]
+  set_property STEPS.SYNTH_DESIGN.ARGS.FLATTEN_HIERARCHY none [get_runs synth_1]
   set_property AUTO_INCREMENTAL_CHECKPOINT 0 [get_runs synth_1]
 }
 
