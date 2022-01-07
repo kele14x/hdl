@@ -1,33 +1,33 @@
 // File: tb_cmult.sv
 // Brief: Test bench for cmult
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps `default_nettype none
 
 module tb_cmult ();
 
   localparam int TestVectorLength = 4096;
   localparam int DutLatency = 8;
 
-  localparam int AWidth = 16;
-  localparam int BWidth = 16;
-  localparam int PWidth = 16;
-  localparam int SraBits = 15;
+  localparam int A_WIDTH  = 16;
+  localparam int B_WIDTH  = 16;
+  localparam int P_WIDTH  = 16;
+  localparam int SRA_BITS = 15;
 
   logic clk;
   logic rst;
 
-  logic [AWidth-1:0] ar, ai;
-  logic [BWidth-1:0] br, bi;
-  logic [PWidth-1:0] pr, pi, pr_ref, pi_ref;
+  logic [A_WIDTH-1:0] ar, ai;
+  logic [B_WIDTH-1:0] br, bi;
+  logic [P_WIDTH-1:0] pr, pi, pr_ref, pi_ref;
 
   logic ovf, ovf_ref;
 
-  logic [AWidth-1:0] ar_mem [TestVectorLength];
-  logic [AWidth-1:0] ai_mem [TestVectorLength];
-  logic [BWidth-1:0] br_mem [TestVectorLength];
-  logic [BWidth-1:0] bi_mem [TestVectorLength];
-  logic [PWidth-1:0] pr_mem [TestVectorLength];
-  logic [PWidth-1:0] pi_mem [TestVectorLength];
+  logic [A_WIDTH-1:0] ar_mem [TestVectorLength];
+  logic [A_WIDTH-1:0] ai_mem [TestVectorLength];
+  logic [B_WIDTH-1:0] br_mem [TestVectorLength];
+  logic [B_WIDTH-1:0] bi_mem [TestVectorLength];
+  logic [P_WIDTH-1:0] pr_mem [TestVectorLength];
+  logic [P_WIDTH-1:0] pi_mem [TestVectorLength];
   logic              ovf_mem[TestVectorLength];
 
   initial begin
@@ -108,10 +108,10 @@ module tb_cmult ();
   end
 
   cmult #(
-      .AWIDTH (AWidth),
-      .BWIDTH (BWidth),
-      .PWIDTH (PWidth),
-      .SRABITS(SraBits)
+      .A_WIDTH (A_WIDTH),
+      .B_WIDTH (B_WIDTH),
+      .P_WIDTH (P_WIDTH),
+      .SRA_BITS(SRA_BITS)
   ) DUT (
       .*
   );

@@ -5,73 +5,69 @@
 
 module cmult_chain #(
     parameter int NUM_TAPS = 8,
-    parameter int AWIDTH   = 16,
-    parameter int BWIDTH   = 16,
-    parameter int PWIDTH   = 16,
+    parameter int A_WIDTH  = 16,
+    parameter int B_WIDTH  = 16,
+    parameter int P_WIDTH  = 16,
     parameter int SRABITS  = 15
 ) (
-    input var  logic              clk,
-    input var  logic              rst,
+    input var  logic                      clk,
+    input var  logic                      rst,
     //
-    input var  logic [AWIDTH-1:0] ar [NUM_TAPS],
-    input var  logic [AWIDTH-1:0] ai [NUM_TAPS],
+    input var  logic signed [A_WIDTH-1:0] ar [NUM_TAPS],
+    input var  logic signed [A_WIDTH-1:0] ai [NUM_TAPS],
     //
-    input var  logic [BWIDTH-1:0] br [NUM_TAPS],
-    input var  logic [BWIDTH-1:0] bi [NUM_TAPS],
+    input var  logic signed [B_WIDTH-1:0] br [NUM_TAPS],
+    input var  logic signed [B_WIDTH-1:0] bi [NUM_TAPS],
     //
-    output var logic [PWIDTH-1:0] pr,
-    output var logic [PWIDTH-1:0] pi,
+    output var logic signed [P_WIDTH-1:0] pr,
+    output var logic signed [P_WIDTH-1:0] pi,
     // Overflow indicator
-    output var logic              ovf
+    output var logic                      ovf
 );
 
 
   localparam int Latency = NUM_TAPS + 4;
-  localparam int PWidthInt = AWIDTH + BWIDTH + $clog2(NUM_TAPS);
+  localparam int PWidthInt = A_WIDTH + B_WIDTH + 1 + $clog2(NUM_TAPS);
 
-  logic [PWidthInt-1:0] pc_int[NUM_TAPS+1];
-  logic [PWidthInt-1:0] pr_int[NUM_TAPS+1];
-  logic [PWidthInt-1:0] pi_int[NUM_TAPS+1];
+  logic [PWidthInt-1:0] pc_in, pr_in, pi_in;
+  logic [PWidthInt-1:0] pc_out, pr_out, pi_out;
 
   logic ovf_r, ovf_i;
 
-  assign pc_int[0] = (1 << (SRABITS - 1));
-  assign pr_int[0] = 0;
-  assign pi_int[0] = 0;
+  assign pc_in = (1 << (SRABITS - 1));
+  assign pr_in = 0;
+  assign pi_in = 0;
 
-  generate
-    for (genvar i = 0; i < NUM_TAPS; i++) begin
-      cmult_chain_pe #(
-          .AWIDTH(AWIDTH),
-          .BWIDTH(BWIDTH),
-          .PWIDTH(PWidthInt)
-      ) i_cmult_chain_pe (
-          .clk   (clk),
-          .rst   (rst),
-          .ar    (ar[i]),
-          .ai    (ai[i]),
-          .br    (br[i]),
-          .bi    (bi[i]),
-          .pc_in (pc_int[i]),
-          .pr_in (pr_int[i]),
-          .pi_in (pi_int[i]),
-          .pc_out(pc_int[i+1]),
-          .pr_out(pr_int[i+1]),
-          .pi_out(pi_int[i+1])
-      );
-    end
-  endgenerate
+  cmult_chain_core #(
+      .NUM_TAPS(NUM_TAPS),
+      .A_WIDTH (A_WIDTH),
+      .B_WIDTH (B_WIDTH),
+      .P_WIDTH (PWidthInt)
+  ) i_core (
+      .clk   (clk),
+      .rst   (rst),
+      .ar    (ar),
+      .ai    (ai),
+      .br    (br),
+      .bi    (bi),
+      .pc_in (pc_in),
+      .pr_in (pr_in),
+      .pi_in (pi_in),
+      .pc_out(pc_out),
+      .pr_out(pr_out),
+      .pi_out(pi_out)
+  );
 
   adder #(
       .A_WIDTH (PWidthInt),
       .B_WIDTH (PWidthInt),
-      .P_WIDTH (PWIDTH),
+      .P_WIDTH (P_WIDTH),
       .SRA_BITS(SRABITS)
-  ) adder_r_i (
+  ) i_adder_r (
       .clk    (clk),
       .rst    (rst),
-      .a      (pc_int[NUM_TAPS]),
-      .b      (pr_int[NUM_TAPS]),
+      .a      (pc_out),
+      .b      (pr_out),
       .add_sub(1'b1),
       .p      (pr),
       .ovf    (ovf_r)
@@ -80,13 +76,13 @@ module cmult_chain #(
   adder #(
       .A_WIDTH (PWidthInt),
       .B_WIDTH (PWidthInt),
-      .P_WIDTH (PWIDTH),
+      .P_WIDTH (P_WIDTH),
       .SRA_BITS(SRABITS)
-  ) adder_i_i (
+  ) i_adder_i (
       .clk    (clk),
       .rst    (rst),
-      .a      (pc_int[NUM_TAPS]),
-      .b      (pi_int[NUM_TAPS]),
+      .a      (pc_out),
+      .b      (pi_out),
       .add_sub(1'b1),
       .p      (pi),
       .ovf    (ovf_i)

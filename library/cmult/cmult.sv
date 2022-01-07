@@ -4,22 +4,22 @@
 `timescale 1ns / 1ps `default_nettype none
 
 module cmult #(
-    parameter int AWIDTH  = 16,
-    parameter int BWIDTH  = 16,
-    parameter int PWIDTH  = 16,
-    parameter int SRABITS = 15
+    parameter int A_WIDTH  = 16,
+    parameter int B_WIDTH  = 16,
+    parameter int P_WIDTH  = 16,
+    parameter int SRA_BITS = 15
 ) (
-    input var  logic              clk,
-    input var  logic              rst,
+    input var  logic               clk,
+    input var  logic               rst,
     //
-    input var  logic [AWIDTH-1:0] ar,
-    input var  logic [AWIDTH-1:0] ai,
+    input var  logic [A_WIDTH-1:0] ar,
+    input var  logic [A_WIDTH-1:0] ai,
     //
-    input var  logic [BWIDTH-1:0] br,
-    input var  logic [BWIDTH-1:0] bi,
+    input var  logic [B_WIDTH-1:0] br,
+    input var  logic [B_WIDTH-1:0] bi,
     //
-    output var logic [PWIDTH-1:0] pr,
-    output var logic [PWIDTH-1:0] pi,
+    output var logic [P_WIDTH-1:0] pr,
+    output var logic [P_WIDTH-1:0] pi,
     // Overflow indicator
     output var logic              ovf
 );
@@ -27,16 +27,16 @@ module cmult #(
 
   localparam int Latency = 8;
 
-  logic signed [AWIDTH-1:0] ar_d, ar_dd, ar_ddd, ar_dddd, ar_ddddd;
-  logic signed [AWIDTH-1:0] ai_d, ai_dd, ai_ddd, ai_dddd, ai_ddddd;
+  logic signed [A_WIDTH-1:0] ar_d, ar_dd, ar_ddd, ar_dddd, ar_ddddd;
+  logic signed [A_WIDTH-1:0] ai_d, ai_dd, ai_ddd, ai_dddd, ai_ddddd;
 
-  logic signed [BWIDTH-1:0] bi_d, bi_dd, bi_ddd, bi_dddd;
-  logic signed [BWIDTH-1:0] br_d, br_dd, br_ddd, br_dddd;
+  logic signed [B_WIDTH-1:0] bi_d, bi_dd, bi_ddd, bi_dddd;
+  logic signed [B_WIDTH-1:0] br_d, br_dd, br_ddd, br_dddd;
 
-  logic signed [AWIDTH:0] addcommon;
-  logic signed [BWIDTH:0] addr, addi;
-  logic signed [AWIDTH+BWIDTH:0] mult0, multr, multi, pr_int, pi_int;
-  logic signed [AWIDTH+BWIDTH:0] common, common_d, commonr1, commonr2;
+  logic signed [A_WIDTH:0] addcommon;
+  logic signed [B_WIDTH:0] addr, addi;
+  logic signed [A_WIDTH+B_WIDTH:0] mult0, multr, multi, pr_int, pi_int;
+  logic signed [A_WIDTH+B_WIDTH:0] common, common_d, commonr1, commonr2;
 
   // Delay taps, tools will automatically absorb registers into DSP and
   // duplicate if needed
@@ -70,7 +70,7 @@ module cmult #(
   always_ff @(posedge clk) begin
     addcommon <= ar_d - ai_d;
     mult0     <= addcommon * bi_dd;
-    common    <= mult0 + (1 << (SRABITS - 1));
+    common    <= mult0 + (1 << (SRA_BITS - 1));
   end
 
   // DSP2
@@ -90,12 +90,12 @@ module cmult #(
   end
 
   always_ff @(posedge clk) begin
-    pr <= pr_int[PWIDTH+SRABITS-1:SRABITS];
-    pi <= pi_int[PWIDTH+SRABITS-1:SRABITS];
+    pr <= pr_int[P_WIDTH+SRA_BITS-1:SRA_BITS];
+    pi <= pi_int[P_WIDTH+SRA_BITS-1:SRA_BITS];
   end
 
   generate
-    if (PWIDTH + SRABITS >= AWIDTH + BWIDTH + 1) begin : g_no_ovf
+    if (P_WIDTH + SRA_BITS >= A_WIDTH + B_WIDTH + 1) begin : g_no_ovf
 
       // Output is full width, no overflow will happen
       assign ovf = 'b0;
@@ -103,9 +103,9 @@ module cmult #(
     end else begin : g_ovf
 
       always_ff @(posedge clk) begin
-        ovf <= ~(&pr_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1] ||
-                &(~pr_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1])) || ~(
-                &pi_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1] || &(~pi_int[AWIDTH+BWIDTH:PWIDTH+SRABITS-1]));
+        ovf <= ~(&pr_int[A_WIDTH+B_WIDTH:P_WIDTH+SRA_BITS-1] ||
+                &(~pr_int[A_WIDTH+B_WIDTH:P_WIDTH+SRA_BITS-1])) || ~(
+                &pi_int[A_WIDTH+B_WIDTH:P_WIDTH+SRA_BITS-1] || &(~pi_int[A_WIDTH+B_WIDTH:P_WIDTH+SRA_BITS-1]));
       end
 
     end
