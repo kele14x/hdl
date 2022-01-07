@@ -1,3 +1,3 @@
-LIBRARY_NAME := cmult
+LIBRARY_NAME := nlf
 
 include ../scripts/common.mk
