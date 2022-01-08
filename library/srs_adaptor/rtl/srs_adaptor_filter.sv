@@ -67,9 +67,6 @@ module srs_adaptor_filter #(
 );
 
 
-  // FSM
-  //====
-  // This FSM is used to extract SRS configuration C-Plane message from XORIF.
   // The necessary information of SRS message are:
   //  rtcID[7:6] = 1 (RU Port ID for SRS)
   //  messageType = 2 (C-Plane message)
@@ -78,14 +75,23 @@ module srs_adaptor_filter #(
   //  dataDirction = 0 (UL)
   //  sectionType = 1 (Generic for DL/UL, but we use it for SRS)
 
-  typedef enum int {
-    S_TRANS,  // wait for transcation header valid
-    S_APP,    // wait application header valid
-    S_SEC,    // wait section header valid
-    S_VALID   // output
-  } state_t;
-
-  state_t state, state_next;
+  logic        runt_packet_len_r;
+  logic [15:0] rtc_pc_id_r;
+  logic [ 2:0] messagetype_r;
+  //
+  logic        datadirection_r;
+  logic [ 2:0] sectiontype_r;
+  logic [ 7:0] frameid_r;
+  logic [ 3:0] subframeid_r;
+  logic [ 5:0] slotid_r;
+  logic [ 5:0] symbolid_r;
+  //
+  logic [ 3:0] numsymbol_r;
+  logic [ 7:0] numprbc_r;
+  logic [ 9:0] startprbc_r;
+  logic [11:0] sectionid_r;
+  //
+  logic        section_header_valid_r;
 
   logic t_header_is_ok, radio_app_head_is_ok, section_header_is_ok;
 
@@ -93,8 +99,39 @@ module srs_adaptor_filter #(
   logic [ 1:0] mu;
   logic [11:0] symbol;
 
+
+  always_ff @(posedge clk) begin
+    if (s_t_header_offset_valid) begin
+      runt_packet_len_r <= s_runt_packet_len;
+      rtc_pc_id_r       <= s_rtc_pc_id;
+      messagetype_r     <= s_messagetype;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (s_radio_app_head_valid) begin
+      datadirection_r <= s_datadirection;
+      sectiontype_r   <= s_sectiontype;
+      frameid_r       <= s_frameid;
+      subframeid_r    <= s_subframeid;
+      slotid_r        <= s_slotid;
+      symbolid_r      <= s_symbolid;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (s_section_header_valid) begin
+      numsymbol_r <= s_numsymbol;
+      numprbc_r   <= s_numprbc;
+      startprbc_r <= s_startprbc;
+      sectionid_r <= s_sectionid;
+    end
+    section_header_valid_r <= s_section_header_valid;
+  end
+
+
   // NR Symbol number calculation
-  assign cc = s_rtc_pc_id[10:8];
+  assign cc = rtc_pc_id_r[10:8];
   // 0 : 30 kHz SCS, 1: 15 khz SCS, others: 60 kHz SCS
   assign mu = ctrl_numerology[cc] == 0 ? 1 : ctrl_numerology[cc] == 1 ? 0 : 2;
   assign symbol = ((s_subframeid * (2 ** mu) + s_slotid) * 14 + s_symbolid);
@@ -103,79 +140,34 @@ module srs_adaptor_filter #(
 
   // {2-bit DU_Port_ID, 3-bit RandSector_ID, 3-bit CC_ID, 8-bit RU_Port_ID}
   // SRS: RU_Port_ID from 0x40 to 0x7F
-  assign t_header_is_ok = s_messagetype == 2 && ~s_runt_packet_len && s_rtc_pc_id[7:6] == 2'b01;
+  assign t_header_is_ok = messagetype_r == 2 && ~runt_packet_len_r && rtc_pc_id_r[7:6] == 2'b01;
 
-  assign radio_app_head_is_ok = s_datadirection == 0 && s_sectiontype == 1;
+  assign radio_app_head_is_ok = datadirection_r == 0 && sectiontype_r == 1;
 
   assign section_header_is_ok = 1;
-
-
-  // FSM
-  //====
-  // Note this FSM assume s_numsections is always 1. If not, this FSM needs minor change.
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      state <= S_TRANS;
-    end else begin
-      state <= state_next;
-    end
-  end
-
-  always_comb begin : p_state_next
-    case (state)
-      S_TRANS: begin
-        state_next = ~s_t_header_offset_valid ? S_TRANS : ~t_header_is_ok ? S_TRANS : S_APP;
-      end
-      S_APP: begin
-        state_next = ~s_radio_app_head_valid ? S_APP : ~radio_app_head_is_ok ? S_TRANS : S_SEC;
-      end
-      S_SEC: begin
-        state_next = ~s_section_header_valid ? S_SEC : ~section_header_is_ok ? S_TRANS : S_VALID;
-      end
-      S_VALID: begin
-        state_next = S_TRANS;
-      end
-      default: begin
-        state_next = S_TRANS;
-      end
-    endcase
-  end
 
 
   // Output
   //=======
 
   always_ff @(posedge clk) begin
-    if (rst) begin
-      srs_valid <= 1'b0;
-    end else begin
-      srs_valid <= (state_next == S_VALID);
+    if (section_header_valid_r) begin
+      srs_rtc_pc_id  <= rtc_pc_id_r;
+      //
+      srs_frameid    <= frameid_r;
+      srs_subframeid <= subframeid_r;
+      srs_slotid     <= slotid_r;
+      srs_symbolid   <= symbolid_r;
+      //
+      srs_numsymbol  <= numsymbol_r;
+      srs_numprbc    <= numprbc_r;
+      srs_startprbc  <= startprbc_r;
+      srs_sectionid  <= sectionid_r;
     end
   end
 
   always_ff @(posedge clk) begin
-    if (s_t_header_offset_valid) begin
-      srs_rtc_pc_id <= s_rtc_pc_id;
-    end
-  end
-
-  always_ff @(posedge clk) begin
-    if (s_radio_app_head_valid) begin
-      srs_frameid    <= s_frameid;
-      srs_subframeid <= s_subframeid;
-      srs_slotid     <= s_slotid;
-      srs_symbolid   <= s_symbolid;
-    end
-  end
-
-  always_ff @(posedge clk) begin
-    if (s_section_header_valid) begin
-      srs_numsymbol <= s_numsymbol;
-      srs_numprbc   <= s_numprbc;
-      srs_startprbc <= s_startprbc;
-      srs_sectionid <= s_sectionid;
-    end
+    srs_valid <= section_header_valid_r && t_header_is_ok && radio_app_head_is_ok && section_header_is_ok;
   end
 
 endmodule

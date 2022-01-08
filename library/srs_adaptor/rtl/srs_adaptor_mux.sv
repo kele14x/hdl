@@ -146,45 +146,26 @@ module srs_adaptor_mux #(
 
     end else if (ctrl_srs_en && ctrl_srs_gen_en) begin
 
-      // SRS information from M-Plane
-      srs_mux_cc         <= ctrl_srs_rtc_pc_id[10:8];
-      srs_mux_layer      <= ctrl_srs_rtc_pc_id[5:0];
-      srs_mux_symbol     <= ctrl_srs_symbol;
-      //
-      srs_mux_rtc_pc_id  <= ctrl_srs_rtc_pc_id;
-      //
-      srs_mux_frameid    <= ctrl_srs_frameid;
-      srs_mux_subframeid <= ctrl_srs_subframeid;
-      srs_mux_slotid     <= ctrl_srs_slotid;
-      srs_mux_symbolid   <= ctrl_srs_symbolid;
-      //
-      srs_mux_numsymbol  <= ctrl_srs_numsymbol;
-      srs_mux_numprbc    <= ctrl_srs_numprbc;
-      srs_mux_startprbc  <= ctrl_srs_startprbc;
-      srs_mux_sectionid  <= ctrl_srs_sectionid;
-      //
-      srs_mux_ethport    <= ctrl_srs_ethport;
-
-    end else begin
-
-      // SRS disabled
-      srs_mux_cc         <= '0;
-      srs_mux_layer      <= '0;
-      srs_mux_symbol     <= '0;
-      //
-      srs_mux_rtc_pc_id  <= '0;
-      //
-      srs_mux_frameid    <= '0;
-      srs_mux_subframeid <= '0;
-      srs_mux_slotid     <= '0;
-      srs_mux_symbolid   <= '0;
-      //
-      srs_mux_numsymbol  <= '0;
-      srs_mux_numprbc    <= '0;
-      srs_mux_startprbc  <= '0;
-      srs_mux_sectionid  <= '0;
-      //
-      srs_mux_ethport    <= '0;
+      if (ctrl_srs_valid) begin
+        // SRS information from M-Plane
+        srs_mux_cc         <= ctrl_srs_rtc_pc_id[10:8];
+        srs_mux_layer      <= ctrl_srs_rtc_pc_id[5:0];
+        srs_mux_symbol     <= ctrl_srs_symbol;
+        //
+        srs_mux_rtc_pc_id  <= ctrl_srs_rtc_pc_id;
+        //
+        srs_mux_frameid    <= ctrl_srs_frameid;
+        srs_mux_subframeid <= ctrl_srs_subframeid;
+        srs_mux_slotid     <= ctrl_srs_slotid;
+        srs_mux_symbolid   <= ctrl_srs_symbolid;
+        //
+        srs_mux_numsymbol  <= ctrl_srs_numsymbol;
+        srs_mux_numprbc    <= ctrl_srs_numprbc;
+        srs_mux_startprbc  <= ctrl_srs_startprbc;
+        srs_mux_sectionid  <= ctrl_srs_sectionid;
+        //
+        srs_mux_ethport    <= ctrl_srs_ethport;
+      end
 
     end
   end

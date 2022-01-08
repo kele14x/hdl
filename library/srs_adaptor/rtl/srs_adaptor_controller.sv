@@ -143,7 +143,7 @@ module srs_adaptor_controller #(
 
   assign buffer_wr_addr_s       = {buffer_wr_addr_cc, buffer_wr_addr_layer, buffer_wr_addr_section};
 
-  // section_index ram's asynchronous output (latency 0) has dirctly feedback
+  // section_index ram's asynchronous output (latency 0) has directly feedback
   // to it's input, this enables write operation at every clock tick. The
   // timing seems be fine.
   always @(posedge clk) begin
@@ -357,17 +357,15 @@ module srs_adaptor_controller #(
 
   always_comb begin
     case (rd_state)
-      S_RD_RST: rd_state_next = S_RD_IDLE;
-      S_RD_IDLE: rd_state_next = ~fifo_empty ? S_RD_ADDR : S_RD_IDLE;
-      S_RD_ADDR: rd_state_next = S_RD_D1;
-      S_RD_D1: rd_state_next = S_RD_D2;
-      S_RD_D2: rd_state_next = S_RD_DATA;
-      S_RD_DATA: rd_state_next = S_RD_CHK;
-      S_RD_CHK:
-      rd_state_next = process_it ? S_RD_VALID : (&layer_section_cnt) ? S_RD_IDLE : S_RD_ADDR;
-      S_RD_VALID:
-      rd_state_next = ~srs_run_ready ? S_RD_VALID : (&layer_section_cnt) ? S_RD_IDLE : S_RD_ADDR;
-      default: rd_state_next = S_RD_RST;
+      S_RD_RST:   rd_state_next = S_RD_IDLE;
+      S_RD_IDLE:  rd_state_next = ~fifo_empty ? S_RD_ADDR : S_RD_IDLE;
+      S_RD_ADDR:  rd_state_next = S_RD_D1;
+      S_RD_D1:    rd_state_next = S_RD_D2;
+      S_RD_D2:    rd_state_next = S_RD_DATA;
+      S_RD_DATA:  rd_state_next = S_RD_CHK;
+      S_RD_CHK:   rd_state_next = process_it ? S_RD_VALID : (&layer_section_cnt) ? S_RD_IDLE : S_RD_ADDR;
+      S_RD_VALID: rd_state_next = ~srs_run_ready ? S_RD_VALID : (&layer_section_cnt) ? S_RD_IDLE : S_RD_ADDR;
+      default:    rd_state_next = S_RD_RST;
     endcase
   end
 
@@ -416,7 +414,9 @@ module srs_adaptor_controller #(
   end
 
   // Clear the buffer memory
-  assign buffer_clr_en = (rd_state == S_RD_CHK) && process_it && ~ctrl_srs_gen_en;
+  assign buffer_clr_en = (rd_state == S_RD_CHK) && srs_run_valid_s &&
+      (current_cc == srs_run_cc) &&
+      (current_symbol == srs_run_symbol + srs_run_numsymbol - 1) && ~ctrl_srs_gen_en;
 
 
   // Output
