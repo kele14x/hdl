@@ -15,10 +15,10 @@ module nlf_srl #(
     output var [DATA_WIDTH-1:0] dout
 );
 
-  logic [2**ADDR_WIDTH-1:0] dsrl[DATA_WIDTH-1:0];
+  logic [2**ADDR_WIDTH-1:0] dsrl[DATA_WIDTH];
 
   generate
-    for (genvar i = 0; i < DATA_WIDTH; i++) begin
+    for (genvar i = 0; i < DATA_WIDTH; i++) begin : g_srl
 
       always_ff @(posedge clk) begin
         dsrl[i] <= {dsrl[i][2**ADDR_WIDTH-2:0], din[i]};

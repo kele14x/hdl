@@ -18,6 +18,9 @@ module nlf_delay_line #(
 );
 
 
+  // This is fixed/minimum latency when `delay` is 0
+  localparam int Latency = 3;
+
   logic [DATA_WIDTH-1:0] data_s[NUM_UNITS];
 
 
@@ -25,11 +28,11 @@ module nlf_delay_line #(
   generate
     for (genvar i = 0; i < NUM_UNITS; i++) begin : g_stage
 
-      if (i == 0) begin
+      if (i == 0) begin : g_first
         always_ff @(posedge clk) begin
           data_s[i] <= data_in;
         end
-      end else begin
+      end else begin : g_left
         always_ff @(posedge clk) begin
           data_s[i] <= data_s[i-1];
         end

@@ -9,22 +9,22 @@ module cmult_chain_core #(
     parameter int B_WIDTH  = 16,
     parameter int P_WIDTH  = 36
 ) (
-    input var  logic                      clk,
-    input var  logic                      rst,
+    input var                       clk,
+    input var                       rst,
     //
-    input var  logic signed [A_WIDTH-1:0] ar [NUM_TAPS],
-    input var  logic signed [A_WIDTH-1:0] ai [NUM_TAPS],
+    input var  signed [A_WIDTH-1:0] ar [NUM_TAPS],
+    input var  signed [A_WIDTH-1:0] ai [NUM_TAPS],
     //
-    input var  logic signed [B_WIDTH-1:0] br [NUM_TAPS],
-    input var  logic signed [B_WIDTH-1:0] bi [NUM_TAPS],
+    input var  signed [B_WIDTH-1:0] br [NUM_TAPS],
+    input var  signed [B_WIDTH-1:0] bi [NUM_TAPS],
     //
-    input var  logic signed [P_WIDTH-1:0] pc_in,
-    input var  logic signed [P_WIDTH-1:0] pr_in,
-    input var  logic signed [P_WIDTH-1:0] pi_in,
+    input var  signed [P_WIDTH-1:0] pc_in,
+    input var  signed [P_WIDTH-1:0] pr_in,
+    input var  signed [P_WIDTH-1:0] pi_in,
     //
-    output var logic signed [P_WIDTH-1:0] pc_out,
-    output var logic signed [P_WIDTH-1:0] pr_out,
-    output var logic signed [P_WIDTH-1:0] pi_out
+    output var signed [P_WIDTH-1:0] pc_out,
+    output var signed [P_WIDTH-1:0] pr_out,
+    output var signed [P_WIDTH-1:0] pi_out
 );
 
 
