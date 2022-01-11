@@ -20,8 +20,8 @@ module dl_adaptor_gearbox #(
     input var  [ 7:0] s_defm_data_tkeep    [NUM_DL_LAYER],
     input var         s_defm_data_tvalid   [NUM_DL_LAYER],
     input var         s_defm_data_tlast    [NUM_DL_LAYER],
+    input var  [89:0] s_defm_data_tuser    [NUM_DL_LAYER],
     output var        s_defm_data_tready   [NUM_DL_LAYER],
-    input var  [30:0] s_defm_data_tuser    [NUM_DL_LAYER],
     // Interface with DFE
     //===================
     input var         clk_491m52,
@@ -40,11 +40,30 @@ module dl_adaptor_gearbox #(
   logic [ 7:0] m_axis_tkeep      [NUM_DL_LAYER];
   logic        m_axis_tvalid     [NUM_DL_LAYER];
   logic        m_axis_tlast      [NUM_DL_LAYER];
-  logic [30:0] m_axis_tuser      [NUM_DL_LAYER];
+  logic [89:0] m_axis_tuser      [NUM_DL_LAYER];
+  logic [ 1:0] m_axis_tdest      [NUM_DL_LAYER];
   logic        m_axis_tready     [NUM_DL_LAYER];
 
-  logic        m_axis_tready_raw [NUM_DL_LAYER];
-  logic        m_axis_tready_bfp9[NUM_DL_LAYER];
+  logic [63:0] raw_axis_tdata      [NUM_DL_LAYER];
+  logic [ 7:0] raw_axis_tkeep      [NUM_DL_LAYER];
+  logic        raw_axis_tvalid     [NUM_DL_LAYER];
+  logic        raw_axis_tlast      [NUM_DL_LAYER];
+  logic [89:0] raw_axis_tuser      [NUM_DL_LAYER];
+  logic        raw_axis_tready     [NUM_DL_LAYER];
+
+  logic [63:0] bfp9_axis_tdata      [NUM_DL_LAYER];
+  logic [ 7:0] bfp9_axis_tkeep      [NUM_DL_LAYER];
+  logic        bfp9_axis_tvalid     [NUM_DL_LAYER];
+  logic        bfp9_axis_tlast      [NUM_DL_LAYER];
+  logic [89:0] bfp9_axis_tuser      [NUM_DL_LAYER];
+  logic        bfp9_axis_tready     [NUM_DL_LAYER];
+
+  logic [63:0] mod4_axis_tdata      [NUM_DL_LAYER];
+  logic [ 7:0] mod4_axis_tkeep      [NUM_DL_LAYER];
+  logic        mod4_axis_tvalid     [NUM_DL_LAYER];
+  logic        mod4_axis_tlast      [NUM_DL_LAYER];
+  logic [89:0] mod4_axis_tuser      [NUM_DL_LAYER];
+  logic        mod4_axis_tready     [NUM_DL_LAYER];
 
   logic [63:0] gb_data_raw       [NUM_DL_LAYER] [NUM_CC];
   logic        gb_valid_raw      [NUM_DL_LAYER] [NUM_CC];
@@ -53,6 +72,10 @@ module dl_adaptor_gearbox #(
   logic [63:0] gb_data_bfp9      [NUM_DL_LAYER] [NUM_CC];
   logic        gb_valid_bfp9     [NUM_DL_LAYER] [NUM_CC];
   logic [11:0] gb_re_bfp9        [NUM_DL_LAYER] [NUM_CC];
+
+  logic [63:0] gb_data_mod4      [NUM_DL_LAYER] [NUM_CC];
+  logic        gb_valid_mod4     [NUM_DL_LAYER] [NUM_CC];
+  logic [11:0] gb_re_mod4        [NUM_DL_LAYER] [NUM_CC];
 
 
   generate
@@ -73,8 +96,8 @@ module dl_adaptor_gearbox #(
           .s_axis_tkeep  (s_defm_data_tkeep[i]),
           .s_axis_tvalid (s_defm_data_tvalid[i]),
           .s_axis_tlast  (s_defm_data_tlast[i]),
-          .s_axis_tready (s_defm_data_tready[i]),
           .s_axis_tuser  (s_defm_data_tuser[i]),
+          .s_axis_tready (s_defm_data_tready[i]),
           // Reader side
           .m_axis_aclk   (clk_491m52),
           //
@@ -82,16 +105,42 @@ module dl_adaptor_gearbox #(
           .m_axis_tkeep  (m_axis_tkeep[i]),
           .m_axis_tvalid (m_axis_tvalid[i]),
           .m_axis_tlast  (m_axis_tlast[i]),
-          .m_axis_tready (m_axis_tready[i]),
-          .m_axis_tuser  (m_axis_tuser[i])
+          .m_axis_tuser  (m_axis_tuser[i]),
+          .m_axis_tready (m_axis_tready[i])
       );
 
-      assign m_axis_tready[i] = (ctrl_compression_mode[0] == 0) ? m_axis_tready_raw[i] :
-                              (ctrl_compression_mode[0] == 1) ? m_axis_tready_bfp9[i] :
-                              1'b1;
+      // Use CC bits to index the compression method, the compression method is
+      // the destination for the packet.
+      assign m_axis_tdest[i] = ctrl_compression_mode[m_axis_tuser[i][30:28]];
 
-      // We have two modules to handle different compression format. To save
-      // resource, remove raw module.
+      dl_adaptor_axis_switch i_dl_adaptor_axis_switch (
+          .aclk         (clk_491m52),
+          .aresetn      (~rst_491m52),
+          //
+          .s_axis_tdata (m_axis_tdata[i]),
+          .s_axis_tkeep (m_axis_tkeep[i]),
+          .s_axis_tvalid(m_axis_tvalid[i]),
+          .s_axis_tlast (m_axis_tlast[i]),
+          .s_axis_tuser (m_axis_tuser[i]),
+          .s_axis_tdest (m_axis_tdest[i]),
+          .s_axis_tready(m_axis_tready[i]),
+          //
+          .m_axis_tdata ({mod4_axis_tdata[i], bfp9_axis_tdata[i], raw_axis_tdata[i]}),
+          .m_axis_tkeep ({mod4_axis_tkeep[i], bfp9_axis_tkeep[i], raw_axis_tkeep[i]}),
+          .m_axis_tvalid({mod4_axis_tvalid[i], bfp9_axis_tvalid[i], raw_axis_tvalid[i]}),
+          .m_axis_tlast ({mod4_axis_tlast[i], bfp9_axis_tlast[i], raw_axis_tlast[i]}),
+          .m_axis_tuser ({mod4_axis_tuser[i], bfp9_axis_tuser[i], raw_axis_tuser[i]}),
+          .m_axis_tdest (  /* not used */),
+          .m_axis_tready({mod4_axis_tready[i], bfp9_axis_tready[i], raw_axis_tready[i]}),
+          //
+          .s_decode_err(  /* not used */)
+      );
+
+
+      // We have 3 modules to handle different compression format.
+      // 2'b00 : No compression
+      // 2'b01 : BFP9
+      // 2'b10 : Modulation compression
 
       dl_adaptor_gearbox_raw #(
           .NUM_CC(NUM_CC)
@@ -101,12 +150,12 @@ module dl_adaptor_gearbox #(
           .clk          (clk_491m52),
           .rst          (rst_491m52),
           //
-          .s_axis_tdata (m_axis_tdata[i]),
-          .s_axis_tkeep (m_axis_tkeep[i]),
-          .s_axis_tvalid(m_axis_tvalid[i]),
-          .s_axis_tlast (m_axis_tlast[i]),
-          .s_axis_tready(m_axis_tready_raw[i]),
-          .s_axis_tuser (m_axis_tuser[i]),
+          .s_axis_tdata (raw_axis_tdata[i]),
+          .s_axis_tkeep (raw_axis_tkeep[i]),
+          .s_axis_tvalid(raw_axis_tvalid[i]),
+          .s_axis_tlast (raw_axis_tlast[i]),
+          .s_axis_tuser (raw_axis_tuser[i][30:0]),
+          .s_axis_tready(raw_axis_tready[i]),
           // Shared by CC0 and CC1
           .gb_data      (gb_data_raw[i]),
           .gb_valid     (gb_valid_raw[i]),
@@ -121,16 +170,36 @@ module dl_adaptor_gearbox #(
           .clk          (clk_491m52),
           .rst          (rst_491m52),
           //
-          .s_axis_tdata (m_axis_tdata[i]),
-          .s_axis_tkeep (m_axis_tkeep[i]),
-          .s_axis_tvalid(m_axis_tvalid[i]),
-          .s_axis_tlast (m_axis_tlast[i]),
-          .s_axis_tready(m_axis_tready_bfp9[i]),
-          .s_axis_tuser (m_axis_tuser[i]),
+          .s_axis_tdata (bfp9_axis_tdata[i]),
+          .s_axis_tkeep (bfp9_axis_tkeep[i]),
+          .s_axis_tvalid(bfp9_axis_tvalid[i]),
+          .s_axis_tlast (bfp9_axis_tlast[i]),
+          .s_axis_tuser (bfp9_axis_tuser[i][30:0]),
+          .s_axis_tready(bfp9_axis_tready[i]),
           // Shared by CC0 and CC1
           .gb_data      (gb_data_bfp9[i]),
           .gb_valid     (gb_valid_bfp9[i]),
           .gb_re        (gb_re_bfp9[i])
+      );
+
+      dl_adaptor_gearbox_mod4 #(
+          .NUM_CC(NUM_CC)
+      ) i_dl_adaptor_gearbox_mod4 (
+          // Interface with DFE
+          //===================
+          .clk          (clk_491m52),
+          .rst          (rst_491m52),
+          //
+          .s_axis_tdata (mod4_axis_tdata[i]),
+          .s_axis_tkeep (mod4_axis_tkeep[i]),
+          .s_axis_tvalid(mod4_axis_tvalid[i]),
+          .s_axis_tlast (mod4_axis_tlast[i]),
+          .s_axis_tuser (mod4_axis_tuser[i]),
+          .s_axis_tready(mod4_axis_tready[i]),
+          // Shared by CC0 and CC1
+          .gb_data      (gb_data_mod4[i]),
+          .gb_valid     (gb_valid_mod4[i]),
+          .gb_re        (gb_re_mod4[i])
       );
 
     end
@@ -143,19 +212,13 @@ module dl_adaptor_gearbox #(
 
         always_ff @(posedge clk_491m52) begin
           gb_data[j][i] <= (ctrl_compression_mode[0] == 0) ? gb_data_raw[i][j] :
-                          (ctrl_compression_mode[0] == 1) ? gb_data_bfp9[i][j] : {
-            '0
-          };
+                          (ctrl_compression_mode[0] == 1) ? gb_data_bfp9[i][j] : gb_data_mod4[i][j];
 
           gb_valid[j][i] <= (ctrl_compression_mode[0] == 0) ? gb_valid_raw[i][j] :
-                              (ctrl_compression_mode[0] == 1) ? gb_valid_bfp9[i][j] : {
-            '0
-          };
+                              (ctrl_compression_mode[0] == 1) ? gb_valid_bfp9[i][j] : gb_valid_mod4[i][j];
 
           gb_re[j][i] <= (ctrl_compression_mode[0] == 0) ? gb_re_raw[i][j] :
-                          (ctrl_compression_mode[0] == 1) ? gb_re_bfp9[i][j] : {
-            '0
-          };
+                          (ctrl_compression_mode[0] == 1) ? gb_re_bfp9[i][j] : gb_re_mod4[i][j];
         end
 
       end

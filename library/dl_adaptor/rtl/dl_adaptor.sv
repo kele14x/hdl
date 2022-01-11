@@ -23,7 +23,7 @@ module dl_adaptor #(
     input var         s_defm_data_tvalid   [NUM_DL_LAYER],
     input var         s_defm_data_tlast    [NUM_DL_LAYER],
     output var        s_defm_data_tready   [NUM_DL_LAYER],
-    input var  [30:0] s_defm_data_tuser    [NUM_DL_LAYER],
+    input var  [89:0] s_defm_data_tuser    [NUM_DL_LAYER],
     // Interface with DFE
     //===================
     input var         clk_491m52,
@@ -52,6 +52,7 @@ module dl_adaptor #(
     input var         buffer_mem_we        [      NUM_CC][NUM_DL_LAYER],
     output var [31:0] buffer_mem_data_o    [      NUM_CC][NUM_DL_LAYER]
 );
+
 
   // Start of symbol for each CC
   logic        gb_sos  [NUM_CC];
@@ -124,7 +125,7 @@ module dl_adaptor #(
       //===================
       .clk_491m52           (clk_491m52),
       .rst_491m52           (rst_491m52),
-      // Shared by CC0 and CC1
+      // Separated CCs
       .gb_data              (gb_data),  // {Q, I}
       .gb_valid             (gb_valid),
       .gb_re                (gb_re),  // RE number, 0 ~ 3275

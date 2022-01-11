@@ -1,8 +1,9 @@
-// File: dl_adaptor_gearbox_bfp9.sv
-// Brief: Downlink PDxCH (DL U-Plane data) adaptor gearbox, for BFP9 format.
+// File: dl_adaptor_gearbox_mod4.sv
+// Brief: Downlink PDxCH (DL U-Plane data) adaptor gearbox, for Modulation
+//        Compression 4 format.
 `timescale 1 ns / 1 ps `default_nettype none
 
-module dl_adaptor_gearbox_bfp9 #(
+module dl_adaptor_gearbox_mod4 #(
     parameter int NUM_CC = 2
 ) (
     // Interface with DFE
@@ -15,26 +16,37 @@ module dl_adaptor_gearbox_bfp9 #(
     input var         s_axis_tvalid,
     input var         s_axis_tlast,
     output var        s_axis_tready,
-    input var  [30:0] s_axis_tuser,
+    input var  [89:0] s_axis_tuser,
     //
-    output var [63:0] gb_data      [NUM_CC],  // {10'b0, exp, Q, I, 10'b0, exp, Q, I}
+    output var [63:0] gb_data      [NUM_CC],  // {8'b0, csf, scalar, Q, I, 8'b0, csf, scalar, Q, I}
     output var        gb_valid     [NUM_CC],
     output var [11:0] gb_re        [NUM_CC]  // RE number, 0 ~ 3275
 );
 
 
   // Immediate data
-  logic [39:0] gb_data_c;
-  logic [39:0] gb_data_r;
-  logic [ 3:0] gb_data_exp;
-  logic [ 8:0] gb_data_i0;
-  logic [ 8:0] gb_data_q0;
-  logic [ 8:0] gb_data_i1;
-  logic [ 8:0] gb_data_q1;
+  logic [31:0] gb_data_c;
+  logic [31:0] gb_data_r;
+
+  logic        gb_data_csf;
+  logic [14:0] gb_data_scalar;
+  logic [ 3:0] gb_data_i0;
+  logic [ 3:0] gb_data_q0;
+  logic [ 3:0] gb_data_i1;
+  logic [ 3:0] gb_data_q1;
+
   logic [ 2:0] gb_cc_r;
   logic        gb_valid_r;
   logic [11:0] gb_re_r;
 
+  logic [11:0] tuser_mod_remask2;
+  logic        tuser_mod_csf2;
+  logic [14:0] tuser_mod_scalar2;
+  logic [11:0] tuser_mod_remask1;
+  logic        tuser_mod_csf1;
+  logic [14:0] tuser_mod_scalar1;
+  logic [ 1:0] tuser_modulation_compression;
+  logic        tuser_mod_param_valid;
   logic [ 2:0] tuser_component_carrier;
   logic        tuser_start_of_section;  // Used to indicate the start of a symbol of RB sections.
   logic        tuser_every_other_rb;  // Not used
@@ -72,6 +84,14 @@ module dl_adaptor_gearbox_bfp9 #(
 
   // Xilinx PG370, Page 57, Chapter 3, Section x Downlink U-Plane Data Ports
   assign {
+    tuser_mod_remask2,
+    tuser_mod_csf2,
+    tuser_mod_scalar2,
+    tuser_mod_remask1,
+    tuser_mod_csf1,
+    tuser_mod_scalar1,
+    tuser_modulation_compression,
+    tuser_mod_param_valid,
     tuser_component_carrier,
     tuser_start_of_section,
     tuser_every_other_rb,

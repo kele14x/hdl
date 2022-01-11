@@ -16,8 +16,8 @@ module dl_adaptor_gearbox_raw #(
     input var         s_axis_tlast,
     output var        s_axis_tready,
     input var  [30:0] s_axis_tuser,
-    // Shared by CC0 and CC1
-    output var [63:0] gb_data      [NUM_CC],
+    //
+    output var [63:0] gb_data      [NUM_CC],  // {Q, I, Q, I}
     output var        gb_valid     [NUM_CC],
     output var [11:0] gb_re        [NUM_CC]
 );
