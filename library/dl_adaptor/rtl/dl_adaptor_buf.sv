@@ -14,16 +14,16 @@ module dl_adaptor_buf #(
     input var         dl_data_sof_i,
     input var         dl_data_sop_i,
     // DL data from Gearbox
-    input var  [63:0] dl_data_i                 [LAYER_NUMBER_C],
-    input var         dl_data_valid_i           [LAYER_NUMBER_C],
-    input var  [11:0] re_no_i                   [LAYER_NUMBER_C],
+    input var  [63:0] dl_data_i                       [LAYER_NUMBER_C],
+    input var         dl_data_valid_i                 [LAYER_NUMBER_C],
+    input var  [11:0] re_no_i                         [LAYER_NUMBER_C],
     // DL data output to DFE
     output var        dl_sof_o,
     output var        dl_sop_o,
     output var        dl_sof_ahead_9_o,
     output var        dl_sop_ahead_9_o,
-    output var [15:0] dl_di_o                   [LAYER_NUMBER_C],
-    output var [15:0] dl_dq_o                   [LAYER_NUMBER_C],
+    output var [15:0] dl_di_o                         [LAYER_NUMBER_C],
+    output var [15:0] dl_dq_o                         [LAYER_NUMBER_C],
     output var        dl_valid_o,
     //
     // Control Interface
@@ -41,13 +41,13 @@ module dl_adaptor_buf #(
     // Buffer access
     input var  [ 1:0] buffer_mem_ctrl_en,
     input var  [ 8:0] dfe_dl_adaptor_mem_symbol_no_sel,
-    input var  [11:0] buffer_mem_addr_i         [LAYER_NUMBER_C],
-    input var  [31:0] buffer_mem_data_i         [LAYER_NUMBER_C],
-    input var         buffer_mem_we             [LAYER_NUMBER_C],
-    output var [31:0] buffer_mem_data_o         [LAYER_NUMBER_C]
+    input var  [11:0] buffer_mem_addr_i               [LAYER_NUMBER_C],
+    input var  [31:0] buffer_mem_data_i               [LAYER_NUMBER_C],
+    input var         buffer_mem_we                   [LAYER_NUMBER_C],
+    output var [31:0] buffer_mem_data_o               [LAYER_NUMBER_C]
 );
 
-  logic [14:0] buffer_rd_ctrl[16];
+  logic [14:0] buffer_rd_ctrl           [16];
   logic [ 1:0] buffer_mem_ctrl_en_s;
   logic        buffer_mem_ctrl_override;
   logic [ 8:0] symbol_no_s;
@@ -95,7 +95,7 @@ module dl_adaptor_buf #(
   end
 
   assign buffer_mem_ctrl_en_s = {buffer_mem_ctrl_override, buffer_mem_ctrl_en[0]};
-  
+
   generate
     for (genvar i = 0; i < LAYER_NUMBER_C; i++) begin
 

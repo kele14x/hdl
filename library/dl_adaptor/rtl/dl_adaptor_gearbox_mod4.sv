@@ -20,32 +20,29 @@ module dl_adaptor_gearbox_mod4 #(
     //
     output var [63:0] gb_data      [NUM_CC],  // {8'b0, csf, scalar, Q, I, 8'b0, csf, scalar, Q, I}
     output var        gb_valid     [NUM_CC],
-    output var [11:0] gb_re        [NUM_CC]  // RE number, 0 ~ 3275
+    output var [11:0] gb_re        [NUM_CC]   // RE number, 0 ~ 3275
 );
 
 
   // Immediate data
-  logic [31:0] gb_data_c;
-  logic [31:0] gb_data_r;
-
   logic        gb_data_csf;
   logic [14:0] gb_data_scalar;
-  logic [ 3:0] gb_data_i0;
-  logic [ 3:0] gb_data_q0;
-  logic [ 3:0] gb_data_i1;
   logic [ 3:0] gb_data_q1;
+  logic [ 3:0] gb_data_i1;
+  logic [ 3:0] gb_data_q0;
+  logic [ 3:0] gb_data_i0;
 
   logic [ 2:0] gb_cc_r;
   logic        gb_valid_r;
   logic [11:0] gb_re_r;
 
-  logic [11:0] tuser_mod_remask2;
-  logic        tuser_mod_csf2;
-  logic [14:0] tuser_mod_scalar2;
-  logic [11:0] tuser_mod_remask1;
+  logic [11:0] tuser_mod_remask2;  // Not used
+  logic        tuser_mod_csf2;  // Not used
+  logic [14:0] tuser_mod_scalar2;  // Not used
+  logic [11:0] tuser_mod_remask1;  // Not used
   logic        tuser_mod_csf1;
   logic [14:0] tuser_mod_scalar1;
-  logic [ 1:0] tuser_modulation_compression;
+  logic [ 1:0] tuser_modulation_compression;  // Not used
   logic        tuser_mod_param_valid;
   logic [ 2:0] tuser_component_carrier;
   logic        tuser_start_of_section;  // Used to indicate the start of a symbol of RB sections.
@@ -55,17 +52,39 @@ module dl_adaptor_gearbox_mod4 #(
   logic [ 7:0] tuser_num_rb;  // Not used
   logic [ 9:0] tuser_start_rb;
 
-  logic [63:0] tdata_current;
-  logic [63:0] tdata_last;
-  logic [ 3:0] exp_last;
+  logic [63:0] s_axis_tdata_reversed;
 
-  // 12 states, read 7 words and output 24 re data
-  // BFP 9:
-  // 7 * 64 = 448-bit
-  //        = 18 * 24 + 8 * 2
-  logic [3:0] state, state_next;
+  logic [63:0] tdata0;
+  logic [63:0] tdata1;
+  logic [63:0] tdata2;
 
-  logic go_next;
+  logic even_rb, odd_rb;
+
+
+  // Modulation compression 4:
+  // The AXIS 3 words contains 2 RBs (24 REs), or 1.5 words contain 1 RB (only when
+  // number of RB within the section is odd).
+  // 3 * 64 = 192-bit
+  //        = 8 * 24
+  // For most of the time, during 12 clock cycles, 3 words are read from the
+  // input stream, and 24 REs are output. In case that there are odd REs, only
+  // 1.5 words is provided by AXIS (with tlast assert at 2nd word), so 12 REs
+  // are output.
+
+  typedef enum int {
+    S_RD_RST,    // Under reset
+    S_RD_INIT0,  // Read first word in packet
+    S_RD_WORD0,  // Read word 0, this is not first word in packet
+    S_RD_WORD1,  // Read word 1, if `tlast` assert here, indicates odd number RE
+    S_RD_WORD2,  // Read word 2, if `tlast` assert here, indicates even number of RE
+    S_RD_WAIT0,  // Wait for writer done, this is not last word in packet
+    S_RD_WAIT1   // Wait for writer done, this is last word in packet
+  } rd_state_t;
+
+  rd_state_t rd_state, rd_state_next;
+
+  // 0 ~ 12
+  logic [3:0] wr_cnt, wr_cnt_max;
 
   function automatic logic [63:0] byte_reverse(input logic [63:0] data);
     begin
@@ -81,6 +100,7 @@ module dl_adaptor_gearbox_mod4 #(
       };
     end
   endfunction
+
 
   // Xilinx PG370, Page 57, Chapter 3, Section x Downlink U-Plane Data Ports
   assign {
@@ -101,151 +121,194 @@ module dl_adaptor_gearbox_mod4 #(
     tuser_start_rb
   } = s_axis_tuser;
 
-  assign tdata_current = byte_reverse(s_axis_tdata);
+  // AXIS require byte reverse
+  assign s_axis_tdata_reversed = byte_reverse(s_axis_tdata);
 
-  assign go_next = (state == 0 && s_axis_tvalid) ||
-    (state == 1 && s_axis_tvalid) || (state == 2) ||
-    (state == 3 && s_axis_tvalid) || (state == 4) ||
-    (state == 5 && s_axis_tvalid) || (state == 6 && s_axis_tvalid) ||
-    (state == 7) || (state == 8 && s_axis_tvalid) || (state == 9) ||
-    (state == 10 && s_axis_tvalid) || (state == 11);
 
-  // State Machine
+  // AXIS Reader State Machine
+  //==========================
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      state <= '0;
+      rd_state <= S_RD_RST;
     end else begin
-      state <= state_next;
+      rd_state <= rd_state_next;
     end
   end
 
   always_comb begin
-    if (state >= 11) begin
-      state_next = 0;  // failt recovery
-    end else if (go_next && (state == 0 || state == 1 || state == 3 ||
-      state == 6 || state == 8) && s_axis_tlast) begin
-      // Normally we should not see TLAST at those states, but so we need to end
-      // the FSM here.
-      state_next = 0;
-    end else if (go_next && state == 5 && s_axis_tlast) begin
-      // The case odd number of RBs.
-      state_next = 0;
-    end else if (go_next && state == 10 && s_axis_tlast) begin
-      // The case even number of RBs.
-      state_next = 11;
-    end else if (go_next && state == 11) begin
-      state_next = 0;
-    end else if (go_next) begin
-      state_next = state + 1;
-    end else begin
-      state_next = state;
+    case (rd_state)
+      S_RD_RST:   rd_state_next = S_RD_INIT0;
+      S_RD_INIT0: rd_state_next = ~s_axis_tvalid ? S_RD_INIT0 : s_axis_tlast ? S_RD_INIT0 : S_RD_WORD1;
+      S_RD_WORD0: rd_state_next = ~s_axis_tvalid ? S_RD_WORD0 : s_axis_tlast ? S_RD_INIT0 : S_RD_WORD1;
+      S_RD_WORD1: rd_state_next = ~s_axis_tvalid ? S_RD_WORD1 : s_axis_tlast ? S_RD_WAIT1 : S_RD_WORD2;
+      S_RD_WORD2: rd_state_next = ~s_axis_tvalid ? S_RD_WORD2 : s_axis_tlast ? S_RD_WAIT1 : S_RD_WAIT0;
+      S_RD_WAIT0: rd_state_next = ~(wr_cnt_max - wr_cnt == 3) ? S_RD_WAIT0 : S_RD_WORD0;
+      S_RD_WAIT1: rd_state_next = ~(wr_cnt_max - wr_cnt == 0) ? S_RD_WAIT1 : S_RD_INIT0;
+      default: rd_state_next = S_RD_RST;
+    endcase
+  end
+
+  // even number of RB
+  assign even_rb = (rd_state == S_RD_WORD2 && s_axis_tvalid);
+
+  // odd number of RB
+  assign odd_rb  = (rd_state == S_RD_WORD1 && s_axis_tvalid && s_axis_tlast);
+
+  // AXIS interface is ready when we are reading words
+  always_ff @(posedge clk) begin
+    s_axis_tready <= (rd_state_next == S_RD_INIT0 || rd_state_next == S_RD_WORD0
+      || rd_state_next == S_RD_WORD1 || rd_state_next == S_RD_WORD2);
+  end
+
+  // register some data for later use
+
+  always_ff @(posedge clk) begin
+    if ((rd_state == S_RD_WORD0 || rd_state == S_RD_INIT0) && s_axis_tvalid) begin
+      tdata0 <= s_axis_tdata_reversed;
     end
   end
 
-  // AXI4-Stream
+  always_ff @(posedge clk) begin
+    if ((rd_state == S_RD_WORD1) && s_axis_tvalid) begin
+      tdata1 <= s_axis_tdata_reversed;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if ((rd_state == S_RD_WORD2) && s_axis_tvalid) begin
+      tdata2 <= s_axis_tdata_reversed;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if ((rd_state == S_RD_INIT0) && s_axis_tvalid) begin
+      gb_cc_r <= tuser_component_carrier;
+    end
+  end
+
+  // Assume mod_param_valid is at first 3 ticks of the packet
+  always_ff @(posedge clk) begin
+    if (tuser_mod_param_valid) begin
+      gb_data_csf    <= tuser_mod_csf1;
+      gb_data_scalar <= tuser_mod_scalar1;
+    end
+  end
+
+
+  // RE Writer State Machine
+  //========================
+
+  // `wr_cnt` goes from 1 to 6 when odd RB, from 0 to 11 when even RB
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      wr_cnt <= 0;
+    end else if (even_rb || odd_rb) begin
+      wr_cnt <= 1;
+    end else if (wr_cnt > 0 && wr_cnt != wr_cnt_max) begin
+      wr_cnt <= wr_cnt + 1;
+    end else begin
+      wr_cnt <= 0;
+    end
+  end
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      s_axis_tready <= '0;
-    end else if (state_next == 0 || state_next == 1 || state_next == 3 ||
-      state_next == 5 || state_next == 6 || state_next == 8 ||
-      state_next == 10) begin
-      s_axis_tready <= 1'b1;
+      wr_cnt_max <= 0;
+    end else if (even_rb) begin
+      wr_cnt_max <= 12;
+    end else if (odd_rb) begin
+      wr_cnt_max <= 6;
     end else begin
-      s_axis_tready <= 1'b0;
+      wr_cnt_max <= wr_cnt_max;
     end
   end
 
-  // register some old data for later use
-
+  // data mux, select 16-bit data from `tdatax`
   always_ff @(posedge clk) begin
-    if (rst) begin
-      tdata_last <= '0;
-    end else if (s_axis_tready && s_axis_tvalid) begin
-      tdata_last <= tdata_current;
+    if (wr_cnt == 1) begin
+      {gb_data_q1, gb_data_i1, gb_data_q0, gb_data_i0} <= {
+        tdata0[51:48], tdata0[55:52], tdata0[59:56], tdata0[63:60]
+      };
+    end else if (wr_cnt == 2) begin
+      {gb_data_q1, gb_data_i1, gb_data_q0, gb_data_i0} <= {
+        tdata0[35:32], tdata0[39:36], tdata0[43:40], tdata0[47:44]
+      };
+    end else if (wr_cnt == 3) begin
+      {gb_data_q1, gb_data_i1, gb_data_q0, gb_data_i0} <= {
+        tdata0[19:16], tdata0[23:20], tdata0[27:24], tdata0[31:28]
+      };
+    end else if (wr_cnt == 4) begin
+      {gb_data_q1, gb_data_i1, gb_data_q0, gb_data_i0} <= {
+        tdata0[3:0], tdata0[7:4], tdata0[11:8], tdata0[15:12]
+      };
+    end else if (wr_cnt == 5) begin
+      {gb_data_q1, gb_data_i1, gb_data_q0, gb_data_i0} <= {
+        tdata1[51:48], tdata1[55:52], tdata1[59:56], tdata1[63:60]
+      };
+    end else if (wr_cnt == 6) begin
+      {gb_data_q1, gb_data_i1, gb_data_q0, gb_data_i0} <= {
+        tdata1[35:32], tdata1[39:36], tdata1[43:40], tdata1[47:44]
+      };
+    end else if (wr_cnt == 7) begin
+      {gb_data_q1, gb_data_i1, gb_data_q0, gb_data_i0} <= {
+        tdata1[19:16], tdata1[23:20], tdata1[27:24], tdata1[31:28]
+      };
+    end else if (wr_cnt == 8) begin
+      {gb_data_q1, gb_data_i1, gb_data_q0, gb_data_i0} <= {
+        tdata1[3:0], tdata1[7:4], tdata1[11:8], tdata1[15:12]
+      };
+    end else if (wr_cnt == 9) begin
+      {gb_data_q1, gb_data_i1, gb_data_q0, gb_data_i0} <= {
+        tdata2[51:48], tdata2[55:52], tdata2[59:56], tdata2[63:60]
+      };
+    end else if (wr_cnt == 10) begin
+      {gb_data_q1, gb_data_i1, gb_data_q0, gb_data_i0} <= {
+        tdata2[35:32], tdata2[39:36], tdata2[43:40], tdata2[47:44]
+      };
+    end else if (wr_cnt == 11) begin
+      {gb_data_q1, gb_data_i1, gb_data_q0, gb_data_i0} <= {
+        tdata2[19:16], tdata2[23:20], tdata2[27:24], tdata2[31:28]
+      };
+    end else if (wr_cnt == 12) begin
+      {gb_data_q1, gb_data_i1, gb_data_q0, gb_data_i0} <= {
+        tdata2[3:0], tdata2[7:4], tdata2[11:8], tdata2[15:12]
+      };
     end
   end
 
   always_ff @(posedge clk) begin
-    if (rst) begin
-      exp_last <= '0;
-    end else if (state == 0 && s_axis_tvalid) begin
-      exp_last <= tdata_current[59:56];
-    end else if (state == 5 && s_axis_tvalid && ~s_axis_tlast) begin
-      exp_last <= tdata_current[27:24];
-    end else begin
-      exp_last <= exp_last;
-    end
-  end
-
-  // data mux, select 40-bit from tdata_current and tdata_last
-
-  always_comb begin
-    if (state == 0) begin
-      gb_data_c = tdata_current[59:20];
-    end else if (state == 1) begin
-      gb_data_c = {exp_last, tdata_last[19:0], tdata_current[63:48]};
-    end else if (state == 2) begin
-      gb_data_c = {exp_last, tdata_last[47:12]};
-    end else if (state == 3) begin
-      gb_data_c = {exp_last, tdata_last[11:0], tdata_current[63:40]};
-    end else if (state == 4) begin
-      gb_data_c = {exp_last, tdata_last[39:4]};
-    end else if (state == 5) begin
-      gb_data_c = {exp_last, tdata_last[3:0], tdata_current[63:32]};
-    end else if (state == 6) begin
-      gb_data_c = {exp_last, tdata_last[23:0], tdata_current[63:52]};
-    end else if (state == 7) begin
-      gb_data_c = {exp_last, tdata_last[51:16]};
-    end else if (state == 8) begin
-      gb_data_c = {exp_last, tdata_last[15:0], tdata_current[63:44]};
-    end else if (state == 9) begin
-      gb_data_c = {exp_last, tdata_last[43:8]};
-    end else if (state == 10) begin
-      gb_data_c = {exp_last, tdata_last[7:0], tdata_current[63:36]};
-    end else begin  // state == 11
-      gb_data_c = {exp_last, tdata_last[35:0]};
-    end
-  end
-
-  // 40-bit data out from state machine
-
-  always_ff @(posedge clk) begin
-    if (go_next) begin
-      gb_data_r <= gb_data_c;
-    end
-  end
-
-  assign {gb_data_exp, gb_data_i0, gb_data_q0, gb_data_i1, gb_data_q1} = gb_data_r;
-
-  always_ff @(posedge clk) begin
-    gb_valid_r <= go_next;
-  end
-
-  always_ff @(posedge clk) begin
-    gb_cc_r <= tuser_component_carrier;
+    gb_valid_r <= (1 <= wr_cnt && wr_cnt <= wr_cnt_max);
   end
 
   // If incoming packets does not come in order, this will fail.
   always_ff @(posedge clk) begin
-    if (go_next) begin
-      if (tuser_start_of_section) begin
-        gb_re_r <= tuser_start_rb * 12;
-      end else begin
-        gb_re_r <= gb_re_r + 2;
-      end
+    if ((rd_state == S_RD_INIT0) && s_axis_tvalid) begin
+      gb_re_r <= tuser_start_rb * 12;
+    end else if (gb_valid_r) begin
+      gb_re_r <= gb_re_r + 2;
     end
   end
 
+
   // CC mutex
+  //=========
 
   generate
     for (genvar i = 0; i < NUM_CC; i++) begin
 
       always_ff @(posedge clk) begin
         gb_data[i] <= {
-          10'b0, gb_data_exp, gb_data_q1, gb_data_i1, 10'b0, gb_data_exp, gb_data_q0, gb_data_i0
+          8'b0,
+          gb_data_csf,
+          gb_data_scalar,
+          gb_data_q1,
+          gb_data_i1,
+          8'b0,
+          gb_data_csf,
+          gb_data_scalar,
+          gb_data_q0,
+          gb_data_i0
         };
       end
 

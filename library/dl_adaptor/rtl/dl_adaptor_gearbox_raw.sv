@@ -48,12 +48,7 @@ module dl_adaptor_gearbox_raw #(
 
   function automatic logic [63:0] byte2_reverse(input logic [63:0] data);
     begin
-      return {
-        data[15:0],
-        data[31:16],
-        data[47:32],
-        data[63:48]
-      };
+      return {data[15:0], data[31:16], data[47:32], data[63:48]};
     end
   endfunction
 

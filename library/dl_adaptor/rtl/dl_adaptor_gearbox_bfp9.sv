@@ -19,7 +19,7 @@ module dl_adaptor_gearbox_bfp9 #(
     //
     output var [63:0] gb_data      [NUM_CC],  // {10'b0, exp, Q, I, 10'b0, exp, Q, I}
     output var        gb_valid     [NUM_CC],
-    output var [11:0] gb_re        [NUM_CC]  // RE number, 0 ~ 3275
+    output var [11:0] gb_re        [NUM_CC]   // RE number, 0 ~ 3275
 );
 
 

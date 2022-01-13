@@ -16,14 +16,14 @@ module dl_adaptor #(
     input var         rst_400m,
     // Timing ports
     output var        defm_radio_start_10ms,
-    input var         s_dl_update          [      NUM_CC],
+    input var         s_dl_update                     [      NUM_CC],
     // 16 branch/layer stream, CC shared
-    input var  [63:0] s_defm_data_tdata    [NUM_DL_LAYER],
-    input var  [ 7:0] s_defm_data_tkeep    [NUM_DL_LAYER],
-    input var         s_defm_data_tvalid   [NUM_DL_LAYER],
-    input var         s_defm_data_tlast    [NUM_DL_LAYER],
-    output var        s_defm_data_tready   [NUM_DL_LAYER],
-    input var  [89:0] s_defm_data_tuser    [NUM_DL_LAYER],
+    input var  [63:0] s_defm_data_tdata               [NUM_DL_LAYER],
+    input var  [ 7:0] s_defm_data_tkeep               [NUM_DL_LAYER],
+    input var         s_defm_data_tvalid              [NUM_DL_LAYER],
+    input var         s_defm_data_tlast               [NUM_DL_LAYER],
+    output var        s_defm_data_tready              [NUM_DL_LAYER],
+    input var  [89:0] s_defm_data_tuser               [NUM_DL_LAYER],
     // Interface with DFE
     //===================
     input var         clk_491m52,
@@ -32,25 +32,25 @@ module dl_adaptor #(
     // This is base line of DL timing
     input var         dl_radio_start_10ms,
     // 2 CC port, each will have interleaved 4 layer data
-    output var        dl_sof               [      NUM_CC],
-    output var        dl_sop               [      NUM_CC],
-    output var        dl_sof_ahead_9       [      NUM_CC],
-    output var        dl_sop_ahead_9       [      NUM_CC],
-    output var [15:0] dl_data_i            [      NUM_CC][NUM_DL_LAYER],
-    output var [15:0] dl_data_q            [      NUM_CC][NUM_DL_LAYER],
-    output var        dl_valid             [      NUM_CC],
+    output var        dl_sof                          [      NUM_CC],
+    output var        dl_sop                          [      NUM_CC],
+    output var        dl_sof_ahead_9                  [      NUM_CC],
+    output var        dl_sop_ahead_9                  [      NUM_CC],
+    output var [15:0] dl_data_i                       [      NUM_CC][NUM_DL_LAYER],
+    output var [15:0] dl_data_q                       [      NUM_CC][NUM_DL_LAYER],
+    output var        dl_valid                        [      NUM_CC],
     // Control Interface
     //==================
-    input var  [ 3:0] ctrl_bandwidth       [      NUM_CC],
-    input var  [ 1:0] ctrl_numerology      [      NUM_CC],
-    input var  [ 1:0] ctrl_compression_mode[      NUM_CC],
+    input var  [ 3:0] ctrl_bandwidth                  [      NUM_CC],
+    input var  [ 1:0] ctrl_numerology                 [      NUM_CC],
+    input var  [ 1:0] ctrl_compression_mode           [      NUM_CC],
     //
-    input var  [ 1:0] buffer_mem_ctrl_en   [      NUM_CC],
+    input var  [ 1:0] buffer_mem_ctrl_en              [      NUM_CC],
     input var  [ 8:0] dfe_dl_adaptor_mem_symbol_no_sel,
-    input var  [11:0] buffer_mem_addr_i    [      NUM_CC][NUM_DL_LAYER],
-    input var  [31:0] buffer_mem_data_i    [      NUM_CC][NUM_DL_LAYER],
-    input var         buffer_mem_we        [      NUM_CC][NUM_DL_LAYER],
-    output var [31:0] buffer_mem_data_o    [      NUM_CC][NUM_DL_LAYER]
+    input var  [11:0] buffer_mem_addr_i               [      NUM_CC][NUM_DL_LAYER],
+    input var  [31:0] buffer_mem_data_i               [      NUM_CC][NUM_DL_LAYER],
+    input var         buffer_mem_we                   [      NUM_CC][NUM_DL_LAYER],
+    output var [31:0] buffer_mem_data_o               [      NUM_CC][NUM_DL_LAYER]
 );
 
 
@@ -126,9 +126,9 @@ module dl_adaptor #(
       .clk_491m52           (clk_491m52),
       .rst_491m52           (rst_491m52),
       // Separated CCs
-      .gb_data              (gb_data),  // {Q, I}
+      .gb_data              (gb_data),               // {Q, I}
       .gb_valid             (gb_valid),
-      .gb_re                (gb_re),  // RE number, 0 ~ 3275
+      .gb_re                (gb_re),                 // RE number, 0 ~ 3275
       // Control Interface
       //==================
       .ctrl_compression_mode(ctrl_compression_mode)
@@ -145,43 +145,43 @@ module dl_adaptor #(
       ) dl_adaptor_buf (
           // Clock & Reset
           //==============
-          .clk_491m_i                (clk_491m52),
-          .rst_491m_i                (rst_491m52),
-          .clk_491m_gating_dl_i      (clk_491m52),
-          .clk_491m_gating_dl_flush_i(rst_491m52),
+          .clk_491m_i                      (clk_491m52),
+          .rst_491m_i                      (rst_491m52),
+          .clk_491m_gating_dl_i            (clk_491m52),
+          .clk_491m_gating_dl_flush_i      (rst_491m52),
           // DL timing ports
-          .dl_data_sof_i             (dl_radio_start_10ms),
-          .dl_data_sop_i             (gb_sos[i]),
+          .dl_data_sof_i                   (dl_radio_start_10ms),
+          .dl_data_sop_i                   (gb_sos[i]),
           // Data from Gearbox
-          .dl_data_i                 (gb_data[i]),
-          .dl_data_valid_i           (gb_valid[i]),
-          .re_no_i                   (gb_re[i]),
+          .dl_data_i                       (gb_data[i]),
+          .dl_data_valid_i                 (gb_valid[i]),
+          .re_no_i                         (gb_re[i]),
           // Data output to DFE
-          .dl_sof_o                  (dl_sof[i]),
-          .dl_sop_o                  (dl_sop[i]),
-          .dl_sof_ahead_9_o          (dl_sof_ahead_9[i]),
-          .dl_sop_ahead_9_o          (dl_sop_ahead_9[i]),
-          .dl_di_o                   (dl_data_i[i]),
-          .dl_dq_o                   (dl_data_q[i]),
-          .dl_valid_o                (dl_valid[i]),
+          .dl_sof_o                        (dl_sof[i]),
+          .dl_sop_o                        (dl_sop[i]),
+          .dl_sof_ahead_9_o                (dl_sof_ahead_9[i]),
+          .dl_sop_ahead_9_o                (dl_sop_ahead_9[i]),
+          .dl_di_o                         (dl_data_i[i]),
+          .dl_dq_o                         (dl_data_q[i]),
+          .dl_valid_o                      (dl_valid[i]),
           // Control interface
           //===================
-          .clk_axi                   (1'b0),
-          .rst_axi                   (1'b0),
+          .clk_axi                         (1'b0),
+          .rst_axi                         (1'b0),
           // TODO: External timing port
-          .s0_rd_trig_i              (1'b0),
-          .s0_rd_trig_en             (1'b0),
+          .s0_rd_trig_i                    (1'b0),
+          .s0_rd_trig_en                   (1'b0),
           //
-          .bw_mode_i                 (ctrl_bandwidth[i]),  // Bandwidth mode
-          .rat_mode_i                (ctrl_numerology[i]),  // Numerology
-          .compression_mode          (ctrl_compression_mode[i]),  // Compression mode
+          .bw_mode_i                       (ctrl_bandwidth[i]),                 // Bandwidth mode
+          .rat_mode_i                      (ctrl_numerology[i]),                // Numerology
+          .compression_mode                (ctrl_compression_mode[i]),          // Compression mode
           //
-          .buffer_mem_ctrl_en        (buffer_mem_ctrl_en[i]),
+          .buffer_mem_ctrl_en              (buffer_mem_ctrl_en[i]),
           .dfe_dl_adaptor_mem_symbol_no_sel(dfe_dl_adaptor_mem_symbol_no_sel),
-          .buffer_mem_addr_i         (buffer_mem_addr_i[i]),
-          .buffer_mem_data_i         (buffer_mem_data_i[i]),
-          .buffer_mem_we             (buffer_mem_we[i]),
-          .buffer_mem_data_o         (buffer_mem_data_o[i])
+          .buffer_mem_addr_i               (buffer_mem_addr_i[i]),
+          .buffer_mem_data_i               (buffer_mem_data_i[i]),
+          .buffer_mem_we                   (buffer_mem_we[i]),
+          .buffer_mem_data_o               (buffer_mem_data_o[i])
       );
 
     end

@@ -36,46 +36,46 @@ module dl_adaptor_gearbox #(
 );
 
 
-  logic [63:0] m_axis_tdata      [NUM_DL_LAYER];
-  logic [ 7:0] m_axis_tkeep      [NUM_DL_LAYER];
-  logic        m_axis_tvalid     [NUM_DL_LAYER];
-  logic        m_axis_tlast      [NUM_DL_LAYER];
-  logic [89:0] m_axis_tuser      [NUM_DL_LAYER];
-  logic [ 1:0] m_axis_tdest      [NUM_DL_LAYER];
-  logic        m_axis_tready     [NUM_DL_LAYER];
+  logic [63:0] m_axis_tdata    [NUM_DL_LAYER];
+  logic [ 7:0] m_axis_tkeep    [NUM_DL_LAYER];
+  logic        m_axis_tvalid   [NUM_DL_LAYER];
+  logic        m_axis_tlast    [NUM_DL_LAYER];
+  logic [89:0] m_axis_tuser    [NUM_DL_LAYER];
+  logic [ 1:0] m_axis_tdest    [NUM_DL_LAYER];
+  logic        m_axis_tready   [NUM_DL_LAYER];
 
-  logic [63:0] raw_axis_tdata      [NUM_DL_LAYER];
-  logic [ 7:0] raw_axis_tkeep      [NUM_DL_LAYER];
-  logic        raw_axis_tvalid     [NUM_DL_LAYER];
-  logic        raw_axis_tlast      [NUM_DL_LAYER];
-  logic [89:0] raw_axis_tuser      [NUM_DL_LAYER];
-  logic        raw_axis_tready     [NUM_DL_LAYER];
+  logic [63:0] raw_axis_tdata  [NUM_DL_LAYER];
+  logic [ 7:0] raw_axis_tkeep  [NUM_DL_LAYER];
+  logic        raw_axis_tvalid [NUM_DL_LAYER];
+  logic        raw_axis_tlast  [NUM_DL_LAYER];
+  logic [89:0] raw_axis_tuser  [NUM_DL_LAYER];
+  logic        raw_axis_tready [NUM_DL_LAYER];
 
-  logic [63:0] bfp9_axis_tdata      [NUM_DL_LAYER];
-  logic [ 7:0] bfp9_axis_tkeep      [NUM_DL_LAYER];
-  logic        bfp9_axis_tvalid     [NUM_DL_LAYER];
-  logic        bfp9_axis_tlast      [NUM_DL_LAYER];
-  logic [89:0] bfp9_axis_tuser      [NUM_DL_LAYER];
-  logic        bfp9_axis_tready     [NUM_DL_LAYER];
+  logic [63:0] bfp9_axis_tdata [NUM_DL_LAYER];
+  logic [ 7:0] bfp9_axis_tkeep [NUM_DL_LAYER];
+  logic        bfp9_axis_tvalid[NUM_DL_LAYER];
+  logic        bfp9_axis_tlast [NUM_DL_LAYER];
+  logic [89:0] bfp9_axis_tuser [NUM_DL_LAYER];
+  logic        bfp9_axis_tready[NUM_DL_LAYER];
 
-  logic [63:0] mod4_axis_tdata      [NUM_DL_LAYER];
-  logic [ 7:0] mod4_axis_tkeep      [NUM_DL_LAYER];
-  logic        mod4_axis_tvalid     [NUM_DL_LAYER];
-  logic        mod4_axis_tlast      [NUM_DL_LAYER];
-  logic [89:0] mod4_axis_tuser      [NUM_DL_LAYER];
-  logic        mod4_axis_tready     [NUM_DL_LAYER];
+  logic [63:0] mod4_axis_tdata [NUM_DL_LAYER];
+  logic [ 7:0] mod4_axis_tkeep [NUM_DL_LAYER];
+  logic        mod4_axis_tvalid[NUM_DL_LAYER];
+  logic        mod4_axis_tlast [NUM_DL_LAYER];
+  logic [89:0] mod4_axis_tuser [NUM_DL_LAYER];
+  logic        mod4_axis_tready[NUM_DL_LAYER];
 
-  logic [63:0] gb_data_raw       [NUM_DL_LAYER] [NUM_CC];
-  logic        gb_valid_raw      [NUM_DL_LAYER] [NUM_CC];
-  logic [11:0] gb_re_raw         [NUM_DL_LAYER] [NUM_CC];
+  logic [63:0] gb_data_raw     [NUM_DL_LAYER] [NUM_CC];
+  logic        gb_valid_raw    [NUM_DL_LAYER] [NUM_CC];
+  logic [11:0] gb_re_raw       [NUM_DL_LAYER] [NUM_CC];
 
-  logic [63:0] gb_data_bfp9      [NUM_DL_LAYER] [NUM_CC];
-  logic        gb_valid_bfp9     [NUM_DL_LAYER] [NUM_CC];
-  logic [11:0] gb_re_bfp9        [NUM_DL_LAYER] [NUM_CC];
+  logic [63:0] gb_data_bfp9    [NUM_DL_LAYER] [NUM_CC];
+  logic        gb_valid_bfp9   [NUM_DL_LAYER] [NUM_CC];
+  logic [11:0] gb_re_bfp9      [NUM_DL_LAYER] [NUM_CC];
 
-  logic [63:0] gb_data_mod4      [NUM_DL_LAYER] [NUM_CC];
-  logic        gb_valid_mod4     [NUM_DL_LAYER] [NUM_CC];
-  logic [11:0] gb_re_mod4        [NUM_DL_LAYER] [NUM_CC];
+  logic [63:0] gb_data_mod4    [NUM_DL_LAYER] [NUM_CC];
+  logic        gb_valid_mod4   [NUM_DL_LAYER] [NUM_CC];
+  logic [11:0] gb_re_mod4      [NUM_DL_LAYER] [NUM_CC];
 
 
   generate
@@ -133,7 +133,7 @@ module dl_adaptor_gearbox #(
           .m_axis_tdest (  /* not used */),
           .m_axis_tready({mod4_axis_tready[i], bfp9_axis_tready[i], raw_axis_tready[i]}),
           //
-          .s_decode_err(  /* not used */)
+          .s_decode_err (  /* not used */)
       );
 
 

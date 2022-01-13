@@ -2,6 +2,7 @@
 create_project project_1 ./prj -part xczu19eg-ffvc1760-2-i -force
 
 # Add source files
+add_files -norecurse ./ip/dl_adaptor_axis_switch/dl_adaptor_axis_switch.xci
 add_files -norecurse ./ip/dl_adaptor_ctrl_c_addsub_v12_0_i0/dl_adaptor_ctrl_c_addsub_v12_0_i0.xci
 add_files -norecurse ./ip/dl_adaptor_ctrl_c_addsub_v12_0_i1/dl_adaptor_ctrl_c_addsub_v12_0_i1.xci
 add_files -norecurse ./ip/dl_adaptor_ctrl_c_counter_binary_v12_0_i0/dl_adaptor_ctrl_c_counter_binary_v12_0_i0.xci
@@ -24,6 +25,7 @@ add_files -norecurse ./rtl/dl_adaptor_data.vhd
 add_files -norecurse ./rtl/dl_adaptor_data_entity_declarations.vhd
 add_files -norecurse ./rtl/dl_adaptor_gearbox.sv
 add_files -norecurse ./rtl/dl_adaptor_gearbox_bfp9.sv
+add_files -norecurse ./rtl/dl_adaptor_gearbox_mod4.sv
 add_files -norecurse ./rtl/dl_adaptor_gearbox_raw.sv
 add_files -norecurse {./sysgen\ libs/conv_pkg.vhd}
 add_files -norecurse {./sysgen\ libs/single_reg_w_init.vhd}
