@@ -6,7 +6,7 @@
 `timescale 1 ns / 1 ps `default_nettype none
 
 module dl_adaptor #(
-    parameter int NUM_CC = 2,
+    parameter int NUM_CC       = 2,
     parameter int NUM_DL_LAYER = 16
 ) (
     // Interface with XORIF
@@ -41,9 +41,16 @@ module dl_adaptor #(
     output var        dl_valid                        [      NUM_CC],
     // Control Interface
     //==================
+    input var         clk_axi,
+    //
     input var  [ 3:0] ctrl_bandwidth                  [      NUM_CC],
     input var  [ 1:0] ctrl_numerology                 [      NUM_CC],
-    input var  [ 1:0] ctrl_compression_mode           [      NUM_CC],
+    input var  [ 1:0] ctrl_compression_mode           [      NUM_CC][NUM_DL_LAYER],
+    //
+    input var  [10:0] dl_eq_gain_mem_addr             [      NUM_CC],
+    input var  [31:0] dl_eq_gain_mem_wdata            [      NUM_CC],
+    input var         dl_eq_gain_mem_we               [      NUM_CC],
+    output var [31:0] dl_eq_gain_mem_rdata            [      NUM_CC],
     //
     input var  [ 1:0] buffer_mem_ctrl_en              [      NUM_CC],
     input var  [ 8:0] dfe_dl_adaptor_mem_symbol_no_sel,
@@ -166,8 +173,13 @@ module dl_adaptor #(
           .dl_valid_o                      (dl_valid[i]),
           // Control interface
           //===================
-          .clk_axi                         (1'b0),
+          .clk_axi                         (clk_axi),
           .rst_axi                         (1'b0),
+          //
+          .dl_eq_gain_mem_addr             (dl_eq_gain_mem_addr[i]),
+          .dl_eq_gain_mem_wdata            (dl_eq_gain_mem_wdata[i]),
+          .dl_eq_gain_mem_we               (dl_eq_gain_mem_we[i]),
+          .dl_eq_gain_mem_rdata            (dl_eq_gain_mem_rdata[i]),
           // TODO: External timing port
           .s0_rd_trig_i                    (1'b0),
           .s0_rd_trig_en                   (1'b0),

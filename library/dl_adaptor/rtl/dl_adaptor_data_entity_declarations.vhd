@@ -1,7 +1,7 @@
 -------------------------------------------------------------------
--- System Generator version 2018.3 VHDL source file.
+-- System Generator version 2020.2 VHDL source file.
 --
--- Copyright(C) 2018 by Xilinx, Inc.  All rights reserved.  This
+-- Copyright(C) 2020 by Xilinx, Inc.  All rights reserved.  This
 -- text/file contains proprietary, confidential information of Xilinx,
 -- Inc., is distributed under license from Xilinx, Inc., and may be used,
 -- copied and/or disclosed only pursuant to the terms of a valid license
@@ -30,7 +30,7 @@
 -- sole risk and will be unsupported.
 --
 -- This copyright and support notice must be retained as part of this
--- text at all times.  (c) Copyright 1995-2018 Xilinx, Inc.  All rights
+-- text at all times.  (c) Copyright 1995-2020 Xilinx, Inc.  All rights
 -- reserved.
 -------------------------------------------------------------------
 
@@ -113,44 +113,6 @@ begin
   in1_1_27 <= std_logic_vector_to_unsigned(in1);
   y_2_1_concat <= std_logic_vector_to_unsigned(unsigned_to_std_logic_vector(in0_1_23) & unsigned_to_std_logic_vector(in1_1_27));
   y <= unsigned_to_std_logic_vector(y_2_1_concat);
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-entity sysgen_constant_fc92696315 is
-  port (
-    op : out std_logic_vector((1 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_constant_fc92696315;
-architecture behavior of sysgen_constant_fc92696315
-is
-begin
-  op <= "1";
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-entity sysgen_constant_91f375ad5f is
-  port (
-    op : out std_logic_vector((1 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_constant_91f375ad5f;
-architecture behavior of sysgen_constant_91f375ad5f
-is
-begin
-  op <= "0";
 end behavior;
 
 library work;
@@ -330,6 +292,264 @@ begin
 
 end  behavior;
 
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all ; 
+use ieee.numeric_std.all;
+use ieee.std_logic_arith.all;
+
+Library UNISIM;
+use UNISIM.vcomponents.all;
+
+entity dl_adaptor_data_xltdpram is
+   generic(width_addr        : integer := -1;
+           width             : integer := -1;
+           addr_width_b      : integer := -1;
+           data_width_b      : integer := -1;
+           mem_size          : integer := 0;
+           write_mode_a      : string := "no_change";
+           write_mode_b      : string := "no_change";
+           mem_init_file     : string := "none";
+           mem_type          : string := "auto";
+           clocking_mode     : string  := "common_clock";
+           read_reset_a    : string  := "0";
+           read_reset_b    : string  := "0";
+           latency           : integer := 0);
+   port(dina: in std_logic_vector(width-1 downto 0);
+        addra: in std_logic_vector(width_addr-1 downto 0);
+        wea: in std_logic_vector(0 downto 0);
+        ena: in std_logic_vector(0 downto 0);
+        rsta: in std_logic_vector(0 downto 0);
+        a_ce: in std_logic;
+        a_clk: in std_logic;
+        douta: out std_logic_vector(width-1 downto 0);
+        dinb: in std_logic_vector(data_width_b-1 downto 0);
+        addrb: in std_logic_vector(addr_width_b-1 downto 0);
+        web: in std_logic_vector(0 downto 0);
+        enb: in std_logic_vector(0 downto 0);
+        rstb: in std_logic_vector(0 downto 0);
+        b_ce: in std_logic;
+        b_clk: in std_logic;
+        doutb: out std_logic_vector(data_width_b-1 downto 0)
+);
+
+end dl_adaptor_data_xltdpram;
+
+architecture behavior of dl_adaptor_data_xltdpram is
+
+-- signal b_en: std_logic_vector(0 downto 0);
+-- signal a_en: std_logic_vector(0 downto 0);
+-- signal a_rst: std_logic_vector(0 downto 0);
+-- signal b_rst: std_logic_vector(0 downto 0);
+-- signal a_we: std_logic_vector(0 downto 0);
+-- signal b_we: std_logic_vector(0 downto 0);
+signal  buf_clk          : std_logic;
+signal  buf_ena          : std_logic;
+signal  buf_wea          : std_logic_vector(0 downto 0);
+signal  buf_addra        : std_logic_vector(22 downto 0);
+signal  buf_dina         : std_logic_vector(71 downto 0);
+signal  buf_douta        : std_logic_vector(71 downto 0);
+signal  buf_bwea         : std_logic_vector(8 downto 0);
+signal  buf_enb          : std_logic;
+signal  buf_web          : std_logic_vector(0 downto 0);
+signal  buf_addrb        : std_logic_vector(22 downto 0);
+signal  buf_dinb         : std_logic_vector(71 downto 0);
+signal  buf_doutb        : std_logic_vector(71 downto 0);
+signal  buf_bweb         : std_logic_vector(8 downto 0);
+
+begin
+    buf_clk      <=  a_clk;
+    buf_ena      <=  '1';
+    buf_wea      <=  wea;
+    buf_addra    <=  "00000000000" & addra;
+    buf_dina     <=  "00000000" & dina;
+    buf_bwea     <=  "000001111" when (enb="0" and ena="0") else "011110000" when (enb="0" and ena="1") else "011111111";
+    buf_enb      <=  '1';
+    buf_web      <=  "0" when (enb="0") else web;
+    buf_addrb    <=  "00000000000" & addrb;
+    buf_dinb     <=  "00000000" & dinb;
+    buf_bweb    <=  "011111111";
+    douta       <= buf_douta(63 downto 0);
+    doutb       <= buf_doutb(63 downto 0);
+    
+-- b_en(0) <= enb(0) and b_ce;
+-- a_en(0) <= ena(0) and a_ce;
+-- b_rst(0) <= rstb(0) and b_ce;
+-- a_rst(0) <= rsta(0) and a_ce;
+-- b_we(0) <= web(0) and b_ce;
+-- a_we(0) <= wea(0) and a_ce;
+
+ -- xpm_memory_tdpram_inst : xpm_memory_tdpram
+
+-- generic map (
+   -- -- Common module generics
+     -- MEMORY_SIZE        => mem_size,        --positive integer
+     -- MEMORY_PRIMITIVE   => mem_type,
+     -- MEMORY_INIT_FILE   => mem_init_file,
+     -- CLOCKING_MODE      => clocking_mode,
+     -- MEMORY_INIT_PARAM  => "",
+     -- USE_MEM_INIT       => 1,
+     -- WAKEUP_TIME        => "disable_sleep",
+     -- MESSAGE_CONTROL    => 0,
+
+     -- -- Port A module generics
+     -- WRITE_DATA_WIDTH_A => width,
+     -- READ_DATA_WIDTH_A  => width,
+     -- BYTE_WRITE_WIDTH_A => width,
+     -- ADDR_WIDTH_A       => width_addr,
+     -- READ_RESET_VALUE_A => read_reset_a,
+     -- READ_LATENCY_A     => latency,
+     -- WRITE_MODE_A       => write_mode_a,
+     -- -- Port A module generics
+     -- WRITE_DATA_WIDTH_B => data_width_b,
+     -- READ_DATA_WIDTH_B  => data_width_b,
+     -- BYTE_WRITE_WIDTH_B => data_width_b,
+     -- ADDR_WIDTH_B       => addr_width_b,
+     -- READ_RESET_VALUE_B => read_reset_b,
+     -- READ_LATENCY_B     => latency,
+     -- WRITE_MODE_B       => write_mode_b
+ -- )
+ -- port map (
+     -- -- Common module ports
+     -- sleep          =>  '0',
+     -- -- Port A module ports
+     -- clka           =>  a_clk,
+     -- rsta           =>  a_rst(0),
+     -- ena            =>  a_en(0),
+     -- regcea         =>  a_ce,
+	  -- wea            =>  a_we,
+	  -- addra          =>  addra,
+	  -- dina           =>  dina,
+	  -- injectsbiterra =>  '0',  --do not change
+	  -- injectdbiterra =>  '0',  --do not change
+	  -- douta          =>  douta,
+	  -- sbiterra       =>  open, --do not change
+	  -- dbiterra       =>  open,  --do not change
+ 
+     -- -- Port B module ports
+     -- clkb           =>  b_clk,
+     -- rstb           =>  b_rst(0),
+     -- enb            =>  b_en(0),
+     -- regceb         =>  b_ce,
+	  -- web            =>  b_we,
+	  -- addrb          =>  addrb,
+	  -- dinb           =>  dinb,
+	  -- injectsbiterrb =>  '0',  --do not change
+	  -- injectdbiterrb =>  '0',  --do not change
+	  -- doutb          =>  doutb,
+	  -- sbiterrb       =>  open, --do not change
+	  -- dbiterrb       =>  open  --do not change
+-- );
+URAM288_inst0 : URAM288
+generic map (
+    AUTO_SLEEP_LATENCY            => 8,                   
+    AVG_CONS_INACTIVE_CYCLES      => 10,                  
+    BWE_MODE_A                    => "PARITY_INTERLEAVED",
+    BWE_MODE_B                    => "PARITY_INTERLEAVED",
+    CASCADE_ORDER_A               => "NONE",             
+    CASCADE_ORDER_B               => "NONE",             
+    EN_AUTO_SLEEP_MODE            => "FALSE",             
+    EN_ECC_RD_A                   => "FALSE",             
+    EN_ECC_RD_B                   => "FALSE",             
+    EN_ECC_WR_A                   => "FALSE",             
+    EN_ECC_WR_B                   => "FALSE",             
+    IREG_PRE_A                    => "FALSE",              
+    IREG_PRE_B                    => "FALSE",              
+    IS_CLK_INVERTED               => '0',                 
+    IS_EN_A_INVERTED              => '0',                 
+    IS_EN_B_INVERTED              => '0',                 
+    IS_RDB_WR_A_INVERTED          => '0',                 
+    IS_RDB_WR_B_INVERTED          => '0',                 
+    IS_RST_A_INVERTED             => '0',                 
+    IS_RST_B_INVERTED             => '0',                 
+    MATRIX_ID                     => "NONE",            
+    NUM_UNIQUE_SELF_ADDR_A        => 1,                   
+    NUM_UNIQUE_SELF_ADDR_B        => 1,                   
+    NUM_URAM_IN_MATRIX            => 1,                   
+    OREG_A                        => "TRUE",              
+    OREG_B                        => "TRUE",              
+    OREG_ECC_A                    => "FALSE",              
+    OREG_ECC_B                    => "FALSE",              
+    REG_CAS_A                     => "FALSE",              
+    REG_CAS_B                     => "FALSE",              
+    RST_MODE_A                    => "SYNC",              
+    RST_MODE_B                    => "SYNC",              
+    SELF_ADDR_A                   => "000"&X"00",         
+    SELF_ADDR_B                   => "000"&X"00",         
+    SELF_MASK_A                   => "111"&X"ff",         
+    SELF_MASK_B                   => "111"&X"ff",         
+    USE_EXT_CE_A                  => "FALSE",             
+    USE_EXT_CE_B                  => "FALSE"              
+)
+port map (
+    CAS_OUT_ADDR_A        => open, 
+    CAS_OUT_ADDR_B        => open, 
+    CAS_OUT_BWE_A         => open, 
+    CAS_OUT_BWE_B         => open, 
+    CAS_OUT_DBITERR_A     => open, 
+    CAS_OUT_DBITERR_B     => open, 
+    CAS_OUT_DIN_A         => open, 
+    CAS_OUT_DIN_B         => open, 
+    CAS_OUT_DOUT_A        => open, 
+    CAS_OUT_DOUT_B        => open, 
+    CAS_OUT_EN_A          => open, 
+    CAS_OUT_EN_B          => open, 
+    CAS_OUT_RDACCESS_A    => open, 
+    CAS_OUT_RDACCESS_B    => open, 
+    CAS_OUT_RDB_WR_A      => open, 
+    CAS_OUT_RDB_WR_B      => open, 
+    CAS_OUT_SBITERR_A     => open, 
+    CAS_OUT_SBITERR_B     => open, 
+    DBITERR_A             => open,                        
+    DBITERR_B             => open,                        
+    DOUT_A                => buf_douta,                        
+    DOUT_B                => buf_doutb,                        
+    RDACCESS_A            => open,                        
+    RDACCESS_B            => open,                        
+    SBITERR_A             => open,                        
+    SBITERR_B             => open,                        
+    ADDR_A                => buf_addra,                   
+    ADDR_B                => buf_addrb,                   
+    BWE_A                 => buf_bwea,                
+    BWE_B                 => buf_bweb,                 
+    CAS_IN_ADDR_A         => (others=>'0'),               
+    CAS_IN_ADDR_B         => (others=>'0'),               
+    CAS_IN_BWE_A          => (others=>'0'),               
+    CAS_IN_BWE_B          => (others=>'0'),               
+    CAS_IN_DBITERR_A      => '0'          ,               
+    CAS_IN_DBITERR_B      => '0'          ,               
+    CAS_IN_DIN_A          => (others=>'0'),               
+    CAS_IN_DIN_B          => (others=>'0'),               
+    CAS_IN_DOUT_A         => (others=>'0'),               
+    CAS_IN_DOUT_B         => (others=>'0'),               
+    CAS_IN_EN_A           => '0'          ,               
+    CAS_IN_EN_B           => '0'          ,               
+    CAS_IN_RDACCESS_A     => '0'          ,               
+    CAS_IN_RDACCESS_B     => '0'          ,               
+    CAS_IN_RDB_WR_A       => '0'          ,               
+    CAS_IN_RDB_WR_B       => '0'          ,               
+    CAS_IN_SBITERR_A      => '0'          ,               
+    CAS_IN_SBITERR_B      => '0'          ,               
+    CLK                   => buf_clk,                     
+    DIN_A                 => buf_dina,                    
+    DIN_B                 => buf_dinb,               
+    EN_A                  => buf_ena,                     
+    EN_B                  => buf_enb,                     
+    INJECT_DBITERR_A      => '0',                         
+    INJECT_DBITERR_B      => '0',                         
+    INJECT_SBITERR_A      => '0',                         
+    INJECT_SBITERR_B      => '0',                         
+    OREG_CE_A             => '1',                         
+    OREG_CE_B             => '1',                         
+    OREG_ECC_CE_A         => '1',                         
+    OREG_ECC_CE_B         => '1',                         
+    RDB_WR_A              => buf_wea(0),                  
+    RDB_WR_B              => buf_web(0),                        
+    RST_A                 => '0',                          
+    RST_B                 => '0',                         
+    SLEEP                 => '0'                          
+);
+end behavior;
 library work;
 use work.conv_pkg.all;
 
@@ -370,6 +590,49 @@ begin
   internal_ip_12_1_bitnot <= ((not boolean_to_vector(ip_1_26)) = "1");
   op_mem_22_20_push_front_pop_back_en <= '0';
   op <= boolean_to_vector(internal_ip_12_1_bitnot);
+end behavior;
+
+library work;
+use work.conv_pkg.all;
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+entity sysgen_inverter_263288122f is
+  port (
+    ip : in std_logic_vector((1 - 1) downto 0);
+    op : out std_logic_vector((1 - 1) downto 0);
+    clk : in std_logic;
+    ce : in std_logic;
+    clr : in std_logic);
+end sysgen_inverter_263288122f;
+architecture behavior of sysgen_inverter_263288122f
+is
+  signal ip_1_26: boolean;
+  type array_type_op_mem_22_20 is array (0 to (1 - 1)) of boolean;
+  signal op_mem_22_20: array_type_op_mem_22_20 := (
+    0 => false);
+  signal op_mem_22_20_front_din: boolean;
+  signal op_mem_22_20_back: boolean;
+  signal op_mem_22_20_push_front_pop_back_en: std_logic;
+  signal internal_ip_12_1_bitnot: boolean;
+begin
+  ip_1_26 <= ((ip) = "1");
+  op_mem_22_20_back <= op_mem_22_20(0);
+  proc_op_mem_22_20: process (clk)
+  is
+    variable i: integer;
+  begin
+    if (clk'event and (clk = '1')) then
+      if ((ce = '1') and (op_mem_22_20_push_front_pop_back_en = '1')) then
+        op_mem_22_20(0) <= op_mem_22_20_front_din;
+      end if;
+    end if;
+  end process proc_op_mem_22_20;
+  internal_ip_12_1_bitnot <= ((not boolean_to_vector(ip_1_26)) = "1");
+  op_mem_22_20_front_din <= internal_ip_12_1_bitnot;
+  op_mem_22_20_push_front_pop_back_en <= '1';
+  op <= boolean_to_vector(op_mem_22_20_back);
 end behavior;
 
 library work;
@@ -563,64 +826,6 @@ use work.conv_pkg.all;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-entity sysgen_mux_81f369649b is
-  port (
-    sel : in std_logic_vector((1 - 1) downto 0);
-    d0 : in std_logic_vector((16 - 1) downto 0);
-    d1 : in std_logic_vector((16 - 1) downto 0);
-    y : out std_logic_vector((16 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_mux_81f369649b;
-architecture behavior of sysgen_mux_81f369649b
-is
-  signal sel_1_20: std_logic_vector((1 - 1) downto 0);
-  signal d0_1_24: std_logic_vector((16 - 1) downto 0);
-  signal d1_1_27: std_logic_vector((16 - 1) downto 0);
-  type array_type_pipe_16_22 is array (0 to (1 - 1)) of std_logic_vector((16 - 1) downto 0);
-  signal pipe_16_22: array_type_pipe_16_22 := (
-    0 => "0000000000000000");
-  signal pipe_16_22_front_din: std_logic_vector((16 - 1) downto 0);
-  signal pipe_16_22_back: std_logic_vector((16 - 1) downto 0);
-  signal pipe_16_22_push_front_pop_back_en: std_logic;
-  signal unregy_join_6_1: std_logic_vector((16 - 1) downto 0);
-begin
-  sel_1_20 <= sel;
-  d0_1_24 <= d0;
-  d1_1_27 <= d1;
-  pipe_16_22_back <= pipe_16_22(0);
-  proc_pipe_16_22: process (clk)
-  is
-    variable i: integer;
-  begin
-    if (clk'event and (clk = '1')) then
-      if ((ce = '1') and (pipe_16_22_push_front_pop_back_en = '1')) then
-        pipe_16_22(0) <= pipe_16_22_front_din;
-      end if;
-    end if;
-  end process proc_pipe_16_22;
-  proc_switch_6_1: process (d0_1_24, d1_1_27, sel_1_20)
-  is
-  begin
-    case sel_1_20 is 
-      when "0" =>
-        unregy_join_6_1 <= d0_1_24;
-      when others =>
-        unregy_join_6_1 <= d1_1_27;
-    end case;
-  end process proc_switch_6_1;
-  pipe_16_22_front_din <= unregy_join_6_1;
-  pipe_16_22_push_front_pop_back_en <= '1';
-  y <= pipe_16_22_back;
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
 entity sysgen_mux_ff6eacdf66 is
   port (
     sel : in std_logic_vector((1 - 1) downto 0);
@@ -735,76 +940,6 @@ end architecture behavior;
 library work;
 use work.conv_pkg.all;
 
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-entity sysgen_reinterpret_7d2e9b0e70 is
-  port (
-    input_port : in std_logic_vector((16 - 1) downto 0);
-    output_port : out std_logic_vector((16 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_reinterpret_7d2e9b0e70;
-architecture behavior of sysgen_reinterpret_7d2e9b0e70
-is
-  signal input_port_1_40: unsigned((16 - 1) downto 0);
-  signal output_port_5_5_force: signed((16 - 1) downto 0);
-begin
-  input_port_1_40 <= std_logic_vector_to_unsigned(input_port);
-  output_port_5_5_force <= unsigned_to_signed(input_port_1_40);
-  output_port <= signed_to_std_logic_vector(output_port_5_5_force);
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-entity sysgen_reinterpret_d686c88fee is
-  port (
-    input_port : in std_logic_vector((16 - 1) downto 0);
-    output_port : out std_logic_vector((16 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_reinterpret_d686c88fee;
-architecture behavior of sysgen_reinterpret_d686c88fee
-is
-  signal input_port_1_40: signed((16 - 1) downto 0);
-begin
-  input_port_1_40 <= std_logic_vector_to_signed(input_port);
-  output_port <= signed_to_std_logic_vector(input_port_1_40);
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-entity sysgen_reinterpret_82e12a3d16 is
-  port (
-    input_port : in std_logic_vector((9 - 1) downto 0);
-    output_port : out std_logic_vector((9 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_reinterpret_82e12a3d16;
-architecture behavior of sysgen_reinterpret_82e12a3d16
-is
-  signal input_port_1_40: unsigned((9 - 1) downto 0);
-  signal output_port_5_5_force: signed((9 - 1) downto 0);
-begin
-  input_port_1_40 <= std_logic_vector_to_unsigned(input_port);
-  output_port_5_5_force <= unsigned_to_signed(input_port_1_40);
-  output_port <= signed_to_std_logic_vector(output_port_5_5_force);
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
 ---------------------------------------------------------------------
 --
 --  Filename      : xlslice.vhd
@@ -844,7 +979,7 @@ use work.conv_pkg.all;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-entity sysgen_counter_f86f34e4b9 is
+entity sysgen_counter_5f3bbd2578 is
   port (
     rst : in std_logic_vector((1 - 1) downto 0);
     en : in std_logic_vector((1 - 1) downto 0);
@@ -852,8 +987,8 @@ entity sysgen_counter_f86f34e4b9 is
     clk : in std_logic;
     ce : in std_logic;
     clr : in std_logic);
-end sysgen_counter_f86f34e4b9;
-architecture behavior of sysgen_counter_f86f34e4b9
+end sysgen_counter_5f3bbd2578;
+architecture behavior of sysgen_counter_5f3bbd2578
 is
   signal rst_1_40: boolean;
   signal en_1_45: boolean;
@@ -861,10 +996,10 @@ is
   signal count_reg_20_23_rst: std_logic;
   signal count_reg_20_23_en: std_logic;
   signal bool_44_4: boolean;
+  signal rst_limit_join_44_1: boolean;
   signal count_reg_join_44_1: unsigned((2 - 1) downto 0);
   signal count_reg_join_44_1_en: std_logic;
   signal count_reg_join_44_1_rst: std_logic;
-  signal rst_limit_join_44_1: boolean;
 begin
   rst_1_40 <= ((rst) = "1");
   en_1_45 <= ((en) = "1");
@@ -907,252 +1042,4 @@ begin
   count_reg_20_23_en <= count_reg_join_44_1_en;
   op <= unsigned_to_std_logic_vector(count_reg_20_23);
 end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-entity sysgen_mux_288381b4d5 is
-  port (
-    sel : in std_logic_vector((3 - 1) downto 0);
-    d0 : in std_logic_vector((16 - 1) downto 0);
-    d1 : in std_logic_vector((16 - 1) downto 0);
-    d2 : in std_logic_vector((16 - 1) downto 0);
-    d3 : in std_logic_vector((16 - 1) downto 0);
-    d4 : in std_logic_vector((16 - 1) downto 0);
-    d5 : in std_logic_vector((16 - 1) downto 0);
-    d6 : in std_logic_vector((16 - 1) downto 0);
-    d7 : in std_logic_vector((16 - 1) downto 0);
-    y : out std_logic_vector((16 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_mux_288381b4d5;
-architecture behavior of sysgen_mux_288381b4d5
-is
-  signal sel_1_20: std_logic_vector((3 - 1) downto 0);
-  signal d0_1_24: std_logic_vector((16 - 1) downto 0);
-  signal d1_1_27: std_logic_vector((16 - 1) downto 0);
-  signal d2_1_30: std_logic_vector((16 - 1) downto 0);
-  signal d3_1_33: std_logic_vector((16 - 1) downto 0);
-  signal d4_1_36: std_logic_vector((16 - 1) downto 0);
-  signal d5_1_39: std_logic_vector((16 - 1) downto 0);
-  signal d6_1_42: std_logic_vector((16 - 1) downto 0);
-  signal d7_1_45: std_logic_vector((16 - 1) downto 0);
-  signal unregy_join_6_1: std_logic_vector((16 - 1) downto 0);
-begin
-  sel_1_20 <= sel;
-  d0_1_24 <= d0;
-  d1_1_27 <= d1;
-  d2_1_30 <= d2;
-  d3_1_33 <= d3;
-  d4_1_36 <= d4;
-  d5_1_39 <= d5;
-  d6_1_42 <= d6;
-  d7_1_45 <= d7;
-  proc_switch_6_1: process (d0_1_24, d1_1_27, d2_1_30, d3_1_33, d4_1_36, d5_1_39, d6_1_42, d7_1_45, sel_1_20)
-  is
-  begin
-    case sel_1_20 is 
-      when "000" =>
-        unregy_join_6_1 <= d0_1_24;
-      when "001" =>
-        unregy_join_6_1 <= d1_1_27;
-      when "010" =>
-        unregy_join_6_1 <= d2_1_30;
-      when "011" =>
-        unregy_join_6_1 <= d3_1_33;
-      when "100" =>
-        unregy_join_6_1 <= d4_1_36;
-      when "101" =>
-        unregy_join_6_1 <= d5_1_39;
-      when "110" =>
-        unregy_join_6_1 <= d6_1_42;
-      when others =>
-        unregy_join_6_1 <= d7_1_45;
-    end case;
-  end process proc_switch_6_1;
-  y <= unregy_join_6_1;
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-entity sysgen_reinterpret_910df35f9e is
-  port (
-    input_port : in std_logic_vector((9 - 1) downto 0);
-    output_port : out std_logic_vector((9 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_reinterpret_910df35f9e;
-architecture behavior of sysgen_reinterpret_910df35f9e
-is
-  signal input_port_1_40: signed((9 - 1) downto 0);
-begin
-  input_port_1_40 <= std_logic_vector_to_signed(input_port);
-  output_port <= signed_to_std_logic_vector(input_port_1_40);
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
----------------------------------------------------------------------
- --
- --  Entity        : xldpram
- --
- --  Architecture  : behavior
- --
- --  Description   : Top level HDL wrapper for block dual port ram
- --
- ---------------------------------------------------------------------
- 
- library IEEE;
- use IEEE.std_logic_1164.all;
- use IEEE.std_logic_arith.all;
-
-entity dl_adaptor_data_xldpram is 
-   generic (
-     core_name0: string := "";
-     c_width_a: integer := 13;
-     c_address_width_a: integer := 4;
-     c_width_b: integer := 13;
-     c_address_width_b: integer := 4;
-     c_has_sinita: integer := 0;
-     c_has_sinitb: integer := 0;
-     latency: integer := 1
-   );
-   port (
-     dina: in std_logic_vector(c_width_a - 1 downto 0);
-     addra: in std_logic_vector(c_address_width_a - 1 downto 0);
-     wea: in std_logic_vector(0 downto 0);
-     a_ce: in std_logic;
-     a_clk: in std_logic;
-     rsta: in std_logic_vector(0 downto 0) := (others => '0');
-     ena: in std_logic_vector(0 downto 0) := (others => '1');
-     douta: out std_logic_vector(c_width_a - 1 downto 0);
-     dinb: in std_logic_vector(c_width_b - 1 downto 0);
-     addrb: in std_logic_vector(c_address_width_b - 1 downto 0);
-     web: in std_logic_vector(0 downto 0);
-     b_ce: in std_logic;
-     b_clk: in std_logic;
-     rstb: in std_logic_vector(0 downto 0) := (others => '0');
-     enb: in std_logic_vector(0 downto 0) := (others => '1');
-     doutb: out std_logic_vector(c_width_b - 1 downto 0)
-   );
- end dl_adaptor_data_xldpram;
- 
- architecture behavior of dl_adaptor_data_xldpram is
- component synth_reg
- generic (
- width: integer;
- latency: integer
- );
- port (
- i: in std_logic_vector(width - 1 downto 0);
- ce: in std_logic;
- clr: in std_logic;
- clk: in std_logic;
- o: out std_logic_vector(width - 1 downto 0)
- );
- end component;
- 
- signal core_addra: std_logic_vector(c_address_width_a - 1 downto 0);
- signal core_addrb: std_logic_vector(c_address_width_b - 1 downto 0);
- signal core_dina, core_douta, dly_douta:
- std_logic_vector(c_width_a - 1 downto 0);
- signal core_dinb, core_doutb, dly_doutb:
- std_logic_vector(c_width_b - 1 downto 0);
- signal core_wea, core_web: std_logic;
- signal core_a_ce, core_b_ce: std_logic;
- signal sinita, sinitb: std_logic;
-
-
- component dl_adaptor_data_blk_mem_gen_i0
-    port ( 
-addra: in std_logic_vector(c_address_width_a - 1 downto 0);
-      addrb: in std_logic_vector(c_address_width_b - 1 downto 0);
-      dina: in std_logic_vector(c_width_a - 1 downto 0);
-      dinb: in std_logic_vector(c_width_b - 1 downto 0);
-      clka: in std_logic;
-      clkb: in std_logic;
-      wea: in std_logic_vector(0 downto 0);
-      web: in std_logic_vector(0 downto 0);
-      ena: in std_logic;
-      enb: in std_logic;
-      douta: out std_logic_vector(c_width_a - 1 downto 0);
-      doutb: out std_logic_vector(c_width_b - 1 downto 0) 
- 		  ); 
- end component;
-
-begin
- core_addra <= addra;
- core_dina <= dina;
- douta <= dly_douta;
- core_wea <= wea(0);
- core_a_ce <= a_ce and ena(0);
- sinita <= rsta(0) and a_ce;
- 
- core_addrb <= addrb;
- core_dinb <= dinb;
- doutb <= dly_doutb;
- core_web <= web(0);
- core_b_ce <= b_ce and enb(0);
- sinitb <= rstb(0) and b_ce;
-
-
- comp0: if ((core_name0 = "dl_adaptor_data_blk_mem_gen_i0")) generate 
-  core_instance0:dl_adaptor_data_blk_mem_gen_i0
-   port map ( 
-addra => core_addra,
-        clka => a_clk,
-        addrb => core_addrb,
-        clkb => b_clk,
-        dina => core_dina,
-        wea(0) => core_wea,
-        dinb => core_dinb,
-        web(0) => core_web,
-        ena => core_a_ce,
-        enb => core_b_ce,
-        douta => core_douta,
-        doutb => core_doutb
-  ); 
-   end generate;
-
-latency_test: if (latency > 0) generate
- regA: synth_reg
- generic map (
- width => c_width_a,
- latency => latency
- )
- port map (
- i => core_douta,
- ce => core_a_ce,
- clr => '0',
- clk => a_clk,
- o => dly_douta
- );
- regB: synth_reg
- generic map (
- width => c_width_b,
- latency => latency
- )
- port map (
- i => core_doutb,
- ce => core_b_ce,
- clr => '0',
- clk => b_clk,
- o => dly_doutb
- );
- end generate;
- latency1: if (latency < 1) generate
- dly_douta <= core_douta;
- dly_doutb <= core_doutb;
- end generate;
- end behavior;
 

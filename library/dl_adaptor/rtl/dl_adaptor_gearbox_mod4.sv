@@ -138,11 +138,15 @@ module dl_adaptor_gearbox_mod4 #(
 
   always_comb begin
     case (rd_state)
-      S_RD_RST:   rd_state_next = S_RD_INIT0;
-      S_RD_INIT0: rd_state_next = ~s_axis_tvalid ? S_RD_INIT0 : s_axis_tlast ? S_RD_INIT0 : S_RD_WORD1;
-      S_RD_WORD0: rd_state_next = ~s_axis_tvalid ? S_RD_WORD0 : s_axis_tlast ? S_RD_INIT0 : S_RD_WORD1;
-      S_RD_WORD1: rd_state_next = ~s_axis_tvalid ? S_RD_WORD1 : s_axis_tlast ? S_RD_WAIT1 : S_RD_WORD2;
-      S_RD_WORD2: rd_state_next = ~s_axis_tvalid ? S_RD_WORD2 : s_axis_tlast ? S_RD_WAIT1 : S_RD_WAIT0;
+      S_RD_RST: rd_state_next = S_RD_INIT0;
+      S_RD_INIT0:
+      rd_state_next = ~s_axis_tvalid ? S_RD_INIT0 : s_axis_tlast ? S_RD_INIT0 : S_RD_WORD1;
+      S_RD_WORD0:
+      rd_state_next = ~s_axis_tvalid ? S_RD_WORD0 : s_axis_tlast ? S_RD_INIT0 : S_RD_WORD1;
+      S_RD_WORD1:
+      rd_state_next = ~s_axis_tvalid ? S_RD_WORD1 : s_axis_tlast ? S_RD_WAIT1 : S_RD_WORD2;
+      S_RD_WORD2:
+      rd_state_next = ~s_axis_tvalid ? S_RD_WORD2 : s_axis_tlast ? S_RD_WAIT1 : S_RD_WAIT0;
       S_RD_WAIT0: rd_state_next = ~(wr_cnt_max - wr_cnt == 3) ? S_RD_WAIT0 : S_RD_WORD0;
       S_RD_WAIT1: rd_state_next = ~(wr_cnt_max - wr_cnt == 0) ? S_RD_WAIT1 : S_RD_INIT0;
       default: rd_state_next = S_RD_RST;

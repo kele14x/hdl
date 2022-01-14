@@ -32,7 +32,7 @@ module dl_adaptor_gearbox #(
     output var [11:0] gb_re                [      NUM_CC][NUM_DL_LAYER],
     // Control Interface
     //==================
-    input var  [ 1:0] ctrl_compression_mode[      NUM_CC]
+    input var  [ 1:0] ctrl_compression_mode[      NUM_CC][NUM_DL_LAYER]
 );
 
 
@@ -111,7 +111,7 @@ module dl_adaptor_gearbox #(
 
       // Use CC bits to index the compression method, the compression method is
       // the destination for the packet.
-      assign m_axis_tdest[i] = ctrl_compression_mode[m_axis_tuser[i][30:28]];
+      assign m_axis_tdest[i] = ctrl_compression_mode[m_axis_tuser[i][30:28]][i];
 
       dl_adaptor_axis_switch i_dl_adaptor_axis_switch (
           .aclk         (clk_491m52),
@@ -211,14 +211,14 @@ module dl_adaptor_gearbox #(
       for (genvar j = 0; j < NUM_CC; j++) begin
 
         always_ff @(posedge clk_491m52) begin
-          gb_data[j][i] <= (ctrl_compression_mode[0] == 0) ? gb_data_raw[i][j] :
-                          (ctrl_compression_mode[0] == 1) ? gb_data_bfp9[i][j] : gb_data_mod4[i][j];
+          gb_data[j][i] <= (ctrl_compression_mode[j][i] == 0) ? gb_data_raw[i][j] :
+                          (ctrl_compression_mode[j][i] == 1) ? gb_data_bfp9[i][j] : gb_data_mod4[i][j];
 
-          gb_valid[j][i] <= (ctrl_compression_mode[0] == 0) ? gb_valid_raw[i][j] :
-                              (ctrl_compression_mode[0] == 1) ? gb_valid_bfp9[i][j] : gb_valid_mod4[i][j];
+          gb_valid[j][i] <= (ctrl_compression_mode[j][i] == 0) ? gb_valid_raw[i][j] :
+                              (ctrl_compression_mode[j][i] == 1) ? gb_valid_bfp9[i][j] : gb_valid_mod4[i][j];
 
-          gb_re[j][i] <= (ctrl_compression_mode[0] == 0) ? gb_re_raw[i][j] :
-                          (ctrl_compression_mode[0] == 1) ? gb_re_bfp9[i][j] : gb_re_mod4[i][j];
+          gb_re[j][i] <= (ctrl_compression_mode[j][i] == 0) ? gb_re_raw[i][j] :
+                          (ctrl_compression_mode[j][i] == 1) ? gb_re_bfp9[i][j] : gb_re_mod4[i][j];
         end
 
       end

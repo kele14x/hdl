@@ -73,6 +73,33 @@ use work.conv_pkg.all;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+entity sysgen_concat_a3c44e842e is
+  port (
+    in0 : in std_logic_vector((1 - 1) downto 0);
+    in1 : in std_logic_vector((2 - 1) downto 0);
+    y : out std_logic_vector((3 - 1) downto 0);
+    clk : in std_logic;
+    ce : in std_logic;
+    clr : in std_logic);
+end sysgen_concat_a3c44e842e;
+architecture behavior of sysgen_concat_a3c44e842e
+is
+  signal in0_1_23: boolean;
+  signal in1_1_27: unsigned((2 - 1) downto 0);
+  signal y_2_1_concat: unsigned((3 - 1) downto 0);
+begin
+  in0_1_23 <= ((in0) = "1");
+  in1_1_27 <= std_logic_vector_to_unsigned(in1);
+  y_2_1_concat <= std_logic_vector_to_unsigned(boolean_to_vector(in0_1_23) & unsigned_to_std_logic_vector(in1_1_27));
+  y <= unsigned_to_std_logic_vector(y_2_1_concat);
+end behavior;
+
+library work;
+use work.conv_pkg.all;
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
 entity sysgen_concat_715e01483f is
   port (
     in0 : in std_logic_vector((6 - 1) downto 0);
@@ -241,6 +268,44 @@ architecture behavior of sysgen_constant_55d43e1094
 is
 begin
   op <= "11";
+end behavior;
+
+library work;
+use work.conv_pkg.all;
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+entity sysgen_constant_dc8e889f87 is
+  port (
+    op : out std_logic_vector((9 - 1) downto 0);
+    clk : in std_logic;
+    ce : in std_logic;
+    clr : in std_logic);
+end sysgen_constant_dc8e889f87;
+architecture behavior of sysgen_constant_dc8e889f87
+is
+begin
+  op <= "000000000";
+end behavior;
+
+library work;
+use work.conv_pkg.all;
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+entity sysgen_constant_3a2b908cad is
+  port (
+    op : out std_logic_vector((1 - 1) downto 0);
+    clk : in std_logic;
+    ce : in std_logic;
+    clr : in std_logic);
+end sysgen_constant_3a2b908cad;
+architecture behavior of sysgen_constant_3a2b908cad
+is
+begin
+  op <= "0";
 end behavior;
 
 library work;
@@ -534,6 +599,125 @@ begin
    end generate reg_delay;
 end architecture behavior;
 
+library work;
+use work.conv_pkg.all;
+
+library xpm;
+use xpm.vcomponents.all;
+library IEEE;
+use IEEE.std_logic_1164.all;
+
+entity dl_adaptor_ctrl_xltdpram is
+   generic(width_addr        : integer := -1;
+           width             : integer := -1;
+           addr_width_b      : integer := -1;
+           data_width_b      : integer := -1;
+           mem_size          : integer := 0;
+           write_mode_a      : string := "no_change";
+           write_mode_b      : string := "no_change";
+           mem_init_file     : string := "none";
+           mem_type          : string := "auto";
+           clocking_mode     : string  := "common_clock";
+           read_reset_a    : string  := "0";
+           read_reset_b    : string  := "0";
+           latency           : integer := 0);
+   port(dina: in std_logic_vector(width-1 downto 0);
+        addra: in std_logic_vector(width_addr-1 downto 0);
+        wea: in std_logic_vector(0 downto 0);
+        ena: in std_logic_vector(0 downto 0);
+        rsta: in std_logic_vector(0 downto 0);
+        a_ce: in std_logic;
+        a_clk: in std_logic;
+        douta: out std_logic_vector(width-1 downto 0);
+        dinb: in std_logic_vector(data_width_b-1 downto 0);
+        addrb: in std_logic_vector(addr_width_b-1 downto 0);
+        web: in std_logic_vector(0 downto 0);
+        enb: in std_logic_vector(0 downto 0);
+        rstb: in std_logic_vector(0 downto 0);
+        b_ce: in std_logic;
+        b_clk: in std_logic;
+        doutb: out std_logic_vector(data_width_b-1 downto 0)
+);
+
+end dl_adaptor_ctrl_xltdpram;
+
+architecture behavior of dl_adaptor_ctrl_xltdpram is
+
+signal b_en: std_logic_vector(0 downto 0);
+signal a_en: std_logic_vector(0 downto 0);
+signal a_rst: std_logic_vector(0 downto 0);
+signal b_rst: std_logic_vector(0 downto 0);
+signal a_we: std_logic_vector(0 downto 0);
+signal b_we: std_logic_vector(0 downto 0);
+begin
+b_en(0) <= enb(0) and b_ce;
+a_en(0) <= ena(0) and a_ce;
+b_rst(0) <= rstb(0) and b_ce;
+a_rst(0) <= rsta(0) and a_ce;
+b_we(0) <= web(0) and b_ce;
+a_we(0) <= wea(0) and a_ce;
+ xpm_memory_tdpram_inst : xpm_memory_tdpram
+
+generic map (
+   -- Common module generics
+     MEMORY_SIZE        => mem_size,        --positive integer
+     MEMORY_PRIMITIVE   => mem_type,
+     MEMORY_INIT_FILE   => mem_init_file,
+     CLOCKING_MODE      => clocking_mode,
+     MEMORY_INIT_PARAM  => "",
+     USE_MEM_INIT       => 1,
+     WAKEUP_TIME        => "disable_sleep",
+     MESSAGE_CONTROL    => 0,
+
+     -- Port A module generics
+     WRITE_DATA_WIDTH_A => width,
+     READ_DATA_WIDTH_A  => width,
+     BYTE_WRITE_WIDTH_A => width,
+     ADDR_WIDTH_A       => width_addr,
+     READ_RESET_VALUE_A => read_reset_a,
+     READ_LATENCY_A     => latency,
+     WRITE_MODE_A       => write_mode_a,
+     -- Port A module generics
+     WRITE_DATA_WIDTH_B => data_width_b,
+     READ_DATA_WIDTH_B  => data_width_b,
+     BYTE_WRITE_WIDTH_B => data_width_b,
+     ADDR_WIDTH_B       => addr_width_b,
+     READ_RESET_VALUE_B => read_reset_b,
+     READ_LATENCY_B     => latency,
+     WRITE_MODE_B       => write_mode_b
+ )
+ port map (
+     -- Common module ports
+     sleep          =>  '0',
+     -- Port A module ports
+     clka           =>  a_clk,
+     rsta           =>  a_rst(0),
+     ena            =>  a_en(0),
+     regcea         =>  a_ce,
+	  wea            =>  a_we,
+	  addra          =>  addra,
+	  dina           =>  dina,
+	  injectsbiterra =>  '0',  --do not change
+	  injectdbiterra =>  '0',  --do not change
+	  douta          =>  douta,
+	  sbiterra       =>  open, --do not change
+	  dbiterra       =>  open,  --do not change
+ 
+     -- Port B module ports
+     clkb           =>  b_clk,
+     rstb           =>  b_rst(0),
+     enb            =>  b_en(0),
+     regceb         =>  b_ce,
+	  web            =>  b_we,
+	  addrb          =>  addrb,
+	  dinb           =>  dinb,
+	  injectsbiterrb =>  '0',  --do not change
+	  injectdbiterrb =>  '0',  --do not change
+	  doutb          =>  doutb,
+	  sbiterrb       =>  open, --do not change
+	  dbiterrb       =>  open  --do not change
+);
+end behavior;
 library work;
 use work.conv_pkg.all;
 
@@ -1376,17 +1560,36 @@ use work.conv_pkg.all;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-entity sysgen_constant_04155b1977 is
+entity sysgen_constant_9c271f1a8d is
+  port (
+    op : out std_logic_vector((1 - 1) downto 0);
+    clk : in std_logic;
+    ce : in std_logic;
+    clr : in std_logic);
+end sysgen_constant_9c271f1a8d;
+architecture behavior of sysgen_constant_9c271f1a8d
+is
+begin
+  op <= "1";
+end behavior;
+
+library work;
+use work.conv_pkg.all;
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+entity sysgen_constant_7b327e21fb is
   port (
     op : out std_logic_vector((16 - 1) downto 0);
     clk : in std_logic;
     ce : in std_logic;
     clr : in std_logic);
-end sysgen_constant_04155b1977;
-architecture behavior of sysgen_constant_04155b1977
+end sysgen_constant_7b327e21fb;
+architecture behavior of sysgen_constant_7b327e21fb
 is
 begin
-  op <= "0000000000000000";
+  op <= "1111111111111110";
 end behavior;
 
 library work;
@@ -1395,25 +1598,17 @@ use work.conv_pkg.all;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-entity sysgen_relational_2cf81b4d2b is
+entity sysgen_constant_3bfbf281aa is
   port (
-    a : in std_logic_vector((16 - 1) downto 0);
-    b : in std_logic_vector((16 - 1) downto 0);
-    op : out std_logic_vector((1 - 1) downto 0);
+    op : out std_logic_vector((13 - 1) downto 0);
     clk : in std_logic;
     ce : in std_logic;
     clr : in std_logic);
-end sysgen_relational_2cf81b4d2b;
-architecture behavior of sysgen_relational_2cf81b4d2b
+end sysgen_constant_3bfbf281aa;
+architecture behavior of sysgen_constant_3bfbf281aa
 is
-  signal a_1_31: unsigned((16 - 1) downto 0);
-  signal b_1_34: unsigned((16 - 1) downto 0);
-  signal result_14_3_rel: boolean;
 begin
-  a_1_31 <= std_logic_vector_to_unsigned(a);
-  b_1_34 <= std_logic_vector_to_unsigned(b);
-  result_14_3_rel <= a_1_31 /= b_1_34;
-  op <= boolean_to_vector(result_14_3_rel);
+  op <= "1111111111110";
 end behavior;
 
 library work;
@@ -1422,45 +1617,7 @@ use work.conv_pkg.all;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-entity sysgen_constant_bd1d934353 is
-  port (
-    op : out std_logic_vector((15 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_constant_bd1d934353;
-architecture behavior of sysgen_constant_bd1d934353
-is
-begin
-  op <= "000000000000000";
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-entity sysgen_constant_35777e3f95 is
-  port (
-    op : out std_logic_vector((14 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_constant_35777e3f95;
-architecture behavior of sysgen_constant_35777e3f95
-is
-begin
-  op <= "01111111111111";
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-entity sysgen_logical_3988e4be9f is
+entity sysgen_logical_a8014b6985 is
   port (
     d0 : in std_logic_vector((1 - 1) downto 0);
     d1 : in std_logic_vector((1 - 1) downto 0);
@@ -1468,17 +1625,36 @@ entity sysgen_logical_3988e4be9f is
     clk : in std_logic;
     ce : in std_logic;
     clr : in std_logic);
-end sysgen_logical_3988e4be9f;
-architecture behavior of sysgen_logical_3988e4be9f
+end sysgen_logical_a8014b6985;
+architecture behavior of sysgen_logical_a8014b6985
 is
   signal d0_1_24: std_logic;
   signal d1_1_27: std_logic;
+  type array_type_latency_pipe_5_26 is array (0 to (1 - 1)) of std_logic;
+  signal latency_pipe_5_26: array_type_latency_pipe_5_26 := (
+    0 => '0');
+  signal latency_pipe_5_26_front_din: std_logic;
+  signal latency_pipe_5_26_back: std_logic;
+  signal latency_pipe_5_26_push_front_pop_back_en: std_logic;
   signal fully_2_1_bit: std_logic;
 begin
   d0_1_24 <= d0(0);
   d1_1_27 <= d1(0);
+  latency_pipe_5_26_back <= latency_pipe_5_26(0);
+  proc_latency_pipe_5_26: process (clk)
+  is
+    variable i: integer;
+  begin
+    if (clk'event and (clk = '1')) then
+      if ((ce = '1') and (latency_pipe_5_26_push_front_pop_back_en = '1')) then
+        latency_pipe_5_26(0) <= latency_pipe_5_26_front_din;
+      end if;
+    end if;
+  end process proc_latency_pipe_5_26;
   fully_2_1_bit <= d0_1_24 and d1_1_27;
-  y <= std_logic_to_vector(fully_2_1_bit);
+  latency_pipe_5_26_front_din <= fully_2_1_bit;
+  latency_pipe_5_26_push_front_pop_back_en <= '1';
+  y <= std_logic_to_vector(latency_pipe_5_26_back);
 end behavior;
 
 library work;
@@ -1487,54 +1663,25 @@ use work.conv_pkg.all;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
-entity sysgen_relational_0ffe8ee119 is
+entity sysgen_relational_29dce0b11b is
   port (
     a : in std_logic_vector((13 - 1) downto 0);
-    b : in std_logic_vector((14 - 1) downto 0);
+    b : in std_logic_vector((13 - 1) downto 0);
     op : out std_logic_vector((1 - 1) downto 0);
     clk : in std_logic;
     ce : in std_logic;
     clr : in std_logic);
-end sysgen_relational_0ffe8ee119;
-architecture behavior of sysgen_relational_0ffe8ee119
+end sysgen_relational_29dce0b11b;
+architecture behavior of sysgen_relational_29dce0b11b
 is
   signal a_1_31: unsigned((13 - 1) downto 0);
-  signal b_1_34: unsigned((14 - 1) downto 0);
-  signal cast_12_12: unsigned((14 - 1) downto 0);
+  signal b_1_34: unsigned((13 - 1) downto 0);
   signal result_12_3_rel: boolean;
 begin
   a_1_31 <= std_logic_vector_to_unsigned(a);
   b_1_34 <= std_logic_vector_to_unsigned(b);
-  cast_12_12 <= u2u_cast(a_1_31, 0, 14, 0);
-  result_12_3_rel <= cast_12_12 = b_1_34;
+  result_12_3_rel <= a_1_31 = b_1_34;
   op <= boolean_to_vector(result_12_3_rel);
-end behavior;
-
-library work;
-use work.conv_pkg.all;
-
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-entity sysgen_relational_de1a39d15c is
-  port (
-    a : in std_logic_vector((15 - 1) downto 0);
-    b : in std_logic_vector((15 - 1) downto 0);
-    op : out std_logic_vector((1 - 1) downto 0);
-    clk : in std_logic;
-    ce : in std_logic;
-    clr : in std_logic);
-end sysgen_relational_de1a39d15c;
-architecture behavior of sysgen_relational_de1a39d15c
-is
-  signal a_1_31: unsigned((15 - 1) downto 0);
-  signal b_1_34: unsigned((15 - 1) downto 0);
-  signal result_14_3_rel: boolean;
-begin
-  a_1_31 <= std_logic_vector_to_unsigned(a);
-  b_1_34 <= std_logic_vector_to_unsigned(b);
-  result_14_3_rel <= a_1_31 /= b_1_34;
-  op <= boolean_to_vector(result_14_3_rel);
 end behavior;
 
 library work;
