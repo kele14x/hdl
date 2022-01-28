@@ -11,6 +11,10 @@ module tb_eth_if_sim;
   parameter int NUM_UL_LAYER = 8;
   // The number of SRS layers
   parameter int NUM_SRS_LAYER = 64;
+  //
+  parameter int HAS_DL_ADAPTOR = 1;
+  parameter int HAS_UL_ADAPTOR = 0;
+  parameter int HAS_SRS_ADAPTOR = 0;
 
   // Ethernet Port Clock Interval in PS
   // 10G = 6400, 25G = 2560
@@ -23,42 +27,45 @@ module tb_eth_if_sim;
   // Ethernet Interface
   //===================
 
-  bit        eth_port_clk            [NUM_ETH_PORT];
-  bit        eth_port_rst            [NUM_ETH_PORT];
+  bit        eth_port_clk                    [NUM_ETH_PORT];
+  bit        eth_port_rst                    [NUM_ETH_PORT];
 
-  bit [63:0] m_eth_fram_tdata        [NUM_ETH_PORT];
-  bit [ 7:0] m_eth_fram_tkeep        [NUM_ETH_PORT];
-  bit        m_eth_fram_tvalid       [NUM_ETH_PORT];
-  bit        m_eth_fram_tlast        [NUM_ETH_PORT];
-  bit        m_eth_fram_tready       [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b1}};
+  bit [63:0] m_eth_fram_tdata                [NUM_ETH_PORT];
+  bit [ 7:0] m_eth_fram_tkeep                [NUM_ETH_PORT];
+  bit        m_eth_fram_tvalid               [NUM_ETH_PORT];
+  bit        m_eth_fram_tlast                [NUM_ETH_PORT];
+  bit        m_eth_fram_tready               [NUM_ETH_PORT];
 
-  bit        s_eth_mac_tuser         [NUM_ETH_PORT];
-  bit        s_eth_mac_bad_fcs       [NUM_ETH_PORT];
+  bit        s_eth_mac_tuser                 [NUM_ETH_PORT];
+  bit        s_eth_mac_bad_fcs               [NUM_ETH_PORT];
 
-  bit [79:0] s_eth_mac_tstamp_out    [NUM_ETH_PORT];
+  bit [79:0] s_eth_mac_tstamp_out            [NUM_ETH_PORT];
 
-  bit        s_eth_mac_tstamp_valid  [NUM_ETH_PORT];
+  bit        s_eth_mac_tstamp_valid          [NUM_ETH_PORT];
 
   //
-  bit [63:0] s_eth_defm_tdata        [NUM_ETH_PORT];
-  bit [ 7:0] s_eth_defm_tkeep        [NUM_ETH_PORT];
-  bit        s_eth_defm_tvalid       [NUM_ETH_PORT];
-  bit        s_eth_defm_tlast        [NUM_ETH_PORT];
+  bit [63:0] s_eth_defm_tdata                [NUM_ETH_PORT];
+  bit [ 7:0] s_eth_defm_tkeep                [NUM_ETH_PORT];
+  bit        s_eth_defm_tvalid               [NUM_ETH_PORT];
+  bit        s_eth_defm_tlast                [NUM_ETH_PORT];
 
-  bit [63:0] m_message_tdata         [NUM_ETH_PORT];
-  bit [ 7:0] m_message_tkeep         [NUM_ETH_PORT];
-  bit        m_message_tvalid        [NUM_ETH_PORT];
-  bit        m_message_tlast         [NUM_ETH_PORT];
-  bit        m_message_tready        [NUM_ETH_PORT] = '{NUM_ETH_PORT{1'b1}};
+  bit [63:0] m_message_tdata                 [NUM_ETH_PORT];
+  bit [ 7:0] m_message_tkeep                 [NUM_ETH_PORT];
+  bit        m_message_tvalid                [NUM_ETH_PORT];
+  bit        m_message_tlast                 [NUM_ETH_PORT];
+  bit        m_message_tready                [NUM_ETH_PORT];
 
-  bit [79:0] m_message_ts_tdata      [NUM_ETH_PORT];
-  bit        m_message_ts_tvalid     [NUM_ETH_PORT];
+  bit [79:0] m_message_ts_tdata              [NUM_ETH_PORT];
+  bit        m_message_ts_tvalid             [NUM_ETH_PORT];
 
   // Internal Bus Interface
   //=======================
 
   bit        clk_400m;
   bit        rst_400m;
+
+  bit        clk_184m32;
+  bit        rst_184m32;
 
   // Radio Bus Interface
   //====================
@@ -70,11 +77,11 @@ module tb_eth_if_sim;
   bit        ul_radio_start_10ms = 0;
 
   // DL data
-  bit        dl_sof                  [      NUM_CC];
-  bit        dl_sop                  [      NUM_CC];
-  bit [15:0] dl_data_i               [      NUM_CC][NUM_DL_LAYER];
-  bit [15:0] dl_data_q               [      NUM_CC][NUM_DL_LAYER];
-  bit        dl_valid                [      NUM_CC];
+  bit        dl_sof                          [      NUM_CC];
+  bit        dl_sop                          [      NUM_CC];
+  bit [15:0] dl_data_i                       [      NUM_CC] [NUM_DL_LAYER];
+  bit [15:0] dl_data_q                       [      NUM_CC] [NUM_DL_LAYER];
+  bit        dl_valid                        [      NUM_CC];
 
   // UL data
   bit        ul_sof_ahead_3_s;
@@ -82,10 +89,10 @@ module tb_eth_if_sim;
   bit [15:0] ul_data_i_s;
   bit [15:0] ul_data_q_s;
 
-  bit        ul_sof_ahead_3        [      NUM_CC];
-  bit        ul_sop_ahead_3        [      NUM_CC];
-  bit [15:0] ul_data_i             [      NUM_CC][NUM_UL_LAYER];
-  bit [15:0] ul_data_q             [      NUM_CC][NUM_UL_LAYER];
+  bit        ul_sof_ahead_3                  [      NUM_CC];
+  bit        ul_sop_ahead_3                  [      NUM_CC];
+  bit [15:0] ul_data_i                       [      NUM_CC] [NUM_UL_LAYER];
+  bit [15:0] ul_data_q                       [      NUM_CC] [NUM_UL_LAYER];
 
   // SRS Section Header
   bit [ 2:0] srs_cfg_cc;
@@ -98,14 +105,14 @@ module tb_eth_if_sim;
   bit [11:0] srs_req_symbol;
   bit        srs_req_valid;
   // SRS data
-  bit  [23:0] srs_data_tdata;                         // {4E, 9Q, 9I}
-  bit         srs_data_tlast;
-  bit         srs_data_tvalid;
-  bit         srs_data_tready;
+  bit [23:0] srs_data_tdata;  // {4E, 9Q, 9I}
+  bit        srs_data_tlast;
+  bit        srs_data_tvalid;
+  bit        srs_data_tready;
 
-  bit [  3:0] ctrl_bandwidth             [         NUM_CC] = '{NUM_CC{0}};
-  bit [  1:0] ctrl_numerology            [         NUM_CC] = '{NUM_CC{0}};
-  bit [  1:0] ctrl_compression_mode      [         NUM_CC] = '{NUM_CC{1}};
+  bit [ 3:0] ctrl_bandwidth                  [      NUM_CC];
+  bit [ 1:0] ctrl_numerology                 [      NUM_CC];
+  bit [ 1:0] ctrl_compression_mode           [      NUM_CC] [NUM_DL_LAYER];
 
   // AXI-Lite Control/Status
   //========================
@@ -321,17 +328,17 @@ module tb_eth_if_sim;
     axi_write(32'h6020, 32'h8);
     // defm_cid_cc_mask
     axi_write(32'h6024, 32'h3);
-    
+
     // defm_cid_bs_shift
     axi_write(32'h6028, 32'hA);
     // defm_cid_bs_mask
     axi_write(32'h602C, 32'h3);
-    
+
     // defm_cid_du_shift
     axi_write(32'h6030, 32'hC);
     // defm_cid_du_mask
     axi_write(32'h6034, 32'hF);
-    
+
 
     // 0x00 ~ 0x0F UL/DL SS (Layer)
     // 0x20 ~ 0x23 PRACH
@@ -344,17 +351,17 @@ module tb_eth_if_sim;
     axi_write(32'h603C, 32'hF0);
     // defm_cid_u_value
     axi_write(32'h6040, 32'h00);
-    
+
     // defm_cid_prach_mask
     axi_write(32'h6044, 32'hF0);
     // defm_cid_prach_value
     axi_write(32'h6048, 32'h20);
-    
+
     // defm_cid_ssb_mask
     axi_write(32'h604C, 32'h00);
     // defm_cid_ssb_value
     axi_write(32'h6050, 32'h40);
-    
+
     // defm_cid_lte_mask
     axi_write(32'h6054, 32'h00);
     // defm_cid_lte_value
@@ -366,7 +373,7 @@ module tb_eth_if_sim;
   //
   task simulation_config();
     logic [31:0] data;
-    automatic int start_symbol = 45;
+    automatic int start_symbol = 230;
 
     start_symbol = start_symbol % 280;
     $display("Start configure simulation only registers");
@@ -404,15 +411,16 @@ module tb_eth_if_sim;
       axi_write(32'hE114 + 32'h70 * i, 32'h18180A00 + 32'hA * i);
       // pran_cc_ul_compression
       //axi_write(32'hE118 + 32'h70 * i, 32'h100); // raw
-      axi_write(32'hE118 + 32'h70 * i, 32'h119); // bfp9
+      axi_write(32'hE118 + 32'h70 * i, 32'h119);  // bfp9
       // oran_cc_dl_compression
       //axi_write(32'hE11C + 32'h70 * i, 32'h100); // raw
-      axi_write(32'hE11C + 32'h70 * i, 32'h119); // bfp9
+      //axi_write(32'hE11C + 32'h70 * i, 32'h119);  // bfp9
+      axi_write(32'hE11C + 32'h70 * i, 32'h144);  // mod4
       // cc_ul_setup_c_abs_symbol
-//      axi_write(32'hE120 + 32'h70 * i, 32'h2);
+      //      axi_write(32'hE120 + 32'h70 * i, 32'h2);
       axi_write(32'hE120 + 32'h70 * i, 32'h0);
       // cc_ul_setup_c_cycles
-//      axi_write(32'hE124 + 32'h70 * i, 32'h1D35);
+      //      axi_write(32'hE124 + 32'h70 * i, 32'h1D35);
       axi_write(32'hE124 + 32'h70 * i, 32'h1100);
       // cc_ul_setup_d_cycles
       axi_write(32'hE128 + 32'h70 * i, 32'h2249);
@@ -539,7 +547,7 @@ module tb_eth_if_sim;
   initial begin
     clk_400m = 0;
     forever begin
-      #(CORE_CLK_INTERVAL_PS/2000) clk_400m = ~clk_400m;
+      #(CORE_CLK_INTERVAL_PS / 2000) clk_400m = ~clk_400m;
     end
   end
 
@@ -557,7 +565,7 @@ module tb_eth_if_sim;
       initial begin
         eth_port_clk[i] = 0;
         forever begin
-          #(ETH_CLK_INTERVAL_PS/2000) eth_port_clk[i] = ~eth_port_clk[i];
+          #(ETH_CLK_INTERVAL_PS / 2000) eth_port_clk[i] = ~eth_port_clk[i];
         end
       end
     end
@@ -603,7 +611,7 @@ module tb_eth_if_sim;
     $display("****Simulation starts");
     axi4l_vip_i.set_master_mode();
     axi4l_vip_i.IF.reset();
-    wait(aresetn);
+    wait (aresetn);
     @(posedge aclk);
 
     simulation_config();
@@ -622,7 +630,7 @@ module tb_eth_if_sim;
     // Wait to enable CC
     #(50 * 1000 - $time());  // wait to 50 us
     enable_cc();
-    
+
     forever begin
       // Wait interrupt
       @(posedge aclk);
@@ -642,13 +650,32 @@ module tb_eth_if_sim;
     $display("****Simulation ends");
   end
 
+  // Configuration Interface
+  //------------------------
+
+  initial begin
+    // Ethernet Port
+    for (int eth = 0; eth < NUM_ETH_PORT; eth++) begin
+      m_eth_fram_tready[eth] = 1;
+      m_message_tready[eth]  = 1;
+    end
+
+    // CC
+    for (int cc = 0; cc < NUM_CC; cc++) begin
+      ctrl_bandwidth[cc]  = 0;
+      ctrl_numerology[cc] = 0;
+      for (int ly = 0; ly < NUM_DL_LAYER; ly++) begin
+        ctrl_compression_mode[cc][ly] = 2;
+      end
+    end
+  end
 
   // Ethernet Stimulation
   //---------------------
 
   initial begin
     #(150 * 1000);  // wait to 150 us
-    g_eth_injector[0].eth_injector_i.play_pcap("srs_c_1frame.pcap");
+    g_eth_injector[0].eth_injector_i.play_pcap("ModComp_QPSK_2.pcap");
     #1000;
     $finish();
   end
@@ -658,8 +685,7 @@ module tb_eth_if_sim;
   //----------------------
 
   initial begin
-    wait(~rst_491m52);
-
+    wait (~rst_491m52);
     #(10 * 1000 * 1000);  // 10ms us
 
     forever begin
@@ -758,27 +784,162 @@ module tb_eth_if_sim;
   endgenerate
 
   eth_if_sim #(
-      .NUM_CC       (NUM_CC),
-      .NUM_ETH_PORT (NUM_ETH_PORT),
-      .NUM_DL_LAYER (NUM_DL_LAYER),
-      .NUM_UL_LAYER (NUM_UL_LAYER),
-      .NUM_SRS_LAYER(NUM_SRS_LAYER)
+      .NUM_CC         (NUM_CC),
+      .NUM_ETH_PORT   (NUM_ETH_PORT),
+      .NUM_DL_LAYER   (NUM_DL_LAYER),
+      .NUM_UL_LAYER   (NUM_UL_LAYER),
+      .NUM_SRS_LAYER  (NUM_SRS_LAYER),
+      //
+      .HAS_DL_ADAPTOR (HAS_DL_ADAPTOR),
+      .HAS_UL_ADAPTOR (HAS_UL_ADAPTOR),
+      .HAS_SRS_ADAPTOR(HAS_SRS_ADAPTOR)
   ) DUT (
-      .*
+      // AXI-Lite Control/Status
+      .aclk                  (aclk),
+      .aresetn               (aresetn),
+      // XORIF IP AXI4-Lite interface
+      //=========================
+      .s00_axi_awaddr        (s00_axi_awaddr),
+      .s00_axi_awprot        (s00_axi_awprot),
+      .s00_axi_awvalid       (s00_axi_awvalid),
+      .s00_axi_awready       (s00_axi_awready),
+      //
+      .s00_axi_wdata         (s00_axi_wdata),
+      .s00_axi_wstrb         (s00_axi_wstrb),
+      .s00_axi_wvalid        (s00_axi_wvalid),
+      .s00_axi_wready        (s00_axi_wready),
+      //
+      .s00_axi_bresp         (s00_axi_bresp),
+      .s00_axi_bvalid        (s00_axi_bvalid),
+      .s00_axi_bready        (s00_axi_bready),
+      //
+      .s00_axi_araddr        (s00_axi_araddr),
+      .s00_axi_arprot        (s00_axi_arprot),
+      .s00_axi_arvalid       (s00_axi_arvalid),
+      .s00_axi_arready       (s00_axi_arready),
+      //
+      .s00_axi_rdata         (s00_axi_rdata),
+      .s00_axi_rresp         (s00_axi_rresp),
+      .s00_axi_rvalid        (s00_axi_rvalid),
+      .s00_axi_rready        (s00_axi_rready),
+      // interrupt pin
+      .s00_interrupt         (s00_interrupt),
+      // Other Competent AXI4-Lite Interface
+      //====================================
+      .s01_axi_awaddr        (s01_axi_awaddr),
+      .s01_axi_awprot        (s01_axi_awprot),
+      .s01_axi_awvalid       (s01_axi_awvalid),
+      .s01_axi_awready       (s01_axi_awready),
+      //
+      .s01_axi_wdata         (s01_axi_wdata),
+      .s01_axi_wstrb         (s01_axi_wstrb),
+      .s01_axi_wvalid        (s01_axi_wvalid),
+      .s01_axi_wready        (s01_axi_wready),
+      //
+      .s01_axi_bresp         (s01_axi_bresp),
+      .s01_axi_bvalid        (s01_axi_bvalid),
+      .s01_axi_bready        (s01_axi_bready),
+      //
+      .s01_axi_araddr        (s01_axi_araddr),
+      .s01_axi_arprot        (s01_axi_arprot),
+      .s01_axi_arvalid       (s01_axi_arvalid),
+      .s01_axi_arready       (s01_axi_arready),
+      //
+      .s01_axi_rdata         (s01_axi_rdata),
+      .s01_axi_rresp         (s01_axi_rresp),
+      .s01_axi_rvalid        (s01_axi_rvalid),
+      .s01_axi_rready        (s01_axi_rready),
+      // interrupt pin
+      .s01_interrupt         (s01_interrupt),
+      // Ethernet Port 0 Interface
+      //==========================
+      // Clock and Rest
+      .eth_port_clk          (eth_port_clk),
+      // To MAC
+      .m_eth_fram_tdata      (m_eth_fram_tdata),
+      .m_eth_fram_tkeep      (m_eth_fram_tkeep),
+      .m_eth_fram_tvalid     (m_eth_fram_tvalid),
+      .m_eth_fram_tlast      (m_eth_fram_tlast),
+      .m_eth_fram_tready     (m_eth_fram_tready),
+      // From MAC
+      .s_eth_mac_tuser       (s_eth_mac_tuser),
+      .s_eth_mac_bad_fcs     (s_eth_mac_bad_fcs),
+      .s_eth_mac_tstamp_out  (s_eth_mac_tstamp_out),
+      .s_eth_mac_tstamp_valid(s_eth_mac_tstamp_valid),
+      //
+      .s_eth_defm_tdata      (s_eth_defm_tdata),
+      .s_eth_defm_tkeep      (s_eth_defm_tkeep),
+      .s_eth_defm_tvalid     (s_eth_defm_tvalid),
+      .s_eth_defm_tlast      (s_eth_defm_tlast),
+      // To DMA
+      .m_message_tdata       (m_message_tdata),
+      .m_message_tkeep       (m_message_tkeep),
+      .m_message_tvalid      (m_message_tvalid),
+      .m_message_tlast       (m_message_tlast),
+      .m_message_tready      (m_message_tready),
+      .m_message_ts_tdata    (m_message_ts_tdata),
+      .m_message_ts_tvalid   (m_message_ts_tvalid),
+      // Internal Bus Interface
+      //=======================
+      // Clock and reset
+      .clk_400m              (clk_400m),
+      .rst_400m              (rst_400m),
+      //
+      .clk_184m32            (clk_184m32),
+      .rst_184m32            (rst_184m32),
+      // SRS Section Header
+      .srs_cfg_cc            (srs_cfg_cc),
+      .srs_cfg_symbol        (srs_cfg_symbol),
+      .srs_cfg_numsymbol     (srs_cfg_numsymbol),
+      .srs_cfg_valid         (srs_cfg_valid),
+      // SRS data request
+      .srs_req_cc            (srs_req_cc),
+      .srs_req_layer         (srs_req_layer),
+      .srs_req_symbol        (srs_req_symbol),
+      .srs_req_valid         (srs_req_valid),
+      // Radio Interface
+      //================
+      // Clock and reset
+      .clk_491m52            (clk_491m52),
+      .rst_491m52            (rst_491m52),
+      // Radio frame start
+      .dl_radio_start_10ms   (dl_radio_start_10ms),
+      .ul_radio_start_10ms   (ul_radio_start_10ms),
+      // DL data
+      .dl_sof                (dl_sof),
+      .dl_sop                (dl_sop),
+      .dl_data_i             (dl_data_i),
+      .dl_data_q             (dl_data_q),
+      .dl_valid              (dl_valid),
+      // UL data
+      .ul_sof_ahead_3        (ul_sof_ahead_3),
+      .ul_sop_ahead_3        (ul_sop_ahead_3),
+      .ul_data_i             (ul_data_i),
+      .ul_data_q             (ul_data_q),
+      // SRS data
+      .srs_data_tdata        (srs_data_tdata),
+      .srs_data_tlast        (srs_data_tlast),
+      .srs_data_tvalid       (srs_data_tvalid),
+      .srs_data_tready       (srs_data_tready),
+      // CTRL
+      //=====
+      .ctrl_bandwidth        (ctrl_bandwidth),
+      .ctrl_numerology       (ctrl_numerology),
+      .ctrl_compression_mode (ctrl_compression_mode)
   );
 
   ul_traffic_gen i_ul_traffic_gen (
-    .clk                (clk_491m52),
-    .rst                (rst_491m52),
-    //
-    .ul_radio_start_10ms(ul_radio_start_10ms),
-    //
-    .ul_sof_ahead_3     (ul_sof_ahead_3_s),
-    .ul_sop_ahead_3     (ul_sop_ahead_3_s),
-    .ul_data_i          (ul_data_i_s),
-    .ul_data_q          (ul_data_q_s),
-    // Control
-    .ctrl_numerology    ('0)
+      .clk                (clk_491m52),
+      .rst                (rst_491m52),
+      //
+      .ul_radio_start_10ms(ul_radio_start_10ms),
+      //
+      .ul_sof_ahead_3     (ul_sof_ahead_3_s),
+      .ul_sop_ahead_3     (ul_sop_ahead_3_s),
+      .ul_data_i          (ul_data_i_s),
+      .ul_data_q          (ul_data_q_s),
+      // Control
+      .ctrl_numerology    ('0)
   );
 
   generate

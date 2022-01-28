@@ -58,7 +58,7 @@ module dl_adaptor_gearbox_mod4 #(
   logic [63:0] tdata1;
   logic [63:0] tdata2;
 
-  logic even_rb, odd_rb;
+  logic even_rb, odd_rb, odd_rb_d;
 
 
   // Modulation compression 4:
@@ -159,6 +159,10 @@ module dl_adaptor_gearbox_mod4 #(
   // odd number of RB
   assign odd_rb  = (rd_state == S_RD_WORD1 && s_axis_tvalid && s_axis_tlast);
 
+  always_ff @(posedge clk) begin
+    odd_rb_d <= odd_rb;
+  end
+
   // AXIS interface is ready when we are reading words
   always_ff @(posedge clk) begin
     s_axis_tready <= (rd_state_next == S_RD_INIT0 || rd_state_next == S_RD_WORD0
@@ -207,7 +211,7 @@ module dl_adaptor_gearbox_mod4 #(
   always_ff @(posedge clk) begin
     if (rst) begin
       wr_cnt <= 0;
-    end else if (even_rb || odd_rb) begin
+    end else if (even_rb || odd_rb_d) begin
       wr_cnt <= 1;
     end else if (wr_cnt > 0 && wr_cnt != wr_cnt_max) begin
       wr_cnt <= wr_cnt + 1;
@@ -221,7 +225,7 @@ module dl_adaptor_gearbox_mod4 #(
       wr_cnt_max <= 0;
     end else if (even_rb) begin
       wr_cnt_max <= 12;
-    end else if (odd_rb) begin
+    end else if (odd_rb_d) begin
       wr_cnt_max <= 6;
     end else begin
       wr_cnt_max <= wr_cnt_max;
