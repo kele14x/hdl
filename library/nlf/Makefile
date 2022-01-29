@@ -1,3 +1,3 @@
-LIBRARY_NAME := nlf
+DESIGN = nlf
 
 include ../scripts/common.mk

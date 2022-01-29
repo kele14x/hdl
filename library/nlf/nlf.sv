@@ -16,6 +16,8 @@ module nlf #(
     input var  signed [                 DATA_WIDTH-1:0] data_i_in,
     input var  signed [                 DATA_WIDTH-1:0] data_q_in,
     //
+    input var         [                INDEX_WIDTH-1:0] index_in,
+    //
     output var signed [                 DATA_WIDTH-1:0] data_i_out,
     output var signed [                 DATA_WIDTH-1:0] data_q_out,
     // Overflow indicator
@@ -44,17 +46,13 @@ module nlf #(
   logic                                bank_s;
   logic                                bank_dly           [NUM_UNITS];
 
-  logic        [       DATA_WIDTH+1:0] data_abs;
 
-  logic        [      INDEX_WIDTH-1:0] index;
-  logic        [      INDEX_WIDTH-1:0] index_s            [NUM_UNITS];
+  logic        [      INDEX_WIDTH-1:0] index_d            [NUM_UNITS];
 
   logic        [     DATA_WIDTH*2-1:0] signal_in;
-  logic        [     DATA_WIDTH*2-1:0] signal_d;
-  logic        [     DATA_WIDTH*2-1:0] signal_d_s         [NUM_UNITS];
-
-  logic signed [       DATA_WIDTH-1:0] data_i_s           [NUM_UNITS];
-  logic signed [       DATA_WIDTH-1:0] data_q_s           [NUM_UNITS];
+  logic        [     DATA_WIDTH*2-1:0] signal_d           [NUM_UNITS];
+  logic signed [       DATA_WIDTH-1:0] data_i_d           [NUM_UNITS];
+  logic signed [       DATA_WIDTH-1:0] data_q_d           [NUM_UNITS];
 
   logic        [$clog2(NUM_UNITS)-1:0] ctrl_lut_addr_unit;
 
@@ -93,27 +91,6 @@ module nlf #(
 
   assign signal_in = {data_q_in, data_i_in};
 
-  cordic_cart2pol #(
-      .DATA_WIDTH          (DATA_WIDTH),
-      .CTRL_WIDTH          (DATA_WIDTH * 2),
-      .ITERATIONS          (10),
-      .COMPENSATION_SCALING(1)
-  ) i_cordic_cart2pol (
-      .clk     (clk),
-      .rst     (rst),
-      //
-      .xin     (data_i_in),
-      .yin     (data_q_in),
-      .ctrl_in (signal_in),
-      //
-      .theta   (  /* not used */),
-      .r       (data_abs),
-      .ctrl_out(signal_d)
-  );
-
-  // TODO: Add compound module
-  assign index = data_abs[DATA_WIDTH-1-:INDEX_WIDTH];
-
   nlf_delay_line #(
       .NUM_UNITS  (NUM_UNITS),
       .DELAY_WIDTH(DelayWidth),
@@ -122,8 +99,8 @@ module nlf #(
       // Read Interface
       .clk     (clk),
       //
-      .data_in (index),
-      .data_out(index_s),
+      .data_in (index_in),
+      .data_out(index_d),
       //
       .delay   (ctrl_index_delay)
   );
@@ -140,8 +117,8 @@ module nlf #(
       // Read Interface
       .clk     (clk),
       //
-      .data_in (signal_d),
-      .data_out(signal_d_s),
+      .data_in (signal_in),
+      .data_out(signal_d),
       //
       .delay   (ctrl_signal_delay)
   );
@@ -149,7 +126,7 @@ module nlf #(
   generate
     for (genvar i = 0; i < NUM_UNITS; i++) begin : g_signal
 
-      assign {data_q_s[i], data_i_s[i]} = signal_d_s[i];
+      assign {data_q_d[i], data_i_d[i]} = signal_d[i];
 
     end
   endgenerate
@@ -167,10 +144,10 @@ module nlf #(
       .rst          (rst),
       //
       .bank_in      (bank_dly),
-      .index_in     (index_s),
+      .index_in     (index_d),
       //
-      .data_i_in    (data_i_s),
-      .data_q_in    (data_q_s),
+      .data_i_in    (data_i_d),
+      .data_q_in    (data_q_d),
       //
       .data_i_out   (data_i_out),
       .data_q_out   (data_q_out),

@@ -1,0 +1,8 @@
+../cmult_chain/cmult_chain.flt
+../util/srl.sv
+nlf.sv
+nlf_core.sv
+nlf_delay_line.sv
+nlf_lut.sv
+nlf_ooc.xdc
+nlf_srl.sv

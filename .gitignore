@@ -2,6 +2,7 @@
 library/*/prj/
 *.xml
 
-# Editor
+# Editors & IDEs
+.vscode/
 *.swp
 *~
