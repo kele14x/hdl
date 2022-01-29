@@ -38,7 +38,7 @@ module nlf_delay_line #(
         end
       end
 
-      nlf_srl #(
+      srl #(
           .ADDR_WIDTH(DELAY_WIDTH),
           .DATA_WIDTH(DATA_WIDTH)
       ) i_srl (

@@ -97,7 +97,7 @@ module bram_tdp #(
 
   // Additional clock cycle read latency improves clock-to-out timing
   generate
-    for (genvar i = 1; i < READ_LATENCY_B; i++) begin : g_pipeline_a
+    for (genvar i = 1; i < READ_LATENCY_A; i++) begin : g_pipeline_a
       always_ff @(posedge clka) begin
         if (rsta[i]) begin
           rega[i] <= '0;

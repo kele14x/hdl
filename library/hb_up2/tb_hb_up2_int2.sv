@@ -8,9 +8,9 @@ module tb_hb_up2_int2 ();
   localparam int ClkPeriod = 10;
   localparam int TestVectorLength = 4096;
 
-  localparam int XinWidth = 16;
-  localparam int CoeWidth = 16;
-  localparam int NumUniqueCoe = 3;
+  localparam int                   XinWidth = 16;
+  localparam int                   CoeWidth = 16;
+  localparam int                   NumUniqueCoe = 3;
   localparam signed [CoeWidth-1:0] CoeNums[NumUniqueCoe] = {1277, -4710, 20014};
   localparam int YoutWidth = 16;
   localparam int SraBits = 15;
