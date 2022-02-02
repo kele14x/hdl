@@ -7,47 +7,47 @@ module tb_nlf #();
 
   localparam int TestVectorLength = 4096;
 
-  localparam int NUM_UNITS = 16;
-  localparam int DATA_WIDTH = 16;
-  localparam int INDEX_WIDTH = 8;
-  localparam int LUT_DATA_WIDTH = 16;
-  localparam int SRA_BITS = 15;
+  localparam int NumUnits = 16;
+  localparam int DataWidth = 16;
+  localparam int IndexWidth = 8;
+  localparam int LutDataWidth = 16;
+  localparam int SraBits = 15;
 
-  logic                                   clk;
-  logic                                   rst;
+  logic                                        clk;
+  logic                                        rst;
   //
-  logic [                 DATA_WIDTH-1:0] data_i_in;
-  logic [                 DATA_WIDTH-1:0] data_q_in;
+  logic signed [                DataWidth-1:0] data_i_in;
+  logic signed [                DataWidth-1:0] data_q_in;
   //
-  logic [                INDEX_WIDTH-1:0] index_in;
+  logic        [               IndexWidth-1:0] index_in;
   //
-  logic [                 DATA_WIDTH-1:0] data_i_out;
-  logic [                 DATA_WIDTH-1:0] data_q_out;
+  logic signed [                DataWidth-1:0] data_i_out;
+  logic signed [                DataWidth-1:0] data_q_out;
   // Overflow indicator
-  logic                                   ovf;
+  logic                                        ovf;
   // Control Interface
-  logic                                   ctrl_clk;
-  logic                                   ctrl_rst;
+  logic                                        ctrl_clk;
+  logic                                        ctrl_rst;
   //
-  logic                                   ctrl_bank;
+  logic                                        ctrl_bank;
   //
-  logic [          $clog2(NUM_UNITS)-1:0] ctrl_index_delay   [                     NUM_UNITS];
-  logic [          $clog2(NUM_UNITS)-1:0] ctrl_signal_delay  [                     NUM_UNITS];
+  logic        [         $clog2(NumUnits)-1:0] ctrl_index_delay [                    NumUnits];
+  logic        [         $clog2(NumUnits)-1:0] ctrl_signal_delay[                    NumUnits];
 
-  logic [$clog2(NUM_UNITS)+INDEX_WIDTH:0] ctrl_lut_addr = '0;
-  logic                                   ctrl_lut_en = '0;
-  logic                                   ctrl_lut_we = '0;
-  logic [           LUT_DATA_WIDTH*2-1:0] ctrl_lut_din = '0;
-  logic [           LUT_DATA_WIDTH*2-1:0] ctrl_lut_dout;
+  logic        [$clog2(NumUnits)+IndexWidth:0] ctrl_lut_addr;
+  logic                                        ctrl_lut_en;
+  logic                                        ctrl_lut_we;
+  logic        [           LutDataWidth*2-1:0] ctrl_lut_din;
+  logic        [           LutDataWidth*2-1:0] ctrl_lut_dout;
 
-  logic [                 DATA_WIDTH-1:0] data_i_out_ref;
-  logic [                 DATA_WIDTH-1:0] data_q_out_ref;
+  logic signed [                DataWidth-1:0] data_i_out_ref;
+  logic signed [                DataWidth-1:0] data_q_out_ref;
 
-  logic [                 DATA_WIDTH-1:0] data_mem           [            TestVectorLength*2];
-  logic [                INDEX_WIDTH-1:0] index_mem          [              TestVectorLength];
-  logic [                 DATA_WIDTH-1:0] yout_mem           [            TestVectorLength*2];
-  logic                                   ovf_mem            [              TestVectorLength];
-  logic [             LUT_DATA_WIDTH-1:0] lut_mem            [2**INDEX_WIDTH * NUM_UNITS * 2];
+  logic        [                DataWidth-1:0] data_mem         [          TestVectorLength*2];
+  logic        [               IndexWidth-1:0] index_mem        [            TestVectorLength];
+  logic        [                DataWidth-1:0] yout_mem         [          TestVectorLength*2];
+  logic                                        ovf_mem          [            TestVectorLength];
+  logic        [             LutDataWidth-1:0] lut_mem          [2**IndexWidth * NumUnits * 2];
 
 
   initial begin
@@ -55,7 +55,7 @@ module tb_nlf #();
     $readmemh("test_nlf_index.txt", index_mem, 0, TestVectorLength - 1);
     $readmemh("test_nlf_yout.txt", yout_mem, 0, TestVectorLength * 2 - 1);
     $readmemh("test_nlf_ovf.txt", ovf_mem, 0, TestVectorLength - 1);
-    $readmemh("test_nlf_lut.txt", lut_mem, 0, 2 ** INDEX_WIDTH * NUM_UNITS * 2 - 1);
+    $readmemh("test_nlf_lut.txt", lut_mem, 0, 2 ** IndexWidth * NumUnits * 2 - 1);
   end
 
 
@@ -101,9 +101,9 @@ module tb_nlf #();
 
     // Set LUT memory
     @(posedge ctrl_clk);
-    for (int i = 0; i < 2 ** INDEX_WIDTH * NUM_UNITS; i++) begin
+    for (int i = 0; i < 2 ** IndexWidth * NumUnits; i++) begin
       @(posedge ctrl_clk);
-      ctrl_lut_addr <= {1'b0, i[$clog2(NUM_UNITS)+INDEX_WIDTH-1:0]};
+      ctrl_lut_addr <= {1'b0, i[$clog2(NumUnits)+IndexWidth-1:0]};
       ctrl_lut_en   <= 1;
       ctrl_lut_we   <= 1;
       ctrl_lut_din  <= {lut_mem[2*i+1], lut_mem[2*i]};
@@ -117,10 +117,9 @@ module tb_nlf #();
     // Check LUT memory
     fork
       begin : p_set_address
-        @(posedge ctrl_clk);
-        for (int i = 0; i < 2 ** INDEX_WIDTH * NUM_UNITS; i++) begin
+        for (int i = 0; i < 2 ** IndexWidth * NumUnits; i++) begin
           @(posedge ctrl_clk);
-          ctrl_lut_addr <= {1'b0, i[$clog2(NUM_UNITS)+INDEX_WIDTH-1:0]};
+          ctrl_lut_addr <= {1'b0, i[$clog2(NumUnits)+IndexWidth-1:0]};
           ctrl_lut_en   <= 1;
         end
         @(posedge ctrl_clk);
@@ -131,11 +130,11 @@ module tb_nlf #();
       begin : p_check_data
         @(posedge ctrl_clk);
         @(posedge ctrl_clk);
-        @(posedge ctrl_clk);
-        for (int i = 0; i < 2 ** INDEX_WIDTH * NUM_UNITS; i++) begin
+        for (int i = 0; i < 2 ** IndexWidth * NumUnits; i++) begin
           @(posedge ctrl_clk);
           if (ctrl_lut_dout != {lut_mem[2*i+1], lut_mem[2*i]}) begin
-            $warning("%t: ", $time, "LUT memory error at index %d", i, " expect: %x", {lut_mem[2*i+1], lut_mem[2*i]}, " got: ", ctrl_lut_dout);
+            $warning("%t: ", $time, "LUT memory error at index %d", i, " expect: %x", {
+                     lut_mem[2*i+1], lut_mem[2*i]}, " got: ", ctrl_lut_dout);
           end
         end
       end
@@ -189,11 +188,11 @@ module tb_nlf #();
   //====
 
   nlf #(
-      .NUM_UNITS     (NUM_UNITS),
-      .DATA_WIDTH    (DATA_WIDTH),
-      .INDEX_WIDTH   (INDEX_WIDTH),
-      .LUT_DATA_WIDTH(LUT_DATA_WIDTH),
-      .SRA_BITS      (SRA_BITS)
+      .NUM_UNITS     (NumUnits),
+      .DATA_WIDTH    (DataWidth),
+      .INDEX_WIDTH   (IndexWidth),
+      .LUT_DATA_WIDTH(LutDataWidth),
+      .SRA_BITS      (SraBits)
   ) UUT (
       .*
   );

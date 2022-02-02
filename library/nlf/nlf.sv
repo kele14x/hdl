@@ -44,23 +44,24 @@ module nlf #(
 
 
   logic                                bank_s;
-  logic                                bank_dly           [NUM_UNITS];
+  logic                                bank_dly               [NUM_UNITS];
 
 
-  logic        [      INDEX_WIDTH-1:0] index_d            [NUM_UNITS];
+  logic        [      INDEX_WIDTH-1:0] index_d                [NUM_UNITS];
 
   logic        [     DATA_WIDTH*2-1:0] signal_in;
-  logic        [     DATA_WIDTH*2-1:0] signal_d           [NUM_UNITS];
-  logic signed [       DATA_WIDTH-1:0] data_i_d           [NUM_UNITS];
-  logic signed [       DATA_WIDTH-1:0] data_q_d           [NUM_UNITS];
+  logic        [     DATA_WIDTH*2-1:0] signal_d               [NUM_UNITS];
+  logic signed [       DATA_WIDTH-1:0] data_i_d               [NUM_UNITS];
+  logic signed [       DATA_WIDTH-1:0] data_q_d               [NUM_UNITS];
 
   logic        [$clog2(NUM_UNITS)-1:0] ctrl_lut_addr_unit;
+  logic        [$clog2(NUM_UNITS)-1:0] ctrl_lut_addr_unit_mux;
 
-  logic        [        INDEX_WIDTH:0] ctrl_lut_addr_s    [NUM_UNITS];
-  logic                                ctrl_lut_en_s      [NUM_UNITS];
-  logic                                ctrl_lut_we_s      [NUM_UNITS];
-  logic        [ LUT_DATA_WIDTH*2-1:0] ctrl_lut_din_s     [NUM_UNITS];
-  logic        [ LUT_DATA_WIDTH*2-1:0] ctrl_lut_dout_s    [NUM_UNITS];
+  logic        [        INDEX_WIDTH:0] ctrl_lut_addr_s        [NUM_UNITS];
+  logic                                ctrl_lut_en_s          [NUM_UNITS];
+  logic                                ctrl_lut_we_s          [NUM_UNITS];
+  logic        [ LUT_DATA_WIDTH*2-1:0] ctrl_lut_din_s         [NUM_UNITS];
+  logic        [ LUT_DATA_WIDTH*2-1:0] ctrl_lut_dout_s        [NUM_UNITS];
 
 
   // LUT Bank Selector
@@ -180,7 +181,13 @@ module nlf #(
     end
   endgenerate
 
-  assign ctrl_lut_dout = ctrl_lut_dout_s[ctrl_lut_addr_unit];
+  always_ff @(posedge clk) begin
+    if (ctrl_lut_en) begin
+      ctrl_lut_addr_unit_mux <= ctrl_lut_addr_unit;
+    end
+  end
+
+  assign ctrl_lut_dout = ctrl_lut_dout_s[ctrl_lut_addr_unit_mux];
 
 endmodule
 

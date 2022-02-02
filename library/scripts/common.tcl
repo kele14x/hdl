@@ -2,7 +2,9 @@
 set script_version "0.1"
 
 
-## Help information for this script
+# print_help --
+#
+#   Print help information for this script
 #
 proc print_help {} {
   set script_file [file tail [info script]]
@@ -30,38 +32,44 @@ proc print_help {} {
 }
 
 
-## Parse filesets (.flt) file
+# hld_read_flt --
 #
-# \param[file] - The filename of .flt
+#   Parse filesets (.flt) file
 #
-proc hdl_read_flt {file} {
+# Arguments:
+#   file    - The filename of .flt
+#   private - Parse private file (not implemented)
+#
+# Results:
+#   Return the list of files parsed from filesets (.flt) file
+#
+proc hdl_read_flt {file {private 1}} {
   set filename [file normalize $file]
   puts "Parse file list: $filename"
 
   set infile [open $filename r]
-  set files []
 
   # -1 if the end of the file is found
-  while { [gets $infile line] >= 0 } {
+  while {[gets $infile line] >= 0} {
 
-    # Skip the line starts with '#' (comments)
+    # Skip the line starts with '#' (comments) and empty
     set line [string trim $line]
-    if { [string match "#*" $line] } {
+    if {[string match "#*" $line] || [string equal "" $line]} {
       continue
     }
 
     # As destination, all files are related to .flt. If absolute path is
     # specified, `file join` still handles it well
-    set ifile [file normalize [file join [file dirname $filename] $line]]
+    set abspath [file normalize [file join [file dirname $filename] $line]]
 
-    if { [string equal -nocase ".flt" [file extension $ifile]] } {
+    if {[string equal -nocase ".flt" [file extension $abspath]]} {
       # Recursively process .flt file
-      foreach iifile [hdl_read_flt $ifile] {
-        lappend files $iifile
+      foreach ifile [hdl_read_flt $abspath] {
+        lappend files $ifile
       }
     } else {
-      puts "$ifile"
-      lappend files $ifile
+      puts "$abspath"
+      lappend files $abspath
     }
   }
 
@@ -70,29 +78,41 @@ proc hdl_read_flt {file} {
 }
 
 
-## Check if required files exists
+# hdl_check_required_files --
 #
-# \param[origin_dir] - list of required files
+#   Check if required files exists
+#
+# Arguments:
+#   files - List of required files
+#
+# Result:
+#   Return the list of file that exists
 #
 proc hdl_check_required_files {files} {
-  set status true
   foreach ifile $files {
-    if { ![file isfile $ifile] } {
+    if {[file isfile $ifile]} {
+      lappend efiles $ifile
+    } elseif {[file isdirectory $ifile]} {
+      puts "WARNING: File '$ifile' is a directory"
+      lappend efiles $ifile
+    } else {
       puts "WARNING: Could not find file '$ifile'"
-      set status false
     }
   }
-  return status
+  return $efiles
 }
 
 
-## Create a project which will hold synthesis and simulation.
+# hdl_create_project --
 #
-# \param[prj_name] - Project name
-# \param[prj_dir]  - Project folder
-# \param[part]     - FPGA part number
+#   Create a project which will hold synthesis and simulation.
 #
-proc hdl_create_project {prj_name {prj_dir ./prj_dir} {part xczu19eg-ffvc1760-2-i}} {
+# Arguments
+#   prj_name - Project name
+#   prj_dir  - Project folder
+#   part     - FPGA part number
+#
+proc hdl_create_project { prj_name {prj_dir ./prj_dir} {part xczu19eg-ffvc1760-2-i} } {
   # Create project with part number
   put "Create project $prj_name under directory $prj_dir"
   create_project -force -part $part $prj_name $prj_dir
@@ -104,9 +124,12 @@ proc hdl_create_project {prj_name {prj_dir ./prj_dir} {part xczu19eg-ffvc1760-2-
 }
 
 
-## Add source files to current project.
+# hdl_add_source_files --
 #
-# \param[files] - List of source files (*.v *.vhd *.sv *.xdc, etc.)
+#   Add source files to current project.
+#
+# Arguments:
+#   files - List of source files (usually *.v *.vhd *.sv *.xdc, etc.)
 #
 proc hdl_add_source_files {files} {
   foreach ifile $files {
@@ -129,9 +152,12 @@ proc hdl_add_source_files {files} {
 }
 
 
-## Add all simulation files to current project.
+# hdl_add_sim_files --
 #
-# \param[files] - List of simulation files (*.v *.vhd *.xdc, etc.)
+#   Add all simulation files to current project.
+#
+# Arguments:
+#   files - List of simulation source files (usually *.v *.vhd *.xdc, etc.)
 #
 proc hdl_add_sim_files {files} {
   foreach ifile $files {
@@ -140,7 +166,6 @@ proc hdl_add_sim_files {files} {
   }
   update_compile_order -fileset sim_1
 }
-
 
 
 # Script name
@@ -175,7 +200,7 @@ put "HDL folder path: $hdl_folder"
 
 # Required VIVADO version
 set required_vivado_version "2021.2.1"
-if {[info exists REQUIRED_VIVADO_VERSION]} {
+if { [info exists REQUIRED_VIVADO_VERSION] } {
   set required_vivado_version REQUIRED_VIVADO_VERSION
 }
 
@@ -188,7 +213,7 @@ if { ![string equal $required_vivado_version $current_vivado_version] } {
 
 # Read filesets (.flt) file
 set files [hdl_read_flt $filesets]
-hdl_check_required_files $files
+set files [hdl_check_required_files $files]
 
 if { ![info exists project_name] } {
   set project_name [file rootname [file tail $filesets]]
