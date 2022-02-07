@@ -1,8 +1,9 @@
 # Vivado
-library/*/prj/
+library/*/prj_*/
 *.xml
 
 # Editors & IDEs
 .vscode/
 *.swp
 *~
+

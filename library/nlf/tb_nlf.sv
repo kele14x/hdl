@@ -7,11 +7,15 @@ module tb_nlf #();
 
   localparam int TestVectorLength = 4096;
 
+  localparam int DataPathLatency = 23;
+
   localparam int NumUnits = 16;
   localparam int DataWidth = 16;
   localparam int IndexWidth = 8;
   localparam int LutDataWidth = 16;
-  localparam int SraBits = 15;
+  localparam int SraBits = 14;
+
+  // DUT signals
 
   logic                                        clk;
   logic                                        rst;
@@ -31,8 +35,8 @@ module tb_nlf #();
   //
   logic                                        ctrl_bank;
   //
-  logic        [         $clog2(NumUnits)-1:0] ctrl_index_delay [                    NumUnits];
-  logic        [         $clog2(NumUnits)-1:0] ctrl_signal_delay[                    NumUnits];
+  logic        [         $clog2(NumUnits)-1:0] ctrl_index_delay [                NumUnits];
+  logic        [         $clog2(NumUnits)-1:0] ctrl_signal_delay[                NumUnits];
 
   logic        [$clog2(NumUnits)+IndexWidth:0] ctrl_lut_addr;
   logic                                        ctrl_lut_en;
@@ -40,22 +44,48 @@ module tb_nlf #();
   logic        [           LutDataWidth*2-1:0] ctrl_lut_din;
   logic        [           LutDataWidth*2-1:0] ctrl_lut_dout;
 
+  // Testbench signals
+
   logic signed [                DataWidth-1:0] data_i_out_ref;
   logic signed [                DataWidth-1:0] data_q_out_ref;
 
-  logic        [                DataWidth-1:0] data_mem         [          TestVectorLength*2];
-  logic        [               IndexWidth-1:0] index_mem        [            TestVectorLength];
-  logic        [                DataWidth-1:0] yout_mem         [          TestVectorLength*2];
-  logic                                        ovf_mem          [            TestVectorLength];
-  logic        [             LutDataWidth-1:0] lut_mem          [2**IndexWidth * NumUnits * 2];
+  logic                                        ovf_ref;
+
+  logic        [             LutDataWidth-1:0] lut_i_mem        [2**IndexWidth * NumUnits];
+  logic        [             LutDataWidth-1:0] lut_q_mem        [2**IndexWidth * NumUnits];
+  //
+  logic        [         $clog2(NumUnits)-1:0] index_delay_mem  [                NumUnits];
+  logic        [         $clog2(NumUnits)-1:0] signal_delay_mem [                NumUnits];
+  //
+  logic signed [                DataWidth-1:0] data_i_mem       [        TestVectorLength];
+  logic signed [                DataWidth-1:0] data_q_mem       [        TestVectorLength];
+  //
+  logic        [               IndexWidth-1:0] index_mem        [        TestVectorLength];
+  //
+  logic        [                DataWidth-1:0] yout_i_mem       [        TestVectorLength];
+  logic        [                DataWidth-1:0] yout_q_mem       [        TestVectorLength];
+  //
+  logic                                        ovf_mem          [        TestVectorLength];
+
+  logic lut_check_done, datapath_check_done;
 
 
   initial begin
-    $readmemh("test_nlf_signal.txt", data_mem, 0, TestVectorLength * 2 - 1);
-    $readmemh("test_nlf_index.txt", index_mem, 0, TestVectorLength - 1);
-    $readmemh("test_nlf_yout.txt", yout_mem, 0, TestVectorLength * 2 - 1);
-    $readmemh("test_nlf_ovf.txt", ovf_mem, 0, TestVectorLength - 1);
-    $readmemh("test_nlf_lut.txt", lut_mem, 0, 2 ** IndexWidth * NumUnits * 2 - 1);
+    $readmemh("test_nlf_lut_i.txt", lut_i_mem);
+    $readmemh("test_nlf_lut_q.txt", lut_q_mem);
+    //
+    $readmemh("test_nlf_index_delay.txt", index_delay_mem);
+    $readmemh("test_nlf_signal_delay.txt", signal_delay_mem);
+    //
+    $readmemh("test_nlf_signal_i.txt", data_i_mem);
+    $readmemh("test_nlf_signal_q.txt", data_q_mem);
+    //
+    $readmemh("test_nlf_index.txt", index_mem);
+    //
+    $readmemh("test_nlf_yout_i.txt", yout_i_mem);
+    $readmemh("test_nlf_yout_q.txt", yout_q_mem);
+    //
+    $readmemh("test_nlf_ovf.txt", ovf_mem);
   end
 
 
@@ -63,16 +93,16 @@ module tb_nlf #();
   //============================
 
   initial begin
-    clk = 0;
     forever begin
-      #1 clk = ~clk;
+      #1 clk = 1'b0;
+      #1 clk = 1'b1;
     end
   end
 
   initial begin
-    ctrl_clk = 0;
     forever begin
-      #5 ctrl_clk = ~ctrl_clk;
+      #5 ctrl_clk = 1'b0;
+      #5 ctrl_clk = 1'b1;
     end
   end
 
@@ -93,21 +123,46 @@ module tb_nlf #();
   //===========
 
   initial begin
+    $timeformat(-9, 3, " ns", 8);
+    $display("*** Simulation starts ***");
+  end
+
+  // LUT write/read test
+  initial begin
+    lut_check_done = 0;
+
+    // Reset interface
+    ctrl_lut_addr <= '0;
+    ctrl_lut_en   <= '0;
+    ctrl_lut_we   <= '0;
+    ctrl_lut_din  <= '0;
+
     wait (rst == 0);
     wait (ctrl_rst == 0);
 
-    //
-    ctrl_bank = 0;
-
     // Set LUT memory
-    @(posedge ctrl_clk);
-    for (int i = 0; i < 2 ** IndexWidth * NumUnits; i++) begin
-      @(posedge ctrl_clk);
-      ctrl_lut_addr <= {1'b0, i[$clog2(NumUnits)+IndexWidth-1:0]};
-      ctrl_lut_en   <= 1;
-      ctrl_lut_we   <= 1;
-      ctrl_lut_din  <= {lut_mem[2*i+1], lut_mem[2*i]};
-    end
+    begin : p_write_lut
+      logic [$clog2(NumUnits)+IndexWidth:0] addr;
+      logic [LutDataWidth*2-1:0] data;
+
+      for (int unit = 0; unit < NumUnits; unit++) begin
+        for (int bank = 0; bank < 2; bank++) begin
+          for (int i = 0; i < (2 ** IndexWidth); i++) begin
+            addr = {unit[$clog2(NumUnits)-1:0], bank[0], i[IndexWidth-1:0]};
+            data = {lut_q_mem[unit*(2**IndexWidth)+i], lut_i_mem[unit*(2**IndexWidth)+i]};
+
+            @(posedge ctrl_clk);
+            ctrl_lut_addr <= addr;
+            ctrl_lut_en   <= 1;
+            ctrl_lut_we   <= 1;
+            ctrl_lut_din  <= data;
+
+          end  // for
+        end  // for
+      end  // for
+    end  // p_write_lut
+
+    // Reset interface
     @(posedge ctrl_clk);
     ctrl_lut_addr <= '0;
     ctrl_lut_en   <= '0;
@@ -116,44 +171,81 @@ module tb_nlf #();
 
     // Check LUT memory
     fork
-      begin : p_set_address
-        for (int i = 0; i < 2 ** IndexWidth * NumUnits; i++) begin
-          @(posedge ctrl_clk);
-          ctrl_lut_addr <= {1'b0, i[$clog2(NumUnits)+IndexWidth-1:0]};
-          ctrl_lut_en   <= 1;
+      begin : p_set_lut_rd_address
+        logic [$clog2(NumUnits)+IndexWidth:0] addr;
+
+        for (int unit = 0; unit < NumUnits; unit++) begin
+          for (int bank = 0; bank < 2; bank++) begin
+            for (int i = 0; i < (2 ** IndexWidth); i++) begin
+              addr = {unit[$clog2(NumUnits)-1:0], bank[0], i[IndexWidth-1:0]};
+              @(posedge ctrl_clk);
+              ctrl_lut_addr <= addr;
+              ctrl_lut_en   <= 1;
+            end
+          end
         end
+
         @(posedge ctrl_clk);
         ctrl_lut_addr <= '0;
         ctrl_lut_en   <= '0;
-      end
+      end  // p_set_lut_rd_address
 
-      begin : p_check_data
+      begin : p_check_lut_rd_data
+        logic [$clog2(NumUnits)+IndexWidth:0] addr;
+        logic [LutDataWidth*2-1:0] data;
+
         @(posedge ctrl_clk);
         @(posedge ctrl_clk);
-        for (int i = 0; i < 2 ** IndexWidth * NumUnits; i++) begin
-          @(posedge ctrl_clk);
-          if (ctrl_lut_dout != {lut_mem[2*i+1], lut_mem[2*i]}) begin
-            $warning("%t: ", $time, "LUT memory error at index %d", i, " expect: %x", {
-                     lut_mem[2*i+1], lut_mem[2*i]}, " got: ", ctrl_lut_dout);
-          end
-        end
-      end
+
+        for (int unit = 0; unit < NumUnits; unit++) begin
+          for (int bank = 0; bank < 2; bank++) begin
+            for (int i = 0; i < (2 ** IndexWidth); i++) begin
+              addr = {unit[$clog2(NumUnits)-1:0], bank[0], i[IndexWidth-1:0]};
+              data = {lut_q_mem[unit*(2**IndexWidth)+i], lut_i_mem[unit*(2**IndexWidth)+i]};
+
+              @(posedge ctrl_clk);
+              if (ctrl_lut_dout != data) begin
+                $display(
+                    "WARNING: time: %t, LUT memory check error at address %d. Expect: %x, got %x",
+                    $realtime, addr, data, ctrl_lut_dout);
+              end  // if
+
+            end  // for
+          end  // for
+        end  // for
+      end  // p_check_lut_rd_data
 
     join
 
-    // Check data path
+    lut_check_done = 1;
+  end
+
+
+  // Datapath test
+  initial begin
+    ctrl_bank = 0;
+    datapath_check_done = 0;
+    for (int i = 0; i < NumUnits; i++) begin
+      ctrl_index_delay[i]  <= index_delay_mem[i];
+      ctrl_signal_delay[i] <= signal_delay_mem[i];
+    end
+    data_i_in <= '0;
+    data_q_in <= '0;
+    index_in  <= '0;
+
+    wait (lut_check_done == 1);
+
+    @(posedge clk);
     fork
       begin : p_feed_signal
-        @(posedge clk);
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
-          data_i_in <= data_mem[2*i];
-          data_q_in <= data_mem[2*i+1];
+          data_i_in <= data_i_mem[i];
+          data_q_in <= data_q_mem[i];
         end
       end
 
       begin : p_feed_index
-        @(posedge clk);
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
           index_in <= index_mem[i];
@@ -161,26 +253,62 @@ module tb_nlf #();
       end
 
       begin : p_ref_signal
-        @(posedge clk);
+        repeat (DataPathLatency) @(posedge clk);
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
-          data_i_out_ref <= yout_mem[2*i];
-          data_q_out_ref <= yout_mem[2*i+1];
+          data_i_out_ref <= yout_i_mem[i];
+          data_q_out_ref <= yout_q_mem[i];
         end
       end
 
       begin : p_ref_ovf
-        @(posedge clk);
+        repeat (DataPathLatency) @(posedge clk);
         for (int i = 0; i < TestVectorLength; i++) begin
           @(posedge clk);
-          data_i_out_ref <= ovf_mem[i];
+          ovf_ref <= ovf_mem[i];
+        end
+      end
+
+      begin : p_chk_signal
+        repeat (DataPathLatency + 1) @(posedge clk);
+        for (int i = 0; i < TestVectorLength; i++) begin
+          @(posedge clk);
+          if (data_i_out_ref != data_i_out) begin
+            $display(
+                "ERROR: time: %t, data mismatch at tick %d. data_i_out_ref: %x, data_i_out: %x",
+                $realtime, i, data_i_out_ref, data_i_out);
+          end
+          if (data_q_out_ref != data_q_out) begin
+            $display(
+                "ERROR: time: %t, data mismatch at tick %d. data_q_out_ref: %x, data_q_out: %x",
+                $realtime, i, data_q_out_ref, data_q_out);
+          end
+        end
+      end
+
+      begin : p_chk_ovf
+        repeat (DataPathLatency + 1) @(posedge clk);
+        for (int i = 0; i < TestVectorLength; i++) begin
+          @(posedge clk);
+          if (ovf_ref != ovf) begin
+            $display(
+                "ERROR: time: %t, ovf mismatch at tick %d. ovf_ref: %x, ovf: %x",
+                $realtime, i, ovf_ref, ovf);
+          end
         end
       end
 
     join
 
-    #1000;
-    $finish(2);
+    datapath_check_done = 1;
+  end
+
+
+  initial begin
+    wait (datapath_check_done == 1);
+    #100;
+    $display("*** Simulation ends ***");
+    $finish();
   end
 
 

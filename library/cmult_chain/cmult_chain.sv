@@ -68,7 +68,7 @@ module cmult_chain #(
       .rst    (rst),
       .a      (pc_out),
       .b      (pr_out),
-      .add_sub(1'b1),
+      .add_sub(1'b0),
       .p      (pr),
       .ovf    (ovf_r)
   );
@@ -83,7 +83,7 @@ module cmult_chain #(
       .rst    (rst),
       .a      (pc_out),
       .b      (pi_out),
-      .add_sub(1'b1),
+      .add_sub(1'b0),
       .p      (pi),
       .ovf    (ovf_i)
   );

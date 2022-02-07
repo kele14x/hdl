@@ -8,7 +8,7 @@ module nlf_core #(
     parameter int DATA_WIDTH     = 16,
     parameter int INDEX_WIDTH    = 8,
     parameter int LUT_DATA_WIDTH = 16,
-    parameter int SRA_BITS       = 15
+    parameter int SRA_BITS       = 14
 ) (
     // Read Interface
     input var                                clk,

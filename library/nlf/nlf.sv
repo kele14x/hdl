@@ -8,7 +8,7 @@ module nlf #(
     parameter int DATA_WIDTH     = 16,
     parameter int INDEX_WIDTH    = 8,
     parameter int LUT_DATA_WIDTH = 16,
-    parameter int SRA_BITS       = 15
+    parameter int SRA_BITS       = 14
 ) (
     input var                                           clk,
     input var                                           rst,
@@ -181,7 +181,7 @@ module nlf #(
     end
   endgenerate
 
-  always_ff @(posedge clk) begin
+  always_ff @(posedge ctrl_clk) begin
     if (ctrl_lut_en) begin
       ctrl_lut_addr_unit_mux <= ctrl_lut_addr_unit;
     end
