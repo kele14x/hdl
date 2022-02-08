@@ -1,6 +1,7 @@
 ../cmult_chain/cmult_chain.flt
 ../ram/bram_tdp.sv
 ../ram/bram_tdp_pipe.sv
+../util/reg_pipeline.sv
 ../util/srl.sv
 nlf.sv
 nlf_core.sv

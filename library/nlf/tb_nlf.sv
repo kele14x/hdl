@@ -7,7 +7,7 @@ module tb_nlf #();
 
   localparam int TestVectorLength = 4096;
 
-  localparam int DataPathLatency = 23;
+  localparam int DataPathLatency = 26;
 
   localparam int NumUnits = 16;
   localparam int DataWidth = 16;
@@ -275,12 +275,12 @@ module tb_nlf #();
           @(posedge clk);
           if (data_i_out_ref != data_i_out) begin
             $display(
-                "ERROR: time: %t, data mismatch at tick %d. data_i_out_ref: %x, data_i_out: %x",
+                "ERROR: time: %t, data mismatch at tick %d. data_i_out_ref: %d, data_i_out: %d",
                 $realtime, i, data_i_out_ref, data_i_out);
           end
           if (data_q_out_ref != data_q_out) begin
             $display(
-                "ERROR: time: %t, data mismatch at tick %d. data_q_out_ref: %x, data_q_out: %x",
+                "ERROR: time: %t, data mismatch at tick %d. data_q_out_ref: %d, data_q_out: %d",
                 $realtime, i, data_q_out_ref, data_q_out);
           end
         end
@@ -292,7 +292,7 @@ module tb_nlf #();
           @(posedge clk);
           if (ovf_ref != ovf) begin
             $display(
-                "ERROR: time: %t, ovf mismatch at tick %d. ovf_ref: %x, ovf: %x",
+                "ERROR: time: %t, ovf mismatch at tick %d. ovf_ref: %d, ovf: %d",
                 $realtime, i, ovf_ref, ovf);
           end
         end

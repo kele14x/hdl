@@ -50,6 +50,8 @@ module nlf #(
   logic        [      INDEX_WIDTH-1:0] index_d                [NUM_UNITS];
 
   logic        [     DATA_WIDTH*2-1:0] signal_in;
+  logic        [     DATA_WIDTH*2-1:0] signal_s;
+
   logic        [     DATA_WIDTH*2-1:0] signal_d               [NUM_UNITS];
   logic signed [       DATA_WIDTH-1:0] data_i_d               [NUM_UNITS];
   logic signed [       DATA_WIDTH-1:0] data_q_d               [NUM_UNITS];
@@ -90,8 +92,6 @@ module nlf #(
   // Index Generation
   //=================
 
-  assign signal_in = {data_q_in, data_i_in};
-
   nlf_delay_line #(
       .NUM_UNITS  (NUM_UNITS),
       .DELAY_WIDTH(DelayWidth),
@@ -110,6 +110,18 @@ module nlf #(
   // Signal Delay
   //=============
 
+  assign signal_in = {data_q_in, data_i_in};
+
+  // Add 3 taps delay since LUT adds 3 ticks latency
+  reg_pipeline #(
+      .DATA_WIDTH     (DATA_WIDTH * 2),
+      .PIPELINE_STAGES(3)
+  ) i_reg_pipeline (
+      .clk (clk),
+      .din (signal_in),
+      .dout(signal_s)
+  );
+
   nlf_delay_line #(
       .NUM_UNITS  (NUM_UNITS),
       .DELAY_WIDTH(DelayWidth),
@@ -118,7 +130,7 @@ module nlf #(
       // Read Interface
       .clk     (clk),
       //
-      .data_in (signal_in),
+      .data_in (signal_s),
       .data_out(signal_d),
       //
       .delay   (ctrl_signal_delay)
