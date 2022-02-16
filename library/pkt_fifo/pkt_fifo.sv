@@ -58,14 +58,6 @@ module eth_if_pkt_filter #(
 
   wr_state_t wr_state, wr_state_next;
 
-  typedef enum int {
-    S_RD_RST,    // Under reset
-    S_RD_WAIT,   //
-    S_RD_READ    //
-  } rd_state_t;
-
-  rd_state_t rd_state, rd_state_next;
-
   logic [63:0] tdata_reversed;
 
   // Writer
@@ -292,68 +284,42 @@ module eth_if_pkt_filter #(
   end
 
 
-  // Reader FSM
-  //===========
-
-  always_ff @(posedge aclk) begin
-    if (!aresetn) begin
-      rd_state <= S_RD_RST;
-    end else begin
-      rd_state <= rd_state_next;
-    end
-  end
-
-  always_comb begin
-    // By default stays at current state
-    rd_state_next = rd_state;
-
-    // State transfer
-    case (rd_state)
-      S_RD_RST: begin
-        rd_state_next = S_RD_WAIT;
-      end
-
-      S_RD_WAIT: begin
-        if (!rd_empty) begin
-          rd_state_next = S_RD_READ;
-        end
-      end
-
-      S_RD_READ: begin
-        if (rd_empty) begin
-          rd_state_next = S_RD_WAIT;
-        end
-      end
-
-      default: begin
-        rd_state_next = S_RD_RST;
-      end
-    endcase
-  end
-
-  always_ff @(posedge aclk) begin
-    if (!aresetn) begin
-      rd_addr <= '0;
-    end else if (rd_state == S_RD_READ && (!rd_vld[1] || m_axis_tready) && !rd_empty) begin
-      rd_addr <= rd_addr + 1;
-    end else begin
-      rd_addr <= rd_addr;
-    end
-  end
-
-  assign rd_en[0] = (rd_state == S_RD_READ) && (!rd_vld[1] || m_axis_tready) && !rd_empty;
-
-  assign rd_en[1] = rd_vld[0] && (!rd_vld[2] || m_axis_tready);
-
-  assign rd_en[2] = rd_vld[1] && m_axis_tready;
+  // Reader Pipeline
+  //================
+  // rd_en[0]  -> rd_en[1]   -> rd_en[2]
+  //           -> rd_vld[0]  -> rd_vld[1]  -> rd_vld[2]  (m_axis_tvalid)
+  //           -> rd_data[0] -> rd_data[1] -> rd_data[2] (m_axis_tdata)
+  //                                          m_axis_tready
 
   assign rd_empty = (rd_addr == tail_addr);
+
+  assign rd_en[0] = !rd_empty && (!rd_vld[0] || !rd_vld[1] || !rd_vld[2] || m_axis_tready);
+
+  assign rd_en[1] = (!rd_vld[1] || !rd_vld[2] || m_axis_tready);
+
+  assign rd_en[2] = (!rd_vld[2] || m_axis_tready);
 
   always_ff @(posedge aclk) begin
     if (!aresetn) begin
       rd_vld <= '0;
     end else begin
-      rd_vld <= rd_en;
+      rd_vld[0] <= !rd_empty;
+      if (rd_en[1]) begin
+        rd_vld[1] <= rd_vld[0];
+      end
+      if (rd_en[2]) begin
+        rd_vld[2] <= rd_vld[1];
+      end
+    end
+  end
+
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      rd_addr <= '0;
+    end else if (rd_en[0]) begin
+      rd_addr <= rd_addr + 1;
+    end else begin
+      rd_addr <= rd_addr;
     end
   end
 
