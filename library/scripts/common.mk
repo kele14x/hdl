@@ -12,10 +12,10 @@ help:
 	@echo ""
 	@echo "Type 'make <target>' to start, where <target> could be:"
 	@echo ""
-	@echo "    all      - make all jobs"
-	@echo "    project  - create Vivado project"
-	@echo "    clean    - clean output files"
-	@echo "    help     - print this message"
+	@echo "    all     - Make all jobs"
+	@echo "    project - Create VIVADO project"
+	@echo "    clean   - Clean output files"
+	@echo "    help    - Print this message"
 
 
 all: project

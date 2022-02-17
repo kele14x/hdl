@@ -1,10 +1,10 @@
 //-----------------------------------------------------------------------------
 // File: eth_pkt_fifo.sv
 // Brief: Ethernet packet FIFO. This module buffers the incoming Ethernet
-//        packets from Ethernet MAC and ensures that all packets are forwarded
-//        to next module without error. For this, this module is working at
-//        packet store and forward mode. The buffer size should be large enough
-//        to hold at least one (largest) packet.
+//        packets from Ethernet MAC and ensures that full packets are forwarded
+//        to next module. For this, this FIFO works at AXIS packet store and
+//        forward mode and causes one packet latency. The buffer should be
+//        large enough to hold at least one (largest) packet.
 //-----------------------------------------------------------------------------
 `timescale 1 ns / 1 ps `default_nettype none
 
@@ -39,9 +39,9 @@ module eth_pkt_fifo #(
 
   typedef enum int {
     S_WR_RST,  // Under reset
-    S_WR_WORD0,  // Wait first word for AXIS transaction
-    S_WR_PASS,  // Keep writing
-    S_WR_DISCARD  // Discarded packet
+    S_WR_WORD0,  // Wait first AXIS Stream transaction
+    S_WR_PASS,  // Writing packet to buffer
+    S_WR_DISCARD  // Discarded left words in packet
   } wr_state_t;
 
   wr_state_t wr_state, wr_state_next;

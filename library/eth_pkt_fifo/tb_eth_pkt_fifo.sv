@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
-// File: tb_eth_if_pkt_filter.sv
-// Brief: Testbench for module eth_if_pkt_filter
+// File: tb_eth_pkt_fifo.sv
+// Brief: Testbench for module eth_pkt_fifo
 //-----------------------------------------------------------------------------
 `timescale 1 ns / 1 ps `default_nettype none
 
@@ -23,7 +23,6 @@ module tb_eth_pkt_fifo;
   logic        s_axis_tvalid;
   logic        s_axis_tlast;
   logic        s_axis_tready;
-
 
   initial begin
     forever begin
