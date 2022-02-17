@@ -1,2 +1,2 @@
 ../ram/bram_sdp.sv
-pkt_fifo.sv
+eth_pkt_fifo.sv

@@ -1,20 +1,14 @@
 //-----------------------------------------------------------------------------
-// File: eth_if_pkt_filter.sv
-// Brief: Ethernet packet ingress filter. This module filters the incoming
-//        packets from Ethernet MAC and ensures that eCPRI packets are not
-//        forwarded to next module, which will floods DMA interface and cause
-//        packet loss.
-//
-//        eCPRI packets are identified as:
-//          - Raw Ethernet Type II packets with EtherType = 0xAEFE
-//          - Raw Ethernet Type II packets with VLAN tag and EtherType = 0xAEFE
-//
-//        Currently, this module does not support:
-//          -  IPv4/IPv6 over Ethernet with or without VLAN Tag
+// File: eth_pkt_fifo.sv
+// Brief: Ethernet packet FIFO. This module buffers the incoming Ethernet
+//        packets from Ethernet MAC and ensures that all packets are forwarded
+//        to next module without error. For this, this module is working at
+//        packet store and forward mode. The buffer size should be large enough
+//        to hold at least one (largest) packet.
 //-----------------------------------------------------------------------------
 `timescale 1 ns / 1 ps `default_nettype none
 
-module eth_if_pkt_filter #(
+module eth_pkt_fifo #(
     parameter int ADDR_WIDTH = 12
 ) (
     input var         aclk,
@@ -25,11 +19,10 @@ module eth_if_pkt_filter #(
     input var         s_axis_tvalid,
     input var         s_axis_tlast,
     output var        s_axis_tready,
-    // Sideband signal
-    input var         s_mac_tuser,
-    input var         s_mac_bad_fcs,
-    input var  [79:0] s_mac_tstamp_out,
-    input var         s_mac_tstamp_valid,
+    input var         s_axis_tuser,
+    //
+    input var  [79:0] s_axis_tstamp_out,
+    input var         s_axis_tstamp_valid,
     // Output
     output var [63:0] m_axis_tdata,
     output var [ 7:0] m_axis_tkeep,
@@ -37,28 +30,21 @@ module eth_if_pkt_filter #(
     output var        m_axis_tlast,
     input var         m_axis_tready,
     //
-    output var [79:0] m_mac_tstamp_out,
-    output var        m_mac_tstamp_valid
+    output var [79:0] m_axis_tstamp_out,
+    output var        m_axis_tstamp_valid
 );
 
   // tdata + tkeep + tlast + tstamp + tstamp_valid
   localparam int DATA_WIDTH = (64 + 8 + 1 + 80 + 1);
 
-  localparam logic [15:0] C_VLAN_TAG = 16'h8100;
-  localparam logic [15:0] C_ECPRI_TAG = 16'hAEFE;
-
   typedef enum int {
     S_WR_RST,  // Under reset
-    S_WR_WORD0,  // Wait word 0: {DEST_MAC[47:0], SRC_MAC[47:32]}
-    S_WR_WORD1,   // Wait word 1: {SRC_MAC[31:0], ({ETH_TYPE_LENGTH[15:0], PAYLOAD[15:0]} | {VLAN_TPID[15:0], VLAN_TCI[15:0]})}
-    S_WR_WORD2,  // Wait word 2: {ETH_TYPE_LENGTH[15:0], PAYLOAD[47:0]} if VLAN
+    S_WR_WORD0,  // Wait first word for AXIS transaction
     S_WR_PASS,  // Keep writing
     S_WR_DISCARD  // Discarded packet
   } wr_state_t;
 
   wr_state_t wr_state, wr_state_next;
-
-  logic [63:0] tdata_reversed;
 
   // Writer
   logic [ADDR_WIDTH-1:0] wr_addr, wr_addr_next, wr_addr_last;
@@ -69,32 +55,15 @@ module eth_if_pkt_filter #(
 
   // Reader
   logic [ADDR_WIDTH-1:0] rd_addr;
-  logic [           2:0] rd_en, rd_vld;
+  logic [           2:0] rd_en;
+  logic [           2:0] rd_vld;
+  logic [           2:0] rd_rdy;
   logic [DATA_WIDTH-1:0] rd_data;
 
   logic                  rd_empty;
 
   // Read/Writ shared
   logic [ADDR_WIDTH-1:0] tail_addr;
-
-  // This function reverse the byte order of AXIS data, as required by the difference
-  // between the AXI4-Stream and Ethernet stream interfaces.
-  function automatic [63:0] byte_reverse(input [63:0] data);
-    begin
-      return {
-        data[7:0],
-        data[15:8],
-        data[23:16],
-        data[31:24],
-        data[39:32],
-        data[47:40],
-        data[55:48],
-        data[63:56]
-      };
-    end
-  endfunction
-
-  assign tdata_reversed = byte_reverse(s_axis_tdata);
 
 
   // Writer FSM
@@ -124,32 +93,6 @@ module eth_if_pkt_filter #(
           if (s_axis_tlast) begin
             wr_state_next = S_WR_WORD0;
           end else if (wr_full) begin
-            wr_state_next = S_WR_DISCARD;
-          end else begin
-            wr_state_next = S_WR_WORD1;
-          end
-        end
-      end
-
-      S_WR_WORD1: begin
-        if (s_axis_tvalid) begin
-          if (s_axis_tlast) begin
-            wr_state_next = S_WR_WORD0;
-          end else if (wr_full || tdata_reversed[31:16] == C_ECPRI_TAG) begin
-            wr_state_next = S_WR_DISCARD;
-          end else if (tdata_reversed[31:16] == C_VLAN_TAG) begin
-            wr_state_next = S_WR_WORD2;
-          end else begin
-            wr_state_next = S_WR_PASS;
-          end
-        end
-      end
-
-      S_WR_WORD2: begin
-        if (s_axis_tvalid) begin
-          if (s_axis_tlast) begin
-            wr_state_next = S_WR_WORD0;
-          end else if (wr_full || tdata_reversed[63:48] == C_ECPRI_TAG) begin
             wr_state_next = S_WR_DISCARD;
           end else begin
             wr_state_next = S_WR_PASS;
@@ -184,8 +127,8 @@ module eth_if_pkt_filter #(
     if (!aresetn) begin
       s_axis_tready <= 1'b0;
     end else begin
-      s_axis_tready <= (wr_state_next == S_WR_WORD0 || wr_state_next == S_WR_WORD1 ||
-        wr_state_next == S_WR_WORD2 || wr_state_next == S_WR_PASS || wr_state_next == S_WR_DISCARD);
+      s_axis_tready <= (wr_state_next == S_WR_WORD0 || wr_state_next == S_WR_PASS ||
+        wr_state_next == S_WR_DISCARD);
     end
   end
 
@@ -217,32 +160,8 @@ module eth_if_pkt_filter #(
     // wr_addr change
     case (wr_state)
       S_WR_WORD0: begin
-        if (s_axis_tvalid && !s_axis_tlast && !wr_full) begin
+        if (s_axis_tvalid && !wr_full) begin
           wr_addr_next = wr_addr + 1;
-        end
-      end
-
-      S_WR_WORD1: begin
-        if (s_axis_tvalid) begin
-          if (s_axis_tlast) begin
-            wr_addr_next = wr_addr_last;
-          end else if (wr_full || tdata_reversed[31:16] == C_ECPRI_TAG) begin
-            wr_addr_next = wr_addr_last;
-          end else begin
-            wr_addr_next = wr_addr + 1;
-          end
-        end
-      end
-
-      S_WR_WORD2: begin
-        if (s_axis_tvalid) begin
-          if (s_axis_tlast) begin
-            wr_addr_next = wr_addr_last;
-          end else if (wr_full || tdata_reversed[63:48] == C_ECPRI_TAG) begin
-            wr_addr_next = wr_addr_last;
-          end else begin
-            wr_addr_next = wr_addr + 1;
-          end
         end
       end
 
@@ -262,11 +181,12 @@ module eth_if_pkt_filter #(
     endcase
   end
 
-  assign wr_we = s_axis_tvalid && (wr_state == S_WR_WORD0 || wr_state == S_WR_WORD1 ||
-      wr_state == S_WR_WORD2 || wr_state == S_WR_PASS) && !wr_full;
+  assign wr_we = s_axis_tvalid && (wr_state == S_WR_WORD0 || wr_state == S_WR_PASS) && !wr_full;
 
   // We does not need to write tvalid and tready, tuser and bad_fcs flag
-  assign wr_data = {s_mac_tstamp_valid, s_mac_tstamp_out, s_axis_tlast, s_axis_tkeep, s_axis_tdata};
+  assign wr_data = {
+    s_axis_tstamp_valid, s_axis_tstamp_out, s_axis_tlast, s_axis_tkeep, s_axis_tdata
+  };
 
   assign wr_full = (wr_addr == rd_addr - 1);
 
@@ -278,7 +198,8 @@ module eth_if_pkt_filter #(
   always_ff @(posedge aclk) begin
     if (!aresetn) begin
       tail_addr <= '0;
-    end else if (wr_state == S_WR_PASS && s_axis_tvalid && s_axis_tlast && !wr_full) begin
+    end else if ((wr_state == S_WR_PASS || wr_state == S_WR_WORD0)
+      && s_axis_tvalid && s_axis_tlast && !wr_full) begin
       tail_addr <= wr_addr + 1;
     end
   end
@@ -293,22 +214,34 @@ module eth_if_pkt_filter #(
 
   assign rd_empty = (rd_addr == tail_addr);
 
-  assign rd_en[0] = !rd_empty && (!rd_vld[0] || !rd_vld[1] || !rd_vld[2] || m_axis_tready);
+  assign rd_en[0] = !rd_empty && rd_rdy[0];
+  assign rd_en[1] = rd_vld[0] && rd_rdy[1];
+  assign rd_en[2] = rd_vld[1] && rd_rdy[2];
 
-  assign rd_en[1] = (!rd_vld[1] || !rd_vld[2] || m_axis_tready);
-
-  assign rd_en[2] = (!rd_vld[2] || m_axis_tready);
+  assign rd_rdy[0] = (!rd_vld[0] || !rd_vld[1] || !rd_vld[2] || m_axis_tready);
+  assign rd_rdy[1] = (!rd_vld[1] || !rd_vld[2] || m_axis_tready);
+  assign rd_rdy[2] = (!rd_vld[2] || m_axis_tready);
 
   always_ff @(posedge aclk) begin
     if (!aresetn) begin
       rd_vld <= '0;
     end else begin
-      rd_vld[0] <= !rd_empty;
-      if (rd_en[1]) begin
-        rd_vld[1] <= rd_vld[0];
+      if (rd_en[0]) begin
+        rd_vld[0] <= 1'b1;
+      end else if (rd_en[1]) begin
+        rd_vld[0] <= 1'b0;
       end
+
+      if (rd_en[1]) begin
+        rd_vld[1] <= 1'b1;
+      end else if (rd_en[2]) begin
+        rd_vld[1] <= 1'b0;
+      end
+
       if (rd_en[2]) begin
-        rd_vld[2] <= rd_vld[1];
+        rd_vld[2] <= 1'b1;
+      end else if (m_axis_tready) begin
+        rd_vld[2] <= 1'b0;
       end
     end
   end
@@ -325,7 +258,7 @@ module eth_if_pkt_filter #(
 
   // Output AXIS interface
 
-  assign {m_mac_tstamp_valid, m_mac_tstamp_out, m_axis_tlast, m_axis_tkeep, m_axis_tdata} = rd_data;
+  assign {m_axis_tstamp_valid, m_axis_tstamp_out, m_axis_tlast, m_axis_tkeep, m_axis_tdata} = rd_data;
 
   assign m_axis_tvalid = rd_vld[2];
 
@@ -348,7 +281,7 @@ module eth_if_pkt_filter #(
       .dina (wr_data),
       // Port B
       .clkb (aclk),
-      .rstb (1'b0),
+      .rstb (3'b0),
       .enb  (rd_en),
       .addrb(rd_addr),
       .doutb(rd_data)

@@ -1,3 +1,3 @@
-DESIGN = pkt_fifo
+DESIGN = eth_pkt_fifo
 
 include ../scripts/common.mk
