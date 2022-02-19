@@ -1,2 +1,4 @@
 ../ram/bram_sdp.sv
 eth_pkt_fifo.sv
+
+eth_pkt_fifo_ooc.xdc

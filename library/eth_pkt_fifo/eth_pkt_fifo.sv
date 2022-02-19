@@ -9,7 +9,7 @@
 `timescale 1 ns / 1 ps `default_nettype none
 
 module eth_pkt_fifo #(
-    parameter int ADDR_WIDTH = 12
+    parameter int ADDR_WIDTH = 10
 ) (
     input var         aclk,
     input var         aresetn,
