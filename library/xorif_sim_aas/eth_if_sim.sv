@@ -7,8 +7,8 @@ module eth_if_sim #(
     parameter int NUM_SRS_LAYER   = 64,
     //
     parameter int HAS_DL_ADAPTOR  = 1,
-    parameter int HAS_UL_ADAPTOR  = 0,
-    parameter int HAS_SRS_ADAPTOR = 0
+    parameter int HAS_UL_ADAPTOR  = 1,
+    parameter int HAS_SRS_ADAPTOR = 1
 ) (
     // AXI-Lite Control/Status
     input var         aclk,
@@ -1419,8 +1419,8 @@ module eth_if_sim #(
       ) i_srs_adaptor (
           // Interface with DFE
           //===================
-          .clk_491m52             (clk_184m32),
-          .rst_491m52             (rst_184m32),
+          .clk_184m32             (clk_184m32),
+          .rst_184m32             (rst_184m32),
           // SRS Section Header
           .srs_cfg_cc             (srs_cfg_cc),
           .srs_cfg_symbol         (srs_cfg_symbol),
@@ -1495,7 +1495,7 @@ module eth_if_sim #(
           .ctrl_clk               (aclk),
           .ctrl_rst               (~aresetn),
           //
-          .ctrl_srs_en            ('b0),
+          .ctrl_srs_en            ('b1),
           .ctrl_srs_gen_en        ('b0),
           //
           .ctrl_srs_rtc_pc_id     ('b0),
@@ -1514,7 +1514,7 @@ module eth_if_sim #(
           //
           .ctrl_srs_valid         ('b0),
           // Mu
-          .ctrl_numerology        ('{NUM_CC{2'b00}})
+          .ctrl_numerology        (ctrl_numerology)
       );
     end
   endgenerate

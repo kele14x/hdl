@@ -12,9 +12,9 @@ module tb_eth_if_sim;
   // The number of SRS layers
   parameter int NUM_SRS_LAYER = 64;
   //
-  parameter int HAS_DL_ADAPTOR = 1;
+  parameter int HAS_DL_ADAPTOR = 0;
   parameter int HAS_UL_ADAPTOR = 0;
-  parameter int HAS_SRS_ADAPTOR = 0;
+  parameter int HAS_SRS_ADAPTOR = 1;
 
   // Ethernet Port Clock Interval in PS
   // 10G = 6400, 25G = 2560
@@ -373,7 +373,7 @@ module tb_eth_if_sim;
   //
   task simulation_config();
     logic [31:0] data;
-    automatic int start_symbol = 230;
+    automatic int start_symbol = 51;
 
     start_symbol = start_symbol % 280;
     $display("Start configure simulation only registers");
@@ -559,6 +559,15 @@ module tb_eth_if_sim;
     end
   end
 
+  // Internal bus clock runs at 400 MHz
+  initial begin
+    clk_184m32 = 0;
+    forever begin
+      #(2.713) clk_184m32 = ~clk_184m32;
+    end
+  end
+
+
   // Ethernet clock runs at 390.625 Mhz
   generate
     for (genvar i = 0; i < NUM_ETH_PORT; i++) begin
@@ -594,6 +603,13 @@ module tb_eth_if_sim;
     rst_491m52 = 1;
     repeat (100) @(posedge clk_491m52);
     rst_491m52 <= 0;
+  end
+
+  // Async reset
+  initial begin
+    rst_184m32 = 1;
+    repeat (100) @(posedge clk_184m32);
+    rst_184m32 <= 0;
   end
 
   // ETH reset
@@ -675,7 +691,7 @@ module tb_eth_if_sim;
 
   initial begin
     #(150 * 1000);  // wait to 150 us
-    g_eth_injector[0].eth_injector_i.play_pcap("ModComp_QPSK_2.pcap");
+    g_eth_injector[0].eth_injector_i.play_pcap("srs_c_2section.pcap");
     #1000;
     $finish();
   end
@@ -952,6 +968,36 @@ module tb_eth_if_sim;
       end
     end
   endgenerate
+
+  // SRS Data
+  initial begin
+    srs_data_tdata  <= '0;
+    srs_data_tvalid <= 1'b0;
+    srs_data_tlast  <= 1'b0;
+
+    forever begin
+      // wait srs request
+      forever begin
+        @(posedge clk_184m32);
+        if (srs_req_valid) break;
+      end
+
+      // send SRS data
+      for (int i = 0; i < 3276; i++) begin
+        @(posedge clk_491m52);
+        srs_data_tdata  <= i;
+        srs_data_tvalid <= 1;
+        srs_data_tlast  <= (i == 3275);
+      end
+      @(posedge clk_491m52);
+      srs_data_tdata  <= '0;
+      srs_data_tvalid <= 0;
+      srs_data_tlast  <= 0;
+    end
+  end
+
+
+
 
 endmodule
 
