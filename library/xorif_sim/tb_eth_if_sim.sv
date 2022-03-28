@@ -11,9 +11,9 @@ module tb_eth_if_sim;
   parameter int NUM_UL_LAYER = 4;
 
   // Ethernet Port Clock Interval in PS
-  parameter real ETH_CLK_INTERVAL_PS = 2560;
+  parameter real ETH_CLK_INTERVAL_PS = 6400;
   // Core Clock Interval in PS
-  parameter real CORE_CLK_INTERVAL_PS = 2500;
+  parameter real CORE_CLK_INTERVAL_PS = 4069;
 
 
   // Ethernet Interface
@@ -82,22 +82,6 @@ module tb_eth_if_sim;
   bit        ul_sop_ahead_3        [      NUM_CC];
   bit [15:0] ul_data_i             [      NUM_CC][NUM_UL_LAYER];
   bit [15:0] ul_data_q             [      NUM_CC][NUM_UL_LAYER];
-
-  // SRS Section Header
-  bit [ 2:0] srs_cfg_cc;
-  bit [11:0] srs_cfg_symbol;
-  bit [ 3:0] srs_cfg_numsymbol;
-  bit        srs_cfg_valid;
-  // SRS data request
-  bit [ 2:0] srs_req_cc;
-  bit [ 5:0] srs_req_layer;
-  bit [11:0] srs_req_symbol;
-  bit        srs_req_valid;
-  // SRS data
-  bit  [23:0] srs_data_tdata;                         // {4E, 9Q, 9I}
-  bit         srs_data_tlast;
-  bit         srs_data_tvalid;
-  bit         srs_data_tready;
 
   bit [  3:0] ctrl_bandwidth             [         NUM_CC] = '{NUM_CC{0}};
   bit [  1:0] ctrl_numerology            [         NUM_CC] = '{NUM_CC{0}};
@@ -198,12 +182,12 @@ module tb_eth_if_sim;
       $display("Start configure user_data_filter_* registers for Ethernet port %0d", i);
       // ETH_PORTS(X), 0x6100 + 0x100 * (X)
       // user_data_filter_w0
-      axi_write(32'h6100 + 32'h100 * i, 32'hFFFFFFFF);
-      axi_write(32'h6104 + 32'h100 * i, 32'hFFFFFFFF);
+      axi_write(32'h6100 + 32'h100 * i, 32'h81EFA01C);
+      axi_write(32'h6104 + 32'h100 * i, 32'hFFFF2187);
       axi_write(32'h6108 + 32'h100 * i, 32'hFFFFFFFF);
-      axi_write(32'h610C + 32'h100 * i, 32'hFFFFFFFF);
+      axi_write(32'h610C + 32'h100 * i, 32'hFFFF0081);
       // user_data_filter_w0_mask
-      axi_write(32'h6110 + 32'h100 * i, 32'hFFFF);
+      axi_write(32'h6110 + 32'h100 * i, 32'hCFC0);
       // user_data_filter_w1
       axi_write(32'h6120 + 32'h100 * i, 32'hFFFFFFFF);
       axi_write(32'h6124 + 32'h100 * i, 32'hFFFFFFFF);
@@ -316,45 +300,45 @@ module tb_eth_if_sim;
     // defm_cid_cc_shift
     axi_write(32'h6020, 32'h8);
     // defm_cid_cc_mask
-    axi_write(32'h6024, 32'h7);
-    
+    axi_write(32'h6024, 32'h3);
+
     // defm_cid_bs_shift
-    axi_write(32'h6028, 32'hb);
+    axi_write(32'h6028, 32'hA);
     // defm_cid_bs_mask
-    axi_write(32'h602C, 32'h1);
-    
+    axi_write(32'h602C, 32'h3);
+
     // defm_cid_du_shift
     axi_write(32'h6030, 32'hC);
     // defm_cid_du_mask
     axi_write(32'h6034, 32'hF);
-    
+
 
     // 0x00 ~ 0x0F UL/DL SS (Layer)
     // 0x20 ~ 0x23 PRACH
     // 0x40 ~ 0x7F SRS (no support)
 
     // defm_cid_ss_mask
-    axi_write(32'h6038, 32'h0F);
+    axi_write(32'h6038, 32'h3);
 
     // defm_cid_u_mask
-    axi_write(32'h603C, 32'hF0);
+    axi_write(32'h603C, 32'hFC);
     // defm_cid_u_value
     axi_write(32'h6040, 32'h00);
-    
+
     // defm_cid_prach_mask
-    axi_write(32'h6044, 32'hF0);
+    axi_write(32'h6044, 32'hFC);
     // defm_cid_prach_value
-    axi_write(32'h6048, 32'h20);
-    
+    axi_write(32'h6048, 32'h8);
+
     // defm_cid_ssb_mask
-    axi_write(32'h604C, 32'hF0);
+    axi_write(32'h604C, 32'h0);
     // defm_cid_ssb_value
-    axi_write(32'h6050, 32'h80);
-    
+    axi_write(32'h6050, 32'hFF);
+
     // defm_cid_lte_mask
-    axi_write(32'h6054, 32'hF0);
+    axi_write(32'h6054, 32'h0);
     // defm_cid_lte_value
-    axi_write(32'h6058, 32'hC0);
+    axi_write(32'h6058, 32'hFF);
   endtask
 
   //
@@ -362,7 +346,7 @@ module tb_eth_if_sim;
   //
   task simulation_config();
     logic [31:0] data;
-    automatic int start_symbol = 78;
+    automatic int start_symbol = 177;
 
     start_symbol = start_symbol % 280;
     $display("Start configure simulation only registers");
@@ -397,7 +381,7 @@ module tb_eth_if_sim;
       // cc_ul_ctrl_unrolled_offsets
       axi_write(32'hE110 + 32'h70 * i, 32'h20 * i);
       // oran_cc_num_sym_config
-      axi_write(32'hE114 + 32'h70 * i, 32'h18180300 + 32'h3 * i);
+      axi_write(32'hE114 + 32'h70 * i, 32'h15120A00 + 32'hA * i);
       // pran_cc_ul_compression
       //axi_write(32'hE118 + 32'h70 * i, 32'h100); // raw
       axi_write(32'hE118 + 32'h70 * i, 32'h119); // bfp9
@@ -405,23 +389,23 @@ module tb_eth_if_sim;
       //axi_write(32'hE11C + 32'h70 * i, 32'h100); // raw
       axi_write(32'hE11C + 32'h70 * i, 32'h119); // bfp9
       // cc_ul_setup_c_abs_symbol
-      axi_write(32'hE120 + 32'h70 * i, 32'h2);
+      axi_write(32'hE120 + 32'h70 * i, 32'h4);
       // cc_ul_setup_c_cycles
-      axi_write(32'hE124 + 32'h70 * i, 32'h2246);
+      axi_write(32'hE124 + 32'h70 * i, 32'h1D35);
       // cc_ul_setup_d_cycles
       axi_write(32'hE128 + 32'h70 * i, 32'h2249);
       // cc_dl_setup_c_abs_symbol
       axi_write(32'hE130 + 32'h70 * i, 32'h4);
       // cc_dl_setup_c_cycles
-      axi_write(32'hE134 + 32'h70 * i, 32'h2245);
+      axi_write(32'hE134 + 32'h70 * i, 32'hC58);
       // cc_dl_setup_d_cycles
       axi_write(32'hE138 + 32'h70 * i, 32'h1D7D);
       // cc_ul_base_offset
       axi_write(32'hE140 + 32'h70 * i, 32'h20 * i);
       // cc_ul_bidf_c_abs_symbol
-      axi_write(32'hE144 + 32'h70 * i, 32'h2);
+      axi_write(32'hE144 + 32'h70 * i, 32'h4);
       // cc_ul_bidf_c_cycles
-      axi_write(32'hE148 + 32'h70 * i, 32'h1B3B);
+      axi_write(32'hE148 + 32'h70 * i, 32'h1075);
       // cc_max_symbols
       axi_write(32'hE158 + 32'h70 * i, 32'h118);
       // cc_num_ctrl_per_symbol_dl
@@ -429,25 +413,22 @@ module tb_eth_if_sim;
       // cc_num_ctrl_per_symbol_ul
       axi_write(32'hE164 + 32'h70 * i, 32'h20);
       // cc_modvals_dl
-      axi_write(32'hE168 + 32'h70 * i, 32'h300);
+      axi_write(32'hE168 + 32'h70 * i, 32'h240);
       // cc_modvals_ul
-      axi_write(32'hE16C + 32'h70 * i, 32'h300);
+      axi_write(32'hE16C + 32'h70 * i, 32'h2A0);
     end
 
     // cc_dl_data_unroll_offset
     axi_write(32'hE500, 32'h0);
-    axi_write(32'hE504, 32'h71E);
-    axi_write(32'hE508, 32'hE3C);
-    axi_write(32'hE50C, 32'h115A);
-    axi_write(32'hE510, 32'h1C78);
-    axi_write(32'hE514, 32'h2396);
-
-//    axi_write(32'hE500, 32'h0);
-//    axi_write(32'hE500, 32'h3BF);
-//    axi_write(32'hE500, 32'h77E);
-//    axi_write(32'hE500, 32'hB3D);
-//    axi_write(32'hE500, 32'hEFC);
-//    axi_write(32'hE500, 32'h12BB);
+    axi_write(32'hE504, 32'h3F8);
+    axi_write(32'hE508, 32'h7F0);
+    axi_write(32'hE50C, 32'hBE8);
+    axi_write(32'hE510, 32'hFE0);
+    axi_write(32'hE514, 32'h13D8);
+    axi_write(32'hE518, 32'h17D0);
+    axi_write(32'hE51C, 32'h1BC8);
+    axi_write(32'hE520, 32'h1FC0);
+    axi_write(32'hE524, 32'h23B8);
 
     // TODO: SSB related register
 
@@ -534,6 +515,7 @@ module tb_eth_if_sim;
 
   // Internal bus clock runs at 400 MHz
   initial begin
+    #2;
     clk_400m = 0;
     forever begin
       #(CORE_CLK_INTERVAL_PS/2000) clk_400m = ~clk_400m;
@@ -619,7 +601,7 @@ module tb_eth_if_sim;
     // Wait to enable CC
     #(50 * 1000 - $time());  // wait to 50 us
     enable_cc();
-    
+
     forever begin
       // Wait interrupt
       @(posedge aclk);
@@ -644,9 +626,9 @@ module tb_eth_if_sim;
   //---------------------
 
   initial begin
-    #(150 * 1000);  // wait to 150 us
-    g_eth_injector[0].eth_injector_i.play_pcap("test_dl_prb_118.pcap");
-    #1000;
+    #(158 * 1000 + 868);  // wait to 150 us
+    g_eth_injector[0].eth_injector_i.play_pcap("prach_jp.pcap");
+    #10000;
     $finish();
   end
 
