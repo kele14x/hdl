@@ -1,4 +1,5 @@
 ../ram/bram_sdp.sv
+../ram/bram_sdp_pipe.sv
 fir_macc.sv
 
 fir_macc_ooc.xdc
