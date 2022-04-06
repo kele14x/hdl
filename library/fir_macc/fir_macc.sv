@@ -24,6 +24,10 @@ module fir_macc #(
     input var  logic                  m_axis_tready,
     output var logic [           3:0] m_axis_tuser,             // channel number
     // Control interface
+    input var  logic [           9:0] ctrl_coe_wr_addr,
+    input var  logic                  ctrl_coe_wr_en,
+    input var  logic [ COE_WIDTH-1:0] ctrl_coe_wr_din,
+    //
     input var  logic [           6:0] ctrl_coefficient_length,
     input var  logic [           2:0] ctrl_coefficient_set,
     // Status
@@ -36,6 +40,9 @@ module fir_macc #(
     S_ACC,
     S_WAIT0,
     S_WAIT1,
+    S_WAIT2,
+    S_WAIT3,
+    S_WAIT4,
     S_OUT
   } state_t;
 
@@ -61,8 +68,9 @@ module fir_macc #(
   end
 
   always_comb begin
-    // stay at current state by default
+    // By default, stay at current state
     state_next = state;
+    // State tranfer
     case (state)
       S_RST:   state_next = S_IDLE;
       S_IDLE: begin
@@ -76,7 +84,10 @@ module fir_macc #(
         end
       end
       S_WAIT0: state_next = S_WAIT1;
-      S_WAIT1: state_next = S_OUT;
+      S_WAIT1: state_next = S_WAIT2;
+      S_WAIT2: state_next = S_WAIT3;
+      S_WAIT3: state_next = S_WAIT4;
+      S_WAIT4: state_next = S_OUT;
       S_OUT: begin
         if (m_axis_tready) begin
           state_next = S_IDLE;
@@ -172,6 +183,7 @@ module fir_macc #(
     data_rd_addr[6:0] <= data_wr_addr[6:0] - acc_cnt;
   end
 
+
   bram_sdp_pipe #(
       .ADDR_WIDTH(11),  // 128 * 16 = 2048
       .DATA_WIDTH(XIN_WIDTH),
@@ -190,6 +202,102 @@ module fir_macc #(
       .addrb(data_rd_addr),
       .doutb(data_rd_dout)
   );
+
+
+  // Coefficients Store RAM
+  //=======================
+
+  logic [          9:0] coe_rd_addr;
+  logic                 coe_rd_en;
+  logic [COE_WIDTH-1:0] coe_rd_dout;
+
+  // Coefficients read address is built by {coefficient_set, coefficient_number}
+
+  assign coe_rd_addr[9:7] = ctrl_coefficient_set;
+
+  always_ff @(posedge aclk) begin
+    if (state == S_ACC) begin
+      coe_rd_addr[6:0] <= acc_cnt;
+    end else begin
+      coe_rd_addr[6:0] <= 0;
+    end
+  end
+
+  always_ff @(posedge aclk) begin
+    coe_rd_en <= (state == S_ACC);
+  end
+
+
+  bram_sdp_pipe #(
+      .ADDR_WIDTH(10),  // 128 * 8 = 1024
+      .DATA_WIDTH(COE_WIDTH),
+      .READ_LATENCY(2)
+  ) i_coe_ram (
+      // Port A
+      .clka (aclk),
+      .ena  (ctrl_coe_wr_en),
+      .wea  (ctrl_coe_wr_en),
+      .addra(ctrl_coe_wr_addr),
+      .dina (ctrl_coe_wr_din),
+      // Port B
+      .clkb (aclk),
+      .rstb (1'b0),
+      .enb  (coe_rd_en),
+      .addrb(coe_rd_addr),
+      .doutb(coe_rd_dout)
+  );
+
+
+  // MAC
+  //====
+
+  logic        op_in_pre1, op_in_pre2, op_in_pre3;
+  logic        op_in;
+  logic [47:0] pout;
+
+  always_ff @(posedge aclk) begin
+    op_in_pre1 <= (state == S_IDLE) && s_axis_tvalid;
+    op_in_pre2 <= op_in_pre1;
+    op_in_pre3 <= op_in_pre2;
+    op_in      <= op_in_pre3;
+  end
+
+  fir_macc_mac #(
+      .A_WIDTH(XIN_WIDTH),
+      .B_WIDTH(COE_WIDTH),
+      .P_WIDTH(48)
+  ) i_mac (
+      .clk  (aclk),
+      //
+      .ain  (data_rd_dout),
+      .bin  (coe_rd_dout),
+      .op_in(op_in),  // 0 = multiply, 1 = MACC
+      .pout (pout)
+  );
+
+
+  // Output AXIS
+  //============
+
+  always_ff @(posedge aclk) begin
+    if (state_next == S_OUT) begin
+      m_axis_tdata <= pout[YOUT_WIDTH+SRA_BITS-1:SRA_BITS];
+    end
+  end
+
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      m_axis_tvalid <= 1'b0;
+    end else begin
+      m_axis_tvalid <= (state_next == S_OUT);
+    end
+  end
+
+  always_ff @(posedge aclk) begin
+    if (state_next == S_OUT) begin
+      m_axis_tuser <= ch_num;
+    end
+  end
 
 endmodule
 
