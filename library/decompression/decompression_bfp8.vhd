@@ -36,11 +36,20 @@ architecture rtl of decompression_bfp8 is
   signal state      : unsigned(5 downto 0);
   signal state_next : unsigned(5 downto 0);
 
-  -- This indicate current state need a new word from input
+  signal state_extra_tlast : std_logic;
+
+  -- Current state need new word from input AXIS
   signal state_eat_new_word : std_logic;
 
-  -- The "which state need new word" lookup table is here
+  -- The "which state need new word" lookup table
   constant state_eat_new_word_hex : std_logic_vector(63 downto 0) := x"0000555555AAAAAB";
+
+  -- Current state
+  signal state_extra_re_pair : std_logic;
+
+  -- Which state contains extra RE pair, this means if we recevived TLAST at
+  -- these states, we must
+  constant state_extra_re_pair_hex : std_logic_vector(63 downto 0) := x"00005555552AAAAA";
 
   signal not_first_word : std_logic;
 
@@ -84,7 +93,7 @@ begin
   begin
     if (rising_edge(aclk)) then
       if (aresetn = '0') then
-        state <= (others => '1');
+        state <= (others => '0');
       else
         state <= state_next;
       end if;
@@ -95,7 +104,7 @@ begin
   begin
     if (state < 48) then
       --///
-      if (state_eat_new_word = '1' and s_defm_tvalid = '1' and s_defm_tlast = '1') then
+      if ((state_eat_new_word = '1' and s_defm_tvalid = '1' and s_defm_tlast = '1' and state_extra_re_pair = '0') or state_extra_tlast = '1') then
         -- We recevied last word
         state_next <= (others => '0');
       elsif ((state_eat_new_word = '1' and s_defm_tvalid = '1') or state_eat_new_word = '0') then
@@ -115,6 +124,29 @@ begin
     end if;
   end process;
 
+  process (aclk) is
+  begin
+    if (rising_edge(aclk)) then
+      if (aresetn = '0') then
+        state_extra_tlast <= '0';
+      elsif (state_extra_re_pair = '1' and s_defm_tvalid = '1' and s_defm_tlast = '1') then
+        state_extra_tlast <= '1';
+      else
+        state_extra_tlast <= '0';
+      end if;
+    end if;
+  end process;
+
+  process (state) is
+  begin
+    -- Current state need new word from input AXIS
+    state_eat_new_word <= state_eat_new_word_hex(to_integer(state));
+  end process;
+
+  process (state) is
+  begin
+    state_extra_re_pair <= state_extra_re_pair_hex(to_integer(state));
+  end process;
 
   -- Input AXIS
   --===========
@@ -123,14 +155,12 @@ begin
   begin
     if (rising_edge(aclk)) then
       if (aresetn = '0') then
-        state_eat_new_word <= '0';
+        s_defm_tready <= '0';
       else
-        state_eat_new_word <= state_eat_new_word_hex(to_integer(state_next));
+        s_defm_tready <= state_eat_new_word_hex(to_integer(state_next));
       end if;
     end if;
   end process proc_state_eat_new_word;
-
-  s_defm_tready <= state_eat_new_word;
 
 
   -- TEMP1 Register

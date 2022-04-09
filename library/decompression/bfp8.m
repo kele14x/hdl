@@ -39,7 +39,19 @@ for s = 0:(num_states - 1)
         state_eat_new_word(s + 1) = 1;
         state_eat_new_word_hex = state_eat_new_word_hex + 2 ^ s;
         bits = bits + 64;
-    end 
+    end
 end
 assert(sum(state_eat_new_word) == num_word_lcm);
 state_eat_new_word_hex = dec2hex(state_eat_new_word_hex);
+
+% Which state contains extra RE pair
+state_extra_re_pair = zeros(num_states, 1);
+state_extra_re_pair_hex = int64(0);
+for s = 0:(num_states - 1)
+    next_s = rem(s + 1, num_states);
+    if state_eat_new_word(s + 1) == 1 && state_eat_new_word(next_s + 1) == 0
+        state_extra_re_pair(s + 1) = 1;
+        state_extra_re_pair_hex = state_extra_re_pair_hex + 2 ^ s;
+    end
+end
+state_extra_re_pair_hex = dec2hex(state_extra_re_pair_hex);
