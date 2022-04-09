@@ -9,16 +9,16 @@ entity decompression_bfp8 is
     -- Data input
     s_defm_tdata  : in std_logic_vector(63 downto 0);
     s_defm_tkeep  : in std_logic_vector(7 downto 0);
-    s_defm_tvalid : in std_logic;
     s_defm_tlast  : in std_logic;
     s_defm_tready : out std_logic;
     s_defm_tuser  : in std_logic_vector(30 downto 0);
+    s_defm_tvalid : in std_logic;
     -- Data output
     m_unpack_tdata  : out std_logic_vector(63 downto 0);
     m_unpack_tkeep  : out std_logic_vector(7 downto 0);
-    m_unpack_tvalid : out std_logic;
     m_unpack_tlast  : out std_logic;
-    m_unpack_tuser  : out std_logic_vector(30 downto 0)
+    m_unpack_tuser  : out std_logic_vector(30 downto 0);
+    m_unpack_tvalid : out std_logic
   );
 end entity decompression_bfp8;
 
@@ -29,8 +29,8 @@ architecture rtl of decompression_bfp8 is
   -- interface, and write 48 words to output AXIS (25 : 8 : 48).
   -- Since there is no need for output AXIS to support backward pressure, this
   -- makes simpler for state machine. We only need a state machine with 48
-  -- states (encoded as integer fomr 0 to 47).
-  -- At some specificed states, it eat a new word from input. At other states,
+  -- states (encoded as integer form 0 to 47).
+  -- At some specified states, it eat a new word from input. At other states,
   -- it does not need new word.
 
   signal state      : unsigned(5 downto 0);
@@ -44,24 +44,36 @@ architecture rtl of decompression_bfp8 is
 
   signal not_first_word : std_logic;
 
-  signal defm_dat_reversed : std_logic_vector(63 downto 0);
 
   signal temp_data_current : std_logic_vector(63 downto 0);
   signal temp_data_last    : std_logic_vector(63 downto 0);
-  signal temp_state        : unsigned(5 downto 0);
-  signal temp_valid        : std_logic;
-  signal temp_user         : std_logic_vector(30 downto 0);
   signal temp_last         : std_logic;
+  signal temp_state        : unsigned(5 downto 0);
+  signal temp_user         : std_logic_vector(30 downto 0);
+  signal temp_valid        : std_logic;
 
-  signal temp2_data_i0  : std_logic_vector(7 downto 0);
-  signal temp2_data_q0  : std_logic_vector(7 downto 0);
-  signal temp2_data_i1  : std_logic_vector(7 downto 0);
-  signal temp2_data_q1  : std_logic_vector(7 downto 0);
   signal temp2_data     : std_logic_vector(63 downto 0);
+  signal temp2_data_i0  : std_logic_vector(7 downto 0);
+  signal temp2_data_i1  : std_logic_vector(7 downto 0);
+  signal temp2_data_q0  : std_logic_vector(7 downto 0);
+  signal temp2_data_q1  : std_logic_vector(7 downto 0);
   signal temp2_exponent : std_logic_vector(3 downto 0);
-  signal temp2_valid    : std_logic;
-  signal temp2_user     : std_logic_vector(30 downto 0);
   signal temp2_last     : std_logic;
+  signal temp2_user     : std_logic_vector(30 downto 0);
+  signal temp2_valid    : std_logic;
+
+
+  -- This function performs byte reverse on the input vector
+  function byte_reverse (
+    vector_in    : in std_logic_vector(63 downto 0)
+  ) return std_logic_vector is
+    variable ret : std_logic_vector(63 downto 0) := (others => '0');
+  begin
+    for i in 0 to 7 loop
+      ret(63-i*8 downto 56-i*8) := vector_in(7+i*8 downto i*8);
+    end loop;
+    return ret;
+  end function byte_reverse;
 
 begin
 
@@ -137,18 +149,11 @@ begin
     end if;
   end process;
 
-  process (s_defm_tdata) is
-  begin
-    defm_dat_reversed <= s_defm_tdata(7 downto 0) & s_defm_tdata(15 downto 8) & s_defm_tdata(23 downto 16) &
-      s_defm_tdata(31 downto 24) & s_defm_tdata(39 downto 32) & s_defm_tdata(47 downto 40) & s_defm_tdata(55 downto 48) &
-      s_defm_tdata(63 downto 56);
-  end process;
-
   process (aclk) is
   begin
     if (rising_edge(aclk)) then
       if (state_eat_new_word = '1' and s_defm_tvalid = '1') then
-        temp_data_current <= defm_dat_reversed;
+        temp_data_current <= byte_reverse(s_defm_tdata);
         temp_data_last    <= temp_data_current;
       end if;
     end if;
@@ -186,6 +191,7 @@ begin
     end if;
   end process;
 
+
   -- TEMP2
   --======
 
@@ -195,10 +201,18 @@ begin
       temp2_valid <= temp_valid;
     end if;
   end process;
+
   process (aclk) is
   begin
     if (rising_edge(aclk)) then
-      temp2_valid <= temp_valid;
+      temp2_last <= temp_last;
+    end if;
+  end process;
+
+  process (aclk) is
+  begin
+    if (rising_edge(aclk)) then
+      temp2_user <= temp_user;
     end if;
   end process;
 
@@ -206,26 +220,50 @@ begin
   begin
     if (rising_edge(aclk)) then
       if (temp_valid = '1') then
-        if (unsigned(temp_state) = 0) then
+        if (temp_state = 0) then
           temp2_exponent <= temp_data_current(59 downto 56);
-        elsif (unsigned(temp_state) = 6) then
+        elsif (temp_state = 6) then
           temp2_exponent <= temp_data_current(51 downto 48);
-        elsif (unsigned(temp_state) = 12) then
+        elsif (temp_state = 12) then
           temp2_exponent <= temp_data_current(43 downto 40);
-        elsif (unsigned(temp_state) = 18) then
+        elsif (temp_state = 18) then
           temp2_exponent <= temp_data_current(35 downto 32);
-        elsif (unsigned(temp_state) = 24) then
+        elsif (temp_state = 24) then
           temp2_exponent <= temp_data_last(27 downto 24);
-        elsif (unsigned(temp_state) = 30) then
+        elsif (temp_state = 30) then
           temp2_exponent <= temp_data_last(19 downto 16);
-        elsif (unsigned(temp_state) = 36) then
+        elsif (temp_state = 36) then
           temp2_exponent <= temp_data_last(11 downto 8);
-        elsif (unsigned(temp_state) = 41) then
+        elsif (temp_state = 41) then
           temp2_exponent <= temp_data_current(3 downto 0);
         end if;
       end if;
     end if;
   end process;
+
+  process (temp2_data_i0, temp2_data_i1, temp2_data_q0, temp2_data_q1, temp2_exponent) is
+
+    -- This function decompress BFP8 format
+    function decompress (
+      mantissa       : in std_logic_vector(7 downto 0);
+      exponent       : in std_logic_vector(3 downto 0)
+    ) return std_logic_vector is
+      variable shift : integer := 0;
+      variable ret   : signed(15 downto 0) := (others => '0');
+    begin
+      shift := 8 - to_integer(unsigned(exponent));
+      ret(15 downto 8) := signed(mantissa);
+      ret := shift_right(ret, shift);
+      return std_logic_vector(ret);
+    end function decompress;
+
+  begin
+    temp2_data(63 downto 48) <= decompress(temp2_data_i0, temp2_exponent);
+    temp2_data(47 downto 32) <= decompress(temp2_data_q0, temp2_exponent);
+    temp2_data(31 downto 16) <= decompress(temp2_data_i1, temp2_exponent);
+    temp2_data(15 downto  0) <= decompress(temp2_data_q1, temp2_exponent);
+  end process;
+
 
   -- Output AXIS
   --============
@@ -235,12 +273,10 @@ begin
   process (aclk) is
   begin
     if (rising_edge(aclk)) then
-      m_unpack_tdata  <= temp2_data(7 downto 0) & temp2_data(15 downto 8) & temp2_data(23 downto 16) &
-        temp2_data(31 downto 24) & temp2_data(39 downto 32) & temp2_data(47 downto 40) & temp2_data(55 downto 48) &
-        temp2_data(63 downto 56);
-      m_unpack_tvalid <= temp2_valid;
+      m_unpack_tdata  <= byte_reverse(temp2_data);
       m_unpack_tlast  <= temp2_last;
       m_unpack_tuser  <= temp2_user;
+      m_unpack_tvalid <= temp2_valid;
     end if;
   end process;
 

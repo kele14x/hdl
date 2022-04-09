@@ -83,7 +83,51 @@ begin
   end process;
 
   process is
-    variable cnt : integer := 0;
+
+    procedure send_axis_packet (
+      cnt                  : in integer;
+      signal s_defm_tdata  : out std_logic_vector(63 downto 0);
+      signal s_defm_tkeep  : out std_logic_vector(7 downto 0);
+      signal s_defm_tlast  : out std_logic;
+      signal s_defm_tready : in  std_logic;
+      signal s_defm_tuser  : out std_logic_vector(30 downto 0);
+      signal s_defm_tvalid : out std_logic
+    ) is
+      variable c : integer := 0;
+    begin
+
+      -- Send `cnt` AXIS words
+      while (c <= cnt) loop
+        -- Sync with posedge of `aclk`
+        wait until (aclk'event and aclk = '1');
+
+        -- Check if previous word in accept by slave
+        if (c > 0 and s_defm_tready = '0') then
+          next;
+        end if;
+
+        -- Send word
+        if (c < cnt) then
+          s_defm_tdata  <= std_logic_vector(to_unsigned(c, 64));
+          s_defm_tkeep  <= (others => '1');
+          if (c = cnt - 1) then
+            s_defm_tlast <= '1';
+          end if;
+          s_defm_tuser  <= "000" & x"0000000";
+          s_defm_tvalid <= '1';
+          c := c + 1;
+        else
+          -- Reset interface
+          s_defm_tdata  <= (others => '0');
+          s_defm_tkeep  <= (others => '0');
+          s_defm_tlast  <= '0';
+          s_defm_tuser  <= (others => '0');
+          s_defm_tvalid <= '0';
+        end if;
+      end loop;
+
+    end send_axis_packet;
+
   begin
     s_defm_tdata  <= (others => '0');
     s_defm_tkeep  <= (others => '1');
@@ -92,25 +136,7 @@ begin
     s_defm_tvalid <= '0';
     wait until aresetn = '1';
 
-    while (cnt < 25) loop
-      wait until aclk'event and aclk = '1';
-      s_defm_tdata  <= x"0123456789ABCDEF";
-      s_defm_tvalid <= '1';
-      s_defm_tuser  <= "000" & x"ABCDEF0";
-      if (cnt = 24) then
-        s_defm_tlast <= '1';
-      end if;
-      if (s_defm_tready = '1' and s_defm_tvalid = '1') then
-        cnt := cnt + 1;
-      end if;
-    end loop;
-
-    wait until aclk'event and aclk = '1';
-    s_defm_tdata  <= (others => '0');
-    s_defm_tkeep  <= (others => '1');
-    s_defm_tlast  <= '0';
-    s_defm_tuser  <= (others => '0');
-    s_defm_tvalid <= '0';
+    send_axis_packet(25, s_defm_tdata, s_defm_tkeep, s_defm_tlast, s_defm_tready, s_defm_tuser, s_defm_tvalid);
 
     wait;
   end process;
