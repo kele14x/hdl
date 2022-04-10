@@ -26,32 +26,24 @@ num_word_lcm = bits_lcm / 64;
 % Also number of output words in one loop cycle
 num_states = num_re_lcm / 2;
 
+% s
+s = (0:(num_states - 1))';
+irb = floor(s * 2 / 12);
+ire = rem(s * 2 + 1, 12);
+
+% Required bits for each state
+required_bits = irb * bits_rb + (ire + 1) * bfp * 2 + 8;
+
+% Required words for each state
+required_words = ceil(required_bits / 64);
+
 % Which state require new word from input
-state_eat_new_word = zeros(num_states, 1);
-state_eat_new_word_hex = int64(0);
-bits = 0;
-for s = 0:(num_states - 1)
-    irb = floor(s * 2 / 12);
-    ire = rem(s * 2 + 1, 12);
-    required_bits = irb * bits_rb + (ire + 1) * bfp * 2 + 8;
-    fprintf("%d, %d\n", s, required_bits);
-    if (required_bits > bits)
-        state_eat_new_word(s + 1) = 1;
-        state_eat_new_word_hex = state_eat_new_word_hex + 2 ^ s;
-        bits = bits + 64;
-    end
-end
-assert(sum(state_eat_new_word) == num_word_lcm);
-state_eat_new_word_hex = dec2hex(state_eat_new_word_hex);
+state_eat_new_word = required_words ~= circshift(required_words, 1);
+state_eat_new_word_hex = dec2hex(sum(state_eat_new_word .* (2 .^ s)));
 
 % Which state contains extra RE pair
-state_extra_re_pair = zeros(num_states, 1);
-state_extra_re_pair_hex = int64(0);
-for s = 0:(num_states - 1)
-    next_s = rem(s + 1, num_states);
-    if state_eat_new_word(s + 1) == 1 && state_eat_new_word(next_s + 1) == 0
-        state_extra_re_pair(s + 1) = 1;
-        state_extra_re_pair_hex = state_extra_re_pair_hex + 2 ^ s;
-    end
-end
-state_extra_re_pair_hex = dec2hex(state_extra_re_pair_hex);
+state_extra_re_pair = state_eat_new_word & ~circshift(state_eat_new_word, -1);
+state_extra_re_pair_hex = dec2hex(sum(state_extra_re_pair .* (2 .^ s)));
+
+%
+state_lsb = mod(64 - required_bits, 64);
