@@ -43,6 +43,85 @@ architecture rtl of tb_decompression_bfp8 is
     );
   end component;
 
+  procedure send_axis_packet (
+    start_prb            : in integer;
+    number_prb           : in integer;
+    --
+    signal s_defm_tdata  : out std_logic_vector(63 downto 0);
+    signal s_defm_tkeep  : out std_logic_vector(7 downto 0);
+    signal s_defm_tlast  : out std_logic;
+    signal s_defm_tready : in  std_logic;
+    signal s_defm_tuser  : out std_logic_vector(30 downto 0);
+    signal s_defm_tvalid : out std_logic
+  ) is
+    variable tuser  : std_logic_vector(30 downto 0) := (others => '0');
+    variable nbytes : integer := 0;
+    variable c      : integer := 0;
+  begin
+
+    -- Build the TUSER field
+    tuser(9 downto 0)   := std_logic_vector(to_unsigned(start_prb, 10));
+    tuser(17 downto 10)  := std_logic_vector(to_unsigned(number_prb, 8));
+    tuser(21 downto 18) := x"1"; -- Compression type
+    tuser(25 downto 22) := x"8"; -- Bitwidth
+    tuser(26)           := '0'; -- RB bit
+    tuser(27)           := '0'; -- Start of symbol marker
+    tuser(30 downto 28) := "000"; -- Component carrier
+
+    nbytes := number_prb * (8 + 12 * 8 * 2) / 8; -- 200 bits/RB
+
+    -- Sync with posedge of `aclk`
+    wait until (aclk'event and aclk = '1');
+
+    -- Send `cnt` AXIS words
+    while (c < nbytes) loop
+
+      -- TDATA & TKEEP
+      s_defm_tdata  <= (others => '0');
+      s_defm_tkeep  <= (others => '0');
+      for i in 0 to 7 loop
+        s_defm_tdata(i*8+7 downto i*8) <= std_logic_vector(to_signed(-c / 8, 8));
+        s_defm_tkeep(i)                <= '1';
+      end loop;
+
+      -- TLAST
+      if (nbytes - c <= 8) then
+        s_defm_tlast <= '1';
+      else
+        s_defm_tlast <= '0';
+      end if;
+
+      -- TUSER
+      s_defm_tuser  <= tuser;
+      if (c = 0) then
+        s_defm_tuser(27) <= '1';
+      end if;
+
+      -- TVALID
+      s_defm_tvalid <= '1';
+
+      c := c + 8;
+      
+      loop 
+        wait until (aclk'event and aclk = '1');
+        -- Check if previous word in accept by slave
+        if (s_defm_tready = '1') then
+          exit;
+        end if;
+      end loop;
+
+    end loop;
+
+    -- Reset interface
+    s_defm_tdata  <= (others => '0');
+    s_defm_tkeep  <= (others => '0');
+    s_defm_tlast  <= '0';
+    s_defm_tuser  <= (others => '0');
+    s_defm_tvalid <= '0';
+
+  end send_axis_packet;
+
+
 begin
 
   UUT : decompression_bfp8
@@ -83,51 +162,6 @@ begin
   end process;
 
   process is
-
-    procedure send_axis_packet (
-      cnt                  : in integer;
-      signal s_defm_tdata  : out std_logic_vector(63 downto 0);
-      signal s_defm_tkeep  : out std_logic_vector(7 downto 0);
-      signal s_defm_tlast  : out std_logic;
-      signal s_defm_tready : in  std_logic;
-      signal s_defm_tuser  : out std_logic_vector(30 downto 0);
-      signal s_defm_tvalid : out std_logic
-    ) is
-      variable c : integer := 0;
-    begin
-
-      -- Send `cnt` AXIS words
-      while (c <= cnt) loop
-        -- Sync with posedge of `aclk`
-        wait until (aclk'event and aclk = '1');
-
-        -- Check if previous word in accept by slave
-        if (c > 0 and s_defm_tready = '0') then
-          next;
-        end if;
-
-        -- Send word
-        if (c < cnt) then
-          s_defm_tdata  <= std_logic_vector(to_unsigned(c, 64));
-          s_defm_tkeep  <= (others => '1');
-          if (c = cnt - 1) then
-            s_defm_tlast <= '1';
-          end if;
-          s_defm_tuser  <= "000" & x"0000000";
-          s_defm_tvalid <= '1';
-          c := c + 1;
-        else
-          -- Reset interface
-          s_defm_tdata  <= (others => '0');
-          s_defm_tkeep  <= (others => '0');
-          s_defm_tlast  <= '0';
-          s_defm_tuser  <= (others => '0');
-          s_defm_tvalid <= '0';
-        end if;
-      end loop;
-
-    end send_axis_packet;
-
   begin
     s_defm_tdata  <= (others => '0');
     s_defm_tkeep  <= (others => '1');
@@ -136,7 +170,10 @@ begin
     s_defm_tvalid <= '0';
     wait until aresetn = '1';
 
-    send_axis_packet(25, s_defm_tdata, s_defm_tkeep, s_defm_tlast, s_defm_tready, s_defm_tuser, s_defm_tvalid);
+    for i in 1 to 8 loop
+      send_axis_packet(0, i, s_defm_tdata, s_defm_tkeep, s_defm_tlast, s_defm_tready, s_defm_tuser, s_defm_tvalid);
+      wait for 100 ns;
+    end loop;
 
     wait;
   end process;

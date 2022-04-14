@@ -54,9 +54,6 @@ architecture rtl of decompression_bfp8 is
   signal state_extra_tlast   : std_logic;
   signal state_noextra_tlast : std_logic;
 
-  signal not_first_word : std_logic;
-
-
   signal temp_data_current : std_logic_vector(63 downto 0);
   signal temp_data_last    : std_logic_vector(63 downto 0);
   signal temp_last         : std_logic;
@@ -140,13 +137,10 @@ architecture rtl of decompression_bfp8 is
     variable ret : std_logic := '0';
     variable lut : std_logic_vector(63 downto 0) := (others => '0');
   begin
-    for s in 0 to 63 loop
-      if (required_words(s) = required_words(s + 1)) then
-        lut(s) := '1';
-      else
-        lut(s) := '0';
-      end if ;
-    end loop;
+    lut(28) := '1';
+    lut(34) := '1';
+    lut(40) := '1';
+    lut(46) := '1';
     ret := lut(to_integer(state));
     return ret;
   end function extra_re_pair;
@@ -162,7 +156,7 @@ architecture rtl of decompression_bfp8 is
     variable ret  : std_logic_vector(31 downto 0) := (others => '0');
   begin
     comb := data_last & data_current;
-    idx  := (64 - required_bits(to_integer(state))) mod 32;
+    idx  := (64 - required_bits(to_integer(state))) mod 64;
     ret  := comb(idx+31 downto idx);
     return ret;
   end function get_iq_lsb;
@@ -184,7 +178,7 @@ begin
         write(output, ", required bits: " & integer'image(required_bits(s)));
         write(output, ", required words: " & integer'image(required_words(s)));
         write(output, ", require new word: " & std_logic'image(require_new_word(state)));
-        write(output, ", extra re pair: " & to_string(extra_re_pair(state)));
+        write(output, ", extra re pair: " & std_logic'image(extra_re_pair(state)));
         write(output, "" & LF);
       end loop;
       wait;
@@ -305,20 +299,7 @@ begin
   process (aclk) is
   begin
     if (rising_edge(aclk)) then
-      if (aresetn = '0') then
-        not_first_word <= '0';
-      elsif (state_eat_new_word = '1' and s_defm_tvalid = '1' and s_defm_tlast = '1') then
-        not_first_word <= '0';
-      elsif (state_eat_new_word = '1' and s_defm_tvalid = '1') then
-        not_first_word <= '1';
-      end if;
-    end if;
-  end process;
-
-  process (aclk) is
-  begin
-    if (rising_edge(aclk)) then
-      if ((state_eat_new_word = '1' and s_defm_tvalid = '1') or not_first_word = '0') then
+      if (state_eat_new_word = '1' and s_defm_tvalid = '1') then
         temp_user <= s_defm_tuser;
       end if;
     end if;
