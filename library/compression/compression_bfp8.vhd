@@ -2,6 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library std;
+use std.textio.all;
+
 use work.top_type_pkg.all;
 
 entity compression_bfp8 is
@@ -24,6 +27,8 @@ entity compression_bfp8 is
 end compression_bfp8;
 
 architecture rtl of compression_bfp8 is
+
+  constant DEBUG : integer := 1;
 
   constant C_DELAY_TAPS : integer := 10;
 
@@ -53,9 +58,13 @@ architecture rtl of compression_bfp8 is
   signal comp_exp      : std_logic_vector(3 downto 0);
   signal comp_valid    : std_logic;
   signal comp_last     : std_logic;
-  signal comp_cnt      : std_logic_vector(5 downto 0);
+  signal comp_cnt      : unsigned(5 downto 0);
 
-  signal comp_mantissa_d : std_logic_vector(31 downto 0);
+  signal comp_extra_last   : std_logic;
+  signal comp_noextra_last : std_logic;
+
+  signal comp_mantissa_d  : std_logic_vector(31 downto 0);
+  signal comp_mantissa_dd : std_logic_vector(31 downto 0);
 
 
   -- Functions
@@ -73,15 +82,86 @@ architecture rtl of compression_bfp8 is
     return ret;
   end function byte_reverse;
 
+  -- This function cacluates number of bits until current state counter
+  function total_bits (
+    cnt : in unsigned(5 downto 0)
+  ) return integer is 
+    variable ret : integer := 0;  
+  begin
+    ret := to_integer(cnt);
+    ret := (ret / 6) * 8 + ret * 32 + 40;
+    return ret;
+  end function total_bits;
+
+  -- This function cacluates number of words until current state counter
+  function total_words (
+    cnt : in unsigned(5 downto 0)
+  ) return integer is 
+    variable ret : integer := 0;  
+  begin
+    ret := total_bits(cnt) / 64;
+    return ret;
+  end function total_words;
+
+  -- This function check if at current state counter, we have a valid word 
+  -- output
+  function valid_word (
+    cnt : in unsigned(5 downto 0)
+  ) return std_logic is 
+    variable lut : std_logic_vector(63 downto 0) := (others => '0');
+    variable ret : std_logic := '0';  
+  begin
+    for i in 1 to 47 loop
+      if (total_words(to_unsigned(i, 6)) > total_words(to_unsigned(i - 1, 6))) then 
+        lut(i) := '1';
+      end if;
+    end loop;
+    ret := lut(to_integer(cnt));
+    return ret;
+  end function valid_word;
+
+  -- This function calculates how many bits left after this state
+  function left_bytes (
+    cnt : in unsigned(5 downto 0)
+  ) return unsigned is 
+    variable ret : unsigned(2 downto 0) := (others => '0');  
+  begin
+    ret := to_unsigned((total_bits(cnt) / 8) rem 8, 3);
+    return ret;
+  end function left_bytes;
+
 begin
 
-  -- Input AXIS
+  -- DEBUG
+  DEBUG_PRINT : if (DEBUG > 0) generate
+  begin
   
+    process is
+      variable cnt : unsigned(5 downto 0);
+    begin
+      for c in 0 to 47 loop
+        cnt := to_unsigned(c, 6);
+        write(output, "cnt: " & integer'image(c));
+        write(output, ", total bits: " & integer'image(total_bits(cnt)));
+        write(output, ", total words: " & integer'image(total_words(cnt)));
+        write(output, ", valid words: " & std_logic'image(valid_word(cnt)));
+        write(output, ", left bytes: " & integer'image(to_integer(left_bytes(cnt))));
+        write(output, "" & LF);
+      end loop;
+      wait;
+    end process;
+  
+  end generate;
+
+  -- Input AXIS
+
   process (aclk) is 
   begin
     if (aresetn = '0') then
       s_axis_tready <= '0';
-    else 
+    elsif (s_axis_tvalid = '1' and s_axis_tlast = '1') then
+      s_axis_tready <= '0';
+    else
       s_axis_tready <= '1';
     end if;
   end process;
@@ -100,7 +180,8 @@ begin
       end if;
     end if;
   end process;
-  
+
+
   -- Delay line
 
   process (aclk) is
@@ -217,6 +298,7 @@ begin
     end if;
   end process;
 
+
   -- Compressing using extracted exponent
 
   process (aclk) is
@@ -303,105 +385,147 @@ begin
     if (rising_edge(aclk)) then
       if (aresetn = '0') then
         comp_cnt <= (others => '0');
-      elsif (comp_valid = '1' and (comp_last = '1' or unsigned(comp_cnt) = 47)) then
+      elsif (comp_valid = '1' and (comp_last = '1' or comp_cnt = 47)) then
         comp_cnt <= (others => '0');
       elsif (comp_valid = '1') then
-        comp_cnt <= std_logic_vector(unsigned(comp_cnt) + 1);
+        comp_cnt <= comp_cnt + 1;
       end if;
     end if;
   end process;
-  
+
+
+  -- Past data
+
+  process (aclk) is 
+  begin
+    if (rising_edge(aclk)) then
+      if (comp_valid = '1' and comp_last = '1' and comp_cnt < 47) then
+        comp_extra_last  <= '1';
+      else
+        comp_extra_last  <= '0';
+      end if;
+    end if;
+  end process;
+
+  comp_noextra_last <= '1' when (comp_valid = '1' and comp_last = '1' and comp_cnt = 47) else '0';
+
   process (aclk) is 
   begin
     if (rising_edge(aclk)) then
       if (comp_valid = '1') then
-        comp_mantissa_d <= comp_mantissa;
+        comp_mantissa_d  <= comp_mantissa;
+        comp_mantissa_dd <= comp_mantissa_d;
       end if;
     end if;
   end process;
+
 
   -- Output AXIS
   
   process (aclk) is 
   
     function sel_data (
-      cnt             : in std_logic_vector(5 downto 0);
-      comp_exp        : in std_logic_vector(3 downto 0);
-      comp_mantissa   : in std_logic_vector(31 downto 0);
-      comp_mantissa_d : in std_logic_vector(31 downto 0)
+      cnt              : in unsigned(5 downto 0);
+      comp_exp         : in std_logic_vector(3 downto 0);
+      comp_mantissa    : in std_logic_vector(31 downto 0);
+      comp_mantissa_d  : in std_logic_vector(31 downto 0);
+      comp_mantissa_dd : in std_logic_vector(31 downto 0)
     ) return std_logic_vector is
-      variable bytes : integer := 0;
-      variable ret   : std_logic_vector(64 downto 0);
+      variable bytes : unsigned(2 downto 0) := (others => '0');
+      variable temp  : std_logic_vector(95 downto 0) := (others => '0');
+      variable ret   : std_logic_vector(63 downto 0) := (others => '0');
     begin
-      bytes := to_integer(unsigned(cnt));
-      bytes := ((bytes / 6) + bytes * 4 + 5) rem 8;
-      
+      bytes := left_bytes(cnt);
+      temp  := comp_mantissa_dd & comp_mantissa_d & comp_mantissa;
+      if (cnt = 0) then
+        ret := x"0" & comp_exp & comp_mantissa & x"000000";
+      elsif (cnt = 6) then
+        ret := comp_mantissa_d(7 downto 0) & x"0" & comp_exp & comp_mantissa & x"0000";
+      elsif (cnt = 12) then
+        ret := comp_mantissa_d(15 downto 0) & x"0" & comp_exp & comp_mantissa & x"00";
+      elsif (cnt = 18) then
+        ret := comp_mantissa_d(23 downto 0) & x"0" & comp_exp & comp_mantissa;
+      elsif (cnt = 24) then
+        ret := comp_mantissa_d(31 downto 0) & x"0" & comp_exp & comp_mantissa(31 downto 8);
+      elsif (cnt = 30) then
+        ret := comp_mantissa_dd(7 downto 0) & comp_mantissa_d(31 downto 0) & x"0" & comp_exp & comp_mantissa(31 downto 16);
+      elsif (cnt = 36) then
+        ret := comp_mantissa_dd(15 downto 0) & comp_mantissa_d(31 downto 0) & x"0" & comp_exp & comp_mantissa(31 downto 24);
+      elsif (cnt = 42) then
+        ret := comp_mantissa_dd(23 downto 0) & comp_mantissa_d(31 downto 0) & x"0" & comp_exp;
+      elsif (valid_word(cnt) = '1') then
+        if (bytes = 0) then
+          ret := temp(63 downto 0);
+        elsif (bytes = 1) then
+          ret := temp(71 downto 8);
+        elsif (bytes = 2) then
+          ret := temp(79 downto 16);
+        elsif (bytes = 3) then
+          ret := temp(87 downto 24);
+        else
+          ret := temp(95 downto 32);
+        end if;
+      else
+        if (bytes = 4) then
+          ret := temp(31 downto 0) & x"00000000";
+        elsif (bytes = 5) then
+          ret := temp(39 downto 0) & x"000000";
+        elsif (bytes = 6) then
+          ret := temp(47 downto 0) & x"0000";
+        else
+          ret := temp(55 downto 0) & x"00";
+        end if;
+      end if;
       return ret;
     end function sel_data;
 
   begin
     if (rising_edge(aclk)) then
-      m_axis_tdata <= sel_data(comp_cnt, comp_exp, comp_mantissa, comp_mantissa_d);
+      m_axis_tdata <= sel_data(comp_cnt, comp_exp, comp_mantissa, comp_mantissa_d, comp_mantissa_dd);
     end if;
   end process;
 
   process (aclk) is
     
     function calc_keep (
-      cnt : in std_logic_vector(5 downto 0)
+      cnt : in unsigned(5 downto 0)
     ) return std_logic_vector is
       variable bytes : integer := 0;
       variable ret : std_logic_vector(7 downto 0) := (others => '0');
     begin
       bytes := to_integer(unsigned(cnt));
       bytes := ((bytes / 6) + bytes * 4 + 5) rem 8;
-      for i in 0 to bytes loop
-        ret(i) := '1';
+      for i in 0 to 7 loop
+        if (i < bytes) then
+          ret(i) := '1';
+        else
+          ret(i) := '0';
+        end if;
       end loop;
       return ret;
     end function calc_keep;
 
   begin
     if (rising_edge(aclk)) then
-      m_axis_tkeep <= calc_keep(comp_cnt);
+      if (comp_last = '1') then
+        m_axis_tkeep <= calc_keep(comp_cnt);
+      else
+        m_axis_tkeep <= (others => '1');
+      end if;
     end if;
   end process;
 
   process (aclk) is 
   begin
     if (rising_edge(aclk)) then
-      m_axis_tlast <= comp_last;
+      m_axis_tlast <= (comp_extra_last or comp_noextra_last);
     end if;
   end process;
 
   process (aclk) is 
-    
-    -- This function desides if enough bit are there
-    function is_valid(
-      cnt : in std_logic_vector(5 downto 0)
-    ) return std_logic is
-      variable bits : integer := 0;
-      variable lut  : std_logic_vector(63 downto 0) := (others => '0');
-      variable ret  : std_logic := '0';
-    begin
-      for i in 0 to 47 loop
-        if (i / 6) = 0 then
-          bits := bits + 40;
-        else 
-          bits := bits + 32;
-        end if;
-        if (bits >= 64) then
-          lut(i) := '1';
-          bits := bits - 1;
-        end if;
-      end loop;
-      ret := lut(to_integer(unsigned(cnt)));
-      return ret;
-    end function is_valid;
-
   begin
     if (rising_edge(aclk)) then
-      m_axis_tvalid <= is_valid(comp_cnt) and comp_valid;
+      m_axis_tvalid <= (valid_word(comp_cnt) and comp_valid) or comp_extra_last;
     end if;
   end process;
 

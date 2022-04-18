@@ -1,0 +1,5 @@
+../common/top_type_pkg.vhd
+compression_bfp8.vhd
+compression_bfp8.ooc
+
+tb_compression_bfp8.vhd
