@@ -20,7 +20,6 @@ module tb_compression_bfp8 ();
   logic [63:0] m_axis_tdata;
   logic [ 7:0] m_axis_tkeep;
   logic        m_axis_tlast;
-  logic        m_axis_tready;
   logic        m_axis_tvalid;
 
   logic [15:0] data_i_mem [TEST_LENGTH];
@@ -82,7 +81,6 @@ module tb_compression_bfp8 ();
       .m_axis_tdata (m_axis_tdata),
       .m_axis_tkeep (m_axis_tkeep),
       .m_axis_tlast (m_axis_tlast),
-      .m_axis_tready(m_axis_tready),
       .m_axis_tvalid(m_axis_tvalid)
   );
 
@@ -111,10 +109,9 @@ module tb_compression_bfp8 ();
     s_axis_tlast  = 0;
     s_axis_tvalid = 0;
     //
-    m_axis_tready = 1;
     wait (aresetn == 1);
 
-    for (int i = 2; i <= 2; i++) begin
+    for (int i = 1; i <= 1; i++) begin
       send_axis_packet(i);
       #100;
     end
