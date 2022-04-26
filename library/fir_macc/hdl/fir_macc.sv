@@ -1,37 +1,43 @@
 // File: fir_macc.sv
 // Brief: FIR using MACC (Multiply and accumulation) architecture.
-//        Supports max 16 channel, 8 coefficient sets, 128 coefficient length
+//        Supports multi channel, multi coefficient sets, and variable
+//        coefficient length
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
 
 module fir_macc #(
-    parameter int XIN_WIDTH  = 24,
-    parameter int COE_WIDTH  = 16,
-    parameter int YOUT_WIDTH = 24,
-    parameter int SRA_BITS   = 15
+    // Structural parameters
+    parameter int W_CHANNEL    = 3,   // 8 channels
+    parameter int W_COE_SETS   = 3,   // 8 coefficients sets
+    parameter int W_COE_LENGTH = 10,  // 1024 coefficients length
+    // Port parameters
+    parameter int XIN_WIDTH    = 24,
+    parameter int COE_WIDTH    = 16,
+    parameter int YOUT_WIDTH   = 24,
+    parameter int SRA_BITS     = 15
 ) (
-    input var  logic                  aclk,
-    input var  logic                  aresetn,
+    input var  logic                               aclk,
+    input var  logic                               aresetn,
     // Data input
-    input var  logic [ XIN_WIDTH-1:0] s_axis_tdata,
-    input var  logic                  s_axis_tvalid,
-    output var logic                  s_axis_tready,
-    input var  logic [           3:0] s_axis_tuser,             // channel number
+    input var  logic [              XIN_WIDTH-1:0] s_axis_tdata,
+    input var  logic                               s_axis_tvalid,
+    output var logic                               s_axis_tready,
+    input var  logic [              W_CHANNEL-1:0] s_axis_tuser,             // channel number
     // Data output
-    output var logic [YOUT_WIDTH-1:0] m_axis_tdata,
-    output var logic                  m_axis_tvalid,
-    input var  logic                  m_axis_tready,
-    output var logic [           3:0] m_axis_tuser,             // channel number
+    output var logic [             YOUT_WIDTH-1:0] m_axis_tdata,
+    output var logic                               m_axis_tvalid,
+    input var  logic                               m_axis_tready,
+    output var logic [              W_CHANNEL-1:0] m_axis_tuser,             // channel number
     // Control interface
-    input var  logic [           9:0] ctrl_coe_wr_addr,
-    input var  logic                  ctrl_coe_wr_en,
-    input var  logic [ COE_WIDTH-1:0] ctrl_coe_wr_din,
+    input var  logic [W_COE_SETS+W_COE_LENGTH-1:0] ctrl_coe_wr_addr,         // {set, length}
+    input var  logic                               ctrl_coe_wr_en,
+    input var  logic [              COE_WIDTH-1:0] ctrl_coe_wr_din,
     //
-    input var  logic [           6:0] ctrl_coefficient_length,
-    input var  logic [           2:0] ctrl_coefficient_set,
+    input var  logic [           W_COE_LENGTH-1:0] ctrl_coefficient_length,
+    input var  logic [             W_COE_SETS-1:0] ctrl_coefficient_set,
     // Status
-    output var logic                  err_ovf
+    output var logic                               err_ovf
 );
 
   typedef enum int {
@@ -48,8 +54,9 @@ module fir_macc #(
 
   state_t state, state_next;
 
-  logic [6:0] acc_cnt;  // Accumulation counter
-  logic       acc_done;
+  // State accumulation counter
+  logic [W_COE_LENGTH-1:0] acc_cnt;
+  logic                    acc_done;
 
   // FSM
   //====
@@ -125,20 +132,20 @@ module fir_macc #(
   // Data Storage RAM
   //=================
 
-  logic [          3:0] ch_num;
-  logic [          6:0] data_cnt     [16];
+  logic [             W_CHANNEL-1:0] ch_num;
+  logic [          W_COE_LENGTH-1:0] data_cnt     [2**W_CHANNEL];
 
-  logic [         10:0] data_wr_addr;
-  logic                 data_wr_en;
-  logic [XIN_WIDTH-1:0] data_wr_din;
+  logic [W_CHANNEL+W_COE_LENGTH-1:0] data_wr_addr;
+  logic                              data_wr_en;
+  logic [             XIN_WIDTH-1:0] data_wr_din;
 
-  logic [         10:0] data_rd_addr;
-  logic                 data_rd_en;
-  logic [XIN_WIDTH-1:0] data_rd_dout;
+  logic [W_CHANNEL+W_COE_LENGTH-1:0] data_rd_addr;
+  logic                              data_rd_en;
+  logic [             XIN_WIDTH-1:0] data_rd_dout;
 
   always_ff @(posedge aclk) begin
     if (!aresetn) begin
-      data_cnt <= '{16{7'b0}};
+      data_cnt <= '{2 ** W_CHANNEL{'0}};
     end else if (state == S_IDLE && s_axis_tvalid) begin
       data_cnt[s_axis_tuser] <= data_cnt[s_axis_tuser] + 1;
     end
@@ -153,11 +160,11 @@ module fir_macc #(
 
   // Data write address is built by {channel_number, data_cnt[channel_number]}
 
-  assign data_wr_addr[10:7] = ch_num;
+  assign data_wr_addr[W_CHANNEL+W_COE_LENGTH-1:W_COE_LENGTH] = ch_num;
 
   always_ff @(posedge aclk) begin
     if (state == S_IDLE && s_axis_tvalid) begin
-      data_wr_addr[6:0] <= data_cnt[s_axis_tuser];
+      data_wr_addr[9:0] <= data_cnt[s_axis_tuser];
     end
   end
 
@@ -177,16 +184,16 @@ module fir_macc #(
     data_rd_en <= (state == S_ACC);
   end
 
-  assign data_rd_addr[10:7] = ch_num;
+  assign data_rd_addr[W_CHANNEL+W_COE_LENGTH-1:W_COE_LENGTH] = ch_num;
 
   always_ff @(posedge aclk) begin
-    data_rd_addr[6:0] <= data_wr_addr[6:0] - acc_cnt;
+    data_rd_addr[W_COE_LENGTH-1:0] <= data_wr_addr[W_COE_LENGTH-1:0] - acc_cnt;
   end
 
 
   bram_sdp_pipe #(
-      .ADDR_WIDTH(11),  // 128 * 16 = 2048
-      .DATA_WIDTH(XIN_WIDTH),
+      .ADDR_WIDTH  (W_CHANNEL + W_COE_LENGTH),  // 8 * 1024 = 8192
+      .DATA_WIDTH  (XIN_WIDTH),
       .READ_LATENCY(2)
   ) i_data_ram (
       // Port A
@@ -207,19 +214,19 @@ module fir_macc #(
   // Coefficients Store RAM
   //=======================
 
-  logic [          9:0] coe_rd_addr;
-  logic                 coe_rd_en;
-  logic [COE_WIDTH-1:0] coe_rd_dout;
+  logic [W_COE_SETS+W_COE_LENGTH-1:0] coe_rd_addr;
+  logic                               coe_rd_en;
+  logic [              COE_WIDTH-1:0] coe_rd_dout;
 
   // Coefficients read address is built by {coefficient_set, coefficient_number}
 
-  assign coe_rd_addr[9:7] = ctrl_coefficient_set;
+  assign coe_rd_addr[W_COE_SETS+W_COE_LENGTH-1:W_COE_LENGTH] = ctrl_coefficient_set;
 
   always_ff @(posedge aclk) begin
     if (state == S_ACC) begin
-      coe_rd_addr[6:0] <= acc_cnt;
+      coe_rd_addr[W_COE_LENGTH-1:0] <= acc_cnt;
     end else begin
-      coe_rd_addr[6:0] <= 0;
+      coe_rd_addr[W_COE_LENGTH-1:0] <= 0;
     end
   end
 
@@ -229,9 +236,10 @@ module fir_macc #(
 
 
   bram_sdp_pipe #(
-      .ADDR_WIDTH(10),  // 128 * 8 = 1024
-      .DATA_WIDTH(COE_WIDTH),
-      .READ_LATENCY(2)
+      .ADDR_WIDTH  (W_COE_SETS + W_COE_LENGTH),  // 8 * 1024 = 8192
+      .DATA_WIDTH  (COE_WIDTH),
+      .READ_LATENCY(2),
+      .INIT_FILE   ("D:\\Workspaces\\hdl\\library\\fir_macc\\hdl\\coefficients_hex.txt")
   ) i_coe_ram (
       // Port A
       .clka (aclk),
@@ -251,7 +259,7 @@ module fir_macc #(
   // MAC
   //====
 
-  logic        op_in_pre1, op_in_pre2, op_in_pre3;
+  logic op_in_pre1, op_in_pre2, op_in_pre3;
   logic        op_in;
   logic [47:0] pout;
 
@@ -267,12 +275,11 @@ module fir_macc #(
       .B_WIDTH(COE_WIDTH),
       .P_WIDTH(48)
   ) i_mac (
-      .clk  (aclk),
-      //
-      .ain  (data_rd_dout),
-      .bin  (coe_rd_dout),
+      .clk(aclk),
+      .ain(data_rd_dout),
+      .bin(coe_rd_dout),
       .op_in(op_in),  // 0 = multiply, 1 = MACC
-      .pout (pout)
+      .pout(pout)
   );
 
 

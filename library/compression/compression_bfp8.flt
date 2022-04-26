@@ -1,8 +1,8 @@
 ../common/top_type_pkg.vhd
-compression_bfp8.vhd
-compression_bfp8_comp.vhd
-compression_bfp8_axis.vhd
+hdl/compression_bfp8.vhd
+hdl/compression_bfp8_comp.vhd
+hdl/compression_bfp8_axis.vhd
 
-compression_bfp8.ooc
+constr/compression_bfp8_ooc.xdc
 
-tb_compression_bfp8.sv
+tb/tb_compression_bfp8.sv

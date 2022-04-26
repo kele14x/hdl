@@ -6,7 +6,8 @@
 
 module tb_compression_bfp8 ();
 
-  localparam TEST_LENGTH = 3275;
+  localparam TEST_IN_LENGTH = 1638;
+  localparam TEST_OUT_LENGTH = 854;
 
   logic        aclk;
   logic        aresetn;
@@ -22,8 +23,8 @@ module tb_compression_bfp8 ();
   logic        m_axis_tlast;
   logic        m_axis_tvalid;
 
-  logic [15:0] data_i_mem [TEST_LENGTH];
-  logic [15:0] data_q_mem [TEST_LENGTH];
+  logic [63:0] data_in_mem [TEST_IN_LENGTH];
+  logic [63:0] data_out_mem [TEST_OUT_LENGTH];
 
   task static send_axis_packet(input int number_prb);
     begin
@@ -33,14 +34,7 @@ module tb_compression_bfp8 ();
       // Send `cnt` AXIS words
       for (int c = 0; c < number_prb * 6; c++) begin
         // TDATA
-        s_axis_tdata[ 7: 0] <= data_i_mem[2*c+0][15:8];
-        s_axis_tdata[15: 8] <= data_i_mem[2*c+0][ 7:0];
-        s_axis_tdata[23:16] <= data_q_mem[2*c+0][15:8];
-        s_axis_tdata[31:24] <= data_q_mem[2*c+0][ 7:0];
-        s_axis_tdata[39:32] <= data_i_mem[2*c+1][15:8];
-        s_axis_tdata[47:40] <= data_i_mem[2*c+1][ 7:0];
-        s_axis_tdata[55:48] <= data_q_mem[2*c+1][15:8];
-        s_axis_tdata[63:56] <= data_q_mem[2*c+1][ 7:0];
+        s_axis_tdata <= data_in_mem[c];
         // TKEEP
         s_axis_tkeep <= '1;
         // TLAST
@@ -65,6 +59,36 @@ module tb_compression_bfp8 ();
       s_axis_tkeep  <= 0;
       s_axis_tlast  <= 0;
       s_axis_tvalid <= 0;
+    end
+  endtask
+
+  task static check_axis_packet(input int nbytes);
+    begin
+      for (int w = 0; w < ((nbytes + 7) / 8); w++) begin
+        // Only check valid data
+        forever begin
+          // Sync with posedge of `aclk`
+          @(posedge aclk);
+          if (m_axis_tvalid) break;
+        end
+
+        for (int i = 0; i < nbytes - 8 * w && i < 8; i++) begin
+          assert (m_axis_tdata[i * 8 + 7 -: 8] == data_out_mem[w][i * 8 + 7 -: 8]) else begin
+            $warning("%d: m_axis_tdata = %x, data_out_mem = %x", w, m_axis_tdata, data_out_mem[w]);
+          end
+          assert (m_axis_tkeep[i] == 1'b1) else begin
+            $warning("%d: m_axis_tkeep = %x", w, m_axis_tkeep);
+          end
+        end
+        
+        for (int i = nbytes - 8 * w; i < 8; i++) begin
+          assert (m_axis_tkeep[i] == 1'b0) else begin
+            $warning("%d: m_axis_tkeep = %x", w, m_axis_tkeep);
+          end
+        end
+        
+        $display("%d: %x", w, m_axis_tdata);
+      end
     end
   endtask
 
@@ -99,8 +123,8 @@ module tb_compression_bfp8 ();
   end
 
   initial begin
-    $readmemh("test_compression_bfp8_data_i_in.txt", data_i_mem, 0, TEST_LENGTH-1);
-    $readmemh("test_compression_bfp8_data_q_in.txt", data_q_mem, 0, TEST_LENGTH-1);
+    $readmemh("test_compression_bfp8_data_in.txt", data_in_mem, 0, TEST_IN_LENGTH - 1);
+    $readmemh("test_compression_bfp8_data_out.txt", data_out_mem, 0, TEST_OUT_LENGTH - 1);
   end
 
   initial begin
@@ -111,11 +135,22 @@ module tb_compression_bfp8 ();
     //
     wait (aresetn == 1);
 
-    for (int i = 1; i <= 1; i++) begin
-      send_axis_packet(i);
-      #100;
+    for (int i = 1; i <= 8; i++) begin
+      fork
+        begin
+          send_axis_packet(i);
+        end
+
+        begin
+          check_axis_packet(25*i);
+        end
+        
+        #1000;
+      join;
     end
 
+    #1000;
+    $finish();
   end
 
 endmodule  // tb_compression_bfp8
