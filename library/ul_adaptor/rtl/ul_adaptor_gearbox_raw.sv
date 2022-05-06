@@ -21,7 +21,7 @@ module ul_adaptor_gearbox_raw #(
     // URAM
     output var [11:0] uram_addr             [NUM_CC],
     output var        uram_rden             [NUM_CC],
-    input var  [63:0] uram_data             [NUM_CC]
+    input var  [71:0] uram_data             [NUM_CC]
 );
 
 
@@ -47,6 +47,17 @@ module ul_adaptor_gearbox_raw #(
         data[31:16],
         data[47:32],
         data[63:48]
+      };
+    end
+  endfunction
+
+  function automatic logic [63:0] select64(input logic [71:0] data);
+    begin
+      return {
+        data[71:56],
+        data[53:37],
+        data[35:20],
+        data[17: 2]
       };
     end
   endfunction
@@ -253,7 +264,7 @@ module ul_adaptor_gearbox_raw #(
   //-------------
 
   always_ff @(posedge clk) begin
-    m_axis_tdata <= byte_reverse(byte2_reverse(uram_data[re_cc_pre[3]]));
+    m_axis_tdata <= byte_reverse(byte2_reverse(select64(uram_data[re_cc_pre[3]])));
   end
 
   assign m_axis_tkeep  = '1;

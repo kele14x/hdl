@@ -26,7 +26,7 @@ module ul_adaptor_gearbox #(
     //
     output var [11:0] ram_addr             [NUM_UL_LAYER][NUM_CC],
     output var        ram_rden             [NUM_UL_LAYER][NUM_CC],
-    input var  [63:0] ram_data             [NUM_UL_LAYER][NUM_CC],
+    input var  [71:0] ram_data             [NUM_UL_LAYER][NUM_CC],
     // Control Interface
     //==================
     input var  [ 1:0] ctrl_compression_mode[      NUM_CC]
@@ -49,11 +49,11 @@ module ul_adaptor_gearbox #(
 
   logic [11:0] ram_addr_raw       [NUM_UL_LAYER] [NUM_CC];
   logic        ram_rden_raw       [NUM_UL_LAYER] [NUM_CC];
-  logic [63:0] ram_data_raw       [NUM_UL_LAYER] [NUM_CC];
+  logic [71:0] ram_data_raw       [NUM_UL_LAYER] [NUM_CC];
 
   logic [11:0] ram_addr_bfp9      [NUM_UL_LAYER] [NUM_CC];
   logic        ram_rden_bfp9      [NUM_UL_LAYER] [NUM_CC];
-  logic [63:0] ram_data_bfp9      [NUM_UL_LAYER] [NUM_CC];
+  logic [71:0] ram_data_bfp9      [NUM_UL_LAYER] [NUM_CC];
 
   logic [63:0] s_axis_tdata_s     [NUM_UL_LAYER];
   logic [ 7:0] s_axis_tkeep_s     [NUM_UL_LAYER];
@@ -211,7 +211,7 @@ module ul_adaptor_gearbox #(
       assign m_fram_data_tlast[i] = fifo_dout[i][72] && (~fifo_empty[i]);
       assign m_fram_data_tkeep[i] = fifo_dout[i][71:64];
       assign m_fram_data_tdata[i] = fifo_dout[i][63:0];
-      
+
       assign m_fram_data_tvalid[i] = ~fifo_empty[i];
       assign fifo_rden[i] = m_fram_data_tready[i];
 

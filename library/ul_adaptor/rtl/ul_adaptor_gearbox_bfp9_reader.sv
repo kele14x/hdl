@@ -17,9 +17,9 @@ module ul_adaptor_gearbox_bfp9_reader #(
     // URAM
     output var [11:0] uram_addr            [NUM_CC],
     output var        uram_rden            [NUM_CC],
-    input var  [63:0] uram_data            [NUM_CC],
+    input var  [71:0] uram_data            [NUM_CC],
     //
-    output var [63:0] re_data,  // RE pair, {re1_q, re1_i, re0_q, re0_i}
+    output var [71:0] re_data,  // RE pair, {re1_q, re1_i, re0_q, re0_i}
     output var [ 2:0] re_cnt,  // 0 ~ 5
     output var        re_valid,  // Should be valid all alone the packet
     output var        re_done  // Pulse at last RE pair

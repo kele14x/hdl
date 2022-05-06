@@ -7,7 +7,7 @@ module ul_adaptor_gearbox_bfp9_comp (
     input var         clk,
     input var         rst,
     //
-    input var  [63:0] re_data,  // RE pair, {re1_q, re1_i, re0_q, re0_i}
+    input var  [71:0] re_data,  // RE pair, {re1_q, re1_i, re0_q, re0_i}
     input var  [ 2:0] re_cnt,  // 0 ~ 5
     input var         re_valid,  // Should be valid all alone the packet
     input var         re_done,  // Pulse at last RE pair
@@ -25,7 +25,7 @@ module ul_adaptor_gearbox_bfp9_comp (
 
   localparam int DelayTaps = 9;
 
-  logic [63:0] re_data_d [DelayTaps];
+  logic [71:0] re_data_d [DelayTaps];
   logic [ 2:0] re_cnt_d  [DelayTaps];
   logic        re_valid_d[DelayTaps];
   logic        re_done_d [DelayTaps];
@@ -78,12 +78,12 @@ module ul_adaptor_gearbox_bfp9_comp (
   logic [8:0] comp_mantissa_1_i;
   logic [8:0] comp_mantissa_1_q;
 
-  // Get the BFP9 exponent value based on the 16-bit data, for example
-  // 16'b0000000_000000001_ => exp = 0
-  // 16'b0000_010000000_000 => exp = 3
-  // 16'b_010000000_0000000 => exp = 7
-  function automatic [3:0] get_exp(input logic [15:0] data);
-    for (int i = 15; i >= 9; i--) begin
+  // Get the BFP9 exponent value based on the 18-bit data, for example
+  // 16'b000000000_000000001_ => exp = 0
+  // 16'b000000_010000000_000 => exp = 3
+  // 16'b_010000000_000000000 => exp = 9
+  function automatic [3:0] get_exp(input logic [17:0] data);
+    for (int i = 17; i >= 9; i--) begin
       if (data[i] != data[i-1]) begin
         return (i - 8);
       end
@@ -100,10 +100,10 @@ module ul_adaptor_gearbox_bfp9_comp (
     return temp;
   endfunction
 
-  assign exp_0 = get_exp(re_data[15:0]);
-  assign exp_1 = get_exp(re_data[31:16]);
-  assign exp_2 = get_exp(re_data[47:32]);
-  assign exp_3 = get_exp(re_data[63:48]);
+  assign exp_0 = get_exp(re_data[17: 0]);
+  assign exp_1 = get_exp(re_data[35:18]);
+  assign exp_2 = get_exp(re_data[53:36]);
+  assign exp_3 = get_exp(re_data[71:54]);
 
   // `exp_mt` is largest of exp_0 ~ exp_3
   always_ff @(posedge clk) begin
@@ -127,10 +127,10 @@ module ul_adaptor_gearbox_bfp9_comp (
   end
 
   always_ff @(posedge clk) begin
-    comp_mantissa_pre_0_i <= {re_data_d[7][15: 0], 1'b0} >> (exp_pre);  // re0_i
-    comp_mantissa_pre_0_q <= {re_data_d[7][31:16], 1'b0} >> (exp_pre);  // re0_q
-    comp_mantissa_pre_1_i <= {re_data_d[7][47:32], 1'b0} >> (exp_pre);  // re1_i
-    comp_mantissa_pre_1_q <= {re_data_d[7][63:48], 1'b0} >> (exp_pre);  // re1_q
+    comp_mantissa_pre_0_i <= {re_data_d[7][17: 0], 1'b0} >> (exp_pre);  // re0_i
+    comp_mantissa_pre_0_q <= {re_data_d[7][35:18], 1'b0} >> (exp_pre);  // re0_q
+    comp_mantissa_pre_1_i <= {re_data_d[7][53:36], 1'b0} >> (exp_pre);  // re1_i
+    comp_mantissa_pre_1_q <= {re_data_d[7][71:54], 1'b0} >> (exp_pre);  // re1_q
   end
 
   // Rounding stage

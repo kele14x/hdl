@@ -14,8 +14,8 @@ module ul_adaptor_buf #(
     input var         clk_491m_gating_ul_i,
     input var         clk_491m_gating_ul_flush_i,
     // Data bus & valid & sop & sof & index input
-    input var  [15:0] ul_di_i                   [LAYER_NUMBER_C],
-    input var  [15:0] ul_dq_i                   [LAYER_NUMBER_C],
+    input var  [17:0] ul_di_i                   [LAYER_NUMBER_C],
+    input var  [17:0] ul_dq_i                   [LAYER_NUMBER_C],
     input var         ul_sof_ahead_3_i,
     input var         ul_sop_ahead_3_i,
     // Interface with Reader
@@ -24,7 +24,7 @@ module ul_adaptor_buf #(
     //
     input var  [11:0] buffer_rd_addr_i          [LAYER_NUMBER_C],
     input var         buffer_rd_en_i            [LAYER_NUMBER_C],
-    output var [63:0] ul_data_o                 [LAYER_NUMBER_C],
+    output var [71:0] ul_data_o                 [LAYER_NUMBER_C],
     output var        ul_data_sop_o             [LAYER_NUMBER_C],
     output var        ul_data_valid_o           [LAYER_NUMBER_C],
     // Control Interface
@@ -38,9 +38,9 @@ module ul_adaptor_buf #(
     // BRAM
     input var  [ 1:0] buffer_mem_ctrl_en,
     input var  [11:0] buffer_mem_addr_i         [LAYER_NUMBER_C],
-    input var  [31:0] buffer_mem_data_i         [LAYER_NUMBER_C],
+    input var  [35:0] buffer_mem_data_i         [LAYER_NUMBER_C],
     input var         buffer_mem_we             [LAYER_NUMBER_C],
-    output var [31:0] buffer_mem_data_o         [LAYER_NUMBER_C]
+    output var [35:0] buffer_mem_data_o         [LAYER_NUMBER_C]
 );
 
 

@@ -20,11 +20,11 @@ module ul_adaptor_gearbox_bfp9 #(
     // URAM
     output var [11:0] uram_addr            [NUM_CC],
     output var        uram_rden            [NUM_CC],
-    input var  [63:0] uram_data            [NUM_CC]
+    input var  [71:0] uram_data            [NUM_CC]
 );
 
 
-  logic [63:0] re_data;
+  logic [71:0] re_data;
   logic [ 2:0] re_cnt;
   logic        re_valid;
   logic        re_done;

@@ -45,8 +45,8 @@ module ul_adaptor #(
     //
     input var         ul_sof_ahead_3       [      NUM_CC],
     input var         ul_sop_ahead_3       [      NUM_CC],
-    input var  [15:0] ul_data_i            [      NUM_CC][NUM_UL_LAYER],
-    input var  [15:0] ul_data_q            [      NUM_CC][NUM_UL_LAYER],
+    input var  [17:0] ul_data_i            [      NUM_CC][NUM_UL_LAYER],
+    input var  [17:0] ul_data_q            [      NUM_CC][NUM_UL_LAYER],
     // Control Interface
     //==================
     input var  [ 3:0] ctrl_bandwidth       [      NUM_CC],
@@ -55,20 +55,20 @@ module ul_adaptor #(
     //
     input var  [ 1:0] buffer_mem_ctrl_en   [      NUM_CC],
     input var  [11:0] buffer_mem_addr_i    [      NUM_CC][NUM_UL_LAYER],
-    input var  [31:0] buffer_mem_data_i    [      NUM_CC][NUM_UL_LAYER],
+    input var  [35:0] buffer_mem_data_i    [      NUM_CC][NUM_UL_LAYER],
     input var         buffer_mem_we        [      NUM_CC][NUM_UL_LAYER],
-    output var [31:0] buffer_mem_data_o    [      NUM_CC][NUM_UL_LAYER]
+    output var [35:0] buffer_mem_data_o    [      NUM_CC][NUM_UL_LAYER]
 );
 
   logic        rst_491m52;
 
   logic [11:0] ram_addr_s         [NUM_UL_LAYER] [      NUM_CC];
   logic        ram_rden_s         [NUM_UL_LAYER] [      NUM_CC];
-  logic [63:0] ram_data_s         [NUM_UL_LAYER] [      NUM_CC];
+  logic [71:0] ram_data_s         [NUM_UL_LAYER] [      NUM_CC];
 
   logic [11:0] ram_addr           [      NUM_CC] [NUM_UL_LAYER];
   logic        ram_rden           [      NUM_CC] [NUM_UL_LAYER];
-  logic [63:0] ram_data           [      NUM_CC] [NUM_UL_LAYER];
+  logic [71:0] ram_data           [      NUM_CC] [NUM_UL_LAYER];
 
   logic        ul_radio_start_10ms[      NUM_CC];
 
