@@ -2,58 +2,25 @@
 
 module tb_dl_adaptor;
 
-  parameter int NUM_CC = 1;
-  parameter int NUM_DL_LAYER = 1;
+  parameter int NUM_CC = 2;
 
   // DUT Signals
 
-  logic        clk_400m;
-  logic        rst_400m;
+  logic        clk;
+  logic        rst;
 
-  // Timing ports
-  logic        defm_radio_start_10ms;
-  logic        s_dl_update                      [      NUM_CC];
+  // branch/layer stream; CC shared
+  logic [63:0] s_axis_tdata;
+  logic [ 7:0] s_axis_tkeep;
+  logic        s_axis_tvalid;
+  logic        s_axis_tlast;
+  logic        s_axis_tready;
+  logic [89:0] s_axis_tuser;
 
-  // 4 branch/layer stream; CC shared
-  logic [63:0] s_defm_data_tdata                [NUM_DL_LAYER];
-  logic [ 7:0] s_defm_data_tkeep                [NUM_DL_LAYER];
-  logic        s_defm_data_tvalid               [NUM_DL_LAYER];
-  logic        s_defm_data_tlast                [NUM_DL_LAYER];
-  logic        s_defm_data_tready               [NUM_DL_LAYER];
-  logic [89:0] s_defm_data_tuser                [NUM_DL_LAYER];
-
-  // Interface with DFE
-  logic        clk_491m52;
-  logic        rst_491m52;
-
-  // DL symbol timing
-  logic        dl_radio_start_10ms = 0;
-
-  // 2 CC port; each will have interleaved 4 layer data
-  logic        dl_sof                           [      NUM_CC];
-  logic        dl_sop                           [      NUM_CC];
-  logic        dl_sof_ahead_9                   [      NUM_CC];
-  logic        dl_sop_ahead_9                   [      NUM_CC];
-  logic [15:0] dl_data_i                        [      NUM_CC] [NUM_DL_LAYER];
-  logic [15:0] dl_data_q                        [      NUM_CC] [NUM_DL_LAYER];
-  logic        dl_valid                         [      NUM_CC];
-
-  // Control Interface
-  logic [ 3:0] ctrl_bandwidth                   [      NUM_CC];
-  logic [ 1:0] ctrl_numerology                  [      NUM_CC];
-  logic [ 1:0] ctrl_compression_mode            [      NUM_CC] [NUM_DL_LAYER];
-
-  logic [10:0] dl_eq_gain_mem_addr;
-  logic [ 8:0] dl_eq_gain_mem_wdata;
-  logic        dl_eq_gain_mem_we;
-  logic [31:0] dl_eq_gain_mem_rdata;
-
-  logic [ 1:0] buffer_mem_ctrl_en               [      NUM_CC];
-  logic [ 8:0] dfe_dl_adaptor_mem_symbol_no_sel;
-  logic [11:0] buffer_mem_addr_i                [      NUM_CC] [NUM_DL_LAYER];
-  logic [31:0] buffer_mem_data_i                [      NUM_CC] [NUM_DL_LAYER];
-  logic        buffer_mem_we                    [      NUM_CC] [NUM_DL_LAYER];
-  logic [31:0] buffer_mem_data_o                [      NUM_CC] [NUM_DL_LAYER];
+  // 2 CC port
+  logic [63:0] gb_data                          [      NUM_CC];
+  logic        gb_valid                         [      NUM_CC];
+  logic [11:0] gb_re                            [      NUM_CC];
 
   // Simulation signals
 
@@ -68,12 +35,22 @@ module tb_dl_adaptor;
     begin
       for (int i = 0; i < len; i++) begin
         TDATA[i] = i;
-        TKEEP[i] = (i == len - 1 && odd) ? 0 : 7;
+        TKEEP[i] = (i == len - 1 && odd) ? 15 : 7;
+        //
         TUSER[i] = '0;
+        TUSER[i][9:0] = start_rb; 
+        TUSER[i][17:10] = number_rb;
+        TUSER[i][27] = (i == 0); // start_of_symbol
+        TUSER[i][30:28] = 0; // cc
+        TUSER[i][31] = (i == 2); // ModParamValid
+        TUSER[i][33:32] = 1; // Modulation Compress
+        TUSER[i][48:34] = 0; // Modulation Compress Scalar Value
+        TUSER[i][49] = 0; // Constellation Shift Factor
+        TUSER[i][61:50] = 4095; // Modulation Compress RE Mask
       end
       i_axi4s_vip.IF.master_send(len, TDATA, TKEEP, TUSER);
-      @(posedge clk_400m);
-      @(posedge clk_400m);
+      @(posedge clk);
+      @(posedge clk);
     end
   endtask
 
@@ -85,35 +62,20 @@ module tb_dl_adaptor;
   //-----------------
 
   initial begin
-    clk_400m = 0;
+    clk = 0;
     forever begin
-      #(1.25) clk_400m = ~clk_400m;
+      #(1.25) clk = ~clk;
     end
   end
-
-  initial begin
-    clk_491m52 = 0;
-    forever begin
-      #(1.017) clk_491m52 = ~clk_491m52;
-    end
-  end
-
 
   // Reset Generation
   //-----------------
 
   initial begin
-    rst_400m = 1;
-    repeat (100) @(posedge clk_400m);
-    rst_400m <= 0;
+    rst = 1;
+    repeat (100) @(posedge clk);
+    rst <= 0;
   end
-
-  initial begin
-    rst_491m52 = 1;
-    repeat (100) @(posedge clk_491m52);
-    rst_491m52 <= 0;
-  end
-
 
   // Main Process
   //-------------
@@ -125,41 +87,12 @@ module tb_dl_adaptor;
     i_axi4s_vip.set_master_mode();
     i_axi4s_vip.IF.reset();
 
-    for (int cc = 0; cc < NUM_CC; cc++) begin
-      s_dl_update[cc] = 0;
-      ctrl_bandwidth[cc] = 0;
-      ctrl_numerology[cc] = 0;
-      for (int ly = 0; ly < NUM_DL_LAYER; ly++) begin
-        ctrl_compression_mode[cc][ly] = 2;
-        buffer_mem_ctrl_en[cc][ly] = 0;
-      end
-    end
-
-    wait (rst_400m == 0);
+    wait (rst == 0);
     #1000;
 
     // Stimulate
 
     fork
-
-      begin : set_sof
-        @(posedge clk_491m52);
-        dl_radio_start_10ms <= 1;
-        @(posedge clk_491m52);
-        dl_radio_start_10ms <= 0;
-        #10;
-      end
-
-      begin : set_sop
-        #100;
-        repeat (10) begin
-          @(posedge clk_400m);
-          s_dl_update <= '{NUM_CC{1}};
-          @(posedge clk_400m);
-          s_dl_update <= '{NUM_CC{0}};
-          repeat (14685 - 2) @(posedge clk_400m);
-        end
-      end
 
       begin : set_dl_data
         #200;
@@ -186,68 +119,36 @@ module tb_dl_adaptor;
       .TDATA_WIDTH(64),
       .TUSER_WIDTH(90)
   ) i_axi4s_vip (
-      .aclk         (clk_400m),
-      .aresetn      (~rst_400m),
+      .aclk         (clk),
+      .aresetn      (~rst),
       //
-      .m_axis_tdata (s_defm_data_tdata[0]),
-      .m_axis_tkeep (s_defm_data_tkeep[0]),
-      .m_axis_tlast (s_defm_data_tlast[0]),
-      .m_axis_tvalid(s_defm_data_tvalid[0]),
-      .m_axis_tuser (s_defm_data_tuser[0]),
-      .m_axis_tready(s_defm_data_tready[0])
+      .m_axis_tdata (s_axis_tdata),
+      .m_axis_tkeep (s_axis_tkeep),
+      .m_axis_tlast (s_axis_tlast),
+      .m_axis_tvalid(s_axis_tvalid),
+      .m_axis_tuser (s_axis_tuser),
+      .m_axis_tready(s_axis_tready)
   );
 
-  dl_adaptor #(
-      .NUM_CC      (NUM_CC),
-      .NUM_DL_LAYER(NUM_DL_LAYER)
+  dl_adaptor_gearbox_mod4 #(
+      .NUM_CC      (NUM_CC)
   ) UUT (
       // Interface with XORIF
       //=====================
       // Note, connect these ports to XORIF same name ports
-      .clk_400m                        (clk_400m),
-      .rst_400m                        (rst_400m),
-      // Timing ports
-      .defm_radio_start_10ms           (defm_radio_start_10ms),
-      .s_dl_update                     (s_dl_update),
+      .clk                        (clk),
+      .rst                        (rst),
       // 16 branch/layer stream, CC shared
-      .s_defm_data_tdata               (s_defm_data_tdata),
-      .s_defm_data_tkeep               (s_defm_data_tkeep),
-      .s_defm_data_tvalid              (s_defm_data_tvalid),
-      .s_defm_data_tlast               (s_defm_data_tlast),
-      .s_defm_data_tready              (s_defm_data_tready),
-      .s_defm_data_tuser               (s_defm_data_tuser),
-      // Interface with DFE
-      //===================
-      .clk_491m52                      (clk_491m52),
-      .rst_491m52                      (rst_491m52),
-      // DL symbol timing
-      // This is base line of DL timing
-      .dl_radio_start_10ms             (dl_radio_start_10ms),
-      // 2 CC port, each will have interleaved 4 layer data
-      .dl_sof                          (dl_sof),
-      .dl_sop                          (dl_sop),
-      .dl_sof_ahead_9                  (dl_sof_ahead_9),
-      .dl_sop_ahead_9                  (dl_sop_ahead_9),
-      .dl_data_i                       (dl_data_i),
-      .dl_data_q                       (dl_data_q),
-      .dl_valid                        (dl_valid),
-      // Control Interface
-      //==================
-      .ctrl_bandwidth                  (ctrl_bandwidth),
-      .ctrl_numerology                 (ctrl_numerology),
-      .ctrl_compression_mode           (ctrl_compression_mode),
+      .s_axis_tdata               (s_axis_tdata),
+      .s_axis_tkeep               (s_axis_tkeep),
+      .s_axis_tvalid              (s_axis_tvalid),
+      .s_axis_tlast               (s_axis_tlast),
+      .s_axis_tready              (s_axis_tready),
+      .s_axis_tuser               (s_axis_tuser),
       //
-      .dl_eq_gain_mem_addr             (dl_eq_gain_mem_addr),
-      .dl_eq_gain_mem_wdata            (dl_eq_gain_mem_wdata),
-      .dl_eq_gain_mem_we               (dl_eq_gain_mem_we),
-      .dl_eq_gain_mem_rdata            (dl_eq_gain_mem_rdata),
-      //
-      .buffer_mem_ctrl_en              (buffer_mem_ctrl_en),
-      .dfe_dl_adaptor_mem_symbol_no_sel(dfe_dl_adaptor_mem_symbol_no_sel),
-      .buffer_mem_addr_i               (buffer_mem_addr_i),
-      .buffer_mem_data_i               (buffer_mem_data_i),
-      .buffer_mem_we                   (buffer_mem_we),
-      .buffer_mem_data_o               (buffer_mem_data_o)
+      .gb_data                    (gb_data),
+      .gb_valid                   (gb_valid),
+      .gb_re                      (gb_re)
   );
 
 endmodule

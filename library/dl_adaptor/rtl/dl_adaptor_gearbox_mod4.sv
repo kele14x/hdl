@@ -25,6 +25,7 @@ module dl_adaptor_gearbox_mod4 #(
 
 
   // Immediate data
+  logic [11:0] gb_data_remask;
   logic        gb_data_csf;
   logic [14:0] gb_data_scalar;
   logic [ 3:0] gb_data_q1;
@@ -198,6 +199,7 @@ module dl_adaptor_gearbox_mod4 #(
   // Assume mod_param_valid is at first 3 ticks of the packet
   always_ff @(posedge clk) begin
     if (tuser_mod_param_valid) begin
+      gb_data_remask <= tuser_mod_remask1;
       gb_data_csf    <= tuser_mod_csf1;
       gb_data_scalar <= tuser_mod_scalar1;
     end
@@ -207,7 +209,7 @@ module dl_adaptor_gearbox_mod4 #(
   // RE Writer State Machine
   //========================
 
-  // `wr_cnt` goes from 1 to 6 when odd RB, from 0 to 11 when even RB
+  // `wr_cnt` goes from 1 to 6 when odd RB, from 1 to 12 when even RB
   always_ff @(posedge clk) begin
     if (rst) begin
       wr_cnt <= 0;
