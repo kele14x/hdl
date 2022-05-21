@@ -1,7 +1,8 @@
 // File: reg_pipeline.sv
-// Brief: Register pipeline to delay a signal for specific number of clocks
-
-`timescale 1 ns / 1 ps `default_nettype none
+// Brief: Register pipeline to delay a signal for specific number of clocks.
+`timescale 1 ns / 1 ps 
+//
+`default_nettype none
 
 module reg_pipeline #(
     parameter int DATA_WIDTH      = 8,
