@@ -1,11 +1,12 @@
-// File: bram_sdp.sv
+// File: ram_sdp.sv
 // Brief: Simplified Simple Dual Port (SDP) memory. Port A is the
 //        write port, port B is the read port. Each port has dedicated address
 //        port.
+`timescale 1ns / 1ps 
+//
+`default_nettype none
 
-`timescale 1ns / 1ps `default_nettype none
-
-module bram_sdp #(
+module ram_sdp #(
     parameter int    ADDR_WIDTH   = 10,
     parameter int    DATA_WIDTH   = 32,
     parameter int    READ_LATENCY = 3,  // 1 ~ 3

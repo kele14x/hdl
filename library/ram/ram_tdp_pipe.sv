@@ -1,10 +1,10 @@
-// File: bram_tdp_pipe.sv
+// File: ram_tdp_pipe.sv
 // Brief: Simplified True Dual Port Memory, but with control (enable and reset)
 //        signal pipelined.
 
 `timescale 1 ns / 1 ps `default_nettype none
 
-module bram_tdp_pipe #(
+module ram_tdp_pipe #(
     parameter int    ADDR_WIDTH     = 10,
     parameter int    DATA_WIDTH     = 32,
     parameter int    READ_LATENCY_A = 2,
@@ -61,14 +61,14 @@ module bram_tdp_pipe #(
   endgenerate
 
 
-  bram_tdp #(
+  ram_tdp #(
       .ADDR_WIDTH    (ADDR_WIDTH),
       .DATA_WIDTH    (DATA_WIDTH),
       .READ_LATENCY_A(READ_LATENCY_A),
       .READ_LATENCY_B(READ_LATENCY_B),
       .INIT_WORD     (INIT_WORD),
       .INIT_FILE     (INIT_FILE)
-  ) i_bram_tdp (
+  ) i_ram_tdp (
       // Port A
       .clka (clka),
       .rsta (rsta_d),

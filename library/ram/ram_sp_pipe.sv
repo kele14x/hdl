@@ -1,10 +1,10 @@
-// File: bram_sp_pipe.sv
+// File: ram_sp_pipe.sv
 // Brief: Simplified Single Port (SP) Memory, but with control (enable and
 //        reset) signal pipelined.
 
 `timescale 1ns / 1ps `default_nettype none
 
-module bram_sp_pipe #(
+module ram_sp_pipe #(
     parameter int    ADDR_WIDTH   = 10,
     parameter int    DATA_WIDTH   = 32,
     parameter int    READ_LATENCY = 2 ,
@@ -39,13 +39,13 @@ module bram_sp_pipe #(
   endgenerate
 
 
-  bram_sp #(
+  ram_sp #(
       .ADDR_WIDTH  (ADDR_WIDTH),
       .DATA_WIDTH  (DATA_WIDTH),
       .READ_LATENCY(READ_LATENCY),
       .INIT_WORD   (INIT_WORD),
       .INIT_FILE   (INIT_FILE)
-  ) i_bram_sdp (
+  ) i_ram_sdp (
       // Port A
       .clk (clk),
       .rst (rst_d),

@@ -1,10 +1,10 @@
-// File: bram_sdp_pipe.sv
+// File: ram_sdp_pipe.sv
 // Brief: Simplified Simple Dual Port (SDP) memory, but with control (enable and
 //        reset) signal pipelined.
 
 `timescale 1ns / 1ps `default_nettype none
 
-module bram_sdp_pipe #(
+module ram_sdp_pipe #(
     parameter int    ADDR_WIDTH   = 10,
     parameter int    DATA_WIDTH   = 32,
     parameter int    READ_LATENCY = 2 ,
@@ -43,13 +43,13 @@ module bram_sdp_pipe #(
   endgenerate
 
 
-  bram_sdp #(
+  ram_sdp #(
       .ADDR_WIDTH  (ADDR_WIDTH),
       .DATA_WIDTH  (DATA_WIDTH),
       .READ_LATENCY(READ_LATENCY),
       .INIT_WORD   (INIT_WORD),
       .INIT_FILE   (INIT_FILE)
-  ) i_bram_sdp (
+  ) i_ram_sdp (
       // Port A
       .clka (clka),
       .ena  (ena),

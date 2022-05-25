@@ -1,9 +1,9 @@
-// File: bram_sp.sv
+// File: ram_sp.sv
 // Brief: Simplified Single Port (SP) Memory.
 
 `timescale 1ns / 1ps `default_nettype none
 
-module bram_sp #(
+module ram_sp #(
     parameter int    ADDR_WIDTH   = 10,
     parameter int    DATA_WIDTH   = 32,
     parameter int    READ_LATENCY = 2 ,  // 1 ~ 3

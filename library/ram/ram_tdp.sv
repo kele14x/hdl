@@ -1,4 +1,4 @@
-// File: bram_tdp.sv
+// File: ram_tdp.sv
 // Brief: Simplified True Dual Port Memory. Which means RAM with two ports, and
 //        both ports can be used to write and read. However, each port only has
 //        one address port, it's used for both read and write. Which means you
@@ -7,7 +7,7 @@
 
 `timescale 1ns / 1ps `default_nettype none
 
-module bram_tdp #(
+module ram_tdp #(
     parameter int    ADDR_WIDTH     = 10,
     parameter int    DATA_WIDTH     = 32,
     parameter int    READ_LATENCY_A = 3,
