@@ -1,12 +1,14 @@
 // File: ram_shift.sv
-// Brief: RAM based shift register.
+// Brief: RAM-Based shift register. It provides multi-bit wide shift registers
+//        for use as a delay line. Currently only fixed-length shift registers
+//        is supported.
 `default_nettype none
 //
 `timescale 1 ns / 1 ps
 
 module shift_ram #(
-    parameter int DEPTH      = 8192,
-    parameter int DATA_WIDTH = 32
+    parameter int DATA_WIDTH = 32，
+    parameter int DEPTH      = 8192
 ) (
     input var                   clk,
     input var                   rst,
