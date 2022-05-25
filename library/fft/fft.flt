@@ -1,3 +1,5 @@
+../cmult/rtl/cmult.sv
+../util/reg_pipeline.sv
 rtl/fft.sv
 rtl/fft_bf2.sv
 rtl/fft_delay.sv
