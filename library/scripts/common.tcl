@@ -199,7 +199,7 @@ set hdl_folder [file normalize [file join script_folder "../.."]]
 put "HDL folder path: $hdl_folder"
 
 # Required VIVADO version
-set required_vivado_version "2021.2.1"
+set required_vivado_version "2022.1"
 if { [info exists REQUIRED_VIVADO_VERSION] } {
   set required_vivado_version REQUIRED_VIVADO_VERSION
 }
