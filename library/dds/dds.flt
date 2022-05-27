@@ -1,3 +1,4 @@
 rtl/dds_lut.v
+rtl/dds_rom.v
 
 tb/tb_dds_lut.v
