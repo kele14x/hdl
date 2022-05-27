@@ -174,35 +174,31 @@ module fft_stage #(
 
   // Data delay line
 
-  fft_delay #(
-      .DELAY_TAPS(DelayTaps),
-      .DATA_WIDTH(DATA_WIDTH)
+  delay #(
+      .DELAY     (DelayTaps),
+      .DATA_WIDTH(DATA_WIDTH * 2)
   ) i_delay (
-      .clk       (clk),
-      .rst       (rst),
-      //
-      .data_i_in (delayed_i_out),
-      .data_q_in (delayed_q_out),
-      //
-      .data_i_out(delayed_i_in),
-      .data_q_out(delayed_q_in)
+      .clk (clk),
+      .rst (rst),
+      .din ({delayed_q_out, delayed_i_out}),
+      .dout({delayed_q_in, delayed_i_in})
   );
 
   // Control delay line
 
-  reg_pipeline #(
-      .DATA_WIDTH     (1),
-      .PIPELINE_STAGES(DelayTaps + 9)
-  ) i_sync0_pipeline (
+  shift_regs #(
+      .DATA_WIDTH(1),
+      .DEPTH     (DelayTaps + 9)
+  ) i_sync0_delay (
       .clk (clk),
       .din (sync_in[0]),
       .dout(sync_out[0])
   );
 
-  reg_pipeline #(
-      .DATA_WIDTH     (1),
-      .PIPELINE_STAGES(STAGE == 0 ? DelayTaps - 1 : DelayTaps + 9)
-  ) i_sync1_pipeline (
+  shift_regs #(
+      .DATA_WIDTH(1),
+      .DEPTH     (STAGE == 0 ? DelayTaps - 1 : DelayTaps + 9)
+  ) i_sync1_delay (
       .clk (clk),
       .din (sync_in[1]),
       .dout(sync_out[1])

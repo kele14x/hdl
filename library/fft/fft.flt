@@ -1,5 +1,8 @@
 ../cmult/rtl/cmult.sv
-../util/reg_pipeline.sv
+../ram/ram_sdp.sv
+../shift_ram/rtl/shift_ram.sv
+../util/delay.sv
+../util/shift_regs.sv
 rtl/fft.sv
 rtl/fft_bf2.sv
 rtl/fft_delay.sv

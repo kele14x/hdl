@@ -6,7 +6,7 @@
 
 module fft #(
     // FFT size, must be power of 2
-    parameter int FFT_SIZE   = 4,
+    parameter int FFT_SIZE   = 4096,
     // Input data width for I and Q
     parameter int DATA_WIDTH = 16
 ) (
@@ -148,10 +148,10 @@ module fft #(
 
   // Control & status output
 
-  reg_pipeline #(
-      .DATA_WIDTH     (2),
-      .PIPELINE_STAGES(Latency)
-  ) i_valid_pipeline (
+  shift_regs #(
+      .DATA_WIDTH(2),
+      .DEPTH     (Latency)
+  ) i_valid_delay (
       .clk (clk),
       .din ({data_last_in, data_valid_in}),
       .dout({data_last_out, data_valid_out})

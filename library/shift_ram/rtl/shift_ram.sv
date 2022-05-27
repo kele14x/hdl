@@ -7,8 +7,8 @@
 `timescale 1 ns / 1 ps
 
 module shift_ram #(
-    parameter int DATA_WIDTH = 32，
-    parameter int DEPTH      = 8192
+    parameter int DATA_WIDTH = 16,
+    parameter int DEPTH      = 16
 ) (
     input var                   clk,
     input var                   rst,

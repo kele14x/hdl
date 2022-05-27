@@ -6,6 +6,7 @@
 `default_nettype none
 
 module shift_regs #(
+    parameter bit SIM_INIT   = 1,
     parameter int DATA_WIDTH = 8,
     parameter int DEPTH      = 8
 ) (
@@ -22,6 +23,14 @@ module shift_regs #(
     end else begin : g_regs
 
       logic [DATA_WIDTH-1:0] dregs[DEPTH];
+
+      initial begin
+        if (SIM_INIT) begin
+          for (int i = 0; i < DEPTH; i++) begin
+            dregs[i] <= '0;
+          end
+        end
+      end
 
       always_ff @(posedge clk) begin
         dregs[0] <= din;

@@ -13,6 +13,7 @@ module delay #(
     parameter int    DATA_WIDTH = 8
 ) (
     input var  logic                  clk,
+    input var  logic                  rst,
     input var  logic [DATA_WIDTH-1:0] din,
     output var logic [DATA_WIDTH-1:0] dout
 );
@@ -32,13 +33,13 @@ module delay #(
         STRUCTURE == "SRL" || STRUCTURE == "RAM")
       else begin
         $error("[%m]: Delay implement structure (STRUCTURE) should be one of \"AUTO\", \"REGISTERS\", \"SRL\" or \"RAM\".");
-        $1 $finish();
+        #1 $finish();
       end
       // Check DELAY
-      assert(0<= DEALY && DELAY <= 16384)
+      assert(0<= DELAY && DELAY <= 16384)
       else begin
         $error("[%m]: Delay depth (DELAY) must be within the range 0 to 16384.");
-        $1 $finish();
+        #1 $finish();
       end
   end
 
@@ -54,8 +55,8 @@ module delay #(
     end else if (DELAY <= SRL_RAM_THRESHOLD || STRUCTURE == "REGISTERS" || STRUCTURE == "SRL") begin : g_srl
 
       shift_regs #(
-          .DATA_WIDTH(DATA_WIDTH)
-          .DEPTH     (DEPTH),
+          .DATA_WIDTH(DATA_WIDTH),
+          .DEPTH     (DELAY)
       ) i_shitf_regs (
           .clk (clk),
           .din (din),
@@ -66,10 +67,10 @@ module delay #(
 
       shift_ram #(
           .DATA_WIDTH(DATA_WIDTH),
-          .DPETH     (DELAY)
+          .DEPTH     (DELAY)
       ) i_shift_ram (
           .clk (clk),
-          .rst (1'b0),
+          .rst (rst),
           .din (din),
           .dout(dout)
       );
