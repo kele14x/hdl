@@ -1,0 +1,3 @@
+rtl/dds_lut.v
+
+tb/tb_dds_lut.v
