@@ -6,7 +6,7 @@
 
 module tb_dds_lut;
 
-  parameter integer PHASE_WIDTH = 12;
+  parameter integer PHASE_WIDTH = 8;
   parameter integer DATA_WIDTH  = 16;
 
   reg                           clk;
