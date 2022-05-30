@@ -1,4 +1,4 @@
-// File: fft.sv
+// File: fft.v
 // Brief: Top of FFT module.
 `default_nettype none
 //
@@ -6,33 +6,33 @@
 
 module fft #(
     // FFT size, must be power of 2
-    parameter int FFT_SIZE   = 4096,
+    parameter integer FFT_SIZE   = 4096,
     // Input data width for I and Q
-    parameter int DATA_WIDTH = 16
+    parameter integer DATA_WIDTH = 16
 ) (
-    input var                   clk,
-    input var                   rst,
+    input  wire                  clk,
+    input  wire                  rst,
     // Data input
-    input var  [DATA_WIDTH-1:0] data_i_in,
-    input var  [DATA_WIDTH-1:0] data_q_in,
-    input var                   data_valid_in,
-    input var                   data_last_in,
+    input  wire [DATA_WIDTH-1:0] data_i_in,
+    input  wire [DATA_WIDTH-1:0] data_q_in,
+    input  wire                  data_valid_in,
+    input  wire                  data_last_in,
     // Data output
-    output var [DATA_WIDTH-1:0] data_i_out,
-    output var [DATA_WIDTH-1:0] data_q_out,
-    output var                  data_valid_out,
-    output var                  data_last_out,
+    output wire [DATA_WIDTH-1:0] data_i_out,
+    output wire [DATA_WIDTH-1:0] data_q_out,
+    output wire                  data_valid_out,
+    output wire                  data_last_out,
     // Status otuput
-    output var                  err_input_halt,
-    output var                  err_last_unexpected,
-    output var                  err_ovf
+    output reg                   err_input_halt,
+    output reg                   err_last_unexpected,
+    output reg                   err_ovf
 );
 
   // Local parameters
   //=================
 
-  localparam int LogFftSize = $clog2(FFT_SIZE);
-  localparam int Latency = LogFftSize * 9 + FFT_SIZE - 8;
+  localparam integer LogFftSize = $clog2(FFT_SIZE);
+  localparam integer Latency = LogFftSize * 9 + FFT_SIZE - 8;
 
 
   // Check parameters
@@ -41,21 +41,18 @@ module fft #(
   initial begin
 
     // Check FFT size
-    assert (2 <= FFT_SIZE && FFT_SIZE <= 16384)
-    else begin
+    if (!(2 <= FFT_SIZE && FFT_SIZE <= 16384)) begin
       $error("[%m]: FFT size (FFT_SIZE) must be within the range 2 to 16384.");
       #1 $finish();
     end
 
-    assert (FFT_SIZE == 2 ** LogFftSize)
-    else begin
+    if (!(FFT_SIZE == 2 ** LogFftSize)) begin
       $error("[%m]: FFT size (FFT_SIZE) must be power of 2.");
       #1 $finish();
     end
 
     // Check data width
-    assert (8 <= DATA_WIDTH && DATA_WIDTH <= 32)
-    else begin
+    if (!(8 <= DATA_WIDTH && DATA_WIDTH <= 32)) begin
       $error("[%m]: Data wdith (DATA_WIDTH) must be within the range 8 to 32.");
       #1 $finish();
     end
@@ -66,16 +63,16 @@ module fft #(
   //========
 
   // state = 0: idle, 1: synced with data
-  logic                         state;
+  reg                          state;
   // Counter count from 0 to FFT_SIZE - 1
-  logic        [LogFftSize-1:0] counter;
+  reg         [LogFftSize-1:0] counter;
 
-  logic signed [DATA_WIDTH-1:0] data_i_s[LogFftSize + 1];
-  logic signed [DATA_WIDTH-1:0] data_q_s[LogFftSize + 1];
+  wire signed [DATA_WIDTH-1:0] data_i_s[  0:LogFftSize];
+  wire signed [DATA_WIDTH-1:0] data_q_s[  0:LogFftSize];
 
-  logic        [           1:0] sync_s  [LogFftSize + 1];
+  wire        [           1:0] sync_s  [  0:LogFftSize];
 
-  logic                         ovf     [    LogFftSize];
+  wire                         ovf     [0:LogFftSize-1];
 
 
   // Main
@@ -87,13 +84,13 @@ module fft #(
   assign data_q_s[0] = data_q_in;
 
   assign sync_s[0]   = {state, state};
-
-  assign data_i_out  = data_i_s[LogFftSize];
-  assign data_q_out  = data_q_s[LogFftSize];
+  
+  assign data_i_out = data_i_s[LogFftSize];
+  assign data_q_out = data_q_s[LogFftSize];
 
   // FFT State & Counter
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     if (rst) begin
       state <= 1'b0;
     end else if (data_valid_in && data_last_in) begin
@@ -105,22 +102,23 @@ module fft #(
     end
   end
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     if (rst) begin
-      counter <= '0;
+      counter <= 'd0;
     end else if (data_valid_in && data_last_in) begin
-      counter <= '0;
+      counter <= 'd0;
     end else if (data_valid_in) begin
       counter <= counter + 1;
     end else begin
-      counter <= '0;
+      counter <= 'd0;
     end
   end
 
   // Loop generate each stage
 
   generate
-    for (genvar i = 0; i <= LogFftSize - 1; i++) begin : g_stage
+    genvar i;
+    for (i = 0; i <= LogFftSize - 1; i = i + 1) begin : g_stage
 
       // FFT stage
 
@@ -157,20 +155,21 @@ module fft #(
       .dout({data_last_out, data_valid_out})
   );
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin : p_err_ovf
+    integer i;
     err_ovf <= 1'b0;
-    for (int i = 0; i < LogFftSize; i++) begin
+    for (i = 0; i < LogFftSize; i = i + 1) begin
       if (ovf[i]) begin
         err_ovf <= 1'b1;
       end
     end
   end
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     err_last_unexpected <= (data_last_in && ~&counter);
   end
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     err_input_halt <= (!data_valid_in && |counter);
   end
 

@@ -1,15 +1,14 @@
-../cmult/rtl/cmult.sv
-../ram/ram_sdp.sv
-../shift_ram/rtl/shift_ram.sv
-../util/delay.sv
-../util/shift_regs.sv
-rtl/fft.sv
-rtl/fft_bf2.sv
-rtl/fft_delay.sv
-rtl/fft_stage.sv
-rtl/fft_twiddle_rom.sv
+../cmult/rtl/cmult.v
+../ram/ram_sdp.v
+../shift_ram/rtl/shift_ram.v
+../util/delay.v
+../util/shift_regs.v
+rtl/fft.v
+rtl/fft_bf2.v
+rtl/fft_stage.v
+rtl/fft_twiddle_rom.v
 
-tb/tb_fft.sv
+tb/tb_fft.v
 tb/test_fft_dit2_xin_imag.txt
 tb/test_fft_dit2_xin_real.txt
 tb/test_fft_dit2_yout_imag.txt

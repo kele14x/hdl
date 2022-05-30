@@ -1,40 +1,40 @@
-// File: fft_twiddle_rom.sv
+// File: fft_twiddle_rom.v
 // Brief: The twiddle factor rom in FFT algorithm.
 `timescale 1ns / 1ps
 //
 `default_nettype none
 
 module fft_twiddle_rom #(
-    parameter int TWIDDLE_WIDTH = 3,
-    parameter int DATA_WIDTH    = 16
+    parameter integer TWIDDLE_WIDTH = 3,
+    parameter integer DATA_WIDTH    = 16
 ) (
-    input var                             clk,
-    input var                             rst,
+    input  wire                           clk,
+    input  wire                           rst,
     //
-    input var                             en,
-    input var         [TWIDDLE_WIDTH-1:0] twiddle,
+    input  wire                           en,
+    input  wire       [TWIDDLE_WIDTH-1:0] twiddle,
     //
-    output var signed [   DATA_WIDTH-1:0] twiddle_i_out,
-    output var signed [   DATA_WIDTH-1:0] twiddle_q_out
+    output reg signed [   DATA_WIDTH-1:0] twiddle_i_out,
+    output reg signed [   DATA_WIDTH-1:0] twiddle_q_out
 );
 
-  localparam int LATENCY = 2;
+  localparam integer LATENCY = 2;
   localparam real PI = 3.14159265359;
 
 
   // Signals
   //========
 
-  logic en_d;
+  reg en_d;
 
-  logic [TWIDDLE_WIDTH-1:0] twiddle_bitreversed;
+  reg [TWIDDLE_WIDTH-1:0] twiddle_bitreversed;
 
   // The Memory
-  logic signed [DATA_WIDTH-1:0] COS_ROM[2**TWIDDLE_WIDTH];
-  logic signed [DATA_WIDTH-1:0] SIN_ROM[2**TWIDDLE_WIDTH]; // negative
+  reg signed [DATA_WIDTH-1:0] COS_ROM[0:2**TWIDDLE_WIDTH];
+  reg signed [DATA_WIDTH-1:0] SIN_ROM[0:2**TWIDDLE_WIDTH]; // negative
 
-  logic signed [   DATA_WIDTH-1:0] twiddle_i_s;
-  logic signed [   DATA_WIDTH-1:0] twiddle_q_s;
+  reg signed [   DATA_WIDTH-1:0] twiddle_i_s;
+  reg signed [   DATA_WIDTH-1:0] twiddle_q_s;
 
 
   // Initializes the memory values
@@ -46,15 +46,17 @@ module fft_twiddle_rom #(
   // pi / 2 = 2 ^ (TWIDDLE_WIDTH - 1)
 
   // TODO: reduce ROM usage using equation: -sin(x) = cos(pi/2+x)
-  initial begin
-    for (int i = 0; i < 2 ** TWIDDLE_WIDTH; i = i + 1) begin
+  initial begin : p_init
+    integer i;
+    for (i = 0; i < 2 ** TWIDDLE_WIDTH; i = i + 1) begin
       COS_ROM[i] = (2 ** (DATA_WIDTH - 1) - 1) * $cos(PI * i / 2 ** TWIDDLE_WIDTH);
       SIN_ROM[i] = -(2 ** (DATA_WIDTH - 1) - 1) * $sin(PI * i / 2 ** TWIDDLE_WIDTH);
     end
   end
 
-  always_comb begin
-    for (int i = 0; i < TWIDDLE_WIDTH; i++) begin
+  always @(*) begin : p_reverse
+    integer i;
+    for (i = 0; i < TWIDDLE_WIDTH; i = i + 1) begin
       twiddle_bitreversed[i] <= twiddle[TWIDDLE_WIDTH-i-1];
     end
   end
@@ -63,19 +65,19 @@ module fft_twiddle_rom #(
   // Memory read
   //============
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     en_d <= en;
   end
 
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     if (en) begin
       twiddle_i_s <= COS_ROM[twiddle_bitreversed];
       twiddle_q_s <= SIN_ROM[twiddle_bitreversed];
     end
   end
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     if (en_d) begin
       twiddle_i_out <= twiddle_i_s;
       twiddle_q_out <= twiddle_q_s;

@@ -1,34 +1,35 @@
-// File: tb_cmult.sv
+// File: tb_cmult.v
 // Brief: Test bench for cmult
-
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+//
+`default_nettype none
 
 module tb_cmult ();
 
-  localparam int TestVectorLength = 4096;
-  localparam int DutLatency = 8;
+  localparam integer TestVectorLength = 4096;
+  localparam integer DutLatency = 8;
 
-  localparam int A_WIDTH  = 16;
-  localparam int B_WIDTH  = 16;
-  localparam int P_WIDTH  = 16;
-  localparam int SRA_BITS = 15;
+  localparam integer A_WIDTH = 16;
+  localparam integer B_WIDTH = 16;
+  localparam integer P_WIDTH = 16;
+  localparam integer SRA_BITS = 15;
 
-  logic clk;
-  logic rst;
+  reg clk;
+  reg rst;
 
-  logic [A_WIDTH-1:0] ar, ai;
-  logic [B_WIDTH-1:0] br, bi;
-  logic [P_WIDTH-1:0] pr, pi, pr_ref, pi_ref;
+  reg [A_WIDTH-1:0] ar, ai;
+  reg [B_WIDTH-1:0] br, bi;
+  reg [P_WIDTH-1:0] pr, pi, pr_ref, pi_ref;
 
-  logic ovf, ovf_ref;
+  reg ovf, ovf_ref;
 
-  logic [A_WIDTH-1:0] ar_mem [TestVectorLength];
-  logic [A_WIDTH-1:0] ai_mem [TestVectorLength];
-  logic [B_WIDTH-1:0] br_mem [TestVectorLength];
-  logic [B_WIDTH-1:0] bi_mem [TestVectorLength];
-  logic [P_WIDTH-1:0] pr_mem [TestVectorLength];
-  logic [P_WIDTH-1:0] pi_mem [TestVectorLength];
-  logic              ovf_mem[TestVectorLength];
+  reg [A_WIDTH-1:0] ar_mem [0:TestVectorLength-1];
+  reg [A_WIDTH-1:0] ai_mem [0:TestVectorLength-1];
+  reg [B_WIDTH-1:0] br_mem [0:TestVectorLength-1];
+  reg [B_WIDTH-1:0] bi_mem [0:TestVectorLength-1];
+  reg [P_WIDTH-1:0] pr_mem [0:TestVectorLength-1];
+  reg [P_WIDTH-1:0] pi_mem [0:TestVectorLength-1];
+  reg               ovf_mem[0:TestVectorLength-1];
 
   initial begin
     $readmemh("test_cmult_input_a_real.txt", ar_mem, 0, TestVectorLength - 1);
@@ -56,12 +57,13 @@ module tb_cmult ();
   initial begin
     $display("************************");
     $display("Simulation starts.");
-    wait(rst == 0);
+    wait (rst == 0);
     #100;
     @(posedge clk);
     fork
       begin : p_feed_input
-        for (int i = 0; i < TestVectorLength; i++) begin
+        integer i;
+        for (i = 0; i < TestVectorLength; i = i + 1) begin
           @(posedge clk);
           ar <= ar_mem[i];
           ai <= ai_mem[i];
@@ -71,8 +73,9 @@ module tb_cmult ();
       end
 
       begin : p_gen_ref
+        integer i;
         repeat (DutLatency) @(posedge clk);
-        for (int i = 0; i < TestVectorLength; i++) begin
+        for (i = 0; i < TestVectorLength; i = i + 1) begin
           @(posedge clk);
           pr_ref  <= pr_mem[i];
           pi_ref  <= pi_mem[i];
@@ -81,20 +84,24 @@ module tb_cmult ();
       end
 
       begin : p_checker
+        integer i;
         repeat (DutLatency + 1) @(posedge clk);
-        for (int i = 0; i < TestVectorLength; i++) begin
+        for (i = 0; i < TestVectorLength; i = i + 1) begin
           @(posedge clk);
           if (pr_ref != pr) begin
             $warning("\"pr\" does not match golden reference, i = %d, t = %t, \
-            expect = %x, got = %x", i, $time, pr_ref, pr);
+            expect = %x, got = %x", i, $time, pr_ref,
+                     pr);
           end
           if (pi_ref != pi) begin
             $warning("\"pi\" does not match golden reference, i = %d, t = %t, \
-            expect = %x, got = %x", i, $time, pi_ref, pi);
+            expect = %x, got = %x", i, $time, pi_ref,
+                     pi);
           end
           if (ovf_ref != ovf) begin
             $warning("\"ovf\" does not match golden reference, i = %d, t = %t, \
-            expect = %x, got = %x", i, $time, ovf_ref, ovf);
+            expect = %x, got = %x", i, $time,
+                     ovf_ref, ovf);
           end
         end
       end
@@ -113,7 +120,19 @@ module tb_cmult ();
       .P_WIDTH (P_WIDTH),
       .SRA_BITS(SRA_BITS)
   ) DUT (
-      .*
+      .clk(clk),
+      .rst(rst),
+      //
+      .ar (ar),
+      .ai (ai),
+      //
+      .br (br),
+      .bi (bi),
+      //
+      .pr (pr),
+      .pi (pi),
+      // Overflow indicator
+      .ovf(ovf)
   );
 
 endmodule

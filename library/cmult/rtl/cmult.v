@@ -1,46 +1,47 @@
-// File: cmult.sv
+// File: cmult.v
 // Brief: 3-DSP complex multiplier.
-
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps
+//
+`default_nettype none
 
 module cmult #(
-    parameter int A_WIDTH  = 16,
-    parameter int B_WIDTH  = 16,
-    parameter int P_WIDTH  = 16,
-    parameter int SRA_BITS = 15
+    parameter integer A_WIDTH  = 16,
+    parameter integer B_WIDTH  = 16,
+    parameter integer P_WIDTH  = 16,
+    parameter integer SRA_BITS = 15
 ) (
-    input var  logic               clk,
-    input var  logic               rst,
+    input  wire               clk,
+    input  wire               rst,
     //
-    input var  logic [A_WIDTH-1:0] ar,
-    input var  logic [A_WIDTH-1:0] ai,
+    input  wire [A_WIDTH-1:0] ar,
+    input  wire [A_WIDTH-1:0] ai,
     //
-    input var  logic [B_WIDTH-1:0] br,
-    input var  logic [B_WIDTH-1:0] bi,
+    input  wire [B_WIDTH-1:0] br,
+    input  wire [B_WIDTH-1:0] bi,
     //
-    output var logic [P_WIDTH-1:0] pr,
-    output var logic [P_WIDTH-1:0] pi,
+    output reg  [P_WIDTH-1:0] pr,
+    output reg  [P_WIDTH-1:0] pi,
     // Overflow indicator
-    output var logic              ovf
+    output reg                ovf
 );
 
 
-  localparam int Latency = 8;
+  localparam integer Latency = 8;
 
-  logic signed [A_WIDTH-1:0] ar_d, ar_dd, ar_ddd, ar_dddd, ar_ddddd;
-  logic signed [A_WIDTH-1:0] ai_d, ai_dd, ai_ddd, ai_dddd, ai_ddddd;
+  reg signed [A_WIDTH-1:0] ar_d, ar_dd, ar_ddd, ar_dddd, ar_ddddd;
+  reg signed [A_WIDTH-1:0] ai_d, ai_dd, ai_ddd, ai_dddd, ai_ddddd;
 
-  logic signed [B_WIDTH-1:0] bi_d, bi_dd, bi_ddd, bi_dddd;
-  logic signed [B_WIDTH-1:0] br_d, br_dd, br_ddd, br_dddd;
+  reg signed [B_WIDTH-1:0] bi_d, bi_dd, bi_ddd, bi_dddd;
+  reg signed [B_WIDTH-1:0] br_d, br_dd, br_ddd, br_dddd;
 
-  logic signed [A_WIDTH:0] addcommon;
-  logic signed [B_WIDTH:0] addr, addi;
-  logic signed [A_WIDTH+B_WIDTH:0] mult0, multr, multi, pr_int, pi_int;
-  logic signed [A_WIDTH+B_WIDTH:0] common, common_d, commonr1, commonr2;
+  reg signed [A_WIDTH:0] addcommon;
+  reg signed [B_WIDTH:0] addr, addi;
+  reg signed [A_WIDTH+B_WIDTH:0] mult0, multr, multi, pr_int, pi_int;
+  reg signed [A_WIDTH+B_WIDTH:0] common, common_d, commonr1, commonr2;
 
   // Delay taps, tools will automatically absorb registers into DSP and
   // duplicate if needed
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     ar_d     <= ar;
     ar_dd    <= ar_d;
     ar_ddd   <= ar_dd;
@@ -67,7 +68,7 @@ module cmult #(
   // DSP1
   // Common factor (ar - ai) * bi, shared for the calculations of the real and
   // imaginary final products
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     addcommon <= ar_d - ai_d;
     mult0     <= addcommon * bi_dd;
     common    <= mult0 + (1 << (SRA_BITS - 1));
@@ -75,7 +76,7 @@ module cmult #(
 
   // DSP2
   // Real product ar * (br - bi) + (ar - ai) * bi = ar * br - ai * bi
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     addr   <= br_dddd - bi_dddd;
     multr  <= addr * ar_ddddd;
     pr_int <= multr + commonr1;
@@ -83,13 +84,13 @@ module cmult #(
 
   // DSP3
   // Imaginary product ai * (br + bi) + (ar - ai) * bi = ai * br + ar + bi
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     addi   <= br_dddd + bi_dddd;
     multi  <= addi * ai_ddddd;
     pi_int <= multi + commonr2;
   end
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     pr <= pr_int[P_WIDTH+SRA_BITS-1:SRA_BITS];
     pi <= pi_int[P_WIDTH+SRA_BITS-1:SRA_BITS];
   end
@@ -98,11 +99,13 @@ module cmult #(
     if (P_WIDTH + SRA_BITS >= A_WIDTH + B_WIDTH + 1) begin : g_no_ovf
 
       // Output is full width, no overflow will happen
-      assign ovf = 'b0;
+      always @(*) begin
+        ovf = 'b0;
+      end
 
     end else begin : g_ovf
 
-      always_ff @(posedge clk) begin
+      always @(posedge clk) begin
         ovf <= ~(&pr_int[A_WIDTH+B_WIDTH:P_WIDTH+SRA_BITS-1] ||
                 &(~pr_int[A_WIDTH+B_WIDTH:P_WIDTH+SRA_BITS-1])) || ~(
                 &pi_int[A_WIDTH+B_WIDTH:P_WIDTH+SRA_BITS-1] || &(~pi_int[A_WIDTH+B_WIDTH:P_WIDTH+SRA_BITS-1]));
