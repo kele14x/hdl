@@ -112,7 +112,7 @@ proc hdl_check_required_files {files} {
 #   prj_dir  - Project folder
 #   part     - FPGA part number
 #
-proc hdl_create_project { prj_name {prj_dir ./prj_dir} {part xczu19eg-ffvc1760-2-i} } {
+proc hdl_create_project { prj_name {prj_dir ./prj_dir} {part xc7k160t-fbg676-2} } {
   # Create project with part number
   put "Create project $prj_name under directory $prj_dir"
   create_project -force -part $part $prj_name $prj_dir
