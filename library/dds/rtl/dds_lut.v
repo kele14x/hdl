@@ -7,6 +7,7 @@
 module dds_lut #(
     parameter integer PHASE_WIDTH  = 12,
     parameter integer DATA_WIDTH   = 16,
+    parameter reg     NEGATIVE_COS = 0,
     parameter reg     NEGATIVE_SIN = 0
 ) (
     input  wire                          clk,
@@ -46,6 +47,7 @@ module dds_lut #(
       dds_lut_fabric #(
           .PHASE_WIDTH (PHASE_WIDTH),
           .DATA_WIDTH  (DATA_WIDTH),
+          .NEGATIVE_COS(NEGATIVE_COS),
           .NEGATIVE_SIN(NEGATIVE_SIN)
       ) i_lut_fabric (
           .clk    (clk),
@@ -63,6 +65,7 @@ module dds_lut #(
       dds_lut_block #(
           .PHASE_WIDTH (PHASE_WIDTH),
           .DATA_WIDTH  (DATA_WIDTH),
+          .NEGATIVE_COS(NEGATIVE_COS),
           .NEGATIVE_SIN(NEGATIVE_SIN)
       ) i_lut_block (
           .clk    (clk),

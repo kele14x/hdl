@@ -8,8 +8,8 @@ module dds #(
     parameter reg                       HAS_PHASE_GEN = 1,
     parameter integer                   PHASE_WIDTH   = 32,
     parameter integer                   DATA_WIDTH    = 16,
-    parameter         [PHASE_WIDTH-1:0] INIT_PINC     = 'b0,
-    parameter         [PHASE_WIDTH-1:0] INIT_POFF     = 'b0,
+    parameter reg     [PHASE_WIDTH-1:0] INIT_PINC     = 'b0,
+    parameter reg     [PHASE_WIDTH-1:0] INIT_POFF     = 'b0,
     parameter reg                       NEGATIVE_COS  = 0,
     parameter reg                       NEGATIVE_SIN  = 0
 ) (
@@ -28,6 +28,14 @@ module dds #(
     input  wire        [PHASE_WIDTH-1:0] config_pinc_in,
     input  wire                          config_valid
 );
+
+  // Local parameters
+  //=================
+
+  localparam integer Latency = 7;
+
+  localparam integer LutPhaseWidth = HAS_PHASE_GEN ?
+    ((PHASE_WIDTH > 14) ? 14 : PHASE_WIDTH) : PHASE_WIDTH;
 
   // Check parameters
   //=================
@@ -53,13 +61,6 @@ module dds #(
   end
 
 
-  // Local parameters
-  //=================
-
-  localparam LutPhaseWidth = HAS_PHASE_GEN ? ((PHASE_WIDTH > 14) ? 14 : PHASE_WIDTH) :
-                             PHASE_WIDTH;
-
-
   // Signals
   //========
 
@@ -70,9 +71,10 @@ module dds #(
     if (HAS_PHASE_GEN) begin : g_phase_gen
 
       dds_phase_gen #(
-          .PHASE_WIDTH(PHASE_WIDTH),
-          .INIT_PINC  (INIT_PINC),
-          .INIT_POFF  (INIT_POFF)
+          .PHASE_WIDTH    (PHASE_WIDTH),
+          .LUT_PHASE_WIDTH(LutPhaseWidth),
+          .INIT_PINC      (INIT_PINC),
+          .INIT_POFF      (INIT_POFF)
       ) i_phase_gen (
           .clk           (clk),
           .rst           (rst),

@@ -9,6 +9,7 @@
 module dds_lut_fabric #(
     parameter integer PHASE_WIDTH  = 9,
     parameter integer DATA_WIDTH   = 16,
+    parameter reg     NEGATIVE_COS = 0,
     parameter reg     NEGATIVE_SIN = 0
 ) (
     input  wire                          clk,
@@ -37,6 +38,9 @@ module dds_lut_fabric #(
     reg signed [DATA_WIDTH-1:0] sin;
     begin
       cos = (2 ** (DATA_WIDTH - 1) - 1) * $cos(PI * idx / 2 ** (PHASE_WIDTH - 1));
+      if (NEGATIVE_COS) begin
+        cos = -cos;
+      end
       sin = (2 ** (DATA_WIDTH - 1) - 1) * $sin(PI * idx / 2 ** (PHASE_WIDTH - 1));
       if (NEGATIVE_SIN) begin
         sin = -sin;

@@ -11,6 +11,7 @@
 module dds_lut_block #(
     parameter integer PHASE_WIDTH  = 12,
     parameter integer DATA_WIDTH   = 16,
+    parameter reg     NEGATIVE_COS = 0,
     parameter reg     NEGATIVE_SIN = 0
 ) (
     input  wire                         clk,
@@ -109,14 +110,20 @@ module dds_lut_block #(
   //=====
 
   // Reduce ROM usage using equation:
+  //    cos(x) = cos(x)
+  //   -cos(x) = cos(x + pi)
   //    sin(x) = cos(x - pi / 2)
   //   -sin(x) = cos(x + pi / 2)
   always @(*) begin
-    cos_phase = phase;
-    if (NEGATIVE_SIN) begin
-      sin_phase = phase + (1 << (PHASE_WIDTH - 2));
+    if (NEGATIVE_COS) begin
+      cos_phase = phase + PhasePi;
     end else begin
-      sin_phase = phase - (1 << (PHASE_WIDTH - 2));
+      cos_phase = phase;
+    end
+    if (NEGATIVE_SIN) begin
+      sin_phase = phase + PhasePi2;
+    end else begin
+      sin_phase = phase - PhasePi2;
     end
   end
 

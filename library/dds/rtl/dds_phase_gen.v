@@ -10,24 +10,31 @@ module dds_phase_gen #(
     parameter reg     [PHASE_WIDTH-1:0] INIT_PINC       = 'b0,
     parameter reg     [PHASE_WIDTH-1:0] INIT_POFF       = 'b0
 ) (
-    input wire                   clk,
-    input wire                   rst,
+    input  wire                   clk,
+    input  wire                   rst,
     //
-    input wire                   sync,
+    input  wire                   sync,
     //
-    input wire [PHASE_WIDTH-1:0] phase_out,
+    output reg  [PHASE_WIDTH-1:0] phase_out,
     //
-    input wire [PHASE_WIDTH-1:0] config_poff_in,
-    input wire [PHASE_WIDTH-1:0] config_pinc_in,
-    input wire                   config_valid
+    input  wire [PHASE_WIDTH-1:0] config_poff_in,
+    input  wire [PHASE_WIDTH-1:0] config_pinc_in,
+    input  wire                   config_valid
 );
+
+  // Local parameters
+  //=================
+
+  localparam integer Latency = 3;
 
 
   // Signals
   //========
 
-  reg [PHASE_WIDTH-1:0] phase_counter;
-  
+  reg [PHASE_WIDTH-1:0] phase_accumulator;
+
+  // TODO: sync with pinc/poff to `phase_out`, this enables pipeline interface
+  //       for `config_*` input. 
   reg [PHASE_WIDTH-1:0] phase_pinc;
   reg [PHASE_WIDTH-1:0] phase_poff;
 
@@ -42,7 +49,7 @@ module dds_phase_gen #(
       phase_pinc <= INIT_PINC;
     end else if (config_valid) begin
       phase_pinc <= config_pinc_in;
-    end 
+    end
   end
 
   always @(posedge clk) begin
@@ -56,16 +63,18 @@ module dds_phase_gen #(
   // Phase accumulator
 
   always @(posedge clk) begin
-    if (rst) begin
-      phase_counter <= INIT_POFF;
-    end else if (sync) begin
-      phase_counter <= phase_poff;
+    if (rst || sync) begin
+      phase_accumulator <= INIT_POFF;
     end else begin
-      phase_counter <= phase_counter + phase_pinc;
+      phase_accumulator <= phase_accumulator + phase_pinc;
     end
   end
 
   // TODO: add phase dither logic
+
+  always @(posedge clk) begin
+    phase_out = phase_accumulator + phase_poff;
+  end
 
 endmodule
 
