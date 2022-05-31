@@ -78,6 +78,8 @@ module tb_fft;
   initial begin
     data_i_in = 0;
     data_q_in = 0;
+    data_valid_in = 0;
+    data_last_in = 0;
 
     wait (rst == 0);
 

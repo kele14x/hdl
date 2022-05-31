@@ -79,8 +79,8 @@ module shift_ram #(
       .dina (din),
       // Port B, read port
       .clkb (clk),
-      .rstb (1'b0),
-      .enb  ('b1),
+      .rstb (3'b000),
+      .enb  (3'b111),
       .addrb(addrb),
       .doutb(dout)
   );
