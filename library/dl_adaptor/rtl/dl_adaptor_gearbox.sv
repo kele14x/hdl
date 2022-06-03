@@ -26,13 +26,19 @@ module dl_adaptor_gearbox #(
     //===================
     input var         clk_491m52,
     input var         rst_491m52,
+    //
+    input var         gb_sof,
+    input var         gb_sop               [      NUM_CC],
     // Separated CCs
     output var [63:0] gb_data              [      NUM_CC][NUM_DL_LAYER],
     output var        gb_valid             [      NUM_CC][NUM_DL_LAYER],
     output var [11:0] gb_re                [      NUM_CC][NUM_DL_LAYER],
     // Control Interface
     //==================
-    input var  [ 1:0] ctrl_compression_mode[      NUM_CC][NUM_DL_LAYER]
+    input var  [ 1:0] ctrl_compression_mode[      NUM_CC][NUM_DL_LAYER],
+    input var         ctrl_enmask          [      NUM_CC],
+    input var  [11:0] ctrl_remask          [      NUM_CC],
+    input var  [13:0] ctrl_symmask         [      NUM_CC]
 );
 
 
@@ -196,10 +202,17 @@ module dl_adaptor_gearbox #(
           .s_axis_tlast (mod4_axis_tlast[i]),
           .s_axis_tuser (mod4_axis_tuser[i]),
           .s_axis_tready(mod4_axis_tready[i]),
+          //
+          .gb_sof       (gb_sof),
+          .gb_sop       (gb_sop),
           // Shared by CC0 and CC1
           .gb_data      (gb_data_mod4[i]),
           .gb_valid     (gb_valid_mod4[i]),
-          .gb_re        (gb_re_mod4[i])
+          .gb_re        (gb_re_mod4[i]),
+          // Control interface
+          .ctrl_enmask  (ctrl_enmask),
+          .ctrl_remask  (ctrl_remask),
+          .ctrl_symmask (ctrl_symmask)
       );
 
     end

@@ -47,6 +47,10 @@ module dl_adaptor #(
     input var  [ 1:0] ctrl_numerology                 [      NUM_CC],
     input var  [ 1:0] ctrl_compression_mode           [      NUM_CC][NUM_DL_LAYER],
     //
+    input var         ctrl_enmask                     [      NUM_CC],
+    input var  [11:0] ctrl_remask                     [      NUM_CC],
+    input var  [13:0] ctrl_symmask                    [      NUM_CC],
+    //
     input var  [10:0] dl_eq_gain_mem_addr             [      NUM_CC],
     input var  [31:0] dl_eq_gain_mem_wdata            [      NUM_CC],
     input var         dl_eq_gain_mem_we               [      NUM_CC],
@@ -132,20 +136,26 @@ module dl_adaptor #(
       //===================
       .clk_491m52           (clk_491m52),
       .rst_491m52           (rst_491m52),
+      //
+      .gb_sof               (dl_radio_start_10ms),
+      .gb_sop               (gb_sos),
       // Separated CCs
       .gb_data              (gb_data),               // {Q, I}
       .gb_valid             (gb_valid),
       .gb_re                (gb_re),                 // RE number, 0 ~ 3275
       // Control Interface
       //==================
-      .ctrl_compression_mode(ctrl_compression_mode)
+      .ctrl_compression_mode(ctrl_compression_mode),
+      .ctrl_enmask          (ctrl_enmask),
+      .ctrl_remask          (ctrl_remask),
+      .ctrl_symmask         (ctrl_symmask)
   );
 
 
   generate
     for (genvar i = 0; i < NUM_CC; i++) begin : g_buf
 
-      // Not `gb_sos` is expected to arrive few ticks after
+      // Note `gb_sos` is expected to arrive few ticks after
       // `dl_radio_start_10ms`. And `gb_data` should be few ticks more late.
       dl_adaptor_buf #(
           .LAYER_NUMBER_C(NUM_DL_LAYER)

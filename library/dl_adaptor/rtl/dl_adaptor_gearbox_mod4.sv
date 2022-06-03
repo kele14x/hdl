@@ -18,14 +18,21 @@ module dl_adaptor_gearbox_mod4 #(
     output var        s_axis_tready,
     input var  [89:0] s_axis_tuser,
     //
+    input var         gb_sof,
+    input var         gb_sop       [NUM_CC],
+    //
     output var [63:0] gb_data      [NUM_CC],  // {8'b0, csf, scalar, Q, I, 8'b0, csf, scalar, Q, I}
     output var        gb_valid     [NUM_CC],
-    output var [11:0] gb_re        [NUM_CC]   // RE number, 0 ~ 3275
+    output var [11:0] gb_re        [NUM_CC],  // RE number, 0 ~ 3275
+    //
+    input var         ctrl_enmask  [NUM_CC],
+    input var  [11:0] ctrl_remask  [NUM_CC],
+    input var  [13:0] ctrl_symmask [NUM_CC]
 );
 
 
   // Immediate data
-  logic [11:0] gb_data_remask;
+  logic [11:0] gb_data_remask; // Not used
   logic        gb_data_csf;
   logic [14:0] gb_data_scalar;
   logic [ 3:0] gb_data_q1;
@@ -36,6 +43,7 @@ module dl_adaptor_gearbox_mod4 #(
   logic [ 2:0] gb_cc_r;
   logic        gb_valid_r;
   logic [11:0] gb_re_r;
+  logic [ 2:0] gb_re_cnt_r;
 
   logic [11:0] tuser_mod_remask2;  // Not used
   logic        tuser_mod_csf2;  // Not used
@@ -61,6 +69,8 @@ module dl_adaptor_gearbox_mod4 #(
 
   logic even_rb, odd_rb, odd_rb_d;
 
+  logic [ 3:0] symbol [NUM_CC];
+  logic [11:0] remask [NUM_CC];
 
   // Modulation compression 4:
   // The AXIS 3 words contains 2 RBs (24 REs), or 1.5 words contain 1 RB (only when
@@ -199,7 +209,6 @@ module dl_adaptor_gearbox_mod4 #(
   // Assume mod_param_valid is at first 3 ticks of the packet
   always_ff @(posedge clk) begin
     if (tuser_mod_param_valid) begin
-      gb_data_remask <= tuser_mod_remask1;
       gb_data_csf    <= tuser_mod_csf1;
       gb_data_scalar <= tuser_mod_scalar1;
     end
@@ -300,6 +309,19 @@ module dl_adaptor_gearbox_mod4 #(
     end
   end
 
+  // `gb_re_cnt_r` count from 0 to 5 to index 12 REs
+  always_ff @(posedge clk) begin
+    if ((rd_state == S_RD_INIT0) && s_axis_tvalid) begin
+      gb_re_cnt_r <= 0;
+    end else if (gb_valid_r) begin
+      gb_re_cnt_r <= gb_re_cnt_r == 5 ? 0 : gb_re_cnt_r + 1;
+    end
+  end
+
+
+  // RE MASK
+  
+
 
   // CC mutex
   //=========
@@ -308,18 +330,46 @@ module dl_adaptor_gearbox_mod4 #(
     for (genvar i = 0; i < NUM_CC; i++) begin
 
       always_ff @(posedge clk) begin
-        gb_data[i] <= {
-          8'b0,
-          gb_data_csf,
-          gb_data_scalar,
-          gb_data_q1,
-          gb_data_i1,
-          8'b0,
-          gb_data_csf,
-          gb_data_scalar,
-          gb_data_q0,
-          gb_data_i0
-        };
+        if (gb_sof) begin
+          symbol[i] <= '1;
+        end else if (gb_sop[i]) begin
+          symbol[i] <= symbol[i] + 1;
+        end
+      end
+
+      always_ff @(posedge clk) begin 
+        if (ctrl_enmask[i] && ctrl_symmask[i][symbol[i]]) begin
+          remask[i] <= ctrl_remask[i];
+        end else begin
+          remask[i] <= '1;
+        end
+      end
+
+
+      always_ff @(posedge clk) begin
+        if (remask[i][gb_re_cnt_r * 2]) begin
+          gb_data[i][63:32] <= {
+            8'b0,
+            gb_data_csf,
+            gb_data_scalar,
+            gb_data_q1,
+            gb_data_i1
+          };
+        end else begin
+          gb_data[i][63:32] <= '0;
+        end
+
+        if (remask[i][gb_re_cnt_r * 2 + 1]) begin
+          gb_data[i][31:0] <= {
+            8'b0,
+            gb_data_csf,
+            gb_data_scalar,
+            gb_data_q0,
+            gb_data_i0
+          };
+        end else begin
+          gb_data[i][31:0] <= '0;
+        end
       end
 
       always_ff @(posedge clk) begin

@@ -1,6 +1,6 @@
 `timescale 1 ns / 1 ps `default_nettype none
 
-module tb_dl_adaptor;
+module tb_dl_adaptor_gearbox_mod4;
 
   parameter int NUM_CC = 1;
   parameter int NUM_DL_LAYER = 1;
@@ -39,9 +39,15 @@ module tb_dl_adaptor;
   logic        dl_valid                         [      NUM_CC];
 
   // Control Interface
+  logic        clk_axi;
+
   logic [ 3:0] ctrl_bandwidth                   [      NUM_CC];
   logic [ 1:0] ctrl_numerology                  [      NUM_CC];
   logic [ 1:0] ctrl_compression_mode            [      NUM_CC] [NUM_DL_LAYER];
+
+  logic        ctrl_enmask                      [      NUM_CC];
+  logic [11:0] ctrl_remask                      [      NUM_CC];
+  logic [13:0] ctrl_symmask                     [      NUM_CC];
 
   logic [10:0] dl_eq_gain_mem_addr              [      NUM_CC];
   logic [31:0] dl_eq_gain_mem_wdata             [      NUM_CC];
@@ -129,6 +135,9 @@ module tb_dl_adaptor;
       s_dl_update[cc] = 0;
       ctrl_bandwidth[cc] = 0;
       ctrl_numerology[cc] = 0;
+      ctrl_enmask[cc] = 0;
+      ctrl_remask[cc] = 0;
+      ctrl_symmask[cc] = 0;
       for (int ly = 0; ly < NUM_DL_LAYER; ly++) begin
         ctrl_compression_mode[cc][ly] = 2;
         buffer_mem_ctrl_en[cc][ly] = 0;
@@ -233,9 +242,15 @@ module tb_dl_adaptor;
       .dl_valid                        (dl_valid),
       // Control Interface
       //==================
+      .clk_axi                         (clk_axi),
+      //
       .ctrl_bandwidth                  (ctrl_bandwidth),
       .ctrl_numerology                 (ctrl_numerology),
       .ctrl_compression_mode           (ctrl_compression_mode),
+      //
+      .ctrl_enmask                     (ctrl_enmask),
+      .ctrl_remask                     (ctrl_remask),
+      .ctrl_symmask                    (ctrl_symmask),
       //
       .dl_eq_gain_mem_addr             (dl_eq_gain_mem_addr),
       .dl_eq_gain_mem_wdata            (dl_eq_gain_mem_wdata),
