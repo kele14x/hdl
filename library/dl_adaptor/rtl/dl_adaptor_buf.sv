@@ -21,10 +21,10 @@ module dl_adaptor_buf #(
     // DL data output to DFE
     output var        dl_sof_o,
     output var        dl_sop_o,
-    output var        dl_sof_ahead_9_o,
-    output var        dl_sop_ahead_9_o,
-    output var [15:0] dl_di_o                         [LAYER_NUMBER_C],
-    output var [15:0] dl_dq_o                         [LAYER_NUMBER_C],
+    output var        dl_sof_ahead_11_o,
+    output var        dl_sop_ahead_11_o,
+    output var [15:0] dl_di_o                         [LAYER_NUMBER_C/4],
+    output var [15:0] dl_dq_o                         [LAYER_NUMBER_C/4],
     output var        dl_valid_o,
     //
     // Control Interface
@@ -37,6 +37,8 @@ module dl_adaptor_buf #(
     input var  [31:0] dl_eq_gain_mem_wdata,
     input var         dl_eq_gain_mem_we,
     output var [31:0] dl_eq_gain_mem_rdata,
+    input var  [15:0] dl_iq_gain,        
+    input var  [3:0]  dl_iq_exp_offset,  
     // TODO: not used
     input var         s0_rd_trig_i,
     input var         s0_rd_trig_en,
@@ -55,7 +57,7 @@ module dl_adaptor_buf #(
 
   logic [14:0] buffer_rd_ctrl           [             4];
   logic [ 2:0] decomp_ctrl              [             4];
-  logic [ 9:0] eq_gain;
+  logic [ 9:0] eq_gain                  [             4];
   logic [ 1:0] buffer_mem_ctrl_en_s;
   logic        buffer_mem_ctrl_override;
   logic [ 8:0] symbol_no_s;
@@ -91,17 +93,17 @@ module dl_adaptor_buf #(
       .rat_mode_i        (rat_mode_i),
       .eq_bypass_i       (1'b0),
       .eq_gain_mem_addr  (dl_eq_gain_mem_addr),
-      .eq_gain_mem_data_i(dl_eq_gain_mem_wdata[8:0]),
+      .eq_gain_mem_data_i(dl_eq_gain_mem_wdata),
       .eq_gain_mem_we    (dl_eq_gain_mem_we),
-      .eq_gain_mem_data_o(dl_eq_gain_mem_rdata[8:0]),
+      .eq_gain_mem_data_o(dl_eq_gain_mem_rdata),
       //
       .s0_read_trig      (s0_rd_trig_i),
       .s0_read_trig_en   (s0_rd_trig_en),
       .sof0_i            (dl_data_sof_s),
       .sof_o             (dl_sof_o),
       .sop_o             (dl_sop_o),
-      .sof_ahead_9_o     (dl_sof_ahead_9_o),
-      .sop_ahead_9_o     (dl_sop_ahead_9_o),
+      .sof_ahead_11_o    (dl_sof_ahead_11_o),
+      .sop_ahead_11_o    (dl_sop_ahead_11_o),
       .valid_o           (dl_valid_o),
       .subframe_no_o     (  /* Not used */),
       .symbol_no_o       (symbol_no_s),
@@ -114,7 +116,10 @@ module dl_adaptor_buf #(
       .decomp_ctrl_1     (decomp_ctrl[1]),
       .decomp_ctrl_2     (decomp_ctrl[2]),
       .decomp_ctrl_3     (decomp_ctrl[3]),
-      .eq_gain_o         (eq_gain)
+      .eq_gain_0         (eq_gain[0]),
+      .eq_gain_1         (eq_gain[1]),
+      .eq_gain_2         (eq_gain[2]),
+      .eq_gain_3         (eq_gain[3])
   );
 
 
@@ -162,25 +167,19 @@ module dl_adaptor_buf #(
           .compression_mode1 (compression_mode[4*i+1]),
           .compression_mode2 (compression_mode[4*i+2]),
           .compression_mode3 (compression_mode[4*i+3]),
-          .compression_scale (16'h7fff),
           .decomp_ctrl_i     (decomp_ctrl[i]),
-          .eq_gain_i         (eq_gain),
+          .eq_gain_i         (eq_gain[i]),
+          .iq_exp_offset_i   (dl_iq_exp_offset),
+          .dl_oran_gain_i    (dl_iq_gain),
           .data0_i           (buffer_data[4*i+0]),
           .data1_i           (buffer_data[4*i+1]),
           .data2_i           (buffer_data[4*i+2]),
           .data3_i           (buffer_data[4*i+3]),
-          .idata0_o          (dl_di_o[4*i+0]),
-          .qdata0_o          (dl_dq_o[4*i+0]),
-          .idata1_o          (dl_di_o[4*i+1]),
-          .qdata1_o          (dl_dq_o[4*i+1]),
-          .idata2_o          (dl_di_o[4*i+2]),
-          .qdata2_o          (dl_dq_o[4*i+2]),
-          .idata3_o          (dl_di_o[4*i+3]),
-          .qdata3_o          (dl_dq_o[4*i+3])
+          .idata0_o          (dl_di_o[i]),
+          .qdata0_o          (dl_dq_o[i])
       );
     end
   endgenerate
-
 
 endmodule
 

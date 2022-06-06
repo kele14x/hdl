@@ -8,6 +8,11 @@ tc=1/491.52e6;       % system clock cycle
 simulation_mode=1;   % 0 for single tone source , 1 for random data source, 2 for special pattern data source
 RAT_mode=0;    % 2 bits for 4 cases,  0 for NR scs30k mode, 1 for NR scs60k mode, 2 for LTE scs15k mode 3 for NR scs15kmode
 bw_case=0;     % 4 bits for 16 cases of each RAT mode, 0 for 100M; 1 for 80M; 2 for 60M; 3 for 40M; 4 for 20M; 5 for 90M; 6 for 70M; 7 for 50M; 8 for 30M; 9 for 10M; 10 to 15 reserved;
+compression_mode=0;  % 0 for non-compression, 1 for bfp 9 compression, 2 for modulation compression
+equalization_bypass=0;
+eq_gain_power_backoff=-3; % dB
+dl_oran_gain_power_backoff=0; % dB
+IQ_exp_offset=0;
 
 
 NR_FFT_size=4096;    
@@ -47,7 +52,14 @@ end
 
 FFT_stage=log2(FFT_subband_size);  % FFT stage no
 data_bit_width=16;         % input data bitwidth
-data_bin_pt=11;
+data_bin_pt=0;
+gain_bit_width=16;         % input data bitwidth
+gain_bin_pt=gain_bit_width-1;
+
+dl_oran_gain_bit_width=16;
+dl_oran_gain_bin_pt=14;
+dl_oran_gain_reg=10^(dl_oran_gain_power_backoff/20);
+dl_oran_gain_reg=round(dl_oran_gain_reg*2^dl_oran_gain_bin_pt)*2^-dl_oran_gain_bin_pt;
 
 RE_NO=12*[273, 217, 162, 106, 51, 245, 189, 133, 78, 24, ones(1,6)*273, 135, 107, 79, 51, 24, 121, 93, 65, 38, 11,ones(1,6)*135,ones(1,16)*100, 270, 270,270, 216, 106, 270, 270, 270, 160, 52, ones(1,6)*270];  % RE no= RB number * 12, order matched with bw case
 RE_NO_SUM=12*[273, 217, 162, 106, 51, 245, 189, 133, 78, 24, ones(1,6)*273, 135, 107, 79, 51, 24, 121, 93, 65, 38, 11,ones(1,6)*135,ones(1,16)*100*2, 270, 270,270, 216, 106, 270, 270, 270, 160, 52, ones(1,6)*270]-1; % for LTE case, RE_NO_SUM=RE_NO*2 since there are 2CC
@@ -70,6 +82,29 @@ sb_boundary(1:32,:)=RE_SB(1:32)'*(0:1:3);
 sb_boundary(33:48,:)=RE_SB(33:48)'*[0,1,0,1];
 sb_boundary(49:64,:)=RE_SB(49:64)'*[0,1,0,1];
 sb_boundary= reshape(sb_boundary', 256, 1);
+
+
+%%%%%%%%% equalyzer gain calculation%%%%%%%%%%%%
+eq_gain_bit_width=9;
+eq_gain_bin_pt=8;
+eq_gain=zeros(1,2048);
+
+chanfir_fs=30.72e6;  % channel filter sample rate
+load chanfir_coe.mat
+chanfir=dl_chanfir_100m;
+RE_NO_SB=RE_SB(RAT_mode*16+bw_case+1);
+% calculate frequency domain equalization coefficents
+re_freq=(-floor((RE_NO_SB)/2):1:floor((RE_NO_SB+1)/2)-1)*RAT_scs;
+[frquency_domain_ripple_compensation_value,~] = freqz(chanfir,1,re_freq,chanfir_fs); 
+frquency_domain_ripple_compensation_value=abs(1./frquency_domain_ripple_compensation_value)*10^(eq_gain_power_backoff/20);
+eq_gain(1:RE_NO_SB)=round(frquency_domain_ripple_compensation_value*2^eq_gain_bin_pt)*2^-eq_gain_bin_pt;
+
+      
+
+
+
+
+
 nr_30k_symbol_start_cnt=...
 [0                                               % sop timing offset to sof, unit 1/122.88Msps
 0

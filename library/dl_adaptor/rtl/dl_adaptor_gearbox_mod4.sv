@@ -319,10 +319,6 @@ module dl_adaptor_gearbox_mod4 #(
   end
 
 
-  // RE MASK
-  
-
-
   // CC mutex
   //=========
 
@@ -337,7 +333,7 @@ module dl_adaptor_gearbox_mod4 #(
         end
       end
 
-      always_ff @(posedge clk) begin 
+      always_ff @(posedge clk) begin
         if (ctrl_enmask[i] && ctrl_symmask[i][symbol[i]]) begin
           remask[i] <= ctrl_remask[i];
         end else begin
@@ -347,7 +343,7 @@ module dl_adaptor_gearbox_mod4 #(
 
 
       always_ff @(posedge clk) begin
-        if (remask[i][gb_re_cnt_r * 2]) begin
+        if (remask[i][11 - gb_re_cnt_r * 2]) begin
           gb_data[i][63:32] <= {
             8'b0,
             gb_data_csf,
@@ -359,7 +355,7 @@ module dl_adaptor_gearbox_mod4 #(
           gb_data[i][63:32] <= '0;
         end
 
-        if (remask[i][gb_re_cnt_r * 2 + 1]) begin
+        if (remask[i][11 - gb_re_cnt_r * 2 - 1]) begin
           gb_data[i][31:0] <= {
             8'b0,
             gb_data_csf,

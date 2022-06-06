@@ -13,28 +13,28 @@ entity dl_decompression_barrel_shift1 is
   );
 end dl_decompression_barrel_shift1;
 architecture structural of dl_decompression_barrel_shift1 is 
-  signal register53_q_net : std_logic_vector( 3-1 downto 0 );
-  signal reinterpret9_output_port_net_x0 : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret9_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal reinterpret1_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert2_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal ce_net : std_logic;
-  signal reinterpret3_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal reinterpret4_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal reinterpret5_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal convert3_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal convert1_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal clk_net : std_logic;
-  signal convert4_dout_net : std_logic_vector( 16-1 downto 0 );
   signal reinterpret2_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal reinterpret9_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal ce_net : std_logic;
+  signal register53_q_net : std_logic_vector( 3-1 downto 0 );
+  signal clk_net : std_logic;
+  signal convert_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret9_output_port_net_x0 : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret5_output_port_net : std_logic_vector( 9-1 downto 0 );
   signal convert5_dout_net : std_logic_vector( 16-1 downto 0 );
   signal reinterpret6_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal convert4_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret3_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal convert3_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal convert1_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal convert2_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret1_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal reinterpret4_output_port_net : std_logic_vector( 9-1 downto 0 );
   signal mux3_y_net : std_logic_vector( 16-1 downto 0 );
-  signal convert7_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret7_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal reinterpret8_output_port_net : std_logic_vector( 9-1 downto 0 );
   signal convert6_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal convert7_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret8_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal reinterpret7_output_port_net : std_logic_vector( 9-1 downto 0 );
 begin
   mantissa <= reinterpret9_output_port_net_x0;
   reinterpret9_output_port_net <= data;
@@ -313,32 +313,32 @@ entity dl_decompression_barrel_shift2 is
   );
 end dl_decompression_barrel_shift2;
 architecture structural of dl_decompression_barrel_shift2 is 
-  signal reinterpret9_output_port_net : std_logic_vector( 16-1 downto 0 );
-  signal slice14_y_net : std_logic_vector( 3-1 downto 0 );
-  signal reinterpret2_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert1_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret1_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert2_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal clk_net : std_logic;
-  signal reinterpret3_output_port_net : std_logic_vector( 9-1 downto 0 );
   signal reinterpret8_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret2_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal reinterpret1_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal reinterpret9_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal convert1_dout_net : std_logic_vector( 16-1 downto 0 );
   signal ce_net : std_logic;
-  signal reinterpret5_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert3_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret4_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert4_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret6_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal convert5_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal clk_net : std_logic;
+  signal convert_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal convert2_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal register25_q_net : std_logic_vector( 3-1 downto 0 );
   signal reinterpret8_output_port_net_x0 : std_logic_vector( 9-1 downto 0 );
-  signal reinterpret7_output_port_net : std_logic_vector( 9-1 downto 0 );
   signal convert7_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal convert6_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal convert4_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret4_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal reinterpret3_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal convert5_dout_net : std_logic_vector( 16-1 downto 0 );
   signal mux3_y_net : std_logic_vector( 16-1 downto 0 );
+  signal convert3_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret5_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal reinterpret7_output_port_net : std_logic_vector( 9-1 downto 0 );
+  signal convert6_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret6_output_port_net : std_logic_vector( 9-1 downto 0 );
 begin
   mantissa <= reinterpret9_output_port_net;
   reinterpret8_output_port_net <= data;
-  slice14_y_net <= exp;
+  register25_q_net <= exp;
   clk_net <= clk_1;
   ce_net <= ce_1;
   convert : entity work.dl_decompression_xlconvert 
@@ -514,7 +514,7 @@ begin
     clk => '0',
     ce => '0',
     clr => '0',
-    sel => slice14_y_net,
+    sel => register25_q_net,
     d0 => convert_dout_net,
     d1 => convert1_dout_net,
     d2 => convert2_dout_net,
@@ -613,29 +613,29 @@ entity dl_decompression_barrel_shift3 is
   );
 end dl_decompression_barrel_shift3;
 architecture structural of dl_decompression_barrel_shift3 is 
-  signal convert4_dout_net : std_logic_vector( 15-1 downto 0 );
-  signal convert5_dout_net : std_logic_vector( 15-1 downto 0 );
-  signal reinterpret6_output_port_net : std_logic_vector( 11-1 downto 0 );
-  signal reinterpret5_output_port_net : std_logic_vector( 11-1 downto 0 );
-  signal mux3_y_net : std_logic_vector( 15-1 downto 0 );
-  signal reinterpret7_output_port_net : std_logic_vector( 11-1 downto 0 );
-  signal convert7_dout_net : std_logic_vector( 15-1 downto 0 );
-  signal reinterpret9_output_port_net : std_logic_vector( 15-1 downto 0 );
-  signal reinterpret8_output_port_net : std_logic_vector( 11-1 downto 0 );
-  signal convert6_dout_net : std_logic_vector( 15-1 downto 0 );
-  signal ce_net : std_logic;
-  signal convert3_dout_net : std_logic_vector( 15-1 downto 0 );
-  signal convert1_dout_net : std_logic_vector( 15-1 downto 0 );
-  signal convert8_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal clk_net : std_logic;
   signal reinterpret1_output_port_net : std_logic_vector( 11-1 downto 0 );
+  signal clk_net : std_logic;
   signal convert_dout_net : std_logic_vector( 15-1 downto 0 );
-  signal slice37_y_net : std_logic_vector( 3-1 downto 0 );
-  signal reinterpret4_output_port_net : std_logic_vector( 11-1 downto 0 );
-  signal slice35_y_net : std_logic_vector( 11-1 downto 0 );
   signal reinterpret2_output_port_net : std_logic_vector( 11-1 downto 0 );
+  signal convert1_dout_net : std_logic_vector( 15-1 downto 0 );
+  signal slice35_y_net : std_logic_vector( 11-1 downto 0 );
+  signal slice37_y_net : std_logic_vector( 3-1 downto 0 );
+  signal ce_net : std_logic;
+  signal convert8_dout_net : std_logic_vector( 16-1 downto 0 );
   signal convert2_dout_net : std_logic_vector( 15-1 downto 0 );
   signal reinterpret3_output_port_net : std_logic_vector( 11-1 downto 0 );
+  signal reinterpret4_output_port_net : std_logic_vector( 11-1 downto 0 );
+  signal convert4_dout_net : std_logic_vector( 15-1 downto 0 );
+  signal reinterpret8_output_port_net : std_logic_vector( 11-1 downto 0 );
+  signal reinterpret9_output_port_net : std_logic_vector( 15-1 downto 0 );
+  signal reinterpret6_output_port_net : std_logic_vector( 11-1 downto 0 );
+  signal reinterpret5_output_port_net : std_logic_vector( 11-1 downto 0 );
+  signal convert3_dout_net : std_logic_vector( 15-1 downto 0 );
+  signal convert5_dout_net : std_logic_vector( 15-1 downto 0 );
+  signal reinterpret7_output_port_net : std_logic_vector( 11-1 downto 0 );
+  signal convert6_dout_net : std_logic_vector( 15-1 downto 0 );
+  signal convert7_dout_net : std_logic_vector( 15-1 downto 0 );
+  signal mux3_y_net : std_logic_vector( 15-1 downto 0 );
 begin
   mantissa <= convert8_dout_net;
   slice35_y_net <= data;
@@ -927,145 +927,126 @@ library work;
 use work.conv_pkg.all;
 entity dl_decompression_struct is
   port (
-    compression_scale : in std_logic_vector( 16-1 downto 0 );
+    compression_mode0 : in std_logic_vector( 2-1 downto 0 );
+    compression_mode1 : in std_logic_vector( 2-1 downto 0 );
+    compression_mode2 : in std_logic_vector( 2-1 downto 0 );
+    compression_mode3 : in std_logic_vector( 2-1 downto 0 );
+    dl_oran_gain_i : in std_logic_vector( 16-1 downto 0 );
     data0_i : in std_logic_vector( 32-1 downto 0 );
     data1_i : in std_logic_vector( 32-1 downto 0 );
     data2_i : in std_logic_vector( 32-1 downto 0 );
     data3_i : in std_logic_vector( 32-1 downto 0 );
     decomp_ctrl_i : in std_logic_vector( 3-1 downto 0 );
     eq_gain_i : in std_logic_vector( 10-1 downto 0 );
-    compression_mode1 : in std_logic_vector( 2-1 downto 0 );
-    compression_mode0 : in std_logic_vector( 2-1 downto 0 );
-    compression_mode2 : in std_logic_vector( 2-1 downto 0 );
-    compression_mode3 : in std_logic_vector( 2-1 downto 0 );
+    iq_exp_offset_i : in std_logic_vector( 4-1 downto 0 );
     clk_1 : in std_logic;
     ce_1 : in std_logic;
     idata0_o : out std_logic_vector( 16-1 downto 0 );
-    idata1_o : out std_logic_vector( 16-1 downto 0 );
-    idata2_o : out std_logic_vector( 16-1 downto 0 );
-    idata3_o : out std_logic_vector( 16-1 downto 0 );
-    qdata0_o : out std_logic_vector( 16-1 downto 0 );
-    qdata1_o : out std_logic_vector( 16-1 downto 0 );
-    qdata2_o : out std_logic_vector( 16-1 downto 0 );
-    qdata3_o : out std_logic_vector( 16-1 downto 0 )
+    qdata0_o : out std_logic_vector( 16-1 downto 0 )
   );
 end dl_decompression_struct;
 architecture structural of dl_decompression_struct is 
+  signal slice40_y_net : std_logic_vector( 4-1 downto 0 );
+  signal dsp48e2_1_p_net : std_logic_vector( 48-1 downto 0 );
+  signal opmode2_op_net : std_logic_vector( 22-1 downto 0 );
+  signal reinterpret5_output_port_net : std_logic_vector( 48-1 downto 0 );
+  signal reinterpret12_output_port_net : std_logic_vector( 5-1 downto 0 );
+  signal convert6_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal convert8_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal register19_q_net : std_logic_vector( 18-1 downto 0 );
+  signal dsp48e2_2_p_net : std_logic_vector( 48-1 downto 0 );
+  signal opmode1_op_net : std_logic_vector( 22-1 downto 0 );
+  signal register24_q_net : std_logic_vector( 2-1 downto 0 );
+  signal register9_q_net : std_logic_vector( 16-1 downto 0 );
+  signal mux4_y_net : std_logic_vector( 16-1 downto 0 );
+  signal register17_q_net : std_logic_vector( 16-1 downto 0 );
+  signal register8_q_net : std_logic_vector( 16-1 downto 0 );
+  signal mux10_y_net : std_logic_vector( 2-1 downto 0 );
+  signal register50_q_net : std_logic_vector( 16-1 downto 0 );
+  signal mux2_y_net : std_logic_vector( 16-1 downto 0 );
+  signal dsp48e2_3_p_net : std_logic_vector( 48-1 downto 0 );
+  signal register10_q_net : std_logic_vector( 16-1 downto 0 );
+  signal slice38_y_net : std_logic_vector( 2-1 downto 0 );
+  signal register49_q_net : std_logic_vector( 16-1 downto 0 );
+  signal mux7_y_net : std_logic_vector( 32-1 downto 0 );
+  signal reinterpret17_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret6_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal register3_q_net : std_logic_vector( 3-1 downto 0 );
+  signal register18_q_net : std_logic_vector( 16-1 downto 0 );
+  signal mux8_y_net : std_logic_vector( 16-1 downto 0 );
+  signal convert7_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret2_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal slice4_y_net : std_logic_vector( 16-1 downto 0 );
   signal reinterpret16_output_port_net : std_logic_vector( 16-1 downto 0 );
   signal slice23_y_net : std_logic_vector( 3-1 downto 0 );
-  signal slice4_y_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret1_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal register52_q_net : std_logic_vector( 32-1 downto 0 );
   signal reinterpret7_output_port_net : std_logic_vector( 16-1 downto 0 );
   signal slice11_y_net : std_logic_vector( 9-1 downto 0 );
   signal slice10_y_net : std_logic_vector( 16-1 downto 0 );
-  signal register38_q_net : std_logic_vector( 2-1 downto 0 );
-  signal slice20_y_net : std_logic_vector( 18-1 downto 0 );
   signal slice19_y_net : std_logic_vector( 9-1 downto 0 );
+  signal slice20_y_net : std_logic_vector( 18-1 downto 0 );
+  signal addsub3_s_net : std_logic_vector( 12-1 downto 0 );
   signal data2_i_net : std_logic_vector( 32-1 downto 0 );
-  signal data3_i_net : std_logic_vector( 32-1 downto 0 );
-  signal decomp_ctrl_i_net : std_logic_vector( 3-1 downto 0 );
   signal eq_gain_i_net : std_logic_vector( 10-1 downto 0 );
-  signal register92_q_net : std_logic_vector( 16-1 downto 0 );
-  signal register24_q_net : std_logic_vector( 16-1 downto 0 );
-  signal compression_scale_net : std_logic_vector( 16-1 downto 0 );
-  signal data0_i_net : std_logic_vector( 32-1 downto 0 );
-  signal data1_i_net : std_logic_vector( 32-1 downto 0 );
-  signal register21_q_net : std_logic_vector( 16-1 downto 0 );
-  signal register28_q_net : std_logic_vector( 16-1 downto 0 );
-  signal register31_q_net : std_logic_vector( 16-1 downto 0 );
-  signal register32_q_net : std_logic_vector( 16-1 downto 0 );
-  signal ce_net : std_logic;
-  signal compression_mode0_net : std_logic_vector( 2-1 downto 0 );
-  signal clk_net : std_logic;
-  signal reinterpret9_output_port_net_x0 : std_logic_vector( 16-1 downto 0 );
-  signal register53_q_net : std_logic_vector( 3-1 downto 0 );
-  signal compression_mode1_net : std_logic_vector( 2-1 downto 0 );
-  signal compression_mode2_net : std_logic_vector( 2-1 downto 0 );
   signal compression_mode3_net : std_logic_vector( 2-1 downto 0 );
+  signal ce_net : std_logic;
+  signal reinterpret9_output_port_net_x0 : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret9_output_port_net_x1 : std_logic_vector( 9-1 downto 0 );
+  signal data1_i_net : std_logic_vector( 32-1 downto 0 );
+  signal register53_q_net : std_logic_vector( 3-1 downto 0 );
   signal reinterpret9_output_port_net : std_logic_vector( 16-1 downto 0 );
   signal reinterpret8_output_port_net : std_logic_vector( 9-1 downto 0 );
-  signal slice14_y_net : std_logic_vector( 3-1 downto 0 );
-  signal convert8_dout_net_x0 : std_logic_vector( 16-1 downto 0 );
-  signal slice37_y_net : std_logic_vector( 3-1 downto 0 );
-  signal register89_q_net : std_logic_vector( 16-1 downto 0 );
-  signal slice35_y_net : std_logic_vector( 11-1 downto 0 );
-  signal reinterpret9_output_port_net_x1 : std_logic_vector( 9-1 downto 0 );
-  signal slice34_y_net : std_logic_vector( 1-1 downto 0 );
-  signal slice32_y_net : std_logic_vector( 4-1 downto 0 );
-  signal concat10_y_net : std_logic_vector( 5-1 downto 0 );
-  signal register29_q_net : std_logic_vector( 16-1 downto 0 );
-  signal convert10_dout_net : std_logic_vector( 30-1 downto 0 );
-  signal slice15_y_net : std_logic_vector( 4-1 downto 0 );
-  signal convert12_dout_net : std_logic_vector( 18-1 downto 0 );
-  signal concat5_y_net : std_logic_vector( 5-1 downto 0 );
-  signal reinterpret14_output_port_net : std_logic_vector( 16-1 downto 0 );
-  signal slice24_y_net : std_logic_vector( 1-1 downto 0 );
-  signal convert8_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret12_output_port_net : std_logic_vector( 5-1 downto 0 );
-  signal reinterpret11_output_port_net : std_logic_vector( 16-1 downto 0 );
-  signal convert17_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal convert6_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret5_output_port_net : std_logic_vector( 48-1 downto 0 );
-  signal convert18_dout_net : std_logic_vector( 30-1 downto 0 );
-  signal reinterpret3_output_port_net : std_logic_vector( 48-1 downto 0 );
-  signal opmode2_op_net : std_logic_vector( 22-1 downto 0 );
-  signal dsp48e2_1_p_net : std_logic_vector( 48-1 downto 0 );
-  signal opmode1_op_net : std_logic_vector( 22-1 downto 0 );
-  signal dsp48e2_2_p_net : std_logic_vector( 48-1 downto 0 );
-  signal register19_q_net : std_logic_vector( 18-1 downto 0 );
-  signal mux2_y_net : std_logic_vector( 16-1 downto 0 );
-  signal mux10_y_net : std_logic_vector( 2-1 downto 0 );
-  signal dsp48e2_3_p_net : std_logic_vector( 48-1 downto 0 );
-  signal register49_q_net : std_logic_vector( 16-1 downto 0 );
-  signal register50_q_net : std_logic_vector( 16-1 downto 0 );
-  signal register8_q_net : std_logic_vector( 16-1 downto 0 );
-  signal mux4_y_net : std_logic_vector( 16-1 downto 0 );
-  signal register17_q_net : std_logic_vector( 16-1 downto 0 );
-  signal register10_q_net : std_logic_vector( 16-1 downto 0 );
-  signal register9_q_net : std_logic_vector( 16-1 downto 0 );
-  signal mux7_y_net : std_logic_vector( 32-1 downto 0 );
-  signal slice38_y_net : std_logic_vector( 2-1 downto 0 );
-  signal mux8_y_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret17_output_port_net : std_logic_vector( 16-1 downto 0 );
-  signal register18_q_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret6_output_port_net : std_logic_vector( 16-1 downto 0 );
-  signal register20_q_net : std_logic_vector( 16-1 downto 0 );
-  signal register25_q_net : std_logic_vector( 1-1 downto 0 );
+  signal dl_oran_gain_i_net : std_logic_vector( 16-1 downto 0 );
+  signal compression_mode1_net : std_logic_vector( 2-1 downto 0 );
+  signal data3_i_net : std_logic_vector( 32-1 downto 0 );
+  signal decomp_ctrl_i_net : std_logic_vector( 3-1 downto 0 );
   signal register26_q_net : std_logic_vector( 16-1 downto 0 );
-  signal register30_q_net : std_logic_vector( 1-1 downto 0 );
-  signal slice40_y_net : std_logic_vector( 1-1 downto 0 );
-  signal register3_q_net : std_logic_vector( 3-1 downto 0 );
-  signal register33_q_net : std_logic_vector( 1-1 downto 0 );
-  signal register52_q_net : std_logic_vector( 32-1 downto 0 );
-  signal register312_q_net : std_logic_vector( 10-1 downto 0 );
-  signal reinterpret2_output_port_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret1_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal register20_q_net : std_logic_vector( 16-1 downto 0 );
+  signal iq_exp_offset_i_net : std_logic_vector( 4-1 downto 0 );
+  signal clk_net : std_logic;
+  signal compression_mode2_net : std_logic_vector( 2-1 downto 0 );
+  signal data0_i_net : std_logic_vector( 32-1 downto 0 );
+  signal compression_mode0_net : std_logic_vector( 2-1 downto 0 );
+  signal slice37_y_net : std_logic_vector( 3-1 downto 0 );
+  signal slice32_y_net : std_logic_vector( 4-1 downto 0 );
+  signal register25_q_net : std_logic_vector( 3-1 downto 0 );
+  signal slice35_y_net : std_logic_vector( 11-1 downto 0 );
+  signal concat10_y_net : std_logic_vector( 5-1 downto 0 );
+  signal slice34_y_net : std_logic_vector( 1-1 downto 0 );
+  signal convert8_dout_net_x0 : std_logic_vector( 16-1 downto 0 );
   signal reinterpret4_output_port_net : std_logic_vector( 48-1 downto 0 );
-  signal convert13_dout_net : std_logic_vector( 18-1 downto 0 );
-  signal reinterpret15_output_port_net : std_logic_vector( 5-1 downto 0 );
   signal convert14_dout_net : std_logic_vector( 16-1 downto 0 );
-  signal reinterpret10_output_port_net : std_logic_vector( 10-1 downto 0 );
   signal reinterpret13_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret10_output_port_net : std_logic_vector( 10-1 downto 0 );
+  signal convert17_dout_net : std_logic_vector( 16-1 downto 0 );
+  signal convert18_dout_net : std_logic_vector( 30-1 downto 0 );
+  signal reinterpret11_output_port_net : std_logic_vector( 16-1 downto 0 );
+  signal reinterpret15_output_port_net : std_logic_vector( 5-1 downto 0 );
+  signal slice24_y_net : std_logic_vector( 1-1 downto 0 );
+  signal convert12_dout_net : std_logic_vector( 18-1 downto 0 );
+  signal slice15_y_net : std_logic_vector( 4-1 downto 0 );
+  signal convert10_dout_net : std_logic_vector( 30-1 downto 0 );
   signal convert15_dout_net : std_logic_vector( 30-1 downto 0 );
+  signal concat5_y_net : std_logic_vector( 5-1 downto 0 );
+  signal reinterpret3_output_port_net : std_logic_vector( 48-1 downto 0 );
+  signal convert13_dout_net : std_logic_vector( 18-1 downto 0 );
+  signal reinterpret14_output_port_net : std_logic_vector( 16-1 downto 0 );
 begin
-  compression_scale_net <= compression_scale;
+  compression_mode0_net <= compression_mode0;
+  compression_mode1_net <= compression_mode1;
+  compression_mode2_net <= compression_mode2;
+  compression_mode3_net <= compression_mode3;
+  dl_oran_gain_i_net <= dl_oran_gain_i;
   data0_i_net <= data0_i;
   data1_i_net <= data1_i;
   data2_i_net <= data2_i;
   data3_i_net <= data3_i;
   decomp_ctrl_i_net <= decomp_ctrl_i;
   eq_gain_i_net <= eq_gain_i;
-  idata0_o <= register92_q_net;
-  idata1_o <= register24_q_net;
-  idata2_o <= register29_q_net;
-  idata3_o <= register32_q_net;
-  qdata0_o <= register89_q_net;
-  qdata1_o <= register21_q_net;
-  qdata2_o <= register28_q_net;
-  qdata3_o <= register31_q_net;
-  compression_mode1_net <= compression_mode1;
-  compression_mode0_net <= compression_mode0;
-  compression_mode2_net <= compression_mode2;
-  compression_mode3_net <= compression_mode3;
+  idata0_o <= register26_q_net;
+  qdata0_o <= register20_q_net;
+  iq_exp_offset_i_net <= iq_exp_offset_i;
   clk_net <= clk_1;
   ce_net <= ce_1;
   barrel_shift1 : entity work.dl_decompression_barrel_shift1 
@@ -1079,7 +1060,7 @@ begin
   barrel_shift2 : entity work.dl_decompression_barrel_shift2 
   port map (
     data => reinterpret8_output_port_net,
-    exp => slice14_y_net,
+    exp => register25_q_net,
     clk_1 => clk_net,
     ce_1 => ce_net,
     mantissa => reinterpret9_output_port_net
@@ -1219,7 +1200,7 @@ begin
   generic map (
     bool_conversion => 0,
     din_arith => 2,
-    din_bin_pt => 15,
+    din_bin_pt => 14,
     din_width => 48,
     dout_arith => 2,
     dout_bin_pt => 0,
@@ -1261,7 +1242,7 @@ begin
   generic map (
     bool_conversion => 0,
     din_arith => 2,
-    din_bin_pt => 15,
+    din_bin_pt => 14,
     din_width => 48,
     dout_arith => 2,
     dout_bin_pt => 0,
@@ -1424,7 +1405,7 @@ begin
     opmodereg => 1,
     preaddinsel => "A",
     preg => 1,
-    rnd => X"000000004000",
+    rnd => X"000000002000",
     sel_mask => "C",
     sel_pattern => "C",
     use_c_port => 0,
@@ -1510,7 +1491,7 @@ begin
     opmodereg => 1,
     preaddinsel => "A",
     preg => 1,
-    rnd => X"000000004000",
+    rnd => X"000000002000",
     sel_mask => "C",
     sel_pattern => "C",
     use_c_port => 0,
@@ -1557,6 +1538,18 @@ begin
     ce => ce_net,
     p => dsp48e2_3_p_net
   );
+  mux10 : entity work.sysgen_mux_4be6277f9e 
+  port map (
+    clr => '0',
+    sel => register24_q_net,
+    d0 => compression_mode0_net,
+    d1 => compression_mode1_net,
+    d2 => compression_mode2_net,
+    d3 => compression_mode3_net,
+    clk => clk_net,
+    ce => ce_net,
+    y => mux10_y_net
+  );
   mux2 : entity work.sysgen_mux_b786075160 
   port map (
     clr => '0',
@@ -1597,10 +1590,10 @@ begin
   port map (
     clr => '0',
     sel => mux10_y_net,
-    d0 => compression_scale_net,
-    d1 => compression_scale_net,
+    d0 => dl_oran_gain_i_net,
+    d1 => dl_oran_gain_i_net,
     d2 => register18_q_net,
-    d3 => compression_scale_net,
+    d3 => dl_oran_gain_i_net,
     clk => clk_net,
     ce => ce_net,
     y => mux8_y_net
@@ -1653,7 +1646,7 @@ begin
   port map (
     en => "1",
     rst => "0",
-    d => convert8_dout_net_x0,
+    d => convert7_dout_net,
     clk => clk_net,
     ce => ce_net,
     q => register18_q_net
@@ -1684,45 +1677,6 @@ begin
     ce => ce_net,
     q => register20_q_net
   );
-  register21 : entity work.dl_decompression_xlregister 
-  generic map (
-    d_width => 16,
-    init_value => b"0000000000000000"
-  )
-  port map (
-    rst => "0",
-    d => register20_q_net,
-    en => register25_q_net,
-    clk => clk_net,
-    ce => ce_net,
-    q => register21_q_net
-  );
-  register24 : entity work.dl_decompression_xlregister 
-  generic map (
-    d_width => 16,
-    init_value => b"0000000000000000"
-  )
-  port map (
-    rst => "0",
-    d => register26_q_net,
-    en => register25_q_net,
-    clk => clk_net,
-    ce => ce_net,
-    q => register24_q_net
-  );
-  register25 : entity work.dl_decompression_xlregister 
-  generic map (
-    d_width => 1,
-    init_value => b"0"
-  )
-  port map (
-    en => "1",
-    rst => "0",
-    d => slice40_y_net,
-    clk => clk_net,
-    ce => ce_net,
-    q => register25_q_net
-  );
   register26 : entity work.dl_decompression_xlregister 
   generic map (
     d_width => 16,
@@ -1736,32 +1690,6 @@ begin
     ce => ce_net,
     q => register26_q_net
   );
-  register28 : entity work.dl_decompression_xlregister 
-  generic map (
-    d_width => 16,
-    init_value => b"0000000000000000"
-  )
-  port map (
-    rst => "0",
-    d => register20_q_net,
-    en => register30_q_net,
-    clk => clk_net,
-    ce => ce_net,
-    q => register28_q_net
-  );
-  register29 : entity work.dl_decompression_xlregister 
-  generic map (
-    d_width => 16,
-    init_value => b"0000000000000000"
-  )
-  port map (
-    rst => "0",
-    d => register26_q_net,
-    en => register30_q_net,
-    clk => clk_net,
-    ce => ce_net,
-    q => register29_q_net
-  );
   register3 : entity work.dl_decompression_xlregister 
   generic map (
     d_width => 3,
@@ -1774,71 +1702,6 @@ begin
     clk => clk_net,
     ce => ce_net,
     q => register3_q_net
-  );
-  register30 : entity work.dl_decompression_xlregister 
-  generic map (
-    d_width => 1,
-    init_value => b"0"
-  )
-  port map (
-    en => "1",
-    rst => "0",
-    d => register25_q_net,
-    clk => clk_net,
-    ce => ce_net,
-    q => register30_q_net
-  );
-  register31 : entity work.dl_decompression_xlregister 
-  generic map (
-    d_width => 16,
-    init_value => b"0000000000000000"
-  )
-  port map (
-    rst => "0",
-    d => register20_q_net,
-    en => register33_q_net,
-    clk => clk_net,
-    ce => ce_net,
-    q => register31_q_net
-  );
-  register312 : entity work.dl_decompression_xlregister 
-  generic map (
-    d_width => 10,
-    init_value => b"0000000000"
-  )
-  port map (
-    en => "1",
-    rst => "0",
-    d => eq_gain_i_net,
-    clk => clk_net,
-    ce => ce_net,
-    q => register312_q_net
-  );
-  register32 : entity work.dl_decompression_xlregister 
-  generic map (
-    d_width => 16,
-    init_value => b"0000000000000000"
-  )
-  port map (
-    rst => "0",
-    d => register26_q_net,
-    en => register33_q_net,
-    clk => clk_net,
-    ce => ce_net,
-    q => register32_q_net
-  );
-  register33 : entity work.dl_decompression_xlregister 
-  generic map (
-    d_width => 1,
-    init_value => b"0"
-  )
-  port map (
-    en => "1",
-    rst => "0",
-    d => register30_q_net,
-    clk => clk_net,
-    ce => ce_net,
-    q => register33_q_net
   );
   register49 : entity work.dl_decompression_xlregister 
   generic map (
@@ -1905,19 +1768,6 @@ begin
     ce => ce_net,
     q => register8_q_net
   );
-  register89 : entity work.dl_decompression_xlregister 
-  generic map (
-    d_width => 16,
-    init_value => b"0000000000000000"
-  )
-  port map (
-    rst => "0",
-    d => register20_q_net,
-    en => slice40_y_net,
-    clk => clk_net,
-    ce => ce_net,
-    q => register89_q_net
-  );
   register9 : entity work.dl_decompression_xlregister 
   generic map (
     d_width => 16,
@@ -1930,19 +1780,6 @@ begin
     clk => clk_net,
     ce => ce_net,
     q => register9_q_net
-  );
-  register92 : entity work.dl_decompression_xlregister 
-  generic map (
-    d_width => 16,
-    init_value => b"0000000000000000"
-  )
-  port map (
-    rst => "0",
-    d => register26_q_net,
-    en => slice40_y_net,
-    clk => clk_net,
-    ce => ce_net,
-    q => register92_q_net
   );
   reinterpret1 : entity work.sysgen_reinterpret_1b9bf41623 
   port map (
@@ -1957,7 +1794,7 @@ begin
     clk => '0',
     ce => '0',
     clr => '0',
-    input_port => register312_q_net,
+    input_port => eq_gain_i_net,
     output_port => reinterpret10_output_port_net
   );
   reinterpret11 : entity work.sysgen_reinterpret_07a6d38459 
@@ -2102,17 +1939,6 @@ begin
     x => slice20_y_net,
     y => slice11_y_net
   );
-  slice14 : entity work.dl_decompression_xlslice 
-  generic map (
-    new_lsb => 18,
-    new_msb => 20,
-    x_width => 32,
-    y_width => 3
-  )
-  port map (
-    x => register52_q_net,
-    y => slice14_y_net
-  );
   slice15 : entity work.dl_decompression_xlslice 
   generic map (
     new_lsb => 0,
@@ -2145,17 +1971,6 @@ begin
   port map (
     x => register52_q_net,
     y => slice20_y_net
-  );
-  slice23 : entity work.dl_decompression_xlslice 
-  generic map (
-    new_lsb => 18,
-    new_msb => 20,
-    x_width => 32,
-    y_width => 3
-  )
-  port map (
-    x => mux7_y_net,
-    y => slice23_y_net
   );
   slice24 : entity work.dl_decompression_xlslice 
   generic map (
@@ -2234,30 +2049,39 @@ begin
     x => register52_q_net,
     y => slice4_y_net
   );
-  slice40 : entity work.dl_decompression_xlslice 
+  convert7 : entity work.dl_decompression_xlconvert 
   generic map (
-    new_lsb => 2,
-    new_msb => 2,
-    x_width => 3,
-    y_width => 1
+    bool_conversion => 0,
+    din_arith => 2,
+    din_bin_pt => 15,
+    din_width => 16,
+    dout_arith => 2,
+    dout_bin_pt => 14,
+    dout_width => 16,
+    latency => 0,
+    overflow => xlWrap,
+    quantization => xlTruncate
   )
   port map (
-    x => register3_q_net,
-    y => slice40_y_net
-  );
-  mux10 : entity work.sysgen_mux_4be6277f9e 
-  port map (
     clr => '0',
-    sel => register38_q_net,
-    d0 => compression_mode0_net,
-    d1 => compression_mode1_net,
-    d2 => compression_mode2_net,
-    d3 => compression_mode3_net,
+    en => "1",
+    din => convert8_dout_net_x0,
     clk => clk_net,
     ce => ce_net,
-    y => mux10_y_net
+    dout => convert7_dout_net
   );
-  register38 : entity work.dl_decompression_xlregister 
+  slice23 : entity work.dl_decompression_xlslice 
+  generic map (
+    new_lsb => 0,
+    new_msb => 2,
+    x_width => 12,
+    y_width => 3
+  )
+  port map (
+    x => addsub3_s_net,
+    y => slice23_y_net
+  );
+  register24 : entity work.dl_decompression_xlregister 
   generic map (
     d_width => 2,
     init_value => b"00"
@@ -2268,7 +2092,62 @@ begin
     d => slice38_y_net,
     clk => clk_net,
     ce => ce_net,
-    q => register38_q_net
+    q => register24_q_net
+  );
+  addsub3 : entity work.dl_decompression_xladdsub 
+  generic map (
+    a_arith => xlUnsigned,
+    a_bin_pt => 0,
+    a_width => 4,
+    b_arith => xlUnsigned,
+    b_bin_pt => 0,
+    b_width => 4,
+    c_has_c_out => 0,
+    c_latency => 0,
+    c_output_width => 5,
+    core_name0 => "dl_decompression_c_addsub_v12_0_i0",
+    extra_registers => 0,
+    full_s_arith => 2,
+    full_s_width => 5,
+    latency => 0,
+    overflow => 1,
+    quantization => 1,
+    s_arith => xlUnsigned,
+    s_bin_pt => 0,
+    s_width => 12
+  )
+  port map (
+    clr => '0',
+    en => "1",
+    a => slice40_y_net,
+    b => iq_exp_offset_i_net,
+    clk => clk_net,
+    ce => ce_net,
+    s => addsub3_s_net
+  );
+  register25 : entity work.dl_decompression_xlregister 
+  generic map (
+    d_width => 3,
+    init_value => b"000"
+  )
+  port map (
+    en => "1",
+    rst => "0",
+    d => slice23_y_net,
+    clk => clk_net,
+    ce => ce_net,
+    q => register25_q_net
+  );
+  slice40 : entity work.dl_decompression_xlslice 
+  generic map (
+    new_lsb => 18,
+    new_msb => 21,
+    x_width => 32,
+    y_width => 4
+  )
+  port map (
+    x => mux7_y_net,
+    y => slice40_y_net
   );
 end structural;
 -- Generated from Simulink block 
@@ -2307,33 +2186,28 @@ library work;
 use work.conv_pkg.all;
 entity dl_decompression is
   port (
-    compression_scale : in std_logic_vector( 16-1 downto 0 );
+    compression_mode0 : in std_logic_vector( 2-1 downto 0 );
+    compression_mode1 : in std_logic_vector( 2-1 downto 0 );
+    compression_mode2 : in std_logic_vector( 2-1 downto 0 );
+    compression_mode3 : in std_logic_vector( 2-1 downto 0 );
+    dl_oran_gain_i : in std_logic_vector( 16-1 downto 0 );
     data0_i : in std_logic_vector( 32-1 downto 0 );
     data1_i : in std_logic_vector( 32-1 downto 0 );
     data2_i : in std_logic_vector( 32-1 downto 0 );
     data3_i : in std_logic_vector( 32-1 downto 0 );
     decomp_ctrl_i : in std_logic_vector( 3-1 downto 0 );
     eq_gain_i : in std_logic_vector( 10-1 downto 0 );
-    compression_mode1 : in std_logic_vector( 2-1 downto 0 );
-    compression_mode0 : in std_logic_vector( 2-1 downto 0 );
-    compression_mode2 : in std_logic_vector( 2-1 downto 0 );
-    compression_mode3 : in std_logic_vector( 2-1 downto 0 );
+    iq_exp_offset_i : in std_logic_vector( 4-1 downto 0 );
     clk : in std_logic;
     idata0_o : out std_logic_vector( 16-1 downto 0 );
-    idata1_o : out std_logic_vector( 16-1 downto 0 );
-    idata2_o : out std_logic_vector( 16-1 downto 0 );
-    idata3_o : out std_logic_vector( 16-1 downto 0 );
-    qdata0_o : out std_logic_vector( 16-1 downto 0 );
-    qdata1_o : out std_logic_vector( 16-1 downto 0 );
-    qdata2_o : out std_logic_vector( 16-1 downto 0 );
-    qdata3_o : out std_logic_vector( 16-1 downto 0 )
+    qdata0_o : out std_logic_vector( 16-1 downto 0 )
   );
 end dl_decompression;
 architecture structural of dl_decompression is 
   attribute core_generation_info : string;
-  attribute core_generation_info of structural : architecture is "dl_decompression,sysgen_core_2020_2,{,compilation=HDL Netlist,block_icon_display=Default,family=zynquplus,part=xczu19eg,speed=-2-i,package=ffvc1760,synthesis_language=vhdl,hdl_library=work,synthesis_strategy=Vivado Synthesis Defaults,implementation_strategy=Performance_Explore,testbench=0,interface_doc=0,ce_clr=0,clock_period=2.03451,system_simulink_period=2.03451e-09,waveform_viewer=0,axilite_interface=0,ip_catalog_plugin=0,hwcosim_burst_mode=0,simulation_time=0.0001,concat=2,convert=34,dsp48e2=3,mux=8,opmode=2,register=26,reinterpret=44,slice=15,}";
-  signal ce_1_net : std_logic;
+  attribute core_generation_info of structural : architecture is "dl_decompression,sysgen_core_2020_2,{,compilation=HDL Netlist,block_icon_display=Default,family=zynquplus,part=xczu19eg,speed=-2-i,package=ffvc1760,synthesis_language=vhdl,hdl_library=work,synthesis_strategy=Vivado Synthesis Defaults,implementation_strategy=Performance_Explore,testbench=0,interface_doc=0,ce_clr=0,clock_period=2.03451,system_simulink_period=2.03451e-09,waveform_viewer=0,axilite_interface=0,ip_catalog_plugin=0,hwcosim_burst_mode=0,simulation_time=0.0001,addsub=1,concat=2,convert=35,dsp48e2=3,mux=8,opmode=2,register=15,reinterpret=44,slice=14,}";
   signal clk_1_net : std_logic;
+  signal ce_1_net : std_logic;
 begin
   dl_decompression_default_clock_driver : entity work.dl_decompression_default_clock_driver 
   port map (
@@ -2345,26 +2219,21 @@ begin
   );
   dl_decompression_struct : entity work.dl_decompression_struct 
   port map (
-    compression_scale => compression_scale,
+    compression_mode0 => compression_mode0,
+    compression_mode1 => compression_mode1,
+    compression_mode2 => compression_mode2,
+    compression_mode3 => compression_mode3,
+    dl_oran_gain_i => dl_oran_gain_i,
     data0_i => data0_i,
     data1_i => data1_i,
     data2_i => data2_i,
     data3_i => data3_i,
     decomp_ctrl_i => decomp_ctrl_i,
     eq_gain_i => eq_gain_i,
-    compression_mode1 => compression_mode1,
-    compression_mode0 => compression_mode0,
-    compression_mode2 => compression_mode2,
-    compression_mode3 => compression_mode3,
+    iq_exp_offset_i => iq_exp_offset_i,
     clk_1 => clk_1_net,
     ce_1 => ce_1_net,
     idata0_o => idata0_o,
-    idata1_o => idata1_o,
-    idata2_o => idata2_o,
-    idata3_o => idata3_o,
-    qdata0_o => qdata0_o,
-    qdata1_o => qdata1_o,
-    qdata2_o => qdata2_o,
-    qdata3_o => qdata3_o
+    qdata0_o => qdata0_o
   );
 end structural;

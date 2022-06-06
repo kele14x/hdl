@@ -34,10 +34,10 @@ module dl_adaptor #(
     // 2 CC port, each will have interleaved 4 layer data
     output var        dl_sof                          [      NUM_CC],
     output var        dl_sop                          [      NUM_CC],
-    output var        dl_sof_ahead_9                  [      NUM_CC],
-    output var        dl_sop_ahead_9                  [      NUM_CC],
-    output var [15:0] dl_data_i                       [      NUM_CC][NUM_DL_LAYER],
-    output var [15:0] dl_data_q                       [      NUM_CC][NUM_DL_LAYER],
+    output var        dl_sof_ahead_11                 [      NUM_CC],
+    output var        dl_sop_ahead_11                 [      NUM_CC],
+    output var [15:0] dl_data_i                       [      NUM_CC][NUM_DL_LAYER/4],
+    output var [15:0] dl_data_q                       [      NUM_CC][NUM_DL_LAYER/4],
     output var        dl_valid                        [      NUM_CC],
     // Control Interface
     //==================
@@ -55,6 +55,8 @@ module dl_adaptor #(
     input var  [31:0] dl_eq_gain_mem_wdata            [      NUM_CC],
     input var         dl_eq_gain_mem_we               [      NUM_CC],
     output var [31:0] dl_eq_gain_mem_rdata            [      NUM_CC],
+    input var  [15:0] dl_iq_gain                      [      NUM_CC],
+    input var  [3:0]  dl_iq_exp_offset                [      NUM_CC],
     //
     input var  [ 1:0] buffer_mem_ctrl_en              [      NUM_CC],
     input var  [ 8:0] dfe_dl_adaptor_mem_symbol_no_sel,
@@ -176,8 +178,8 @@ module dl_adaptor #(
           // Data output to DFE
           .dl_sof_o                        (dl_sof[i]),
           .dl_sop_o                        (dl_sop[i]),
-          .dl_sof_ahead_9_o                (dl_sof_ahead_9[i]),
-          .dl_sop_ahead_9_o                (dl_sop_ahead_9[i]),
+          .dl_sof_ahead_11_o               (dl_sof_ahead_11[i]),
+          .dl_sop_ahead_11_o               (dl_sop_ahead_11[i]),
           .dl_di_o                         (dl_data_i[i]),
           .dl_dq_o                         (dl_data_q[i]),
           .dl_valid_o                      (dl_valid[i]),
@@ -190,6 +192,8 @@ module dl_adaptor #(
           .dl_eq_gain_mem_wdata            (dl_eq_gain_mem_wdata[i]),
           .dl_eq_gain_mem_we               (dl_eq_gain_mem_we[i]),
           .dl_eq_gain_mem_rdata            (dl_eq_gain_mem_rdata[i]),
+          .dl_iq_gain                      (dl_iq_gain[i]),
+          .dl_iq_exp_offset                (dl_iq_exp_offset[i]),
           // TODO: External timing port
           .s0_rd_trig_i                    (1'b0),
           .s0_rd_trig_en                   (1'b0),
