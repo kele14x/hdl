@@ -3,7 +3,7 @@
 module tb_dl_adaptor_gearbox_mod4;
 
   parameter int NUM_CC = 1;
-  parameter int NUM_DL_LAYER = 1;
+  parameter int NUM_DL_LAYER = 4;
 
   // DUT Signals
 
@@ -32,10 +32,10 @@ module tb_dl_adaptor_gearbox_mod4;
   // 2 CC port; each will have interleaved 4 layer data
   logic        dl_sof                           [      NUM_CC];
   logic        dl_sop                           [      NUM_CC];
-  logic        dl_sof_ahead_9                   [      NUM_CC];
-  logic        dl_sop_ahead_9                   [      NUM_CC];
-  logic [15:0] dl_data_i                        [      NUM_CC] [NUM_DL_LAYER];
-  logic [15:0] dl_data_q                        [      NUM_CC] [NUM_DL_LAYER];
+  logic        dl_sof_ahead_11                  [      NUM_CC];
+  logic        dl_sop_ahead_11                  [      NUM_CC];
+  logic [15:0] dl_data_i                        [      NUM_CC] [NUM_DL_LAYER/4];
+  logic [15:0] dl_data_q                        [      NUM_CC] [NUM_DL_LAYER/4];
   logic        dl_valid                         [      NUM_CC];
 
   // Control Interface
@@ -53,6 +53,8 @@ module tb_dl_adaptor_gearbox_mod4;
   logic [31:0] dl_eq_gain_mem_wdata             [      NUM_CC];
   logic        dl_eq_gain_mem_we                [      NUM_CC];
   logic [31:0] dl_eq_gain_mem_rdata             [      NUM_CC];
+  logic [15:0] dl_iq_gain                       [      NUM_CC];
+  logic [ 3:0] dl_iq_exp_offset                 [      NUM_CC];
 
   logic [ 1:0] buffer_mem_ctrl_en               [      NUM_CC];
   logic [ 8:0] dfe_dl_adaptor_mem_symbol_no_sel;
@@ -73,7 +75,7 @@ module tb_dl_adaptor_gearbox_mod4;
     automatic int len = (number_rb / 2) * 3 + odd * 2;
     begin
       for (int i = 0; i < len; i++) begin
-        TDATA[i] = i;
+        TDATA[i] = 64'h0123456789ABCDEF;
         TKEEP[i] = (i == len - 1 && odd) ? 0 : 7;
         TUSER[i] = '0;
       end
@@ -135,9 +137,9 @@ module tb_dl_adaptor_gearbox_mod4;
       s_dl_update[cc] = 0;
       ctrl_bandwidth[cc] = 0;
       ctrl_numerology[cc] = 0;
-      ctrl_enmask[cc] = 0;
-      ctrl_remask[cc] = 0;
-      ctrl_symmask[cc] = 0;
+      ctrl_enmask[cc] = 1;
+      ctrl_remask[cc] = 12'hAAA;
+      ctrl_symmask[cc] = 14'b00100000000101;
       for (int ly = 0; ly < NUM_DL_LAYER; ly++) begin
         ctrl_compression_mode[cc][ly] = 2;
         buffer_mem_ctrl_en[cc][ly] = 0;
@@ -235,8 +237,8 @@ module tb_dl_adaptor_gearbox_mod4;
       // 2 CC port, each will have interleaved 4 layer data
       .dl_sof                          (dl_sof),
       .dl_sop                          (dl_sop),
-      .dl_sof_ahead_9                  (dl_sof_ahead_9),
-      .dl_sop_ahead_9                  (dl_sop_ahead_9),
+      .dl_sof_ahead_11                 (dl_sof_ahead_11),
+      .dl_sop_ahead_11                 (dl_sop_ahead_11),
       .dl_data_i                       (dl_data_i),
       .dl_data_q                       (dl_data_q),
       .dl_valid                        (dl_valid),

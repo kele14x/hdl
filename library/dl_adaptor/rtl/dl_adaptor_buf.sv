@@ -93,9 +93,9 @@ module dl_adaptor_buf #(
       .rat_mode_i        (rat_mode_i),
       .eq_bypass_i       (1'b0),
       .eq_gain_mem_addr  (dl_eq_gain_mem_addr),
-      .eq_gain_mem_data_i(dl_eq_gain_mem_wdata),
+      .eq_gain_mem_data_i(dl_eq_gain_mem_wdata[8:0]),
       .eq_gain_mem_we    (dl_eq_gain_mem_we),
-      .eq_gain_mem_data_o(dl_eq_gain_mem_rdata),
+      .eq_gain_mem_data_o(dl_eq_gain_mem_rdata[8:0]),
       //
       .s0_read_trig      (s0_rd_trig_i),
       .s0_read_trig_en   (s0_rd_trig_en),

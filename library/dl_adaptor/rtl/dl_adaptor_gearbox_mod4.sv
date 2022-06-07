@@ -329,7 +329,7 @@ module dl_adaptor_gearbox_mod4 #(
         if (gb_sof) begin
           symbol[i] <= '1;
         end else if (gb_sop[i]) begin
-          symbol[i] <= symbol[i] + 1;
+          symbol[i] <= symbol[i] >= 13 ? 0 : symbol[i] + 1;
         end
       end
 
@@ -343,7 +343,8 @@ module dl_adaptor_gearbox_mod4 #(
 
 
       always_ff @(posedge clk) begin
-        if (remask[i][11 - gb_re_cnt_r * 2]) begin
+        // RE 2k + 1
+        if (remask[i][11 - gb_re_cnt_r * 2 - 1]) begin
           gb_data[i][63:32] <= {
             8'b0,
             gb_data_csf,
@@ -355,7 +356,8 @@ module dl_adaptor_gearbox_mod4 #(
           gb_data[i][63:32] <= '0;
         end
 
-        if (remask[i][11 - gb_re_cnt_r * 2 - 1]) begin
+        // RE 2*k
+        if (remask[i][11 - gb_re_cnt_r * 2]) begin
           gb_data[i][31:0] <= {
             8'b0,
             gb_data_csf,
