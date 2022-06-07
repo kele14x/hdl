@@ -69,10 +69,10 @@ module lfsr #(
     end
   end
 
-`ifndef SIM
+`ifdef COCOTB_SIM
   initial begin
     $dumpfile("dump.vcd");
-    $dumpvars();
+    $dumpvars(0, lfsr);
   end
 `endif
 
