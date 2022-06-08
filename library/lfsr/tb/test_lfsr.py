@@ -33,28 +33,50 @@ class LfsrTester:
         STRUCTURE = self.dut.STRUCTURE.value
         GATE_TYPE = self.dut.GATE_TYPE.value
 
-        bit = 0
-        for i in range(0, BIT_WIDTH):
-            if POLYNOMIAL >> i & 1:
-                bit = bit ^ ((stat >> i) & 1)
+        if STRUCTURE == b"FIBONACCI":
+            if GATE_TYPE == b"XOR":
+                bit = 0
+            else:
+                bit = 1
+            for i in range(0, BIT_WIDTH):
+                if POLYNOMIAL >> i & 1:
+                    if GATE_TYPE == b"XOR":
+                        bit = (bit ^ (stat >> i)) & 1
+                    else:
+                        bit = ~(bit ^ (stat >> i)) & 1
+            stat_new = (stat >> 1) | (bit << (BIT_WIDTH - 1))
+        else:
+            bit = stat & 1
+            stat_new = stat >> 1
+            if bit == 1 and GATE_TYPE == b"XOR":
+                stat_new ^= (POLYNOMIAL >> 1)
+            if bit == 0 and GATE_TYPE == b"XNOR":
+                stat_new = ~(stat_new ^ (POLYNOMIAL >> 1))
+            stat_new |= (bit << (BIT_WIDTH - 1))
 
-        stat_new = (stat >> 1) | (bit << (BIT_WIDTH - 1))
         return stat_new
 
     async def _check(self) -> None:
         await RisingEdge(self.dut.clk)
+        stat_previous = self.dut.lfsr_regs.value
         while True:
             en = self.dut.en.value
+            rst = self.dut.rst.value
+            await RisingEdge(self.dut.clk)
+            stat_current = self.dut.lfsr_regs.value
+            if rst == 1:
+                assert stat_current == self.dut.INITIAL.value
+                continue
             if en == 1:
-                stat_previous = self.dut.dout.value
-                await RisingEdge(self.dut.clk)
-                stat_current = self.dut.dout.value
                 expected = self.model(stat_previous.integer)
                 assert stat_current == expected
+                stat_previous = stat_current
+            else:
+                assert stat_current == stat_previous
 
 
 @cocotb.test()
-async def lsft_rst_test(dut):
+async def lsft_test(dut):
     """Test reset of LFSR."""
 
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -73,14 +95,16 @@ async def lsft_rst_test(dut):
     dut.en.value = 1
     dut.load.value = 0
     dut.din.value = 0
+    dut.rst.value = 1
+
+    await RisingEdge(dut.clk)
+    tester.start()
 
     # Reset DUT
-    dut.rst.value = 1
     for _ in range(3):
         await RisingEdge(dut.clk)
     dut.rst.value = 0
 
-    tester.start()
 
     # await RisingEdge(dut.clk)
     # dut._log.debug(f"{dut.dout.value}")
