@@ -5,13 +5,13 @@
 `default_nettype none
 
 module dds #(
-    parameter reg                       HAS_PHASE_GEN = 1,
+    parameter                           HAS_PHASE_GEN = 0,
     parameter integer                   PHASE_WIDTH   = 32,
     parameter integer                   DATA_WIDTH    = 16,
-    parameter reg     [PHASE_WIDTH-1:0] INIT_PINC     = 'b0,
-    parameter reg     [PHASE_WIDTH-1:0] INIT_POFF     = 'b0,
-    parameter reg                       NEGATIVE_COS  = 0,
-    parameter reg                       NEGATIVE_SIN  = 0
+    parameter         [PHASE_WIDTH-1:0] INIT_PINC     = 'b0,
+    parameter         [PHASE_WIDTH-1:0] INIT_POFF     = 'b0,
+    parameter                           NEGATIVE_COS  = 0,
+    parameter                           NEGATIVE_SIN  = 0
 ) (
     input  wire                          clk,
     input  wire                          rst,
@@ -49,7 +49,7 @@ module dds #(
       end
     end else begin
       if (!(2 <= PHASE_WIDTH && PHASE_WIDTH <= 16)) begin
-        $error("[%m]: Phase word width (PHASE_WIDTH) must be within the range 2 to 48.");
+        $error("[%m]: Phase word width (PHASE_WIDTH) must be within the range 2 to 16.");
         #1 $finish();
       end
     end
@@ -59,6 +59,17 @@ module dds #(
       #1 $finish();
     end
   end
+
+
+  // Test
+  //=====
+
+`ifdef COCOTB_SIM
+  initial begin
+    $dumpfile("dds.vcd");
+    $dumpvars(0, dds);
+  end
+`endif
 
 
   // Signals

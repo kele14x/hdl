@@ -1,4 +1,6 @@
+rtl/dds.v
 rtl/dds_lut.v
+rtl/dds_lut_block.v
+rtl/dds_lut_fabric.v
+rtl/dds_phase_gen.v
 rtl/dds_rom.v
-
-tb/tb_dds_lut.v

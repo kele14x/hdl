@@ -7,8 +7,8 @@
 module dds_lut #(
     parameter integer PHASE_WIDTH  = 12,
     parameter integer DATA_WIDTH   = 16,
-    parameter reg     NEGATIVE_COS = 0,
-    parameter reg     NEGATIVE_SIN = 0
+    parameter         NEGATIVE_COS = 0,
+    parameter         NEGATIVE_SIN = 0
 ) (
     input  wire                          clk,
     input  wire                          rst,
@@ -25,17 +25,6 @@ module dds_lut #(
 
   localparam integer Latency = 4;
   localparam integer PhaseWidthThreshold = 9;
-
-
-  // Check parameters
-  //=================
-
-  initial begin
-    if (!(2 <= PHASE_WIDTH && PHASE_WIDTH <= 23)) begin
-      $error("[%m]: Phase word width (PHASE_WIDTH) must be with in the range 2 to 23");
-      #1 $finish();
-    end
-  end
 
 
   // Main

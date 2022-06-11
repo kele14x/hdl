@@ -7,8 +7,8 @@
 module dds_phase_gen #(
     parameter integer                   PHASE_WIDTH     = 32,
     parameter integer                   LUT_PHASE_WIDTH = 14,
-    parameter reg     [PHASE_WIDTH-1:0] INIT_PINC       = 'b0,
-    parameter reg     [PHASE_WIDTH-1:0] INIT_POFF       = 'b0
+    parameter         [PHASE_WIDTH-1:0] INIT_PINC       = 'b0,
+    parameter         [PHASE_WIDTH-1:0] INIT_POFF       = 'b0
 ) (
     input  wire                   clk,
     input  wire                   rst,
@@ -34,7 +34,7 @@ module dds_phase_gen #(
   reg [PHASE_WIDTH-1:0] phase_accumulator;
 
   // TODO: sync with pinc/poff to `phase_out`, this enables pipeline interface
-  //       for `config_*` input. 
+  //       for `config_*` input.
   reg [PHASE_WIDTH-1:0] phase_pinc;
   reg [PHASE_WIDTH-1:0] phase_poff;
 

@@ -11,8 +11,8 @@
 module dds_lut_block #(
     parameter integer PHASE_WIDTH  = 12,
     parameter integer DATA_WIDTH   = 16,
-    parameter reg     NEGATIVE_COS = 0,
-    parameter reg     NEGATIVE_SIN = 0
+    parameter         NEGATIVE_COS = 0,
+    parameter         NEGATIVE_SIN = 0
 ) (
     input  wire                         clk,
     input  wire                         rst,
@@ -35,9 +35,9 @@ module dds_lut_block #(
   //         pi = 2 ^ (PHASE_WIDTH - 1) = 10_0000...
   // 3 / 2 * pi = 1 / 2 * pi + pi       = 11_0000...
   //     2 * pi = 2 ^ PHASE_WIDTH       = 00_0000...
-  localparam reg [PHASE_WIDTH-1:0] PhasePi = (1 << (PHASE_WIDTH - 1));
-  localparam reg [PHASE_WIDTH-1:0] PhasePi2 = (1 << (PHASE_WIDTH - 2));
-  localparam reg [PHASE_WIDTH-1:0] Phase3Pi2 = PhasePi + PhasePi2;
+  localparam [PHASE_WIDTH-1:0] PhasePi = (1 << (PHASE_WIDTH - 1));
+  localparam [PHASE_WIDTH-1:0] PhasePi2 = (1 << (PHASE_WIDTH - 2));
+  localparam [PHASE_WIDTH-1:0] Phase3Pi2 = PhasePi + PhasePi2;
 
 
   // Functions

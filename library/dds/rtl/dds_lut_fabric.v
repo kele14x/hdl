@@ -9,8 +9,8 @@
 module dds_lut_fabric #(
     parameter integer PHASE_WIDTH  = 9,
     parameter integer DATA_WIDTH   = 16,
-    parameter reg     NEGATIVE_COS = 0,
-    parameter reg     NEGATIVE_SIN = 0
+    parameter         NEGATIVE_COS = 0,
+    parameter         NEGATIVE_SIN = 0
 ) (
     input  wire                          clk,
     input  wire                          rst,
