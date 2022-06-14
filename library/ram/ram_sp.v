@@ -4,11 +4,11 @@
 `timescale 1ns / 1ps `default_nettype none
 
 module ram_sp #(
-    parameter int    ADDR_WIDTH   = 10,
-    parameter int    DATA_WIDTH   = 32,
-    parameter int    READ_LATENCY = 2 ,  // 1 ~ 3
-    parameter int    INIT_WORD    = '0,
-    parameter string INIT_FILE    = ""
+    parameter integer ADDR_WIDTH   = 10,
+    parameter integer DATA_WIDTH   = 32,
+    parameter integer READ_LATENCY = 2 ,  // 1 ~ 3
+    parameter integer INIT_WORD    = '0,
+    parameter         INIT_FILE    = ""
 ) (
     input var                     clk,
     input var  [READ_LATENCY-1:0] rst,
@@ -45,7 +45,7 @@ module ram_sp #(
 
   // Memory write
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     if (en && we) begin
       MEM[addr] <= din;
     end
@@ -53,7 +53,7 @@ module ram_sp #(
 
   // Memory read
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     if (rst[0]) begin
       rega[0] <= '0;
     end else if (en[0]) begin
@@ -64,7 +64,7 @@ module ram_sp #(
   // Additional clock cycle read latency improves clock-to-out timing
   generate
     for (genvar i = 1; i < READ_LATENCY; i++) begin : g_output_reg
-      always_ff @(posedge clk) begin
+      always @(posedge clk) begin
         if (rst[i]) begin
           rega[i] <= '0;
         end else if (en[i]) begin

@@ -8,12 +8,12 @@
 `timescale 1ns / 1ps `default_nettype none
 
 module ram_tdp #(
-    parameter int    ADDR_WIDTH     = 10,
-    parameter int    DATA_WIDTH     = 32,
-    parameter int    READ_LATENCY_A = 3,
-    parameter int    READ_LATENCY_B = 3,
-    parameter int    INIT_WORD      = '0,
-    parameter string INIT_FILE      = ""
+    parameter integer ADDR_WIDTH     = 10,
+    parameter integer DATA_WIDTH     = 32,
+    parameter integer READ_LATENCY_A = 3,
+    parameter integer READ_LATENCY_B = 3,
+    parameter integer INIT_WORD      = '0,
+    parameter         INIT_FILE      = ""
 ) (
     // Port A
     input var                       clka,
@@ -63,13 +63,13 @@ module ram_tdp #(
 
   // Memory write
 
-  always_ff @(posedge clka) begin
+  always @(posedge clka) begin
     if (ena[0] && wea) begin
       MEM[addra] <= dina;
     end
   end
 
-  always_ff @(posedge clkb) begin
+  always @(posedge clkb) begin
     if (enb[0] && web) begin
       MEM[addrb] <= dinb;
     end
@@ -77,7 +77,7 @@ module ram_tdp #(
 
   // Port A read
 
-  always_ff @(posedge clka) begin
+  always @(posedge clka) begin
     if (rsta[0]) begin
       rega[0] <= '0;
     end else if (ena[0]) begin
@@ -87,7 +87,7 @@ module ram_tdp #(
 
   // Read B read
 
-  always_ff @(posedge clkb) begin
+  always @(posedge clkb) begin
     if (rstb[0]) begin
       regb[0] <= '0;
     end else if (enb[0]) begin
@@ -98,7 +98,7 @@ module ram_tdp #(
   // Additional clock cycle read latency improves clock-to-out timing
   generate
     for (genvar i = 1; i < READ_LATENCY_A; i++) begin : g_pipeline_a
-      always_ff @(posedge clka) begin
+      always @(posedge clka) begin
         if (rsta[i]) begin
           rega[i] <= '0;
         end else if (ena[i]) begin
@@ -108,7 +108,7 @@ module ram_tdp #(
     end
 
     for (genvar i = 1; i < READ_LATENCY_B; i++) begin : g_pipeline_b
-      always_ff @(posedge clkb) begin
+      always @(posedge clkb) begin
         if (rstb[i]) begin
           regb[i] <= '0;
         end else if (enb[i]) begin

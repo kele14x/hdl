@@ -5,12 +5,12 @@
 `timescale 1 ns / 1 ps `default_nettype none
 
 module ram_tdp_pipe #(
-    parameter int    ADDR_WIDTH     = 10,
-    parameter int    DATA_WIDTH     = 32,
-    parameter int    READ_LATENCY_A = 2,
-    parameter int    READ_LATENCY_B = 2,
-    parameter int    INIT_WORD      = '0,
-    parameter string INIT_FILE      = ""
+    parameter integer ADDR_WIDTH     = 10,
+    parameter integer DATA_WIDTH     = 32,
+    parameter integer READ_LATENCY_A = 2,
+    parameter integer READ_LATENCY_B = 2,
+    parameter integer INIT_WORD      = 'd0,
+    parameter         INIT_FILE      = ""
 ) (
     // Port A
     input var                   clka,
@@ -46,14 +46,14 @@ module ram_tdp_pipe #(
 
   generate
     for (genvar i = 1; i < READ_LATENCY_A; i = i + 1) begin : g_pipe_a
-      always_ff @(posedge clka) begin
+      always @(posedge clka) begin
         rsta_d[i] <= rsta_d[i-1];
         ena_d[i]  <= ena_d[i-1];
       end
     end
 
     for (genvar i = 1; i < READ_LATENCY_B; i = i + 1) begin : g_pipe_b
-      always_ff @(posedge clkb) begin
+      always @(posedge clkb) begin
         rstb_d[i] <= rstb_d[i-1];
         enb_d[i]  <= enb_d[i-1];
       end

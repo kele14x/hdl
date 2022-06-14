@@ -5,11 +5,11 @@
 `timescale 1ns / 1ps `default_nettype none
 
 module ram_sp_pipe #(
-    parameter int    ADDR_WIDTH   = 10,
-    parameter int    DATA_WIDTH   = 32,
-    parameter int    READ_LATENCY = 2 ,
-    parameter int    INIT_WORD    = '0,
-    parameter string INIT_FILE    = ""
+    parameter integer ADDR_WIDTH   = 10,
+    parameter integer DATA_WIDTH   = 32,
+    parameter integer READ_LATENCY = 2 ,
+    parameter integer INIT_WORD    = 'd0,
+    parameter         INIT_FILE    = ""
 ) (
     // Port A
     input var                   clk,
@@ -31,7 +31,7 @@ module ram_sp_pipe #(
 
   generate
     for (genvar i = 1; i < READ_LATENCY; i = i + 1) begin : g_pipe
-      always_ff @(posedge clk) begin
+      always @(posedge clk) begin
         rst_d[i] <= rst_d[i-1];
         en_d[i]  <= en_d[i-1];
       end
