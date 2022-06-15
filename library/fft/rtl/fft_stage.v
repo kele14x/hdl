@@ -18,8 +18,8 @@ module fft_stage #(
     input  wire signed [DATA_WIDTH-1:0] data_q_in,
     input  wire        [           1:0] sync_in,
     // Output
-    output reg signed  [DATA_WIDTH-1:0] data_i_out,
-    output reg signed  [DATA_WIDTH-1:0] data_q_out,
+    output reg signed  [  DATA_WIDTH:0] data_i_out,
+    output reg signed  [  DATA_WIDTH:0] data_q_out,
     output wire        [           1:0] sync_out,
     // Status output
     output wire                         ovf
@@ -30,7 +30,7 @@ module fft_stage #(
 
   localparam integer DelayTaps = 2 ** (LOG_FFT_SIZE - STAGE - 1);
   localparam integer Latency = (STAGE == 0 ? (DelayTaps + 2) : (DelayTaps + 9));
-  localparam integer TwiddleWidth = STAGE;
+  localparam integer TwiddleWidth = STAGE == 0 ? 1 : STAGE;
 
 
   // Signals
@@ -46,14 +46,14 @@ module fft_stage #(
   wire signed [  DATA_WIDTH-1:0] data_i_twiddled;
   wire signed [  DATA_WIDTH-1:0] data_q_twiddled;
 
-  wire signed [  DATA_WIDTH-1:0] delayed_i_in;
-  wire signed [  DATA_WIDTH-1:0] delayed_q_in;
+  wire signed [    DATA_WIDTH:0] delayed_i_in;
+  wire signed [    DATA_WIDTH:0] delayed_q_in;
 
-  wire signed [  DATA_WIDTH-1:0] delayed_i_out;
-  wire signed [  DATA_WIDTH-1:0] delayed_q_out;
+  wire signed [    DATA_WIDTH:0] delayed_i_out;
+  wire signed [    DATA_WIDTH:0] delayed_q_out;
 
-  wire signed [  DATA_WIDTH-1:0] data_i_s;
-  wire signed [  DATA_WIDTH-1:0] data_q_s;
+  wire signed [    DATA_WIDTH:0] data_i_s;
+  wire signed [    DATA_WIDTH:0] data_q_s;
 
 
   // Main
@@ -128,9 +128,9 @@ module fft_stage #(
 
       cmult #(
           .A_WIDTH (DATA_WIDTH),
-          .B_WIDTH (DATA_WIDTH),
+          .B_WIDTH (16),
           .P_WIDTH (DATA_WIDTH),
-          .SRA_BITS(DATA_WIDTH - 1)
+          .SRA_BITS(15)
       ) i_cmult (
           .clk(clk),
           .rst(rst),
@@ -182,7 +182,7 @@ module fft_stage #(
 
   delay #(
       .DELAY     (DelayTaps),
-      .DATA_WIDTH(DATA_WIDTH * 2)
+      .DATA_WIDTH((DATA_WIDTH + 1) * 2)
   ) i_delay (
       .clk (clk),
       .rst (rst),

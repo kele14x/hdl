@@ -6,26 +6,28 @@
 
 module fft #(
     // FFT size, must be power of 2
-    parameter integer FFT_SIZE   = 4096,
+    parameter integer FFT_SIZE          = 4096,
     // Input data width for I and Q
-    parameter integer DATA_WIDTH = 16
+    parameter integer INPUT_DATA_WIDTH  = 16,
+    // Output data width for I and Q
+    parameter integer OUTPUT_DATA_WIDTH = 28
 ) (
-    input  wire                  clk,
-    input  wire                  rst,
+    input  wire                         clk,
+    input  wire                         rst,
     // Data input
-    input  wire [DATA_WIDTH-1:0] data_i_in,
-    input  wire [DATA_WIDTH-1:0] data_q_in,
-    input  wire                  data_valid_in,
-    input  wire                  data_last_in,
+    input  wire [ INPUT_DATA_WIDTH-1:0] data_i_in,
+    input  wire [ INPUT_DATA_WIDTH-1:0] data_q_in,
+    input  wire                         data_valid_in,
+    input  wire                         data_last_in,
     // Data output
-    output wire [DATA_WIDTH-1:0] data_i_out,
-    output wire [DATA_WIDTH-1:0] data_q_out,
-    output wire                  data_valid_out,
-    output wire                  data_last_out,
-    // Status otuput
-    output reg                   err_input_halt,
-    output reg                   err_last_unexpected,
-    output reg                   err_ovf
+    output wire [OUTPUT_DATA_WIDTH-1:0] data_i_out,
+    output wire [OUTPUT_DATA_WIDTH-1:0] data_q_out,
+    output wire                         data_valid_out,
+    output wire                         data_last_out,
+    // Status output
+    output reg                          err_input_halt,
+    output reg                          err_last_unexpected,
+    output reg                          err_ovf
 );
 
   // Local parameters
@@ -39,21 +41,25 @@ module fft #(
   //=================
 
   initial begin
-
     // Check FFT size
     if (!(2 <= FFT_SIZE && FFT_SIZE <= 16384)) begin
       $error("[%m]: FFT size (FFT_SIZE) must be within the range 2 to 16384.");
       #1 $finish();
     end
-
     if (!(FFT_SIZE == 2 ** LogFftSize)) begin
       $error("[%m]: FFT size (FFT_SIZE) must be power of 2.");
       #1 $finish();
     end
 
-    // Check data width
-    if (!(8 <= DATA_WIDTH && DATA_WIDTH <= 32)) begin
-      $error("[%m]: Data wdith (DATA_WIDTH) must be within the range 8 to 32.");
+    // Check input data width
+    if (!(8 <= INPUT_DATA_WIDTH && INPUT_DATA_WIDTH <= 32)) begin
+      $error("[%m]: Input data width (INPUT_DATA_WIDTH) must be within the range 8 to 32.");
+      #1 $finish();
+    end
+
+    // Check output data width
+    if (!(INPUT_DATA_WIDTH <= OUTPUT_DATA_WIDTH && OUTPUT_DATA_WIDTH <= INPUT_DATA_WIDTH + LogFftSize)) begin
+      $error("[%m]: Output data width (OUTPUT_DATA_WIDTH) must be within the range %d to %d.", INPUT_DATA_WIDTH, INPUT_DATA_WIDTH + LogFftSize);
       #1 $finish();
     end
   end
@@ -63,16 +69,16 @@ module fft #(
   //========
 
   // state = 0: idle, 1: synced with data
-  reg                          state;
+  reg                                 state;
   // Counter count from 0 to FFT_SIZE - 1
-  reg         [LogFftSize-1:0] counter;
+  reg         [       LogFftSize-1:0] counter;
 
-  wire signed [DATA_WIDTH-1:0] data_i_s[  0:LogFftSize];
-  wire signed [DATA_WIDTH-1:0] data_q_s[  0:LogFftSize];
+  wire signed [OUTPUT_DATA_WIDTH-1:0] data_i_s[  0:LogFftSize];
+  wire signed [OUTPUT_DATA_WIDTH-1:0] data_q_s[  0:LogFftSize];
 
-  wire        [           1:0] sync_s  [  0:LogFftSize];
+  wire        [                  1:0] sync_s  [  0:LogFftSize];
 
-  wire                         ovf     [0:LogFftSize-1];
+  wire                                ovf     [0:LogFftSize-1];
 
 
   // Main
@@ -80,11 +86,11 @@ module fft #(
 
   // Connect input & output
 
-  assign data_i_s[0] = data_i_in;
-  assign data_q_s[0] = data_q_in;
+  assign data_i_s[0] = { {OUTPUT_DATA_WIDTH-INPUT_DATA_WIDTH{data_i_in[INPUT_DATA_WIDTH-1]}}, data_i_in };
+  assign data_q_s[0] = { {OUTPUT_DATA_WIDTH-INPUT_DATA_WIDTH{data_q_in[INPUT_DATA_WIDTH-1]}}, data_q_in };
 
   assign sync_s[0]   = {state, state};
-  
+
   assign data_i_out = data_i_s[LogFftSize];
   assign data_q_out = data_q_s[LogFftSize];
 
@@ -125,17 +131,17 @@ module fft #(
       fft_stage #(
           .STAGE       (i),
           .LOG_FFT_SIZE(LogFftSize),
-          .DATA_WIDTH  (DATA_WIDTH)
+          .DATA_WIDTH  (INPUT_DATA_WIDTH + i <= OUTPUT_DATA_WIDTH ? INPUT_DATA_WIDTH + i : OUTPUT_DATA_WIDTH)
       ) i_stage (
           .clk       (clk),
           .rst       (rst),
           //
-          .data_i_in (data_i_s[i]),
-          .data_q_in (data_q_s[i]),
+          .data_i_in (data_i_s[i][INPUT_DATA_WIDTH+i-1:0]),
+          .data_q_in (data_q_s[i][INPUT_DATA_WIDTH+i-1:0]),
           .sync_in   (sync_s[i]),
           //
-          .data_i_out(data_i_s[i+1]),
-          .data_q_out(data_q_s[i+1]),
+          .data_i_out(data_i_s[i+1][INPUT_DATA_WIDTH+i:0]),
+          .data_q_out(data_q_s[i+1][INPUT_DATA_WIDTH+i:0]),
           .sync_out  (sync_s[i+1]),
           //
           .ovf       (ovf[i])
