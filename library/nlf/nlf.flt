@@ -3,9 +3,20 @@
 ../ram/bram_tdp_pipe.sv
 ../util/reg_pipeline.sv
 ../util/srl.sv
-nlf.sv
-nlf_core.sv
-nlf_delay_line.sv
-nlf_lut.sv
+rtl/nlf.sv
+rtl/nlf_core.sv
+rtl/nlf_delay_line.sv
+rtl/nlf_lut.sv
 
-nlf_ooc.xdc
+[testbench]
+tb/tb_nlf.sv
+tb/test_nlf_index_delay.txt
+tb/test_nlf_index.txt
+tb/test_nlf_lut_i.txt
+tb/test_nlf_lut_q.txt
+tb/test_nlf_ovf.txt
+tb/test_nlf_signal_delay.txt
+tb/test_nlf_signal_i.txt
+tb/test_nlf_signal_q.txt
+tb/test_nlf_yout_i.txt
+tb/test_nlf_yout_q.txt

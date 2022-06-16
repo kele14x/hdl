@@ -1,2 +1,4 @@
-decompression_bfp8.vhd
+rtl/decompression_bfp8.vhd
+
+[testbench]
 tb_decompression_bfp8.vhd

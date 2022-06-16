@@ -1,6 +1,5 @@
-[src_files]
-axi4s_if.sv
-axi4s_vip.sv
+../common/axi4s_if.sv
+rtl/axi4s_vip.sv
 
-[tb_files]
-tb_axi4s_vip.sv
+[testbench]
+tb/tb_axi4s_vip.sv

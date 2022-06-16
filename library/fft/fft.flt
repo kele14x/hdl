@@ -8,6 +8,7 @@ rtl/fft_bf2.v
 rtl/fft_stage.v
 rtl/fft_twiddle_rom.v
 
+[testbench]
 tb/tb_fft.v
 tb/test_fft_dit2_xin_imag.txt
 tb/test_fft_dit2_xin_real.txt

@@ -1,0 +1,8 @@
+rtl/fir_rc_u3d2.sv
+
+[testbench]
+tb/tb_fir_rc_u3d2.sv
+tb/test_fir_rc_u3d2_input_coe.txt
+tb/test_fir_rc_u3d2_input_xin.txt
+tb/test_fir_rc_u3d2_output_ovf.txt
+tb/test_fir_rc_u3d2_output_yout.txt

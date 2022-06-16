@@ -1,1 +1,11 @@
 rtl/cmult.sv
+
+[testbench]
+tb/tb_cmult.v
+tb/test_cmult_input_a_imag.txt
+tb/test_cmult_input_a_real.txt
+tb/test_cmult_input_b_imag.txt
+tb/test_cmult_input_b_real.txt
+tb/test_cmult_output_ovf.txt
+tb/test_cmult_output_p_imag.txt
+tb/test_cmult_output_p_real.txt

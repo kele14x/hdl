@@ -1,0 +1,3 @@
+../cordic_rotate/cordic_rotate.sv
+../util/reg_pipeline.sv
+rtl/cordic_pol2cart.sv
