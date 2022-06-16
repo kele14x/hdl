@@ -62,7 +62,7 @@ module fft_stage #(
   // Control signal for each stage
 
   always @(posedge clk) begin
-    if (~sync_in[0]) begin
+    if (~sync_in[0] || rst) begin
       counter_sel <= 'd0;
     end else begin
       counter_sel <= counter_sel + 1;
@@ -70,7 +70,7 @@ module fft_stage #(
   end
 
   always @(posedge clk) begin
-    if (~sync_in[1]) begin
+    if (~sync_in[1] || rst) begin
       counter_twiddle <= 'd0;
     end else begin
       counter_twiddle <= counter_twiddle + 1;
@@ -83,8 +83,8 @@ module fft_stage #(
   generate
     if (STAGE == 0) begin : g_no_twiddle
 
-      // Twiddle is twiddle factor index
-      always @(*) begin
+      // There is no twiddle at first stage
+      initial begin
         twiddle = 'd0;
       end
 
@@ -97,11 +97,14 @@ module fft_stage #(
           .dout({data_q_twiddled, data_i_twiddled})
       );
 
+      assign ovf = 0;
+
     end else begin : g_twiddle
 
-      wire signed [DATA_WIDTH-1:0] twiddle_i_s;
-      wire signed [DATA_WIDTH-1:0] twiddle_q_s;
+      wire signed [15:0] twiddle_i_s;
+      wire signed [15:0] twiddle_q_s;
 
+      // Twiddle is twiddle factor index
       always @(*) begin
         if (~counter_twiddle[LOG_FFT_SIZE-STAGE-1]) begin
           // Upper half
@@ -117,7 +120,7 @@ module fft_stage #(
           .DATA_WIDTH   (16)
       ) i_twiddle_rom (
           .clk          (clk),
-          .rst          (rst),
+          .rst          (1'b0),
           //
           .en           (1'b1),
           .twiddle      (twiddle),
@@ -151,7 +154,6 @@ module fft_stage #(
   endgenerate
 
   // The butterfly operator
-  // TODO: maybe it could be implement in DSP
 
   fft_bf2 #(
       .DATA_WIDTH(DATA_WIDTH)

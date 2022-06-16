@@ -26,6 +26,7 @@ module fft_twiddle_rom #(
   //========
 
   reg en_d;
+  reg rst_d;
 
   reg [TWIDDLE_WIDTH-1:0] twiddle_bitreversed;
 
@@ -66,19 +67,26 @@ module fft_twiddle_rom #(
   //============
 
   always @(posedge clk) begin
-    en_d <= en;
+    en_d  <= en;
+    rst_d <= rst;
   end
 
 
   always @(posedge clk) begin
-    if (en) begin
+    if (rst) begin
+      twiddle_i_s <= 'd0;
+      twiddle_q_s <= 'd0;
+    end else if (en) begin
       twiddle_i_s <= COS_ROM[twiddle_bitreversed];
       twiddle_q_s <= SIN_ROM[twiddle_bitreversed];
     end
   end
 
   always @(posedge clk) begin
-    if (en_d) begin
+    if (rst_d) begin
+      twiddle_i_out <= 'd0;
+      twiddle_q_out <= 'd0;
+    end else if (en_d) begin
       twiddle_i_out <= twiddle_i_s;
       twiddle_q_out <= twiddle_q_s;
     end

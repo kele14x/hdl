@@ -58,8 +58,10 @@ module fft #(
     end
 
     // Check output data width
-    if (!(INPUT_DATA_WIDTH <= OUTPUT_DATA_WIDTH && OUTPUT_DATA_WIDTH <= INPUT_DATA_WIDTH + LogFftSize)) begin
-      $error("[%m]: Output data width (OUTPUT_DATA_WIDTH) must be within the range %d to %d.", INPUT_DATA_WIDTH, INPUT_DATA_WIDTH + LogFftSize);
+    if (!(INPUT_DATA_WIDTH <= OUTPUT_DATA_WIDTH &&
+      OUTPUT_DATA_WIDTH <= INPUT_DATA_WIDTH + LogFftSize)) begin
+      $error("[%m]: Output data width (OUTPUT_DATA_WIDTH) must be within the range %d to %d.",
+             INPUT_DATA_WIDTH, INPUT_DATA_WIDTH + LogFftSize);
       #1 $finish();
     end
   end
@@ -86,10 +88,14 @@ module fft #(
 
   // Connect input & output
 
-  assign data_i_s[0] = { {OUTPUT_DATA_WIDTH-INPUT_DATA_WIDTH{data_i_in[INPUT_DATA_WIDTH-1]}}, data_i_in };
-  assign data_q_s[0] = { {OUTPUT_DATA_WIDTH-INPUT_DATA_WIDTH{data_q_in[INPUT_DATA_WIDTH-1]}}, data_q_in };
+  assign data_i_s[0] = {
+    {OUTPUT_DATA_WIDTH - INPUT_DATA_WIDTH{data_i_in[INPUT_DATA_WIDTH-1]}}, data_i_in
+  };
+  assign data_q_s[0] = {
+    {OUTPUT_DATA_WIDTH - INPUT_DATA_WIDTH{data_q_in[INPUT_DATA_WIDTH-1]}}, data_q_in
+  };
 
-  assign sync_s[0]   = {state, state};
+  assign sync_s[0] = {state, state};
 
   assign data_i_out = data_i_s[LogFftSize];
   assign data_q_out = data_q_s[LogFftSize];
@@ -126,22 +132,43 @@ module fft #(
     genvar i;
     for (i = 0; i <= LogFftSize - 1; i = i + 1) begin : g_stage
 
+      // Data width increases by 1 after each stage, (caused by the adder).
+      // But should not exceeds output data width.
+      localparam integer StageDataWidth = ((INPUT_DATA_WIDTH + i) <= OUTPUT_DATA_WIDTH) ?
+        (INPUT_DATA_WIDTH + i) : OUTPUT_DATA_WIDTH;
+
+      wire signed [StageDataWidth-1:0] data_i_stage_in;
+      wire signed [StageDataWidth-1:0] data_q_stage_in;
+
+      wire signed [  StageDataWidth:0] data_i_stage_out;
+      wire signed [  StageDataWidth:0] data_q_stage_out;
+
+      assign data_i_stage_in = data_i_s[i][StageDataWidth-1:0];
+      assign data_q_stage_in = data_q_s[i][StageDataWidth-1:0];
+
+      assign data_i_s[i+1] = {
+        {OUTPUT_DATA_WIDTH - StageDataWidth - 1{data_i_stage_out[StageDataWidth]}}, data_i_stage_out
+      };
+      assign data_q_s[i+1] = {
+        {OUTPUT_DATA_WIDTH - StageDataWidth - 1{data_q_stage_out[StageDataWidth]}}, data_q_stage_out
+      };
+
       // FFT stage
 
       fft_stage #(
           .STAGE       (i),
           .LOG_FFT_SIZE(LogFftSize),
-          .DATA_WIDTH  (INPUT_DATA_WIDTH + i <= OUTPUT_DATA_WIDTH ? INPUT_DATA_WIDTH + i : OUTPUT_DATA_WIDTH)
+          .DATA_WIDTH  (StageDataWidth)
       ) i_stage (
           .clk       (clk),
           .rst       (rst),
           //
-          .data_i_in (data_i_s[i][INPUT_DATA_WIDTH+i-1:0]),
-          .data_q_in (data_q_s[i][INPUT_DATA_WIDTH+i-1:0]),
+          .data_i_in (data_i_stage_in),
+          .data_q_in (data_q_stage_in),
           .sync_in   (sync_s[i]),
           //
-          .data_i_out(data_i_s[i+1][INPUT_DATA_WIDTH+i:0]),
-          .data_q_out(data_q_s[i+1][INPUT_DATA_WIDTH+i:0]),
+          .data_i_out(data_i_stage_out),
+          .data_q_out(data_q_stage_out),
           .sync_out  (sync_s[i+1]),
           //
           .ovf       (ovf[i])

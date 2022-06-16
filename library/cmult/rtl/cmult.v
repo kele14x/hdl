@@ -99,7 +99,7 @@ module cmult #(
     if (P_WIDTH + SRA_BITS >= A_WIDTH + B_WIDTH + 1) begin : g_no_ovf
 
       // Output is full width, no overflow will happen
-      always @(*) begin
+      initial begin
         ovf = 'b0;
       end
 
