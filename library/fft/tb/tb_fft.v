@@ -9,43 +9,44 @@ module tb_fft;
   parameter integer TEST_LENGTH = 4096;
 
   parameter integer FFT_SIZE = TEST_LENGTH;
-  parameter integer DATA_WIDTH = 16;
+  parameter integer INPUT_DATA_WIDTH = 16;
+  parameter integer OUTPUT_DATA_WIDTH = 28;
 
 
   // DUT signals
   //============
 
-  reg                         clk;
-  reg                         rst;
+  reg                                clk;
+  reg                                rst;
   //
-  reg        [DATA_WIDTH-1:0] data_i_in;
-  reg        [DATA_WIDTH-1:0] data_q_in;
-  reg                         data_valid_in;
-  reg                         data_last_in;
+  reg        [ INPUT_DATA_WIDTH-1:0] data_i_in;
+  reg        [ INPUT_DATA_WIDTH-1:0] data_q_in;
+  reg                                data_valid_in;
+  reg                                data_last_in;
   //
-  wire       [DATA_WIDTH-1:0] data_i_out;
-  wire       [DATA_WIDTH-1:0] data_q_out;
-  wire                        data_valid_out;
-  wire                        data_last_out;
+  wire       [OUTPUT_DATA_WIDTH-1:0] data_i_out;
+  wire       [OUTPUT_DATA_WIDTH-1:0] data_q_out;
+  wire                               data_valid_out;
+  wire                               data_last_out;
 
-  wire                        err_input_halt;
-  wire                        err_last_unexpected;
-  wire                        err_ovf;
+  wire                               err_input_halt;
+  wire                               err_last_unexpected;
+  wire                               err_ovf;
 
 
   // Testbench signals
   //==================
 
-  reg        [DATA_WIDTH-1:0] xin_real_mem        [0:TEST_LENGTH-1];
-  reg        [DATA_WIDTH-1:0] xin_imag_mem        [0:TEST_LENGTH-1];
-  reg        [DATA_WIDTH-1:0] yout_real_mem       [0:TEST_LENGTH-1];
-  reg        [DATA_WIDTH-1:0] yout_imag_mem       [0:TEST_LENGTH-1];
+  reg        [ INPUT_DATA_WIDTH-1:0] xin_real_mem        [0:TEST_LENGTH-1];
+  reg        [ INPUT_DATA_WIDTH-1:0] xin_imag_mem        [0:TEST_LENGTH-1];
+  reg        [OUTPUT_DATA_WIDTH-1:0] yout_real_mem       [0:TEST_LENGTH-1];
+  reg        [OUTPUT_DATA_WIDTH-1:0] yout_imag_mem       [0:TEST_LENGTH-1];
 
-  reg        [DATA_WIDTH-1:0] data_i_out_ref;
-  reg        [DATA_WIDTH-1:0] data_q_out_ref;
+  reg        [OUTPUT_DATA_WIDTH-1:0] data_i_out_ref;
+  reg        [OUTPUT_DATA_WIDTH-1:0] data_q_out_ref;
 
-  reg signed [DATA_WIDTH-1:0] data_i_out_err;
-  reg signed [DATA_WIDTH-1:0] data_q_out_err;
+  reg signed [OUTPUT_DATA_WIDTH-1:0] data_i_out_err;
+  reg signed [OUTPUT_DATA_WIDTH-1:0] data_q_out_err;
 
 
   // Initial memory
@@ -71,7 +72,7 @@ module tb_fft;
 
   initial begin
     rst = 1;
-    #100;
+    #160;
     rst = 0;
   end
 
@@ -134,8 +135,9 @@ module tb_fft;
   // DUT
 
   fft #(
-      .FFT_SIZE  (FFT_SIZE),
-      .DATA_WIDTH(DATA_WIDTH)
+      .FFT_SIZE         (FFT_SIZE),
+      .INPUT_DATA_WIDTH (INPUT_DATA_WIDTH),
+      .OUTPUT_DATA_WIDTH(OUTPUT_DATA_WIDTH)
   ) DUT (
       .clk                (clk),
       .rst                (rst),
