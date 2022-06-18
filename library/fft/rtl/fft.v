@@ -9,6 +9,8 @@ module fft #(
     parameter integer FFT_SIZE          = 4096,
     // Input data width for I and Q
     parameter integer INPUT_DATA_WIDTH  = 16,
+    // Phase factor data width
+    parameter integer PHASE_WIDTH       = 16,
     // Output data width for I and Q
     parameter integer OUTPUT_DATA_WIDTH = 28
 ) (
@@ -29,6 +31,15 @@ module fft #(
     output reg                          err_last_unexpected,
     output reg                          err_ovf
 );
+
+
+`ifdef COCOTB_SIM
+  initial begin
+    $dumpfile("fft.vcd");
+    $dumpvars(0, fft);
+  end
+`endif
+
 
   // Local parameters
   //=================
@@ -158,7 +169,8 @@ module fft #(
       fft_stage #(
           .STAGE       (i),
           .LOG_FFT_SIZE(LogFftSize),
-          .DATA_WIDTH  (StageDataWidth)
+          .DATA_WIDTH  (StageDataWidth),
+          .PHASE_WIDTH (PHASE_WIDTH)
       ) i_stage (
           .clk       (clk),
           .rst       (rst),

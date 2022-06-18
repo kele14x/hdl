@@ -6,7 +6,8 @@
 
 module fft_twiddle_rom #(
     parameter integer TWIDDLE_WIDTH = 3,
-    parameter integer DATA_WIDTH    = 16
+    parameter integer DATA_WIDTH    = 16,
+    parameter integer PHASE_WIDTH   = 16
 ) (
     input  wire                           clk,
     input  wire                           rst,
@@ -50,8 +51,8 @@ module fft_twiddle_rom #(
   initial begin : p_init
     integer i;
     for (i = 0; i < 2 ** TWIDDLE_WIDTH; i = i + 1) begin
-      COS_ROM[i] = (2 ** (DATA_WIDTH - 1) - 1) * $cos(PI * i / 2 ** TWIDDLE_WIDTH);
-      SIN_ROM[i] = -(2 ** (DATA_WIDTH - 1) - 1) * $sin(PI * i / 2 ** TWIDDLE_WIDTH);
+      COS_ROM[i] = (2 ** (DATA_WIDTH - 2)) * $cos(PI * i / 2 ** TWIDDLE_WIDTH);
+      SIN_ROM[i] = -(2 ** (DATA_WIDTH - 2)) * $sin(PI * i / 2 ** TWIDDLE_WIDTH);
     end
   end
 

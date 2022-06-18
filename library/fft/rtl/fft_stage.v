@@ -9,7 +9,8 @@
 module fft_stage #(
     parameter integer STAGE        = 0,
     parameter integer LOG_FFT_SIZE = 4,
-    parameter integer DATA_WIDTH   = 16
+    parameter integer DATA_WIDTH   = 16,
+    parameter integer PHASE_WIDTH  = 16
 ) (
     input  wire                         clk,
     input  wire                         rst,
@@ -117,7 +118,7 @@ module fft_stage #(
 
       fft_twiddle_rom #(
           .TWIDDLE_WIDTH(TwiddleWidth),
-          .DATA_WIDTH   (16)
+          .DATA_WIDTH   (PHASE_WIDTH)
       ) i_twiddle_rom (
           .clk          (clk),
           .rst          (1'b0),
@@ -131,9 +132,9 @@ module fft_stage #(
 
       cmult #(
           .A_WIDTH (DATA_WIDTH),
-          .B_WIDTH (16),
+          .B_WIDTH (PHASE_WIDTH),
           .P_WIDTH (DATA_WIDTH),
-          .SRA_BITS(15)
+          .SRA_BITS(PHASE_WIDTH-2)
       ) i_cmult (
           .clk(clk),
           .rst(rst),
