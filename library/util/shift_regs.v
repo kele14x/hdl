@@ -6,7 +6,7 @@
 `default_nettype none
 
 module shift_regs #(
-    parameter reg     SIM_INIT   = 1,
+    parameter         SIM_INIT   = 1,
     parameter integer DATA_WIDTH = 8,
     parameter integer DEPTH      = 8
 ) (
