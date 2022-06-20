@@ -80,8 +80,12 @@ module fft #(
 
   // Signals
   //========
+  // data_i_in =>  stage[0] => stage[1] => ... => stage[log2(N)-1]
+  // data_q_in =>
+  // state     =>
+  // counter   =>
 
-  // state = 0: idle, 1: synced with data
+  // state = 0: idle or first data, 1: left data
   reg                                 state;
   // Counter count from 0 to FFT_SIZE - 1
   reg         [       LogFftSize-1:0] counter;

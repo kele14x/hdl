@@ -1,6 +1,13 @@
 # Vivado
-library/*/prj_*/
 *.xml
+
+# cocotb
+sim_build/
+__pycache__/
+results.xml
+
+# VCD
+*.vcd
 
 # Editors & IDEs
 .vscode/
