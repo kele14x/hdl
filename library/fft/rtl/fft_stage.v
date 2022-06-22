@@ -134,7 +134,7 @@ module fft_stage #(
           .A_WIDTH (DATA_WIDTH),
           .B_WIDTH (PHASE_WIDTH),
           .P_WIDTH (DATA_WIDTH),
-          .SRA_BITS(PHASE_WIDTH-2)
+          .SRA_BITS(PHASE_WIDTH - 2)
       ) i_cmult (
           .clk(clk),
           .rst(rst),
