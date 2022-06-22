@@ -12,7 +12,7 @@ module fft #(
     // Phase factor data width
     parameter integer PHASE_WIDTH       = 16,
     // Output data width for I and Q
-    parameter integer OUTPUT_DATA_WIDTH = 28
+    parameter integer OUTPUT_DATA_WIDTH = 29
 ) (
     input  wire                         clk,
     input  wire                         rst,
@@ -70,9 +70,9 @@ module fft #(
 
     // Check output data width
     if (!(INPUT_DATA_WIDTH <= OUTPUT_DATA_WIDTH &&
-      OUTPUT_DATA_WIDTH <= INPUT_DATA_WIDTH + LogFftSize)) begin
+      OUTPUT_DATA_WIDTH <= INPUT_DATA_WIDTH + LogFftSize + 1)) begin
       $error("[%m]: Output data width (OUTPUT_DATA_WIDTH) must be within the range %d to %d.",
-             INPUT_DATA_WIDTH, INPUT_DATA_WIDTH + LogFftSize);
+             INPUT_DATA_WIDTH, INPUT_DATA_WIDTH + LogFftSize + 1);
       #1 $finish();
     end
   end
@@ -147,10 +147,12 @@ module fft #(
     genvar i;
     for (i = 0; i <= LogFftSize - 1; i = i + 1) begin : g_stage
 
+      // At first stage, we increase input data width by 1, this ensures there
+      // is no overflow at twiddle rotation. This only need to be done onece.
       // Data width increases by 1 after each stage, (caused by the adder).
-      // But should not exceeds output data width.
-      localparam integer StageDataWidth = ((INPUT_DATA_WIDTH + i) <= OUTPUT_DATA_WIDTH) ?
-        (INPUT_DATA_WIDTH + i) : OUTPUT_DATA_WIDTH;
+      // But data width should not exceeds output data width.
+      localparam integer StageDataWidth = ((INPUT_DATA_WIDTH + i + 1) <= OUTPUT_DATA_WIDTH) ?
+        (INPUT_DATA_WIDTH + i + 1) : OUTPUT_DATA_WIDTH;
 
       wire signed [StageDataWidth-1:0] data_i_stage_in;
       wire signed [StageDataWidth-1:0] data_q_stage_in;

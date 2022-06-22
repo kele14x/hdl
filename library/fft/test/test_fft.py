@@ -1,7 +1,8 @@
 import cocotb
 import numpy as np
 from cocotb.clock import Clock
-from cocotb.triggers import Timer, RisingEdge, ClockCycles
+from cocotb.triggers import RisingEdge, ClockCycles
+
 
 @cocotb.test()
 async def fft_test(dut):
@@ -24,7 +25,7 @@ async def fft_test(dut):
     FFT_SIZE = dut.FFT_SIZE.value
     INPUT_DATA_WIDTH = dut.INPUT_DATA_WIDTH.value
 
-    xin = np.cos(2*np.pi*np.arange(0, FFT_SIZE)/FFT_SIZE*1)
+    xin = np.exp(2j*np.pi*np.arange(0, FFT_SIZE)/FFT_SIZE*1)
     xin = xin * (2 ** (INPUT_DATA_WIDTH - 1) - 1)
     xin = np.round(xin)
 
