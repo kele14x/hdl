@@ -1,12 +1,13 @@
 SIM ?= icarus
 TOPLEVEL_LANG = verilog
 
-FFT_SIZE ?= 4096
+FFT_SIZE ?= 16
 INPUT_DATA_WIDTH ?= 16
 PHASE_WIDTH ?= 16
-OUTPUT_DATA_WIDTH ?= 29
-HAS_BITREVERSE ?= 1
+OUTPUT_DATA_WIDTH ?= 21
+HAS_BITREVERSE ?= 0
 
+VERILOG_SOURCES += $(PWD)/iverilog_dump.v
 VERILOG_SOURCES += $(PWD)/../rtl/fft.v
 VERILOG_SOURCES += $(PWD)/../rtl/fft_bf2.v
 VERILOG_SOURCES += $(PWD)/../rtl/fft_bitreverse.v

@@ -3,10 +3,11 @@ from typing import Dict, Tuple
 
 import cocotb
 import matlab.engine
-from cocotb.triggers import RisingEdge, ClockCycles
-from cocotb.handle import SimHandleBase
 from cocotb.clock import Clock
+from cocotb.handle import SimHandleBase
 from cocotb.queue import Queue
+from cocotb.triggers import RisingEdge, ClockCycles
+
 
 A_WIDTH = cocotb.top.A_WIDTH.value
 B_WIDTH = cocotb.top.B_WIDTH.value
@@ -16,7 +17,7 @@ SRA_BITS = cocotb.top.SRA_BITS.value
 
 class DataMonitor:
     """
-    Simple Monitor to read data from a signal.
+    Simple monitor to read data from a signal.
     """
 
     def __init__(self, clk: SimHandleBase, signals: Dict[str, SimHandleBase], delay: int = 0):
@@ -112,7 +113,6 @@ class CmultTester:
 
     async def _check(self) -> None:
         """Checker function."""
-        await RisingEdge(self.dut.clk)
         while True:
             input = await self.input_mon.values.get()
             output = await self.output_mon.values.get()

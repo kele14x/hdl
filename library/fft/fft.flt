@@ -5,6 +5,8 @@
 ../util/shift_regs.v
 rtl/fft.v
 rtl/fft_bf2.v
+rtl/fft_bitreverse.v
+rtl/fft_core.v
 rtl/fft_stage.v
 rtl/fft_twiddle_rom.v
 
