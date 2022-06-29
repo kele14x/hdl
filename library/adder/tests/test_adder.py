@@ -62,7 +62,8 @@ class AdderTester:
             ovf = self.dut.ovf.value.integer
             (P_ref, ovf_ref) = self.model(A, B)
             assert P == P_ref, "Test failed: P = %d, P_ref = %d" % (P, P_ref)
-            assert ovf == ovf_ref, "Test failed: ovf = %d, ovf_ref = %d" % (ovf, ovf_ref)
+            assert ovf == ovf_ref, "Test failed: ovf = %d, ovf_ref = %d" % (
+                ovf, ovf_ref)
 
 
 @cocotb.test()

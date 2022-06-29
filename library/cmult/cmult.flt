@@ -1,4 +1,4 @@
-rtl/cmult.sv
+rtl/cmult.v
 
 [testbench]
 tb/tb_cmult.v
