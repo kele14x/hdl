@@ -26,9 +26,9 @@ class AdderTester:
 
         # Create MATLAB reference System object
         self._model = self._eng.dfe.Adder(
-            'ADataWidth', float(A_WIDTH),
-            'BDataWidth', float(B_WIDTH),
-            'PDataWidth', float(P_WIDTH),
+            'AWidth', float(A_WIDTH),
+            'BWidth', float(B_WIDTH),
+            'PWidth', float(P_WIDTH),
             'SraBits', float(SRA_BITS)
         )
 
@@ -47,7 +47,8 @@ class AdderTester:
 
     def model(self, a: int, b: int) -> Tuple[int, int]:
         """Return the model result of the adder."""
-        (p, ovf) = self._eng.step(self._model, a, b, nargout=2)
+        (p, ovf) = self._eng.step(self._model, float(a), float(b), nargout=2)
+        self.dut._log.info(f'{type(ovf)}')
         return (p, ovf)
 
     async def _check(self) -> None:
