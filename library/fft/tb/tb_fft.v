@@ -6,11 +6,11 @@
 
 module tb_fft;
 
-  parameter integer TEST_LENGTH = 4096;
+  parameter integer TEST_LENGTH = 16;
 
   parameter integer FFT_SIZE = TEST_LENGTH;
   parameter integer INPUT_DATA_WIDTH = 16;
-  parameter integer OUTPUT_DATA_WIDTH = 28;
+  parameter integer OUTPUT_DATA_WIDTH = 21;
 
 
   // DUT signals

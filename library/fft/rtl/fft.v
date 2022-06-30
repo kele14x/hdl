@@ -6,13 +6,13 @@
 
 module fft #(
     // FFT size, must be power of 2
-    parameter integer FFT_SIZE          = 4096,
+    parameter integer FFT_SIZE          = 16,
     // Input data width for I and Q
     parameter integer INPUT_DATA_WIDTH  = 16,
     // Phase factor data width
     parameter integer PHASE_WIDTH       = 16,
     // Output data width for I and Q
-    parameter integer OUTPUT_DATA_WIDTH = 29,
+    parameter integer OUTPUT_DATA_WIDTH = 21,
     //
     parameter         HAS_BITREVERSE    = 1
 ) (

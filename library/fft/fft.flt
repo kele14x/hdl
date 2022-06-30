@@ -6,13 +6,7 @@
 rtl/fft.v
 rtl/fft_bf2.v
 rtl/fft_bitreverse.v
+rtl/fft_bitreverse_stage.v
 rtl/fft_core.v
 rtl/fft_stage.v
 rtl/fft_twiddle_rom.v
-
-[testbench]
-tb/tb_fft.v
-tb/test_fft_dit2_xin_imag.txt
-tb/test_fft_dit2_xin_real.txt
-tb/test_fft_dit2_yout_imag.txt
-tb/test_fft_dit2_yout_real.txt

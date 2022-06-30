@@ -11,6 +11,7 @@ VERILOG_SOURCES += $(PWD)/iverilog_dump.v
 VERILOG_SOURCES += $(PWD)/../rtl/fft.v
 VERILOG_SOURCES += $(PWD)/../rtl/fft_bf2.v
 VERILOG_SOURCES += $(PWD)/../rtl/fft_bitreverse.v
+VERILOG_SOURCES += $(PWD)/../rtl/fft_bitreverse_stage.v
 VERILOG_SOURCES += $(PWD)/../rtl/fft_core.v
 VERILOG_SOURCES += $(PWD)/../rtl/fft_stage.v
 VERILOG_SOURCES += $(PWD)/../rtl/fft_twiddle_rom.v
