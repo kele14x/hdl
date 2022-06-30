@@ -1,8 +1,8 @@
+import random
 from typing import Dict, List
 
 import cocotb
 import matlab.engine
-import numpy as np
 from cocotb.binary import BinaryValue
 from cocotb.clock import Clock
 from cocotb.handle import SimHandleBase
@@ -119,10 +119,12 @@ class FftTester:
         """
         Run the model with the given input and return the output.
         """
+        # Create a MATLAB column vector
         x = matlab.double(x, is_complex=True)
         x = self._eng.transpose(x)
         y = self._eng.step(self._model, x)
-        y = self._eng.transpose(y)[0]
+        # Convert to Python list
+        y = self._eng.num2cell(y)
         return y
 
     async def _check(self) -> None:
@@ -130,11 +132,12 @@ class FftTester:
         while True:
             input = await self.input_mon.values.get()
             output = await self.output_mon.values.get()
-            x = [x["data_i_in"].signed_integer + 1j * x["data_q_in"].signed_integer for x in input]
-            y = [y["data_i_out"].signed_integer + 1j * y["data_q_out"].signed_integer for y in output]
+            x = [x["data_i_in"].signed_integer + 1j *
+                 x["data_q_in"].signed_integer for x in input]
+            y = [y["data_i_out"].signed_integer + 1j *
+                 y["data_q_out"].signed_integer for y in output]
             y_ref = self.model(x)
-            for i in range(FFT_SIZE):
-                assert y[i] == y_ref[i], "Output mismatch"
+            assert y == y_ref, "Output mismatch"
 
 
 @cocotb.test()
@@ -160,13 +163,13 @@ async def fft_test(dut):
     checker = FftTester(dut)
     checker.start()
 
-    xin = np.exp(2j*np.pi*np.arange(0, FFT_SIZE)/FFT_SIZE*1)
-
     await ClockCycles(dut.clk, 10)
     for i in range(0, FFT_SIZE):
         await RisingEdge(dut.clk)
-        dut.data_i_in.value = int(np.real(xin[i]))
-        dut.data_q_in.value = int(np.imag(xin[i]))
+        dut.data_i_in.value = random.randint(
+            -2**(INPUT_DATA_WIDTH-1), 2**(INPUT_DATA_WIDTH-1) - 1)
+        dut.data_q_in.value = random.randint(
+            -2**(INPUT_DATA_WIDTH-1), 2**(INPUT_DATA_WIDTH-1) - 1)
         dut.data_valid_in.value = 1
         if i == FFT_SIZE - 1:
             dut.data_last_in.value = 1
