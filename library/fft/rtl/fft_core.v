@@ -124,12 +124,8 @@ module fft_core #(
       assign data_i_stage_in = data_i_s[i][StageDataWidth-1:0];
       assign data_q_stage_in = data_q_s[i][StageDataWidth-1:0];
 
-      assign data_i_s[i+1] = {
-        {OUTPUT_DATA_WIDTH - StageDataWidth - 1{data_i_stage_out[StageDataWidth]}}, data_i_stage_out
-      };
-      assign data_q_s[i+1] = {
-        {OUTPUT_DATA_WIDTH - StageDataWidth - 1{data_q_stage_out[StageDataWidth]}}, data_q_stage_out
-      };
+      assign data_i_s[i+1] = data_i_stage_out;
+      assign data_q_s[i+1] = data_q_stage_out;
 
       // FFT stage
 

@@ -83,6 +83,8 @@ module tb_fft;
     data_last_in = 0;
 
     wait (rst == 0);
+    
+    #1000;
 
     fork
 
