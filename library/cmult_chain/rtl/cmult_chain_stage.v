@@ -28,22 +28,22 @@ module cmult_chain_stage #(
 );
 
 
-  localparam int Latency = 3;
+  localparam integer Latency = 3;
 
 
-  logic signed [A_WIDTH-1:0] ar_d, ar_dd;
-  logic signed [A_WIDTH-1:0] ai_d, ai_dd;
+  reg signed [A_WIDTH-1:0] ar_d, ar_dd;
+  reg signed [A_WIDTH-1:0] ai_d, ai_dd;
 
-  logic signed [B_WIDTH-1:0] br_d;
-  logic signed [B_WIDTH-1:0] bi_d, bi_dd;
+  reg signed [B_WIDTH-1:0] br_d;
+  reg signed [B_WIDTH-1:0] bi_d, bi_dd;
 
-  logic signed [A_WIDTH:0] addcommon;
-  logic signed [B_WIDTH:0] addr, addi;
-  logic signed [A_WIDTH+B_WIDTH:0] multc, multr, multi;
+  reg signed [A_WIDTH:0] addcommon;
+  reg signed [B_WIDTH:0] addr, addi;
+  reg signed [A_WIDTH+B_WIDTH:0] multc, multr, multi;
 
   // Delay taps, tools will automatically absorb registers into DSP and
   // duplicate if needed
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     ar_d  <= ar;
     ar_dd <= ar_d;
     ai_d  <= ai;
@@ -56,7 +56,7 @@ module cmult_chain_stage #(
   // DSP1
   // Common factor (ar - ai) * bi, shared for the calculations of the real and
   // imaginary final products
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     addcommon <= ar_d - ai_d;
     multc     <= addcommon * bi_dd;
     pc_out    <= multc + pc_in;
@@ -64,7 +64,7 @@ module cmult_chain_stage #(
 
   // DSP2
   // Real product ar * (br - bi) + (ar - ai) * bi = ar * br - ai * bi
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     addr   <= br_d - bi_d;
     multr  <= addr * ar_dd;
     pr_out <= multr + pr_in;
@@ -72,7 +72,7 @@ module cmult_chain_stage #(
 
   // DSP3
   // Imaginary product ai * (br + bi) + (ar - ai) * bi = ai * br + ar + bi
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     addi   <= br_d + bi_d;
     multi  <= addi * ai_dd;
     pi_out <= multi + pi_in;

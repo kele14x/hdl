@@ -22,7 +22,7 @@ module adder #(
 
   localparam integer FULL_WIDTH = (A_WIDTH >= B_WIDTH) ? A_WIDTH + 1 : B_WIDTH + 1;
 
-  reg signed [FULL_WIDTH-1:0] p_s;
+  wire signed [FULL_WIDTH-1:0] p_s;
 
   // Full adder without truncate or sign expansion
   assign p_s = add_sub ? a - b : a + b;
@@ -43,7 +43,9 @@ module adder #(
   // Overflow indicator
   generate
     if (P_WIDTH + SRA_BITS >= FULL_WIDTH) begin : g_no_ovf
-      assign ovf = 1'b0;
+      initial begin
+        ovf = 1'b0;
+      end
     end else begin : g_ovf
       always @(posedge clk) begin
         ovf <= ~(&p_s[FULL_WIDTH-1:P_WIDTH+SRA_BITS-1] || &(~p_s[FULL_WIDTH-1:P_WIDTH+SRA_BITS-1]));

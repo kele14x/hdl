@@ -1,34 +1,35 @@
 // File: tb_cmult_chain.sv
 // Brief: Test bench for cmult_chain
-
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps 
+//
+`default_nettype none
 
 module tb_cmult_chain ();
 
-  localparam int TestVectorLength = 4096;
-  localparam int DutLatency = 8;
+  localparam integer TestVectorLength = 4096;
+  localparam integer DutLatency = 8;
 
-  localparam int AWidth = 16;
-  localparam int BWidth = 16;
-  localparam int PWidth = 16;
-  localparam int SraBits = 15;
+  localparam integer AWidth = 16;
+  localparam integer BWidth = 16;
+  localparam integer PWidth = 16;
+  localparam integer SraBits = 15;
 
-  logic clk;
-  logic rst;
+  reg clk;
+  reg rst;
 
-  logic [AWidth-1:0] ar, ai;
-  logic [BWidth-1:0] br, bi;
-  logic [PWidth-1:0] pr, pi, pr_ref, pi_ref;
+  reg [AWidth-1:0] ar, ai;
+  reg [BWidth-1:0] br, bi;
+  reg [PWidth-1:0] pr, pi, pr_ref, pi_ref;
 
-  logic ovf, ovf_ref;
+  reg ovf, ovf_ref;
 
-  logic [AWidth-1:0] ar_mem [TestVectorLength];
-  logic [AWidth-1:0] ai_mem [TestVectorLength];
-  logic [BWidth-1:0] br_mem [TestVectorLength];
-  logic [BWidth-1:0] bi_mem [TestVectorLength];
-  logic [PWidth-1:0] pr_mem [TestVectorLength];
-  logic [PWidth-1:0] pi_mem [TestVectorLength];
-  logic              ovf_mem[TestVectorLength];
+  reg [AWidth-1:0] ar_mem [TestVectorLength];
+  reg [AWidth-1:0] ai_mem [TestVectorLength];
+  reg [BWidth-1:0] br_mem [TestVectorLength];
+  reg [BWidth-1:0] bi_mem [TestVectorLength];
+  reg [PWidth-1:0] pr_mem [TestVectorLength];
+  reg [PWidth-1:0] pi_mem [TestVectorLength];
+  reg              ovf_mem[TestVectorLength];
 
   initial begin
     $readmemh("test_cmult_input_a_real.txt", ar_mem, 0, TestVectorLength - 1);
@@ -61,7 +62,7 @@ module tb_cmult_chain ();
     @(posedge clk);
     fork
       begin : p_feed_input
-        for (int i = 0; i < TestVectorLength; i++) begin
+        for (integer i = 0; i < TestVectorLength; i = i + 1) begin
           @(posedge clk);
           ar <= ar_mem[i];
           ai <= ai_mem[i];
@@ -72,7 +73,7 @@ module tb_cmult_chain ();
 
       begin : p_gen_ref
         repeat (DutLatency) @(posedge clk);
-        for (int i = 0; i < TestVectorLength; i++) begin
+        for (integer i = 0; i < TestVectorLength; i = i + 1) begin
           @(posedge clk);
           pr_ref  <= pr_mem[i];
           pi_ref  <= pi_mem[i];
@@ -82,7 +83,7 @@ module tb_cmult_chain ();
 
       begin : p_checker
         repeat (DutLatency + 1) @(posedge clk);
-        for (int i = 0; i < TestVectorLength; i++) begin
+        for (integer i = 0; i < TestVectorLength; i = i + 1) begin
           @(posedge clk);
           if (pr_ref != pr) begin
             $warning("\"pr\" does not match golden reference, i = %d, t = %t, \
@@ -113,7 +114,15 @@ module tb_cmult_chain ();
       .PWIDTH (PWidth),
       .SRABITS(SraBits)
   ) DUT (
-      .*
+      .clk   (clk),
+      .rst   (rst),
+      .ar    (ar),
+      .ai    (ai),
+      .br    (br),
+      .bi    (bi),
+      .pi    (pi),
+      .pr    (pr),
+      .ovf   (ovf)
   );
 
 endmodule
