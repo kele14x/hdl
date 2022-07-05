@@ -6,11 +6,12 @@
 
 module tb_fft;
 
-  parameter integer TEST_LENGTH = 16;
+  parameter integer TEST_LENGTH = 4096;
+  parameter integer Latency = 8166;
 
   parameter integer FFT_SIZE = TEST_LENGTH;
   parameter integer INPUT_DATA_WIDTH = 16;
-  parameter integer OUTPUT_DATA_WIDTH = 21;
+  parameter integer OUTPUT_DATA_WIDTH = 29;
 
 
   // DUT signals
@@ -39,14 +40,8 @@ module tb_fft;
 
   reg        [ INPUT_DATA_WIDTH-1:0] xin_real_mem        [0:TEST_LENGTH-1];
   reg        [ INPUT_DATA_WIDTH-1:0] xin_imag_mem        [0:TEST_LENGTH-1];
-  reg        [OUTPUT_DATA_WIDTH-1:0] yout_real_mem       [0:TEST_LENGTH-1];
-  reg        [OUTPUT_DATA_WIDTH-1:0] yout_imag_mem       [0:TEST_LENGTH-1];
 
-  reg        [OUTPUT_DATA_WIDTH-1:0] data_i_out_ref;
-  reg        [OUTPUT_DATA_WIDTH-1:0] data_q_out_ref;
-
-  reg signed [OUTPUT_DATA_WIDTH-1:0] data_i_out_err;
-  reg signed [OUTPUT_DATA_WIDTH-1:0] data_q_out_err;
+  integer fid;
 
 
   // Initial memory
@@ -55,8 +50,6 @@ module tb_fft;
   initial begin
     $readmemh("test_fft_dit2_xin_real.txt", xin_real_mem);
     $readmemh("test_fft_dit2_xin_imag.txt", xin_imag_mem);
-    $readmemh("test_fft_dit2_yout_real.txt", yout_real_mem);
-    $readmemh("test_fft_dit2_yout_imag.txt", yout_imag_mem);
   end
 
 
@@ -77,6 +70,13 @@ module tb_fft;
   end
 
   initial begin
+
+    fid = $fopen("test_fft_dit2_yout.txt", "w");
+    if (fid == 0) begin
+      $error("Error open file");
+      #1 $finish();
+    end
+
     data_i_in = 0;
     data_q_in = 0;
     data_valid_in = 0;
@@ -105,36 +105,31 @@ module tb_fft;
       end
 
       begin : p_ref_out
-        integer i;
-        repeat ($clog2(FFT_SIZE) * 9 + FFT_SIZE - 8) @(posedge clk);
-        for (i = 0; i < FFT_SIZE; i = i + 1) begin
-          @(posedge clk);
-          data_i_out_ref <= yout_real_mem[i];
-          data_q_out_ref <= yout_imag_mem[i];
-        end
+        integer set;
+        set = 1;
         @(posedge clk);
-        data_i_out_ref <= 0;
-        data_q_out_ref <= 0;
-      end
-
-      begin : p_checker
-        integer i;
-        repeat ($clog2(FFT_SIZE) * 9 + FFT_SIZE - 8) @(posedge clk);
-        for (i = 0; i < FFT_SIZE; i = i + 1) begin
+        while (set) begin
+          if (data_valid_out) begin
+            $fwrite(fid, "%x, %x\n", data_i_out, data_q_out);
+          end
+          if (data_valid_out && data_last_out) begin
+            set = 0;
+          end
           @(posedge clk);
-          data_i_out_err <= $signed(data_i_out_ref) - $signed(data_i_out);
-          data_q_out_err <= $signed(data_q_out_ref) - $signed(data_q_out);
         end
       end
 
     join
 
+    $fclose(fid);
+ 
     #1000;
     $finish();
   end
 
 
   // DUT
+  //====
 
   fft #(
       .FFT_SIZE         (FFT_SIZE),

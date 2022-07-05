@@ -6,13 +6,13 @@
 
 module fft #(
     // FFT size, must be power of 2
-    parameter integer FFT_SIZE          = 16,
+    parameter integer FFT_SIZE          = 4096,
     // Input data width for I and Q
     parameter integer INPUT_DATA_WIDTH  = 16,
     // Phase factor data width
     parameter integer PHASE_WIDTH       = 16,
     // Output data width for I and Q
-    parameter integer OUTPUT_DATA_WIDTH = 21,
+    parameter integer OUTPUT_DATA_WIDTH = 29,
     //
     parameter         HAS_BITREVERSE    = 1
 ) (
@@ -34,18 +34,15 @@ module fft #(
     output wire                         err_ovf
 );
 
-`ifdef COCOTB_SIM
-  initial begin
-    $dumpfile("fft.vcd");
-    $dumpvars(0, fft);
-  end
-`endif
 
   // Local parameters
   //=================
 
   localparam integer LogFftSize = $clog2(FFT_SIZE);
-
+  localparam integer Latency = LogFftSize * 9 + FFT_SIZE - 8 + 
+    (HAS_BITREVERSE ? ((LogFftSize % 2 == 0) ?
+        (FFT_SIZE - 2 ** (LogFftSize / 2 + 1) + 2) :
+        (FFT_SIZE - 2 ** ((LogFftSize + 1) / 2) - 2 ** ((LogFftSize - 1) / 2) + 2)) : 0);
 
   // Signals
   //========

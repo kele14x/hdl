@@ -56,7 +56,7 @@ module delay #(
       shift_regs #(
           .DATA_WIDTH(DATA_WIDTH),
           .DEPTH     (DELAY)
-      ) i_shitf_regs (
+      ) i_shift_regs (
           .clk (clk),
           .din (din),
           .dout(dout)
