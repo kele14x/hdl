@@ -28,7 +28,7 @@ module nlf_lut #(
   // LUT
   //====
 
-  bram_tdp_pipe #(
+  ram_tdp_pipe #(
       .ADDR_WIDTH     (INDEX_WIDTH + 1),
       .DATA_WIDTH     (LUT_WIDTH),
       .READ_LATENCY_A (1),

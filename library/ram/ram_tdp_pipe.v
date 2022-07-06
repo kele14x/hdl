@@ -1,8 +1,9 @@
 // File: ram_tdp_pipe.sv
 // Brief: Simplified True Dual Port Memory, but with control (enable and reset)
 //        signal pipelined.
-
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps 
+//
+`default_nettype none
 
 module ram_tdp_pipe #(
     parameter integer ADDR_WIDTH     = 10,
@@ -13,21 +14,21 @@ module ram_tdp_pipe #(
     parameter         INIT_FILE      = ""
 ) (
     // Port A
-    input var                   clka,
-    input var                   rsta,
-    input var                   ena,
-    input var                   wea,
-    input var  [ADDR_WIDTH-1:0] addra,
-    input var  [DATA_WIDTH-1:0] dina,
-    output var [DATA_WIDTH-1:0] douta,
+    input wire                   clka,
+    input wire                   rsta,
+    input wire                   ena,
+    input wire                   wea,
+    input wire  [ADDR_WIDTH-1:0] addra,
+    input wire  [DATA_WIDTH-1:0] dina,
+    output wire [DATA_WIDTH-1:0] douta,
     // Port B
-    input var                   clkb,
-    input var                   rstb,
-    input var                   enb,
-    input var                   web,
-    input var  [ADDR_WIDTH-1:0] addrb,
-    input var  [DATA_WIDTH-1:0] dinb,
-    output var [DATA_WIDTH-1:0] doutb
+    input wire                   clkb,
+    input wire                   rstb,
+    input wire                   enb,
+    input wire                   web,
+    input wire  [ADDR_WIDTH-1:0] addrb,
+    input wire  [DATA_WIDTH-1:0] dinb,
+    output wire [DATA_WIDTH-1:0] doutb
 );
 
 
@@ -45,14 +46,15 @@ module ram_tdp_pipe #(
   assign enb_d[0]  = enb;
 
   generate
-    for (genvar i = 1; i < READ_LATENCY_A; i = i + 1) begin : g_pipe_a
+    genvar i;
+    for (i = 1; i < READ_LATENCY_A; i = i + 1) begin : g_pipe_a
       always @(posedge clka) begin
         rsta_d[i] <= rsta_d[i-1];
         ena_d[i]  <= ena_d[i-1];
       end
     end
 
-    for (genvar i = 1; i < READ_LATENCY_B; i = i + 1) begin : g_pipe_b
+    for (i = 1; i < READ_LATENCY_B; i = i + 1) begin : g_pipe_b
       always @(posedge clkb) begin
         rstb_d[i] <= rstb_d[i-1];
         enb_d[i]  <= enb_d[i-1];

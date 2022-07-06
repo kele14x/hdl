@@ -11,6 +11,8 @@ module shift_regs #(
     parameter integer DEPTH      = 8
 ) (
     input  wire                  clk,
+    input  wire                  cen,
+    //
     input  wire [DATA_WIDTH-1:0] din,
     output wire [DATA_WIDTH-1:0] dout
 );
@@ -35,9 +37,11 @@ module shift_regs #(
 
       always @(posedge clk) begin : p_shift
         integer i;
-        dregs[0] <= din;
-        for (i = 1; i < DEPTH; i = i + 1) begin
-          dregs[i] <= dregs[i-1];
+        if (cen) begin
+          dregs[0] <= din;
+          for (i = 1; i < DEPTH; i = i + 1) begin
+            dregs[i] <= dregs[i-1];
+          end
         end
       end
 
