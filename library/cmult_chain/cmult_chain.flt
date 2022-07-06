@@ -1,6 +1,3 @@
-../adder/rtl/adder.v
+../adder/adder.flt
 rtl/cmult_chain.v
 rtl/cmult_chain_stage.v
-
-[testbench]
-tb/tb_cmult_chain.v

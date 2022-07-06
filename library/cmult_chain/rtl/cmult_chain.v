@@ -24,7 +24,7 @@ module cmult_chain #(
     output wire signed [         P_WIDTH-1:0] pr,
     output wire signed [         P_WIDTH-1:0] pi,
     // Overflow indicator
-    output wire                      ovf
+    output wire                               ovf
 );
 
 
