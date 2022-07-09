@@ -1,4 +1,4 @@
-SIM = icarus
+SIM = questa
 
 A_WIDTH ?= 8
 B_WIDTH ?= 8
@@ -6,7 +6,9 @@ P_WIDTH ?= 9
 SRA_BITS ?= 0
 
 TOPLEVEL_LANG = verilog
-TOP_LEVEL = adder
+TOPLEVEL = adder
+
+PWD = $(shell pwd)
 
 VERILOG_SOURCES += $(PWD)/../rtl/adder.v
 VERILOG_SOURCES += $(PWD)/iverilog_dump.v

@@ -48,7 +48,6 @@ class AdderTester:
     def model(self, a: int, b: int) -> Tuple[int, int]:
         """Return the model result of the adder."""
         (p, ovf) = self._eng.step(self._model, float(a), float(b), nargout=2)
-        self.dut._log.info(f'{type(ovf)}')
         return (p, ovf)
 
     async def _check(self) -> None:
@@ -78,7 +77,7 @@ async def test_adder_basic(dut):
     dut.rst.value = 1
     dut.a.value = 0
     dut.b.value = 0
-    dut.add_sub.value = 0
+    dut.sub.value = 0
     await ClockCycles(dut.clk, 3)
     assert dut.p.value == 0, "P output should be reset to 0"
     assert dut.ovf.value == 0, "OVF output should be reset to 0"
@@ -117,7 +116,7 @@ async def test_adder_advanced(dut):
     dut.rst.value = 1
     dut.a.value = 0
     dut.b.value = 0
-    dut.add_sub.value = 0
+    dut.sub.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst.value = 0
 
