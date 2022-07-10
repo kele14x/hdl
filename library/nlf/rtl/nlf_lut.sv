@@ -1,7 +1,8 @@
 // File: nlf_lut.sv
 // Brief: LUT for nlf module
-
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+//
+`default_nettype none
 
 module nlf_lut #(
     parameter int INDEX_WIDTH = 8,

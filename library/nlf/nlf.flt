@@ -1,9 +1,9 @@
 ../cmult_chain/cmult_chain.flt
-../ram/ram_tdp.v
-../ram/ram_tdp_pipe.v
-../util/shift_regs.v
-../util/srl.v
-rtl/nlf.v
-rtl/nlf_core.v
-rtl/nlf_delay_line.v
-rtl/nlf_lut.v
+../ram/ram_tdp.sv
+../ram/ram_tdp_pipe.sv
+../util/shift_regs.sv
+../util/srl.sv
+rtl/nlf.sv
+rtl/nlf_core.sv
+rtl/nlf_delay_line.sv
+rtl/nlf_lut.sv

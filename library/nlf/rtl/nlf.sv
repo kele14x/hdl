@@ -5,66 +5,66 @@
 `default_nettype none
 
 module nlf #(
-    parameter integer NUM_UNITS      = 16,
-    parameter integer DATA_WIDTH     = 16,
-    parameter integer INDEX_WIDTH    = 8,
-    parameter integer LUT_DATA_WIDTH = 16,
-    parameter integer SRA_BITS       = 14
+    parameter int NUM_UNITS      = 16,
+    parameter int DATA_WIDTH     = 16,
+    parameter int INDEX_WIDTH    = 8,
+    parameter int LUT_DATA_WIDTH = 16,
+    parameter int SRA_BITS       = 14
 ) (
-    input wire                                           clk,
-    input wire                                           rst,
+    input var                                           clk,
+    input var                                           rst,
     //
-    input wire  signed [                 DATA_WIDTH-1:0] data_i_in,
-    input wire  signed [                 DATA_WIDTH-1:0] data_q_in,
+    input var  signed [                 DATA_WIDTH-1:0] data_i_in,
+    input var  signed [                 DATA_WIDTH-1:0] data_q_in,
     //
-    input wire         [                INDEX_WIDTH-1:0] index_in,
+    input var         [                INDEX_WIDTH-1:0] index_in,
     //
-    output wire signed [                 DATA_WIDTH-1:0] data_i_out,
-    output wire signed [                 DATA_WIDTH-1:0] data_q_out,
+    output var signed [                 DATA_WIDTH-1:0] data_i_out,
+    output var signed [                 DATA_WIDTH-1:0] data_q_out,
     // Overflow indicator
-    output wire                                          ovf,
+    output var                                          ovf,
     // Control Interface
     //==================
-    input wire                                           ctrl_clk,
-    input wire                                           ctrl_rst,
+    input var                                           ctrl_clk,
+    input var                                           ctrl_rst,
     //
-    input wire                                           ctrl_bank,
+    input var                                           ctrl_bank,
     //
-    input wire         [          $clog2(NUM_UNITS)-1:0] ctrl_index_delay [NUM_UNITS],
-    input wire         [          $clog2(NUM_UNITS)-1:0] ctrl_signal_delay[NUM_UNITS],
+    input var         [          $clog2(NUM_UNITS)-1:0] ctrl_index_delay [NUM_UNITS],
+    input var         [          $clog2(NUM_UNITS)-1:0] ctrl_signal_delay[NUM_UNITS],
     //
-    input wire         [$clog2(NUM_UNITS)+INDEX_WIDTH:0] ctrl_lut_addr,
-    input wire                                           ctrl_lut_en,
-    input wire                                           ctrl_lut_we,
-    input wire         [           LUT_DATA_WIDTH*2-1:0] ctrl_lut_din,
-    output wire        [           LUT_DATA_WIDTH*2-1:0] ctrl_lut_dout
+    input var         [$clog2(NUM_UNITS)+INDEX_WIDTH:0] ctrl_lut_addr,
+    input var                                           ctrl_lut_en,
+    input var                                           ctrl_lut_we,
+    input var         [           LUT_DATA_WIDTH*2-1:0] ctrl_lut_din,
+    output var        [           LUT_DATA_WIDTH*2-1:0] ctrl_lut_dout
 );
 
 
-  localparam integer DelayWidth = $clog2(NUM_UNITS);
+  localparam int DelayWidth = $clog2(NUM_UNITS);
 
 
-  reg                                bank_s;
-  reg                                bank_dly               [NUM_UNITS];
+  logic                                bank_s;
+  logic                                bank_dly               [NUM_UNITS];
 
 
-  reg        [      INDEX_WIDTH-1:0] index_d                [NUM_UNITS];
+  logic        [      INDEX_WIDTH-1:0] index_d                [NUM_UNITS];
 
-  reg        [     DATA_WIDTH*2-1:0] signal_in;
-  reg        [     DATA_WIDTH*2-1:0] signal_s;
+  logic        [     DATA_WIDTH*2-1:0] signal_in;
+  logic        [     DATA_WIDTH*2-1:0] signal_s;
 
-  reg        [     DATA_WIDTH*2-1:0] signal_d               [NUM_UNITS];
-  reg signed [       DATA_WIDTH-1:0] data_i_d               [NUM_UNITS];
-  reg signed [       DATA_WIDTH-1:0] data_q_d               [NUM_UNITS];
+  logic        [     DATA_WIDTH*2-1:0] signal_d               [NUM_UNITS];
+  logic signed [       DATA_WIDTH-1:0] data_i_d               [NUM_UNITS];
+  logic signed [       DATA_WIDTH-1:0] data_q_d               [NUM_UNITS];
 
-  reg        [$clog2(NUM_UNITS)-1:0] ctrl_lut_addr_unit;
-  reg        [$clog2(NUM_UNITS)-1:0] ctrl_lut_addr_unit_mux;
+  logic        [$clog2(NUM_UNITS)-1:0] ctrl_lut_addr_unit;
+  logic        [$clog2(NUM_UNITS)-1:0] ctrl_lut_addr_unit_mux;
 
-  reg        [        INDEX_WIDTH:0] ctrl_lut_addr_s        [NUM_UNITS];
-  reg                                ctrl_lut_en_s          [NUM_UNITS];
-  reg                                ctrl_lut_we_s          [NUM_UNITS];
-  reg        [ LUT_DATA_WIDTH*2-1:0] ctrl_lut_din_s         [NUM_UNITS];
-  reg        [ LUT_DATA_WIDTH*2-1:0] ctrl_lut_dout_s        [NUM_UNITS];
+  logic        [        INDEX_WIDTH:0] ctrl_lut_addr_s        [NUM_UNITS];
+  logic                                ctrl_lut_en_s          [NUM_UNITS];
+  logic                                ctrl_lut_we_s          [NUM_UNITS];
+  logic        [ LUT_DATA_WIDTH*2-1:0] ctrl_lut_din_s         [NUM_UNITS];
+  logic        [ LUT_DATA_WIDTH*2-1:0] ctrl_lut_dout_s        [NUM_UNITS];
 
 
   // LUT Bank Selector
@@ -138,11 +138,8 @@ module nlf #(
   );
 
   generate
-    genvar i;
-    for (i = 0; i < NUM_UNITS; i = i + 1) begin : g_signal
-
+    for (genvar i = 0; i < NUM_UNITS; i++) begin : g_signal
       assign {data_q_d[i], data_i_d[i]} = signal_d[i];
-
     end
   endgenerate
 

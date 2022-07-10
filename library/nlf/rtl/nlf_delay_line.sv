@@ -5,37 +5,36 @@
 `default_nettype none
 
 module nlf_delay_line #(
-    parameter integer NUM_UNITS   = 16,
-    parameter integer DELAY_WIDTH = 4,
-    parameter integer DATA_WIDTH  = 32
+    parameter int NUM_UNITS   = 16,
+    parameter int DELAY_WIDTH = 4,
+    parameter int DATA_WIDTH  = 32
 ) (
     // Read Interface
-    input wire                    clk,
+    input var                    clk,
     //
-    input wire  [DATA_WIDTH -1:0] data_in,
-    output wire [DATA_WIDTH -1:0] data_out[NUM_UNITS],
+    input var  [DATA_WIDTH -1:0] data_in,
+    output var [DATA_WIDTH -1:0] data_out[NUM_UNITS],
     //
-    input wire  [DELAY_WIDTH-1:0] delay   [NUM_UNITS]
+    input var  [DELAY_WIDTH-1:0] delay   [NUM_UNITS]
 );
 
 
   // This is fixed/minimum latency when `delay` is 0
-  localparam integer Latency = 3;
+  localparam int Latency = 3;
 
-  reg [DATA_WIDTH-1:0] data_s[NUM_UNITS];
+  logic [DATA_WIDTH-1:0] data_s[NUM_UNITS];
 
 
   // Each stage is 1 tap register plus 1 SRL
   generate
-    genvar i;
-    for (i = 0; i < NUM_UNITS; i = i + 1) begin : g_stage
+    for (genvar i = 0; i < NUM_UNITS; i++) begin : g_stage
 
       if (i == 0) begin : g_first
-        always @(posedge clk) begin
+        always_ff @(posedge clk) begin
           data_s[i] <= data_in;
         end
       end else begin : g_left
-        always @(posedge clk) begin
+        always_ff @(posedge clk) begin
           data_s[i] <= data_s[i-1];
         end
       end
