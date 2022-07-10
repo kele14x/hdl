@@ -39,12 +39,11 @@ module adder #(
       end
     end else begin : g_ovf
       always @(posedge clk) begin
-        if (p_full[FullWidth-1:P_WIDTH+SRA_BITS-1] == '0) begin
-          ovf <= 1'b0;
-        end else if (p_full[FullWidth-1:P_WIDTH+SRA_BITS-1] == '1) begin
-          ovf <= 1'b0;
-        end else begin
+        if (p_full[FullWidth-1:P_WIDTH+SRA_BITS-1] != '0 &&
+          p_full[FullWidth-1:P_WIDTH+SRA_BITS-1] != '1) begin
           ovf <= 1'b1;
+        end else begin
+          ovf <= 1'b0;
         end
       end
     end
