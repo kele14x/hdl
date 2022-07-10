@@ -1,4 +1,4 @@
-// File: fft.v
+// File: fft.sv
 // Brief: Top of FFT module.
 `default_nettype none
 //
@@ -6,40 +6,40 @@
 
 module fft #(
     // FFT size, must be power of 2
-    parameter integer FFT_SIZE          = 4096,
+    parameter int FFT_SIZE          = 4096,
     // Input data width for I and Q
-    parameter integer INPUT_DATA_WIDTH  = 16,
+    parameter int INPUT_DATA_WIDTH  = 16,
     // Phase factor data width
-    parameter integer PHASE_WIDTH       = 16,
+    parameter int PHASE_WIDTH       = 16,
     // Output data width for I and Q
-    parameter integer OUTPUT_DATA_WIDTH = 29,
-    //
-    parameter         HAS_BITREVERSE    = 1
+    parameter int OUTPUT_DATA_WIDTH = 29,
+    // Optional Bit-reverse order module
+    parameter bit HAS_BITREVERSE    = 1
 ) (
-    input  wire                         clk,
-    input  wire                         rst,
+    input  var                         clk,
+    input  var                         rst,
     // Data input
-    input  wire [ INPUT_DATA_WIDTH-1:0] data_i_in,
-    input  wire [ INPUT_DATA_WIDTH-1:0] data_q_in,
-    input  wire                         data_valid_in,
-    input  wire                         data_last_in,
+    input  var [ INPUT_DATA_WIDTH-1:0] data_i_in,
+    input  var [ INPUT_DATA_WIDTH-1:0] data_q_in,
+    input  var                         data_valid_in,
+    input  var                         data_last_in,
     // Data output
-    output wire [OUTPUT_DATA_WIDTH-1:0] data_i_out,
-    output wire [OUTPUT_DATA_WIDTH-1:0] data_q_out,
-    output wire                         data_valid_out,
-    output wire                         data_last_out,
+    output var [OUTPUT_DATA_WIDTH-1:0] data_i_out,
+    output var [OUTPUT_DATA_WIDTH-1:0] data_q_out,
+    output var                         data_valid_out,
+    output var                         data_last_out,
     // Status output
-    output wire                         err_input_halt,
-    output wire                         err_last_unexpected,
-    output wire                         err_ovf
+    output var                         err_input_halt,
+    output var                         err_last_unexpected,
+    output var                         err_ovf
 );
 
 
   // Local parameters
   //=================
 
-  localparam integer LogFftSize = $clog2(FFT_SIZE);
-  localparam integer Latency = LogFftSize * 9 + FFT_SIZE - 8 + 
+  localparam int LogFftSize = $clog2(FFT_SIZE);
+  localparam int Latency = LogFftSize * 9 + FFT_SIZE - 8 +
     (HAS_BITREVERSE ? ((LogFftSize % 2 == 0) ?
         (FFT_SIZE - 2 ** (LogFftSize / 2 + 1) + 2) :
         (FFT_SIZE - 2 ** ((LogFftSize + 1) / 2) - 2 ** ((LogFftSize - 1) / 2) + 2)) : 0);
@@ -47,10 +47,10 @@ module fft #(
   // Signals
   //========
 
-  wire [OUTPUT_DATA_WIDTH-1:0] data_i_s;
-  wire [OUTPUT_DATA_WIDTH-1:0] data_q_s;
-  wire                         data_valid_s;
-  wire                         data_last_s;
+  logic [OUTPUT_DATA_WIDTH-1:0] data_i_s;
+  logic [OUTPUT_DATA_WIDTH-1:0] data_q_s;
+  logic                         data_valid_s;
+  logic                         data_last_s;
 
 
   // Check parameters
@@ -58,27 +58,27 @@ module fft #(
 
   initial begin
     // Check FFT size
-    if (!(2 <= FFT_SIZE && FFT_SIZE <= 16384)) begin
+    assert(2 <= FFT_SIZE && FFT_SIZE <= 16384) else begin
       $error("[%m]: FFT size (FFT_SIZE) must be within the range 2 to 16384.");
-      #1 $finish();
+      #1 $finish;
     end
-    if (!(FFT_SIZE == 2 ** LogFftSize)) begin
+    assert(FFT_SIZE == 2 ** LogFftSize) else begin
       $error("[%m]: FFT size (FFT_SIZE) must be power of 2.");
-      #1 $finish();
+      #1 $finish;
     end
 
     // Check input data width
-    if (!(8 <= INPUT_DATA_WIDTH && INPUT_DATA_WIDTH <= 32)) begin
+    assert(8 <= INPUT_DATA_WIDTH && INPUT_DATA_WIDTH <= 32) else begin
       $error("[%m]: Input data width (INPUT_DATA_WIDTH) must be within the range 8 to 32.");
-      #1 $finish();
+      #1 $finish;
     end
 
     // Check output data width
-    if (!(INPUT_DATA_WIDTH <= OUTPUT_DATA_WIDTH &&
-      OUTPUT_DATA_WIDTH <= INPUT_DATA_WIDTH + LogFftSize + 1)) begin
+    assert(INPUT_DATA_WIDTH <= OUTPUT_DATA_WIDTH &&
+      OUTPUT_DATA_WIDTH <= INPUT_DATA_WIDTH + LogFftSize + 1) else begin
       $error("[%m]: Output data width (OUTPUT_DATA_WIDTH) must be within the range %d to %d.",
              INPUT_DATA_WIDTH, INPUT_DATA_WIDTH + LogFftSize + 1);
-      #1 $finish();
+      #1 $finish;
     end
   end
 

@@ -1,31 +1,31 @@
-// File: fft_bf2.v
+// File: fft_bf2.sv
 // Brief: Radix-2 Butterfly operator for FFT.
 `default_nettype none
 //
 `timescale 1 ns / 1 ps
 
 module fft_bf2 #(
-    parameter integer DATA_WIDTH = 16
+    parameter int DATA_WIDTH = 16
 ) (
-    input  wire                         sel,
+    input var                          sel,
     //
-    input  wire signed [  DATA_WIDTH:0] delayed_i_in,
-    input  wire signed [  DATA_WIDTH:0] delayed_q_in,
+    input var  signed [  DATA_WIDTH:0] delayed_i_in,
+    input var  signed [  DATA_WIDTH:0] delayed_q_in,
     //
-    input  wire signed [DATA_WIDTH-1:0] data_i_in,
-    input  wire signed [DATA_WIDTH-1:0] data_q_in,
+    input var  signed [DATA_WIDTH-1:0] data_i_in,
+    input var  signed [DATA_WIDTH-1:0] data_q_in,
     //
-    output reg signed  [  DATA_WIDTH:0] delayed_i_out,
-    output reg signed  [  DATA_WIDTH:0] delayed_q_out,
+    output var signed [  DATA_WIDTH:0] delayed_i_out,
+    output var signed [  DATA_WIDTH:0] delayed_q_out,
     //
-    output reg signed  [  DATA_WIDTH:0] data_i_out,
-    output reg signed  [  DATA_WIDTH:0] data_q_out
+    output var signed [  DATA_WIDTH:0] data_i_out,
+    output var signed [  DATA_WIDTH:0] data_q_out
 );
 
   localparam integer Latency = 0;
 
   // Output to delay path
-  always @(*) begin
+  always_comb begin
     if (sel) begin
       delayed_i_out = delayed_i_in - data_i_in;
       delayed_q_out = delayed_q_in - data_q_in;
@@ -36,7 +36,7 @@ module fft_bf2 #(
   end
 
   // To (next) BF or output
-  always @(*) begin
+  always_comb begin
     if (sel) begin
       data_i_out = delayed_i_in + data_i_in;
       data_q_out = delayed_q_in + data_q_in;

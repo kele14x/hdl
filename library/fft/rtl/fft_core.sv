@@ -6,37 +6,37 @@
 
 module fft_core #(
     // FFT size, must be power of 2
-    parameter integer FFT_SIZE          = 4096,
+    parameter int FFT_SIZE          = 4096,
     // Input data width for I and Q
-    parameter integer INPUT_DATA_WIDTH  = 16,
+    parameter int INPUT_DATA_WIDTH  = 16,
     // Phase factor data width
-    parameter integer PHASE_WIDTH       = 16,
+    parameter int PHASE_WIDTH       = 16,
     // Output data width for I and Q
-    parameter integer OUTPUT_DATA_WIDTH = 29
+    parameter int OUTPUT_DATA_WIDTH = 29
 ) (
-    input  wire                         clk,
-    input  wire                         rst,
+    input var                          clk,
+    input var                          rst,
     // Data input
-    input  wire [ INPUT_DATA_WIDTH-1:0] data_i_in,
-    input  wire [ INPUT_DATA_WIDTH-1:0] data_q_in,
-    input  wire                         data_valid_in,
-    input  wire                         data_last_in,
+    input var  [ INPUT_DATA_WIDTH-1:0] data_i_in,
+    input var  [ INPUT_DATA_WIDTH-1:0] data_q_in,
+    input var                          data_valid_in,
+    input var                          data_last_in,
     // Data output
-    output wire [OUTPUT_DATA_WIDTH-1:0] data_i_out,
-    output wire [OUTPUT_DATA_WIDTH-1:0] data_q_out,
-    output wire                         data_valid_out,
-    output wire                         data_last_out,
+    output var [OUTPUT_DATA_WIDTH-1:0] data_i_out,
+    output var [OUTPUT_DATA_WIDTH-1:0] data_q_out,
+    output var                         data_valid_out,
+    output var                         data_last_out,
     // Status output
-    output reg                          err_input_halt,
-    output reg                          err_last_unexpected,
-    output reg                          err_ovf
+    output var                         err_input_halt,
+    output var                         err_last_unexpected,
+    output var                         err_ovf
 );
 
   // Local parameters
   //=================
 
-  localparam integer LogFftSize = $clog2(FFT_SIZE);
-  localparam integer Latency = LogFftSize * 9 + FFT_SIZE - 8;
+  localparam int LogFftSize = $clog2(FFT_SIZE);
+  localparam int Latency = LogFftSize * 9 + FFT_SIZE - 8;
 
 
   // Signals
@@ -47,16 +47,16 @@ module fft_core #(
   // counter   =>
 
   // state = 0: idle or first data, 1: left data
-  reg                                 state;
+  logic                                state;
   // Counter count from 0 to FFT_SIZE - 1
-  reg         [       LogFftSize-1:0] counter;
+  logic        [       LogFftSize-1:0] counter;
 
-  wire signed [OUTPUT_DATA_WIDTH-1:0] data_i_s[  0:LogFftSize];
-  wire signed [OUTPUT_DATA_WIDTH-1:0] data_q_s[  0:LogFftSize];
+  logic signed [OUTPUT_DATA_WIDTH-1:0] data_i_s[LogFftSize+1];
+  logic signed [OUTPUT_DATA_WIDTH-1:0] data_q_s[LogFftSize+1];
 
-  wire        [                  1:0] sync_s  [  0:LogFftSize];
+  logic        [                  1:0] sync_s  [LogFftSize+1];
 
-  wire                                ovf     [0:LogFftSize-1];
+  logic                                ovf     [  LogFftSize];
 
 
   // Main
@@ -78,7 +78,7 @@ module fft_core #(
 
   // FFT State & Counter
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= 1'b0;
     end else if (data_valid_in && data_last_in) begin
@@ -90,7 +90,7 @@ module fft_core #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       counter <= 'd0;
     end else if (data_valid_in && data_last_in) begin
@@ -124,8 +124,8 @@ module fft_core #(
       assign data_i_stage_in = data_i_s[i][StageDataWidth-1:0];
       assign data_q_stage_in = data_q_s[i][StageDataWidth-1:0];
 
-      assign data_i_s[i+1] = data_i_stage_out;
-      assign data_q_s[i+1] = data_q_stage_out;
+      assign data_i_s[i+1]   = data_i_stage_out;
+      assign data_q_s[i+1]   = data_q_stage_out;
 
       // FFT stage
 
@@ -159,11 +159,12 @@ module fft_core #(
       .DEPTH     (Latency)
   ) i_valid_delay (
       .clk (clk),
+      .cen (1'b1),
       .din ({data_last_in, data_valid_in}),
       .dout({data_last_out, data_valid_out})
   );
 
-  always @(posedge clk) begin : p_err_ovf
+  always_ff @(posedge clk) begin : p_err_ovf
     integer i;
     err_ovf <= 1'b0;
     for (i = 0; i < LogFftSize; i = i + 1) begin
@@ -173,11 +174,11 @@ module fft_core #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     err_last_unexpected <= (data_last_in && ~&counter);
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     err_input_halt <= (!data_valid_in && |counter);
   end
 

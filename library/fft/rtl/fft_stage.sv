@@ -7,54 +7,54 @@
 `default_nettype none
 
 module fft_stage #(
-    parameter integer STAGE        = 0,
-    parameter integer LOG_FFT_SIZE = 4,
-    parameter integer DATA_WIDTH   = 16,
-    parameter integer PHASE_WIDTH  = 16
+    parameter int STAGE        = 0,
+    parameter int LOG_FFT_SIZE = 4,
+    parameter int DATA_WIDTH   = 16,
+    parameter int PHASE_WIDTH  = 16
 ) (
-    input  wire                         clk,
-    input  wire                         rst,
+    input var                          clk,
+    input var                          rst,
     // Input
-    input  wire signed [DATA_WIDTH-1:0] data_i_in,
-    input  wire signed [DATA_WIDTH-1:0] data_q_in,
-    input  wire        [           1:0] sync_in,
+    input var  signed [DATA_WIDTH-1:0] data_i_in,
+    input var  signed [DATA_WIDTH-1:0] data_q_in,
+    input var         [           1:0] sync_in,
     // Output
-    output reg signed  [  DATA_WIDTH:0] data_i_out,
-    output reg signed  [  DATA_WIDTH:0] data_q_out,
-    output wire        [           1:0] sync_out,
+    output var signed [  DATA_WIDTH:0] data_i_out,
+    output var signed [  DATA_WIDTH:0] data_q_out,
+    output var        [           1:0] sync_out,
     // Status output
-    output wire                         ovf
+    output var                         ovf
 );
 
   // Local parameter
   //================
 
-  localparam integer DelayTaps = 2 ** (LOG_FFT_SIZE - STAGE - 1);
-  localparam integer Latency = (STAGE == 0 ? (DelayTaps + 2) : (DelayTaps + 9));
-  localparam integer TwiddleWidth = STAGE == 0 ? 1 : STAGE;
+  localparam int DelayTaps = 2 ** (LOG_FFT_SIZE - STAGE - 1);
+  localparam int Latency = (STAGE == 0 ? (DelayTaps + 2) : (DelayTaps + 9));
+  localparam int TwiddleWidth = STAGE == 0 ? 1 : STAGE;
 
 
   // Signals
   //========
 
   // Counter count from 0 to FFT_SIZE - 1
-  reg         [LOG_FFT_SIZE-1:0] counter_sel;
-  reg         [LOG_FFT_SIZE-1:0] counter_twiddle;
+  logic        [LOG_FFT_SIZE-1:0] counter_sel;
+  logic        [LOG_FFT_SIZE-1:0] counter_twiddle;
 
-  wire                           sel;
-  reg         [TwiddleWidth-1:0] twiddle;
+  logic                           sel;
+  logic        [TwiddleWidth-1:0] twiddle;
 
-  wire signed [  DATA_WIDTH-1:0] data_i_twiddled;
-  wire signed [  DATA_WIDTH-1:0] data_q_twiddled;
+  logic signed [  DATA_WIDTH-1:0] data_i_twiddled;
+  logic signed [  DATA_WIDTH-1:0] data_q_twiddled;
 
-  wire signed [    DATA_WIDTH:0] delayed_i_in;
-  wire signed [    DATA_WIDTH:0] delayed_q_in;
+  logic signed [    DATA_WIDTH:0] delayed_i_in;
+  logic signed [    DATA_WIDTH:0] delayed_q_in;
 
-  wire signed [    DATA_WIDTH:0] delayed_i_out;
-  wire signed [    DATA_WIDTH:0] delayed_q_out;
+  logic signed [    DATA_WIDTH:0] delayed_i_out;
+  logic signed [    DATA_WIDTH:0] delayed_q_out;
 
-  wire signed [    DATA_WIDTH:0] data_i_s;
-  wire signed [    DATA_WIDTH:0] data_q_s;
+  logic signed [    DATA_WIDTH:0] data_i_s;
+  logic signed [    DATA_WIDTH:0] data_q_s;
 
 
   // Main
@@ -62,7 +62,7 @@ module fft_stage #(
 
   // Control signal for each stage
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (~sync_in[0] || rst) begin
       counter_sel <= 'd0;
     end else begin
@@ -70,7 +70,7 @@ module fft_stage #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (~sync_in[1] || rst) begin
       counter_twiddle <= 'd0;
     end else begin
@@ -94,6 +94,7 @@ module fft_stage #(
           .DEPTH     (1)
       ) i_sync0_delay (
           .clk (clk),
+          .cen (1'b1),
           .din ({data_q_in, data_i_in}),
           .dout({data_q_twiddled, data_i_twiddled})
       );
@@ -106,7 +107,7 @@ module fft_stage #(
       wire signed [15:0] twiddle_q_s;
 
       // Twiddle is twiddle factor index
-      always @(*) begin
+      always_comb begin
         if (~counter_twiddle[LOG_FFT_SIZE-STAGE-1]) begin
           // Upper half
           twiddle = 'd0;
@@ -176,19 +177,20 @@ module fft_stage #(
 
   // Add 1 tap register to improve timing
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     data_i_out <= data_i_s;
     data_q_out <= data_q_s;
   end
 
   // Data delay line
 
-  delay #(
+  shift_ram #(
       .DELAY     (DelayTaps),
       .DATA_WIDTH((DATA_WIDTH + 1) * 2)
   ) i_delay (
       .clk (clk),
       .rst (rst),
+      .cen (1'b1),
       .din ({delayed_q_out, delayed_i_out}),
       .dout({delayed_q_in, delayed_i_in})
   );
@@ -200,6 +202,7 @@ module fft_stage #(
       .DEPTH     (DelayTaps + 9)
   ) i_sync0_delay (
       .clk (clk),
+      .cen (1'b1),
       .din (sync_in[0]),
       .dout(sync_out[0])
   );
@@ -209,6 +212,7 @@ module fft_stage #(
       .DEPTH     (STAGE == 0 ? DelayTaps - 1 : DelayTaps + 9)
   ) i_sync1_delay (
       .clk (clk),
+      .cen (1'b1),
       .din (sync_in[1]),
       .dout(sync_out[1])
   );
