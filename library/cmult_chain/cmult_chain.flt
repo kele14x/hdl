@@ -1,3 +1,3 @@
 ../adder/adder.flt
-rtl/cmult_chain.v
-rtl/cmult_chain_stage.v
+rtl/cmult_chain.sv
+rtl/cmult_chain_stage.sv
