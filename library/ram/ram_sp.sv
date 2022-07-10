@@ -1,14 +1,15 @@
 // File: ram_sp.sv
 // Brief: Simplified Single Port (SP) Memory.
-
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1ns / 1ps
+//
+`default_nettype none
 
 module ram_sp #(
-    parameter integer ADDR_WIDTH   = 10,
-    parameter integer DATA_WIDTH   = 32,
-    parameter integer READ_LATENCY = 2 ,  // 1 ~ 3
-    parameter integer INIT_WORD    = '0,
-    parameter         INIT_FILE    = ""
+    parameter int                     ADDR_WIDTH   = 10,
+    parameter int                     DATA_WIDTH   = 32,
+    parameter int                     READ_LATENCY = 2,   // 1 ~ 3
+    parameter bit    [DATA_WIDTH-1:0] INIT_WORD    = '0,
+    parameter string                  INIT_FILE    = ""
 ) (
     input var                     clk,
     input var  [READ_LATENCY-1:0] rst,
@@ -22,7 +23,10 @@ module ram_sp #(
 
   initial begin
     assert (1 <= READ_LATENCY && READ_LATENCY <= 3)
-    else $error("READ_LATENCY should be within range 1 to 3.");
+    else begin
+      $error("READ_LATENCY should be within range 1 to 3.");
+      #1 $finish;
+    end
   end
 
 
@@ -30,12 +34,12 @@ module ram_sp #(
   logic [DATA_WIDTH-1:0] MEM [2**ADDR_WIDTH];
 
   // Port B output pipeline
-  logic [DATA_WIDTH-1:0] rega[ READ_LATENCY] = '{READ_LATENCY{'0}};
+  logic [DATA_WIDTH-1:0] rega[ READ_LATENCY];
 
   // Initializes the memory values to a specified file or to all zeros to match
   // hardware
   initial begin
-    for (int i = 0; i < 2 ** ADDR_WIDTH; i = i + 1) begin
+    for (int i = 0; i < 2 ** ADDR_WIDTH; i++) begin
       MEM[i] = INIT_WORD;
     end
     if (INIT_FILE != "") begin : g_file_init
@@ -45,7 +49,7 @@ module ram_sp #(
 
   // Memory write
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (en && we) begin
       MEM[addr] <= din;
     end
@@ -53,7 +57,7 @@ module ram_sp #(
 
   // Memory read
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst[0]) begin
       rega[0] <= '0;
     end else if (en[0]) begin
@@ -64,7 +68,7 @@ module ram_sp #(
   // Additional clock cycle read latency improves clock-to-out timing
   generate
     for (genvar i = 1; i < READ_LATENCY; i++) begin : g_output_reg
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         if (rst[i]) begin
           rega[i] <= '0;
         end else if (en[i]) begin

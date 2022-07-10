@@ -3,8 +3,9 @@
 //        synchronize an asynchronous reset signal into specified clock domain.
 //        The reset output will assert and release (leave reset) synchronously
 //        with `clk`.
-
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+//
+`default_nettype none
 
 module cdc_sync_rst_sync #(
     parameter int SYNC_FF = 4
@@ -16,10 +17,13 @@ module cdc_sync_rst_sync #(
 
   initial begin
     assert (SYNC_FF >= 2)
-    else $error("SYNC_FF must be equal or lager than 2.");
+    else begin
+      $error("SYNC_FF must be equal or lager than 2.");
+      #1 $finish;
+    end
   end
 
-  (* async_reg="true" *)
+  (* ASYNC_REG="TRUE" *)
   logic [SYNC_FF-1:0] async_reg;
 
   always_ff @(posedge clk) begin

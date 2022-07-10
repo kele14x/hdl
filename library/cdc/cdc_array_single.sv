@@ -1,60 +1,62 @@
 // File: cdc_array_single.sv
 // Brief: Simple array CDC, each bit is treat as separate and has no constrained
 //        relationship.
-`timescale 1 ns / 1 ps 
+`timescale 1 ns / 1 ps
 //
 `default_nettype none
 
 module cdc_array_single #(
-    parameter integer DEST_SYNC_FF  = 2,
-    parameter integer INIT_SYNC_FF  = 0,
-    parameter integer SRC_INPUT_REG = 1,
-    parameter integer WIDTH         = 1
+    parameter int DEST_SYNC_FF  = 2,
+    parameter int INIT_SYNC_FF  = 0,
+    parameter int SRC_INPUT_REG = 1,
+    parameter int WIDTH         = 1
 ) (
-    input wire              src_clk,
-    input wire  [WIDTH-1:0] src_in,
-    input wire              dest_clk,
-    output wire [WIDTH-1:0] dest_out
+    input var              src_clk,
+    input var  [WIDTH-1:0] src_in,
+    input var              dest_clk,
+    output var [WIDTH-1:0] dest_out
 );
 
   initial begin : drc_check
-
-    if (!(DEST_SYNC_FF >= 2 && DEST_SYNC_FF <= 10)) begin
+    assert (DEST_SYNC_FF >= 2 && DEST_SYNC_FF <= 10)
+    else begin
       $error("[%m]: DEST_SYNC_FF (%0d) is outside of valid range of 2-10.", DEST_SYNC_FF);
-      #1 $finish();
+      #1 $finish;
     end
 
-    if (!(INIT_SYNC_FF == 0 || INIT_SYNC_FF == 1)) begin
+    assert (INIT_SYNC_FF == 0 || INIT_SYNC_FF == 1)
+    else begin
       $error("[%m]: INIT_SYNC_FF (%0d) is outside of valid range.", INIT_SYNC_FF);
-      #1 $finish();
+      #1 $finish;
     end
 
-    if (!(SRC_INPUT_REG == 0 || SRC_INPUT_REG == 1)) begin
+    assert (SRC_INPUT_REG == 0 || SRC_INPUT_REG == 1)
+    else begin
       $error("[%m]: SRC_INPUT_REG (%0d) value is outside of valid range.", SRC_INPUT_REG);
-      #1 $finish();
+      #1 $finish;
     end
 
-    if (!(WIDTH >= 1 && WIDTH <= 1024)) begin
+    assert (WIDTH >= 1 && WIDTH <= 1024)
+    else begin
       $error("[%m]: WIDTH (%0d) is outside of valid range of 1-1024.", WIDTH);
-      #1 $finish();
+      #1 $finish;
     end
-
   end
 
 
-  reg [WIDTH-1:0] src_ff;
+  logic [WIDTH-1:0] src_ff;
 
-  (* ASYNC_REG = "TRUE" *)
-  reg [WIDTH-1:0] sync_ff[0:DEST_SYNC_FF-1];
+  (* ASYNC_REG="TRUE" *)
+  logic [WIDTH-1:0] sync_ff[DEST_SYNC_FF];
 
 
   generate
 
-    if (SRC_INPUT_REG) begin : src_input_reg
+    if (SRC_INPUT_REG) begin : g_src_input_reg
 
       initial begin
         if (INIT_SYNC_FF) begin
-          src_ff = 'b0;
+          src_ff = '0;
         end
       end
 
@@ -62,10 +64,10 @@ module cdc_array_single #(
         src_ff <= src_in;
       end
 
-    end else begin : no_input_reg
+    end else begin : g_no_input_reg
 
-      always @(*) begin
-        src_ff <= src_in;
+      always_comb begin
+        src_ff = src_in;
       end
 
     end
@@ -73,18 +75,16 @@ module cdc_array_single #(
   endgenerate
 
   initial begin : p_init
-    integer i;
     if (INIT_SYNC_FF) begin
-      for (i = 0; i < DEST_SYNC_FF; i = i + 1) begin
-        sync_ff[i] = 'b0;
+      for (int i = 0; i < DEST_SYNC_FF; i++) begin
+        sync_ff[i] = '0;
       end
     end
   end
 
   always @(posedge dest_clk) begin : p_sync
-    integer i;
     sync_ff[0] <= src_ff;
-    for (i = 1; i < DEST_SYNC_FF; i = i + 1) begin
+    for (int i = 1; i < DEST_SYNC_FF; i++) begin
       sync_ff[i] <= sync_ff[i-1];
     end
   end

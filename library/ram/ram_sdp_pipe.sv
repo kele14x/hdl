@@ -1,15 +1,16 @@
 // File: ram_sdp_pipe.sv
 // Brief: Simplified Simple Dual Port (SDP) memory, but with control (enable and
-//        reset) signal pipelined.
-
-`timescale 1ns / 1ps `default_nettype none
+//        reset) signal pipeline.
+`timescale 1 ns / 1 ps
+//
+`default_nettype none
 
 module ram_sdp_pipe #(
-    parameter integer ADDR_WIDTH   = 10,
-    parameter integer DATA_WIDTH   = 32,
-    parameter integer READ_LATENCY = 2 ,
-    parameter integer INIT_WORD    = 'd0,
-    parameter string  INIT_FILE    = ""
+    parameter int                     ADDR_WIDTH   = 10,
+    parameter int                     DATA_WIDTH   = 32,
+    parameter int                     READ_LATENCY = 2,
+    parameter bit    [DATA_WIDTH-1:0] INIT_WORD    = '0,
+    parameter string                  INIT_FILE    = ""
 ) (
     // Port A
     input var                   clka,
@@ -34,8 +35,8 @@ module ram_sdp_pipe #(
   assign enb_d[0]  = enb;
 
   generate
-    for (genvar i = 1; i < READ_LATENCY; i = i + 1) begin : g_pipe_b
-      always @(posedge clkb) begin
+    for (genvar i = 1; i < READ_LATENCY; i++) begin : g_pipe_b
+      always_ff @(posedge clkb) begin
         rstb_d[i] <= rstb_d[i-1];
         enb_d[i]  <= enb_d[i-1];
       end

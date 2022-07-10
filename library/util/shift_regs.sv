@@ -1,4 +1,4 @@
-// File: shift_regs.v
+// File: shift_regs.sv
 // Brief: Shift registers to delay a signal for specific number of clocks. It
 //        let synthesizer select result automatically.
 `timescale 1 ns / 1 ps
@@ -6,15 +6,15 @@
 `default_nettype none
 
 module shift_regs #(
-    parameter         SIM_INIT   = 1,
-    parameter integer DATA_WIDTH = 8,
-    parameter integer DEPTH      = 8
+    parameter bit SIM_INIT   = 1,
+    parameter int DATA_WIDTH = 8,
+    parameter int DEPTH      = 8
 ) (
-    input  wire                  clk,
-    input  wire                  cen,
+    input var                   clk,
+    input var                   cen,
     //
-    input  wire [DATA_WIDTH-1:0] din,
-    output wire [DATA_WIDTH-1:0] dout
+    input var  [DATA_WIDTH-1:0] din,
+    output var [DATA_WIDTH-1:0] dout
 );
 
   generate
@@ -24,22 +24,20 @@ module shift_regs #(
 
     end else begin : g_regs
 
-      reg [DATA_WIDTH-1:0] dregs[0:DEPTH-1];
+      logic [DATA_WIDTH-1:0] dregs[DEPTH];
 
       initial begin : p_init
-        integer i;
         if (SIM_INIT) begin
-          for (i = 0; i < DEPTH; i = i + 1) begin
+          for (int i = 0; i < DEPTH; i++) begin
             dregs[i] <= 'd0;
           end
         end
       end
 
       always @(posedge clk) begin : p_shift
-        integer i;
         if (cen) begin
           dregs[0] <= din;
-          for (i = 1; i < DEPTH; i = i + 1) begin
+          for (int i = 1; i < DEPTH; i++) begin
             dregs[i] <= dregs[i-1];
           end
         end

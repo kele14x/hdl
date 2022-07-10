@@ -4,19 +4,28 @@
 //        into specified clock domain. The reset output is put into reset
 //        asynchronously, but will release (leave reset) synchronously with
 //        `clk`.
-
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+//
+`default_nettype none
 
 module cdc_async_rst_sync #(
     parameter int SYNC_FF = 4,
-    parameter logic RST_ACTIVE_HIGH = 0
+    parameter bit RST_ACTIVE_HIGH = 0
 ) (
     input var  clk,
     input var  async_rst_in,
     output var sync_rst_out
 );
 
-  (* async_reg="true" *)
+  initial begin
+    assert (SYNC_FF >= 2)
+    else begin
+      $error("SYNC_FF must be equal or lager than 2.");
+      #1 $finish;
+    end
+  end
+
+  (* ASYNC_REG="TRUE" *)
   logic [SYNC_FF-1:0] async_reg;
   logic async_clr;
 
