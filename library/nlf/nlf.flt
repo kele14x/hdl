@@ -1,3 +1,4 @@
+../cdc/cdc_array_single.flt
 ../cmult_chain/cmult_chain.flt
 ../ram/ram_tdp.sv
 ../ram/ram_tdp_pipe.sv
