@@ -74,7 +74,7 @@ module nlf #(
       .DEST_SYNC_FF  (4),
       .INIT_SYNC_FF  (0),
       .SRC_INPUT_REG (0),
-      .WIDTH         (1),
+      .WIDTH         (1)
   ) cdc_ctrl_bank (
       .src_clk (ctrl_clk),
       .src_in  (ctrl_bank),
@@ -115,10 +115,11 @@ module nlf #(
 
   // Add 3 taps delay since LUT adds 3 ticks latency
   shift_regs #(
-      .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(3)
+      .DATA_WIDTH (DATA_WIDTH * 2),
+      .DEPTH      (3)
   ) i_shift_regs (
       .clk (clk),
+      .cen (1'b1),
       .din (signal_in),
       .dout(signal_s)
   );

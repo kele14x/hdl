@@ -11,12 +11,12 @@ module srl #(
     parameter int DATA_WIDTH = 8
 ) (
     // Read Interface
-    input  logic                  clk,
-    input  logic                  cen,
+    input var                   clk,
+    input var                   cen,
     //
-    input  logic [ADDR_WIDTH-1:0] addr,
-    input  logic [DATA_WIDTH-1:0] din,
-    output logic [DATA_WIDTH-1:0] dout
+    input var  [ADDR_WIDTH-1:0] addr,
+    input var  [DATA_WIDTH-1:0] din,
+    output var [DATA_WIDTH-1:0] dout
 );
 
   // Put the shifting path in first index

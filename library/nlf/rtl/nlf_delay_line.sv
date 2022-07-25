@@ -45,6 +45,7 @@ module nlf_delay_line #(
       ) i_srl (
           // Read Interface
           .clk (clk),
+          .cen (1'b1),
           //
           .addr(delay[i]),
           .din (data_s[i]),

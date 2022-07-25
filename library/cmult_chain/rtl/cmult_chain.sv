@@ -15,11 +15,11 @@ module cmult_chain #(
     input var                       clk,
     input var                       rst,
     //
-    input var         [A_WIDTH-1:0] ar [NUM_TAPS],
-    input var         [A_WIDTH-1:0] ai [NUM_TAPS],
+    input var  signed [A_WIDTH-1:0] ar [NUM_TAPS],
+    input var  signed [A_WIDTH-1:0] ai [NUM_TAPS],
     //
-    input var         [B_WIDTH-1:0] br [NUM_TAPS],
-    input var         [B_WIDTH-1:0] bi [NUM_TAPS],
+    input var  signed [B_WIDTH-1:0] br [NUM_TAPS],
+    input var  signed [B_WIDTH-1:0] bi [NUM_TAPS],
     //
     output var signed [P_WIDTH-1:0] pr,
     output var signed [P_WIDTH-1:0] pi,

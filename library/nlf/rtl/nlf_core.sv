@@ -78,7 +78,7 @@ module nlf_core #(
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (DATA_WIDTH),
       .P_WIDTH (DATA_WIDTH),
-      .SRABITS (SRA_BITS)
+      .SRA_BITS(SRA_BITS)
   ) i_cmult_chain (
       .clk(clk),
       .rst(rst),
