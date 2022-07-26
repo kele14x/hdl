@@ -11,12 +11,14 @@ module mult #(
     parameter integer SRA_BITS = 15
 ) (
     input var                       clk,
+    input var                       rst,
     input var  signed [A_WIDTH-1:0] a,
     input var  signed [B_WIDTH-1:0] b,
     output var signed [P_WIDTH-1:0] p,
     output var                      ovf
 );
 
+  localparam integer Latency   = 4;
   localparam integer FullWidth = A_WIDTH + B_WIDTH;
 
   localparam signed [FullWidth-1:0] Rnd = (1 <<< SRA_BITS - 1);
