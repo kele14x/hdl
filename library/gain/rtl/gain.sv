@@ -5,12 +5,13 @@
 `default_nettype none
 
 module gain #(
-    parameter integer DATA_WIDTH = 16,
-    parameter integer GAIN_WIDTH = 16,
-    parameter integer SRA_BITS   = 14
+    parameter int DATA_WIDTH = 16,
+    parameter int GAIN_WIDTH = 16,
+    parameter int SRA_BITS   = 14
 ) (
     input var                          clk,
     input var                          rst,
+    //
     input var  signed [DATA_WIDTH-1:0] data_in,
     output var signed [DATA_WIDTH-1:0] data_out,
     // gain

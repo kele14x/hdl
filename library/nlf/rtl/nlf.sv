@@ -7,6 +7,7 @@
 module nlf #(
     parameter int NUM_UNITS      = 16,
     parameter int DATA_WIDTH     = 16,
+    parameter int DELAY_WIDTH    = 5,
     parameter int INDEX_WIDTH    = 8,
     parameter int LUT_DATA_WIDTH = 16,
     parameter int SRA_BITS       = 14
@@ -30,8 +31,8 @@ module nlf #(
     //
     input var                                           ctrl_bank,
     //
-    input var         [          $clog2(NUM_UNITS)-1:0] ctrl_index_delay [NUM_UNITS],
-    input var         [          $clog2(NUM_UNITS)-1:0] ctrl_signal_delay[NUM_UNITS],
+    input var         [                DELAY_WIDTH-1:0] ctrl_index_delay [NUM_UNITS],
+    input var         [                DELAY_WIDTH-1:0] ctrl_signal_delay[NUM_UNITS],
     //
     input var         [$clog2(NUM_UNITS)+INDEX_WIDTH:0] ctrl_lut_addr,
     input var                                           ctrl_lut_en,
@@ -39,9 +40,6 @@ module nlf #(
     input var         [           LUT_DATA_WIDTH*2-1:0] ctrl_lut_din,
     output var        [           LUT_DATA_WIDTH*2-1:0] ctrl_lut_dout
 );
-
-
-  localparam int DelayWidth = $clog2(NUM_UNITS);
 
 
   logic                                bank_s;
@@ -95,7 +93,7 @@ module nlf #(
 
   nlf_delay_line #(
       .NUM_UNITS  (NUM_UNITS),
-      .DELAY_WIDTH(DelayWidth),
+      .DELAY_WIDTH(DELAY_WIDTH),
       .DATA_WIDTH (INDEX_WIDTH)
   ) i_index_delay_line (
       // Read Interface
@@ -126,7 +124,7 @@ module nlf #(
 
   nlf_delay_line #(
       .NUM_UNITS  (NUM_UNITS),
-      .DELAY_WIDTH(DelayWidth),
+      .DELAY_WIDTH(DELAY_WIDTH),
       .DATA_WIDTH (DATA_WIDTH * 2)
   ) i_signal_delay_line (
       // Read Interface

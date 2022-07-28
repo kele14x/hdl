@@ -7,21 +7,21 @@
 
 module mac #(
     // Port width
-    parameter integer A_WIDTH   = 16,  // 1 ~ 25
-    parameter integer B_WIDTH   = 16,  // 1 ~ 18
-    parameter integer C_WIDTH   = 33,  // 1 ~ 48
-    parameter integer D_WIDTH   = 16,  // 1 ~ 25
-    parameter integer P_WIDTH   = 34,  // 1 ~ 48
+    parameter int A_WIDTH   = 16,  // 1 ~ 25
+    parameter int B_WIDTH   = 16,  // 1 ~ 18
+    parameter int C_WIDTH   = 33,  // 1 ~ 48
+    parameter int D_WIDTH   = 16,  // 1 ~ 25
+    parameter int P_WIDTH   = 34,  // 1 ~ 48
     // Pipeline depth
-    parameter integer A_REG     = 1,   // 0, 1, 2
-    parameter integer AD_REG    = 1,   // 0, 1
-    parameter integer B_REG     = 1,   // 0, 1, 2
-    parameter integer C_REG     = 1,   // 0, 1
-    parameter integer D_REG     = 1,   // 0, 1
-    parameter integer M_REG     = 1,   // 0, 1
-    parameter integer P_REG     = 1,   // 0, 1
+    parameter int A_REG     = 1,   // 0, 1, 2
+    parameter int AD_REG    = 1,   // 0, 1
+    parameter int B_REG     = 1,   // 0, 1, 2
+    parameter int C_REG     = 1,   // 0, 1
+    parameter int D_REG     = 1,   // 0, 1
+    parameter int M_REG     = 1,   // 0, 1
+    parameter int P_REG     = 1,   // 0, 1
     // Feature control
-    parameter integer USE_DPORT = 1    // 0, 1
+    parameter int USE_DPORT = 1    // 0, 1
 ) (
     input var                       clk,
     input var  signed [A_WIDTH-1:0] a,
@@ -34,9 +34,9 @@ module mac #(
   // Local parameters
   //=================
 
-  localparam integer ADWidth = USE_DPORT ? (A_WIDTH >= D_WIDTH ? A_WIDTH : D_WIDTH) : A_WIDTH;
-  localparam integer MWidth = ADWidth + B_WIDTH;
-  localparam integer PFullWidth = MWidth >= C_WIDTH ? MWidth : C_WIDTH;
+  localparam int ADWidth = USE_DPORT ? (A_WIDTH >= D_WIDTH ? A_WIDTH : D_WIDTH) : A_WIDTH;
+  localparam int MWidth = ADWidth + B_WIDTH;
+  localparam int PFullWidth = MWidth >= C_WIDTH ? MWidth : C_WIDTH;
 
 
   // AD path

@@ -1,0 +1,23 @@
+regfile dpd_channel_rfile {
+    reg {field {sw = rw; hw = r;} pre_amp_gain[15:0];} gain_reg;
+    reg {field {sw = rw; hw = r;} nlf_bank;} nlf_bank_reg;
+    reg {field {sw = rw; hw = r;} nlf_index_delay[4:0];} index_delay_reg[16];
+    reg {field {sw = rw; hw = r;} nlf_signal_delay[4:0];} index_signal_reg[16];
+
+    reg {field {sw = rw; hw = r;} qmc_i_gain[15:0];} qmc_i_gain_reg;
+    reg {field {sw = rw; hw = r;} qmc_q_gain[15:0];} qmc_q_gain_reg;
+    reg {field {sw = rw; hw = r;} qmc_qi_gain[15:0];} qmc_qi_gain_reg;
+    reg {field {sw = rw; hw = r;} qmc_i_offset[15:0];} qmc_i_offset_reg;
+    reg {field {sw = rw; hw = r;} qmc_q_offset[15:0];} qmc_q_offset_reg;
+};
+
+addrmap dpd #(
+    longint unsigned NUM_CHANNEL = 4
+) {
+    desc="DPD slave registers";
+    dpd_channel_rfile dpd_channel[NUM_CHANNEL];
+    mem {
+        mementries = 8192;
+        memwidth = 32;
+    } external lut[NUM_CHANNEL];
+};
