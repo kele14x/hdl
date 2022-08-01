@@ -1,4 +1,2 @@
 rtl/axi4l_ipif.sv
 
-[testbench]
-tb/tb_axi4l_ipif.sv
