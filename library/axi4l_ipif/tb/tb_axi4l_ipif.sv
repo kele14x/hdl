@@ -42,7 +42,7 @@ module tb_axi4l_ipif ();
   //-----------
   logic                    ipif_req;
   logic                    ipif_req_is_wr;
-  logic [  ADDR_WIDTH-3:0] ipif_addr;
+  logic [  ADDR_WIDTH-1:0] ipif_addr;
   //
   logic [DATA_WIDTH/8-1:0] ipif_wr_be;
   logic [  DATA_WIDTH-1:0] ipif_wr_data;

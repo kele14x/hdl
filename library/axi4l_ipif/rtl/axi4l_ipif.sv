@@ -82,6 +82,61 @@ module axi4l_ipif #(
   localparam logic [1:0] RespDecerr = 2'b11;  // DECERR, decoder error
 
 
+  // // FSM
+
+  // typedef enum int {
+  //   S_RST,
+  //   S_IDLE,
+  //   S_VALID,
+  //   S_RESP
+  // } state_t;
+
+  // state_t state, state_next;
+
+  // always_ff @(posedge aclk) begin
+  //   if (!aresetn) begin
+  //     state <= S_RST;
+  //   end else begin
+  //     state <= state_next;
+  //   end
+  // end
+
+  // always_comb begin
+  //   case(state)
+  //     S_RST: begin
+  //       state_next = S_IDLE;
+  //     end
+  //     S_IDLE: begin
+  //       if (rd_addr_valid || (wr_addr_valid && wr_data_valid)) begin
+  //         state_next = S_VALID;
+  //       end else begin
+  //         state_next = S_IDLE;
+  //       end
+  //     end
+  //     S_VALID: begin
+  //       if (rd_ack || wr_ack) begin
+  //         state_next = S_RESP;
+  //       end else begin
+  //         state_next = S_VALID;
+  //       end
+  //     end
+  //     S_RESP: begin
+  //       if (s_axi_bready) begin
+  //         if (rd_addr_valid || (wr_addr_valid && wr_data_valid)) begin
+  //           state_next = S_VALID;
+  //         end else begin
+  //           state_next = S_IDLE;
+  //         end
+  //       end else begin
+  //         state_next = S_RSSP;
+  //       end
+  //     end
+  //     default: begin
+  //       state_next = S_RST;
+  //     end
+  //   endcase
+  // end
+
   // Accept AXI4-Lite AW/W/AR
   //=========================
 
@@ -91,10 +146,13 @@ module axi4l_ipif #(
   var logic                    wr_addr_valid;
   var logic                    wr_data_valid;
   var logic                    wr_accept;
+  var logic                    wr_in_flight;
 
   var logic [  ADDR_WIDTH-1:0] rd_addr;
   var logic                    rd_addr_valid;
   var logic                    rd_accept;
+  var logic                    rd_in_flight;
+
 
   // AW
   //---
@@ -159,9 +217,10 @@ module axi4l_ipif #(
   assign s_axi_arready = (!rd_addr_valid || rd_accept);
 
 
-  //
+  // Send request to next
   //======================
 
+  // Read has higher priority than
   always_comb begin
     ipif_addr = '0;
     ipif_req = 1'b0;
@@ -170,20 +229,41 @@ module axi4l_ipif #(
     ipif_wr_data = '0;
     wr_accept = 1'b0;
     rd_accept = 1'b0;
-    if (rd_addr_valid) begin
+    if (rd_addr_valid && !rd_in_flight && (!s_axi_rvalid || s_axi_rready)) begin
       ipif_addr = rd_addr;
       ipif_req = 1'b1;
       ipif_req_is_wr = 1'b0;
       ipif_wr_be = '0;
       ipif_wr_data = '0;
       rd_accept = 1'b1;
-    end else if (wr_addr_valid && wr_data_valid) begin
+    end else if (wr_addr_valid && wr_data_valid && !wr_in_flight && (!s_axi_bvalid || s_axi_bready)) begin
       ipif_addr = wr_addr;
       ipif_req = 1'b1;
       ipif_req_is_wr = 1'b1;
       ipif_wr_be = wr_be;
       ipif_wr_data = wr_data;
       wr_accept = 1'b1;
+    end
+  end
+
+  // Keep track if current transaction is in flight.
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      wr_in_flight <= 1'b0;
+    end else if (ipif_req && ipif_req_is_wr && !ipif_wr_ack) begin
+      wr_in_flight <= 1'b1;
+    end else if (ipif_wr_ack) begin
+      wr_in_flight <= 1'b0;
+    end
+  end
+
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      rd_in_flight <= 1'b0;
+    end else if (ipif_req && !ipif_req_is_wr && !ipif_rd_ack) begin
+      rd_in_flight <= 1'b1;
+    end else if (ipif_rd_ack) begin
+      rd_in_flight <= 1'b0;
     end
   end
 
@@ -228,7 +308,7 @@ module axi4l_ipif #(
     if (!aresetn) begin
       s_axi_rdata <= 0;
     end else if (ipif_rd_ack) begin
-      ipif_rd_data <= ipif_rd_data;
+      s_axi_rdata <= ipif_rd_data;
     end
   end
 
