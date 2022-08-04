@@ -3,27 +3,37 @@
 `timescale 1 ns / 100 ps
 //
 `default_nettype none
+`include "uvm_macros.svh"
 
+import uvm_pkg::*;
+  
 module tb_axi4l_ipif ();
 
-  import uvm_pkg::*;
+  `include "axi4l_ipif_test.sv"
+
 
   parameter int ADDR_WIDTH = 12;
   parameter int DATA_WIDTH = 32;
+
+  bit aclk;
+  bit aresetn;
 
   // Virtual interface
   axi4l_ipif_if #(
       .ADDR_WIDTH(ADDR_WIDTH),
       .DATA_WIDTH(DATA_WIDTH)
-  ) vif ();
+  ) vif (
+      .aclk   (aclk),
+      .aresetn(aresetn)
+  );
 
   // Connects the interface to DUT
   axi4l_ipif #(
       .ADDR_WIDTH(ADDR_WIDTH),
       .DATA_WIDTH(DATA_WIDTH)
   ) DUT (
-      .aclk          (vif.aclk),
-      .aresetn       (vif.aresetn),
+      .aclk          (aclk),
+      .aresetn       (aresetn),
       //
       .s_axi_awaddr  (vif.s_axi_awaddr),
       .s_axi_awprot  (vif.s_axi_awprot),
@@ -66,10 +76,16 @@ module tb_axi4l_ipif ();
 
   // Stimulation
   initial begin
-    vif.aclk = 0;
+    aclk = 0;
     forever begin
-      #5 vif.aclk = ~vif.aclk;
+      #5 aclk = ~aclk;
     end
+  end
+
+  initial begin
+    aresetn = 0;
+    #100;
+    aresetn = 1;
   end
 
   // //-------------------------------------------------------------------------
