@@ -10,7 +10,7 @@ import uvm_pkg::*;
 class axis_mst_driver extends uvm_driver #(axis_transaction);
   `uvm_component_utils(axis_mst_driver)
 
-  virtual axis_if vif;
+  virtual axi4s_if vif;
 
   function new(string name = "axis_mst_driver", uvm_component parent = null);
     super.new(name, parent);
@@ -25,11 +25,11 @@ class axis_mst_driver extends uvm_driver #(axis_transaction);
     forever begin
       seq_item_port.get_next_item(req);
       drive();
-      seq_item_port.item_done(seq);
+      seq_item_port.item_done(req);
     end
   endtask
 
-  function void set_vif(axis_if vif);
+  function void set_vif(virtual axi4s_if vif);
     this.vif = vif;
   endfunction
 
@@ -47,7 +47,7 @@ class axis_mst_driver extends uvm_driver #(axis_transaction);
     vif.tvalid <= 1'b1;
     forever begin
       @(posedge vif.aclk);
-      if (vif_in.tready) begin
+      if (vif.tready) begin
         vif.tvalid <= 1'b0;
         break;
       end
@@ -55,15 +55,15 @@ class axis_mst_driver extends uvm_driver #(axis_transaction);
   endtask
 
   task reset();
-    vif_in.tdata  <= '0;
-    vif_in.tdest  <= '0;
-    vif_in.tid    <= '0;
-    vif_in.tkeep  <= '0;
-    vif_in.tlast  <= '0;
-    vif_in.tstrb  <= '0;
-    vif_in.tuser  <= '0;
+    vif.tdata  <= '0;
+    vif.tdest  <= '0;
+    vif.tid    <= '0;
+    vif.tkeep  <= '0;
+    vif.tlast  <= '0;
+    vif.tstrb  <= '0;
+    vif.tuser  <= '0;
     //
-    vif_in.tvalid <= '0;
+    vif.tvalid <= '0;
   endtask
 
 endclass

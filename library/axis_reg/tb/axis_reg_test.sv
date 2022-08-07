@@ -12,9 +12,9 @@ class axis_reg_test extends uvm_test;
 
   bit test_pass = 1;
 
-  axis_reg_env        env;
-  axis_reg_sequence   seq;
-  axis_ready_sequence ready_seq;
+  axis_reg_env            env;
+  axis_reg_sequence       seq;
+  axis_reg_ready_sequence ready_seq;
 
   function new(string name = "axis_reg_test", uvm_component parent = null);
     super.new(name, parent);

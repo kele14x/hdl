@@ -1,10 +1,16 @@
 // File: axis_slv_agent.sv
 // Brief: AXI4-Stream Slave UVM Agent
 
-class axis_slv_agent extends axis_slv_agent;
+`ifndef AXIS_SLV_AGENT
+`define AXIS_SLV_AGENT
+
+import uvm_pkg::*;
+`include "uvm_macros.svh"
+
+class axis_slv_agent extends uvm_agent;
   `uvm_component_utils(axis_slv_agent)
 
-  virtual axis_if vif;
+  virtual axi4s_if vif;
 
   // Components
   axis_slv_driver      driver;
@@ -19,10 +25,10 @@ class axis_slv_agent extends axis_slv_agent;
     super.build_phase(phase);
 
     driver    = axis_slv_driver::type_id::create("driver", this);
-    sequencer = axis_sequencer::type_id::create("sequencer", this);
-    monitor   = axis_monitor_before::type_id::create("monitor", this);
+    sequencer = axis_ready_sequencer::type_id::create("sequencer", this);
+    monitor   = axis_monitor::type_id::create("monitor", this);
 
-    if (!uvm_config_db#(axis_if).get(this, "axis_driver", "slv_vif", vif)) begin
+    if (!uvm_config_db#(virtual axi4s_if)::get(this, "", "slv_vif", vif)) begin
       `uvm_fatal(get_full_name(), $sformatf("vif not found"));
     end
     driver.set_vif(vif);
@@ -30,8 +36,10 @@ class axis_slv_agent extends axis_slv_agent;
   endfunction
 
   function void connect_phase(uvm_phase phase);
-    supper.connect_phase(phase);
+    super.connect_phase(phase);
     driver.seq_item_port.connect(sequencer.seq_item_export);
   endfunction
 
 endclass
+
+`endif

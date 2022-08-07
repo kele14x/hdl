@@ -111,11 +111,13 @@ module tb_axis_reg;
   end
 
   initial begin
+    axis_reg_test test = new();
     $display("********************");
     $display("Simulation started");
+    
     // Register the interface in the UVM configuration block
-    uvm_config_db#(virtual axi4s_if)::set(uvm_root::get(), "tb_axis_reg", "mst_vif", mst_vif);
-    uvm_config_db#(virtual axi4s_if)::set(uvm_root::get(), "tb_axis_reg", "slv_vif", slv_vif);
+    uvm_config_db#(virtual axi4s_if)::set(uvm_root::get(), "", "mst_vif", mst_vif);
+    uvm_config_db#(virtual axi4s_if)::set(uvm_root::get(), "", "slv_vif", slv_vif);
     // Execute the test
     run_test();
   end

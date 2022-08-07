@@ -1,10 +1,16 @@
 // File: axis_slv_driver.sv
 // Brief: AXI4-Stream Slave UVM Driver
 
-class axis_slv_driver extends uvm_driver #(axis_transaction);
+`ifndef AXIS_SLV_DRIVER
+`define AXIS_SLV_DRIVER
+
+import uvm_pkg::*;
+`include "uvm_macros.svh"
+
+class axis_slv_driver extends uvm_driver #(axis_ready_trans);
   `uvm_component_utils(axis_slv_driver)
 
-  virtual axis_if vif;
+  virtual axi4s_if vif;
 
   function new(string name = "axis_slv_driver", uvm_component parent = null);
     super.new(name, parent);
@@ -19,11 +25,11 @@ class axis_slv_driver extends uvm_driver #(axis_transaction);
     forever begin
       seq_item_port.get_next_item(req);
       drive();
-      seq_item_port.item_done(seq);
+      seq_item_port.item_done(req);
     end
   endtask
 
-  function void set_vif(axis_if vif);
+  function void set_vif(virtual axi4s_if vif);
     this.vif = vif;
   endfunction
 
@@ -33,7 +39,7 @@ class axis_slv_driver extends uvm_driver #(axis_transaction);
     vif.tready <= 1'b1;
     forever begin
       @(posedge vif.aclk);
-      if (vif_in.tvalid) begin
+      if (vif.tvalid) begin
         vif.tready <= 1'b0;
         break;
       end
@@ -41,7 +47,9 @@ class axis_slv_driver extends uvm_driver #(axis_transaction);
   endtask
 
   task reset();
-    vif_in.tready <= 1'b0;
+    vif.tready <= 1'b0;
   endtask
 
 endclass
+
+`endif

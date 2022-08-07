@@ -1,6 +1,12 @@
 // File axis_mst_sequencer.sv
 // Brief: AXI4-Stream UVM Sequencer
 
+`ifndef AXIS_MST_SEQUENCER
+`define AXIS_MST_SEQUENCER
+
+import uvm_pkg::*;
+`include "uvm_macros.svh"
+
 class axis_mst_sequencer extends uvm_sequencer #(axis_transaction);
   `uvm_component_utils(axis_mst_sequencer)
 
@@ -9,3 +15,5 @@ class axis_mst_sequencer extends uvm_sequencer #(axis_transaction);
   endfunction
 
 endclass
+
+`endif

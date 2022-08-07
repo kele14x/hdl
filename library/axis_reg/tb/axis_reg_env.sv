@@ -29,8 +29,8 @@ class axis_reg_env extends uvm_env;
   // Connect the agent and scoreboard
   function void connect_phase(uvm_phase phase);
     super.connect_phase(phase);
-    mst_agent.monitor.mon2sb_port.connect(sb0.sb_export_before);
-    slv_agent.monitor.mon2sb_port.connect(sb0.sb_export_after);
+    mst_agent.monitor.mon2sb_port.connect(scoreboard.mon2sb_mst_export);
+    slv_agent.monitor.mon2sb_port.connect(scoreboard.mon2sb_slv_export);
   endfunction
 
 endclass

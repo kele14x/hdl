@@ -4,6 +4,9 @@
 `ifndef AXIS_TRANSACTION
 `define AXIS_TRANSACTION
 
+import uvm_pkg::*;
+`include "uvm_macros.svh"
+
 class axis_transaction #(
     parameter int HAS_TKEEP   = 0,
     parameter int HAS_TLAST   = 0,
