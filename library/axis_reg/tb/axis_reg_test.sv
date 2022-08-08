@@ -10,8 +10,6 @@ import uvm_pkg::*;
 class axis_reg_test extends uvm_test;
   `uvm_component_utils(axis_reg_test)
 
-  bit test_pass = 1;
-
   axis_reg_env            env;
   axis_reg_sequence       seq;
   axis_reg_ready_sequence ready_seq;
@@ -26,21 +24,28 @@ class axis_reg_test extends uvm_test;
 
   virtual function void build_phase(uvm_phase phase);
     super.build_phase(phase);
-    env = axis_reg_env::type_id::create("env", this);
-    seq = axis_reg_sequence::type_id::create("seq");
+    env       = axis_reg_env::type_id::create("env", this);
+    seq       = axis_reg_sequence::type_id::create("seq");
+    ready_seq = axis_reg_ready_sequence::type_id::create("ready_seq");
   endfunction : build_phase
 
   virtual task run_phase(uvm_phase phase);
     super.run_phase(phase);
     phase.raise_objection(this);
-    seq.start(env.mst_agent.sequencer);
-    ready_seq.start(env.slv_agent.sequencer);
+    fork
+      begin
+        seq.start(env.mst_agent.sequencer);
+      end
+      begin
+        ready_seq.start(env.slv_agent.sequencer);
+      end
+    join
     phase.drop_objection(this);
   endtask
 
   // Report the test results
   virtual function void report_phase(uvm_phase phase);
-    if (test_pass) begin
+    if (!env.scoreboard.error) begin
       `uvm_info(get_type_name(), "** UVM TEST PASSED **", UVM_NONE);
     end else begin
       `uvm_error(get_type_name(), "** UVM TEST FAIL **");

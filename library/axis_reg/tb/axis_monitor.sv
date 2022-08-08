@@ -31,7 +31,7 @@ class axis_monitor extends uvm_monitor;
   task run_phase(uvm_phase phase);
     wait (vif.aresetn == 1'b1);
     forever begin
-      @(vif.aclk);
+      @(posedge vif.aclk);
       if (vif.tvalid && vif.tready && vif.aclken) begin
         trans.tdata = vif.tdata;
         trans.tdest = vif.tdest;

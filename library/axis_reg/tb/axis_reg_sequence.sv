@@ -16,13 +16,7 @@ class axis_reg_sequence extends uvm_sequence #(axis_transaction);
 
   virtual task body();
     for (int i = 0; i < 100; i++) begin
-      // T req is a pre-defined transaction object
-      req = axis_transaction::type_id::create("req");
-      start_item(req);
-      assert (req.randomize());
-      `uvm_info(get_full_name(), $sformatf("Randomized transaction from sequence"), UVM_LOW);
-      req.print();
-      finish_item(req);
+      `uvm_do(req)
     end
   endtask
 

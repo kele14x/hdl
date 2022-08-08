@@ -7,7 +7,7 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 
-class axis_reg_ready_sequence extends uvm_sequence #(axis_ready_trans);
+class axis_reg_ready_sequence extends uvm_sequence #(axis_ready_gen);
   `uvm_object_utils(axis_reg_ready_sequence)
 
   function new(string name = "axis_reg_ready_sequence");
@@ -16,13 +16,7 @@ class axis_reg_ready_sequence extends uvm_sequence #(axis_ready_trans);
 
   virtual task body();
     for (int i = 0; i < 100; i++) begin
-      // T req is a pre-defined transaction object
-      req = axis_ready_trans::type_id::create("req");
-      start_item(req);
-      assert (req.randomize());
-      `uvm_info(get_full_name(), $sformatf("Randomized transaction from sequence"), UVM_LOW);
-      req.print();
-      finish_item(req);
+      `uvm_do(req)
     end
   endtask
 

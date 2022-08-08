@@ -7,7 +7,7 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 
-class axis_ready_sequencer extends uvm_sequencer #(axis_ready_trans);
+class axis_ready_sequencer extends uvm_sequencer #(axis_ready_gen);
   `uvm_component_utils(axis_ready_sequencer)
 
   function new(string name = "axis_ready_sequencer", uvm_component parent = null);

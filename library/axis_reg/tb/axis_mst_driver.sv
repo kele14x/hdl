@@ -25,7 +25,7 @@ class axis_mst_driver extends uvm_driver #(axis_transaction);
     forever begin
       seq_item_port.get_next_item(req);
       drive();
-      seq_item_port.item_done(req);
+      seq_item_port.item_done();
     end
   endtask
 

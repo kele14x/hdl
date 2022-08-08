@@ -7,7 +7,7 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 
-class axis_slv_driver extends uvm_driver #(axis_ready_trans);
+class axis_slv_driver extends uvm_driver #(axis_ready_gen);
   `uvm_component_utils(axis_slv_driver)
 
   virtual axi4s_if vif;
@@ -25,7 +25,7 @@ class axis_slv_driver extends uvm_driver #(axis_ready_trans);
     forever begin
       seq_item_port.get_next_item(req);
       drive();
-      seq_item_port.item_done(req);
+      seq_item_port.item_done();
     end
   endtask
 
