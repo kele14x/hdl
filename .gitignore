@@ -6,6 +6,11 @@ sim_build/
 __pycache__/
 results.xml
 
+# Questa
+modelsim.ini
+transcript
+*.wlf
+
 # VCD
 *.vcd
 

@@ -1,4 +1,4 @@
-SIM = icarus
+SIM = questa 
 
 A_WIDTH ?= 16
 B_WIDTH ?= 16
@@ -6,10 +6,9 @@ P_WIDTH ?= 16
 SRA_BITS ?= 15
 
 TOPLEVEL_LANG = verilog
-TOP_LEVEL = cmult
+TOPLEVEL = cmult
 
-VERILOG_SOURCES += $(PWD)/../rtl/cmult.v
-VERILOG_SOURCES += $(PWD)/iverilog_dump.v
+VERILOG_SOURCES += $(PWD)/../rtl/cmult.sv
 
 ifeq ($(SIM),icarus)
 	COMPILE_ARGS += -Pcmult.A_WIDTH=$(A_WIDTH)
