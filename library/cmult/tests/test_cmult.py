@@ -20,7 +20,8 @@ class DataMonitor:
     Simple monitor to read data from a signal.
     """
 
-    def __init__(self, clk: SimHandleBase, signals: Dict[str, SimHandleBase], delay: int = 0):
+    def __init__(self, clk: SimHandleBase, signals: Dict[str, SimHandleBase],
+                 delay: int = 0):
         self.values = Queue[Dict[str, int]]()
         self._clk = clk
         self._signals = signals

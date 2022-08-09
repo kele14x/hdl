@@ -5,13 +5,13 @@
 `default_nettype none
 
 module axi4s_reg #(
+    parameter int HAS_TREADY  = 1,
+    parameter int TDATA_WIDTH = 8,
+    parameter int HAS_TSTRB   = 0,
     parameter int HAS_TKEEP   = 0,
     parameter int HAS_TLAST   = 0,
-    parameter int HAS_TREADY  = 1,
-    parameter int HAS_TSTRB   = 0,
-    parameter int TDATA_WIDTH = 8,
-    parameter int TDEST_WIDTH = 0,
     parameter int TID_WIDTH   = 0,
+    parameter int TDEST_WIDTH = 0,
     parameter int TUSER_WIDTH = 0
 ) (
     input var                                                                   aclk,
@@ -19,26 +19,26 @@ module axi4s_reg #(
     input var                                                                   aresetn,
     // Slave Side Interface
     //---------------------
+    input var                                                                   s_axis_tvalid,
+    output var                                                                  s_axis_tready,
     input var  [                    (TDATA_WIDTH == 0 ? 0 : (TDATA_WIDTH-1)):0] s_axis_tdata,
-    input var  [                    (TDEST_WIDTH == 0 ? 0 : (TDEST_WIDTH-1)):0] s_axis_tdest,
-    input var  [                        (TID_WIDTH == 0 ? 0 : (TID_WIDTH-1)):0] s_axis_tid,
+    input var  [(TDATA_WIDTH == 0 || HAS_TSTRB == 0 ? 0 : (TDATA_WIDTH/8-1)):0] s_axis_tstrb,
     input var  [(TDATA_WIDTH == 0 || HAS_TKEEP == 0 ? 0 : (TDATA_WIDTH/8-1)):0] s_axis_tkeep,
     input var                                                                   s_axis_tlast,
-    input var                                                                   s_axis_tvalid,
-    input var  [(TDATA_WIDTH == 0 || HAS_TSTRB == 0 ? 0 : (TDATA_WIDTH/8-1)):0] s_axis_tstrb,
+    input var  [                        (TID_WIDTH == 0 ? 0 : (TID_WIDTH-1)):0] s_axis_tid,
+    input var  [                    (TDEST_WIDTH == 0 ? 0 : (TDEST_WIDTH-1)):0] s_axis_tdest,
     input var  [                    (TUSER_WIDTH == 0 ? 0 : (TUSER_WIDTH-1)):0] s_axis_tuser,
-    output var                                                                  s_axis_tready,
     // Master Side Interface
     //----------------------
+    output var                                                                  m_axis_tvalid,
+    input var                                                                   m_axis_tready,
     output var [                    (TDATA_WIDTH == 0 ? 0 : (TDATA_WIDTH-1)):0] m_axis_tdata,
-    output var [                    (TDEST_WIDTH == 0 ? 0 : (TDEST_WIDTH-1)):0] m_axis_tdest,
-    output var [                        (TID_WIDTH == 0 ? 0 : (TID_WIDTH-1)):0] m_axis_tid,
+    output var [(TDATA_WIDTH == 0 || HAS_TSTRB == 0 ? 0 : (TDATA_WIDTH/8-1)):0] m_axis_tstrb,
     output var [(TDATA_WIDTH == 0 || HAS_TKEEP == 0 ? 0 : (TDATA_WIDTH/8-1)):0] m_axis_tkeep,
     output var                                                                  m_axis_tlast,
-    output var                                                                  m_axis_tvalid,
-    output var [(TDATA_WIDTH == 0 || HAS_TSTRB == 0 ? 0 : (TDATA_WIDTH/8-1)):0] m_axis_tstrb,
-    output var [                    (TUSER_WIDTH == 0 ? 0 : (TUSER_WIDTH-1)):0] m_axis_tuser,
-    input var                                                                   m_axis_tready
+    output var [                        (TID_WIDTH == 0 ? 0 : (TID_WIDTH-1)):0] m_axis_tid,
+    output var [                    (TDEST_WIDTH == 0 ? 0 : (TDEST_WIDTH-1)):0] m_axis_tdest,
+    output var [                    (TUSER_WIDTH == 0 ? 0 : (TUSER_WIDTH-1)):0] m_axis_tuser
 );
 
   always_ff @(posedge aclk) begin

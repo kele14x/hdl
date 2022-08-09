@@ -10,8 +10,9 @@ TOPLEVEL = adder
 
 PWD = $(shell pwd)
 
-VERILOG_SOURCES += $(PWD)/../rtl/adder.v
-VERILOG_SOURCES += $(PWD)/iverilog_dump.v
+VERILOG_SOURCES += $(PWD)/../rtl/adder.sv
+
+# VSIM_ARGS += -onfinish stop
 
 ifeq ($(SIM),icarus)
 	COMPILE_ARGS += -Padder.A_WIDTH=$(A_WIDTH)
