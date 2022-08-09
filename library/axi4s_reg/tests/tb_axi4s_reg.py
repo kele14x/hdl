@@ -2,10 +2,9 @@ import cocotb
 import pyuvm
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
-from pyuvm import uvm_test
 
 
-@pyuvm.test()
+@cocotb.test()
 class BasicTest(uvm_test):
 
     def __init__(self, name, parent):

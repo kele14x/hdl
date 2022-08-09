@@ -4,7 +4,7 @@
 //
 `default_nettype none
 
-module axis_reg #(
+module axi4s_reg #(
     parameter int HAS_TKEEP   = 0,
     parameter int HAS_TLAST   = 0,
     parameter int HAS_TREADY  = 1,

@@ -1,5 +1,0 @@
-../common/axi4s_if.sv
-rtl/axi4s_vip.sv
-
-[testbench]
-tb/tb_axi4s_vip.sv
