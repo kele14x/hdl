@@ -20,6 +20,7 @@ module mac #(
     parameter int D_REG     = 1,   // 0, 1
     parameter int M_REG     = 1,   // 0, 1
     parameter int P_REG     = 1,   // 0, 1
+    parameter int OP_REG    = 1,   // 0, 1
     // Feature control
     parameter int USE_DPORT = 1    // 0, 1
 ) (
@@ -28,6 +29,7 @@ module mac #(
     input var  signed [B_WIDTH-1:0] b,
     input var  signed [C_WIDTH-1:0] c,
     input var  signed [D_WIDTH-1:0] d,
+    input var                       op,
     output var signed [P_WIDTH-1:0] p
 );
 
@@ -59,6 +61,9 @@ module mac #(
 
   // C path
   logic signed [C_WIDTH-1:0] reg_c1;
+
+  // OP path
+  logic signed              reg_op1;
 
   // Adder
   logic signed [PFullWidth-1:0] px;
@@ -182,9 +187,27 @@ module mac #(
   endgenerate
 
 
-  // Adder
+    // OP
 
-  assign px = reg_m1 + reg_c1;
+  generate
+    if (OP_REG == 0) begin : g_no_op1
+      assign reg_op1 = op;
+    end else begin : g_op1
+      always_ff @(posedge clk) begin
+        reg_op1 <= op;
+      end
+    end
+  endgenerate
+
+  // ALU
+
+  always_comb begin
+    if (reg_op1) begin
+      px = reg_m1 + reg_c1;
+    end else begin
+      px = reg_m1 + reg_p1;
+    end
+  end
 
   generate
     if (P_REG == 0) begin : g_no_p1

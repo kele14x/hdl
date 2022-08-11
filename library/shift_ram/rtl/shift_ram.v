@@ -9,7 +9,7 @@
 
 module shift_ram #(
     parameter integer DEPTH      = 8,
-    parameter         STRUCTURE  = "AUTO",
+    parameter string  STRUCTURE  = "AUTO",
     parameter integer DATA_WIDTH = 8
 ) (
     input  wire                  clk,
