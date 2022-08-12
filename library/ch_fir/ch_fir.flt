@@ -1,0 +1,3 @@
+rtl/ch_fir.sv
+rtl/ch_fir_coe.sv
+rtl/ch_fir/stage.sv

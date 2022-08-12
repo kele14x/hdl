@@ -1,6 +1,6 @@
 
-// File: ch_fir_mac.sv
-// Brief: Multiplier for ch_fir module.
+// File: ch_fir_stage.sv
+// Brief: Multiplier at each stage for ch_fir module.
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
@@ -35,8 +35,8 @@ module ch_fir_stage #(
     br   <= b;
     brr  <= br;
     dr   <= d;
-    ad   <= a + d;
-    mreg <= ad * b;
+    ad   <= ar + dr;
+    mreg <= ad * brr;
     preg <= mreg + pin;
   end
 

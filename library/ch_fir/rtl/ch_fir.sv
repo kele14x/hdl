@@ -5,21 +5,17 @@
 `default_nettype none
 
 module ch_fir #(
-    parameter int CSR_SUPPORT       = 4,
-    parameter int NUM_STAGES        = 4,
-    //
-    parameter int INPUT_DATA_WIDTH  = 16,
-    parameter int OUTPUT_DATA_WIDTH = 16,
-    //
-    parameter int COE_DATA_WIDTH    = 16,
-    //
-    parameter int SRA_BITS          = 15
+    parameter int CSR_SUPPORT    = 4,
+    parameter int NUM_STAGES     = 64,
+    parameter int DATA_WIDTH     = 16,
+    parameter int COE_DATA_WIDTH = 16,
+    parameter int SRA_BITS       = 15
 ) (
     input var                                  clk,
     input var                                  rst,
     //
-    input var  signed [  INPUT_DATA_WIDTH-1:0] data_in,
-    output var signed [ OUTPUT_DATA_WIDTH-1:0] data_out,
+    input var  signed [        DATA_WIDTH-1:0] data_in,
+    output var signed [        DATA_WIDTH-1:0] data_out,
     // Control signals
     //----------------
     input var                                  ctrl_clk,
@@ -36,15 +32,18 @@ module ch_fir #(
   //=================
 
   localparam int CoeAddrWidth = $clog2(NUM_STAGES);
-  localparam int PWidth = INPUT_DATA_WIDTH + COE_DATA_WIDTH + $clog2(NUM_STAGES);
-  localparam int DelayTaps = NUM_STAGES * 4 + 1;
+  localparam int PWidth = DATA_WIDTH + COE_DATA_WIDTH + $clog2(NUM_STAGES);
+  localparam int ForwardDelayTaps = (NUM_STAGES - 1) * (CSR_SUPPORT + 1) + 1;
+  localparam int ReverseDelayTaps = (NUM_STAGES - 1) * (CSR_SUPPORT - 1) + 1;
 
   // Signals
   //========
 
   // Data delay line
-  logic signed [INPUT_DATA_WIDTH-1:0] data_s[DelayTaps];
+  logic signed [DATA_WIDTH-1:0] forward_data_d[ForwardDelayTaps];
+  logic signed [DATA_WIDTH-1:0] reverse_data_d[ReverseDelayTaps];
 
+  // Coefficients
   logic signed [COE_DATA_WIDTH-1:0] coe_s[NUM_STAGES];
 
   // MAC cascade
@@ -55,15 +54,20 @@ module ch_fir #(
   //=====
 
   // Data delay line
-
   always_ff @(posedge clk) begin
-    data_s[0] <= data_in;
+    forward_data_d[0] <= data_in;
+    for (int i = 1; i < ForwardDelayTaps; i++) begin
+      forward_data_d[i] <= forward_data_d[i-1];
+    end
   end
 
+
   always_ff @(posedge clk) begin
-    for (int i = 1; i < DelayTaps; i++) begin
-      data_s[i] <= data_s[i-1];
+    for (int i = 0; i < ReverseDelayTaps-2; i++) begin
+      reverse_data_d[i] <= reverse_data_d[i+1];
     end
+    reverse_data_d[ReverseDelayTaps-2] <= forward_data_d[ForwardDelayTaps-1];
+    reverse_data_d[ReverseDelayTaps-1] <= 0;
   end
 
   // Coefficients Store
@@ -97,15 +101,15 @@ module ch_fir #(
 
 
       ch_fir_stage #(
-          .A_WIDTH(INPUT_DATA_WIDTH),
+          .A_WIDTH(DATA_WIDTH),
           .B_WIDTH(COE_DATA_WIDTH),
-          .D_WIDTH(INPUT_DATA_WIDTH),
+          .D_WIDTH(DATA_WIDTH),
           .P_WIDTH(PWidth)
       ) i_stage (
           .clk (clk),
-          .a   (data_s[4*i]),
+          .a   (forward_data_d[(CSR_SUPPORT + 1)*i]),
           .b   (coe_s[i]),
-          .d   (data_s[DelayTaps - 4*i - 1]),
+          .d   (reverse_data_d[(CSR_SUPPORT - 1)*i]),
           .pin (mac_s[i]),
           .pout(mac_s[i+1])
       );
@@ -114,7 +118,7 @@ module ch_fir #(
   endgenerate
 
   always_ff @(posedge clk) begin
-    data_out <= mac_s[NUM_STAGES][OUTPUT_DATA_WIDTH+SRA_BITS-1:SRA_BITS];
+    data_out <= mac_s[NUM_STAGES][DATA_WIDTH+SRA_BITS-1:SRA_BITS];
   end
 
 endmodule

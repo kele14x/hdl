@@ -1,5 +1,5 @@
 // File: ch_fir_coe.sv
-// Brief: Channel filter
+// Brief: Coefficients storage from ch_fir module.
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
