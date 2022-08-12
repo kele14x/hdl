@@ -22,13 +22,13 @@ module symbol_timer #(
     input var        ctrl_extended_cp            // 0 or 1, only applicable to numerology 2
 );
 
-  // mu       num_slot  num_symbol  sample_cp_long  sample_cp_other  long/other  sample_symbol
-  //  0       10        14          2560            2304             1/7         32768
-  //  1       20        14          1408            1152             1/14        16384
-  //  2       40        14          832             576              1/28        8192
-  //  2, ecp  40        12          -               2048             -           8192
-  //  3       80        14          544             288              1/56        4096
-  //  4       160       14          400             144              1/56        2048
+  // mu       num_subframe num_slot  num_symbol  sample_cp_long  sample_cp_other  long/other  sample_symbol
+  //  0       10           1         14          2560            2304             1/7         32768
+  //  1       10           2         14          1408            1152             1/14        16384
+  //  2       10           4         14          832             576              1/28        8192
+  //  2, ecp  10           4         12          -               2048             -           8192
+  //  3       10           8         14          544             288              1/56        4096
+  //  4       10           16        14          400             144              1/112       2048
 
   logic [7:0] frame_counter;  // 0 ~ 255
   logic [3:0] subframe_counter;  // 0 ~ 9

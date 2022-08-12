@@ -36,12 +36,12 @@
 `default_nettype none
 
 module lfsr #(
-    parameter integer                 BIT_WIDTH       = 8,
-    parameter         [BIT_WIDTH-1:0] INITIAL         = 8'b11111111,
-    parameter         [BIT_WIDTH-1:0] POLYNOMIAL      = 8'b01101001,
-    parameter                         STRUCTURE       = "FIBONACCI",  // "FIBONACCI" or "GALOIS"
-    parameter                         GATE_TYPE       = "XOR",        // "XOR" or "XNOR"
-    parameter                         PARALLEL_OUTPUT = 1'b0
+    parameter int                    BIT_WIDTH       = 8,
+    parameter bit    [BIT_WIDTH-1:0] INITIAL         = 8'b11111111,
+    parameter bit    [BIT_WIDTH-1:0] POLYNOMIAL      = 8'b01101001,
+    parameter string                 STRUCTURE       = "FIBONACCI",  // "FIBONACCI" or "GALOIS"
+    parameter string                 GATE_TYPE       = "XOR",        // "XOR" or "XNOR"
+    parameter bit                    PARALLEL_OUTPUT = 1'b0
 ) (
     input  wire                                         clk,
     input  wire                                         rst,
