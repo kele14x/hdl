@@ -5,113 +5,127 @@
 `default_nettype none
 
 module ch_fir #(
-    parameter int CSR_SUPPORT    = 4,
-    parameter int NUM_STAGES     = 64,
-    parameter int DATA_WIDTH     = 16,
-    parameter int COE_DATA_WIDTH = 16,
-    parameter int SRA_BITS       = 15
+    parameter int CHANNEL_SUPPORT = 4,
+    parameter int NUM_STAGES      = 64,
+    parameter int DATA_WIDTH      = 16,
+    parameter int COE_DATA_WIDTH  = 16,
+    parameter int SRA_BITS        = 15
 ) (
-    input var                                  clk,
-    input var                                  rst,
+    input var                                                          clk,
+    input var                                                          rst,
     //
-    input var  signed [        DATA_WIDTH-1:0] data_in,
-    output var signed [        DATA_WIDTH-1:0] data_out,
+    input var  signed [                                DATA_WIDTH-1:0] data_in,
+    input var                                                          data_sync_in,
+    //
+    output var signed [                                DATA_WIDTH-1:0] data_out,
+    output var                                                         data_sync_out,
     // Control signals
     //----------------
-    input var                                  ctrl_clk,
-    input var                                  ctrl_rst,
+    input var                                                          ctrl_clk,
+    input var                                                          ctrl_rst,
     // Coefficient memory
-    input var                                  ctrl_coe_en,
-    input var                                  ctrl_coe_we,
-    input var         [$clog2(NUM_STAGES)-1:0] ctrl_coe_addr,
-    input var         [    COE_DATA_WIDTH-1:0] ctrl_coe_data_in,
-    output var        [    COE_DATA_WIDTH-1:0] ctrl_coe_data_out
+    input var                                                          ctrl_coe_en,
+    input var                                                          ctrl_coe_we,
+    input var         [$clog2(NUM_STAGES)+$clog2(CHANNEL_SUPPORT)-1:0] ctrl_coe_addr,
+    input var         [                            COE_DATA_WIDTH-1:0] ctrl_coe_din,
+    output var        [                            COE_DATA_WIDTH-1:0] ctrl_coe_dout
 );
 
   // Local parameters
   //=================
 
-  localparam int CoeAddrWidth = $clog2(NUM_STAGES);
-  localparam int PWidth = DATA_WIDTH + COE_DATA_WIDTH + $clog2(NUM_STAGES);
-  localparam int ForwardDelayTaps = (NUM_STAGES - 1) * (CSR_SUPPORT + 1) + 1;
-  localparam int ReverseDelayTaps = (NUM_STAGES - 1) * (CSR_SUPPORT - 1) + 1;
+  localparam int CoeAddrWidth = $clog2(NUM_STAGES) + $clog2(CHANNEL_SUPPORT);
+  localparam int MacDataWidth = DATA_WIDTH + COE_DATA_WIDTH + $clog2(NUM_STAGES);
+
+  localparam int CoeAddrWidthStage = $clog2(CHANNEL_SUPPORT);
 
   // Signals
   //========
 
+  logic signed [        DATA_WIDTH-1:0] data_in_reg;
+  logic        [ CoeAddrWidthStage-1:0] coe_addr        [  NUM_STAGES];
+
+  logic        [ CoeAddrWidthStage-1:0] ctrl_coe_addr_l;
+  logic        [$clog2(NUM_STAGES)-1:0] ctrl_coe_addr_h;
+  logic                                 ctrl_coe_en_s   [  NUM_STAGES];
+
   // Data delay line
-  logic signed [DATA_WIDTH-1:0] forward_data_d[ForwardDelayTaps];
-  logic signed [DATA_WIDTH-1:0] reverse_data_d[ReverseDelayTaps];
+  logic signed [        DATA_WIDTH-1:0] forward_data_s  [NUM_STAGES+1];
+  logic signed [        DATA_WIDTH-1:0] backward_data_s [NUM_STAGES+1];
 
   // Coefficients
-  logic signed [COE_DATA_WIDTH-1:0] coe_s[NUM_STAGES];
+  logic signed [    COE_DATA_WIDTH-1:0] coe_s           [  NUM_STAGES];
 
   // MAC cascade
-  logic signed [PWidth-1:0] mac_s[NUM_STAGES+1];
+  logic signed [      MacDataWidth-1:0] mac_s           [NUM_STAGES+1];
 
 
   // Main
   //=====
 
-  // Data delay line
-  always_ff @(posedge clk) begin
-    forward_data_d[0] <= data_in;
-    for (int i = 1; i < ForwardDelayTaps; i++) begin
-      forward_data_d[i] <= forward_data_d[i-1];
-    end
-  end
-
+  // Reverse delay line
 
   always_ff @(posedge clk) begin
-    for (int i = 0; i < ReverseDelayTaps-2; i++) begin
-      reverse_data_d[i] <= reverse_data_d[i+1];
-    end
-    reverse_data_d[ReverseDelayTaps-2] <= forward_data_d[ForwardDelayTaps-1];
-    reverse_data_d[ReverseDelayTaps-1] <= 0;
+    data_in_reg <= data_in;
   end
 
-  // Coefficients Store
-
-  ch_fir_coe #(
-      .COE_ADDR_WIDTH(CoeAddrWidth),
-      .COE_DATA_WIDTH(COE_DATA_WIDTH)
-  ) i_coe_store (
-      .clk              (clk),
-      .rst              (rst),
-      .coe_out          (coe_s),
-      // Control signals
-      //----------------
-      .ctrl_clk         (ctrl_clk),
-      .ctrl_rst         (ctrl_rst),
-      // Coefficient memory
-      .ctrl_coe_en      (ctrl_coe_en),
-      .ctrl_coe_we      (ctrl_coe_we),
-      .ctrl_coe_addr    (ctrl_coe_addr),
-      .ctrl_coe_data_in (ctrl_coe_data_in),
-      .ctrl_coe_data_out(ctrl_coe_data_out)
-  );
-
+  always_ff @(posedge clk) begin
+    if (data_sync_in) begin
+      coe_addr[0] <= 0;
+    end else begin
+      coe_addr[0] <= coe_addr[0] + 1;
+    end
+    for (int i = 1; i < NUM_STAGES; i++) begin
+      coe_addr[i] <= coe_addr[i-1];
+    end
+  end
 
   // Stages
 
+  assign forward_data_s[0] = data_in_reg;
+
   assign mac_s[0] = (1 <<< (SRA_BITS - 1));
 
-  generate
-    for (genvar i = 0; i < NUM_STAGES; i = i + 1) begin : g_stage
+  assign ctrl_coe_addr_l = ctrl_coe_addr[CoeAddrWidthStage-1:0];
+  assign ctrl_coe_addr_h = ctrl_coe_addr[CoeAddrWidth-1:CoeAddrWidthStage];
 
+  generate
+    for (genvar i = 0; i < NUM_STAGES; i++) begin : g_stage
+
+      assign ctrl_coe_en_s[i] = ctrl_coe_en && (ctrl_coe_addr_h == i);
 
       ch_fir_stage #(
-          .A_WIDTH(DATA_WIDTH),
-          .B_WIDTH(COE_DATA_WIDTH),
-          .D_WIDTH(DATA_WIDTH),
-          .P_WIDTH(PWidth)
+          .COE_ADDR_WIDTH(CoeAddrWidthStage),
+          .COE_DATA_WIDTH(COE_DATA_WIDTH),
+          .DATA_WIDTH    (DATA_WIDTH),
+          .MAC_DATA_WIDTH(MacDataWidth)
       ) i_stage (
-          .clk (clk),
-          .a   (forward_data_d[(CSR_SUPPORT + 1)*i]),
-          .b   (coe_s[i]),
-          .d   (reverse_data_d[(CSR_SUPPORT - 1)*i]),
-          .pin (mac_s[i]),
-          .pout(mac_s[i+1])
+          .clk                (clk),
+          .rst                (rst),
+          //
+          .coe_addr           (coe_addr[i]),
+          //
+          .data_forward_in    (forward_data_s[i]),
+          .data_forward_out   (forward_data_s[i+1]),
+          //
+          .data_backward_in   (backward_data_s[i+1]),
+          .data_backward_out  (backward_data_s[i]),
+          //
+          .data_mac_in        (mac_s[i]),
+          .data_mac_out       (mac_s[i+1]),
+          //
+          .ctrl_clk           (ctrl_clk),
+          .ctrl_rst           (ctrl_rst),
+          //
+          .ctrl_forward_delay (4'd3),
+          .ctrl_backward_delay(4'd1),
+          .ctrl_loopback      (i == NUM_STAGES - 1),
+          //
+          .ctrl_coe_en        (ctrl_coe_en_s[i]),
+          .ctrl_coe_we        (ctrl_coe_we),
+          .ctrl_coe_addr      (ctrl_coe_addr_l),
+          .ctrl_coe_din       (ctrl_coe_din),
+          .ctrl_coe_dout      (  /* not used */)
       );
 
     end
