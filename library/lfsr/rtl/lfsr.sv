@@ -43,12 +43,12 @@ module lfsr #(
     parameter string                 GATE_TYPE       = "XOR",        // "XOR" or "XNOR"
     parameter bit                    PARALLEL_OUTPUT = 1'b0
 ) (
-    input  wire                                         clk,
-    input  wire                                         rst,
-    input  wire                                         en,
-    input  wire                                         load,
-    input  wire [                        BIT_WIDTH-1:0] din,
-    output wire [(PARALLEL_OUTPUT ? BIT_WIDTH : 1)-1:0] dout
+    input var                                          clk,
+    input var                                          rst,
+    input var                                          en,
+    input var                                          load,
+    input var  [                        BIT_WIDTH-1:0] din,
+    output var [(PARALLEL_OUTPUT ? BIT_WIDTH : 1)-1:0] dout
 );
 
   // Check parameters
@@ -69,25 +69,18 @@ module lfsr #(
     end
   end
 
-`ifdef COCOTB_SIM
-  initial begin
-    $dumpfile("dump.vcd");
-    $dumpvars(0, lfsr);
-  end
-`endif
-
 
   // Signals
   //========
 
-  reg [BIT_WIDTH-1:0] lfsr_regs;
-  reg [BIT_WIDTH-1:0] lfsr_new;
+  logic [BIT_WIDTH-1:0] lfsr_regs;
+  logic [BIT_WIDTH-1:0] lfsr_new;
 
 
   // Main
   //=====
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       lfsr_regs <= INITIAL;
     end else if (en) begin
@@ -110,7 +103,7 @@ module lfsr #(
       reg feedback;
 
       // Pick taps defined by polynomial and XOR (XNOR) them together as feedback
-      always @(*) begin
+      always_comb begin
         if (GATE_TYPE == "XOR") begin
           feedback = ^{lfsr_regs & POLYNOMIAL};
         end else begin
@@ -119,14 +112,14 @@ module lfsr #(
       end
 
       // Shift right with `feedback` input to MSB
-      always @(*) begin
+      always_comb begin
         lfsr_new = {feedback, lfsr_regs[BIT_WIDTH-1:1]};
       end
 
     end else begin : g_galois
 
       // LSB feedback to taps defined by polynomial, then shift by 1
-      always @(*) begin
+      always_comb begin
         if (GATE_TYPE == "XOR") begin
           lfsr_new = {
             lfsr_regs[0],
