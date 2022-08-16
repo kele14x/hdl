@@ -19,13 +19,13 @@ module dummy_source #(
     input var  [           2:0] ctrl_numerology,  // 0 ~ 4
     input var  [           1:0] ctrl_iq_width,    // 0 ~ 3,
     input var                   ctrl_shift,
-    input var  [          15:0] ctrl_scalar
+    input var  [          14:0] ctrl_scalar
 );
 
   // Local parameters
   //=================
 
-  localparam int Latency = 7;
+  localparam int Latency = 8;
   localparam int LfsrBitWidth = 24;
 
 
@@ -33,13 +33,19 @@ module dummy_source #(
   //========
 
   logic                    symbol_start;
+  logic                    symbol_start_d;
 
-  logic [            15:0] counter;
-  logic [            15:0] counter_max;
+  logic [             3:0] channel_counter;
+  logic [             3:0] channel_counter_max;
+
+  logic [            12:0] sample_counter;
+  logic [            12:0] sample_counter_max;
+
+  logic                    counter_valid;
 
   logic                    lfsr_rst;
   logic                    lfsr_en;
-  logic                    lfsr_en_d;
+  logic                    lfsr_valid;
   logic [LfsrBitWidth-1:0] lfsr_dout;
 
   logic [             4:0] mod_s;
@@ -54,39 +60,86 @@ module dummy_source #(
 
   always_ff @(posedge clk) begin
     if (rst || symbol_start) begin
-      counter <= 0;
-    end else if (counter != counter_max) begin
-      counter <= counter + 1;
+      channel_counter <= '0;
+    end else if (counter_valid) begin
+      if (channel_counter == channel_counter_max) begin
+        channel_counter <= '0;
+      end else begin
+        channel_counter <= channel_counter + 1;
+      end
     end
   end
 
-  always_ff @(posedge clk) begin
+  always_comb begin
     case (ctrl_numerology)
-      0:       counter_max <= 32768 - 1;
-      1:       counter_max <= 16384 - 1;
-      2:       counter_max <= 8192 - 1;
-      3:       counter_max <= 4096 - 1;
-      default: counter_max <= 2048 - 1;
+      0:       channel_counter_max = 7;
+      1:       channel_counter_max = 3;
+      2:       channel_counter_max = 3;
+      3:       channel_counter_max = 3;
+      default: channel_counter_max = 3;
+    endcase
+  end
+
+
+  always_ff @(posedge clk) begin
+    if (rst || symbol_start) begin
+      sample_counter <= 0;
+    end else if (counter_valid) begin 
+      if (channel_counter == channel_counter_max) begin
+        if (sample_counter == sample_counter_max) begin
+          sample_counter <= '0;
+        end else begin
+          sample_counter <= sample_counter + 1;
+        end
+      end
+    end
+  end
+
+  always_comb begin
+    case (ctrl_numerology)
+      0:       sample_counter_max = 4096 - 1;
+      1:       sample_counter_max = 4096 - 1;
+      2:       sample_counter_max = 2048 - 1;
+      3:       sample_counter_max = 1024 - 1;
+      default: sample_counter_max = 512 - 1;
     endcase
   end
 
   always_ff @(posedge clk) begin
-    lfsr_rst <= (rst || symbol_start);
+    symbol_start_d <= symbol_start;
   end
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      lfsr_en <= 1'b0;
+      counter_valid <= 1'b0;
     end else if (symbol_start) begin
-      lfsr_en <= 1'b1;
-    end else if (counter == counter_max) begin
+      counter_valid <= 1'b1;
+    end else if (sample_counter == sample_counter_max && channel_counter == channel_counter_max) begin
+      counter_valid <= 1'b0;
+    end
+  end
+
+
+  // lfsr_*
+
+  always_ff @(posedge clk) begin
+    lfsr_rst <= symbol_start_d;
+  end
+
+  always_ff @(posedge clk) begin
+    if ((0 <= sample_counter && sample_counter < 1638) || (2458 <= sample_counter && sample_counter <= 4096)) begin
+      lfsr_en <= counter_valid;
+    end else begin
       lfsr_en <= 1'b0;
     end
   end
 
   always_ff @(posedge clk) begin
-    lfsr_en_d  <= lfsr_en;
+    lfsr_valid <= lfsr_en;
   end
+
+
+  // Use LFSR as produsue sequence generator
 
   lfsr #(
       .BIT_WIDTH      (LfsrBitWidth),
@@ -108,7 +161,7 @@ module dummy_source #(
   // Modulation
 
   always_ff @(posedge clk) begin
-    if (lfsr_en_d == 0) begin
+    if (lfsr_valid == 0) begin
       mod_s <= '0;
     end else begin
       case (ctrl_iq_width)
@@ -123,7 +176,7 @@ module dummy_source #(
   mult #(
       .A_WIDTH (5),
       .B_WIDTH (16),
-      .P_WIDTH (21),
+      .P_WIDTH (DATA_WIDTH),
       .SRA_BITS(4)
   ) i_mult (
       .clk(clk),

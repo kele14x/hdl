@@ -20,7 +20,7 @@ module tb_dummy_source;
   bit [           2:0] ctrl_numerology;
   bit [           1:0] ctrl_iq_width;
   bit                  ctrl_shift;
-  bit [          15:0] ctrl_scalar;
+  bit [          14:0] ctrl_scalar;
 
 
   initial begin
@@ -37,7 +37,7 @@ module tb_dummy_source;
   end
 
   initial begin
-    ctrl_numerology = 0;
+    ctrl_numerology = 3'd1;
     // QPSK
     ctrl_iq_width = 2'd0;
     ctrl_shift = 1'b1;
