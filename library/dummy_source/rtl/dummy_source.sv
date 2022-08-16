@@ -17,9 +17,9 @@ module dummy_source #(
     // Control interface
     //==================
     input var  [           2:0] ctrl_numerology,  // 0 ~ 4
-    input var  [           3:0] ctrl_mask,
+    input var  [           1:0] ctrl_iq_width,    // 0 ~ 3,
     input var                   ctrl_shift,
-    input var  [          11:0] ctrl_scalar
+    input var  [          15:0] ctrl_scalar
 );
 
   // Local parameters
@@ -40,13 +40,9 @@ module dummy_source #(
   logic                    lfsr_rst;
   logic                    lfsr_en;
   logic                    lfsr_en_d;
-  logic                    lfsr_en_dd;
   logic [LfsrBitWidth-1:0] lfsr_dout;
 
-  logic                    ram_rst;
-  logic                    ram_en;
   logic [             4:0] mod_s;
-  logic [            17:0] mult_data;
 
 
   // Main
@@ -79,7 +75,9 @@ module dummy_source #(
   end
 
   always_ff @(posedge clk) begin
-    if (rst || symbol_start) begin
+    if (rst) begin
+      lfsr_en <= 1'b0;
+    end else if (symbol_start) begin
       lfsr_en <= 1'b1;
     end else if (counter == counter_max) begin
       lfsr_en <= 1'b0;
@@ -88,7 +86,6 @@ module dummy_source #(
 
   always_ff @(posedge clk) begin
     lfsr_en_d  <= lfsr_en;
-    lfsr_en_dd <= lfsr_en_d;
   end
 
   lfsr #(
@@ -111,23 +108,28 @@ module dummy_source #(
   // Modulation
 
   always_ff @(posedge clk) begin
-    if (lfsr_en_dd) begin
+    if (lfsr_en_d == 0) begin
       mod_s <= '0;
     end else begin
-      mod_s <= {(lfsr_dout[3:0] & ctrl_mask), ctrl_shift};
+      case (ctrl_iq_width)
+        0:       mod_s <= {lfsr_dout[0], ctrl_shift, 3'b0};
+        1:       mod_s <= {lfsr_dout[1:0], ctrl_shift, 2'b0};
+        2:       mod_s <= {lfsr_dout[2:0], ctrl_shift, 1'b0};
+        default: mod_s <= {lfsr_dout[3:0], ctrl_shift};
+      endcase
     end
   end
 
   mult #(
       .A_WIDTH (5),
-      .B_WIDTH (13),
-      .P_WIDTH (18),
-      .SRA_BITS(2)
+      .B_WIDTH (16),
+      .P_WIDTH (21),
+      .SRA_BITS(4)
   ) i_mult (
       .clk(clk),
       .rst(rst),
       .a  (mod_s),
-      .b  (ctrl_scalar),
+      .b  ({1'b0, ctrl_scalar}),
       .p  (data_out),
       .ovf(  /* not used */)
   );
