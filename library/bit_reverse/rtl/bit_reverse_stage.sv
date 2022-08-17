@@ -1,10 +1,10 @@
-// File: fft_bitreverse_stage.sv
-// Brief: Bit reverse stage for FFT.
+// File: bit_reverse_stage.sv
+// Brief: Bit reverse stage for bit_reverse module.
 `default_nettype none
 //
 `timescale 1 ns / 1 ps
 
-module fft_bitreverse_stage #(
+module bit_reverse_stage #(
     parameter int IDX_STAGE  = 0,
     parameter int FFT_SIZE   = 4096,
     parameter int DATA_WIDTH = 32

@@ -1,7 +1,7 @@
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-module tb_fft_bitreverse();
+module tb_bit_reverse;
 
   localparam int FftSize = 8;
   localparam int DataWidth = 32;
@@ -63,7 +63,7 @@ module tb_fft_bitreverse();
     $finish();
   end
 
-  fft_bitreverse #(
+  bit_reverse #(
     .FFT_SIZE  (FftSize),
     .DATA_WIDTH(DataWidth)
   ) UUT (

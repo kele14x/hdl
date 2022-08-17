@@ -1,11 +1,11 @@
-// File: fft_bitreverse.sv
+// File: bit_reverse.sv
 // Brief: Bit reverse for FFT. This module permute input data into bit-reversed
 //        order, which usually cased by FFT Radix-2 processing.
 `default_nettype none
 //
 `timescale 1 ns / 1 ps
 
-module fft_bitreverse #(
+module bit_reverse #(
     parameter int FFT_SIZE   = 4096,
     parameter int DATA_WIDTH = 32
 ) (
@@ -53,7 +53,7 @@ module fft_bitreverse #(
   generate
     for (genvar i = 0; i <= NumStage - 1; i++) begin : g_stage
 
-      fft_bitreverse_stage #(
+      bit_reverse_stage #(
           .IDX_STAGE (i),
           .FFT_SIZE  (FFT_SIZE),
           .DATA_WIDTH(DATA_WIDTH)
