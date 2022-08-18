@@ -1,4 +1,4 @@
-../ram/ram_sdp.v
-../util/shift_regs.v
-rtl/shift_ram.v
-rtl/shift_ram_ram.v
+../ram/ram_sdp.sv
+../util/shift_regs.sv
+rtl/shift_ram.sv
+rtl/shift_ram_ram.sv

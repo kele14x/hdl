@@ -7,31 +7,40 @@
 `default_nettype none
 
 module fft_stage #(
-    parameter int STAGE        = 0,
-    parameter int LOG_FFT_SIZE = 4,
-    parameter int DATA_WIDTH   = 16,
-    parameter int PHASE_WIDTH  = 16
+    parameter int STAGE              = 0,
+    parameter int LOG_FFT_SIZE       = 4,
+    parameter int DATA_WIDTH         = 16,
+    parameter int PHASE_WIDTH        = 16,
+    parameter bit BIT_REVERSED_INPUT = 1
 ) (
     input var                          clk,
     input var                          rst,
     // Input
     input var  signed [DATA_WIDTH-1:0] data_i_in,
     input var  signed [DATA_WIDTH-1:0] data_q_in,
+    input var                          data_valid_in,
+    input var                          data_last_in,
     input var         [           1:0] sync_in,
     // Output
-    output var signed [  DATA_WIDTH:0] data_i_out,
-    output var signed [  DATA_WIDTH:0] data_q_out,
+    output var signed [DATA_WIDTH+1:0] data_i_out,
+    output var signed [DATA_WIDTH+1:0] data_q_out,
+    output var                         data_valid_out,
+    output var                         data_last_out,
     output var        [           1:0] sync_out,
-    // Status output
+    // Status
     output var                         ovf
 );
 
   // Local parameter
   //================
 
-  localparam int DelayTaps = 2 ** (LOG_FFT_SIZE - STAGE - 1);
-  localparam int Latency = (STAGE == 0 ? (DelayTaps + 2) : (DelayTaps + 9));
-  localparam int TwiddleWidth = STAGE == 0 ? 1 : STAGE;
+  localparam int DelayTaps1 = BIT_REVERSED_INPUT ? 2 ** (2 * STAGE) : 2 ** (LOG_FFT_SIZE - 2 * STAGE - 1);
+
+  localparam int DelayTaps2 = BIT_REVERSED_INPUT ? 2 ** (2 * STAGE + 1) : 2 ** (LOG_FFT_SIZE - 2 * STAGE - 2);
+
+  localparam int Latency = (STAGE == 0 ? (DelayTaps1 + DelayTaps2 + 2) : (DelayTaps1 + DelayTaps2 + 9));
+
+  localparam int TwiddleWidth = STAGE == 0 ? 1 : STAGE * 2;
 
 
   // Signals
@@ -41,34 +50,23 @@ module fft_stage #(
   logic        [LOG_FFT_SIZE-1:0] counter_sel;
   logic        [LOG_FFT_SIZE-1:0] counter_twiddle;
 
-  logic                           sel;
   logic        [TwiddleWidth-1:0] twiddle;
 
   logic signed [  DATA_WIDTH-1:0] data_i_twiddled;
   logic signed [  DATA_WIDTH-1:0] data_q_twiddled;
-
-  logic signed [    DATA_WIDTH:0] delayed_i_in;
-  logic signed [    DATA_WIDTH:0] delayed_q_in;
-
-  logic signed [    DATA_WIDTH:0] delayed_i_out;
-  logic signed [    DATA_WIDTH:0] delayed_q_out;
+  logic                           data_valid_twiddled;
+  logic                           data_last_twiddled;
 
   logic signed [    DATA_WIDTH:0] data_i_s;
   logic signed [    DATA_WIDTH:0] data_q_s;
+  logic                           data_valid_s;
+  logic                           data_last_s;
 
 
   // Main
   //=====
 
   // Control signal for each stage
-
-  always_ff @(posedge clk) begin
-    if (~sync_in[0] || rst) begin
-      counter_sel <= 'd0;
-    end else begin
-      counter_sel <= counter_sel + 1;
-    end
-  end
 
   always_ff @(posedge clk) begin
     if (~sync_in[1] || rst) begin
@@ -78,28 +76,18 @@ module fft_stage #(
     end
   end
 
-  // `sel` indicates upper half (0) or lower half (1) of each group
-  assign sel = counter_sel[LOG_FFT_SIZE-STAGE-1];
-
   generate
     if (STAGE == 0) begin : g_no_twiddle
 
       // There is no twiddle at first stage
-      initial begin
-        twiddle = 'd0;
-      end
+      assign twiddle             = 1'b0;
 
-      shift_regs #(
-          .DATA_WIDTH(DATA_WIDTH * 2),
-          .DEPTH     (1)
-      ) i_sync0_delay (
-          .clk (clk),
-          .cen (1'b1),
-          .din ({data_q_in, data_i_in}),
-          .dout({data_q_twiddled, data_i_twiddled})
-      );
+      assign data_i_twiddled     = data_i_in;
+      assign data_q_twiddled     = data_q_in;
+      assign data_valid_twiddled = data_valid_in;
+      assign data_last_twiddled  = data_last_in;
 
-      assign ovf = 0;
+      assign ovf                 = 1'b0;
 
     end else begin : g_twiddle
 
@@ -158,48 +146,48 @@ module fft_stage #(
   // The butterfly operator
 
   fft_bf2 #(
+      .LOG_SIZE  (2 ** STAGE),
+      .HAS_NJ    (1'b0),
       .DATA_WIDTH(DATA_WIDTH)
-  ) i_bf2 (
-      .sel          (sel),
+  ) i_bf2i (
+      .clk           (clk),
+      .rst           (rst),
       //
-      .delayed_i_in (delayed_i_in),
-      .delayed_q_in (delayed_q_in),
+      .data_i_in     (data_i_twiddled),
+      .data_q_in     (data_q_twiddled),
+      .data_valid_in (data_valid_twiddled),
+      .data_last_in  (data_last_twiddled),
       //
-      .data_i_in    (data_i_twiddled),
-      .data_q_in    (data_q_twiddled),
-      //
-      .delayed_i_out(delayed_i_out),
-      .delayed_q_out(delayed_q_out),
-      //
-      .data_i_out   (data_i_s),
-      .data_q_out   (data_q_s)
+      .data_i_out    (data_i_s),
+      .data_q_out    (data_q_s),
+      .data_valid_out(data_valid_s),
+      .data_last_out (data_last_s)
   );
 
-  // Add 1 tap register to improve timing
-
-  always_ff @(posedge clk) begin
-    data_i_out <= data_i_s;
-    data_q_out <= data_q_s;
-  end
-
-  // Data delay line
-
-  shift_ram #(
-      .DELAY     (DelayTaps),
-      .DATA_WIDTH((DATA_WIDTH + 1) * 2)
-  ) i_delay (
-      .clk (clk),
-      .rst (rst),
-      .cen (1'b1),
-      .din ({delayed_q_out, delayed_i_out}),
-      .dout({delayed_q_in, delayed_i_in})
+  fft_bf2 #(
+      .LOG_SIZE  (2 ** (STAGE + 1)),
+      .HAS_NJ    (1'b1),
+      .DATA_WIDTH(DATA_WIDTH + 1)
+  ) i_bf2ii (
+      .clk           (clk),
+      .rst           (rst),
+      //
+      .data_i_in     (data_i_s),
+      .data_q_in     (data_q_s),
+      .data_valid_in (data_valid_s),
+      .data_last_in  (data_last_s),
+      //
+      .data_i_out    (data_i_out),
+      .data_q_out    (data_q_out),
+      .data_valid_out(data_valid_out),
+      .data_last_out (data_last_out)
   );
 
   // Control delay line
 
   shift_regs #(
       .DATA_WIDTH(1),
-      .DEPTH     (DelayTaps + 9)
+      .DEPTH     (DelayTaps1 + DelayTaps2 + 9)
   ) i_sync0_delay (
       .clk (clk),
       .cen (1'b1),
@@ -209,7 +197,7 @@ module fft_stage #(
 
   shift_regs #(
       .DATA_WIDTH(1),
-      .DEPTH     (STAGE == 0 ? DelayTaps - 1 : DelayTaps + 9)
+      .DEPTH     (STAGE == 0 ? DelayTaps1 + DelayTaps2 - 1 : DelayTaps1 + DelayTaps2 + 9)
   ) i_sync1_delay (
       .clk (clk),
       .cen (1'b1),
