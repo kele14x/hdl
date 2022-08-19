@@ -6,13 +6,13 @@
 
 module fft #(
     // Log2 of FFT size
-    parameter int LOG_FFT_SIZE       = 12,
+    parameter int LOG_FFT_SIZE       = 4,
     // Input data width for I and Q
     parameter int INPUT_DATA_WIDTH   = 16,
     // Phase factor data width
     parameter int PHASE_WIDTH        = 16,
     // Output data width for I and Q
-    parameter int OUTPUT_DATA_WIDTH  = 29,
+    parameter int OUTPUT_DATA_WIDTH  = 21,
     // This select the structure of FFT (DIT if reversed / DIF if not)
     parameter bit BIT_REVERSED_INPUT = 1
 ) (

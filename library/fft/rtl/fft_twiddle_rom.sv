@@ -5,7 +5,7 @@
 `default_nettype none
 
 module fft_twiddle_rom #(
-    parameter int TWIDDLE_WIDTH = 3,
+    parameter int TWIDDLE_WIDTH = 4,
     parameter int DATA_WIDTH    = 16,
     parameter int PHASE_WIDTH   = 16
 ) (
@@ -29,8 +29,6 @@ module fft_twiddle_rom #(
   logic en_d;
   logic rst_d;
 
-  logic [TWIDDLE_WIDTH-1:0] twiddle_bitreversed;
-
   // The Memory
   logic signed [DATA_WIDTH-1:0] COS_ROM[2**TWIDDLE_WIDTH];
   logic signed [DATA_WIDTH-1:0] SIN_ROM[2**TWIDDLE_WIDTH]; // negative
@@ -43,21 +41,15 @@ module fft_twiddle_rom #(
   //==============================
 
   // Note:
-  // 2 * pi = 2 ^ (TWIDDLE_WIDTH + 1)
-  //     pi = 2 ^ TWIDDLE_WIDTH
-  // pi / 2 = 2 ^ (TWIDDLE_WIDTH - 1)
+  // 2 * pi = 2 ^ TWIDDLE_WIDTH
+  //     pi = 2 ^ (TWIDDLE_WIDTH - 1)
+  // pi / 2 = 2 ^ (TWIDDLE_WIDTH - 2)
 
   // TODO: reduce ROM usage using equation: -sin(x) = cos(pi/2+x)
   initial begin : p_init
     for (int i = 0; i < 2 ** TWIDDLE_WIDTH; i++) begin
-      COS_ROM[i] = (2 ** (DATA_WIDTH - 2)) * $cos(PI * i / 2 ** TWIDDLE_WIDTH);
-      SIN_ROM[i] = -(2 ** (DATA_WIDTH - 2)) * $sin(PI * i / 2 ** TWIDDLE_WIDTH);
-    end
-  end
-
-  always_comb begin : p_reverse
-    for (int i = 0; i < TWIDDLE_WIDTH; i++) begin
-      twiddle_bitreversed[i] = twiddle[TWIDDLE_WIDTH-i-1];
+      COS_ROM[i] = (2 ** (DATA_WIDTH - 2)) * $cos(2 * PI * i / 2 ** TWIDDLE_WIDTH);
+      SIN_ROM[i] = -(2 ** (DATA_WIDTH - 2)) * $sin(2 * PI * i / 2 ** TWIDDLE_WIDTH);
     end
   end
 
@@ -76,8 +68,8 @@ module fft_twiddle_rom #(
       twiddle_i_s <= 'd0;
       twiddle_q_s <= 'd0;
     end else if (en) begin
-      twiddle_i_s <= COS_ROM[twiddle_bitreversed];
-      twiddle_q_s <= SIN_ROM[twiddle_bitreversed];
+      twiddle_i_s <= COS_ROM[twiddle];
+      twiddle_q_s <= SIN_ROM[twiddle];
     end
   end
 

@@ -6,7 +6,7 @@
 
 module tb_fft;
 
-  parameter int LOG_FFT_SIZE = 2;
+  parameter int LOG_FFT_SIZE = 3;
   parameter int INPUT_DATA_WIDTH = 16;
   parameter int PHASE_WIDTH = 16;
   parameter int OUTPUT_DATA_WIDTH = INPUT_DATA_WIDTH + LOG_FFT_SIZE + 1;

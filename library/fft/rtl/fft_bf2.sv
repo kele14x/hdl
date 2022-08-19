@@ -66,8 +66,6 @@ module fft_bf2 #(
       state <= 1'b0;
     end else if (data_valid_in) begin
       state <= 1'b1;
-    end else begin
-      state <= 1'b0;
     end
   end
 
@@ -78,8 +76,6 @@ module fft_bf2 #(
       counter <= 'd0;
     end else if (data_valid_in) begin
       counter <= counter + 1;
-    end else begin
-      counter <= 'd0;
     end
   end
 

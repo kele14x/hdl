@@ -50,14 +50,12 @@ module fft_core #(
   // Counter count from 0 to FFT_SIZE - 1
   logic        [     LOG_FFT_SIZE-1:0] counter;
 
-  logic signed [OUTPUT_DATA_WIDTH-1:0] data_i_s    [  NumStages+1];
-  logic signed [OUTPUT_DATA_WIDTH-1:0] data_q_s    [  NumStages+1];
-  logic                                data_valid_s[NumStages + 1];
-  logic                                data_last_s [NumStages + 1];
+  logic signed [OUTPUT_DATA_WIDTH-1:0] data_i_s    [NumStages+1];
+  logic signed [OUTPUT_DATA_WIDTH-1:0] data_q_s    [NumStages+1];
+  logic                                data_valid_s[NumStages+1];
+  logic                                data_last_s [NumStages+1];
 
-  logic        [                  1:0] sync_s      [  NumStages+1];
-
-  logic                                ovf         [    NumStages];
+  logic                                ovf         [  NumStages];
 
 
   // Main
@@ -73,9 +71,7 @@ module fft_core #(
   };
 
   assign data_valid_s[0] = data_valid_in;
-  assign data_last_s[0]  = data_last_in;
-
-  assign sync_s[0] = {state, state};
+  assign data_last_s[0] = data_last_in;
 
   // Conenct output
 
@@ -83,7 +79,7 @@ module fft_core #(
   assign data_q_out = data_q_s[NumStages];
 
   assign data_valid_out = data_valid_s[NumStages];
-  assign data_last_out  = data_last_s[NumStages];
+  assign data_last_out = data_last_s[NumStages];
 
   // FFT State & Counter
 
@@ -116,12 +112,24 @@ module fft_core #(
   generate
     for (genvar i = 0; i < NumStages; i++) begin : g_stage
 
+      // First stage does not need a twiddle multiplier
+      localparam bit HasTwiddle = (i > 0);
+
+      // Bigger FFT could be split into multiple small FFTs. One stage process
+      // 4 ^ (i + 1) FFT using two radix-2 butterfly operator. If LOG_FFT_SIZE
+      // is an odd number, the last stage should be a speical stage with only
+      // one radix-2 bufferfly.
+      localparam int StageLogFftSize = BIT_REVERSED_INPUT ? 
+        ((2 * i + 2) <= LOG_FFT_SIZE ? (2 * i + 2) : LOG_FFT_SIZE) :
+        ((LOG_FFT_SIZE - 2 * i) <= 0 ? 0 : (LOG_FFT_SIZE - 2 * i));
+
       // At first stage, we increase input data width by 1, this ensures there
       // is no overflow at twiddle rotation. This only need to be done once.
       // Data width increases by 1 after each stage, (caused by the adder).
       // But data width should not exceeds output data width.
-      localparam integer StageDataWidth = ((INPUT_DATA_WIDTH + i + 1) <= OUTPUT_DATA_WIDTH) ?
-        (INPUT_DATA_WIDTH + i + 1) : OUTPUT_DATA_WIDTH;
+      localparam int StageDataWidth = ((INPUT_DATA_WIDTH + 2 * i + 1) <= OUTPUT_DATA_WIDTH) ?
+        (INPUT_DATA_WIDTH + 2 * i + 1) : OUTPUT_DATA_WIDTH;
+
 
       wire signed [StageDataWidth-1:0] data_i_stage_in;
       wire signed [StageDataWidth-1:0] data_q_stage_in;
@@ -138,8 +146,8 @@ module fft_core #(
       // FFT stage
 
       fft_stage #(
-          .STAGE             (i),
-          .LOG_FFT_SIZE      (LOG_FFT_SIZE),
+          .HAS_TWIDDLE       (HasTwiddle),
+          .LOG_FFT_SIZE      (StageLogFftSize),
           .DATA_WIDTH        (StageDataWidth),
           .PHASE_WIDTH       (PHASE_WIDTH),
           .BIT_REVERSED_INPUT(BIT_REVERSED_INPUT)
@@ -151,13 +159,11 @@ module fft_core #(
           .data_q_in     (data_q_stage_in),
           .data_valid_in (data_valid_s[i]),
           .data_last_in  (data_last_s[i]),
-          .sync_in       (sync_s[i]),
           //
           .data_i_out    (data_i_stage_out),
           .data_q_out    (data_q_stage_out),
           .data_valid_out(data_valid_s[i+1]),
           .data_last_out (data_last_s[i+1]),
-          .sync_out      (sync_s[i+1]),
           //
           .ovf           (ovf[i])
       );
