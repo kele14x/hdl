@@ -55,15 +55,20 @@ module lfsr #(
   //=================
 
   initial begin
-    if (!(STRUCTURE == "FIBONACCI" || STRUCTURE == "GALOIS")) begin
+    assert(STRUCTURE == "FIBONACCI" || STRUCTURE == "GALOIS")
+    else begin
       $error("[%m]: LFSR structure (STRUCTURE) should be one of \"FIBONACCI\" or \"GALOIS\".");
       #1 $finish();
     end
-    if (!(GATE_TYPE == "XOR" || GATE_TYPE == "XNOR")) begin
+
+    assert(GATE_TYPE == "XOR" || GATE_TYPE == "XNOR")
+    else begin
       $error("[%m]: Gate type (GATE_TYPE) should be one of \"XOR\" or \"XNOR\".");
       #1 $finish();
     end
-    if (!(POLYNOMIAL[0] == 1)) begin
+
+    assert(POLYNOMIAL[0] == 1)
+    else begin
       $error("[%m]: Feedback polynomial (POLYNOMIAL) should have LSB set to 1.");
       #1 $finish();
     end

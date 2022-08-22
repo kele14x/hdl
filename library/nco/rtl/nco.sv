@@ -25,7 +25,8 @@ module nco #(
   // Local parameters
   //=================
 
-  localparam int Latency = 3;
+  // Latency from `sync` to `cos`/`sin`
+  localparam int Latency = 5;
 
   // Integer bit width of phase word
   localparam int PhaseIntegerWidth = $clog2(PHASE_ENTRIES);
@@ -94,9 +95,8 @@ module nco #(
   //========
 
   logic [PHASE_WIDTH-1:0] phase_accumulator;
-  logic [  PHASE_WIDTH:0] phase_wrapped;
-  logic [  PHASE_WIDTH:0] phase_pre_round;
-  logic [  PHASE_WIDTH:0] phase_round;
+  logic [PHASE_WIDTH:0] phase_wrapped;
+  logic [PHASE_WIDTH:0] phase_pre_round;
 
   logic [PhaseFractionWidth-1:0] lfsr;
 
@@ -145,37 +145,39 @@ module nco #(
       .PARALLEL_OUTPUT(1'b1)
   ) i_lfsr (
       .clk (clk),
-      .rst (sync),
+      .rst (rst || sync),
       .en  (1'b1),
       .load(1'b0),
-      .din ('0),
+      .din ({PhaseFractionWidth{1'b1}}),
       .dout(lfsr)
   );
 
   always_comb begin
     phase_pre_round = phase_accumulator + lfsr;
     if (phase_pre_round[PHASE_WIDTH-:3] >= 3'b011) begin
-      phase_pre_round = {(phase_pre_round[PHASE_WIDTH-:3] - 3'b011), phase_pre_round[PHASE_WIDTH-3:0]};
+      phase_pre_round = {
+        (phase_pre_round[PHASE_WIDTH-:3] - 3'b011), phase_pre_round[PHASE_WIDTH-3:0]
+      };
     end
   end
 
   always_ff @(posedge clk) begin
-    phase_round <= phase_pre_round[PHASE_WIDTH-1-:PhaseIntegerWidth];
+    phase_int <= phase_pre_round[PHASE_WIDTH-1-:PhaseIntegerWidth];
   end
 
   // Map sine phase to cosine phase
 
   always_comb begin
-    phase_cos = phase_round;
+    phase_cos = phase_int;
   end
 
   // sin(x) = cos(x - pi/2), when x >= pi/2
   // sin(x) = cos(x + 3*pi/2), when x < pi/2
   always_comb begin
-    if (phase_round < PhasePi2) begin
-      phase_sin = phase_round + Phase3Pi2;
+    if (phase_int < PhasePi2) begin
+      phase_sin = phase_int + Phase3Pi2;
     end else begin
-      phase_sin = phase_round - PhasePi2;
+      phase_sin = phase_int - PhasePi2;
     end
   end
 
@@ -197,12 +199,12 @@ module nco #(
   ) i_lut (
       .clk  (clk),
       //
-      .rsta (rst),
+      .rsta (1'b0),
       .ena  (1'b1),
       .addra(addr_cos),
       .douta(cos),
       //
-      .rstb (rst),
+      .rstb (1'b0),
       .enb  (1'b1),
       .addrb(addr_sin),
       .doutb(sin)
