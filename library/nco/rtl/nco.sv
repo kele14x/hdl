@@ -5,20 +5,27 @@
 `default_nettype none
 
 module nco #(
-    parameter int PHASE_WIDTH   = 32,
-    parameter int PHASE_ENTRIES = 3072,
-    parameter int DATA_WIDTH    = 16
+    // Fraction bit width of phase control word
+    parameter int                            PHASE_FRACTION_WIDTH = 20,
+    // Number of phase entries in LUT
+    parameter int                            PHASE_ENTRIES        = 3072,
+    // Output date width
+    parameter int                            DATA_WIDTH           = 16,
+    // Initial state of LFSR, none zero state
+    parameter bit [PHASE_FRACTION_WIDTH-1:0] LFSR_INITIAL         = 20'hFFFFF,
+    // Polynomial of LFSR
+    parameter bit [  PHASE_FRACTION_WIDTH:0] LFSR_POLYNOMIAL      = 21'h100005
 ) (
-    input var                           clk,
-    input var                           rst,
+    input var                                                          clk,
+    input var                                                          rst,
     //
-    input var                           sync,
+    input var                                                          sync,
     //
-    output var signed [ DATA_WIDTH-1:0] cos,
-    output var signed [ DATA_WIDTH-1:0] sin,
+    output var signed [                                DATA_WIDTH-1:0] cos,
+    output var signed [                                DATA_WIDTH-1:0] sin,
     //
-    input var         [PHASE_WIDTH-1:0] ctrl_poff,
-    input var         [PHASE_WIDTH-1:0] ctrl_pinc
+    input var         [$clog2(PHASE_ENTRIES)+PHASE_FRACTION_WIDTH-1:0] ctrl_poff,
+    input var         [$clog2(PHASE_ENTRIES)+PHASE_FRACTION_WIDTH-1:0] ctrl_pinc
 );
 
 
@@ -28,10 +35,10 @@ module nco #(
   // Latency from `sync` to `cos`/`sin`
   localparam int Latency = 5;
 
-  // Integer bit width of phase word
+  // Integer bit width of phase control word
   localparam int PhaseIntegerWidth = $clog2(PHASE_ENTRIES);
-  // Fraction bit width of phase word
-  localparam int PhaseFractionWidth = PHASE_WIDTH - PhaseIntegerWidth;
+  // Total bit with of phase control word
+  localparam int PhaseWidth = PhaseIntegerWidth + PHASE_FRACTION_WIDTH;
   // LUT address with
   localparam int AddrWidth = PhaseIntegerWidth;
 
@@ -47,22 +54,17 @@ module nco #(
   localparam bit [PhaseIntegerWidth-1:0] PhasePi2 = Phase2Pi / 4;
   localparam bit [PhaseIntegerWidth-1:0] Phase3Pi2 = Phase2Pi - PhasePi2;
 
-  localparam bit [PHASE_WIDTH-1:0] Modulus = Phase2Pi << PhaseFractionWidth;
+  localparam bit [PhaseWidth-1:0] Modulus = Phase2Pi << PHASE_FRACTION_WIDTH;
+
 
   // Check parameters
   //=================
 
   initial begin
-    assert (2 <= PHASE_WIDTH && PHASE_WIDTH <= 32)
+    assert (0 <= PHASE_FRACTION_WIDTH && PHASE_FRACTION_WIDTH <= 20)
     else begin
-      $error("[%m]: Phase word width (PHASE_WIDTH) must be within the range 2 to 32, got %d.",
-             PHASE_WIDTH);
-      #1 $finish;
-    end
-
-    assert (PhaseFractionWidth >= 0)
-    else begin
-      $error("[%m]: Phase word width (PHASE_WIDTH) should be large enough to hold PHASE_ENTRIES");
+      $error("[%m]: Phase fraction word width (PHASE_FRACTION_WIDTH) must be within the range 0 to 20, got %d.",
+             PHASE_FRACTION_WIDTH);
       #1 $finish;
     end
 
@@ -94,11 +96,11 @@ module nco #(
   // Signals
   //========
 
-  logic [PHASE_WIDTH-1:0] phase_accumulator;
-  logic [PHASE_WIDTH:0] phase_wrapped;
-  logic [PHASE_WIDTH:0] phase_pre_round;
+  logic [PhaseWidth-1:0] phase_accumulator;
+  logic [PhaseWidth:0] phase_wrapped;
+  logic [PhaseWidth:0] phase_pre_round;
 
-  logic [PhaseFractionWidth-1:0] lfsr;
+  logic [PHASE_FRACTION_WIDTH-1:0] lfsr;
 
   logic [PhaseIntegerWidth-1:0] phase_int;
   logic [PhaseIntegerWidth-1:0] phase_cos;
@@ -119,7 +121,7 @@ module nco #(
     end else if (sync) begin
       phase_accumulator <= ctrl_poff;
     end else begin
-      phase_accumulator <= phase_wrapped[PHASE_WIDTH-1:0];
+      phase_accumulator <= phase_wrapped[PhaseWidth-1:0];
     end
   end
 
@@ -129,17 +131,17 @@ module nco #(
   // by subtract by Phase2Pi.
   always_comb begin
     phase_wrapped = phase_accumulator + ctrl_pinc;
-    if (phase_wrapped[PHASE_WIDTH-:3] >= 3'b011) begin
-      phase_wrapped = {(phase_wrapped[PHASE_WIDTH-:3] - 3'b011), phase_wrapped[PHASE_WIDTH-3:0]};
+    if (phase_wrapped[PhaseWidth-:3] >= 3'b011) begin
+      phase_wrapped = {(phase_wrapped[PhaseWidth-:3] - 3'b011), phase_wrapped[PhaseWidth-3:0]};
     end
   end
 
   // Random rounding
 
   lfsr #(
-      .BIT_WIDTH      (PhaseFractionWidth),
-      .INITIAL        ({PhaseFractionWidth{1'b1}}),
-      .POLYNOMIAL     ('b00000000000000001001),
+      .BIT_WIDTH      (PHASE_FRACTION_WIDTH),
+      .INITIAL        (LFSR_INITIAL),
+      .POLYNOMIAL     (LFSR_POLYNOMIAL),
       .STRUCTURE      ("FIBONACCI"),
       .GATE_TYPE      ("XOR"),
       .PARALLEL_OUTPUT(1'b1)
@@ -148,21 +150,21 @@ module nco #(
       .rst (rst || sync),
       .en  (1'b1),
       .load(1'b0),
-      .din ({PhaseFractionWidth{1'b1}}),
+      .din ({PHASE_FRACTION_WIDTH{1'b1}}),
       .dout(lfsr)
   );
 
   always_comb begin
     phase_pre_round = phase_accumulator + lfsr;
-    if (phase_pre_round[PHASE_WIDTH-:3] >= 3'b011) begin
+    if (phase_pre_round[PhaseWidth-:3] >= 3'b011) begin
       phase_pre_round = {
-        (phase_pre_round[PHASE_WIDTH-:3] - 3'b011), phase_pre_round[PHASE_WIDTH-3:0]
+        (phase_pre_round[PhaseWidth-:3] - 3'b011), phase_pre_round[PhaseWidth-3:0]
       };
     end
   end
 
   always_ff @(posedge clk) begin
-    phase_int <= phase_pre_round[PHASE_WIDTH-1-:PhaseIntegerWidth];
+    phase_int <= phase_pre_round[PhaseWidth-1-:PhaseIntegerWidth];
   end
 
   // Map sine phase to cosine phase

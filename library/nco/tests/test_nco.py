@@ -1,3 +1,4 @@
+from numbers import Complex
 import random
 from typing import Tuple
 
@@ -8,9 +9,11 @@ from cocotb.handle import SimHandleBase
 from cocotb.triggers import ClockCycles, RisingEdge
 from tester import DataMonitor
 
-PHASE_WIDTH = cocotb.top.PHASE_WIDTH.value
+PHASE_FRACTION_WIDTH = cocotb.top.PHASE_FRACTION_WIDTH.value
 PHASE_ENTRIES = cocotb.top.PHASE_ENTRIES.value
 DATA_WIDTH = cocotb.top.DATA_WIDTH.value
+LFSR_INITIAL = cocotb.top.LFSR_INITIAL.value
+LFSR_POLYNOMIAL = cocotb.top.LFSR_POLYNOMIAL.value
 
 
 class NcoTester:
@@ -19,7 +22,7 @@ class NcoTester:
     """
 
     def __init__(self, dut: SimHandleBase):
-        self._dut = dut
+        self.dut = dut
         self._checker = None
 
         self.input_mon = DataMonitor(
@@ -39,9 +42,11 @@ class NcoTester:
 
         # Create MATLAB reference System object
         self._model = self._eng.dfe.NCO(
-            'PhaseWidth', float(PHASE_WIDTH),
+            'PhaseFractionWidth', float(PHASE_FRACTION_WIDTH),
             'PhaseEntries', float(PHASE_ENTRIES),
-            'DataWidth', float(DATA_WIDTH)
+            'DataWidth', float(DATA_WIDTH),
+            'LFSRInitial', float(LFSR_INITIAL),
+            'LFSRPolynomial', float(LFSR_POLYNOMIAL)
         )
 
     def start(self) -> None:
@@ -61,9 +66,10 @@ class NcoTester:
         self._checker.kill()
         self._checker = None
 
-    def model(self, sync) -> Tuple[float, float]:
+    def model(self, sync) -> Complex:
         """The golden model of the NCO."""
-        (cos, sin) = self._eng.step(self._model, sync)
+        result = self._eng.step(self._model, 1, sync)
+        return result
 
     async def _check(self) -> None:
         """Checker function."""
@@ -74,13 +80,13 @@ class NcoTester:
             # Simulation output
             sync = input["sync"].integer
             cos = output["cos"].integer
-            sin = output["cos"].integer
+            sin = output["sin"].integer
             result = cos + sin * 1j
 
             # Golden output
             ref = self.model(sync)
 
-            assert result == ref, "Output mismatch"
+            assert result == ref, f"Output mismatch: result = {result}, ref = {ref}"
 
 
 @cocotb.test()
@@ -90,7 +96,7 @@ async def test_nco_basic(dut):
     """
 
     # Start clock
-    cocotb.start_soon(Clock(dut.clk, 10, units='ns').start(start_high=False))
+    cocotb.start_soon(Clock(dut.clk, 10).start(start_high=False))
 
     # Reset DUT
     dut.rst.value = 1
@@ -106,3 +112,30 @@ async def test_nco_basic(dut):
     await ClockCycles(dut.clk, 3)
     assert dut.cos.value == 2 ** (DATA_WIDTH - 1) - 2
     assert dut.sin.value == 0
+
+
+@cocotb.test()
+async def test_nco_advanced(dut):
+    """
+    Test NCO instance against with MATLAB model.
+    """
+
+    # Start clock
+    cocotb.start_soon(Clock(dut.clk, 10).start(start_high=False))
+
+    # Create tester
+    nco_tester = NcoTester(dut=dut)
+    nco_tester._eng.set(nco_tester._model, 'PhaseIncrement', 400000, nargout=0)
+    nco_tester._eng.set(nco_tester._model, 'PhaseOffset', 100000, nargout=0)
+
+    # Reset DUT
+    dut.rst.value = 1
+    dut.sync.value = 0
+    dut.ctrl_pinc.value = 400000
+    dut.ctrl_poff.value = 100000
+    await ClockCycles(dut.clk, 16)
+    dut.rst.value = 0
+
+    nco_tester.start()
+
+    await ClockCycles(dut.clk, 100)

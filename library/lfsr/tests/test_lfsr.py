@@ -42,17 +42,10 @@ class LfsrTester:
         self._eng.setpath(nargout=0)
 
         # Create MATLAB reference System object
-        Initial = [1 if INITIAL & (1 << i) > 0 else 0 for i in range(BIT_WIDTH-1, -1, -1)]
-        Initial = matlab.double(Initial)
-
-        Polynomial = [1 if POLYNOMIAL & (1 << i) > 0 else 0 for i in range(BIT_WIDTH-1, -1, -1)]
-        Polynomial.insert(0, 1)
-        Polynomial = matlab.double(Polynomial)
-
         self._model = self._eng.dfe.LFSR(
             'BitWidth', float(BIT_WIDTH),
-            'Initial', Initial,
-            'Polynomial', Polynomial,
+            'Initial', float(INITIAL),
+            'Polynomial', float(POLYNOMIAL),
             'Structure', str(STRUCTURE, 'utf-8').title(),
             'GateType', str(GATE_TYPE, 'utf-8'),
             'PalleralOutput', PARALLEL_OUTPUT
@@ -92,7 +85,7 @@ class LfsrTester:
 
 
 @cocotb.test()
-async def test_lsft_basic(dut):
+async def test_lfsr_basic(dut):
     """Perform some basic test of LFSR module."""
 
     # Create clock and start it
