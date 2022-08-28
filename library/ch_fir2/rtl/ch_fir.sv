@@ -67,6 +67,10 @@ module ch_fir #(
   assign forward_data_valid_s[0] = data_valid_in;
 
 
+  // TODO:
+  assign backward_data_s[NUM_STAGES] = '0;
+  assign backward_data_valid_s[NUM_STAGES] = 1'b0;
+
   assign mac_s[0] = (1 <<< (SRA_BITS - 1));
 
   assign ctrl_coe_addr_l = ctrl_coe_addr[CoeAddrWidthStage-1:0];
@@ -97,7 +101,7 @@ module ch_fir #(
           .data_backward_in_valid (backward_data_valid_s[i+1]),
           //
           .data_backward_out      (backward_data_s[i]),
-          .data_backward_out_valid(backward_data_valid_s[i+1]),
+          .data_backward_out_valid(backward_data_valid_s[i]),
           //
           .data_mac_in            (mac_s[i]),
           .data_mac_out           (mac_s[i+1]),

@@ -1,4 +1,3 @@
-
 // File: ch_fir_stage.sv
 // Brief: Multiplier at each stage for ch_fir module.
 `timescale 1 ns / 1 ps
@@ -38,7 +37,7 @@ module ch_fir_mac #(
     opr  <= op;
     ad   <= ar + dr;
     mreg <= ad * br;
-    if (op) begin
+    if (opr) begin
       preg <= mreg + pin;
     end else begin
       preg <= mreg + preg;

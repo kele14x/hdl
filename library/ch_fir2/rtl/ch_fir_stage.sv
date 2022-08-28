@@ -1,4 +1,3 @@
-
 // File: ch_fir_stage.sv
 // Brief: Multiplier at each stage for ch_fir module.
 `timescale 1 ns / 1 ps
@@ -55,11 +54,12 @@ module ch_fir_stage #(
   // Signals
   //========
 
-  logic                                    fds_en;
   logic                                    fds_we;
   logic        [   DataStoreAddrWidth-1:0] fds_addr;
   logic        [           DATA_WIDTH-1:0] fds_din;
   logic        [           DATA_WIDTH-1:0] fds_dout;
+  
+  logic        [           DATA_WIDTH-1:0] temp;
 
   logic        [$clog2(CSR_SUPPORT) - 1:0] state;
 
@@ -69,6 +69,8 @@ module ch_fir_stage #(
   logic signed [           DATA_WIDTH-1:0] data_backward_s;
 
   logic                                    op;
+  logic                                    op_d;
+  logic                                    op_dd;
 
 
   // Main
@@ -87,19 +89,16 @@ module ch_fir_stage #(
 
   // Forward data store
 
-  assign fds_en  = 1'b1;
   assign fds_we  = data_forward_in_valid;
   assign fds_din = data_forward_in;
 
   always_ff @(posedge clk) begin
     if (rst) begin
       fds_addr <= '0;
-    end else if (data_forward_in_valid) begin
-      if (fds_addr == CSR_SUPPORT - 2) begin
-        fds_addr <= '0;
-      end else begin
-        fds_addr <= fds_addr + 1;
-      end
+    end else if (fds_addr == CSR_SUPPORT - 2) begin
+      fds_addr <= '0;
+    end else begin
+      fds_addr <= fds_addr + 1;
     end
   end
 
@@ -110,8 +109,8 @@ module ch_fir_stage #(
       .INIT_WORD   ('0)
   ) i_forward_data_store (
       .clk (clk),
-      .rst (rst),
-      .en  (fds_en),
+      .rst (1'b0),
+      .en  (1'b1),
       .we  (fds_we),
       .addr(fds_addr),
       .din (fds_din),
@@ -120,24 +119,39 @@ module ch_fir_stage #(
 
 
   always_ff @(posedge clk) begin
-    if (fds_we) begin
-      data_forward_out <= fds_dout;
+    if (state == 0) begin
+      temp <= fds_dout;
+    end
+  end
+  
+  always_ff @(posedge clk) begin
+    if (state == 3) begin
+      data_forward_out <= temp;
     end
   end
 
+
   always_ff @(posedge clk) begin
-    data_forward_out_valid <= (state == CSR_SUPPORT - 1);
+    data_forward_out_valid <= (state == CSR_SUPPORT - 2);
   end
 
   // Backward data store
 
   // TODO:
+  assign data_backward_out = data_backward_in;
+  assign data_backward_out_valid = data_backward_in_valid;
 
 
   // Coefficients store
 
   always_ff @(posedge clk) begin
-    coe_addr <= CSR_SUPPORT - state;
+    if (rst) begin
+      coe_addr <= '0;
+    end else if (data_forward_in_valid) begin
+      coe_addr <= CSR_SUPPORT - 1;
+    end else begin
+      coe_addr <= coe_addr - 1;
+    end
   end
 
   ram_sdp #(
@@ -153,7 +167,7 @@ module ch_fir_stage #(
       .dina (ctrl_coe_din),
       //
       .clkb (clk),
-      .rstb (rst),
+      .rstb (1'b0),
       .enb  (1'b1),
       .addrb(coe_addr),
       .doutb(coe_data)
@@ -163,7 +177,16 @@ module ch_fir_stage #(
   // MAC
 
   always_ff @(posedge clk) begin
-    op <= (state == 0);
+    if (data_forward_in_valid) begin
+      op <= 1'b1;
+    end else begin
+      op <= (state == 3);
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    op_d <= op;
+    op_dd <= op_d;
   end
 
   ch_fir_mac #(
@@ -176,7 +199,7 @@ module ch_fir_stage #(
       .a   (fds_dout),
       .b   (coe_data),
       .d   (data_backward_in),
-      .op  (op),
+      .op  (op_dd),
       .pin (data_mac_in),
       .pout(data_mac_out)
   );

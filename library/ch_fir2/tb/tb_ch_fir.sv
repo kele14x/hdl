@@ -63,10 +63,18 @@ module tb_ch_fir;
   end
 
   initial begin
+    // Reset signals
+    
+    data_in = 0;
+    data_valid_in = 0;
+    //
     ctrl_coe_en   = 0;
     ctrl_coe_we   = 0;
     ctrl_coe_addr = 0;
     ctrl_coe_din  = 0;
+    
+    // Set coefficients
+    
     wait (ctrl_rst == 0);
     for (int i = 0; i < NUM_STAGES; i++) begin
       for (int j = 0; j < CSR_SUPPORT; j++) begin
@@ -82,17 +90,17 @@ module tb_ch_fir;
     ctrl_coe_we   <= 0;
     ctrl_coe_addr <= 0;
     ctrl_coe_din  <= 0;
-  end
-
-  initial begin
-    data_in = 0;
-    data_valid_in = 0;
+    #100;
+    
+    // Feed input   
+    
     wait (rst == 0);
-    for (int i = 0; i < 10000; i++) begin
+    for (int i = 0; i < 1000; i++) begin
       @(posedge clk);
-      data_in <= (i == 6000);
+      data_in <= (i == 100);
       data_valid_in <= (i % 4 == 0);
     end
+    
     #1000;
     $finish;
   end
