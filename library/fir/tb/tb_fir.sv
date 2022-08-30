@@ -1,36 +1,37 @@
-// File: tb_ch_fir.sv
-// Brief: Testbench for ch_fir module.
+// File: tb_fir.sv
+// Brief: Testbench for fir module.
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
 
-module tb_ch_fir;
+module tb_fir;
 
-  parameter int CHANNEL_SUPPORT = 4;
+  parameter int NUM_CHANNELS = 16;
   parameter int NUM_STAGES = 64;
+  parameter bit EVEN_TAPS = 0;
   parameter int DATA_WIDTH = 16;
+  parameter int COE_ADDR_WIDTH = 3;
   parameter int COE_DATA_WIDTH = 16;
   parameter int SRA_BITS = 0;
 
 
-  bit                                                         clk;
-  bit                                                         rst;
+  bit                                                clk;
+  bit                                                rst;
   //
-  bit signed [                                DATA_WIDTH-1:0] data_in;
-  bit                                                         data_sync_in;
+  bit signed [                       DATA_WIDTH-1:0] data_in;
+  bit                                                data_sync_in;
   //
-  bit signed [                                DATA_WIDTH-1:0] data_out;
-  bit                                                         data_sync_out;
-  // Control signals
-  //----------------
-  bit                                                         ctrl_clk;
-  bit                                                         ctrl_rst;
-  // Coefficient memory
-  bit                                                         ctrl_coe_en;
-  bit                                                         ctrl_coe_we;
-  bit        [$clog2(NUM_STAGES)+$clog2(CHANNEL_SUPPORT)-1:0] ctrl_coe_addr;
-  bit        [                            COE_DATA_WIDTH-1:0] ctrl_coe_din;
-  bit        [                            COE_DATA_WIDTH-1:0] ctrl_coe_dout;
+  bit signed [                       DATA_WIDTH-1:0] data_out;
+  bit                                                data_sync_out;
+  //
+  bit                                                ctrl_clk;
+  bit                                                ctrl_rst;
+  //
+  bit                                                ctrl_coe_en;
+  bit                                                ctrl_coe_we;
+  bit        [$clog2(NUM_STAGES)+COE_ADDR_WIDTH-1:0] ctrl_coe_addr;
+  bit        [                   COE_DATA_WIDTH-1:0] ctrl_coe_din;
+  bit        [                   COE_DATA_WIDTH-1:0] ctrl_coe_dout;
 
 
   // Stimulation
@@ -68,13 +69,13 @@ module tb_ch_fir;
     ctrl_coe_addr = 0;
     ctrl_coe_din  = 0;
     wait (ctrl_rst == 0);
-    for (int i = 0; i < CHANNEL_SUPPORT; i++) begin
-      for (int j = 0; j < NUM_STAGES; j++) begin
+    for (int s = 0; s < NUM_STAGES; s++) begin
+      for (int c = 0; c < 1; c++) begin
         @(posedge ctrl_clk);
         ctrl_coe_en   <= 1;
         ctrl_coe_we   <= 1;
-        ctrl_coe_addr <= i * NUM_STAGES + j;
-        ctrl_coe_din  <= 100 + j;
+        ctrl_coe_addr <= s * (2**COE_ADDR_WIDTH) + c;
+        ctrl_coe_din  <= s + 1;
       end
     end
     @(posedge ctrl_clk);
@@ -88,10 +89,12 @@ module tb_ch_fir;
     data_in = 0;
     data_sync_in = 0;
     wait (rst == 0);
-    for (int i = 0; i < 10000; i++) begin
-      @(posedge clk);
-      data_in <= (i == 6000);
-      data_sync_in <= (i % 4 == 0);
+    for (int i = 0; i < 1000; i++) begin
+      for (int j = 0; j < NUM_CHANNELS; j++) begin
+        @(posedge clk);
+        data_in <= (i == 100) && (j == 0);
+        data_sync_in <= (j == 0);
+      end
     end
     #1000;
     $finish;
@@ -101,12 +104,14 @@ module tb_ch_fir;
   // DUT
   //====
 
-  ch_fir #(
-      .CHANNEL_SUPPORT(CHANNEL_SUPPORT),
-      .NUM_STAGES     (NUM_STAGES),
-      .DATA_WIDTH     (DATA_WIDTH),
-      .COE_DATA_WIDTH (COE_DATA_WIDTH),
-      .SRA_BITS       (SRA_BITS)
+  fir #(
+      .NUM_CHANNELS  (NUM_CHANNELS),
+      .NUM_STAGES    (NUM_STAGES),
+      .EVEN_TAPS     (EVEN_TAPS),
+      .DATA_WIDTH    (DATA_WIDTH),
+      .COE_ADDR_WIDTH(COE_ADDR_WIDTH),
+      .COE_DATA_WIDTH(COE_DATA_WIDTH),
+      .SRA_BITS      (SRA_BITS)
   ) DUT (
       .clk          (clk),
       .rst          (rst),

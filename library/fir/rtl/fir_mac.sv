@@ -1,11 +1,10 @@
-
-// File: ch_fir_stage.sv
-// Brief: Multiplier at each stage for ch_fir module.
+// File: fir_mac.sv
+// Brief: Multiplier adder element for fir module.
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
 
-module ch_fir_mac #(
+module fir_mac #(
     parameter int A_WIDTH = 16,
     parameter int B_WIDTH = 16,
     parameter int D_WIDTH = 16,
