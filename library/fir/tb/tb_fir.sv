@@ -24,6 +24,8 @@ module tb_fir;
   bit signed [                       DATA_WIDTH-1:0] data_out;
   bit                                                data_sync_out;
   //
+  bit                                                ovf;
+  //
   bit                                                ctrl_clk;
   bit                                                ctrl_rst;
   //
@@ -121,6 +123,8 @@ module tb_fir;
       //
       .data_out     (data_out),
       .data_sync_out(data_sync_out),
+      //
+      .ovf          (ovf),
       // Control signals
       //----------------
       .ctrl_clk     (ctrl_clk),

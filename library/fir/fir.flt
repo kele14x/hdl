@@ -1,3 +1,4 @@
+../ram/ram_sdp.sv
 ../util/shift_regs.sv
 rtl/fir.sv
 rtl/fir_mac.sv

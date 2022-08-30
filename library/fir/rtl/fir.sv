@@ -28,6 +28,8 @@ module fir #(
     //
     output var signed [                       DATA_WIDTH-1:0] data_out,
     output var                                                data_sync_out,
+    //
+    output var                                                ovf,
     // Control signals
     //----------------
     input var                                                 ctrl_clk,
@@ -46,7 +48,7 @@ module fir #(
   // From `data_sync_in` to `data_sync_out`, first sample to first sample latency
   localparam int Latency = 7;
 
-  localparam int CoeAddrWidth = COE_ADDR_WIDTH + $clog2(NUM_STAGES);
+  localparam int CoeAddrWidth = $clog2(NUM_STAGES) + COE_ADDR_WIDTH;
   localparam int MacDataWidth = DATA_WIDTH + COE_DATA_WIDTH + $clog2(NUM_STAGES);
 
 
@@ -168,6 +170,22 @@ module fir #(
   always_ff @(posedge clk) begin
     data_out <= mac_data_s[0][DATA_WIDTH+SRA_BITS-1:SRA_BITS];
   end
+
+  generate
+    if (DATA_WIDTH + SRA_BITS >= MacDataWidth) begin : g_no_ovf
+
+      // Output is full width, no overflow will happen
+      assign ovf = 'b0;
+
+    end else begin : g_ovf
+
+      always_ff @(posedge clk) begin
+        ovf <= ~(&mac_data_s[0][MacDataWidth-1:DATA_WIDTH+SRA_BITS-1] ||
+                 &(~mac_data_s[0][MacDataWidth-1:DATA_WIDTH+SRA_BITS-1]));
+      end
+
+    end
+  endgenerate
 
   shift_regs #(
       .DATA_WIDTH(1),

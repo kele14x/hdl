@@ -1,96 +1,121 @@
 // File: tb_hb_up2.sv
 // Brief: Test bench for hb_up2
+`timescale 1 ns / 1 ps
+//
+`default_nettype none
 
-`timescale 1 ns / 1 ps `default_nettype none
+module tb_hb_up2;
 
-module tb_hb_up2 ();
-
-  localparam int ClkPeriod = 10;
-  localparam int TestVectorLength = 4096;
-
-  localparam int XinWidth = 16;
-  localparam int CoeWidth = 16;
-  localparam int NumUniqueCoe = 3;
-  localparam signed [CoeWidth-1:0] CoeNums[NumUniqueCoe] = {1277, -4710, 20014};
-  localparam int YoutWidth = 16;
-  localparam int SraBits = 15;
-
-  localparam int ImpulseLatency = DUT.Latency;
-  localparam int DutLatency = ImpulseLatency - NumUniqueCoe;
+  parameter int NUM_CHANNELS = 16;
+  parameter int NUM_STAGES = 3;
+  parameter int DATA_WIDTH = 16;
+  parameter int COE_ADDR_WIDTH = 3;
+  parameter int COE_DATA_WIDTH = 16;
+  parameter int SRA_BITS = 0;
 
 
-  logic                clk;
-  logic                rst;
+  bit                                                clk;
+  bit                                                rst;
+  //
+  bit signed [                       DATA_WIDTH-1:0] data_in;
+  bit                                                data_sync_in;
+  //
+  bit signed [                       DATA_WIDTH-1:0] data_p0_out;
+  bit signed [                       DATA_WIDTH-1:0] data_p1_out;
+  bit                                                data_sync_out;
+  //
+  bit                                                ovf;
+  //
+  bit                                                ctrl_clk;
+  bit                                                ctrl_rst;
+  //
+  bit                                                ctrl_coe_en;
+  bit                                                ctrl_coe_we;
+  bit        [$clog2(NUM_STAGES)+COE_ADDR_WIDTH-1:0] ctrl_coe_addr;
+  bit        [                   COE_DATA_WIDTH-1:0] ctrl_coe_din;
+  bit        [                   COE_DATA_WIDTH-1:0] ctrl_coe_dout;
 
-  logic [XinWidth-1:0] xin;
-
-  logic [YoutWidth-1:0] yout0, yout0_ref;
-  logic [YoutWidth-1:0] yout1, yout1_ref;
-  logic ovf, ovf_ref;
-
-  logic [ XinWidth-1:0] xin_mem [    TestVectorLength];
-  logic [YoutWidth-1:0] yout_mem[TestVectorLength * 2];
-  logic                 ovf_mem [TestVectorLength * 2];
-
-  initial begin
-    $readmemh("test_hb_up2_input_xin.txt", xin_mem, 0, TestVectorLength - 1);
-    $readmemh("test_hb_up2_output_yout.txt", yout_mem, 0, TestVectorLength * 2 - 1);
-    $readmemh("test_hb_up2_output_ovf.txt", ovf_mem, 0, TestVectorLength * 2 - 1);
-  end
 
   always begin
     clk = 0;
-    #(ClkPeriod / 2);
+    #1;
     clk = 1;
-    #(ClkPeriod / 2);
+    #1;
   end
 
   initial begin
     rst = 1;
-    #100;
-    rst = 0;
+    repeat (16) @(posedge clk);
+    rst <= 0;
   end
+
+  always begin
+    ctrl_clk = 0;
+    #5;
+    ctrl_clk = 1;
+    #5;
+  end
+
+  initial begin
+    ctrl_rst = 1;
+    repeat (16) @(posedge ctrl_clk);
+    ctrl_rst <= 0;
+  end
+
 
   initial begin
     $display("*****************");
     $display("Simulation start.");
+    data_in = 0;
+    data_sync_in = 0;
+    ctrl_coe_en = 0;
+    ctrl_coe_we = 0;
+    ctrl_coe_addr = 0;
+    ctrl_coe_din = 0;
+
+    // Set coefficients
+    wait (ctrl_rst == 0);
+    #100;
+    for (int c = 0; c < 1; c++) begin
+      for (int s = 0; s < NUM_STAGES; s++) begin
+        @(posedge ctrl_clk);
+        ctrl_coe_en <= 1;
+        ctrl_coe_we <= 1;
+        ctrl_coe_addr <= s * (2 ** COE_ADDR_WIDTH) + c;
+        ctrl_coe_din <= 1 + s;
+      end
+    end
+    @(posedge ctrl_clk);
+    ctrl_coe_en <= 0;
+    ctrl_coe_we <= 0;
+    ctrl_coe_addr <= 0;
+    ctrl_coe_din <= 0;
+  end
+
+  initial begin
+    data_in = 0;
+    data_sync_in = 0;
     wait (rst == 0);
-    xin <= 0;
-    #1000;
-    @(posedge clk);
-    fork
-      begin : p_feed_input
-        for (int i = 0; i < TestVectorLength; i++) begin
-          @(posedge clk);
-          xin <= xin_mem[i];
-        end
+    for (int i = 0; i < 1000; i++) begin
+      for (int j = 0; j < NUM_CHANNELS; j++) begin
+        @(posedge clk);
+        data_in <= (i == 100) && (j == 0);
+        data_sync_in <= (j == 0);
       end
-
-      begin : g_gen_ref
-        repeat (DutLatency) @(posedge clk);
-        for (int i = 0; i < TestVectorLength; i++) begin
-          @(posedge clk);
-          yout0_ref <= (i == 0) ? 0 : yout_mem[2*i-1];
-          yout1_ref <= yout_mem[2*i];
-          ovf_ref   <= ((i == 0) ? 0 : ovf_mem[2*i-1]) | ovf_mem[2*i];
-        end
-      end
-
-    join
-
+    end
     #1000;
     $display("Simulation ends.");
-    $finish(2);
+    $finish;
   end
 
 
   hb_up2 #(
-      .XIN_WIDTH     (XinWidth),
-      .COE_WIDTH     (CoeWidth),
-      .NUM_UNIQUE_COE(NumUniqueCoe),
-      .COE_NUMS      (CoeNums),
-      .YOUT_WIDTH    (YoutWidth),
-      .SRA_BITS      (SraBits)
+      .NUM_CHANNELS  (NUM_CHANNELS),
+      .NUM_STAGES    (NUM_STAGES),
+      .DATA_WIDTH    (DATA_WIDTH),
+      .COE_ADDR_WIDTH(COE_ADDR_WIDTH),
+      .COE_DATA_WIDTH(COE_DATA_WIDTH),
+      .SRA_BITS      (SRA_BITS)
   ) DUT (
       .*
   );

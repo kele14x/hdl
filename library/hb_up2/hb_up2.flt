@@ -1,8 +1,2 @@
+../fir/fir.flt
 rtl/hb_up2.sv
-
-[testbench]
-tb/tb_hb_up2.sv
-tb/test_hb_up2_input_coe.txt
-tb/test_hb_up2_input_xin.txt
-tb/test_hb_up2_output_ovf.txt
-tb/test_hb_up2_output_yout.txt

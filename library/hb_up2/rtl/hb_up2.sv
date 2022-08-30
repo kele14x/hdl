@@ -1,75 +1,100 @@
 // File: hb_up2.sv
 // Brief: Half band up-sample by 2.
-
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+//
+`default_nettype none
 
 module hb_up2 #(
-    parameter int XIN_WIDTH = 16,
-    parameter int COE_WIDTH = 16,
-    parameter int NUM_UNIQUE_COE = 5,
-    parameter signed [COE_WIDTH-1:0] COE_NUMS[NUM_UNIQUE_COE] = {952, -1609, 3090, -6260, 20622},
-    parameter int YOUT_WIDTH = 16,
-    parameter int SRA_BITS = 15
+    // Number of interleaved channels
+    parameter int NUM_CHANNELS   = 16,
+    // Number of MAC stages
+    parameter int NUM_STAGES     = 5,
+    // Bit width of input and output data
+    parameter int DATA_WIDTH     = 16,
+    // Bit width of coefficient sets index address
+    parameter int COE_ADDR_WIDTH = 3,
+    // Bit width of coefficients
+    parameter int COE_DATA_WIDTH = 16,
+    // Shift bits at output
+    parameter int SRA_BITS       = 15
 ) (
-    input var  logic                  clk,
-    input var  logic                  rst,
-    input var  logic [ XIN_WIDTH-1:0] xin,
-    output var logic [YOUT_WIDTH-1:0] yout0,
-    output var logic [YOUT_WIDTH-1:0] yout1,
-    output var logic                  ovf
+    input var                                                 clk,
+    input var                                                 rst,
+    //
+    input var  signed [                       DATA_WIDTH-1:0] data_in,
+    input var                                                 data_sync_in,
+    //
+    output var signed [                       DATA_WIDTH-1:0] data_p0_out,
+    output var signed [                       DATA_WIDTH-1:0] data_p1_out,
+    output var                                                data_sync_out,
+    //
+    output var                                                ovf,
+    // Control interface
+    //==================
+    input var                                                 ctrl_clk,
+    input var                                                 ctrl_rst,
+    // Coefficient memory
+    input var                                                 ctrl_coe_en,
+    input var                                                 ctrl_coe_we,
+    input var         [$clog2(NUM_STAGES)+COE_ADDR_WIDTH-1:0] ctrl_coe_addr,
+    input var         [                   COE_DATA_WIDTH-1:0] ctrl_coe_din,
+    output var        [                   COE_DATA_WIDTH-1:0] ctrl_coe_dout
 );
 
-  localparam int RND = (1 <<< (SRA_BITS - 1));
-  localparam int Latency = NUM_UNIQUE_COE + 6;
+  // Local parameter
+  //================
 
-  logic signed [        XIN_WIDTH-1:0] xin_d[NUM_UNIQUE_COE*4];
+  // First sample to first sample latency
+  localparam int Latency = 7;
 
-  logic signed [          XIN_WIDTH:0] adreg[  NUM_UNIQUE_COE];
-  logic signed [XIN_WIDTH+COE_WIDTH:0] mreg [  NUM_UNIQUE_COE];
-  logic signed [XIN_WIDTH+COE_WIDTH:0] preg [  NUM_UNIQUE_COE];
+  // Impulse latency
+  localparam int ImpulseLatency = NUM_CHANNELS * NUM_STAGES + Latency;
 
-  // Delay taps, tools can automatically absorb registers into DSP and duplicate
-  // registers if needed
 
-  always_ff @(posedge clk) begin
-    xin_d[0] <= xin;
-    for (int i = 1; i < NUM_UNIQUE_COE * 4; i++) begin
-      xin_d[i] <= xin_d[i-1];
-    end
-  end
+  // Main
+  //=====
 
-  generate
-    for (genvar i = 0; i < NUM_UNIQUE_COE; i++) begin : g_dsp
+  shift_regs #(
+      .DATA_WIDTH(DATA_WIDTH),
+      .DEPTH     (ImpulseLatency)
+  ) i_p0_delay (
+      .clk (clk),
+      .cen (1'b1),
+      //
+      .din (data_in),
+      .dout(data_p0_out)
+  );
 
-      always_ff @(posedge clk) begin
-        adreg[i] <= xin_d[1] + xin_d[NUM_UNIQUE_COE*2-2*i];
-        mreg[i]  <= adreg[i] * COE_NUMS[i];
-        preg[i]  <= mreg[i] + ((i < NUM_UNIQUE_COE - 1) ? preg[i+1] : RND);
-      end
-
-    end
-  endgenerate
-
-  always_ff @(posedge clk) begin
-    yout0 <= xin_d[NUM_UNIQUE_COE+4];
-    yout1 <= preg[0][YOUT_WIDTH+SRA_BITS-1:SRA_BITS];
-  end
-
-  generate
-    if (YOUT_WIDTH + SRA_BITS >= XIN_WIDTH + COE_WIDTH + 1) begin : g_no_ovf
-
-      // Output is full width, no overflow will happen
-      assign ovf = 'b0;
-
-    end else begin : g_ovf
-
-      always_ff @(posedge clk) begin
-        ovf <= ~(&preg[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1] ||
-                 &(~preg[0][XIN_WIDTH+COE_WIDTH:YOUT_WIDTH+SRA_BITS-1]));
-      end
-
-    end
-  endgenerate
+  fir #(
+      .NUM_CHANNELS  (NUM_CHANNELS),
+      .NUM_STAGES    (NUM_STAGES),
+      .EVEN_TAPS     (1),
+      .DATA_WIDTH    (DATA_WIDTH),
+      .COE_ADDR_WIDTH(COE_ADDR_WIDTH),
+      .COE_DATA_WIDTH(COE_DATA_WIDTH),
+      .SRA_BITS      (SRA_BITS)
+  ) i_fir (
+      .clk          (clk),
+      .rst          (rst),
+      //
+      .data_in      (data_in),
+      .data_sync_in (data_sync_in),
+      //
+      .data_out     (data_p1_out),
+      .data_sync_out(data_sync_out),
+      //
+      .ovf          (ovf),
+      // Control signals
+      //----------------
+      .ctrl_clk     (ctrl_clk),
+      .ctrl_rst     (ctrl_rst),
+      // Coefficient memory
+      .ctrl_coe_en  (ctrl_coe_en),
+      .ctrl_coe_we  (ctrl_coe_we),
+      .ctrl_coe_addr(ctrl_coe_addr),
+      .ctrl_coe_din (ctrl_coe_din),
+      .ctrl_coe_dout(ctrl_coe_dout)
+  );
 
 endmodule
 
