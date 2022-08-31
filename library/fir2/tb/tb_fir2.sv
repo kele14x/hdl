@@ -4,10 +4,10 @@
 //
 `default_nettype none
 
-module tb_ch_fir;
+module tb_fir2;
 
-  parameter int CSR_SUPPORT = 4;
-  parameter int NUM_STAGES = 2;
+  parameter int CSR_SUPPORT = 16;
+  parameter int NUM_STAGES = 4;
   parameter int DATA_WIDTH = 16;
   parameter int COE_DATA_WIDTH = 16;
   parameter int SRA_BITS = 0;
@@ -64,7 +64,7 @@ module tb_ch_fir;
 
   initial begin
     // Reset signals
-    
+
     data_in = 0;
     data_valid_in = 0;
     //
@@ -72,9 +72,9 @@ module tb_ch_fir;
     ctrl_coe_we   = 0;
     ctrl_coe_addr = 0;
     ctrl_coe_din  = 0;
-    
+
     // Set coefficients
-    
+
     wait (ctrl_rst == 0);
     for (int i = 0; i < NUM_STAGES; i++) begin
       for (int j = 0; j < CSR_SUPPORT; j++) begin
@@ -91,16 +91,18 @@ module tb_ch_fir;
     ctrl_coe_addr <= 0;
     ctrl_coe_din  <= 0;
     #100;
-    
-    // Feed input   
-    
+
+    // Feed input
+
     wait (rst == 0);
     for (int i = 0; i < 1000; i++) begin
-      @(posedge clk);
-      data_in <= (i == 100);
-      data_valid_in <= (i % 4 == 0);
+      for (int j = 0; j < CSR_SUPPORT; j++) begin
+        @(posedge clk);
+        data_in <= (i == 100);
+        data_valid_in <= (j == 0);
+      end
     end
-    
+
     #1000;
     $finish;
   end
@@ -109,7 +111,7 @@ module tb_ch_fir;
   // DUT
   //====
 
-  ch_fir #(
+  fir2 #(
       .CSR_SUPPORT   (CSR_SUPPORT),
       .NUM_STAGES    (NUM_STAGES),
       .DATA_WIDTH    (DATA_WIDTH),

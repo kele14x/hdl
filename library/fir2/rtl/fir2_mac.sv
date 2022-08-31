@@ -1,10 +1,10 @@
-// File: ch_fir_stage.sv
+// File: fir2_mac.sv
 // Brief: Multiplier at each stage for ch_fir module.
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
 
-module ch_fir_mac #(
+module fir2_mac #(
     parameter int A_WIDTH = 16,
     parameter int B_WIDTH = 16,
     parameter int D_WIDTH = 16,
@@ -37,10 +37,10 @@ module ch_fir_mac #(
     opr  <= op;
     ad   <= ar + dr;
     mreg <= ad * br;
-    if (opr) begin
+    if (opr == 1'b0) begin
       preg <= mreg + pin;
     end else begin
-      preg <= mreg + preg;
+      preg <= mreg + pin + preg;
     end
   end
 

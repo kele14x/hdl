@@ -1,12 +1,12 @@
-// File: ch_fir.sv
-// Brief: Channel filter
+// File: fir2.sv
+// Brief:  Semi-Parallel FIR Filter.
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
 
-module ch_fir #(
-    parameter int CSR_SUPPORT    = 4,
-    parameter int NUM_STAGES     = 2,
+module fir2 #(
+    parameter int CSR_SUPPORT    = 16,
+    parameter int NUM_STAGES     = 4,
     parameter int DATA_WIDTH     = 16,
     parameter int COE_DATA_WIDTH = 16,
     parameter int SRA_BITS       = 15
@@ -19,6 +19,8 @@ module ch_fir #(
     //
     output var signed [                            DATA_WIDTH-1:0] data_out,
     output var                                                     data_valid_out,
+    //
+    output var                                                     ovf,
     // Control signals
     //----------------
     input var                                                      ctrl_clk,
@@ -35,81 +37,84 @@ module ch_fir #(
   //=================
 
   localparam int CoeAddrWidth = $clog2(NUM_STAGES) + $clog2(CSR_SUPPORT);
-  localparam int MacDataWidth = DATA_WIDTH + COE_DATA_WIDTH + $clog2(NUM_STAGES) + $clog2(CSR_SUPPORT);
+  localparam int MacDataWidth = DATA_WIDTH + COE_DATA_WIDTH + CoeAddrWidth;
 
-  localparam int CoeAddrWidthStage = $clog2(CSR_SUPPORT);
+  localparam int StageAddrWidth = $clog2(CSR_SUPPORT);
+
 
   // Signals
   //========
 
   // Per stage ctrl_coe_* signals
-  logic        [ CoeAddrWidthStage-1:0] ctrl_coe_addr_l;
+  logic        [    StageAddrWidth-1:0] ctrl_coe_addr_l;
   logic        [$clog2(NUM_STAGES)-1:0] ctrl_coe_addr_h;
   logic                                 ctrl_coe_en_s        [  NUM_STAGES];
 
-  // Data delay line
+  // Forward data delay line
   logic signed [        DATA_WIDTH-1:0] forward_data_s       [NUM_STAGES+1];
   logic                                 forward_data_valid_s [NUM_STAGES+1];
 
+  // Backward data delay line
   logic signed [        DATA_WIDTH-1:0] backward_data_s      [NUM_STAGES+1];
   logic                                 backward_data_valid_s[NUM_STAGES+1];
 
   // MAC cascade
-  logic signed [      MacDataWidth-1:0] mac_s                [NUM_STAGES+1];
+  logic signed [      MacDataWidth-1:0] mac_data_s           [NUM_STAGES+1];
+  logic                                 data_valid_d;
 
 
   // Main
   //=====
 
-  // Stages
+  // Forward delay line
 
   assign forward_data_s[0] = data_in;
   assign forward_data_valid_s[0] = data_valid_in;
 
 
-  // TODO:
+  // Backward delay line
+
+  // TODO: Connect backward delay line
   assign backward_data_s[NUM_STAGES] = '0;
   assign backward_data_valid_s[NUM_STAGES] = 1'b0;
 
-  assign mac_s[0] = (1 <<< (SRA_BITS - 1));
+  // Cascade MAC data
+  assign mac_data_s[0] = (1 <<< (SRA_BITS - 1));
 
-  assign ctrl_coe_addr_l = ctrl_coe_addr[CoeAddrWidthStage-1:0];
-  assign ctrl_coe_addr_h = ctrl_coe_addr[CoeAddrWidth-1:CoeAddrWidthStage];
+  // Stages
 
   generate
     for (genvar i = 0; i < NUM_STAGES; i++) begin : g_stage
 
       assign ctrl_coe_en_s[i] = ctrl_coe_en && (ctrl_coe_addr_h == i);
 
-      ch_fir_stage #(
-          .CSR_SUPPORT   (CSR_SUPPORT),
-          .COE_ADDR_WIDTH(CoeAddrWidthStage),
-          .COE_DATA_WIDTH(COE_DATA_WIDTH),
+      fir2_stage #(
+          .HAS_OP        (i == NUM_STAGES - 1),
+          .ADDR_WIDTH    (StageAddrWidth),
           .DATA_WIDTH    (DATA_WIDTH),
+          .COE_DATA_WIDTH(COE_DATA_WIDTH),
           .MAC_DATA_WIDTH(MacDataWidth)
       ) i_stage (
           .clk                    (clk),
           .rst                    (rst),
           //
-          .data_forward_in        (forward_data_s[i]),
-          .data_forward_in_valid  (forward_data_valid_s[i]),
+          .forward_data_in        (forward_data_s[i]),
+          .forward_data_valid_in  (forward_data_valid_s[i]),
           //
-          .data_forward_out       (forward_data_s[i+1]),
-          .data_forward_out_valid (forward_data_valid_s[i+1]),
+          .forward_data_out       (forward_data_s[i+1]),
+          .forward_data_valid_out (forward_data_valid_s[i+1]),
           //
-          .data_backward_in       (backward_data_s[i+1]),
-          .data_backward_in_valid (backward_data_valid_s[i+1]),
+          .backward_data_in       (backward_data_s[i+1]),
+          .backward_data_valid_in (backward_data_valid_s[i+1]),
           //
-          .data_backward_out      (backward_data_s[i]),
-          .data_backward_out_valid(backward_data_valid_s[i]),
+          .backward_data_out      (backward_data_s[i]),
+          .backward_data_valid_out(backward_data_valid_s[i]),
           //
-          .data_mac_in            (mac_s[i]),
-          .data_mac_out           (mac_s[i+1]),
+          .mac_data_in            (mac_data_s[i]),
+          .mac_data_out           (mac_data_s[i+1]),
           //
           .ctrl_clk               (ctrl_clk),
           .ctrl_rst               (ctrl_rst),
-          //
-          .ctrl_loopback          (i == NUM_STAGES - 1),
           //
           .ctrl_coe_en            (ctrl_coe_en_s[i]),
           .ctrl_coe_we            (ctrl_coe_we),
@@ -121,9 +126,49 @@ module ch_fir #(
     end
   endgenerate
 
+  // Output
+
+  shift_regs #(
+      .DATA_WIDTH(1),
+      .DEPTH     (CSR_SUPPORT + NUM_STAGES + 3)
+  ) i_sync_delay (
+      .clk (clk),
+      .cen (1'b1),
+      //
+      .din (data_valid_in),
+      .dout(data_valid_d)
+  );
+
   always_ff @(posedge clk) begin
-    data_out <= mac_s[NUM_STAGES][DATA_WIDTH+SRA_BITS-1:SRA_BITS];
+    data_valid_out <= data_valid_d;
   end
+
+  always_ff @(posedge clk) begin
+    if (data_valid_d) begin
+      data_out <= mac_data_s[NUM_STAGES][DATA_WIDTH+SRA_BITS-1:SRA_BITS];
+    end
+  end
+
+  generate
+    if (DATA_WIDTH + SRA_BITS >= MacDataWidth) begin : g_no_ovf
+
+      // Output is full width, no overflow will happen
+      assign ovf = 'b0;
+
+    end else begin : g_ovf
+
+      always_ff @(posedge clk) begin
+        ovf <= ~(&mac_data_s[NUM_STAGES][MacDataWidth-1:DATA_WIDTH+SRA_BITS-1] ||
+                 &(~mac_data_s[NUM_STAGES][MacDataWidth-1:DATA_WIDTH+SRA_BITS-1]));
+      end
+
+    end
+  endgenerate
+
+  // Coefficients configuration
+
+  assign ctrl_coe_addr_l = ctrl_coe_addr[StageAddrWidth-1:0];
+  assign ctrl_coe_addr_h = ctrl_coe_addr[CoeAddrWidth-1:StageAddrWidth];
 
 endmodule
 
