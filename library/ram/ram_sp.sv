@@ -7,6 +7,7 @@
 module ram_sp #(
     parameter int                     ADDR_WIDTH   = 10,
     parameter int                     DATA_WIDTH   = 32,
+    parameter                         WRITE_MODE   = "READ_FIRST", // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
     parameter int                     READ_LATENCY = 2,   // 1 ~ 3
     parameter bit    [DATA_WIDTH-1:0] INIT_WORD    = '0,
     parameter string                  INIT_FILE    = ""
@@ -24,7 +25,13 @@ module ram_sp #(
   initial begin
     assert (1 <= READ_LATENCY && READ_LATENCY <= 3)
     else begin
-      $error("READ_LATENCY should be within range 1 to 3.");
+      $error("[%m]: Read layency (READ_LATENCY) should be within range 1 to 3, got %d", READ_LATENCY);
+      #1 $finish;
+    end
+
+    assert (WRITE_MODE == "WRITE_FIRST" || WRITE_MODE == "READ_FIRST" || WRITE_MODE == "NO_CHANGE")
+    else begin
+      $error("[%m]: Write mode (WRITE_MODE) should be one of \"WRITE_FIRST\", \"READ_FIRST\" and \"NO_CHANGE\", got %s", WRITE_MODE);
       #1 $finish;
     end
   end
@@ -50,7 +57,7 @@ module ram_sp #(
   // Memory write
 
   always_ff @(posedge clk) begin
-    if (en && we) begin
+    if (en[0] && we) begin
       MEM[addr] <= din;
     end
   end
@@ -61,7 +68,13 @@ module ram_sp #(
     if (rst[0]) begin
       rega[0] <= '0;
     end else if (en[0]) begin
-      rega[0] <= MEM[addr];
+      if ((we == 1'b1) && (WRITE_MODE == "WRITE_FIRST")) begin
+        rega[0] <= din;
+      end else if ((we == 1'b1) && (WRITE_MODE == "NO_CHANGE")) begin
+        rega[0] <= rega[0];
+      end else begin // no we, or write mode is "READ_FIRST"
+        rega[0] <= MEM[addr];
+      end
     end
   end
 

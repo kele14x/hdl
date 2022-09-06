@@ -98,7 +98,7 @@ module tb_fir2;
     for (int i = 0; i < 1000; i++) begin
       for (int j = 0; j < CSR_SUPPORT; j++) begin
         @(posedge clk);
-        data_in <= (i == 100);
+        data_in <= (i == 100) ? 1 : 0;
         data_valid_in <= (j == 0);
       end
     end

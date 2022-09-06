@@ -24,23 +24,26 @@ module fir2_mac #(
   logic signed [A_WIDTH-1:0] ar;
   logic signed [B_WIDTH-1:0] br;
   logic signed [D_WIDTH-1:0] dr;
-  logic signed               opr;
+
+  logic opr, oprr, oprrr;
 
   logic signed [ADWidth-1:0] ad;
   logic signed [P_WIDTH-1:0] mreg;
   logic signed [P_WIDTH-1:0] preg;
 
   always @(posedge clk) begin
-    ar   <= a;
-    br   <= b;
-    dr   <= d;
-    opr  <= op;
-    ad   <= ar + dr;
-    mreg <= ad * br;
-    if (opr == 1'b0) begin
+    ar    <= a;
+    br    <= b;
+    dr    <= d;
+    opr   <= op;
+    oprr  <= opr;
+    oprrr <= oprr;
+    ad    <= ar + dr;
+    mreg  <= ad * br;
+    if (oprrr) begin
       preg <= mreg + pin;
     end else begin
-      preg <= mreg + pin + preg;
+      preg <= mreg + preg;
     end
   end
 
