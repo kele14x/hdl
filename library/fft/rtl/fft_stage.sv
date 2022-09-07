@@ -35,15 +35,15 @@ module fft_stage #(
 
   localparam int LogSizeTwiddle = BIT_REVERSED_INPUT ? LOG_FFT_SIZE : (LOG_FFT_SIZE + 1);
 
-  // If LOG_FFT_SIZE is an even number, we have 2 Buttferfly operator
+  // If LOG_FFT_SIZE is an even number, we have 2 Butterfly operator
   localparam bit HasBf2ii = (LOG_FFT_SIZE % 2 == 0);
 
   // Log2 FFT size of BF2I
   localparam int LogFftSizeBf2i = HasBf2ii ? (LOG_FFT_SIZE - 1) : LOG_FFT_SIZE;
 
-  // Latency of Buffterfly I
+  // Latency of Butterfly I
   localparam int LatencyBf2i  = 2 ** (LogFftSizeBf2i - 1) + 1;
-  // Latency of Buffterly II
+  // Latency of Butterfly II
   localparam int LatencyBf2ii = HasBf2ii ? (2 ** (LOG_FFT_SIZE - 1) + 1) : 0;
   // Latency of Twiddle
   localparam int LatencyTwiddle = 10;

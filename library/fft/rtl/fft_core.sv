@@ -73,7 +73,7 @@ module fft_core #(
   assign data_valid_s[0] = data_valid_in;
   assign data_last_s[0] = data_last_in;
 
-  // Conenct output
+  // Connect output
 
   assign data_i_out = data_i_s[NumStages];
   assign data_q_out = data_q_s[NumStages];
@@ -117,8 +117,8 @@ module fft_core #(
 
       // Bigger FFT could be split into multiple small FFTs. One stage process
       // 4 ^ (i + 1) FFT using two radix-2 butterfly operator. If LOG_FFT_SIZE
-      // is an odd number, the last stage should be a speical stage with only
-      // one radix-2 bufferfly.
+      // is an odd number, the last stage should be a special stage with only
+      // one radix-2 butterfly.
       localparam int StageLogFftSize = BIT_REVERSED_INPUT ? 
         ((2 * i + 2) <= LOG_FFT_SIZE ? (2 * i + 2) : LOG_FFT_SIZE) :
         ((LOG_FFT_SIZE - 2 * i) <= 0 ? 0 : (LOG_FFT_SIZE - 2 * i));
