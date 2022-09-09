@@ -8,6 +8,8 @@
 module ram_tdp_pipe #(
     parameter int                     ADDR_WIDTH     = 10,
     parameter int                     DATA_WIDTH     = 32,
+    parameter string                  WRITE_MODE_A   = "READ_FIRST", // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
+    parameter string                  WRITE_MODE_B   = "READ_FIRST", // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
     parameter int                     READ_LATENCY_A = 2,
     parameter int                     READ_LATENCY_B = 2,
     parameter bit    [DATA_WIDTH-1:0] INIT_WORD      = '0,
@@ -65,6 +67,8 @@ module ram_tdp_pipe #(
   ram_tdp #(
       .ADDR_WIDTH    (ADDR_WIDTH),
       .DATA_WIDTH    (DATA_WIDTH),
+      .WRITE_MODE_A  (WRITE_MODE_A),
+      .WRITE_MODE_B  (WRITE_MODE_B),
       .READ_LATENCY_A(READ_LATENCY_A),
       .READ_LATENCY_B(READ_LATENCY_B),
       .INIT_WORD     (INIT_WORD),

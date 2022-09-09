@@ -11,6 +11,8 @@
 module ram_tdp #(
     parameter int                     ADDR_WIDTH     = 10,
     parameter int                     DATA_WIDTH     = 32,
+    parameter string                  WRITE_MODE_A   = "READ_FIRST", // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
+    parameter string                  WRITE_MODE_B   = "READ_FIRST", // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
     parameter int                     READ_LATENCY_A = 3,
     parameter int                     READ_LATENCY_B = 3,
     parameter bit    [DATA_WIDTH-1:0] INIT_WORD      = '0,
@@ -88,7 +90,13 @@ module ram_tdp #(
     if (rsta[0]) begin
       rega[0] <= '0;
     end else if (ena[0]) begin
-      rega[0] <= MEM[addra];
+      if ((wea == 1'b1) && (WRITE_MODE_A == "WRITE_FIRST")) begin
+        rega[0] <= dina;
+      end else if ((wea == 1'b1) && (WRITE_MODE_A == "NO_CHANGE")) begin
+        rega[0] <= rega[0];
+      end else begin // no wea, or write mode is "READ_FIRST"
+        rega[0] <= MEM[addra];
+      end
     end
   end
 
@@ -98,7 +106,13 @@ module ram_tdp #(
     if (rstb[0]) begin
       regb[0] <= '0;
     end else if (enb[0]) begin
-      regb[0] <= MEM[addrb];
+      if ((web == 1'b1) && (WRITE_MODE_B == "WRITE_FIRST")) begin
+        regb[0] <= dinb;
+      end else if ((web == 1'b1) && (WRITE_MODE_B == "NO_CHANGE")) begin
+        regb[0] <= regb[0];
+      end else begin // no web, or write mode is "READ_FIRST"
+        regb[0] <= MEM[addrb];
+      end
     end
   end
 
