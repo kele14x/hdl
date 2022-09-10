@@ -45,7 +45,7 @@ module ram_sdp #(
 
   // Initializes the memory values to a specified file or to all zeros to match
   // hardware
-  initial begin : p_init
+  initial begin
     for (int i = 0; i < 2 ** ADDR_WIDTH; i++) begin
       MEM[i] = INIT_WORD;
     end
@@ -56,7 +56,7 @@ module ram_sdp #(
 
   // Memory write
 
-  always_ff @(posedge clka) begin
+  always @(posedge clka) begin
     if (ena && wea) begin
       MEM[addra] <= dina;
     end
