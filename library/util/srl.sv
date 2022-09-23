@@ -36,7 +36,7 @@ module srl #(
 
   generate
     for (genvar i = 0; i < DATA_WIDTH; i++) begin : g_srl
-      always_ff @(posedge clk) begin
+      always @(posedge clk) begin
         if (cen) begin
           dsrl[i] <= {dsrl[i][2**ADDR_WIDTH-2:0], din[i]};
         end
