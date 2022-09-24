@@ -1,3 +1,4 @@
+
 // File: fifo_srl.sv
 // Brief: First-word fall-through (FWFT) FIFO.
 `timescale 1 ns / 1 ps
@@ -37,8 +38,16 @@ module fifo_srl #(
   logic full_next;
   logic empty_next;
 
+
   // Main
   //=====
+
+  // The state of FIFO could be determined by `addr` and `empty`.
+  //   Empty     - `empty = 1`, `addr = 0`
+  //   1 data    - `empty = 0`, `addr = 0`
+  //   2~15 data - `empty = 0`, `15 > addr > 0`
+  //   Full      - `empty = 0`, `addr = 15`
+  // Other combination of `empty` and `addr` is invalid
 
   // SRL address pointer
 
@@ -74,24 +83,6 @@ module fifo_srl #(
     end
   end
 
-  // Full flag
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      full <= 1'b1;
-    end else begin
-      full <= full_next;
-    end
-  end
-
-  always_comb begin
-    if (addr_next == '1) begin
-      full_next = 1'b1;
-    end else begin
-      full_next = 1'b0;
-    end
-  end
-
   // Empty flag
 
   always_ff @(posedge clk) begin
@@ -112,12 +103,32 @@ module fifo_srl #(
     end
   end
 
+  // Full flag
+
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      full <= 1'b1;
+    end else begin
+      full <= full_next;
+    end
+  end
+
+  always_comb begin
+    if (addr_next == '1) begin
+      full_next = 1'b1;
+    end else begin
+      full_next = 1'b0;
+    end
+  end
+
+  // Shift
+
   assign shift = (wren && !full);
 
 
   srl #(
       .SIM_INIT  (1'b1),
-      .OUTPU_REG (1'b0),
+      .OUTPUT_REG(1'b0),
       .ADDR_WIDTH(AddrWidth),
       .DATA_WIDTH(DATA_WIDTH)
   ) i_srl (
@@ -132,13 +143,17 @@ module fifo_srl #(
   );
 
 
-  //
+  // synthesis translate_off
 
   covergroup cg @(posedge clk);
     c1: coverpoint addr;
   endgroup
 
   cg cover_inst = new();
+
+  assert property (@(posedge clk) empty |-> addr == '0);
+
+  // synthesis translate_on
 
 endmodule
 
