@@ -43,6 +43,9 @@ module fifo_sync #(
   logic [   AddrWidth-1:0] rd_addr;
   logic [FIFO_LATENCY-1:0] rd_en_mem;
 
+  logic [  FIFO_LATENCY:0] empty_int;
+
+
   // Main
   //=====
 
@@ -89,32 +92,43 @@ module fifo_sync #(
 
   assign rd_addr = rd_count[AddrWidth-1:0];
 
-  always @(*) begin
-    rd_en_mem[0] = !empty && rden;
-  end
-
-  always @(posedge clk) begin
-    for (int i = 1; i < FIFO_LATENCY; i++) begin
-      rd_en_mem[i] <= rd_en_mem[i-1];
+  always_comb begin
+    for (int i = 0; i < FIFO_LATENCY; i++) begin
+      rd_en_mem[i] = !empty_int[i] && (empty_int[i+1] || rden);
     end
   end
 
-
-  // Status flag
+  // Empty flag
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      empty <= 1'b0;
+      empty_int[0] <= 1'b1;
     end else if (wr_count_next == rd_count_next) begin
-      empty <= 1'b1;
+      empty_int[0] <= 1'b1;
     end else begin
-      empty <= 1'b0;
+      empty_int[0] <= 1'b0;
     end
   end
 
   always_ff @(posedge clk) begin
+    for (int i = 1; i <= FIFO_LATENCY; i++) begin
+      if (rst) begin
+        empty_int[i] <= 1'b1;
+      end else if (empty_int[i] || rden) begin
+        empty_int[i] <= empty_int[i-1];
+      end else begin
+        empty_int[i] <= empty_int[i];
+      end
+    end
+  end
+
+  assign empty = empty_int[FIFO_LATENCY];
+
+  // Full flag
+
+  always_ff @(posedge clk) begin
     if (rst) begin
-      full <= 1'b0;
+      full <= 1'b1;
     end else if ((wr_count_next[AddrWidth-1:0] == rd_count_next[AddrWidth-1:0]) &&
       (wr_count_next[AddrWidth] != rd_count_next[AddrWidth])) begin
       full <= 1'b1;
@@ -122,6 +136,8 @@ module fifo_sync #(
       full <= 1'b0;
     end
   end
+
+  // The dual-port memory
 
   ram_sdp #(
       .ADDR_WIDTH  (AddrWidth),

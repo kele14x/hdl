@@ -4,12 +4,13 @@
 //
 `default_nettype none
 
-module tb_fifo_srl;
+module tb_fifo_sync;
 
   // Parameters
 
-  parameter int FIFO_DEPTH = 16;
-  parameter int DATA_WIDTH = 16;
+  parameter int FIFO_DEPTH   = 16;
+  parameter int FIFO_LATENCY = 1;
+  parameter int DATA_WIDTH   = 16;
 
 
   // Signals
@@ -25,15 +26,8 @@ module tb_fifo_srl;
   bit [DATA_WIDTH-1:0] dout;
   bit empty;
 
-  mailbox #(bit [DATA_WIDTH-1:0]) wr_mbx = new;
-  mailbox #(bit [DATA_WIDTH-1:0]) rd_mbx = new;
-
-  covergroup cg @(posedge clk);
-    cp_addr: coverpoint tb_fifo_srl.DUT.addr;
-    cp_empty: coverpoint tb_fifo_srl.DUT.empty;
-  endgroup
-
-  cg cover_inst = new();
+  mailbox #(bit [DATA_WIDTH-1:0]) wr_queue = new;
+  mailbox #(bit [DATA_WIDTH-1:0]) rd_queue = new;
 
 
   // Driver
@@ -45,12 +39,7 @@ module tb_fifo_srl;
 
       // Generate random transaction
       std::randomize(data);
-      assert (std::randomize(
-          pause
-      ) with {
-        pause >= 0;
-        pause < 3;
-      });
+      assert (std::randomize(pause) with { pause >=0; pause < 3; });
 
       // Wait for pause ticks
       repeat (pause) @(posedge clk);
@@ -73,12 +62,7 @@ module tb_fifo_srl;
       int pause;
 
       // Generate random transaction
-      assert (std::randomize(
-          pause
-      ) with {
-        pause >= 0;
-        pause < 3;
-      });
+      assert (std::randomize(pause) with { pause >=0; pause < 3; });
 
       // Wait for pause ticks
       repeat (pause) @(posedge clk);
@@ -102,7 +86,7 @@ module tb_fifo_srl;
     forever begin
       @(posedge clk);
       if (wren && !full) begin
-        wr_mbx.put(din);
+        wr_queue.put(din);
       end
     end
   endtask
@@ -111,11 +95,10 @@ module tb_fifo_srl;
     forever begin
       @(posedge clk);
       if (rden && !empty) begin
-        rd_mbx.put(dout);
+        rd_queue.put(dout);
       end
     end
   endtask
-
 
   // Scoreboard
 
@@ -123,9 +106,11 @@ module tb_fifo_srl;
     forever begin
       bit [DATA_WIDTH-1:0] wr_data;
       bit [DATA_WIDTH-1:0] rd_data;
-      wr_mbx.get(wr_data);
-      rd_mbx.get(rd_data);
-      assert (wr_data == rd_data);
+      wr_queue.get(wr_data);
+      rd_queue.get(rd_data);
+
+      assert (wr_data == rd_data) else
+        $display("din (0x%0x) != dout (0x%0x)", din, dout);
     end
   endtask
 
@@ -170,9 +155,10 @@ module tb_fifo_srl;
   // UUT
   //====
 
-  fifo_srl #(
-      .FIFO_DEPTH(FIFO_DEPTH),
-      .DATA_WIDTH(DATA_WIDTH)
+  fifo_sync #(
+      .FIFO_DEPTH  (FIFO_DEPTH),
+      .FIFO_LATENCY(FIFO_LATENCY),
+      .DATA_WIDTH  (DATA_WIDTH)
   ) DUT (
       .clk  (clk),
       .rst  (rst),
@@ -185,13 +171,6 @@ module tb_fifo_srl;
       .dout (dout),
       .empty(empty)
   );
-
-
-  // Assertions
-  //===========
-
-  assert property (@(posedge clk) tb_fifo_srl.DUT.empty |-> tb_fifo_srl.DUT.addr == '0);
-
 
 endmodule
 

@@ -142,19 +142,6 @@ module fifo_srl #(
       .dout(dout)
   );
 
-
-  // synthesis translate_off
-
-  covergroup cg @(posedge clk);
-    c1: coverpoint addr;
-  endgroup
-
-  cg cover_inst = new();
-
-  assert property (@(posedge clk) empty |-> addr == '0);
-
-  // synthesis translate_on
-
 endmodule
 
 `default_nettype wire

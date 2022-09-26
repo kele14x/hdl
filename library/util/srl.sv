@@ -9,7 +9,7 @@
 
 module srl #(
     parameter bit SIM_INIT   = 1,
-    parameter bit OUTPU_REG  = 1,
+    parameter bit OUTPUT_REG = 1,
     parameter int ADDR_WIDTH = 4,
     parameter int DATA_WIDTH = 8
 ) (
@@ -45,7 +45,7 @@ module srl #(
   endgenerate
 
   generate
-    if (OUTPU_REG == 0) begin : g_no_reg
+    if (OUTPUT_REG == 0) begin : g_no_reg
       for (genvar i = 0; i < DATA_WIDTH; i++) begin
         assign dout[i] = dsrl[i][addr];
       end
