@@ -1,0 +1,10 @@
+../cmult/rtl/cmult.sv
+../ram/ram_sdp.sv
+../shift_ram/shift_ram.flt
+../util/shift_regs.sv
+rtl/fft.sv
+rtl/fft_bf2.sv
+rtl/fft_core.sv
+rtl/fft_stage.sv
+rtl/fft_twiddle.sv
+rtl/fft_twiddle_rom.sv
