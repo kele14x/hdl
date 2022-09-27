@@ -4,7 +4,7 @@
 //
 `timescale 1 ns / 1ps
 
-module tb_fft2;
+module tb_fft;
 
   parameter int LOG_FFT_SIZE = 4;
   parameter int INPUT_DATA_WIDTH = 16;
@@ -81,9 +81,12 @@ module tb_fft2;
   // DUT
   //====
 
-  fft2_bf2 #(
+  fft #(
       .LOG_FFT_SIZE      (LOG_FFT_SIZE),
-      .DATA_WIDTH        (INPUT_DATA_WIDTH)
+      .INPUT_DATA_WIDTH  (INPUT_DATA_WIDTH),
+      .PHASE_WIDTH       (PHASE_WIDTH),
+      .OUTPUT_DATA_WIDTH (OUTPUT_DATA_WIDTH),
+      .BIT_REVERSED_INPUT(BIT_REVERSED_INPUT)
   ) DUT (
       .clk                (clk),
       .rst                (rst),

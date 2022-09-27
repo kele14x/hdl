@@ -1,6 +1,6 @@
 ../cmult/rtl/cmult.sv
-../ram/ram_sdp.sv
-../shift_ram/shift_ram.flt
+../fifo_srl/fifo_srl.flt
+../fifo_sync/fifo_sync.flt
 ../util/shift_regs.sv
 rtl/fft.sv
 rtl/fft_bf2.sv

@@ -4,7 +4,7 @@
 //
 `timescale 1 ns / 1 ps
 
-module fft2_bf2 #(
+module fft_bf2 #(
     parameter int LOG_SIZE   = 4,
     parameter int DATA_WIDTH = 16
 ) (
@@ -108,20 +108,17 @@ module fft2_bf2 #(
   assign delay_in = {delay_sel_in, delay_q_in, delay_i_in};
   assign {delay_sel_out, delay_q_out, delay_i_out} = delay_out;
 
-  fifo_generator_0 i_fifo (
+  fifo_sync i_fifo (
       .clk        (clk),
-      .srst       (rst),
+      .rst        (rst),
       // Write side
       .din        (delay_in),
-      .wr_en      (wr_en),
+      .wren       (wr_en),
       .full       (  /* not used */),
       // Read side
       .dout       (delay_out),
-      .rd_en      (rd_en),
-      .empty      (empty),
-      //
-      .wr_rst_busy(  /* not used */),
-      .rd_rst_busy(  /* not used */)
+      .rden       (rd_en),
+      .empty      (empty)
   );
 
   // Output register
