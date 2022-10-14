@@ -27,27 +27,28 @@ module fft_bf2 #(
   //========
 
   // Counter count from 0 to LOG_FFT_SIZE - 1
-  logic        [  LOG_SIZE-1:0] counter;
+  logic        [    LOG_SIZE-1:0] counter;
 
-  logic                         sel;
+  logic                           sel;
 
-  logic                         wr_en;
-  logic                         rd_en;
-  logic                         empty;
+  logic                           wr_en;
+  logic                           rd_en;
+  logic                           empty;
 
-
-  logic signed [DATA_WIDTH-1:0] data_i_s;
-  logic signed [DATA_WIDTH-1:0] data_q_s;
+  logic signed [  DATA_WIDTH-1:0] data_i_s;
+  logic signed [  DATA_WIDTH-1:0] data_q_s;
   //
-  logic signed [DATA_WIDTH-1:0] delay_i_in;
-  logic signed [DATA_WIDTH-1:0] delay_q_in;
-  logic                         delay_sel_in;
-  logic        [DATA_WIDTH*2:0] delay_in;
+  logic signed [  DATA_WIDTH-1:0] delay_i_in;
+  logic signed [  DATA_WIDTH-1:0] delay_q_in;
+  logic                           delay_sel_in;
+  logic                           delay_last_in;
+  logic        [DATA_WIDTH*2+1:0] delay_in;
   //
-  logic signed [DATA_WIDTH-1:0] delay_i_out;
-  logic signed [DATA_WIDTH-1:0] delay_q_out;
-  logic                         delay_sel_out;
-  logic        [DATA_WIDTH*2:0] delay_out;
+  logic signed [  DATA_WIDTH-1:0] delay_i_out;
+  logic signed [  DATA_WIDTH-1:0] delay_q_out;
+  logic                           delay_sel_out;
+  logic                           delay_last_out;
+  logic        [DATA_WIDTH*2+1:0] delay_out;
 
 
   // State Counter
@@ -104,22 +105,52 @@ module fft_bf2 #(
   // Delay
 
   assign delay_sel_in = sel;
+  assign delay_last_in = data_last_in;
 
-  assign delay_in = {delay_sel_in, delay_q_in, delay_i_in};
-  assign {delay_sel_out, delay_q_out, delay_i_out} = delay_out;
+  assign delay_in = {delay_last_in, delay_sel_in, delay_q_in, delay_i_in};
+  assign {delay_last_out, delay_sel_out, delay_q_out, delay_i_out} = delay_out;
 
-  fifo_sync i_fifo (
-      .clk        (clk),
-      .rst        (rst),
-      // Write side
-      .din        (delay_in),
-      .wren       (wr_en),
-      .full       (  /* not used */),
-      // Read side
-      .dout       (delay_out),
-      .rden       (rd_en),
-      .empty      (empty)
-  );
+  // For smaller FIFO size, choose SRL type for optimazed resource
+  // and lower latency. For big FIFO, choose BRAM based implementation
+  generate
+    if (LOG_SIZE <= 6) begin : g_fifo_sync
+
+      fifo_srl #(
+          .FIFO_DEPTH(2 ** (LOG_SIZE - 1)),
+          .DATA_WIDTH(2 * DATA_WIDTH + 2)
+      ) i_fifo (
+          .clk  (clk),
+          .rst  (rst),
+          // Write side
+          .din  (delay_in),
+          .wren (wr_en),
+          .full (  /* not used */),
+          // Read side
+          .dout (delay_out),
+          .rden (rd_en),
+          .empty(empty)
+      );
+
+    end else begin : g_fifo_srl
+
+      fifo_sync #(
+          .FIFO_DEPTH(2 ** (LOG_SIZE - 1)),
+          .DATA_WIDTH(2 * DATA_WIDTH + 2)
+      ) i_fifo (
+          .clk  (clk),
+          .rst  (rst),
+          // Write side
+          .din  (delay_in),
+          .wren (wr_en),
+          .full (  /* not used */),
+          // Read side
+          .dout (delay_out),
+          .rden (rd_en),
+          .empty(empty)
+      );
+
+    end
+  endgenerate
 
   // Output register
 
@@ -127,7 +158,7 @@ module fft_bf2 #(
     data_i_out     <= data_i_s;
     data_q_out     <= data_q_s;
     data_valid_out <= rd_en;
-    data_last_out  <= rd_en && (counter == '1);
+    data_last_out  <= delay_last_out;
   end
 
 endmodule

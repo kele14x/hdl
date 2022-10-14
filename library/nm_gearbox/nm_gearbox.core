@@ -1,0 +1,31 @@
+CAPI=2:
+name: test:test:nm_gearbox:1.0.0
+description: N/M Gearbox
+
+filesets:
+  rtl:
+    files:
+      - rtl/nm_gearbox.sv
+    file_type: systemVerilogSource
+
+  tb:
+    files:
+      - tb/tb_nm_gearbox.sv
+    file_type: systemVerilogSource
+
+targets:
+  default: &default
+    filesets:
+      - rtl
+    toplevel: nm_gearbox
+
+  sim:
+    <<: *default
+    default_tool: xsim
+    filesets_append:
+     - tb
+    toplevel: tb_nm_gearbox
+
+  synth:
+    <<: *default
+    default_tool: vivado

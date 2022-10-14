@@ -112,14 +112,11 @@ module fft_core #(
   generate
     for (genvar i = 0; i < NumStages; i++) begin : g_stage
 
-      // First stage does not need a twiddle multiplier
-      localparam bit HasTwiddle = (i > 0);
-
       // Bigger FFT could be split into multiple small FFTs. One stage process
       // 4 ^ (i + 1) FFT using two radix-2 butterfly operator. If LOG_FFT_SIZE
       // is an odd number, the last stage should be a special stage with only
       // one radix-2 butterfly.
-      localparam int StageLogFftSize = BIT_REVERSED_INPUT ? 
+      localparam int StageLogFftSize = BIT_REVERSED_INPUT ?
         ((2 * i + 2) <= LOG_FFT_SIZE ? (2 * i + 2) : LOG_FFT_SIZE) :
         ((LOG_FFT_SIZE - 2 * i) <= 0 ? 0 : (LOG_FFT_SIZE - 2 * i));
 
@@ -146,7 +143,6 @@ module fft_core #(
       // FFT stage
 
       fft_stage #(
-          .HAS_TWIDDLE       (HasTwiddle),
           .LOG_FFT_SIZE      (StageLogFftSize),
           .DATA_WIDTH        (StageDataWidth),
           .PHASE_WIDTH       (PHASE_WIDTH),
