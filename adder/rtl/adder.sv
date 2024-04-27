@@ -12,42 +12,48 @@ module adder #(
 ) (
     input var                       clk,
     input var                       rst,
+    //
     input var  signed [A_WIDTH-1:0] a,
     input var  signed [B_WIDTH-1:0] b,
     input var                       sub,
     output var signed [P_WIDTH-1:0] p,
+    //
     output var                      ovf
 );
 
-  localparam integer FullWidth = (A_WIDTH >= B_WIDTH) ? A_WIDTH + 1 : B_WIDTH + 1;
+  localparam int Latency = 1;
+  localparam int FullWidth = (A_WIDTH >= B_WIDTH) ? A_WIDTH + 1 : B_WIDTH + 1;
+  localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
 
-  wire signed [FullWidth-1:0] p_full;
+  localparam logic signed [FullWidth-1:0] Rng = SHIFT > 0 ? 1 << (SHIFT - 1) : 0;
+
+  logic signed [FullWidth-1:0] p_full;
 
   // Full adder without truncate or sign expansion
-  assign p_full = sub ? a - b : a + b;
+  always @(posedge clk) begin
+    p_full <= sub ? a - b : a + b;
+  end
 
   // Sign expansion and truncate
-  always @(posedge clk) begin
-    p <= (p_full >>> SHIFT);
-  end
+  generate
+    if (SignExp > 0) begin : g_no_sgexp
+      assign p = {{SignExp{p_full[FullWidth-1]}}, p_full[FullWidth-1:SHIFT]};
+    end else begin : g_sgexp
+      assign p = p_full[P_WIDTH+SHIFT-1:SHIFT];
+    end
+  endgenerate
 
   // Overflow indicator
   generate
-    if (P_WIDTH + SHIFT >= FullWidth) begin : g_no_ovf
+    if (SignExp >= 0) begin : g_no_ovf
 
       assign ovf = 1'b0;
 
     end else begin : g_ovf
 
-      always @(posedge clk) begin
-        if (p_full[FullWidth-1:P_WIDTH+SHIFT-1] != '0 &&
-          p_full[FullWidth-1:P_WIDTH+SHIFT-1] != '1) begin
-          ovf <= 1'b1;
-        end else begin
-          ovf <= 1'b0;
-        end
+      assign ovf = ~(p_full[FullWidth-1:P_WIDTH+SHIFT-1] == '1 ||
+        p_full[A_WIDTH+B_WIDTH-1:P_WIDTH+SHIFT-1] == '0);
 
-      end
     end
   endgenerate
 

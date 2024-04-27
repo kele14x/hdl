@@ -21,43 +21,43 @@ module mult #(
 );
 
   localparam int Latency = 4;
-  localparam int SignExp = SHIFT + P_WIDTH - A_WIDTH - B_WIDTH;
-  localparam logic signed [A_WIDTH+B_WIDTH-1:0] Rng = SHIFT > 0 ? 1 << (SHIFT - 1) : 0;
+  localparam int FullWidth = A_WIDTH + B_WIDTH;
+  localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
 
-  logic signed [A_WIDTH-1:0] a_d1;
-  logic signed [A_WIDTH-1:0] a_d2;
-  logic signed [A_WIDTH-1:0] a_d3;
+  localparam logic signed [FullWidth-1:0] Rng = SHIFT > 0 ? 1 << (SHIFT - 1) : 0;
 
-  logic signed [B_WIDTH-1:0] b_d1;
-  logic signed [B_WIDTH-1:0] b_d2;
-  logic signed [B_WIDTH-1:0] b_d3;
-
-  logic signed [A_WIDTH+B_WIDTH-1:0] mult;
+  logic signed [  A_WIDTH-1:0] a_d;
+  logic signed [  B_WIDTH-1:0] b_d;
+  logic signed [FullWidth-1:0] m;
+  logic signed [FullWidth-1:0] p_full;
 
   always_ff @(posedge clk) begin
-    a_d1 <= a;
-    a_d2 <= a_d1;
-    a_d3 <= a_d2;
+    a_d <= a;
   end
 
   always_ff @(posedge clk) begin
-    b_d1 <= b;
-    b_d2 <= b_d1;
-    b_d3 <= b_d2;
+    b_d <= b;
   end
 
   always_ff @(posedge clk) begin
-    mult <= a_d3 * b_d3 + Rng;
+    m <= a_d * b_d + Rng;
   end
 
+  // Full multiplier without truncate or sign expansion
+  always_ff @(posedge clk) begin
+    p_full <= m;
+  end
+
+  // Sign expansion and truncate
   generate
     if (SignExp > 0) begin : g_no_sgexp
-      assign p = {{SignExp{mult[A_WIDTH+B_WIDTH-1]}}, mult[A_WIDTH+B_WIDTH-1:SHIFT]};
+      assign p = {{SignExp{p_full[FullWidth-1]}}, p_full[FullWidth-1:SHIFT]};
     end else begin : g_sgexp
-      assign p = mult[SHIFT+P_WIDTH-1:SHIFT];
+      assign p = p_full[P_WIDTH+SHIFT-1:SHIFT];
     end
   endgenerate
 
+  // Overflow indicator
   generate
     if (SignExp >= 0) begin : g_no_ovf
 
@@ -65,8 +65,8 @@ module mult #(
 
     end else begin : g_ovf
 
-      assign ovf = ~(mult[A_WIDTH+B_WIDTH-1:P_WIDTH+SHIFT-1] == '1 ||
-        mult[A_WIDTH+B_WIDTH-1:P_WIDTH+SHIFT-1] == '0);
+      assign ovf = ~(p_full[FullWidth-1:P_WIDTH+SHIFT-1] == '1 ||
+        p_full[A_WIDTH+B_WIDTH-1:P_WIDTH+SHIFT-1] == '0);
 
     end
   endgenerate
