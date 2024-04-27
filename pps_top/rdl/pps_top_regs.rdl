@@ -1,0 +1,169 @@
+// Get time interface
+regfile gettime_regs {
+    default sw = r;
+    default hw = w;
+
+    reg {
+        name = "Second Register High";
+
+        field {
+            name = "Second High";
+        } val[15:0];
+    } sh @ 0x0;
+
+    reg {
+        name = "Second Register Low";
+
+        field {
+            name = "Second Low";
+        } val[31:0];
+    } sl @ 0x4;
+
+    reg {
+        name = "Nanosecond Register";
+
+        field {
+            name = "Nanosecond";
+        } val[31:0];
+    } ns @ 0x8;
+
+    reg {
+        name = "Snap Register";
+
+        field {
+            name = "Snap";
+
+            sw = rw;
+            hw = r;
+        } val[0:0];
+    } v @ 0xC;
+};
+
+// Set time interface
+regfile settime_regs {
+    default sw = rw;
+    default hw = r;
+
+    reg {
+        name = "Second Register High";
+
+        field {
+            name = "Second High";
+        } val[15:0];
+    } sh @ 0x0;
+
+    reg {
+        name = "Second Register Low";
+
+        field {
+            name = "Second Low";
+        } val[31:0];
+    } sl @ 0x4;
+
+    reg {
+        name = "Nanosecond Register";
+
+        field {
+            name = "Nanosecond";
+        } val[31:0];
+    } ns @ 0x8;
+
+    reg {
+        name = "Latch Register";
+
+        field {
+            name = "Latch";
+        } val[0:0];
+    } v @ 0xC;
+};
+
+addrmap pps_top {
+    name = "PPS Top";
+    default sw = rw;
+    default hw = r;
+    default memwidth = 32;
+
+    reg {
+        name = "Version register";
+
+        field {
+            name = "Version";
+
+            sw = r;
+            hw = na;
+        } val[31:0] = 32'h20230922;
+    } version;
+
+    reg {
+        name = "Control register";
+
+        field {
+            name = "Software reset";
+        } rst[0:0] = 1'b0;
+    } ctrl @ 0x4;
+
+    reg {
+        name = "Adjust phase register";
+
+        field {
+            name = "Adjust phase value";
+        } val [31:0];
+    } adj_ns @ 0x10;
+
+    reg {
+        name = "Adjust phase valid register";
+
+        field {
+            name = "Adjust phase value valid";
+        } val [0:0];
+    } adj_valid @ 0x14;
+
+    reg {
+        name = "Frequency control register";
+
+        field {
+            name = "Frequency control value";
+        } val [31:0];
+    } freq @ 0x18;
+
+    gettime_regs gettime @ 0x20;
+    settime_regs settime @ 0x30;
+
+    reg {
+        name = "PPS offset register";
+
+        field {
+            name = "PPS offset value";
+            hw = w;
+        } val [31:0];
+    } pps_offset @ 0x40;
+
+
+    reg {
+        name = "TS counter register";
+
+        field {
+            name = "TS counter value";
+            hw = w;
+        } val [31:0];
+    } ts_cnt @ 0x50;
+
+
+    reg {
+        name = "TS offset register";
+
+        field {
+            name = "TS offset value";
+            hw = w;
+        } val [31:0];
+    } ts_offset_l @ 0x54;
+
+    reg {
+        name = "TS offset register";
+
+        field {
+            name = "TS offset value";
+            hw = w;
+        } val [15:0];
+    } ts_offset_h @ 0x58;
+};

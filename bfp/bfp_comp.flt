@@ -1,0 +1,9 @@
+src/bfp_comp_exp.sv
+src/bfp_comp_gearbox.sv
+src/bfp_comp.sv
+src/bfp_pkg.sv
+src/fifo_srl.sv
+
+tb/tb_bfp_comp.sv
+tb/test_bfp_comp_in.txt
+tb/test_bfp_comp_out.txt
