@@ -25,7 +25,7 @@ module cmult #(
     output var               ovf
 );
 
-  localparam int Latency = 7;
+  localparam int Latency = 6;
   localparam int FullWidth = A_WIDTH + B_WIDTH + 1;
   localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
 
@@ -35,13 +35,11 @@ module cmult #(
   logic signed [A_WIDTH-1:0] ar_dd;
   logic signed [A_WIDTH-1:0] ar_ddd;
   logic signed [A_WIDTH-1:0] ar_dddd;
-  logic signed [A_WIDTH-1:0] ar_ddddd;
 
   logic signed [A_WIDTH-1:0] ai_d;
   logic signed [A_WIDTH-1:0] ai_dd;
   logic signed [A_WIDTH-1:0] ai_ddd;
   logic signed [A_WIDTH-1:0] ai_dddd;
-  logic signed [A_WIDTH-1:0] ai_ddddd;
 
   logic signed [B_WIDTH-1:0] br_d;
   logic signed [B_WIDTH-1:0] br_dd;
@@ -62,7 +60,6 @@ module cmult #(
   logic signed [FullWidth-1:0] pr_int;
   logic signed [FullWidth-1:0] pi_int;
   logic signed [FullWidth-1:0] common;
-  logic signed [FullWidth-1:0] common_d;
   logic signed [FullWidth-1:0] commonr1;
   logic signed [FullWidth-1:0] commonr2;
 
@@ -73,23 +70,18 @@ module cmult #(
     ar_dd    <= ar_d;
     ar_ddd   <= ar_dd;
     ar_dddd  <= ar_ddd;
-    ar_ddddd <= ar_dddd;
     ai_d     <= ai;
     ai_dd    <= ai_d;
     ai_ddd   <= ai_dd;
     ai_dddd  <= ai_ddd;
-    ai_ddddd <= ai_dddd;
     br_d     <= br;
     br_dd    <= br_d;
     br_ddd   <= br_dd;
-    br_dddd  <= br_ddd;
     bi_d     <= bi;
     bi_dd    <= bi_d;
     bi_ddd   <= bi_dd;
-    bi_dddd  <= bi_ddd;
-    common_d <= common;
-    commonr1 <= common_d;
-    commonr2 <= common_d;
+    commonr1 <= common;
+    commonr2 <= common;
   end
 
   // Common factor (ar - ai) x bi, shared for the calculations of the real and imaginary final products
@@ -101,14 +93,14 @@ module cmult #(
 
   // Real product ar * (br - bi) + (ar - ai) * bi = ar * br - ai * bi
   always @(posedge clk) begin
-    addr   <= br_dddd - bi_dddd;
+    addr   <= br_ddd - bi_ddd;
     multr  <= addr * ar_dddd;
     pr_int <= multr + commonr1;
   end
 
   // Imaginary product ai * (br + bi) + (ar - ai) * bi = ai * br + ar + bi
   always @(posedge clk) begin
-    addi   <= br_dddd + bi_dddd;
+    addi   <= br_ddd + bi_ddd;
     multi  <= addi * ai_dddd;
     pi_int <= multi + commonr2;
   end

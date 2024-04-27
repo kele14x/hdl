@@ -56,8 +56,8 @@ module shift_ram #(
     end else if (DEPTH <= SRL_RAM_THRESHOLD || STRUCTURE == "REGISTERS" || STRUCTURE == "SRL") begin : g_srl
 
       delay #(
-          .DATA_WIDTH(DATA_WIDTH),
-          .DEPTH     (DEPTH)
+          .WIDTH(DATA_WIDTH),
+          .DEPTH(DEPTH)
       ) i_delay (
           .clk (clk),
           .cen (cen),

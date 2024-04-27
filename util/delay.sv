@@ -32,7 +32,7 @@ module delay #(
 
     end else begin : g_regs
 
-      logic [DATA_WIDTH-1:0] dregs[DEPTH];
+      logic [WIDTH-1:0] dregs[DEPTH];
 
       initial begin : p_init
         if (SIM_INIT) begin

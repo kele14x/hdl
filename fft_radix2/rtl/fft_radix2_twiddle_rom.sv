@@ -1,10 +1,10 @@
-// File: fft_twiddle_rom.sv
+// File: fft_radix2_twiddle_rom.sv
 // Brief: The twiddle factor rom in FFT algorithm.
 `timescale 1ns / 1ps
 //
 `default_nettype none
 
-module fft_twiddle_rom #(
+module fft_radix2_twiddle_rom #(
     parameter int TWIDDLE_WIDTH = 4,
     parameter int DATA_WIDTH    = 16,
     parameter int PHASE_WIDTH   = 16

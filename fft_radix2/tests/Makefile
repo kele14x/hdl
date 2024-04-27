@@ -1,33 +1,30 @@
-SIM ?= icarus
+SIM ?= questa
 TOPLEVEL_LANG = verilog
 
-FFT_SIZE ?= 16
+LOG_FFT_SIZE ?= 10
 INPUT_DATA_WIDTH ?= 16
 PHASE_WIDTH ?= 16
-OUTPUT_DATA_WIDTH ?= 21
+OUTPUT_DATA_WIDTH ?= 18
 HAS_BITREVERSE ?= 1
 
-VERILOG_SOURCES += $(PWD)/iverilog_dump.v
-VERILOG_SOURCES += $(PWD)/../rtl/fft.v
-VERILOG_SOURCES += $(PWD)/../rtl/fft_bf2.v
-VERILOG_SOURCES += $(PWD)/../rtl/fft_bitreverse.v
-VERILOG_SOURCES += $(PWD)/../rtl/fft_bitreverse_stage.v
-VERILOG_SOURCES += $(PWD)/../rtl/fft_core.v
-VERILOG_SOURCES += $(PWD)/../rtl/fft_stage.v
-VERILOG_SOURCES += $(PWD)/../rtl/fft_twiddle_rom.v
-VERILOG_SOURCES += $(PWD)/../../cmult/rtl/cmult.v
-VERILOG_SOURCES += $(PWD)/../../ram/ram_sdp.v
-VERILOG_SOURCES += $(PWD)/../../shift_ram/rtl/shift_ram.v
-VERILOG_SOURCES += $(PWD)/../../util/delay.v
-VERILOG_SOURCES += $(PWD)/../../util/shift_regs.v
+VERILOG_SOURCES += $(PWD)/../../cmult/rtl/cmult.sv
+VERILOG_SOURCES += $(PWD)/../../ram/rtl/ram_sdp.sv
+VERILOG_SOURCES += $(PWD)/../../shift_ram/rtl/shift_ram.sv
+VERILOG_SOURCES += $(PWD)/../../util/delay.sv
+VERILOG_SOURCES += $(PWD)/../rtl/fft_radix2_bf2.sv
+VERILOG_SOURCES += $(PWD)/../rtl/fft_radix2_core.sv
+VERILOG_SOURCES += $(PWD)/../rtl/fft_radix2_stage.sv
+VERILOG_SOURCES += $(PWD)/../rtl/fft_radix2_twiddle_rom.sv
+VERILOG_SOURCES += $(PWD)/../rtl/fft_radix2_twiddle.sv
+VERILOG_SOURCES += $(PWD)/../rtl/fft_radix2.sv
 
-TOPLEVEL = fft
-COMPILE_ARGS += -Pfft.FFT_SIZE=$(FFT_SIZE)
-COMPILE_ARGS += -Pfft.INPUT_DATA_WIDTH=$(INPUT_DATA_WIDTH)
-COMPILE_ARGS += -Pfft.PHASE_WIDTH=$(PHASE_WIDTH)
-COMPILE_ARGS += -Pfft.OUTPUT_DATA_WIDTH=$(OUTPUT_DATA_WIDTH)
-COMPILE_ARGS += -Pfft.HAS_BITREVERSE=$(HAS_BITREVERSE)
+TOPLEVEL = fft_radix2
+SIM_ARGS += -gLOG_FFT_SIZE=$(LOG_FFT_SIZE)
+SIM_ARGS += -gINPUT_DATA_WIDTH=$(INPUT_DATA_WIDTH)
+SIM_ARGS += -gPHASE_WIDTH=$(PHASE_WIDTH)
+SIM_ARGS += -gOUTPUT_DATA_WIDTH=$(OUTPUT_DATA_WIDTH)
+SIM_ARGS += -gHAS_BITREVERSE=$(HAS_BITREVERSE)
 
-MODULE = test_fft
+MODULE = test_fft_radix2
 
 include $(shell cocotb-config --makefiles)/Makefile.sim

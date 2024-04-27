@@ -1,10 +1,10 @@
-// File: fft.sv
-// Brief: Top of FFT module.
+// File: fft_radix2.sv
+// Brief: Top of FFT Radix-2 module
 `default_nettype none
 //
 `timescale 1 ns / 1 ps
 
-module fft #(
+module fft_radix2 #(
     // Log2 of FFT size
     parameter int LOG_FFT_SIZE       = 4,
     // Input data width for I and Q
@@ -140,7 +140,7 @@ module fft #(
 
   // The FFT Core
 
-  fft_core #(
+  fft_radix2_core #(
       .LOG_FFT_SIZE      (LOG_FFT_SIZE),
       .INPUT_DATA_WIDTH  (INPUT_DATA_WIDTH),
       .PHASE_WIDTH       (PHASE_WIDTH),

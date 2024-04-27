@@ -1,10 +1,10 @@
-// File: fft_bf2.sv
+// File: fft_radix2_bf2.sv
 // Brief: Radix-2 Butterfly operator for FFT.
 `default_nettype none
 //
 `timescale 1 ns / 1 ps
 
-module fft_bf2 #(
+module fft_radix2_bf2 #(
     parameter int LOG_SIZE   = 4,
     parameter bit HAS_NJ     = 0,
     parameter int DATA_WIDTH = 16

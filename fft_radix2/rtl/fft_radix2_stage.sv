@@ -1,4 +1,4 @@
-// File: fft_stage.v
+// File: fft_radix2_stage.v
 // Brief: FFT process stage. Each stage includes:
 //          - 1 Twiddler (twidder factor ROM and complex multiplier)
 //          - 1 or 2 Butterfly operator
@@ -6,7 +6,7 @@
 //
 `default_nettype none
 
-module fft_stage #(
+module fft_radix2_stage #(
     parameter bit HAS_TWIDDLE        = 0,
     parameter int LOG_FFT_SIZE       = 4,
     parameter int DATA_WIDTH         = 16,
@@ -71,7 +71,7 @@ module fft_stage #(
   generate
     if (HAS_TWIDDLE) begin : g_twiddle
 
-      fft_twiddle #(
+      fft_radix2_twiddle #(
           .LOG_SIZE   (LogSizeTwiddle),
           .DATA_WIDTH (DATA_WIDTH),
           .PHASE_WIDTH(PHASE_WIDTH)
@@ -93,7 +93,7 @@ module fft_stage #(
       );
 
     end else begin : g_no_twiddle
-      
+
       assign data_i_twiddle     = data_i_in;
       assign data_q_twiddle     = data_q_in;
       assign data_valid_twiddle = data_valid_in;
@@ -106,7 +106,7 @@ module fft_stage #(
 
   // The butterfly operator
 
-  fft_bf2 #(
+  fft_radix2_bf2 #(
       .LOG_SIZE  (LogFftSizeBf2i),
       .HAS_NJ    (1'b0),
       .DATA_WIDTH(DATA_WIDTH)
@@ -128,7 +128,7 @@ module fft_stage #(
   generate
     if (HasBf2ii) begin : g_bf2ii
 
-      fft_bf2 #(
+      fft_radix2_bf2 #(
           .LOG_SIZE  (LOG_FFT_SIZE),
           .HAS_NJ    (1'b1),
           .DATA_WIDTH(DATA_WIDTH + 1)
