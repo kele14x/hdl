@@ -112,10 +112,10 @@ module nlf #(
   assign signal_in = {data_q_in, data_i_in};
 
   // Add 3 taps delay since LUT adds 3 ticks latency
-  shift_regs #(
+  delay #(
       .DATA_WIDTH (DATA_WIDTH * 2),
       .DEPTH      (3)
-  ) i_shift_regs (
+  ) i_delay (
       .clk (clk),
       .cen (1'b1),
       .din (signal_in),

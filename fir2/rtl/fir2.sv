@@ -158,7 +158,7 @@ module fir2 #(
 
   // Output
 
-  shift_regs #(
+  delay #(
       .DATA_WIDTH(1),
       .DEPTH     (6)
   ) i_sync_delay (

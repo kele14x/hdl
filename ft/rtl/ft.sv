@@ -81,7 +81,7 @@ module ft #(
       .ovf(  /* not used */)
   );
 
-  shift_regs #(
+  delay #(
       .DATA_WIDTH(1),
       .DEPTH     (8)
   ) i_delay_sync (

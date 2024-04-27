@@ -61,7 +61,7 @@ module fft_twiddle #(
 
 
   // Twiddle is twiddle factor index
-  generate 
+  generate
     if (LOG_SIZE % 2 == 0) begin : g_even_size
       always_comb begin
         twiddle = {counter[LOG_SIZE-2], counter[LOG_SIZE-1]} * counter[LOG_SIZE-3:0];
@@ -73,7 +73,7 @@ module fft_twiddle #(
     end
   endgenerate
 
-  shift_regs #(
+  delay #(
       .DATA_WIDTH(DATA_WIDTH * 2),
       .DEPTH     (2)
   ) i_data_delay (
@@ -84,7 +84,7 @@ module fft_twiddle #(
       .dout({data_q_s, data_i_s})
   );
 
-  shift_regs #(
+  delay #(
       .DATA_WIDTH(2),
       .DEPTH     (10)
   ) i_valid_delay (

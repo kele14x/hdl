@@ -84,7 +84,7 @@ module dummy_source #(
   always_ff @(posedge clk) begin
     if (rst || symbol_start) begin
       sample_counter <= 0;
-    end else if (counter_valid) begin 
+    end else if (counter_valid) begin
       if (channel_counter == channel_counter_max) begin
         if (sample_counter == sample_counter_max) begin
           sample_counter <= '0;
@@ -190,7 +190,7 @@ module dummy_source #(
 
   // Output
 
-  shift_regs #(
+  delay #(
       .DATA_WIDTH(8),
       .DEPTH     (Latency)
   ) i_delay_sync (

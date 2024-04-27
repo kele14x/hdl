@@ -54,7 +54,7 @@ module hb_up2 #(
   // Main
   //=====
 
-  shift_regs #(
+  delay #(
       .DATA_WIDTH(DATA_WIDTH),
       .DEPTH     (ImpulseLatency)
   ) i_p0_delay (

@@ -53,7 +53,7 @@ module fir_stage #(
   // Main
   //=====
 
-  shift_regs #(
+  delay #(
       .DATA_WIDTH(DATA_WIDTH),
       .DEPTH     (FORWARD_DELAY)
   ) i_forward_delay (
@@ -66,7 +66,7 @@ module fir_stage #(
 
   assign backward_data_s = LOOPBACK ? forward_data_out : backward_data_in;
 
-  shift_regs #(
+  delay #(
       .DATA_WIDTH(DATA_WIDTH),
       .DEPTH     (BACKWARD_DELAY)
   ) i_backward_delay (

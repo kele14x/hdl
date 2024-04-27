@@ -110,7 +110,7 @@ module fir2_stage #(
   // In fact all DSP share the same the same state. But to reduce the fan out
   // of sync signal, we delay the sync signal for N ticks and pass it to next
   // stage.
-  shift_regs #(
+  delay #(
       .DATA_WIDTH(1),
       .DEPTH     (CSR_SUPPORT)
   ) i_sync_delay (

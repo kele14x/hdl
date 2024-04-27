@@ -2,7 +2,7 @@
 ../cmult_chain/cmult_chain.flt
 ../ram/ram_tdp.sv
 ../ram/ram_tdp_pipe.sv
-../util/shift_regs.sv
+../util/delay.sv
 ../util/srl.sv
 rtl/nlf.sv
 rtl/nlf_core.sv

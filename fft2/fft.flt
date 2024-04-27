@@ -1,7 +1,7 @@
 ../cmult/rtl/cmult.sv
 ../fifo_srl/fifo_srl.flt
 ../fifo_sync/fifo_sync.flt
-../util/shift_regs.sv
+../util/delay.sv
 rtl/fft.sv
 rtl/fft_bf2.sv
 rtl/fft_core.sv

@@ -187,7 +187,7 @@ module fir #(
     end
   endgenerate
 
-  shift_regs #(
+  delay #(
       .DATA_WIDTH(1),
       .DEPTH     (7)
   ) i_sync_delay (
