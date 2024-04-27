@@ -27,19 +27,19 @@ module adder #(
 
   localparam logic signed [FullWidth-1:0] Rng = SHIFT > 0 ? 1 << (SHIFT - 1) : 0;
 
-  logic signed [FullWidth-1:0] p_full;
+  logic signed [FullWidth-1:0] p_int;
 
   // Full adder without truncate or sign expansion
   always @(posedge clk) begin
-    p_full <= sub ? a - b : a + b;
+    p_int <= sub ? a - b : a + b;
   end
 
   // Sign expansion and truncate
   generate
     if (SignExp > 0) begin : g_no_sgexp
-      assign p = {{SignExp{p_full[FullWidth-1]}}, p_full[FullWidth-1:SHIFT]};
+      assign p = {{SignExp{p_int[FullWidth-1]}}, p_int[FullWidth-1:SHIFT]};
     end else begin : g_sgexp
-      assign p = p_full[P_WIDTH+SHIFT-1:SHIFT];
+      assign p = p_int[P_WIDTH+SHIFT-1:SHIFT];
     end
   endgenerate
 
@@ -51,8 +51,8 @@ module adder #(
 
     end else begin : g_ovf
 
-      assign ovf = ~(p_full[FullWidth-1:P_WIDTH+SHIFT-1] == '1 ||
-        p_full[A_WIDTH+B_WIDTH-1:P_WIDTH+SHIFT-1] == '0);
+      assign ovf = ~(p_int[FullWidth-1:P_WIDTH+SHIFT-1] == '1 ||
+        p_int[A_WIDTH+B_WIDTH-1:P_WIDTH+SHIFT-1] == '0);
 
     end
   endgenerate

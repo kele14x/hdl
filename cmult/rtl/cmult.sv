@@ -26,8 +26,10 @@ module cmult #(
 );
 
   localparam int Latency = 7;
-  localparam int SignExp = SHIFT + P_WIDTH - A_WIDTH - B_WIDTH - 1;
-  localparam logic signed [A_WIDTH+B_WIDTH:0] Rng = SHIFT == 0 ? '0 : (1 << (SHIFT - 1));
+  localparam int FullWidth = A_WIDTH + B_WIDTH + 1;
+  localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
+
+  localparam logic signed [FullWidth-1:0] Rng = SHIFT == 0 ? '0 : (1 << (SHIFT - 1));
 
   logic signed [A_WIDTH-1:0] ar_d;
   logic signed [A_WIDTH-1:0] ar_dd;
@@ -54,15 +56,15 @@ module cmult #(
   logic signed [B_WIDTH:0] addr;
   logic signed [B_WIDTH:0] addi;
 
-  logic signed [A_WIDTH+B_WIDTH:0] mult0;
-  logic signed [A_WIDTH+B_WIDTH:0] multr;
-  logic signed [A_WIDTH+B_WIDTH:0] multi;
-  logic signed [A_WIDTH+B_WIDTH:0] pr_int;
-  logic signed [A_WIDTH+B_WIDTH:0] pi_int;
-  logic signed [A_WIDTH+B_WIDTH:0] common;
-  logic signed [A_WIDTH+B_WIDTH:0] common_d;
-  logic signed [A_WIDTH+B_WIDTH:0] commonr1;
-  logic signed [A_WIDTH+B_WIDTH:0] commonr2;
+  logic signed [FullWidth-1:0] mult0;
+  logic signed [FullWidth-1:0] multr;
+  logic signed [FullWidth-1:0] multi;
+  logic signed [FullWidth-1:0] pr_int;
+  logic signed [FullWidth-1:0] pi_int;
+  logic signed [FullWidth-1:0] common;
+  logic signed [FullWidth-1:0] common_d;
+  logic signed [FullWidth-1:0] commonr1;
+  logic signed [FullWidth-1:0] commonr2;
 
   // Delay taps, tools will automatically absorb registers into DSP and
   // duplicate if needed
@@ -113,8 +115,8 @@ module cmult #(
 
   generate
     if (SignExp > 0) begin : g_no_sgexp
-      assign pr = {{SignExp{pr_int[A_WIDTH+B_WIDTH]}}, pr_int[A_WIDTH+B_WIDTH:SHIFT]};
-      assign pi = {{SignExp{pr_int[A_WIDTH+B_WIDTH]}}, pi_int[A_WIDTH+B_WIDTH:SHIFT]};
+      assign pr = {{SignExp{pr_int[FullWidth-1]}}, pr_int[FullWidth-1:SHIFT]};
+      assign pi = {{SignExp{pr_int[FullWidth-1]}}, pi_int[FullWidth-1:SHIFT]};
     end else begin : g_sgexp
       assign pr = pr_int[SHIFT+P_WIDTH-1:SHIFT];
       assign pi = pi_int[SHIFT+P_WIDTH-1:SHIFT];
@@ -129,10 +131,10 @@ module cmult #(
     end else begin : g_ovf
 
       assign ovf =
-        ~(pr_int[A_WIDTH+B_WIDTH:P_WIDTH+SHIFT-1] == '1 ||
-        pr_int[A_WIDTH+B_WIDTH:P_WIDTH+SHIFT-1] == '0) ||
-        ~(pi_int[A_WIDTH+B_WIDTH:P_WIDTH+SHIFT-1] == '1 ||
-        pi_int[A_WIDTH+B_WIDTH:P_WIDTH+SHIFT-1] == '0);
+        ~(pr_int[FullWidth-1:P_WIDTH+SHIFT-1] == '1 ||
+        pr_int[FullWidth-1:P_WIDTH+SHIFT-1] == '0) ||
+        ~(pi_int[FullWidth-1:P_WIDTH+SHIFT-1] == '1 ||
+        pi_int[FullWidth-1:P_WIDTH+SHIFT-1] == '0);
 
     end
   endgenerate

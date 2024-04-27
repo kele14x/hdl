@@ -20,7 +20,7 @@ module mult #(
     output var               ovf
 );
 
-  localparam int Latency = 4;
+  localparam int Latency = 3;
   localparam int FullWidth = A_WIDTH + B_WIDTH;
   localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
 
@@ -29,7 +29,7 @@ module mult #(
   logic signed [  A_WIDTH-1:0] a_d;
   logic signed [  B_WIDTH-1:0] b_d;
   logic signed [FullWidth-1:0] m;
-  logic signed [FullWidth-1:0] p_full;
+  logic signed [FullWidth-1:0] p_int;
 
   always_ff @(posedge clk) begin
     a_d <= a;
@@ -45,15 +45,15 @@ module mult #(
 
   // Full multiplier without truncate or sign expansion
   always_ff @(posedge clk) begin
-    p_full <= m;
+    p_int <= m;
   end
 
   // Sign expansion and truncate
   generate
     if (SignExp > 0) begin : g_no_sgexp
-      assign p = {{SignExp{p_full[FullWidth-1]}}, p_full[FullWidth-1:SHIFT]};
+      assign p = {{SignExp{p_int[FullWidth-1]}}, p_int[FullWidth-1:SHIFT]};
     end else begin : g_sgexp
-      assign p = p_full[P_WIDTH+SHIFT-1:SHIFT];
+      assign p = p_int[P_WIDTH+SHIFT-1:SHIFT];
     end
   endgenerate
 
@@ -65,8 +65,8 @@ module mult #(
 
     end else begin : g_ovf
 
-      assign ovf = ~(p_full[FullWidth-1:P_WIDTH+SHIFT-1] == '1 ||
-        p_full[A_WIDTH+B_WIDTH-1:P_WIDTH+SHIFT-1] == '0);
+      assign ovf = ~(p_int[FullWidth-1:P_WIDTH+SHIFT-1] == '1 ||
+        p_int[A_WIDTH+B_WIDTH-1:P_WIDTH+SHIFT-1] == '0);
 
     end
   endgenerate
