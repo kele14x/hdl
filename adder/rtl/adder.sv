@@ -5,10 +5,10 @@
 `default_nettype none
 
 module adder #(
-    parameter int A_WIDTH  = 16,
-    parameter int B_WIDTH  = 16,
-    parameter int P_WIDTH  = 17,
-    parameter int SRA_BITS = 0
+    parameter int A_WIDTH = 16,
+    parameter int B_WIDTH = 16,
+    parameter int P_WIDTH = 17,
+    parameter int SHIFT   = 0
 ) (
     input var                       clk,
     input var                       rst,
@@ -28,23 +28,25 @@ module adder #(
 
   // Sign expansion and truncate
   always @(posedge clk) begin
-    p <= (p_full >>> SRA_BITS);
+    p <= (p_full >>> SHIFT);
   end
 
   // Overflow indicator
   generate
-    if (P_WIDTH + SRA_BITS >= FullWidth) begin : g_no_ovf
-      initial begin
-        ovf = 1'b0;
-      end
+    if (P_WIDTH + SHIFT >= FullWidth) begin : g_no_ovf
+
+      assign ovf = 1'b0;
+
     end else begin : g_ovf
+
       always @(posedge clk) begin
-        if (p_full[FullWidth-1:P_WIDTH+SRA_BITS-1] != '0 &&
-          p_full[FullWidth-1:P_WIDTH+SRA_BITS-1] != '1) begin
+        if (p_full[FullWidth-1:P_WIDTH+SHIFT-1] != '0 &&
+          p_full[FullWidth-1:P_WIDTH+SHIFT-1] != '1) begin
           ovf <= 1'b1;
         end else begin
           ovf <= 1'b0;
         end
+
       end
     end
   endgenerate

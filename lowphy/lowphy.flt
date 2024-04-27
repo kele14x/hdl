@@ -1,0 +1,13 @@
+ip/dds_compiler/dds_compiler.xci
+ip/ifft_1ch_4k_p/ifft_1ch_4k_p.xci
+src/lowphy_conv.sv
+src/lowphy_fft.sv
+src/lowphy_fft_in_buf.sv
+src/lowphy_ifft.sv
+src/lowphy_ifft_out_buf.sv
+src/lowphy_phase_comp.sv
+src/lowphy_regs.v
+src/lowphy_top.sv
+src/lowphy_transform.sv
+../common/rtl/complex_mult.sv
+../common/rtl/delay.sv

@@ -1,0 +1,16 @@
+addrmap lowphy {
+    name = "Low PHY";
+    default sw = rw;
+    default hw = r;
+    default memwidth = 32;
+
+    external mem {
+        mementries = 14;
+        sw = rw;
+    } dl_phase_comp @ 0x100;
+
+    external mem {
+        mementries = 14;
+        sw = rw;
+    } ul_phase_comp @ 0x140;
+};
