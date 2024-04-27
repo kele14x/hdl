@@ -5,10 +5,10 @@
 `default_nettype none
 
 module cmult #(
-    parameter int A_WIDTH  = 16,
-    parameter int B_WIDTH  = 16,
-    parameter int P_WIDTH  = 16,
-    parameter int SRA_BITS = 15
+    parameter int A_WIDTH = 16,
+    parameter int B_WIDTH = 16,
+    parameter int P_WIDTH = 16,
+    parameter int SHIFT   = 15
 ) (
     input var                clk,
     input var                rst,
@@ -25,19 +25,44 @@ module cmult #(
     output var               ovf
 );
 
+  localparam int Latency = 7;
+  localparam int SignExp = SHIFT + P_WIDTH - A_WIDTH - B_WIDTH - 1;
+  localparam logic signed [A_WIDTH+B_WIDTH:0] Rng = SHIFT == 0 ? '0 : (1 << (SHIFT - 1));
 
-  localparam int Latency = 8;
+  logic signed [A_WIDTH-1:0] ar_d;
+  logic signed [A_WIDTH-1:0] ar_dd;
+  logic signed [A_WIDTH-1:0] ar_ddd;
+  logic signed [A_WIDTH-1:0] ar_dddd;
+  logic signed [A_WIDTH-1:0] ar_ddddd;
 
-  logic signed [A_WIDTH-1:0] ar_d, ar_dd, ar_ddd, ar_dddd, ar_ddddd;
-  logic signed [A_WIDTH-1:0] ai_d, ai_dd, ai_ddd, ai_dddd, ai_ddddd;
+  logic signed [A_WIDTH-1:0] ai_d;
+  logic signed [A_WIDTH-1:0] ai_dd;
+  logic signed [A_WIDTH-1:0] ai_ddd;
+  logic signed [A_WIDTH-1:0] ai_dddd;
+  logic signed [A_WIDTH-1:0] ai_ddddd;
 
-  logic signed [B_WIDTH-1:0] bi_d, bi_dd, bi_ddd, bi_dddd;
-  logic signed [B_WIDTH-1:0] br_d, br_dd, br_ddd, br_dddd;
+  logic signed [B_WIDTH-1:0] br_d;
+  logic signed [B_WIDTH-1:0] br_dd;
+  logic signed [B_WIDTH-1:0] br_ddd;
+
+  logic signed [B_WIDTH-1:0] bi_d;
+  logic signed [B_WIDTH-1:0] bi_dd;
+  logic signed [B_WIDTH-1:0] bi_ddd;
 
   logic signed [A_WIDTH:0] addcommon;
-  logic signed [B_WIDTH:0] addr, addi;
-  logic signed [A_WIDTH+B_WIDTH:0] mult0, multr, multi, pr_int, pi_int;
-  logic signed [A_WIDTH+B_WIDTH:0] common, common_d, commonr1, commonr2;
+
+  logic signed [B_WIDTH:0] addr;
+  logic signed [B_WIDTH:0] addi;
+
+  logic signed [A_WIDTH+B_WIDTH:0] mult0;
+  logic signed [A_WIDTH+B_WIDTH:0] multr;
+  logic signed [A_WIDTH+B_WIDTH:0] multi;
+  logic signed [A_WIDTH+B_WIDTH:0] pr_int;
+  logic signed [A_WIDTH+B_WIDTH:0] pi_int;
+  logic signed [A_WIDTH+B_WIDTH:0] common;
+  logic signed [A_WIDTH+B_WIDTH:0] common_d;
+  logic signed [A_WIDTH+B_WIDTH:0] commonr1;
+  logic signed [A_WIDTH+B_WIDTH:0] commonr2;
 
   // Delay taps, tools will automatically absorb registers into DSP and
   // duplicate if needed
@@ -65,57 +90,49 @@ module cmult #(
     commonr2 <= common_d;
   end
 
-  // DSP1
-  // Common factor (ar - ai) * bi, shared for the calculations of the real and
-  // imaginary final products
-  always_ff @(posedge clk) begin
+  // Common factor (ar - ai) x bi, shared for the calculations of the real and imaginary final products
+  always @(posedge clk) begin
     addcommon <= ar_d - ai_d;
     mult0     <= addcommon * bi_dd;
-    common    <= mult0 + (1 << (SRA_BITS - 1));
+    common    <= mult0 + Rng;
   end
 
-  // DSP2
   // Real product ar * (br - bi) + (ar - ai) * bi = ar * br - ai * bi
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     addr   <= br_dddd - bi_dddd;
-    multr  <= addr * ar_ddddd;
+    multr  <= addr * ar_dddd;
     pr_int <= multr + commonr1;
   end
 
-  // DSP3
   // Imaginary product ai * (br + bi) + (ar - ai) * bi = ai * br + ar + bi
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     addi   <= br_dddd + bi_dddd;
-    multi  <= addi * ai_ddddd;
+    multi  <= addi * ai_dddd;
     pi_int <= multi + commonr2;
   end
 
-  always_ff @(posedge clk) begin
-    pr <= pr_int[P_WIDTH+SRA_BITS-1:SRA_BITS];
-    pi <= pi_int[P_WIDTH+SRA_BITS-1:SRA_BITS];
-  end
+  generate
+    if (SignExp > 0) begin : g_no_sgexp
+      assign pr = {{SignExp{pr_int[A_WIDTH+B_WIDTH]}}, pr_int[A_WIDTH+B_WIDTH:SHIFT]};
+      assign pi = {{SignExp{pr_int[A_WIDTH+B_WIDTH]}}, pi_int[A_WIDTH+B_WIDTH:SHIFT]};
+    end else begin : g_sgexp
+      assign pr = pr_int[SHIFT+P_WIDTH-1:SHIFT];
+      assign pi = pi_int[SHIFT+P_WIDTH-1:SHIFT];
+    end
+  endgenerate
 
   generate
-    if (P_WIDTH + SRA_BITS >= A_WIDTH + B_WIDTH + 1) begin : g_no_ovf
+    if (SignExp >= 0) begin : g_no_ovf
 
-      // Output is full width, no overflow will happen
-      initial begin
-        ovf = '0;
-      end
+      assign ovf = 1'b0;
 
     end else begin : g_ovf
 
-      always_ff @(posedge clk) begin
-        if (pr_int[A_WIDTH+B_WIDTH:P_WIDTH+SRA_BITS-1] != '0 &&
-          pr_int[A_WIDTH+B_WIDTH:P_WIDTH+SRA_BITS-1] != '1) begin
-          ovf <= 1'b1;
-        end else if (pi_int[A_WIDTH+B_WIDTH:P_WIDTH+SRA_BITS-1] != '0 &&
-          pi_int[A_WIDTH+B_WIDTH:P_WIDTH+SRA_BITS-1] != '1) begin
-          ovf <= 1'b1;
-        end else begin
-          ovf <= 1'b0;
-        end
-      end
+      assign ovf =
+        ~(pr_int[A_WIDTH+B_WIDTH:P_WIDTH+SHIFT-1] == '1 ||
+        pr_int[A_WIDTH+B_WIDTH:P_WIDTH+SHIFT-1] == '0) ||
+        ~(pi_int[A_WIDTH+B_WIDTH:P_WIDTH+SHIFT-1] == '1 ||
+        pi_int[A_WIDTH+B_WIDTH:P_WIDTH+SHIFT-1] == '0);
 
     end
   endgenerate
