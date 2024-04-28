@@ -1,5 +1,9 @@
 // File: axis_if.sv
 // Brief: AXI4-Stream interface definition.
+
+`ifndef __AXI4L_IF__
+`define __AXI4L_IF__
+
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
@@ -52,3 +56,4 @@ interface axi4s_if #(
 endinterface
 
 `default_nettype wire
+`endif

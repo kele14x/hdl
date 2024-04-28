@@ -1,11 +1,14 @@
 // File: axi4l_if.sv
 // Brief: Interface of AXI4-Lite interface.
+
+`ifndef __AXI4L_IF__
+`define __AXI4L_IF__
+
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
 
 interface axi4l_if #(
-    parameter int HAS_ACLKEN  = 0,
     parameter int TADDR_WIDTH = 32,
     parameter int TDATA_WIDTH = 32
 ) (
@@ -56,6 +59,7 @@ interface axi4l_if #(
       input awready, wready, bresp, bvalid, arready, rdata, rresp, rvalid
   );
 
-endinterface  // axi4l_if
+endinterface : axi4l_if
 
 `default_nettype wire
+`endif
