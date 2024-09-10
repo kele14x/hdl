@@ -11,6 +11,8 @@ module nco #(
     parameter int                            PHASE_ENTRIES        = 3072,
     // Output date width
     parameter int                            DATA_WIDTH           = 16,
+    // Parallel output (multi phase)
+    parameter int                            NUM_PARALLEL         = 1,
     // Initial state of LFSR, none zero state
     parameter bit [PHASE_FRACTION_WIDTH-1:0] LFSR_INITIAL         = 20'hFFFFF,
     // Polynomial of LFSR
@@ -21,8 +23,8 @@ module nco #(
     //
     input var                                                          sync,
     //
-    output var signed [                                DATA_WIDTH-1:0] cos,
-    output var signed [                                DATA_WIDTH-1:0] sin,
+    output var signed [                                DATA_WIDTH-1:0] cos      [NUM_PARALLEL],
+    output var signed [                                DATA_WIDTH-1:0] sin      [NUM_PARALLEL],
     //
     input var         [$clog2(PHASE_ENTRIES)+PHASE_FRACTION_WIDTH-1:0] ctrl_poff,
     input var         [$clog2(PHASE_ENTRIES)+PHASE_FRACTION_WIDTH-1:0] ctrl_pinc
@@ -63,8 +65,9 @@ module nco #(
   initial begin
     assert (0 <= PHASE_FRACTION_WIDTH && PHASE_FRACTION_WIDTH <= 20)
     else begin
-      $error("[%m]: Phase fraction word width (PHASE_FRACTION_WIDTH) must be within the range 0 to 20, got %d.",
-             PHASE_FRACTION_WIDTH);
+      $error(
+          "[%m]: Phase fraction word width (PHASE_FRACTION_WIDTH) must be within the range 0 to 20, got %d.",
+          PHASE_FRACTION_WIDTH);
       #1 $finish;
     end
 
@@ -173,13 +176,13 @@ module nco #(
     phase_cos = phase_int;
   end
 
-  // sin(x) = cos(x - pi/2), when x >= pi/2
-  // sin(x) = cos(x + 3*pi/2), when x < pi/2
+  // sin(-x) = cos(x + pi/2), when x < 3*pi/2
+  // sin(-x) = cos(x - 3*pi/2), when x >= 3*pi/2
   always_comb begin
-    if (phase_int < PhasePi2) begin
-      phase_sin = phase_int + Phase3Pi2;
+    if (phase_int < Phase3Pi2) begin
+      phase_sin = phase_int + PhasePi2;
     end else begin
-      phase_sin = phase_int - PhasePi2;
+      phase_sin = phase_int - Phase3Pi2;
     end
   end
 
@@ -195,22 +198,30 @@ module nco #(
 
   // Phase to Cosine/sine LUT
 
-  nco_lut #(
-      .PHASE_ENTRIES(PHASE_ENTRIES),
-      .DATA_WIDTH   (DATA_WIDTH)
-  ) i_lut (
-      .clk  (clk),
-      //
-      .rsta (1'b0),
-      .ena  (1'b1),
-      .addra(addr_cos),
-      .douta(cos),
-      //
-      .rstb (1'b0),
-      .enb  (1'b1),
-      .addrb(addr_sin),
-      .doutb(sin)
-  );
+  generate
+    for (genvar i = 0; i < NUM_PARALLEL; i++) begin : g_lut
+
+      nco_lut #(
+          .NUM_PARALLEL  (NUM_PARALLEL),
+          .INDEX_PARALLEL(i),
+          .PHASE_ENTRIES (PHASE_ENTRIES),
+          .DATA_WIDTH    (DATA_WIDTH)
+      ) i_lut (
+          .clk  (clk),
+          //
+          .rsta (1'b0),
+          .ena  (1'b1),
+          .addra(addr_cos),
+          .douta(cos[i]),
+          //
+          .rstb (1'b0),
+          .enb  (1'b1),
+          .addrb(addr_sin),
+          .doutb(sin[i])
+      );
+
+    end
+  endgenerate
 
 endmodule
 

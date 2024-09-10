@@ -5,8 +5,10 @@
 `default_nettype none
 
 module nco_lut #(
-    parameter int PHASE_ENTRIES = 3072,
-    parameter int DATA_WIDTH    = 16
+    parameter int NUM_PARALLEL   = 1,
+    parameter int INDEX_PARALLEL = 0,
+    parameter int PHASE_ENTRIES  = 3072,
+    parameter int DATA_WIDTH     = 16
 ) (
     input var                                     clk,
     //
@@ -43,7 +45,8 @@ module nco_lut #(
 
   initial begin
     for (int i = 0; i < PHASE_ENTRIES; i++) begin
-      MEM[i] = (2 ** (DATA_WIDTH - 1) - 2) * $cos(2 * PI * i / PHASE_ENTRIES);
+      MEM[i] = (2 ** (DATA_WIDTH - 1) - 2) *
+        $cos(2 * PI * (i + $itor(INDEX_PARALLEL) / NUM_PARALLEL) / PHASE_ENTRIES);
     end
   end
 
