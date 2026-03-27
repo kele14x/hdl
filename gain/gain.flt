@@ -1,2 +1,5 @@
+../cdc/rtl/cdc_array_single.v
+../cmult/cmult.flt
+../common/rtl/delay.v
 ../mult/mult.flt
 rtl/gain.sv

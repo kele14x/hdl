@@ -1,0 +1,91 @@
+addrmap ptp {
+    name = "PTP Lite";
+    default sw = rw;
+    default hw = r;
+
+    reg {
+        name = "Version register";
+
+        field {
+            name = "Version value";
+            sw = r;
+            hw = na;
+        } val [31:0] = 32'h20250228;
+    } version @ 0x0;
+
+    reg {
+        name = "Scratch register 0";
+
+        field {
+            name = "Scratch value 0";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch0 @ 0x4;
+
+    reg {
+        name = "Scratch register 1";
+
+        field {
+            name = "Scratch value 1";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch1 @ 0x8;
+
+    reg {
+        name = "PTP control register";
+
+        field {
+            name = "PTP Enable";
+        } master_en [0:0] = 0x0;
+    } ctrl @ 0x10;
+
+    reg {
+        name = "PTP source MAC address register (low)";
+
+        field {
+            name = "Source MAC address [31:0]";
+        } val [31:0] = 0x0;
+    } src_mac_l @ 0x18;
+
+    reg {
+        name = "PTP source MAC address register (high)";
+
+        field {
+            name = "Source MAC address [47:32]";
+        } val [15:0] = 0x0;
+    } src_mac_h @ 0x1C;
+
+    reg {
+        name = "PTP configuration register";
+
+        field {
+            name = "PTP domain number";
+        } val [7:0] = 0x0;
+    } domain_number @ 0x20;
+
+    reg {
+        name = "PTP UTC offset register";
+
+        field {
+            name = "UTC offset [15:0]";
+        } val [15:0] = 0x0;
+    } utc_offset @ 0x24;
+
+    reg {
+        name = "PTP log announce interval register";
+
+        field {
+            name = "Log announce interval";
+        } val [7:0] = 0x0;
+    } log_announce_interval @ 0x28;
+
+    reg {
+        name = "PTP log sync interval register";
+
+        field {
+            name = "Log sync interval";
+        } val [7:0] = 0x0;
+    } log_sync_interval @ 0x2C;
+};

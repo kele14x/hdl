@@ -1,0 +1,91 @@
+addrmap fh {
+    name = "Fronthaul Interface";
+    default sw = rw;
+    default hw = r;
+    default memwidth = 32;
+
+    reg {
+        name = "Version register";
+
+        field {
+            sw = r;
+            hw = na;
+        } val[31:0] = 0x20230411;
+    } version @ 0x0;
+
+    reg {
+        name = "Scratch register 0";
+
+        field {
+            sw = rw;
+            hw = na;
+        } val[31:0] = 0x0;
+    } scratch0 @ 0x4;
+
+    reg {
+        name = "Scratch register 1";
+
+        field {
+            sw = rw;
+            hw = na;
+        } val[31:0] = 0x0;
+    } scratch1 @ 0x8;
+
+    // PTP
+
+    reg {
+        name = "PTP control register";
+
+        field {
+            name = "Master enable";
+        } master_en[0:0] = 0x0;
+    } ptp_ctrl @ 0x310;
+
+    reg {
+        name = "PTP source MAC address register";
+
+        field {
+            name = "Source MAC address";
+        } val[31:0] = 0x0;
+    } ptp_src_mac_l @ 0x314;
+
+    reg {
+        name = "PTP source MAC address register";
+
+        field {
+            name = "Source MAC address";
+        } val[15:0] = 0x0;
+    } ptp_src_mac_h @ 0x318;
+
+    reg {
+        name = "PTP domain number register";
+
+        field {
+            name = "Domain number";
+        } val[7:0] = 0x0;
+    } ptp_domain_number @ 0x320;
+
+    reg {
+        name = "PTP UTC offset register";
+
+        field {
+            name = "UTC offset";
+        } val[15:0] = 0x0;
+    } ptp_utc_offset @ 0x324;
+
+    reg {
+        name = "PTP log announce interval register";
+
+        field {
+            name = "Log announce interval";
+        } val [7:0] = 0x0;
+    } ptp_log_announce_interval @ 0x328;
+
+    reg {
+        name = "PTP log sync interval register";
+
+        field {
+            name = "Log sync interval";
+        } val [7:0] = 0x0;
+    } ptp_log_sync_interval @ 0x32C;
+};

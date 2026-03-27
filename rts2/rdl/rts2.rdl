@@ -1,0 +1,91 @@
+addrmap rts2 {
+    name = "Radio Test Subsystem";
+    default sw = rw;
+    default hw = r;
+
+    reg {
+        name = "Version register";
+
+        field {
+            name = "Version value";
+            sw = r;
+            hw = na;
+        } val [31:0] = 32'h20250513;
+    } version @ 0x0;
+
+    reg {
+        name = "Scratch register 0";
+
+        field {
+            name = "Scratch value 0";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch0 @ 0x4;
+
+    reg {
+        name = "Scratch register 1";
+
+        field {
+            name = "Scratch value 1";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch1 @ 0x8;
+
+    reg {
+        name = "Control register";
+
+        field {
+            name = "Enable";
+        } en[0:0] = 0x0;
+    } ctrl @ 0x100;
+
+    reg {
+        name = "RAM offset register";
+
+        field {
+            name = "RAM offset value";
+        } val[31:0] = 0x0;
+    } ram0_offset @ 0x104;
+
+    reg {
+        name = "RAM offset register";
+
+        field {
+            name = "RAM offset value";
+        } val[31:0] = 0x0;
+    } ram1_offset @ 0x108;
+
+    reg {
+        name = "RAM offset register";
+
+        field {
+            name = "RAM offset value";
+        } val[31:0] = 0x0;
+    } ram2_offset @ 0x10C;
+
+    reg {
+        name = "RAM size register";
+
+        field {
+            name = "RAM size value";
+        } val[31:0] = 0x1000;
+    } ram0_size @ 0x114;
+
+    reg {
+        name = "RAM size register";
+
+        field {
+            name = "RAM size value";
+        } val[31:0] = 0x1000;
+    } ram1_size @ 0x118;
+
+    reg {
+        name = "RAM size register";
+
+        field {
+            name = "RAM size value";
+        } val[31:0] = 0x1000;
+    } ram2_size @ 0x11C;
+};

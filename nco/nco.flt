@@ -1,3 +1,4 @@
-rtl/nco.sv
-rtl/nco_lut.sv
-rtl/nco_phase_gen.sv
+rtl/nco.v
+
+../dds_lut/dds_lut.flt
+../lfsr/lfsr.flt

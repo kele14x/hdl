@@ -1,0 +1,3 @@
+../cdc/rtl/cdc_gray.v
+../ram/ram_sdp.sv
+rtl/fifo_sync.sv

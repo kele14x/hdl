@@ -1,0 +1,149 @@
+addrmap puxch {
+    name = "PUXCH Top";
+    default sw = rw;
+    default hw = r;
+
+    reg {
+        name = "Version register";
+
+        field {
+            name = "Version value";
+            sw = r;
+            hw = na;
+        } val [31:0] = 32'h20250106;
+    } version @ 0x0;
+
+    reg {
+        name = "Scratch register 0";
+
+        field {
+            name = "Scratch value 0";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch0 @ 0x4;
+
+    reg {
+        name = "Scratch register 1";
+
+        field {
+            name = "Scratch value 1";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch1 @ 0x8;
+
+    // UL
+
+    reg {
+        name = "UL Enable register";
+
+        field {
+            name = "CC0 enable";
+        } cc0 [3:0] = 0x0;
+
+        field {
+            name = "CC1 enable";
+        } cc1 [7:4] = 0x0;
+
+        field {
+            name = "CC2 enable";
+        } cc2 [11:8] = 0x0;
+    } ul_en @ 0x210;
+
+    reg {
+        name = "UL RAN access technology register";
+
+        field {
+            name = "UL CC0 RAN access technology value";
+        } cc0 [1:0] = 0x0;
+
+        field {
+            name = "UL CC1 RAN access technology value";
+        } cc1 [5:4] = 0x0;
+
+        field {
+            name = "UL CC2 RAN access technology value";
+        } cc2 [9:8] = 0x0;
+    } ul_rat @ 0x214;
+
+    reg {
+        name = "UL Built-in self test register";
+
+        field {
+            name = "UL CC0 built-in self test enable";
+        } bist_cc0 [3:0] = 0x0;
+
+        field {
+            name = "UL CC1 built-in self test enable";
+        } bist_cc1 [7:4] = 0x0;
+
+        field {
+            name = "UL CC2 built-in self test enable";
+        } bist_cc2 [11:8] = 0x0;
+    } ul_bist @ 0x218;
+
+    reg {
+        name = "UL Bandwidth configuration register";
+
+        field {
+            name = "UL CC0 bandwidth configuration value";
+        } cc0 [3:0] = 0x2;
+
+        field {
+            name = "UL CC1 bandwidth configuration value";
+        } cc1 [7:4] = 0x2;
+
+        field {
+            name = "UL CC2 bandwidth configuration value";
+        } cc2 [11:8] = 0x2;
+    } ul_bw @ 0x21C;
+
+    reg {
+        name = "UL number of PRBs configuration register";
+
+        field {
+            name = "UL CC0 number of PRBs configuration value";
+        } val [8:0] = 100;
+    } ul_nprb[3] @ 0x220;
+
+    reg {
+        name = "UL RFS offset register";
+
+        field {
+            name = "UL RFS offset value";
+        } val [22:0] = 0x0;
+    } ul_rfs_offset[3] @ 0x230;
+
+    reg {
+        name = "Framer compression control register";
+
+        field {
+            name = "User data compression method (UD_COMP_METH) field";
+        } fs_offset [11:8] = 0x0;
+
+        field {
+            name = "User data IQ Width (UD_IQ_WIDTH) field";
+        } iq_width [7:4] = 0x9;
+
+        field {
+            name = "User data compression method (UD_COMP_METH) field";
+        } comp_meth [3:0] = 0x1;
+    } ul_ud @ 0x258;
+
+    reg {
+        name = "UL gain register";
+
+        field {
+            name = "UL gain value";
+        } val [16:0] = 0x4000;
+    } ul_gain[3][4] @ 0x300;
+
+    external mem {
+        name = "Phase Compensation Memory";
+
+        mementries = 64;
+        memwidth = 32;
+        sw = rw;
+    } ul_phase_comp @ 0xA00;
+};

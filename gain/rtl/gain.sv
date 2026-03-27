@@ -1,37 +1,204 @@
-// File: gain.sv
-// Brief: Gain block for the radio system.
-`timescale 1 ns / 1ps
+`timescale 1 ns / 1 ps
 //
 `default_nettype none
 
 module gain #(
-    parameter int DATA_WIDTH = 16,
-    parameter int GAIN_WIDTH = 16,
-    parameter int SRA_BITS   = 14
+    parameter bit HAS_CDC    = 1'b0,
+    parameter int NUM_ANT    = 4,
+    parameter bit COMPLEX    = 1'b1,
+    parameter int GAIN_WIDTH = 16
 ) (
-    input var                          clk,
-    input var                          rst,
+    input  wire                  clk,
+    input  wire                  rst,
     //
-    input var  signed [DATA_WIDTH-1:0] data_in,
-    output var signed [DATA_WIDTH-1:0] data_out,
-    // gain
-    input var  signed [GAIN_WIDTH-1:0] gain
+    input  wire [          15:0] din_dr,
+    input  wire [          15:0] din_di,
+    input  wire                  din_sf,
+    input  wire                  din_sl,
+    input  wire                  din_sy,
+    input  wire [           3:0] din_chn,
+    input  wire                  din_dv,
+    input  wire                  din_last,
+    //
+    output wire [          15:0] dout_dr,
+    output wire [          15:0] dout_di,
+    output wire                  dout_sf,
+    output wire                  dout_sl,
+    output wire                  dout_sy,
+    output wire [           3:0] dout_chn,
+    output wire                  dout_dv,
+    output wire                  dout_last,
+    // CSR
+    //----
+    input  wire [GAIN_WIDTH-1:0] ctrl_gain_dr[NUM_ANT],
+    input  wire [GAIN_WIDTH-1:0] ctrl_gain_di[NUM_ANT]
 );
 
-  localparam integer Latency = 4;
+  logic [GAIN_WIDTH-1:0] ctrl_gain_dr_s[NUM_ANT];
+  logic [GAIN_WIDTH-1:0] ctrl_gain_di_s[NUM_ANT];
 
-  mult #(
-      .A_WIDTH (DATA_WIDTH),
-      .B_WIDTH (GAIN_WIDTH),
-      .P_WIDTH (DATA_WIDTH),
-      .SRA_BITS(SRA_BITS)
-  ) i_mult (
-      .clk(clk),
-      .rst(rst),
-      .a  (data_in),
-      .b  (gain),
-      .p  (data_out),
-      .ovf(  /* not used */)
+  localparam int Latency = COMPLEX ? 8 : 5;
+
+  logic [          15:0] din_dr_d;
+  logic [          15:0] din_di_d;
+
+  logic [GAIN_WIDTH-1:0] ctrl_gain_dr_ch;
+  logic [GAIN_WIDTH-1:0] ctrl_gain_di_ch;
+
+  generate
+    if (HAS_CDC) begin : g_dr_cdc
+
+      for (genvar i = 0; i < 4; i++) begin : g_ch
+        cdc_array_single #(
+            .DEST_SYNC_FF (2),
+            .INIT_SYNC_FF (0),
+            .SRC_INPUT_REG(0),
+            .WIDTH        (GAIN_WIDTH)
+        ) i_cdc_gain_dr (
+            .src_clk (1'b1),
+            .src_in  (ctrl_gain_dr[i]),
+            //
+            .dest_clk(clk),
+            .dest_out(ctrl_gain_dr_s[i])
+        );
+      end
+
+    end else begin : g_no_cdc
+
+      assign ctrl_gain_dr_s = ctrl_gain_dr;
+
+    end
+  endgenerate
+
+  generate
+    if (HAS_CDC && COMPLEX) begin : g_di_cdc
+
+      for (genvar i = 0; i < 4; i++) begin : g_ch
+        cdc_array_single #(
+            .DEST_SYNC_FF (2),
+            .INIT_SYNC_FF (0),
+            .SRC_INPUT_REG(0),
+            .WIDTH        (GAIN_WIDTH)
+        ) i_cdc_gain_di (
+            .src_clk (1'b1),
+            .src_in  (ctrl_gain_di[i]),
+            //
+            .dest_clk(clk),
+            .dest_out(ctrl_gain_di_s[i])
+        );
+      end
+
+    end else if (COMPLEX) begin : g_di
+
+      assign ctrl_gain_di_s = ctrl_gain_di;
+
+    end else begin : g_no_di
+
+      assign ctrl_gain_di_s = '{NUM_ANT{'0}};
+
+    end
+  endgenerate
+
+  always_ff @(posedge clk) begin
+    if (din_dv) begin
+      ctrl_gain_dr_ch <= ctrl_gain_dr_s[din_chn];
+    end else begin
+      ctrl_gain_dr_ch <= '0;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    din_dr_d <= din_dr;
+    din_di_d <= din_di;
+  end
+
+  generate
+    if (COMPLEX) begin : g_complex
+
+      always_ff @(posedge clk) begin
+        if (din_dv) begin
+          ctrl_gain_di_ch <= ctrl_gain_di_s[din_chn];
+        end else begin
+          ctrl_gain_di_ch <= '0;
+        end
+      end
+
+      cmult #(
+          .A_WIDTH (16),
+          .B_WIDTH (GAIN_WIDTH),
+          .P_WIDTH (16),
+          .SHIFT   (14),
+          .ROUND   (1),
+          .SATURATE(1)
+      ) i_cmult (
+          .clk(clk),
+          .rst(rst),
+          //
+          .ar (din_dr_d),
+          .ai (din_di_d),
+          //
+          .br (ctrl_gain_dr_ch),
+          .bi (ctrl_gain_di_ch),
+          //
+          .pr (dout_dr),
+          .pi (dout_di),
+          //
+          .ovf()
+      );
+
+    end else begin : g_real
+
+      assign ctrl_gain_di_ch = '0;
+
+      mult #(
+          .A_WIDTH (16),
+          .B_WIDTH (GAIN_WIDTH),
+          .P_WIDTH (16),
+          .SHIFT   (14),
+          .ROUND   (1),
+          .SATURATE(1)
+      ) i_mult_dr (
+          .clk(clk),
+          .rst(rst),
+          //
+          .a  (din_dr_d),
+          .b  (ctrl_gain_dr_ch),
+          .p  (dout_dr),
+          //
+          .ovf()
+      );
+
+      mult #(
+          .A_WIDTH (16),
+          .B_WIDTH (GAIN_WIDTH),
+          .P_WIDTH (16),
+          .SHIFT   (14),
+          .ROUND   (1),
+          .SATURATE(1)
+      ) i_mult_di (
+          .clk(clk),
+          .rst(rst),
+          //
+          .a  (din_di_d),
+          .b  (ctrl_gain_dr_ch),
+          .p  (dout_di),
+          //
+          .ovf()
+      );
+
+    end
+  endgenerate
+
+  delay #(
+      .WIDTH(9),
+      .DEPTH(Latency),
+      .INIT (1'b0)
+  ) i_delay (
+      .clk (clk),
+      .rst (1'b0),
+      .cen (1'b1),
+      .din ({din_last, din_dv, din_chn, din_sy, din_sl, din_sf}),
+      .dout({dout_last, dout_dv, dout_chn, dout_sy, dout_sl, dout_sf})
   );
 
 endmodule

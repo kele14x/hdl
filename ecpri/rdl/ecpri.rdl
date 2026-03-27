@@ -1,0 +1,296 @@
+addrmap ecpri {
+    name = "eCPRI";
+
+    default sw = rw;
+    default hw = r;
+    default memwidth = 32;
+
+    reg {
+        name = "Version register";
+
+        field {
+            sw = r;
+            hw = na;
+        } val[31:0] = 0x20230411;
+    } version @ 0x0;
+
+    reg {
+        name = "Scratch register 0";
+
+        field {
+            sw = rw;
+            hw = na;
+        } val[31:0] = 0x0;
+    } scratch0 @ 0x4;
+
+    reg {
+        name = "Scratch register 1";
+
+        field {
+            sw = rw;
+            hw = na;
+        } val[31:0] = 0x0;
+    } scratch1 @ 0x8;
+
+    reg {
+        name = "Tick register";
+
+        field {
+            name = "Clear";
+        } clear[1:1];
+
+        field {
+            name = "Tick";
+        } snap[0:0];
+    } tick @ 0x20;
+
+    // Deframer
+
+    reg {
+        name = "Deframer control register";
+
+        field {
+            name = "Deframer enable";
+        } en[0:0] = 0x0;
+
+        field {
+            name = "Deframer reset";
+        } rst[4:4] = 0x0;
+    } defm_ctrl @ 0x100;
+
+    reg {
+        name = "Deframer configuration register";
+
+        field {
+            name = "Deframer source MAC filter enable";
+        } src_mac_flt_en[1:1] = 0x0;
+
+        field {
+            name = "Deframer destination MAC filter enable";
+        } dest_mac_flt_en[2:2] = 0x0;
+    } defm_cfg @ 0x104;
+
+    reg {
+        name = "Deframer source MAC address low part";
+
+        field {
+            name = "Deframer source MAC address low part value";
+        } val[31:0] = 0x22334455;
+    } defm_src_mac_l @ 0x108;
+
+    reg {
+        name = "Deframer source MAC address high part";
+
+        field {
+            name = "Deframer source MAC address high part value";
+        } val[15:0] = 0x0011;
+    } defm_src_mac_h @ 0x10C;
+
+    reg {
+        name = "Deframer destination MAC address low part";
+
+        field {
+            name = "Deframer destination MAC address low part value";
+        } val[31:0] = 0x22334466;
+    } defm_dest_mac_l @ 0x110;
+
+    reg {
+        name = "Deframer destination MAC address high part";
+
+        field {
+            name = "Deframer destination MAC address high part value";
+        } val[15:0] = 0x0011;
+    } defm_dest_mac_h @ 0x114;
+
+    reg {
+        name = "Total packet counter register";
+
+        field {
+            hw = w;
+            name = "Total packet counter value";
+        } val[31:0];
+    } defm_total_pkt_cnt @ 0x140;
+
+    reg {
+        name = "eCPRI packet counter register";
+
+        field {
+            hw = w;
+            name = "eCPRI packet counter value";
+        } val[31:0];
+    } defm_ecpri_pkt_cnt @ 0x148;
+
+    reg {
+        name = "eCPRI transport packet counter register";
+
+        field {
+            hw = w;
+            name = "eCPRI transport packet counter value";
+        } val[31:0];
+    } defm_trans_pkt_cnt @ 0x150;
+
+    reg {
+        name = "eCPRI one-way delay measurement packet counter register";
+
+        field {
+            hw = w;
+            name = "eCPRI one-way delay measurement packet counter value";
+        } val[31:0];
+    } defm_odm_pkt_cnt @ 0x158;
+
+    // Framer
+
+    reg {
+        name = "Framer control register";
+
+        field {
+            name = "Framer enable";
+        } en[0:0] = 0x0;
+
+        field {
+            name = "Framer reset";
+        } rst[4:4] = 0x0;
+    } fram_ctrl @ 0x200;
+
+    reg {
+        name = "Framer destination MAC address low part";
+
+        field {
+            name = "Framer destination MAC address low part value";
+        } val[31:0] = 0x22334455;
+    } fram_dest_mac_l @ 0x208;
+
+    reg {
+        name = "Framer destination MAC address high part";
+
+        field {
+            name = "Framer destination MAC address high part value";
+        } val[15:0] = 0x0011;
+    } fram_dest_mac_h @ 0x20C;
+
+    reg {
+        name = "Framer source MAC address low part";
+
+        field {
+            name = "Framer source MAC address low part value";
+        } val[31:0] = 0x22334466;
+    } fram_src_mac_l @ 0x210;
+
+    reg {
+        name = "Framer source MAC address high part";
+
+        field {
+            name = "Framer source MAC address high part value";
+        } val[15:0] = 0x0011;
+    } fram_src_mac_h @ 0x214;
+
+    reg {
+        name = "Framer VLAN ctrl";
+
+        field {
+            name = "Framer has VLAN";
+        } has_vlan[16:16] = 0x0;
+
+        field {
+            name = "Framer VLAN tag value";
+        } vlan_tag[15:0] = 0x7001;
+    } fram_vlan_ctrl @ 0x218;
+
+    // ODM
+
+    reg {
+        name = "ODM control register";
+
+        field {
+            name = "Enable";
+        } en[0:0] = 0x0;
+    } odm_ctrl @ 0x300;
+
+    reg {
+        name = "ODM measurement interval register";
+
+        field {
+            name = "Measurement interval value";
+        } val[31:0] = 0x1D4C0000;
+    } odm_meas_interval @ 0x308;
+
+    reg {
+        name = "Ingress timestamp difference nanoseconds register";
+
+        field {
+            name = "Ingress timestamp difference nanoseconds value";
+            sw = r;
+            hw = w;
+        } val[31:0];
+    } ts_diff_ingress_ns @ 0x310;
+
+    reg {
+        name = "Ingress timestamp difference seconds low part register";
+
+        field {
+            name = "Ingress timestamp difference seconds low part value";
+            sw = r;
+            hw = w;
+        } val[31:0];
+    } ts_diff_ingress_sec_l @ 0x314;
+
+    reg {
+        name = "Ingress timestamp difference seconds high part register";
+
+        field {
+            name = "Ingress timestamp difference seconds high part value";
+            sw = r;
+            hw = w;
+        } val[15:0];
+    } ts_diff_ingress_sec_h @ 0x318;
+
+    reg {
+        name = "Egress timestamp difference nanoseconds register";
+
+        field {
+            name = "Egress timestamp difference nanoseconds value";
+            sw = r;
+            hw = w;
+        } val[31:0];
+    } ts_diff_egress_ns @ 0x320;
+
+    reg {
+        name = "Egress timestamp difference seconds low part register";
+
+        field {
+            name = "Egress timestamp difference seconds low part value";
+            sw = r;
+            hw = w;
+        } val[31:0];
+    } ts_diff_egress_sec_l @ 0x324;
+
+    reg {
+        name = "Egress timestamp difference seconds high part register";
+
+        field {
+            name = "Egress timestamp difference seconds high part value";
+            sw = r;
+            hw = w;
+        } val[15:0];
+    } ts_diff_egress_sec_h @ 0x328;
+
+    reg {
+        name = "Topology ID register";
+
+        field {
+            name = "Topology ID value";
+            sw = r;
+            hw = w;
+        } val[15:0] = 0xFFFF;
+    } topology_id @ 0x340;
+
+    reg {
+        name = "Link partner topology ID register";
+
+        field {
+            name = "Link partner Topology ID value";
+            sw = r;
+            hw = w;
+        } val[15:0];
+    } lp_topology_id @ 0x344;
+};

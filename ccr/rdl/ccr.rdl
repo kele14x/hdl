@@ -1,0 +1,71 @@
+addrmap ccr {
+    name = "Controller Clock & Reset";
+    default sw = rw;
+    default hw = r;
+
+    reg {
+        name = "Version register";
+
+        field {
+            name = "Version value";
+            sw = r;
+            hw = w;
+        } val [31:0];
+    } buildtime_0 @ 0x0;
+
+    reg {
+        name = "Version register";
+
+        field {
+            name = "Version value";
+            sw = r;
+            hw = w;
+        } val [31:0];
+    } buildtime_1 @ 0x4;
+
+    reg {
+        name = "Scratch register 0";
+
+        field {
+            name = "Scratch value 0";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch0 @ 0x8;
+
+    reg {
+        name = "Scratch register 1";
+
+        field {
+            name = "Scratch value 1";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch1 @ 0xC;
+
+    reg {
+        name = "Status register";
+
+        field {
+            name = "MMCM0 locked";
+            sw = r;
+            hw = w;
+        } mmcm0_locked [0:0] = 0x0;
+
+        field {
+            name = "MMCM1 locked";
+            sw = r;
+            hw = w;
+        } mmcm1_locked [1:1] = 0x0;
+    } stat @ 0x18;
+
+    reg {
+        name = "Frequency register";
+
+        field {
+            name = "Frequency value";
+            sw = r;
+            hw = w;
+        } val [31:0];
+    } freq @ 0x20;
+};

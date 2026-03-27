@@ -1,0 +1,269 @@
+addrmap prach {
+    name = "PRACH Top";
+    default sw = rw;
+    default hw = r;
+
+    reg {
+        name = "Version register";
+
+        field {
+            name = "Version value";
+            sw = r;
+            hw = na;
+        } val [31:0] = 32'h20250106;
+    } version @ 0x0;
+
+    reg {
+        name = "Scratch register 0";
+
+        field {
+            name = "Scratch value 0";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch0 @ 0x4;
+
+    reg {
+        name = "Scratch register 1";
+
+        field {
+            name = "Scratch value 1";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch1 @ 0x8;
+
+    // PRACH
+
+    reg {
+        name = "PRACH enable register";
+
+        field {
+            name = "CC0 enable";
+        } cc0 [3:0] = 0x0;
+
+        field {
+            name = "CC1 enable";
+        } cc1 [7:4] = 0x0;
+
+        field {
+            name = "CC2 enable";
+        } cc2 [11:8] = 0x0;
+    } prach_en @ 0x410;
+
+    reg {
+        name = "PRACH format register";
+
+        field {
+            name = "CC0 format";
+        } cc0 [3:0] = 0x0;
+
+        field {
+            name = "CC1 format";
+        } cc1 [7:4] = 0x0;
+
+        field {
+            name = "CC2 format";
+        } cc2 [11:8] = 0x0;
+    } prach_format @ 0x414;
+
+    reg {
+        name = "PRACH format register";
+
+        field {
+            name = "CC0 format";
+        } cc0 [1:0] = 0x0;
+
+        field {
+            name = "CC1 format";
+        } cc1 [5:4] = 0x0;
+
+        field {
+            name = "CC2 format";
+        } cc2 [9:8] = 0x0;
+    } prach_rat @ 0x418;
+
+    reg {
+        name = "PRACH control register";
+
+        field {
+            name = "CC0 use static PRACH configuration enable";
+        } bist_cc0 [3:0] = 0x0;
+
+        field {
+            name = "CC1 Use static PRACH configuration enable";
+        } bist_cc1 [7:4] = 0x0;
+
+        field {
+            name = "CC2 Use static PRACH configuration enable";
+        } bist_cc2 [11:8] = 0x0;
+
+        field {
+            name = "CC0 use static PRACH configuration enable";
+        } static_c_cc0 [19:16] = 0x0;
+
+        field {
+            name = "CC1 Use static PRACH configuration enable";
+        } static_c_cc1 [23:20] = 0x0;
+
+        field {
+            name = "CC2 Use static PRACH configuration enable";
+        } static_c_cc2 [27:24] = 0x0;
+    } prach_bist @ 0x41C;
+
+    reg {
+        name = "PRACH Bandwidth configuration register";
+
+        field {
+            name = "PRACH CC0 bandwidth configuration value";
+        } cc0 [3:0] = 0x2;
+
+        field {
+            name = "PRACH CC1 bandwidth configuration value";
+        } cc1 [7:4] = 0x2;
+
+        field {
+            name = "PRACH CC2 bandwidth configuration value";
+        } cc2 [11:8] = 0x2;
+    } prach_bw @ 0x420;
+
+    reg {
+        name = "UL RFS offset register";
+
+        field {
+            name = "UL RFS offset value";
+        } val [22:0] = 0x0;
+    } prach_rfs_offset[3] @ 0x430;
+
+    reg {
+        name = "UL Ta3 offset register";
+
+        field {
+            name = "UL Ta3 offset value";
+        } val [22:0] = 0x0;
+    } prach_ta3_offset[3] @ 0x440;
+
+    reg {
+        name = "PRACH Framer compression control register";
+
+        field {
+            name = "User data compression method (UD_COMP_METH) field";
+        } fs_offset [11:8] = 0x0;
+
+        field {
+            name = "User data IQ Width (UD_IQ_WIDTH) field";
+        } iq_width [7:4] = 0x9;
+
+        field {
+            name = "User data compression method (UD_COMP_METH) field";
+        } comp_meth [3:0] = 0x1;
+    } prach_ud @ 0x458;
+
+    reg {
+        name = "PRACH configuration register 0";
+
+        field {
+            name = "Symbol ID for static PRACH configuration";
+        } symbol_id [5:0] = 0x0;
+
+        field {
+            name = "Slot ID for static PRACH configuration";
+        } slot_id [13:8] = 0x0;
+
+        field {
+            name = "Subframe ID for static PRACH configuration";
+        } subframe_id [19:16] = 0x0;
+
+        field {
+            name = "Subframe ID increment for static PRACH configuration";
+        } subframe_inc [23:20] = 0x0;
+    } prach_cfg0[3] @ 0x460;
+
+    reg {
+        name = "PRACH configuration register 1";
+
+        field {
+            name = "Time Offset for static PRACH configuration";
+        } time_offset [15:0] = 0x0;
+
+        field {
+            name = "CP Length for static PRACH configuration";
+        } cp_length [31:16] = 0x0;
+    } prach_cfg1[3] @ 0x470;
+
+    reg {
+        name = "PRACH configuration register 2";
+
+        field {
+            name = "Number Symbol for static PRACH configuration";
+        } num_symbol [3:0] = 0x0;
+
+        field {
+            name = "Frequency Offset for static PRACH configuration";
+        } freq_offset [27:4] = 0x0;
+    } prach_cfg2[3] @ 0x480;
+
+    reg {
+        name = "PRACH configuration register 3";
+
+        field {
+            name = "This is ul-fft-sampling-offset from M-Plane";
+        } sampling_offset [15:0] = 0x0;
+    } prach_cfg3[3] @ 0x490;
+
+    // PRACH message inspect
+
+    reg {
+        name = "PRACH C-Plane message inspect register 0";
+
+        field {
+            name = "Symbol ID field in C-Plane message";
+            sw = r;
+            hw = w;
+        } symbol_id [5:0] = 0x0;
+
+        field {
+            name = "Slot ID field in C-Plane message";
+            sw = r;
+            hw = w;
+        } slot_id [13:8] = 0x0;
+
+        field {
+            name = "Subframe ID field in C-Plane message";
+            sw = r;
+            hw = w;
+        } subframe_id [19:16] = 0x0;
+    } prach_msg0[3] @ 0x500;
+
+    reg {
+        name = "PRACH C-Plane message inspect register 1";
+
+        field {
+            name = "Time Offset field in C-Plane message";
+            sw = r;
+            hw = w;
+        } time_offset [15:0] = 0x0;
+
+        field {
+            name = "CP Length field in C-Plane message";
+            sw = r;
+            hw = w;
+        } cp_length [31:16] = 0x0;
+    } prach_msg1[3] @ 0x510;
+
+    reg {
+        name = "PRACH C-Plane message inspect register 2";
+
+        field {
+            name = "Number of Symbol field in C-Plane message";
+            sw = r;
+            hw = w;
+        } num_symbol [3:0] = 0x0;
+
+        field {
+            name = "Frequency Offset field in C-Plane message";
+            sw = r;
+            hw = w;
+        } freq_offset [27:4] = 0x0;
+    } prach_msg2[3] @ 0x520;
+};

@@ -1,0 +1,207 @@
+/**
+ * NCO (Numerically Controlled Oscillator)
+ *
+ * This module implements a Numerically Controlled Oscillator (NCO) with the following features:
+ * - Configurable phase control word width (integer and fractional parts)
+ * - Supports parallel output (multi-phase) with 1, 2, or 4 phases
+ * - Uses a Linear Feedback Shift Register (LFSR) for phase accumulator
+ * - Generates both cosine and sine outputs
+ * - Synchronization input for resetting the phase accumulator
+ * - Configurable phase offset and phase increment inputs
+ *
+ * Parameters:
+ * - NUM_PARALLEL: Number of parallel outputs (1, 2, or 4)
+ * - PHASE_INTEGER_WIDTH: Integer bit width of phase control word
+ * - PHASE_FRACTION_WIDTH: Fractional bit width of phase control word
+ * - LFSR_INITIAL: Initial state of LFSR (non-zero)
+ * - LFSR_POLYNOMIAL: Polynomial of LFSR
+ *
+ * Inputs:
+ * - clk: System clock
+ * - rst: Reset signal
+ * - sync: Synchronization signal to reset phase accumulator
+ * - ctrl_poff: Phase offset control
+ * - ctrl_pinc: Phase increment control
+ *
+ * Outputs:
+ * - cos: Cosine output(s)
+ * - sin: Sine output(s)
+ *
+ * The NCO uses a look-up table (LUT) approach for generating sine and cosine waveforms,
+ * with the phase accumulator implemented using an LFSR for improved spectral purity.
+ *
+ * Latency: 6 (from `sync` to `cos`/`sin`)
+ *
+ * TODO:
+ * - Add automatic LFSR polynomial selection
+ * - Sync the frequency control word with sync signal
+ */
+`timescale 1 ns / 1 ps
+//
+`default_nettype none
+
+module nco #(
+    parameter                            NUM_PARALLEL         = 1,
+    parameter                            PHASE_INTEGER_WIDTH  = 12,
+    parameter                            PHASE_FRACTION_WIDTH = 20,
+    parameter [PHASE_FRACTION_WIDTH-1:0] LFSR_INITIAL         = 20'hFFFFF,
+    parameter [  PHASE_FRACTION_WIDTH:0] LFSR_POLYNOMIAL      = 21'h100005
+) (
+    input wire clk,
+    input wire rst,
+    //
+    input wire sync,
+    //
+    output wire [NUM_PARALLEL*16-1:0] cos,
+    output wire [NUM_PARALLEL*16-1:0] sin,
+    //
+    input wire [$clog2(NUM_PARALLEL)+PHASE_INTEGER_WIDTH+PHASE_FRACTION_WIDTH-1:0] ctrl_poff,
+    input wire [$clog2(NUM_PARALLEL)+PHASE_INTEGER_WIDTH+PHASE_FRACTION_WIDTH-1:0] ctrl_pinc
+);
+
+  // Local parameters
+
+  // Integer bit width for multi-phase parallel arch
+  localparam integer PhaseParallelWidth = $clog2(NUM_PARALLEL);
+  // Total bit with of phase control word
+  localparam integer PhaseWidth = PhaseParallelWidth + PHASE_INTEGER_WIDTH + PHASE_FRACTION_WIDTH;
+
+  // Constant 2 Pi
+  localparam reg [PhaseWidth-1:0] Phase2Pi = 3 << (PhaseWidth - 2);
+
+  // Check parameters
+
+  // verilog_format: off
+  initial begin
+    if (PHASE_INTEGER_WIDTH < 4 || 12 < PHASE_INTEGER_WIDTH) begin
+      $display("[%m]: Phase integer word width (PHASE_INTEGER_WIDTH) must be within the range 4 to 12, got %d.", PHASE_INTEGER_WIDTH);
+      #1 $finish();
+    end
+
+    if (PHASE_FRACTION_WIDTH < 0 || 20 < PHASE_FRACTION_WIDTH) begin
+      $display("[%m]: Phase fraction word width (PHASE_FRACTION_WIDTH) must be within the range 0 to 20, got %d.", PHASE_FRACTION_WIDTH);
+      #1 $finish();
+    end
+
+    if (1 != NUM_PARALLEL && 2 != NUM_PARALLEL && 4 != NUM_PARALLEL) begin
+      $display("[%m]: Number of parallel output (NUM_PARALLEL) must be within the range 1, 2 or 4, got %d.", NUM_PARALLEL);
+      #1 $finish();
+    end
+  end
+  // verilog_format: on
+
+  // Signals
+
+  reg         [          PhaseWidth-1:0] phase_accumulator;
+  wire        [            PhaseWidth:0] phase_wrapped;
+  wire        [            PhaseWidth:0] phase_pre_round   [0:NUM_PARALLEL-1];
+
+  wire        [PHASE_FRACTION_WIDTH-1:0] lfsr;
+
+  reg         [ PHASE_INTEGER_WIDTH-1:0] phase_int         [0:NUM_PARALLEL-1];
+
+  wire signed [                    15:0] cos_s             [0:NUM_PARALLEL-1];
+  wire signed [                    15:0] sin_s             [0:NUM_PARALLEL-1];
+
+  genvar i;
+
+  function [PhaseWidth:0] wrap_2pi;
+    input [PhaseWidth:0] phase;
+    begin
+      // equals to wrap_2pi = phase % Phase2Pi;
+      wrap_2pi = phase;
+      if (wrap_2pi[PhaseWidth-:3] >= 3'b011) begin
+        wrap_2pi[PhaseWidth-:3] = wrap_2pi[PhaseWidth-:3] - 3'b011;
+      end
+    end
+  endfunction
+
+  function [PhaseWidth:0] wrap_int;
+    input [PhaseWidth:0] phase;
+    begin
+      // equals to wrap_int = phase % (Phase2Pi / NUM_PARALLEL);
+      wrap_int = phase;
+      wrap_int[PhaseWidth-:(3+PhaseParallelWidth)] = wrap_int[PhaseWidth-:(3+PhaseParallelWidth)] % 3;
+    end
+  endfunction
+
+  // Main
+
+  // #1, Phase accumulator
+
+  always @(posedge clk) begin
+    if (rst) begin
+      phase_accumulator <= 0;
+    end else if (sync) begin
+      phase_accumulator <= ctrl_poff;
+    end else begin
+      phase_accumulator <= phase_wrapped[PhaseWidth-1:0];
+    end
+  end
+
+  // Phase accumulator increase by ctrl_pinc every tick. It will eventually
+  // exceed 2*Pi (Phase2Pi), and need to be wrapped. Unlike 2^N phase case,
+  // phase in modulus M mode does not wrap naturally. Wrap could be done
+  // by subtract by Phase2Pi.
+  assign phase_wrapped = wrap_2pi(phase_accumulator + ctrl_pinc);
+
+  // #2, Random rounding and wrap again
+
+  generate
+    for (i = 0; i < NUM_PARALLEL; i = i + 1) begin : g_phase_int
+
+      assign phase_pre_round[i] = wrap_int(phase_accumulator + lfsr + ctrl_pinc * i / NUM_PARALLEL);
+
+      always @(posedge clk) begin
+        phase_int[i] <= phase_pre_round[i][PHASE_INTEGER_WIDTH+PHASE_FRACTION_WIDTH-1:PHASE_FRACTION_WIDTH];
+      end
+
+    end
+  endgenerate
+
+  lfsr #(
+      .BIT_WIDTH      (PHASE_FRACTION_WIDTH),
+      .INITIAL        (LFSR_INITIAL),
+      .POLYNOMIAL     (LFSR_POLYNOMIAL),
+      .STRUCTURE      ("FIBONACCI"),
+      .GATE_TYPE      ("XOR"),
+      .PARALLEL_OUTPUT(1'b1)
+  ) i_lfsr (
+      .clk (clk),
+      .rst (rst || sync),
+      .en  (1'b1),
+      .load(1'b0),
+      .din ({PHASE_FRACTION_WIDTH{1'b1}}),
+      .dout(lfsr)
+  );
+
+  // Phase to Cosine/sine LUT
+
+  generate
+    for (i = 0; i < NUM_PARALLEL; i = i + 1) begin : g_lut
+
+      dds_lut #(
+          .STRUCTURE   ("AUTO"),
+          .RASTERIZED  (1),
+          .PHASE_WIDTH (PHASE_INTEGER_WIDTH),
+          .NEGATIVE_COS(0),
+          .NEGATIVE_SIN(0)
+      ) i_lut (
+          .clk    (clk),
+          .rst    (rst),
+          //
+          .phase  (phase_int[i]),
+          //
+          .cos_out(cos_s[i]),
+          .sin_out(sin_s[i])
+      );
+
+      assign cos[i*16+15-:16] = cos_s[i];
+      assign sin[i*16+15-:16] = sin_s[i];
+
+    end
+  endgenerate
+
+endmodule
+
+`default_nettype wire

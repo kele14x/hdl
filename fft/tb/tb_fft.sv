@@ -1,111 +1,210 @@
-// File: tb_fft.v
-// Brief: Test bench for module fft.
-`default_nettype none
+`timescale 1 ns / 1 ps
 //
-`timescale 1 ns / 1ps
+`default_nettype none
 
 module tb_fft;
 
-  parameter int LOG_FFT_SIZE = 1;
-  parameter int INPUT_DATA_WIDTH = 16;
-  parameter int PHASE_WIDTH = 16;
-  parameter int OUTPUT_DATA_WIDTH = INPUT_DATA_WIDTH + LOG_FFT_SIZE + 1;
-  parameter bit BIT_REVERSED_INPUT = 1;
+  parameter int NUM_ANT = 4;
+  parameter bit INV_FFT = 0;
+  parameter int LOG_FFT_SIZE = 12;
+  parameter int DATA_WIDTH = 16;
+  parameter bit BIT_REVERSED_INPUT = 0;
 
+  parameter int NUM_FRAMES = 3;
+  parameter int NUM_CHNS = 4;
+  parameter int FFT_SIZE = 4096;
 
-  // DUT signals
-  //============
+  // Valid combinations of NUM_CHNS/FFT_SIZE:
+  //   NUM_CHNS = 4,  FFT_SIZE =                           4096 (30/122.88), 33.33 us
+  //   NUM_CHNS = 8,  FFT_SIZE = 4096 (15/61.44) 66.67 us, 2048 (30/61.44), 33.33 us
+  //   NUM_CHNS = 16, FFT_SIZE = 2048 (15/30.72) 66.67 us, 1024 (30/30.72), 33.33 us
 
-  bit                         clk;
-  bit                         rst;
+  logic                         clk;
+  logic                         rst;
+  // Data input
+  logic signed [DATA_WIDTH-1:0] din_dr;
+  logic signed [DATA_WIDTH-1:0] din_di;
+  logic                         din_sf;
+  logic                         din_sl;
+  logic                         din_sy;
+  logic        [           3:0] din_chn;
+  logic                         din_dv;
+  logic                         din_last;
+  // Data output
+  logic signed [DATA_WIDTH-1:0] dout_dr;
+  logic signed [DATA_WIDTH-1:0] dout_di;
+  logic                         dout_sf;
+  logic                         dout_sl;
+  logic                         dout_sy;
+  logic        [           3:0] dout_chn;
+  logic                         dout_dv;
+  logic                         dout_last;
+  // Status output
+  logic        [           1:0] ctrl_size;
+  logic        [           1:0] ctrl_itlv;
   //
-  bit [ INPUT_DATA_WIDTH-1:0] data_i_in;
-  bit [ INPUT_DATA_WIDTH-1:0] data_q_in;
-  bit                         data_valid_in;
-  bit                         data_last_in;
-  //
-  bit [OUTPUT_DATA_WIDTH-1:0] data_i_out;
-  bit [OUTPUT_DATA_WIDTH-1:0] data_q_out;
-  bit                         data_valid_out;
-  bit                         data_last_out;
+  logic                         stat_ovf;
 
-  bit [                  4:0] ctrl_sra_bits;
-
-  bit                         err_input_halt;
-  bit                         err_last_unexpected;
-  bit                         err_ovf;
-
-
-  // Testbench signals
-  //==================
-
-
-  // Stimulation
-  //============
+  // Clock & Reset
 
   initial begin
     clk = 0;
-    forever begin
-      #5 clk = ~clk;
-    end
+    forever #5 clk = ~clk;
   end
 
   initial begin
     rst = 1;
-    #160;
-    rst = 0;
+    repeat (100) @(posedge clk);
+    rst <= 0;
   end
+
+  // Stimulus
 
   initial begin
+    $display("*** Simulation start ***");
+    din_dr = 0;
+    din_di = 0;
+    din_sf = 0;
+    din_sl = 0;
+    din_sy = 0;
+    din_chn = 0;
+    din_dv = 0;
+    din_last = 0;
+
+    ctrl_size = (FFT_SIZE == 1024) ? 2'b00 : (FFT_SIZE == 2048) ? 2'b01 : 2'b10;
+    ctrl_itlv = (NUM_CHNS == 16) ? 2'b00 : (NUM_CHNS == 8) ? 2'b01 : 2'b10;
     wait (rst == 0);
-    #100;
-
-    for (int i = 0; i < 2 ** LOG_FFT_SIZE; i = i + 1) begin
-      @(posedge clk);
-      data_i_in     <= i + 1;
-      data_q_in     <= 0;
-      data_valid_in <= 1;
-      data_last_in  <= (i == 2 ** LOG_FFT_SIZE - 1);
-    end
     @(posedge clk);
-    data_i_in     <= 0;
-    data_q_in     <= 0;
-    data_valid_in <= 0;
-    data_last_in  <= 0;
 
-    #1000;
-    $finish;
+    // Flush the buffer
+    for (int i = 0; i < 2 ** LOG_FFT_SIZE; i++) begin
+      for (int chn = 0; chn < NUM_CHNS; chn++) begin
+        din_chn <= chn;
+        @(posedge clk);
+      end
+    end
+
+    // Data input
+    for (int frm = 0; frm < NUM_FRAMES; frm++) begin
+      for (int i = 0; i < FFT_SIZE; i++) begin
+        for (int chn = 0; chn < NUM_CHNS; chn++) begin
+          din_dr   <= (chn < NUM_ANT) ? $urandom_range(2000) - 1000 : 0;
+          din_di   <= (chn < NUM_ANT) ? $urandom_range(2000) - 1000 : 0;
+          din_sf   <= (i == 0 && chn < NUM_ANT);
+          din_sl   <= (i == 0 && chn < NUM_ANT);
+          din_sy   <= (i == 0 && chn < NUM_ANT);
+          din_chn  <= chn;
+          din_dv   <= (chn < NUM_ANT);
+          din_last <= (i == FFT_SIZE - 1 && chn < NUM_ANT);
+          @(posedge clk);
+        end
+      end
+
+      // Insert some gap
+      for (int i = 0; i < 11; i++) begin
+        for (int chn = 0; chn < NUM_CHNS; chn++) begin
+          din_dr   <= 0;
+          din_di   <= 0;
+          din_sf   <= 0;
+          din_sl   <= 0;
+          din_sy   <= 0;
+          din_chn  <= chn;
+          din_dv   <= 0;
+          din_last <= 0;
+          @(posedge clk);
+        end
+      end
+    end
+    din_dv <= 0;
+
+    // Keep CHN pattern
+    for (int i = 0; i < 2 * FFT_SIZE; i++) begin
+      for (int chn = 0; chn < NUM_CHNS; chn++) begin
+        din_chn <= chn;
+        @(posedge clk);
+      end
+    end
+
+    #(1000);
+    $finish();
   end
 
+  final begin
+    $display("*** Simulation end ***");
+  end
+
+  // Input data Logger
+
+  integer fin;
+
+  initial begin
+    // Open the file
+    fin = $fopen("din.txt", "w");
+    if (!fin) begin
+      $display("Failed to open din.txt");
+      $finish();
+    end
+
+    // Wait for the first data
+    forever begin
+      @(posedge clk);
+      if (din_dv && din_chn == 0) break;
+    end
+
+    // Log the data
+    forever begin
+      if (din_dv && din_chn == NUM_ANT - 1) begin
+        $fwrite(fin, "%d, %d\n", din_dr, din_di);
+      end
+      @(posedge clk);
+    end
+  end
+
+  final begin
+    $fclose(fin);
+  end
+
+  // Output data Logger
+
+  integer fout;
+
+  initial begin
+    // Open the file
+    fout = $fopen("dout.txt", "w");
+    if (!fout) begin
+      $display("Failed to open dout.txt");
+      $finish();
+    end
+
+    // Wait for the first data
+    forever begin
+      @(posedge clk);
+      if (dout_dv && dout_chn == 0) break;
+    end
+
+    // Log the data
+    forever begin
+      if (dout_dv && dout_chn == NUM_ANT - 1) begin
+        $fwrite(fout, "%d, %d\n", dout_dr, dout_di);
+      end
+      @(posedge clk);
+    end
+  end
+
+  final begin
+    $fclose(fout);
+  end
 
   // DUT
-  //====
 
   fft #(
+      .NUM_ANT           (NUM_ANT),
+      .INV_FFT           (INV_FFT),
       .LOG_FFT_SIZE      (LOG_FFT_SIZE),
-      .INPUT_DATA_WIDTH  (INPUT_DATA_WIDTH),
-      .PHASE_WIDTH       (PHASE_WIDTH),
-      .OUTPUT_DATA_WIDTH (OUTPUT_DATA_WIDTH),
+      .DATA_WIDTH        (DATA_WIDTH),
       .BIT_REVERSED_INPUT(BIT_REVERSED_INPUT)
   ) DUT (
-      .clk                (clk),
-      .rst                (rst),
-      // Data input
-      .data_i_in          (data_i_in),
-      .data_q_in          (data_q_in),
-      .data_valid_in      (data_valid_in),
-      .data_last_in       (data_last_in),
-      // Data output
-      .data_i_out         (data_i_out),
-      .data_q_out         (data_q_out),
-      .data_valid_out     (data_valid_out),
-      .data_last_out      (data_last_out),
-      //
-      .ctrl_sra_bits      (ctrl_sra_bits),
-      //
-      .err_input_halt     (err_input_halt),
-      .err_last_unexpected(err_last_unexpected),
-      .err_ovf            (err_ovf)
+      .*
   );
 
 endmodule

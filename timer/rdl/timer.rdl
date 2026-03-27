@@ -1,0 +1,121 @@
+addrmap timer {
+    name = "Radio Timer Subsystem";
+    default sw = rw;
+    default hw = r;
+
+    reg {
+        name = "Version register";
+
+        field {
+            name = "Version value";
+            sw = r;
+            hw = na;
+        } val [31:0] = 32'h20241106;
+    } version @ 0x0;
+
+    reg {
+        name = "Scratch register 0";
+
+        field {
+            name = "Scratch value 0";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch0 @ 0x4;
+
+    reg {
+        name = "Scratch register 1";
+
+        field {
+            name = "Scratch value 1";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch1 @ 0x8;
+
+    // Set time
+
+    reg {
+        name = "RTC offset in nanoseconds";
+
+        field {
+            name = "RTC offset";
+        } val [31:0] = 0x0;
+    } rtc_offset_ns @ 0x10;
+
+    reg {
+        name = "RTS offset in seconds";
+
+        field {
+            name = "RTS offset in seconds";
+        } val [31:0] = 0x0;
+    } rtc_offset_sec_l @ 0x14;
+
+    reg {
+        name = "RTS offset in seconds";
+
+        field {
+            name = "RTS offset in seconds";
+        } val [15:0] = 0x0;
+    } rtc_offset_sec_h @ 0x18;
+
+    reg {
+        name = "RTS offset valid";
+
+        field {
+            name = "RTS offset valid";
+            sw = rw;
+            hw = rw;
+        } val = 0x0;
+    } rtc_offset_valid @ 0x1C;
+
+    // Get time
+
+    reg {
+        name = "RTC current time in nanoseconds";
+
+        field {
+            name = "RTC current time in nanoseconds";
+            sw = r;
+            hw = w;
+        } val [31:0] = 0x0;
+    } rtc_current_ns @ 0x20;
+
+    reg {
+        name = "RTC current time in seconds";
+
+        field {
+            name = "RTC current time in seconds";
+            sw = r;
+            hw = w;
+        } val [31:0] = 0x0;
+    } rtc_current_sec_l @ 0x24;
+
+    reg {
+        name = "RTC current time in seconds";
+
+        field {
+            name = "RTC current time in seconds";
+            sw = r;
+            hw = w;
+        } val [15:0] = 0x0;
+    } rtc_current_sec_h @ 0x28;
+
+    reg {
+        name = "RTC current time snapshot";
+
+        field {
+            name = "RTC current time snapshot";
+            sw = rw;
+            hw = rw;
+        } val = 0x0;
+    } rtc_current_snap @ 0x2C;
+
+    reg {
+        name = "Radio Frame Start Offset register";
+
+        field {
+            name = "Radio Frame Start Offset value";
+        } val [22:0] = 0x0;
+    } rfs_offset @ 0x100;
+};

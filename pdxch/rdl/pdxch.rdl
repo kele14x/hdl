@@ -1,0 +1,151 @@
+addrmap pdxch {
+    name = "PDXCH Top";
+    default sw = rw;
+    default hw = r;
+
+    reg {
+        name = "Version register";
+
+        field {
+            name = "Version value";
+            sw = r;
+            hw = na;
+        } val [31:0] = 32'h20250106;
+    } version @ 0x0;
+
+    reg {
+        name = "Scratch register 0";
+
+        field {
+            name = "Scratch value 0";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch0 @ 0x4;
+
+    reg {
+        name = "Scratch register 1";
+
+        field {
+            name = "Scratch value 1";
+            sw = rw;
+            hw = na;
+        } val [31:0] = 0x0;
+    } scratch1 @ 0x8;
+
+    // DL
+
+    reg {
+        name = "DL Enable register";
+
+        field {
+            name = "DL Band0 CC0 data enable";
+        } cc0 [3:0] = 0x0;
+
+        field {
+            name = "DL Band0 CC1 data enable";
+        } cc1 [7:4] = 0x0;
+
+        field {
+            name = "DL Band0 CC2 data enable";
+        } cc2 [11:8] = 0x0;
+    } dl_en @ 0x10;
+
+    reg {
+        name = "DL RAN access technology register";
+
+        field {
+            name = "DL Band0 CC0 RAN access technology value";
+        } cc0 [3:0] = 0x0;
+
+        field {
+            name = "DL Band0 CC1 RAN access technology value";
+        } cc1 [7:4] = 0x0;
+
+        field {
+            name = "DL Band0 CC2 RAN access technology value";
+        } cc2 [11:8] = 0x0;
+    } dl_rat @ 0x14;
+
+    reg {
+        name = "DL Built-in self test register";
+
+        field {
+            name = "DL Band0 CC0 built-in self test enable";
+        } cc0 [3:0] = 0x0;
+
+        field {
+            name = "DL Band0 CC1 built-in self test enable";
+        } cc1 [7:4] = 0x0;
+
+        field {
+            name = "DL Band0 CC2 built-in self test enable";
+        } cc2 [11:8] = 0x0;
+    } dl_bist @ 0x18;
+
+    reg {
+        name = "DL Bandwidth configuration register";
+
+        field {
+            name = "DL Band0 CC0 bandwidth configuration value";
+        } cc0 [3:0] = 0x2;
+
+        field {
+            name = "DL Band0 CC1 bandwidth configuration value";
+        } cc1 [7:4] = 0x2;
+
+        field {
+            name = "DL Band0 CC2 bandwidth configuration value";
+        } cc2 [11:8] = 0x2;
+    } dl_bw @ 0x1C;
+
+    reg {
+        name = "DL Band0 number of PRBs configuration register";
+
+        field {
+            name = "DL Band0 number of PRBs configuration value";
+        } val [8:0] = 100;
+    } dl_nprb[3] @ 0x20;
+
+    reg {
+        name = "DL Band0 RFS offset register";
+
+        field {
+            name = "DL Band0 RFS offset value";
+        } val [22:0] = 0x0;
+    } dl_rfs_offset[3] @ 0x30;
+
+    reg {
+        name = "Deframer compression control register";
+
+        field {
+            name = "User data compression method (UD_COMP_METH) field";
+        } comp_meth [3:0] = 0x1;
+
+        field {
+            name = "User data IQ Width (UD_IQ_WIDTH) field";
+        } iq_width [7:4] = 0x9;
+
+        field {
+            name = "User data compression method (UD_COMP_METH) field";
+        } fs_offset [11:8] = 0x0;
+    } dl_ud @ 0x58;
+
+    reg {
+        name = "DL Band0 gain register";
+
+        field {
+            name = "Band0 gain value";
+        } val [16:0] = 0x4000;
+    } dl_gain[3][4] @ 0x100;
+
+    // Phase compensation
+
+    external mem {
+        name = "Phase compensation Memory";
+
+        mementries = 64;
+        memwidth = 32;
+        sw = rw;
+    } dl_phase_comp @ 0x800;
+};

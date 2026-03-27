@@ -1,3 +1,2 @@
 rtl/dds_lut.sv
-rtl/dds_lut_core.sv
 rtl/dds_lut_rom.sv
