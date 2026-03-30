@@ -1,9 +1,14 @@
 # Vivado
+*.jou
+*.log
 *.xml
+
+# Python
+__pycache__/
+.venv/
 
 # cocotb
 sim_build/
-__pycache__/
 results.xml
 
 # Questa
@@ -11,10 +16,10 @@ modelsim.ini
 transcript
 *.wlf
 
-# VCD
-*.vcd
-
 # Editors & IDEs
 .vscode/
 *.swp
 *~
+
+# Others
+*.vcd

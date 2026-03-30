@@ -1,134 +1,153 @@
-import random
-from typing import Tuple
+import os
+from pathlib import Path
 
 import cocotb
-import matlab.engine
+import numpy as np
 from cocotb.clock import Clock
-from cocotb.handle import SimHandleBase
+from cocotb.queue import Queue
 from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb_tools.runner import get_runner
 
-A_WIDTH = cocotb.top.A_WIDTH.value
-B_WIDTH = cocotb.top.B_WIDTH.value
-P_WIDTH = cocotb.top.P_WIDTH.value
-SRA_BITS = cocotb.top.SRA_BITS.value
+prj_path = Path(__file__).resolve().parent.parent
+rng = np.random.default_rng(12345)
+
+A_WIDTH = int(os.environ.get("A_WIDTH", 8))
+B_WIDTH = int(os.environ.get("B_WIDTH", 8))
+P_WIDTH = int(os.environ.get("P_WIDTH", 6))
+SHIFT = int(os.environ.get("SHIFT", 2))
+ROUND = int(os.environ.get("ROUND", 1))
+SATURATE = int(os.environ.get("SATURATE", 1))
+
+LATENCY = 1
+GUI = os.environ.get("GUI", "False").lower() == "true"
+
+input_queue = Queue()
+output_queue = Queue()
 
 
-class AdderTester:
-    """Checker of a adder instance."""
+def truncate(x, w):
+    x = x % 2**w
+    x = x - 2**w if x > 2 ** (w - 1) - 1 else x
+    return x
 
-    def __init__(self, dut: SimHandleBase):
-        self.dut = dut
-        self._checker = None
 
-        # Start MATLAB session
-        self._eng = matlab.engine.start_matlab("-sd ~/Workspaces/dfe")
-        self._eng.setpath(nargout=0)
+def saturation(x, w):
+    if x > 2 ** (w - 1) - 1:
+        return 2 ** (w - 1) - 1
+    if x < -(2 ** (w - 1)):
+        return -(2 ** (w - 1))
+    return x
 
-        # Create MATLAB reference System object
-        self._model = self._eng.dfe.Adder(
-            'AWidth', float(A_WIDTH),
-            'BWidth', float(B_WIDTH),
-            'PWidth', float(P_WIDTH),
-            'SraBits', float(SRA_BITS)
+
+def model(a, b, sub):
+    p = a - b if sub else a + b
+    if ROUND and SHIFT > 0:
+        p = (p + 2 ** (SHIFT - 1)) / 2**SHIFT
+    else:
+        p = p / 2**SHIFT if SHIFT > 0 else p
+    p = int(np.floor(p))
+
+    ovf = p > 2 ** (P_WIDTH - 1) - 1 or p < -(2 ** (P_WIDTH - 1))
+    p = saturation(p, P_WIDTH) if SATURATE else truncate(p, P_WIDTH)
+    return (p, int(ovf))
+
+
+async def reset(dut):
+    dut.rst.value = 1
+    dut.a.value = 0
+    dut.b.value = 0
+    dut.sub.value = 0
+    await ClockCycles(dut.clk, 10)
+    dut.rst.value = 0
+    await ClockCycles(dut.clk, 10)
+
+
+async def drive(dut):
+    for _ in range(10000):
+        await RisingEdge(dut.clk)
+        dut.a.value = int(rng.integers(-(2 ** (A_WIDTH - 1)), 2 ** (A_WIDTH - 1)))
+        dut.b.value = int(rng.integers(-(2 ** (B_WIDTH - 1)), 2 ** (B_WIDTH - 1)))
+        dut.sub.value = int(rng.integers(0, 2))
+
+
+async def input_monitor(dut):
+    while True:
+        await RisingEdge(dut.clk)
+        input_queue.put_nowait(
+            (dut.a.value.to_signed(), dut.b.value.to_signed(), int(dut.sub.value))
         )
 
-    def start(self) -> None:
-        """Start the checker."""
-        if self._checker is not None:
-            raise RuntimeError("Checker already started")
-        self._checker = cocotb.start_soon(self._check())
 
-    def stop(self) -> None:
-        """Stop the checker."""
-        if self._checker is None:
-            raise RuntimeError("Checker not started")
-        self._checker.kill()
-        self._checker = None
-
-    def model(self, a: int, b: int) -> Tuple[int, int]:
-        """Return the model result of the adder."""
-        (p, ovf) = self._eng.step(self._model, float(a), float(b), nargout=2)
-        return (p, ovf)
-
-    async def _check(self) -> None:
-        """Checker function."""
-        await RisingEdge(self.dut.clk)
-        while True:
-            A = self.dut.a.value.signed_integer
-            B = self.dut.b.value.signed_integer
-            await RisingEdge(self.dut.clk)
-            P = self.dut.p.value.signed_integer
-            ovf = self.dut.ovf.value.integer
-            (P_ref, ovf_ref) = self.model(A, B)
-            assert P == P_ref, "Test failed: P = %d, P_ref = %d" % (P, P_ref)
-            assert ovf == ovf_ref, "Test failed: ovf = %d, ovf_ref = %d" % (
-                ovf, ovf_ref)
-
-
-@cocotb.test()
-async def test_adder_basic(dut):
-    """
-    Perform some basic test of the adder module.
-    """
-    # Create clock and start it
-    cocotb.start_soon(Clock(dut.clk, 10).start())
-
-    # Reset the DUT
-    dut.rst.value = 1
-    dut.a.value = 0
-    dut.b.value = 0
-    dut.sub.value = 0
-    await ClockCycles(dut.clk, 3)
-    assert dut.p.value == 0, "P output should be reset to 0"
-    assert dut.ovf.value == 0, "OVF output should be reset to 0"
-    dut.rst.value = 0
-    await ClockCycles(dut.clk, 10)
-
-    # Send a few values to the DUT
-    await RisingEdge(dut.clk)
-    dut.a.value = 1
-    dut.b.value = 1
-
-    # Read the result back from the DUT
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    result = dut.p.value.integer
-    expect = 1 + 1
-    assert result == 2, f"Result is should be {expect}"
-
-    # Wait for the simulation to finish
-    await ClockCycles(dut.clk, 10)
-    dut._log.info("Simulation finished")
-
-
-@cocotb.test()
-async def test_adder_advanced(dut):
-    """
-    Test the adder module against a MATLAB golden model.
-    """
-    # Create clock and start it
-    cocotb.start_soon(Clock(dut.clk, 10).start())
-
-    # Create a tester
-    tester = AdderTester(dut)
-
-    # Reset the DUT
-    dut.rst.value = 1
-    dut.a.value = 0
-    dut.b.value = 0
-    dut.sub.value = 0
-    await ClockCycles(dut.clk, 10)
-    dut.rst.value = 0
-
-    tester.start()
-
-    # Run test multiple times
-    for _ in range(1000):
+async def output_monitor(dut):
+    await ClockCycles(dut.clk, LATENCY)
+    while True:
         await RisingEdge(dut.clk)
-        A = random.randint(-2**(A_WIDTH-1), 2**(A_WIDTH-1)-1)
-        B = random.randint(-2**(B_WIDTH-1), 2**(B_WIDTH-1)-1)
-        dut.a.value = A
-        dut.b.value = B
+        output_queue.put_nowait((dut.p.value.to_signed(), int(dut.ovf.value)))
+
+
+async def checker():
+    while True:
+        input_value = await input_queue.get()
+        output_value = await output_queue.get()
+        (a, b, sub) = input_value
+        (p, ovf) = output_value
+        (p_ref, ovf_ref) = model(a, b, sub)
+        assert (p_ref, ovf_ref) == (p, ovf), (
+            f"Mismatch: a={a}, b={b}, sub={sub}, got(p={p},ovf={ovf}), "
+            f"ref(p={p_ref},ovf={ovf_ref})"
+        )
+
+
+@cocotb.test()
+async def test_adder(dut):
+    cocotb.log.info("Simulation started")
+    cocotb.start_soon(Clock(dut.clk, 10).start())
+
+    await reset(dut)
+
+    cocotb.start_soon(input_monitor(dut))
+    cocotb.start_soon(output_monitor(dut))
+    cocotb.start_soon(checker())
+
+    await drive(dut)
 
     await ClockCycles(dut.clk, 10)
-    dut._log.info("Simulation finished")
+    cocotb.log.info("Simulation finished")
+
+
+def test_adder_runner():
+    sim = os.environ.get("SIM", "questa")
+    hdl_toplevel = "adder"
+    hdl_toplevel_lang = "verilog"
+
+    verilog_sources = [
+        prj_path / "rtl/adder.sv",
+    ]
+
+    parameters = {
+        "A_WIDTH": A_WIDTH,
+        "B_WIDTH": B_WIDTH,
+        "P_WIDTH": P_WIDTH,
+        "SHIFT": SHIFT,
+        "ROUND": ROUND,
+        "SATURATE": SATURATE,
+    }
+
+    runner = get_runner(sim)
+    runner.build(
+        hdl_toplevel=hdl_toplevel,
+        verilog_sources=verilog_sources,
+        parameters=parameters,
+        always=True,
+        waves=True,
+    )
+    runner.test(
+        hdl_toplevel=hdl_toplevel,
+        hdl_toplevel_lang=hdl_toplevel_lang,
+        test_module="test_adder",
+        gui=GUI,
+    )
+
+
+if __name__ == "__main__":
+    test_adder_runner()
