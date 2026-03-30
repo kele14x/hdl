@@ -2,45 +2,50 @@
 //
 `default_nettype none
 
-module mult #(
+module mult_add #(
     parameter int A_WIDTH  = 16,
     parameter int B_WIDTH  = 16,
+    parameter int C_WIDTH  = 16,
     parameter int P_WIDTH  = 16,
     parameter int SHIFT    = 15,
     //
     parameter bit ROUND    = 1'b0,
     parameter bit SATURATE = 1'b0
 ) (
-    input  wire                      clk,
-    input  wire                      rst,
+    input  logic                      clk,
+    input  logic                      rst,
     //
-    input  wire signed [A_WIDTH-1:0] a,
-    input  wire signed [B_WIDTH-1:0] b,
+    input  logic signed [A_WIDTH-1:0] a,
+    input  logic signed [B_WIDTH-1:0] b,
+    input  logic signed [C_WIDTH-1:0] c,
     //
-    output wire signed [P_WIDTH-1:0] p,
-    //
-    output wire                      ovf
+    output logic signed [P_WIDTH-1:0] p,
+    output logic                      ovf
 );
 
   localparam int Latency = 4;
-  localparam int FullWidth = A_WIDTH + B_WIDTH;
+  localparam int FullWidth = (A_WIDTH + B_WIDTH > C_WIDTH) ? (A_WIDTH + B_WIDTH + 1) : (C_WIDTH + 1);
   localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
 
-  localparam signed [FullWidth-1:0] Rng = (ROUND && (SHIFT > 0)) ? (1 << (SHIFT - 1)) : 0;
+  localparam logic signed [FullWidth-1:0] Rng = (ROUND && (SHIFT > 0)) ? (1 << (SHIFT - 1)) : 0;
 
-  reg signed  [  A_WIDTH-1:0] a_d;
-  reg signed  [  B_WIDTH-1:0] b_d;
-  reg signed  [FullWidth-1:0] m;
-  reg signed  [FullWidth-1:0] p_full;
+  logic signed [  A_WIDTH-1:0] a_d;
+  logic signed [  B_WIDTH-1:0] b_d;
+  logic signed [  C_WIDTH-1:0] c_d;
+  logic signed [  C_WIDTH-1:0] c_dd;
+  logic signed [FullWidth-1:0] c_full;
 
-  wire signed [  P_WIDTH-1:0] p_ext;
-  wire signed [  P_WIDTH-1:0] p_sat;
-  reg signed  [  P_WIDTH-1:0] p_reg;
+  logic signed [FullWidth-1:0] m;
+  logic signed [FullWidth-1:0] p_full;
 
-  wire                        ovf_s;
-  reg                         ovf_r;
-  wire                        overflow;
-  wire                        underflow;
+  logic signed [  P_WIDTH-1:0] p_ext;
+  logic signed [  P_WIDTH-1:0] p_sat;
+  logic signed [  P_WIDTH-1:0] p_reg;
+
+  logic                        ovf_s;
+  logic                        ovf_r;
+  logic                        overflow;
+  logic                        underflow;
 
   always_ff @(posedge clk) begin
     a_d <= a;
@@ -51,17 +56,24 @@ module mult #(
   end
 
   always_ff @(posedge clk) begin
+    c_d  <= c;
+    c_dd <= c_d;
+  end
+
+  assign c_full = {{(FullWidth - C_WIDTH) {c_dd[C_WIDTH-1]}}, c_dd};
+
+  always_ff @(posedge clk) begin
     m <= a_d * b_d;
   end
 
   always_ff @(posedge clk) begin
-    p_full <= m + Rng;
+    p_full <= m + c_full + Rng;
   end
 
   generate
     if (SignExp > 0) begin : g_sgexp
       assign p_ext = {{SignExp{p_full[FullWidth-1]}}, p_full[FullWidth-1:SHIFT]};
-    end else begin : g_sgexp
+    end else begin : g_no_sgexp
       assign p_ext = p_full[P_WIDTH+SHIFT-1:SHIFT];
     end
   endgenerate
@@ -83,8 +95,8 @@ module mult #(
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      p_reg <= 0;
-      ovf_r <= 0;
+      p_reg <= '0;
+      ovf_r <= '0;
     end else begin
       p_reg <= p_sat;
       ovf_r <= ovf_s;

@@ -69,7 +69,7 @@ module adder #(
   assign p_sat = (SATURATE && overflow) ? {1'b0, {P_WIDTH - 1{1'b1}}} :
                  (SATURATE && underflow) ? {1'b1, {P_WIDTH - 1{1'b0}}} : p_ext;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       p_reg <= '0;
       ovf_r <= 1'b0;

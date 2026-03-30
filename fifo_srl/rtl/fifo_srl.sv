@@ -10,37 +10,36 @@ module fifo_srl #(
     parameter int DATA_WIDTH = 16
 ) (
     // Common to write and read
-    input var                   clk,
-    input var                   rst,
+    input  wire                  clk,
+    input  wire                  rst,
     // Write interface
-    input var                   wren,
-    input var  [DATA_WIDTH-1:0] din,
-    output var                  full,
+    input  wire                  wren,
+    input  wire [DATA_WIDTH-1:0] din,
+    output wire                  full,
     // Read interface
-    input var                   rden,
-    output var [DATA_WIDTH-1:0] dout,
-    output var                  empty
+    input  wire                  rden,
+    output wire [DATA_WIDTH-1:0] dout,
+    output wire                  empty
 );
 
   // Local parameters
-  //=================
 
   localparam int AddrWidth = $clog2(FIFO_DEPTH);
 
-
   // Signals
-  //========
 
   logic [AddrWidth-1:0] addr;
   logic [AddrWidth-1:0] addr_next;
 
-  logic shift;
-  logic full_next;
-  logic empty_next;
+  logic                 shift;
 
+  logic                 full_r;
+  logic                 full_next;
+
+  logic                 empty_r;
+  logic                 empty_next;
 
   // Main
-  //=====
 
   // The state of FIFO could be determined by `addr` and `empty`.
   //   Empty     - `empty = 1`, `addr = 0`
@@ -60,19 +59,19 @@ module fifo_srl #(
   end
 
   always_comb begin
-    if (addr == '0) begin // FIFO could be empty or not empty
+    if (addr == '0) begin  // FIFO could be empty or not empty
       if (!empty && wren && !rden) begin
         addr_next = addr + 1;
       end else begin
         addr_next = addr;
       end
-    end else if (addr == '1) begin // FIFO is full
+    end else if (addr == '1) begin  // FIFO is full
       if (rden) begin
         addr_next = addr - 1;
       end else begin
         addr_next = addr;
       end
-    end else begin // not full or empty
+    end else begin  // not full or empty
       if (!wren && rden) begin
         addr_next = addr - 1;
       end else if (wren && !rden) begin
@@ -87,9 +86,9 @@ module fifo_srl #(
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      empty <= 1'b1;
+      empty_r <= 1'b1;
     end else begin
-      empty <= empty_next;
+      empty_r <= empty_next;
     end
   end
 
@@ -99,17 +98,19 @@ module fifo_srl #(
     end else if (rden && addr == '0) begin
       empty_next = 1'b1;
     end else begin
-      empty_next = empty;
+      empty_next = empty_r;
     end
   end
+
+  assign empty = empty_r;
 
   // Full flag
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      full <= 1'b1;
+      full_r <= 1'b1;
     end else begin
-      full <= full_next;
+      full_r <= full_next;
     end
   end
 
@@ -121,16 +122,19 @@ module fifo_srl #(
     end
   end
 
+  assign full  = full_r;
+
   // Shift
 
-  assign shift = (wren && !full);
+  assign shift = (wren && !full_r);
 
+  // SRL
 
   srl #(
-      .SIM_INIT  (1'b1),
-      .OUTPUT_REG(1'b0),
       .ADDR_WIDTH(AddrWidth),
-      .DATA_WIDTH(DATA_WIDTH)
+      .DATA_WIDTH(DATA_WIDTH),
+      .OUTPUT_REG(1'b0),
+      .INIT      (1'b1)
   ) i_srl (
       // Read Interface
       .clk (clk),

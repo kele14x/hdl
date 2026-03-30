@@ -17,7 +17,6 @@ rng = np.random.default_rng(12345)
 
 PARAM_SETS_FILE = Path(__file__).resolve().parent / "param_sets.json"
 
-LATENCY = 1
 SIM = os.environ.get("SIM", "verilator").lower()
 GUI = os.environ.get("GUI", "False").lower() == "true"
 
@@ -25,95 +24,53 @@ input_queue = Queue()
 output_queue = Queue()
 
 
-def truncate(x, w):
-    x = x % 2**w
-    x = x - 2**w if x > 2 ** (w - 1) - 1 else x
-    return x
-
-
-def saturation(x, w):
-    if x > 2 ** (w - 1) - 1:
-        return 2 ** (w - 1) - 1
-    if x < -(2 ** (w - 1)):
-        return -(2 ** (w - 1))
-    return x
-
-
-def model(a, b, sub, cfg):
-    shift = cfg["SHIFT"]
-    p_width = cfg["P_WIDTH"]
-    rnd = cfg["ROUND"]
-    saturate_en = cfg["SATURATE"]
-
-    p = a - b if sub else a + b
-    if rnd and shift > 0:
-        p = (p + 2 ** (shift - 1)) / 2**shift
-    else:
-        p = p / 2**shift if shift > 0 else p
-    p = int(np.floor(p))
-
-    ovf = p > 2 ** (p_width - 1) - 1 or p < -(2 ** (p_width - 1))
-    p = saturation(p, p_width) if saturate_en else truncate(p, p_width)
-    return (p, int(ovf))
-
-
 async def reset(dut):
     dut.rst.value = 1
-    dut.a.value = 0
-    dut.b.value = 0
-    dut.sub.value = 0
+    dut.wren.value = 0
+    dut.din.value = 0
+    dut.rden.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst.value = 0
     await ClockCycles(dut.clk, 10)
 
 
 async def drive(dut, cfg):
-    a_width = cfg["A_WIDTH"]
-    b_width = cfg["B_WIDTH"]
+    data_width = cfg["DATA_WIDTH"]
     for _ in range(10000):
         await RisingEdge(dut.clk)
-        dut.a.value = int(rng.integers(-(2 ** (a_width - 1)), 2 ** (a_width - 1)))
-        dut.b.value = int(rng.integers(-(2 ** (b_width - 1)), 2 ** (b_width - 1)))
-        dut.sub.value = int(rng.integers(0, 2))
+        dut.wren.value = int(rng.integers(0, 2))
+        dut.din.value = int(rng.integers(0, 2**data_width))
+        dut.rden.value = int(rng.integers(0, 2))
 
 
 async def input_monitor(dut):
     while True:
         await RisingEdge(dut.clk)
-        input_queue.put_nowait(
-            (dut.a.value.to_signed(), dut.b.value.to_signed(), int(dut.sub.value))
-        )
+        if int(dut.wren.value) and not int(dut.full.value):
+            input_queue.put_nowait(int(dut.din.value))
 
 
 async def output_monitor(dut):
-    await ClockCycles(dut.clk, LATENCY)
     while True:
         await RisingEdge(dut.clk)
-        output_queue.put_nowait((dut.p.value.to_signed(), int(dut.ovf.value)))
+        if int(dut.rden.value) and not int(dut.empty.value):
+            output_queue.put_nowait(int(dut.dout.value))
 
 
-async def checker(cfg):
+async def checker():
     while True:
         input_value = await input_queue.get()
         output_value = await output_queue.get()
-        (a, b, sub) = input_value
-        (p, ovf) = output_value
-        (p_ref, ovf_ref) = model(a, b, sub, cfg)
-        assert (p_ref, ovf_ref) == (p, ovf), (
-            f"Mismatch: a={a}, b={b}, sub={sub}, got(p={p},ovf={ovf}), "
-            f"ref(p={p_ref},ovf={ovf_ref})"
+        assert input_value == output_value, (
+            f"Result mismatch! input = {input_value}, output = {output_value}"
         )
 
 
 @cocotb.test()
-async def test_adder(dut):
+async def test_fifo_srl(dut):
     cfg = {
-        "A_WIDTH": int(dut.A_WIDTH.value),
-        "B_WIDTH": int(dut.B_WIDTH.value),
-        "P_WIDTH": int(dut.P_WIDTH.value),
-        "SHIFT": int(dut.SHIFT.value),
-        "ROUND": int(dut.ROUND.value),
-        "SATURATE": int(dut.SATURATE.value),
+        "FIFO_DEPTH": int(dut.FIFO_DEPTH.value),
+        "DATA_WIDTH": int(dut.DATA_WIDTH.value),
     }
 
     cocotb.log.info("Simulation started")
@@ -123,7 +80,7 @@ async def test_adder(dut):
 
     cocotb.start_soon(input_monitor(dut))
     cocotb.start_soon(output_monitor(dut))
-    cocotb.start_soon(checker(cfg))
+    cocotb.start_soon(checker())
 
     await drive(dut, cfg)
 
@@ -134,7 +91,7 @@ async def test_adder(dut):
 def _normalize_param_sets(data):
     if not isinstance(data, list) or len(data) == 0:
         raise ValueError("param_sets.json must be a non-empty JSON list")
-    required = {"A_WIDTH", "B_WIDTH", "P_WIDTH", "SHIFT", "ROUND", "SATURATE"}
+    required = {"FIFO_DEPTH", "DATA_WIDTH"}
     sets = []
     for i, item in enumerate(data, start=1):
         if not isinstance(item, dict):
@@ -146,12 +103,8 @@ def _normalize_param_sets(data):
         if missing:
             raise ValueError(f"Parameter set #{i} is missing keys: {sorted(missing)}")
         merged = {
-            "A_WIDTH": int(item["A_WIDTH"]),
-            "B_WIDTH": int(item["B_WIDTH"]),
-            "P_WIDTH": int(item["P_WIDTH"]),
-            "SHIFT": int(item["SHIFT"]),
-            "ROUND": int(item["ROUND"]),
-            "SATURATE": int(item["SATURATE"]),
+            "FIFO_DEPTH": int(item["FIFO_DEPTH"]),
+            "DATA_WIDTH": int(item["DATA_WIDTH"]),
         }
         sets.append(merged)
     return sets
@@ -166,23 +119,27 @@ def _param_sets_for_pytest():
 
 
 @pytest.mark.parametrize("params", _param_sets_for_pytest())
-def test_adder_runner(params):
+def test_fifo_srl_runner(params):
     runner = get_runner(SIM)
-    hdl_toplevel = "adder"
+    hdl_toplevel = "fifo_srl"
 
-    with tempfile.TemporaryDirectory(prefix="adder_param_") as run_dir:
+    with tempfile.TemporaryDirectory(prefix="fifo_srl_param_") as run_dir:
         runner.build(
             hdl_toplevel=hdl_toplevel,
-            sources=[prj_path / "rtl/adder.sv"],
+            sources=[
+                prj_path / "../srl/rtl/srl.sv",
+                prj_path / "rtl/fifo_srl.sv",
+            ],
             parameters=params,
-            always=True,
             waves=True,
+            always=True,
             build_dir=run_dir,
         )
+
         runner.test(
             hdl_toplevel=hdl_toplevel,
             hdl_toplevel_lang="verilog",
-            test_module="test_adder",
+            test_module="test_fifo_srl",
             gui=GUI,
             test_dir=run_dir,
         )

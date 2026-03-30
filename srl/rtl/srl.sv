@@ -30,10 +30,10 @@
 `default_nettype none
 
 module srl #(
-    parameter integer ADDR_WIDTH = 4,
-    parameter integer DATA_WIDTH = 8,
-    parameter reg     OUTPUT_REG = 1'b1,
-    parameter reg     INIT       = 1'b0
+    parameter int ADDR_WIDTH = 4,
+    parameter int DATA_WIDTH = 8,
+    parameter reg OUTPUT_REG = 1'b1,
+    parameter reg INIT       = 1'b0
 ) (
     // Read Interface
     input  wire                  clk,
@@ -42,25 +42,25 @@ module srl #(
     //
     input  wire [ADDR_WIDTH-1:0] addr,
     input  wire [DATA_WIDTH-1:0] din,
-    output reg  [DATA_WIDTH-1:0] dout
+    output wire [DATA_WIDTH-1:0] dout
 );
 
-  reg [DATA_WIDTH-1:0] dsrl[0:2**ADDR_WIDTH-1];
+  logic [DATA_WIDTH-1:0] dsrl[2**ADDR_WIDTH];
 
-  integer i;
+  logic [DATA_WIDTH-1:0] dout_s;
 
   initial begin
     if (INIT) begin
-      for (i = 0; i < 2 ** ADDR_WIDTH; i = i + 1) begin
+      for (int i = 0; i < 2 ** ADDR_WIDTH; i = i + 1) begin
         dsrl[i] = 'b0;
       end
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (cen) begin
       dsrl[0] <= din;
-      for (i = 1; i < 2 ** ADDR_WIDTH; i = i + 1) begin
+      for (int i = 1; i < 2 ** ADDR_WIDTH; i = i + 1) begin
         dsrl[i] <= dsrl[i-1];
       end
     end
@@ -69,22 +69,24 @@ module srl #(
   generate
     if (OUTPUT_REG == 0) begin : g_no_reg
 
-      always @(*) begin
-        dout = dsrl[addr];
+      always_comb begin
+        dout_s = dsrl[addr];
       end
 
     end else begin : g_reg
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         if (rst) begin
-          dout <= 1'b0;
+          dout_s <= {DATA_WIDTH{1'b0}};
         end else if (cen) begin
-          dout <= dsrl[addr];
+          dout_s <= dsrl[addr];
         end
       end
 
     end
   endgenerate
+
+  assign dout = dout_s;
 
 endmodule
 

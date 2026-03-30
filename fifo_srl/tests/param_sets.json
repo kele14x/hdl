@@ -1,0 +1,10 @@
+[
+  {
+    "FIFO_DEPTH": 16,
+    "DATA_WIDTH": 16
+  },
+  {
+    "FIFO_DEPTH": 32,
+    "DATA_WIDTH": 12
+  }
+]

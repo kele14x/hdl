@@ -17,9 +17,9 @@ rng = np.random.default_rng(12345)
 
 PARAM_SETS_FILE = Path(__file__).resolve().parent / "param_sets.json"
 
-LATENCY = 1
-SIM = os.environ.get("SIM", "verilator").lower()
+LATENCY = 4
 GUI = os.environ.get("GUI", "False").lower() == "true"
+SIM = os.environ.get("SIM", "verilator")
 
 input_queue = Queue()
 output_queue = Queue()
@@ -39,13 +39,13 @@ def saturation(x, w):
     return x
 
 
-def model(a, b, sub, cfg):
+def model(a, b, c, cfg):
     shift = cfg["SHIFT"]
     p_width = cfg["P_WIDTH"]
     rnd = cfg["ROUND"]
     saturate_en = cfg["SATURATE"]
 
-    p = a - b if sub else a + b
+    p = a * b + c
     if rnd and shift > 0:
         p = (p + 2 ** (shift - 1)) / 2**shift
     else:
@@ -61,7 +61,7 @@ async def reset(dut):
     dut.rst.value = 1
     dut.a.value = 0
     dut.b.value = 0
-    dut.sub.value = 0
+    dut.c.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst.value = 0
     await ClockCycles(dut.clk, 10)
@@ -70,18 +70,19 @@ async def reset(dut):
 async def drive(dut, cfg):
     a_width = cfg["A_WIDTH"]
     b_width = cfg["B_WIDTH"]
-    for _ in range(10000):
+    c_width = cfg["C_WIDTH"]
+    for _ in range(1000):
         await RisingEdge(dut.clk)
         dut.a.value = int(rng.integers(-(2 ** (a_width - 1)), 2 ** (a_width - 1)))
         dut.b.value = int(rng.integers(-(2 ** (b_width - 1)), 2 ** (b_width - 1)))
-        dut.sub.value = int(rng.integers(0, 2))
+        dut.c.value = int(rng.integers(-(2 ** (c_width - 1)), 2 ** (c_width - 1)))
 
 
 async def input_monitor(dut):
     while True:
         await RisingEdge(dut.clk)
         input_queue.put_nowait(
-            (dut.a.value.to_signed(), dut.b.value.to_signed(), int(dut.sub.value))
+            (dut.a.value.to_signed(), dut.b.value.to_signed(), dut.c.value.to_signed())
         )
 
 
@@ -96,20 +97,21 @@ async def checker(cfg):
     while True:
         input_value = await input_queue.get()
         output_value = await output_queue.get()
-        (a, b, sub) = input_value
+        (a, b, c) = input_value
         (p, ovf) = output_value
-        (p_ref, ovf_ref) = model(a, b, sub, cfg)
+        (p_ref, ovf_ref) = model(a, b, c, cfg)
         assert (p_ref, ovf_ref) == (p, ovf), (
-            f"Mismatch: a={a}, b={b}, sub={sub}, got(p={p},ovf={ovf}), "
+            f"Mismatch: a={a}, b={b}, c={c}, got(p={p},ovf={ovf}), "
             f"ref(p={p_ref},ovf={ovf_ref})"
         )
 
 
 @cocotb.test()
-async def test_adder(dut):
+async def test_mult_add(dut):
     cfg = {
         "A_WIDTH": int(dut.A_WIDTH.value),
         "B_WIDTH": int(dut.B_WIDTH.value),
+        "C_WIDTH": int(dut.C_WIDTH.value),
         "P_WIDTH": int(dut.P_WIDTH.value),
         "SHIFT": int(dut.SHIFT.value),
         "ROUND": int(dut.ROUND.value),
@@ -134,7 +136,15 @@ async def test_adder(dut):
 def _normalize_param_sets(data):
     if not isinstance(data, list) or len(data) == 0:
         raise ValueError("param_sets.json must be a non-empty JSON list")
-    required = {"A_WIDTH", "B_WIDTH", "P_WIDTH", "SHIFT", "ROUND", "SATURATE"}
+    required = {
+        "A_WIDTH",
+        "B_WIDTH",
+        "C_WIDTH",
+        "P_WIDTH",
+        "SHIFT",
+        "ROUND",
+        "SATURATE",
+    }
     sets = []
     for i, item in enumerate(data, start=1):
         if not isinstance(item, dict):
@@ -148,6 +158,7 @@ def _normalize_param_sets(data):
         merged = {
             "A_WIDTH": int(item["A_WIDTH"]),
             "B_WIDTH": int(item["B_WIDTH"]),
+            "C_WIDTH": int(item["C_WIDTH"]),
             "P_WIDTH": int(item["P_WIDTH"]),
             "SHIFT": int(item["SHIFT"]),
             "ROUND": int(item["ROUND"]),
@@ -166,14 +177,14 @@ def _param_sets_for_pytest():
 
 
 @pytest.mark.parametrize("params", _param_sets_for_pytest())
-def test_adder_runner(params):
+def test_mult_add_runner(params):
     runner = get_runner(SIM)
-    hdl_toplevel = "adder"
+    hdl_toplevel = "mult_add"
 
-    with tempfile.TemporaryDirectory(prefix="adder_param_") as run_dir:
+    with tempfile.TemporaryDirectory(prefix="mult_add_param_") as run_dir:
         runner.build(
             hdl_toplevel=hdl_toplevel,
-            sources=[prj_path / "rtl/adder.sv"],
+            sources=[prj_path / "rtl/mult_add.sv"],
             parameters=params,
             always=True,
             waves=True,
@@ -182,7 +193,7 @@ def test_adder_runner(params):
         runner.test(
             hdl_toplevel=hdl_toplevel,
             hdl_toplevel_lang="verilog",
-            test_module="test_adder",
+            test_module="test_mult_add",
             gui=GUI,
             test_dir=run_dir,
         )
