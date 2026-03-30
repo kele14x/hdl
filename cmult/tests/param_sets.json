@@ -1,0 +1,18 @@
+[
+  {
+    "A_WIDTH": 16,
+    "B_WIDTH": 16,
+    "P_WIDTH": 16,
+    "SHIFT": 15,
+    "ROUND": 1,
+    "SATURATE": 1
+  },
+  {
+    "A_WIDTH": 16,
+    "B_WIDTH": 16,
+    "P_WIDTH": 16,
+    "SHIFT": 15,
+    "ROUND": 0,
+    "SATURATE": 0
+  }
+]
