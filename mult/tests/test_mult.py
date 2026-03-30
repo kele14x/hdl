@@ -1,191 +1,188 @@
-import random
-from typing import Dict, Tuple
+#! /usr/bin/env python3
+import json
+import os
+import tempfile
+from pathlib import Path
 
 import cocotb
-import matlab.engine
+import numpy as np
+import pytest
 from cocotb.clock import Clock
-from cocotb.handle import SimHandleBase
 from cocotb.queue import Queue
-from cocotb.triggers import RisingEdge, ClockCycles
+from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb_tools.runner import get_runner
+
+prj_path = Path(__file__).resolve().parent.parent
+rng = np.random.default_rng(12345)
+
+PARAM_SETS_FILE = Path(__file__).resolve().parent / "param_sets.json"
+
+LATENCY = 4
+GUI = os.environ.get("GUI", "False").lower() == "true"
+SIM = os.environ.get("SIM", "verilator")
+
+input_queue = Queue()
+output_queue = Queue()
 
 
-A_WIDTH = cocotb.top.A_WIDTH.value
-B_WIDTH = cocotb.top.B_WIDTH.value
-P_WIDTH = cocotb.top.P_WIDTH.value
-SRA_BITS = cocotb.top.SRA_BITS.value
+def truncate(x, w):
+    x = x % 2**w
+    x = x - 2**w if x > 2 ** (w - 1) - 1 else x
+    return x
 
 
-class DataMonitor:
-    """
-    Simple monitor to read data from a signal.
-    """
-
-    def __init__(self, clk: SimHandleBase, signals: Dict[str, SimHandleBase], delay: int = 0):
-        self.values = Queue[Dict[str, int]]()
-        self._clk = clk
-        self._signals = signals
-        self._delay = delay
-        self._coro = None
-
-    def start(self) -> None:
-        """Start the monitor."""
-        if self._coro is not None:
-            raise RuntimeError("Monitor already started")
-        self._coro = cocotb.start_soon(self._monitor())
-
-    def stop(self) -> None:
-        """Stop the monitor."""
-        if self._coro is None:
-            raise RuntimeError("Monitor not started")
-        self._coro.kill()
-        self._coro = None
-
-    async def _monitor(self) -> None:
-        await ClockCycles(self._clk, self._delay)
-        while True:
-            await RisingEdge(self._clk)
-            self.values.put_nowait(self._sample())
-
-    def _sample(self) -> Dict[str, int]:
-        return {name: sig.value for name, sig in self._signals.items()}
+def saturation(x, w):
+    if x > 2 ** (w - 1) - 1:
+        return 2 ** (w - 1) - 1
+    if x < -(2 ** (w - 1)):
+        return -(2 ** (w - 1))
+    return x
 
 
-class MultTester:
-    """Checker of a mult instance."""
+def model(a, b, cfg):
+    shift = cfg["SHIFT"]
+    p_width = cfg["P_WIDTH"]
+    rnd = cfg["ROUND"]
+    saturate_en = cfg["SATURATE"]
 
-    def __init__(self, dut: SimHandleBase):
-        self.dut = dut
-        self._checker = None
+    p = a * b
+    if rnd and shift > 0:
+        p = (p + 2 ** (shift - 1)) / 2**shift
+    else:
+        p = p / 2**shift if shift > 0 else p
+    p = int(np.floor(p))
 
-        self.input_mon = DataMonitor(
-            clk=self.dut.clk,
-            signals={
-                "a": self.dut.a,
-                "b": self.dut.b,
-            },
-        )
-
-        self.output_mon = DataMonitor(
-            clk=self.dut.clk,
-            signals={
-                "p": self.dut.p,
-                "ovf": self.dut.ovf,
-            },
-            delay=self.dut.Latency.value,
-        )
-
-        # Start MATLAB session
-        self._eng = matlab.engine.start_matlab("-sd ~/Workspaces/dfe")
-        self._eng.setpath(nargout=0)
-
-        # Create MATLAB reference System object
-        self._model = self._eng.dfe.Mult(
-            'AWidth', float(A_WIDTH),
-            'BWidth', float(B_WIDTH),
-            'PWidth', float(P_WIDTH),
-            'SraBits', float(SRA_BITS)
-        )
-
-    def start(self) -> None:
-        """Start the checker."""
-        if self._checker is not None:
-            raise RuntimeError("Checker already started")
-        self.input_mon.start()
-        self.output_mon.start()
-        self._checker = cocotb.start_soon(self._check())
-
-    def stop(self) -> None:
-        """Stop the checker."""
-        if self._checker is None:
-            raise RuntimeError("Checker not started")
-        self.input_mon.stop()
-        self.output_mon.stop()
-        self._checker.kill()
-        self._checker = None
-
-    def model(self, a: float, b: float) -> Tuple[float, bool]:
-        """Return the model result of the multiplier."""
-        (p, ovf) = self._eng.step(self._model, a, b, nargout=2)
-        return (p, ovf)
-
-    async def _check(self) -> None:
-        """Checker function."""
-        while True:
-            input = await self.input_mon.values.get()
-            output = await self.output_mon.values.get()
-            a = float(input["a"].signed_integer)
-            b = float(input["b"].signed_integer)
-
-            p = output["p"].signed_integer
-            ovf = output["ovf"].value
-
-            (p_ref, ovf_ref) = self.model(a, b)
-
-            assert p == p_ref, "Output mismatch"
-            assert ovf == ovf_ref, "Overflow mismatch"
+    ovf = p > 2 ** (p_width - 1) - 1 or p < -(2 ** (p_width - 1))
+    p = saturation(p, p_width) if saturate_en else truncate(p, p_width)
+    return (p, int(ovf))
 
 
-@cocotb.test()
-async def test_mult_basic(dut):
-    """
-    Perform some basic test of the mult module.
-    """
-    # Create clock and start it
-    cocotb.start_soon(Clock(dut.clk, 10).start())
-
-    # Reset the DUT
-    dut.rst.value = 1
-    dut.a.value = 0
-    dut.b.value = 0
-    await ClockCycles(dut.clk, 5)
-    assert dut.p.value == 0, "p output should be reset to 0"
-    assert dut.ovf.value == 0, "ovf output should be reset to 0"
-    dut.rst.value = 0
-    await ClockCycles(dut.clk, 10)
-
-    # Send a few values to the DUT
-    await RisingEdge(dut.clk)
-    dut.a.value = 16384
-    dut.b.value = 16384
-
-    # Read the result back from the DUT
-    await ClockCycles(dut.clk, dut.Latency.value + 2)
-    result = dut.p.value.integer
-    expect = 8192
-    assert result == expect, f"Result is should be {expect}"
-
-    # Wait for the simulation to finish
-    await ClockCycles(dut.clk, 10)
-    dut._log.info("Simulation finished")
-
-
-@cocotb.test()
-async def test_mult_advanced(dut):
-    """
-    Test the cmult module against a MATLAB golden model.
-    """
-    # Create clock and start it
-    cocotb.start_soon(Clock(dut.clk, 10).start())
-
-    # Create a tester
-    tester = MultTester(dut)
-
-    # Reset the DUT
+async def reset(dut):
     dut.rst.value = 1
     dut.a.value = 0
     dut.b.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst.value = 0
+    await ClockCycles(dut.clk, 10)
 
-    tester.start()
 
-    # Run test multiple times
+async def drive(dut, cfg):
+    a_width = cfg["A_WIDTH"]
+    b_width = cfg["B_WIDTH"]
     for _ in range(1000):
         await RisingEdge(dut.clk)
-        a = random.randint(-2**(A_WIDTH-1), 2**(A_WIDTH-1)-1)
-        b = random.randint(-2**(B_WIDTH-1), 2**(B_WIDTH-1)-1)
-        dut.a.value = a
-        dut.b.value = b
+        dut.a.value = int(rng.integers(-(2 ** (a_width - 1)), 2 ** (a_width - 1)))
+        dut.b.value = int(rng.integers(-(2 ** (b_width - 1)), 2 ** (b_width - 1)))
+
+
+async def input_monitor(dut):
+    while True:
+        await RisingEdge(dut.clk)
+        input_queue.put_nowait((dut.a.value.to_signed(), dut.b.value.to_signed()))
+
+
+async def output_monitor(dut):
+    await ClockCycles(dut.clk, LATENCY)
+    while True:
+        await RisingEdge(dut.clk)
+        output_queue.put_nowait((dut.p.value.to_signed(), int(dut.ovf.value)))
+
+
+async def checker(cfg):
+    while True:
+        input_value = await input_queue.get()
+        output_value = await output_queue.get()
+        (a, b) = input_value
+        (p, ovf) = output_value
+        (p_ref, ovf_ref) = model(a, b, cfg)
+        assert (p_ref, ovf_ref) == (p, ovf), (
+            f"Mismatch: a={a}, b={b}, got(p={p},ovf={ovf}), "
+            f"ref(p={p_ref},ovf={ovf_ref})"
+        )
+
+
+@cocotb.test()
+async def test_mult(dut):
+    cfg = {
+        "A_WIDTH": int(dut.A_WIDTH.value),
+        "B_WIDTH": int(dut.B_WIDTH.value),
+        "P_WIDTH": int(dut.P_WIDTH.value),
+        "SHIFT": int(dut.SHIFT.value),
+        "ROUND": int(dut.ROUND.value),
+        "SATURATE": int(dut.SATURATE.value),
+    }
+
+    cocotb.log.info("Simulation started")
+    cocotb.start_soon(Clock(dut.clk, 10).start())
+
+    await reset(dut)
+
+    cocotb.start_soon(input_monitor(dut))
+    cocotb.start_soon(output_monitor(dut))
+    cocotb.start_soon(checker(cfg))
+
+    await drive(dut, cfg)
 
     await ClockCycles(dut.clk, 10)
-    dut._log.info("Simulation finished")
+    cocotb.log.info("Simulation finished")
+
+
+def _normalize_param_sets(data):
+    if not isinstance(data, list) or len(data) == 0:
+        raise ValueError("param_sets.json must be a non-empty JSON list")
+    required = {"A_WIDTH", "B_WIDTH", "P_WIDTH", "SHIFT", "ROUND", "SATURATE"}
+    sets = []
+    for i, item in enumerate(data, start=1):
+        if not isinstance(item, dict):
+            raise ValueError(f"Parameter set #{i} must be a JSON object")
+        unknown = set(item.keys()) - required
+        if unknown:
+            raise ValueError(f"Parameter set #{i} has unknown keys: {sorted(unknown)}")
+        missing = required - set(item.keys())
+        if missing:
+            raise ValueError(f"Parameter set #{i} is missing keys: {sorted(missing)}")
+        merged = {
+            "A_WIDTH": int(item["A_WIDTH"]),
+            "B_WIDTH": int(item["B_WIDTH"]),
+            "P_WIDTH": int(item["P_WIDTH"]),
+            "SHIFT": int(item["SHIFT"]),
+            "ROUND": int(item["ROUND"]),
+            "SATURATE": int(item["SATURATE"]),
+        }
+        sets.append(merged)
+    return sets
+
+
+def _param_sets_for_pytest():
+    if not PARAM_SETS_FILE.exists():
+        raise FileNotFoundError(f"Parameter set file not found: {PARAM_SETS_FILE}")
+    with PARAM_SETS_FILE.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+    return _normalize_param_sets(data)
+
+
+@pytest.mark.parametrize("params", _param_sets_for_pytest())
+def test_mult_runner(params):
+    runner = get_runner(SIM)
+    hdl_toplevel = "mult"
+
+    with tempfile.TemporaryDirectory(prefix="mult_param_") as run_dir:
+        runner.build(
+            hdl_toplevel=hdl_toplevel,
+            sources=[prj_path / "rtl/mult.sv"],
+            parameters=params,
+            always=True,
+            waves=True,
+            build_dir=run_dir,
+        )
+        runner.test(
+            hdl_toplevel=hdl_toplevel,
+            hdl_toplevel_lang="verilog",
+            test_module="test_mult",
+            gui=GUI,
+            test_dir=run_dir,
+        )
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-q"]))

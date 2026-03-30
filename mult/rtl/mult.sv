@@ -1,75 +1,98 @@
-// File: mult.sv
-// Brief: Multiplier
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
 
 module mult #(
-    parameter int A_WIDTH = 16,
-    parameter int B_WIDTH = 16,
-    parameter int P_WIDTH = 16,
-    parameter int SHIFT   = 15
+    parameter int A_WIDTH  = 16,
+    parameter int B_WIDTH  = 16,
+    parameter int P_WIDTH  = 16,
+    parameter int SHIFT    = 15,
+    //
+    parameter bit ROUND    = 1'b0,
+    parameter bit SATURATE = 1'b0
 ) (
-    input var                clk,
-    input var                rst,
+    input  wire                      clk,
+    input  wire                      rst,
     //
-    input var  [A_WIDTH-1:0] a,
-    input var  [B_WIDTH-1:0] b,
-    output var [P_WIDTH-1:0] p,
+    input  wire signed [A_WIDTH-1:0] a,
+    input  wire signed [B_WIDTH-1:0] b,
     //
-    output var               ovf
+    output wire signed [P_WIDTH-1:0] p,
+    //
+    output wire                      ovf
 );
 
-  localparam int Latency = 3;
+  localparam int Latency = 4;
   localparam int FullWidth = A_WIDTH + B_WIDTH;
   localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
 
-  localparam logic signed [FullWidth-1:0] Rng = SHIFT > 0 ? 1 << (SHIFT - 1) : 0;
+  localparam signed [FullWidth-1:0] Rng = (ROUND && (SHIFT > 0)) ? (1 << (SHIFT - 1)) : 0;
 
-  logic signed [  A_WIDTH-1:0] a_d;
-  logic signed [  B_WIDTH-1:0] b_d;
-  logic signed [FullWidth-1:0] m;
-  logic signed [FullWidth-1:0] p_int;
+  reg signed  [  A_WIDTH-1:0] a_d;
+  reg signed  [  B_WIDTH-1:0] b_d;
+  reg signed  [FullWidth-1:0] m;
+  reg signed  [FullWidth-1:0] p_full;
 
-  always_ff @(posedge clk) begin
+  wire signed [  P_WIDTH-1:0] p_ext;
+  wire signed [  P_WIDTH-1:0] p_sat;
+  reg signed  [  P_WIDTH-1:0] p_reg;
+
+  wire                        ovf_s;
+  reg                         ovf_r;
+  wire                        overflow;
+  wire                        underflow;
+
+  always @(posedge clk) begin
     a_d <= a;
   end
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     b_d <= b;
   end
 
-  always_ff @(posedge clk) begin
-    m <= a_d * b_d + Rng;
+  always @(posedge clk) begin
+    m <= a_d * b_d;
   end
 
-  // Full multiplier without truncate or sign expansion
-  always_ff @(posedge clk) begin
-    p_int <= m;
+  always @(posedge clk) begin
+    p_full <= m + Rng;
   end
 
-  // Sign expansion and truncate
   generate
-    if (SignExp > 0) begin : g_no_sgexp
-      assign p = {{SignExp{p_int[FullWidth-1]}}, p_int[FullWidth-1:SHIFT]};
+    if (SignExp > 0) begin : g_sgexp
+      assign p_ext = {{SignExp{p_full[FullWidth-1]}}, p_full[FullWidth-1:SHIFT]};
     end else begin : g_sgexp
-      assign p = p_int[P_WIDTH+SHIFT-1:SHIFT];
+      assign p_ext = p_full[P_WIDTH+SHIFT-1:SHIFT];
     end
   endgenerate
 
-  // Overflow indicator
   generate
     if (SignExp >= 0) begin : g_no_ovf
-
-      assign ovf = 1'b0;
-
+      assign ovf_s = 1'b0;
+      assign overflow = 1'b0;
+      assign underflow = 1'b0;
     end else begin : g_ovf
-
-      assign ovf = ~(p_int[FullWidth-1:P_WIDTH+SHIFT-1] == '1 ||
-        p_int[A_WIDTH+B_WIDTH-1:P_WIDTH+SHIFT-1] == '0);
-
+      assign ovf_s = ~(&p_full[FullWidth-1:P_WIDTH+SHIFT-1] || ~|p_full[FullWidth-1:P_WIDTH+SHIFT-1]);
+      assign overflow = ovf_s & ~p_full[FullWidth-1];
+      assign underflow = ovf_s & p_full[FullWidth-1];
     end
   endgenerate
+
+  assign p_sat = (SATURATE && overflow) ? {1'b0, {P_WIDTH - 1{1'b1}}} :
+                 (SATURATE && underflow) ? {1'b1, {P_WIDTH - 1{1'b0}}} : p_ext;
+
+  always @(posedge clk) begin
+    if (rst) begin
+      p_reg <= 0;
+      ovf_r <= 0;
+    end else begin
+      p_reg <= p_sat;
+      ovf_r <= ovf_s;
+    end
+  end
+
+  assign p   = p_reg;
+  assign ovf = ovf_r;
 
 endmodule
 
