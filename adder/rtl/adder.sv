@@ -3,13 +3,13 @@
 `default_nettype none
 
 module adder #(
-    parameter integer A_WIDTH  = 16,
-    parameter integer B_WIDTH  = 16,
-    parameter integer P_WIDTH  = 17,
-    parameter integer SHIFT    = 0,
+    parameter int A_WIDTH  = 16,
+    parameter int B_WIDTH  = 16,
+    parameter int P_WIDTH  = 17,
+    parameter int SHIFT    = 0,
     //
-    parameter bit     ROUND    = 1'b0,
-    parameter bit     SATURATE = 1'b0
+    parameter bit ROUND    = 1'b0,
+    parameter bit SATURATE = 1'b0
 ) (
     input  wire                      clk,
     input  wire                      rst,
@@ -22,23 +22,29 @@ module adder #(
     output wire                      ovf
 );
 
-  localparam integer Latency = 1;
-  localparam integer FullWidth = (A_WIDTH >= B_WIDTH) ? A_WIDTH + 1 : B_WIDTH + 1;
-  localparam integer SignExp = P_WIDTH + SHIFT - FullWidth;
+  localparam int Latency = 1;
+  localparam int FullWidth = (A_WIDTH >= B_WIDTH) ? A_WIDTH + 1 : B_WIDTH + 1;
+  localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
 
   localparam signed [FullWidth-1:0] Rng = (ROUND && (SHIFT > 0)) ? (1 << (SHIFT - 1)) : 0;
 
-  wire signed [FullWidth-1:0] p_full;
-  wire signed [  P_WIDTH-1:0] p_ext;
-  wire signed [  P_WIDTH-1:0] p_sat;
-  reg signed  [  P_WIDTH-1:0] p_reg;
+  logic signed [FullWidth-1:0] a_full;
+  logic signed [FullWidth-1:0] b_full;
 
-  wire                        ovf_s;
-  reg                         ovf_r;
-  wire                        overflow;
-  wire                        underflow;
+  logic signed [FullWidth-1:0] p_full;
+  logic signed [  P_WIDTH-1:0] p_ext;
+  logic signed [  P_WIDTH-1:0] p_sat;
+  logic signed [  P_WIDTH-1:0] p_reg;
 
-  assign p_full = sub ? (a - b + Rng) : (a + b + Rng);
+  logic                        ovf_s;
+  logic                        ovf_r;
+  logic                        overflow;
+  logic                        underflow;
+
+  assign a_full = {{(FullWidth - A_WIDTH) {a[A_WIDTH-1]}}, a};
+  assign b_full = {{(FullWidth - B_WIDTH) {b[B_WIDTH-1]}}, b};
+
+  assign p_full = sub ? (a_full - b_full + Rng) : (a_full + b_full + Rng);
 
   generate
     if (SignExp > 0) begin : g_sgexp
