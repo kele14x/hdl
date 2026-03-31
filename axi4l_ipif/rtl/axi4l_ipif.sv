@@ -1,27 +1,19 @@
 // File: axi4l_ipif.sv
-// Brief: AXI4-Lite to IP interface. This module is used to connect a AXI4-Lite
-//        master, and helps to do:
-//
-//        1. Combine the write and read operation into one port. This help the
-//           later module to use one address decoder for both write and read.
-//           Also this ensures there will not be conflict between the write and
-//           read operation.
-//        2. Buffer the response data, so later module does not need to care
-//           about the back pressure.
-//
-// Note: AxPROT not supported (not connected)
+// Brief: AXI4-Lite to Internal Interface
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
 
-module axi4l_int #(
-    parameter integer ADDR_WIDTH = 10,
-    parameter integer DATA_WIDTH = 32
+module axi4l_ipif #(
+    parameter int ADDR_WIDTH = 10,
+    parameter int DATA_WIDTH = 32
 ) (
+    // AXI4-Lite Slave Interface
     input  wire                    s_axi_aclk,
     input  wire                    s_axi_aresetn,
     //
     input  wire [  ADDR_WIDTH-1:0] s_axi_awaddr,
+    /* verilator lint_off UNUSEDSIGNAL */
     input  wire [             2:0] s_axi_awprot,
     input  wire                    s_axi_awvalid,
     output wire                    s_axi_awready,
@@ -36,6 +28,7 @@ module axi4l_int #(
     input  wire                    s_axi_bready,
     //
     input  wire [  ADDR_WIDTH-1:0] s_axi_araddr,
+    /* verilator lint_off UNUSEDSIGNAL */
     input  wire [             2:0] s_axi_arprot,
     input  wire                    s_axi_arvalid,
     output wire                    s_axi_arready,
@@ -44,578 +37,423 @@ module axi4l_int #(
     output wire [             1:0] s_axi_rresp,
     output wire                    s_axi_rvalid,
     input  wire                    s_axi_rready,
-    // IP I/F
-    output reg  [  ADDR_WIDTH-1:0] ipif_addr,
-    output reg  [  DATA_WIDTH-1:0] ipif_wr_data,
-    output reg  [DATA_WIDTH/8-1:0] ipif_wr_be,
-    output reg                     ipif_wr_en,
-    output reg                     ipif_rd_en,
+    // Internal Interface
+    output wire [  ADDR_WIDTH-1:0] int_addr,
+    output wire [  DATA_WIDTH-1:0] int_wr_data,
+    output wire [DATA_WIDTH/8-1:0] int_wr_strb,
+    output wire                    int_wr_en,
+    output wire                    int_rd_en,
     //
-    input  wire                    ipif_wr_ack,
-    input  wire                    ipif_wr_err,
+    input  wire                    int_wr_ack,
+    input  wire                    int_wr_err,
     //
-    input  wire [  DATA_WIDTH-1:0] ipif_rd_data,
-    input  wire                    ipif_rd_ack,
-    input  wire                    ipif_rd_err
+    input  wire                    int_rd_ack,
+    input  wire                    int_rd_err,
+    input  wire [  DATA_WIDTH-1:0] int_rd_data
 );
 
-  initial begin
-    assert ((DATA_WIDTH == 32) || (DATA_WIDTH == 64))
-    else
-      $error(
-          "[%m]: AXI4-Lite interface data width (DATA_WIDTH) should be 32 or 64, got %0d",
-          DATA_WIDTH
-      );
-  end
-
-  // Local parameters
-
-  localparam logic [1:0] RespOkey = 2'b00;  // OKAY, normal access success
-  localparam logic [1:0] RespExokay = 2'b01;  // EXOKAY, exclusive access success
-  localparam logic [1:0] RespSlverr = 2'b10;  // SLVERR, slave error
-  localparam logic [1:0] RespDecerr = 2'b11;  // DECERR, decoder error
-
   // Signals
+  //--------
 
-  wire                    aclk;
-  wire                    aresetn;
+  logic                    aclk;
+  logic                    aresetn;
 
-  reg                     init_n;
+  // AW buffer
 
-  // AXI Signals
+  logic [  ADDR_WIDTH-1:0] awaddr;
+  logic                    awready;
 
-  wire                    aw_hsk;
-  reg  [  ADDR_WIDTH-1:0] aw_addr;
-  reg                     aw_ready;
-  reg                     aw_req;
+  logic                    aw_hsk;
+  logic [  ADDR_WIDTH-1:0] aw_addr;
+  logic                    aw_vld;
+  logic                    aw_rdy;
+  logic                    aw_pending;
 
-  wire                    w_hsk;
-  reg  [  DATA_WIDTH-1:0] w_data;
-  reg  [DATA_WIDTH/8-1:0] w_strb;
-  reg                     w_ready;
-  reg                     w_req;
+  // W buffer
 
-  wire                    b_hsk;
-  reg  [             1:0] b_resp;
-  reg                     b_valid;
+  logic [  DATA_WIDTH-1:0] wdata;
+  logic [DATA_WIDTH/8-1:0] wstrb;
+  logic                    wready;
 
-  wire                    ar_hsk;
-  reg  [  ADDR_WIDTH-1:0] ar_addr;
-  reg                     ar_ready;
-  reg                     ar_req;
+  logic                    w_hsk;
+  logic [  DATA_WIDTH-1:0] w_data;
+  logic [DATA_WIDTH/8-1:0] w_strb;
+  logic                    w_vld;
+  logic                    w_rdy;
+  logic                    w_pending;
 
-  wire                    r_hsk;
-  reg  [  DATA_WIDTH-1:0] r_data;
-  reg  [             1:0] r_resp;
-  reg                     r_valid;
+  // AR buffer
+
+  logic [  ADDR_WIDTH-1:0] araddr;
+  logic                    arready;
+
+  logic                    ar_hsk;
+  logic [  ADDR_WIDTH-1:0] ar_addr;
+  logic                    ar_vld;
+  logic                    ar_rdy;
+  logic                    ar_pending;
+
+  // Write read arbitration
+
+  logic                    rr_state;
+
+  logic [  ADDR_WIDTH-1:0] wrr_addr;
+  logic [  DATA_WIDTH-1:0] wrr_data;
+  logic [DATA_WIDTH/8-1:0] wrr_strb;
+  logic                    wrr_wrn;
+  logic                    wrr_vld;
+  logic                    wrr_rdy;
 
   // Internal signals
 
-  wire                    wr_valid;
-  wire                    rd_valid;
+  logic [  ADDR_WIDTH-1:0] int_addr_r;
+  logic [  DATA_WIDTH-1:0] int_wr_data_r;
+  logic [DATA_WIDTH/8-1:0] int_wr_strb_r;
+  logic                    int_wr_en_r;
+  logic                    int_rd_en_r;
 
-  reg                     int_wr_req;
-  reg                     int_wr_pend;
-  reg                     ipif_wr_err_reg;
+  logic                    int_wr_req;
+  logic                    int_rd_req;
 
-  reg                     int_rd_req;
-  reg                     int_rd_pend;
-  reg                     ipif_rd_err_reg;
-  reg  [  DATA_WIDTH-1:0] ipif_rd_data_reg;
+  // B buffer
 
+  logic [             1:0] bresp;
+  logic                    bvalid;
+
+  logic                    b_err;
+  logic                    b_vld;
+  logic                    b_rdy;
+
+  // R buffer
+
+  logic [  DATA_WIDTH-1:0] rdata;
+  logic [             1:0] rresp;
+  logic                    rvalid;
+
+  logic [  DATA_WIDTH-1:0] r_data;
+  logic                    r_err;
+  logic                    r_vld;
+  logic                    r_rdy;
+
+  // Main
+  //-----
 
   // AXI4-Lite Interface
-  //--------------------
 
   assign aclk    = s_axi_aclk;
   assign aresetn = s_axi_aresetn;
 
-  // Out of reset initialize
+  // AW buffer
 
-  always @(posedge aclk) begin
+  assign s_axi_awready = awready;
+
+  always_ff @(posedge aclk) begin
     if (!aresetn) begin
-      init_n <= 1'b0;
+      awaddr <= {ADDR_WIDTH{1'b0}};
+    end else if (aw_hsk && !aw_rdy) begin
+      awaddr <= s_axi_awaddr;
+    end
+  end
+
+  // aw_pending, awready
+  //   = 0, 0: under reset
+  //   = 1, 0: awaddr stored, waiting for `aw_rdy`
+  //   = 0, 1: ready to accept new address
+  //   = 1, 1: illegal state
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      aw_pending <= 1'b0;
+    end else if (aw_hsk && !aw_rdy) begin
+      aw_pending <= 1'b1;
+    end else if (aw_pending && !aw_rdy) begin
+      aw_pending <= 1'b1;
     end else begin
-      init_n <= 1'b1;
+      aw_pending <= 1'b0;
     end
   end
 
-  // Write address
-
-  assign aw_hsk        = (s_axi_awvalid & s_axi_awready);
-  assign s_axi_awready = aw_ready;
-
-  always @(posedge aclk) begin
+  always_ff @(posedge aclk) begin
     if (!aresetn) begin
-      aw_addr <= 1'sb0;
-    end else if (aw_hsk) begin
-      aw_addr <= s_axi_awaddr;
-    end
-  end
-
-  // aw_req aw_valid (w_hsk || w_req) int_wr_req aw_req_next
-  //      0        0                0          0           0
-  //      0        0                0          1           0
-  //      0        0                1          0           0
-  //      0        0                1          1           0
-  //      0        1                0          0           1 *
-  //      0        1                0          1           1 *
-  //      0        1                1          0           0
-  //      0        1                1          1           1 *
-  //      1        0                0          0           1
-  //      1        0                0          1           1
-  //      1        0                1          0           0 *
-  //      1        0                1          1           1
-  //      1        1                0          0           1
-  //      1        1                0          1           1
-  //      1        1                1          0           0 *
-  //      1        1                1          1           1
-  always @(posedge aclk) begin
-    if (!aresetn) begin
-      aw_req <= 1'b0;
-    end else if (aw_hsk && (~(w_hsk || w_req) || int_wr_req)) begin
-      aw_req <= 1'b1;
-    end else if (aw_req && (w_hsk || w_req) && ~int_wr_req) begin
-      aw_req <= 1'b0;
+      awready <= 1'b0;
+    end else if (aw_hsk && !aw_rdy) begin
+      awready <= 1'b0;
+    end else if (aw_pending && !aw_rdy) begin
+      awready <= 1'b0;
     end else begin
-      aw_req <= aw_req;
+      awready <= 1'b1;
     end
   end
 
-  // aw_ready = ~aw_req, unless under reset
-  always @(posedge aclk) begin
+  assign aw_hsk       = s_axi_awvalid && s_axi_awready;
+  assign aw_addr      = aw_pending ? awaddr : s_axi_awaddr;
+  assign aw_vld       = aw_hsk || aw_pending;
+
+  // W buffer
+
+  assign s_axi_wready = wready;
+
+  always_ff @(posedge aclk) begin
     if (!aresetn) begin
-      aw_ready <= 1'b0;
-    end else if (~init_n) begin
-      aw_ready <= 1'b1;
-    end else if (aw_hsk && (~(w_hsk || w_req) || int_wr_req)) begin
-      aw_ready <= 1'b0;
-    end else if (aw_req && (w_hsk || w_req) && ~int_wr_req) begin
-      aw_ready <= 1'b1;
+      wdata <= {DATA_WIDTH{1'b0}};
+    end else if (w_hsk && !w_rdy) begin
+      wdata <= s_axi_wdata;
+    end
+  end
+
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      wstrb <= {DATA_WIDTH / 8{1'b0}};
+    end else if (w_hsk && !w_rdy) begin
+      wstrb <= s_axi_wstrb;
+    end
+  end
+
+  // w_pending, wready
+  //   = 0, 0: under reset
+  //   = 1, 0: wdata stored, waiting for `w_rdy`
+  //   = 0, 1: ready to accept new data
+  //   = 1, 1: illegal state
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      w_pending <= 1'b0;
+    end else if (w_hsk && !w_rdy) begin
+      w_pending <= 1'b1;
+    end else if (w_pending && !w_rdy) begin
+      w_pending <= 1'b1;
     end else begin
-      aw_ready <= aw_ready;
+      w_pending <= 1'b0;
     end
   end
 
-  // Write data
-
-  assign w_hsk        = (s_axi_wvalid & s_axi_wready);
-  assign s_axi_wready = w_ready;
-
-  always @(posedge aclk) begin
+  always_ff @(posedge aclk) begin
     if (!aresetn) begin
-      w_data <= 1'sb0;
-    end else if (w_hsk) begin
-      w_data <= s_axi_wdata;
-    end
-  end
-
-  always @(posedge aclk) begin
-    if (!aresetn) begin
-      w_strb <= 1'sb0;
-    end else if (w_hsk) begin
-      w_strb <= s_axi_wstrb;
-    end
-  end
-
-  // w_req w_valid (aw_hsk || aw_req) int_wr_req w_req_next
-  //     0       0                  0          0          0
-  //     0       0                  0          1          0
-  //     0       0                  1          0          0
-  //     0       0                  1          1          0
-  //     0       1                  0          0          1 *
-  //     0       1                  0          1          1 *
-  //     0       1                  1          0          0
-  //     0       1                  1          1          1 *
-  //     1       0                  0          0          1
-  //     1       0                  0          1          1
-  //     1       0                  1          0          0 *
-  //     1       0                  1          1          1
-  //     1       1                  0          0          1
-  //     1       1                  0          1          1
-  //     1       1                  1          0          0 *
-  //     1       1                  1          1          1
-  always @(posedge aclk) begin
-    if (!aresetn) begin
-      w_req <= 1'b0;
-    end else if (w_hsk && (~(aw_hsk || aw_req) || int_wr_req)) begin
-      w_req <= 1'b1;
-    end else if (w_req && (aw_hsk || aw_req) && ~int_wr_req) begin
-      w_req <= 1'b0;
+      wready <= 1'b0;
+    end else if (w_hsk && !w_rdy) begin
+      wready <= 1'b0;
+    end else if (w_pending && !w_rdy) begin
+      wready <= 1'b0;
     end else begin
-      w_req <= w_req;
+      wready <= 1'b1;
     end
   end
 
-  // w_ready = ~w_req, unless under reset
-  always @(posedge aclk) begin
+  assign w_hsk         = s_axi_wvalid && s_axi_wready;
+  assign w_data        = w_pending ? wdata : s_axi_wdata;
+  assign w_strb        = w_pending ? wstrb : s_axi_wstrb;
+  assign w_vld         = w_hsk || w_pending;
+
+  // R buffer
+
+  assign s_axi_arready = arready;
+
+  always_ff @(posedge aclk) begin
     if (!aresetn) begin
-      w_ready <= 1'b0;
-    end else if (~init_n) begin
-      w_ready <= 1'b1;
-    end else if (w_hsk && (~(aw_hsk || aw_req) || int_wr_req)) begin
-      w_ready <= 1'b0;
-    end else if (w_req && (aw_hsk || aw_req) && ~int_wr_req) begin
-      w_ready <= 1'b1;
+      araddr <= {ADDR_WIDTH{1'b0}};
+    end else if (ar_hsk && !ar_rdy) begin
+      araddr <= s_axi_araddr;
+    end
+  end
+
+  // ar_pending, arready
+  //   = 0, 0: under reset
+  //   = 1, 0: wdata stored, waiting for `w_rdy`
+  //   = 0, 1: ready to accept new data
+  //   = 1, 1: illegal state
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      ar_pending <= 1'b0;
+    end else if (ar_hsk && !ar_rdy) begin
+      ar_pending <= 1'b1;
+    end else if (ar_pending && !ar_rdy) begin
+      ar_pending <= 1'b1;
     end else begin
-      w_ready <= w_ready;
+      ar_pending <= 1'b0;
     end
   end
 
-  // Write response
-
-  assign b_hsk        = (s_axi_bvalid && s_axi_bready);
-  assign s_axi_bresp  = b_resp;
-  assign s_axi_bvalid = b_valid;
-
-  always @(posedge aclk) begin
+  always_ff @(posedge aclk) begin
     if (!aresetn) begin
-      b_resp <= 2'b00;
-    end else if (~(b_valid && ~s_axi_bready) && int_wr_pend) begin
-      b_resp <= {2{ipif_wr_err_reg}};
-    end else if (~(b_valid && ~s_axi_bready) && (int_wr_req && ipif_wr_ack)) begin
-      b_resp <= {2{ipif_wr_err}};
-    end
-  end
-
-  // b_valid s_axi_bready (int_wr_req && ipif_wr_ack) int_wr_pend b_valid_next
-  //       0            0                          0           0            0
-  //       0            0                          0           1            1 *
-  //       0            0                          1           0            1 *
-  //       0            0                          1           1            1 *
-  //       0            1                          0           0            0
-  //       0            1                          0           1            1 *
-  //       0            1                          1           0            1 *
-  //       0            1                          1           1            1 *
-  //       1            0                          0           0            1
-  //       1            0                          0           1            1
-  //       1            0                          1           0            1
-  //       1            0                          1           1            1
-  //       1            1                          0           0            0 *
-  //       1            1                          0           1            1
-  //       1            1                          1           0            1
-  //       1            1                          1           1            1
-  always @(posedge aclk) begin
-    if (!aresetn) begin
-      b_valid <= 1'b0;
-    end else if (b_hsk && ~(int_wr_req && ipif_wr_ack) && ~int_wr_pend) begin
-      b_valid <= 1'b0;
-    end else if ((int_wr_req && ipif_wr_ack) || int_wr_pend) begin
-      b_valid <= 1'b1;
+      arready <= 1'b0;
+    end else if (ar_hsk && !ar_rdy) begin
+      arready <= 1'b0;
+    end else if (ar_pending && !ar_rdy) begin
+      arready <= 1'b0;
     end else begin
-      b_valid <= b_valid;
+      arready <= 1'b1;
     end
   end
 
-  // Read address
-
-  assign ar_hsk        = (s_axi_arvalid & s_axi_arready);
-  assign s_axi_arready = ar_ready;
-
-  always @(posedge aclk) begin
-    if (!aresetn) begin
-      ar_addr <= 1'sb0;
-    end else if (ar_hsk) begin
-      ar_addr <= s_axi_araddr;
-    end
-  end
-
-  // ar_req ar_valid wr_valid int_rd_req ar_req_next
-  //      0        0        0          0           0
-  //      0        0        0          1           0
-  //      0        0        1          0           0
-  //      0        0        1          1           0
-  //      0        1        0          0           0
-  //      0        1        0          1           1 *
-  //      0        1        1          0           1 *
-  //      0        1        1          1           1 *
-  //      1        0        0          0           0 *
-  //      1        0        0          1           1
-  //      1        0        1          0           1
-  //      1        0        1          1           1
-  //      1        1        0          0           0 *
-  //      1        1        0          1           1
-  //      1        1        1          0           1
-  //      1        1        1          1           1
-  always @(posedge aclk) begin
-    if (!aresetn) begin
-      ar_req <= 1'b0;
-    end else if (ar_hsk && (wr_valid || int_rd_req)) begin
-      ar_req <= 1'b1;
-    end else if (ar_req && ~wr_valid && ~int_rd_req) begin
-      ar_req <= 1'b0;
-    end else begin
-      ar_req <= ar_req;
-    end
-  end
-
-  // ar_ready = ~ar_req, unless under reset
-  always @(posedge aclk) begin
-    if (!aresetn) begin
-      ar_ready <= 1'b0;
-    end else if (~init_n) begin
-      ar_ready <= 1'b1;
-    end else if (ar_hsk && (wr_valid || int_rd_req)) begin
-      ar_ready <= 1'b0;
-    end else if (ar_req && ~wr_valid && ~int_rd_req) begin
-      ar_ready <= 1'b1;
-    end else begin
-      ar_ready <= ar_ready;
-    end
-  end
-
-  // Read response
-
-  assign r_hsk        = (s_axi_rvalid && s_axi_rready);
-  assign s_axi_rdata  = r_data;
-  assign s_axi_rresp  = r_resp;
-  assign s_axi_rvalid = r_valid;
-
-  always @(posedge aclk) begin
-    if (!aresetn) begin
-      r_data <= 1'sb0;
-    end else if (~(r_valid && ~s_axi_rready) && int_rd_pend) begin
-      r_data <= ipif_rd_data_reg;
-    end else if (~(r_valid && ~s_axi_rready) && (int_rd_req && ipif_rd_ack)) begin
-      r_data <= ipif_rd_data;
-    end
-  end
-
-  always @(posedge aclk) begin
-    if (!aresetn) begin
-      r_resp <= 2'b00;
-    end else if (~(r_valid && ~s_axi_rready) && int_rd_pend) begin
-      r_resp <= {2{ipif_rd_err_reg}};
-    end else if (~(r_valid && ~s_axi_rready) && (int_rd_req && ipif_rd_ack)) begin
-      r_resp <= {2{ipif_rd_err}};
-    end
-  end
-
-  // r_valid s_axi_rready (int_rd_req && ipif_rd_ack) int_rd_pend r_valid_next
-  //       0            0                          0           0            0
-  //       0            0                          0           1            1 *
-  //       0            0                          1           0            1 *
-  //       0            0                          1           1            1 *
-  //       0            1                          0           0            0
-  //       0            1                          0           1            1 *
-  //       0            1                          1           0            1 *
-  //       0            1                          1           1            1 *
-  //       1            0                          0           0            1
-  //       1            0                          0           1            1
-  //       1            0                          1           0            1
-  //       1            0                          1           1            1
-  //       1            1                          0           0            0 *
-  //       1            1                          0           1            1
-  //       1            1                          1           0            1
-  //       1            1                          1           1            1
-  always @(posedge aclk) begin
-    if (!aresetn) begin
-      r_valid <= 1'b0;
-    end else if (r_hsk && ~(int_rd_req && ipif_rd_ack) && ~int_rd_pend) begin
-      r_valid <= 1'b0;
-    end else if ((int_rd_req && ipif_rd_ack) || int_rd_pend) begin
-      r_valid <= 1'b1;
-    end else begin
-      r_valid <= r_valid;
-    end
-  end
-
-  // Internal interface
-  //-------------------
-
-  assign wr_valid = (aw_hsk || aw_req) && (w_hsk || w_req);
-
-  assign rd_valid = ~wr_valid && (ar_hsk || ar_req);
+  assign ar_hsk  = (s_axi_arvalid & s_axi_arready);
+  assign ar_addr = ar_pending ? araddr : s_axi_araddr;
+  assign ar_vld  = ar_hsk || ar_pending;
 
   // Write / read arbitration
 
-  always @(posedge s_axi_aclk) begin
-    if (~s_axi_aresetn) begin
-      ipif_addr <= 1'sb0;
-    end else if (aw_req && (w_hsk || w_req) && ~int_wr_req) begin
-      ipif_addr <= aw_addr;
-    end else if (aw_hsk && (w_hsk || w_req) && ~int_wr_req) begin
-      ipif_addr <= s_axi_awaddr;
-    end else if (~wr_valid && ar_req && ~int_rd_req) begin
-      ipif_addr <= ar_addr;
-    end else if (~wr_valid && ar_hsk && ~int_rd_req) begin
-      ipif_addr <= s_axi_araddr;
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      rr_state <= 1'b0;  // Write has priority
+    end else if (wrr_vld && wrr_rdy) begin
+      rr_state <= !wrr_wrn;
     end
   end
 
-  always @(posedge s_axi_aclk) begin
-    if (~s_axi_aresetn) begin
-      ipif_wr_data <= 1'sb0;
-    end else if (w_req && (aw_hsk || aw_req) && ~int_wr_req) begin
-      ipif_wr_data <= w_data;
-    end else if (w_hsk && (aw_hsk || aw_req) && ~int_wr_req) begin
-      ipif_wr_data <= s_axi_wdata;
+  assign wrr_addr = wrr_wrn ? ar_addr : aw_addr;
+  assign wrr_data = w_data;
+  assign wrr_strb = w_strb;
+  assign wrr_wrn  = ar_vld && rr_state;
+  assign wrr_vld  = (aw_vld && w_vld) || ar_vld;
+
+  assign aw_rdy   = aw_vld && w_vld && wrr_rdy && (!rr_state || !ar_vld);
+  assign w_rdy    = aw_vld && w_vld && wrr_rdy && (!rr_state || !ar_vld);
+  assign ar_rdy   = ar_vld && wrr_rdy && (rr_state || !(aw_vld && w_vld));
+
+  // Internal interface
+
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      int_addr_r <= {ADDR_WIDTH{1'b0}};
+    end else if (wrr_vld && wrr_rdy) begin
+      int_addr_r <= wrr_addr;
     end
   end
 
-  always @(posedge s_axi_aclk) begin
-    if (~s_axi_aresetn) begin
-      ipif_wr_be <= 2'b00;
-    end else if (w_req && (aw_hsk || aw_req) && ~int_wr_req) begin
-      ipif_wr_be <= w_strb;
-    end else if (w_hsk && (aw_hsk || aw_req) && ~int_wr_req) begin
-      ipif_wr_be <= s_axi_wstrb;
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      int_wr_data_r <= {DATA_WIDTH{1'b0}};
+    end else if (wrr_vld && wrr_rdy && !wrr_wrn) begin
+      int_wr_data_r <= wrr_data;
     end
   end
 
-  always @(posedge s_axi_aclk) begin
-    if (wr_valid && ~int_wr_req) begin
-      ipif_wr_en <= 1'b1;
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      int_wr_strb_r <= {DATA_WIDTH / 8{1'b0}};
+    end else if (wrr_vld && wrr_rdy && !wrr_wrn) begin
+      int_wr_strb_r <= wrr_strb;
+    end
+  end
+
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      int_wr_en_r <= 1'b0;
+    end else if (wrr_vld && wrr_rdy && !wrr_wrn) begin
+      int_wr_en_r <= 1'b1;
     end else begin
-      ipif_wr_en <= 1'b0;
+      int_wr_en_r <= 1'b0;
     end
   end
 
-  always @(posedge s_axi_aclk) begin
-    if (rd_valid && ~int_rd_req) begin
-      ipif_rd_en <= 1'b1;
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      int_rd_en_r <= 1'b0;
+    end else if (wrr_vld && wrr_rdy && wrr_wrn) begin
+      int_rd_en_r <= 1'b1;
     end else begin
-      ipif_rd_en <= 1'b0;
+      int_rd_en_r <= 1'b0;
     end
   end
 
-  // Response
-
-  always @(posedge s_axi_aclk) begin
-    if (int_wr_req && ipif_wr_ack) begin
-      ipif_wr_err_reg <= ipif_wr_err;
-    end
-  end
-
-  always @(posedge s_axi_aclk) begin
-    if (int_rd_req && ipif_rd_ack) begin
-      ipif_rd_err_reg <= ipif_rd_err;
-    end
-  end
-
-  always @(posedge s_axi_aclk) begin
-    if (int_rd_req && ipif_rd_ack) begin
-      ipif_rd_data_reg <= ipif_rd_data;
-    end
-  end
-
-  // Internal state
-
-  // int_wr_req wr_valid (ipif_wr_ack || int_wr_pend) (b_valid && ~s_axi_bready) int_wr_req_next
-  //          0        0                           0                          0               0
-  //          0        0                           0                          1               0
-  //          0        0                           1                          0               0
-  //          0        0                           1                          1               0
-  //          0        1                           0                          0               1 *
-  //          0        1                           0                          1               1 *
-  //          0        1                           1                          0               1 *
-  //          0        1                           1                          1               1 *
-  //          1        0                           0                          0               1
-  //          1        0                           0                          1               1
-  //          1        0                           1                          0               0 *
-  //          1        0                           1                          1               1
-  //          1        1                           0                          0               1
-  //          1        1                           0                          1               1
-  //          1        1                           1                          0               0 *
-  //          1        1                           1                          1               1
-  always @(posedge s_axi_aclk) begin
-    if (~s_axi_aresetn) begin
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
       int_wr_req <= 1'b0;
-    end else if (~int_wr_req && wr_valid) begin
+    end else if (wrr_vld && wrr_rdy && !wrr_wrn) begin
       int_wr_req <= 1'b1;
-    end else if (int_wr_req && (ipif_wr_ack || int_wr_pend) && ~(b_valid && ~s_axi_bready)) begin
+    end else if (int_wr_ack) begin
       int_wr_req <= 1'b0;
     end else begin
       int_wr_req <= int_wr_req;
     end
   end
 
-  // int_wr_pend int_wr_req ipif_wr_ack (b_valid && ~s_axi_bready) int_wr_pend_next
-  //           0          0          0                          0                0
-  //           0          0          0                          1                0
-  //           0          0          1                          0                0
-  //           0          0          1                          1                0
-  //           0          1          0                          0                0
-  //           0          1          0                          1                0
-  //           0          1          1                          0                0
-  //           0          1          1                          1                1 *
-  //           1          0          0                          0                -
-  //           1          0          0                          1                -
-  //           1          0          1                          0                -
-  //           1          0          1                          1                -
-  //           1          1          0                          0                0 *
-  //           1          1          0                          1                1
-  //           1          1          1                          0                0 *
-  //           1          1          1                          1                1
-  always @(posedge s_axi_aclk) begin
-    if (~s_axi_aresetn) begin
-      int_wr_pend <= 1'b0;
-    end else if (int_wr_req && ipif_wr_ack && (b_valid && ~s_axi_bready)) begin
-      int_wr_pend <= 1'b1;
-    end else if (int_wr_pend && ~(b_valid && ~s_axi_bready)) begin
-      int_wr_pend <= 1'b0;
-    end else begin
-      int_wr_pend <= int_wr_pend;
-    end
-  end
-
-  // int_rd_req rd_valid (ipif_rd_ack || int_rd_pend) (r_valid && ~s_axi_rready) int_rd_req_next
-  //          0        0                           0                          0               0
-  //          0        0                           0                          1               0
-  //          0        0                           1                          0               0
-  //          0        0                           1                          1               0
-  //          0        1                           0                          0               1 *
-  //          0        1                           0                          1               1 *
-  //          0        1                           1                          0               1 *
-  //          0        1                           1                          1               1 *
-  //          1        0                           0                          0               1
-  //          1        0                           0                          1               1
-  //          1        0                           1                          0               0 *
-  //          1        0                           1                          1               1
-  //          1        1                           0                          0               1
-  //          1        1                           0                          1               1
-  //          1        1                           1                          0               0 *
-  //          1        1                           1                          1               1
-  always @(posedge s_axi_aclk) begin
-    if (~s_axi_aresetn) begin
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
       int_rd_req <= 1'b0;
-    end else if (~int_rd_req && rd_valid) begin
+    end else if (wrr_vld && wrr_rdy && wrr_wrn) begin
       int_rd_req <= 1'b1;
-    end else if (int_rd_req && (ipif_rd_ack || int_rd_pend) && ~(r_valid && ~s_axi_rready)) begin
+    end else if (int_rd_ack) begin
       int_rd_req <= 1'b0;
     end else begin
       int_rd_req <= int_rd_req;
     end
   end
 
-  // int_rd_pend int_rd_req ipif_rd_ack (r_valid && ~s_axi_rready) int_rd_pend_next
-  //           0          0          0                          0                0
-  //           0          0          0                          1                0
-  //           0          0          1                          0                0
-  //           0          0          1                          1                0
-  //           0          1          0                          0                0
-  //           0          1          0                          1                0
-  //           0          1          1                          0                0
-  //           0          1          1                          1                1 *
-  //           1          0          0                          0                -
-  //           1          0          0                          1                -
-  //           1          0          1                          0                -
-  //           1          0          1                          1                -
-  //           1          1          0                          0                0 *
-  //           1          1          0                          1                1
-  //           1          1          1                          0                0 *
-  //           1          1          1                          1                1
-  always @(posedge s_axi_aclk) begin
-    if (~s_axi_aresetn) begin
-      int_rd_pend <= 1'b0;
-    end else if (int_rd_req && ipif_rd_ack && (r_valid && ~s_axi_rready)) begin
-      int_rd_pend <= 1'b1;
-    end else if (int_rd_pend && ~(r_valid && ~s_axi_rready)) begin
-      int_rd_pend <= 1'b0;
-    end else begin
-      int_rd_pend <= int_rd_pend;
+  assign int_addr     = int_addr_r;
+  assign int_wr_data  = int_wr_data_r;
+  assign int_wr_strb  = int_wr_strb_r;
+  assign int_wr_en    = int_wr_en_r;
+  assign int_rd_en    = int_rd_en_r;
+
+  assign wrr_rdy      = !int_wr_req && !int_rd_req && (wrr_wrn ? r_rdy : b_rdy);
+
+  assign b_err        = int_wr_err;
+  assign b_vld        = int_wr_ack;
+
+  assign r_data       = int_rd_data;
+  assign r_err        = int_rd_err;
+  assign r_vld        = int_rd_ack;
+
+  // B buffer
+
+  assign s_axi_bresp  = bresp;
+  assign s_axi_bvalid = bvalid;
+
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      bresp <= 2'b00;
+    end else if (b_vld && b_rdy) begin
+      bresp <= {2{b_err}};
     end
   end
+
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      bvalid <= 1'b0;
+    end else if (b_vld && b_rdy) begin
+      bvalid <= 1'b1;
+    end else if (bvalid && !s_axi_bready) begin
+      bvalid <= 1'b1;
+    end else begin
+      bvalid <= 1'b0;
+    end
+  end
+
+  assign b_rdy        = !bvalid || s_axi_bready;
+
+  // R buffer
+
+  assign s_axi_rdata  = rdata;
+  assign s_axi_rresp  = rresp;
+  assign s_axi_rvalid = rvalid;
+
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      rdata <= {DATA_WIDTH{1'b0}};
+    end else if (r_vld && r_rdy) begin
+      rdata <= r_data;
+    end
+  end
+
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      rresp <= 2'b00;
+    end else if (r_vld && r_rdy) begin
+      rresp <= {2{r_err}};
+    end
+  end
+
+  always_ff @(posedge aclk) begin
+    if (!aresetn) begin
+      rvalid <= 1'b0;
+    end else if (r_vld && r_rdy) begin
+      rvalid <= 1'b1;
+    end else if (rvalid && !s_axi_rready) begin
+      rvalid <= 1'b1;
+    end else begin
+      rvalid <= 1'b0;
+    end
+  end
+
+  assign r_rdy = !rvalid || s_axi_rready;
 
 endmodule
 

@@ -24,3 +24,4 @@ transcript
 
 # Others
 *.vcd
+.DS_Store
