@@ -23,5 +23,7 @@ transcript
 *~
 
 # Others
-*.vcd
 .DS_Store
+*.bkp
+*.vcd
+$*
