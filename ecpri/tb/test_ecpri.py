@@ -182,10 +182,10 @@ def test_ecpri_runner():
 
     verilog_sources = [
         prj_path / "../cdc/rtl/cdc_async_rst.v",
-        prj_path / "../cdc/rtl/cdc_gray.v",
-        prj_path / "../cdc/rtl/cdc_handshake_f.v",
-        prj_path / "../cdc/rtl/cdc_pulse.v",
-        prj_path / "../cdc/rtl/cdc_single.v",
+        prj_path / "../cdc/rtl/cdc_gray.sv",
+        prj_path / "../cdc/rtl/cdc_handshake_f.sv",
+        prj_path / "../cdc/rtl/cdc_pulse.sv",
+        prj_path / "../cdc/rtl/cdc_single.sv",
         prj_path / "../common/rtl/delay.v",
         prj_path / "../fifo_async/rtl/fifo_async.v",
         prj_path / "../fifo_sync/rtl/fifo_sync.v",

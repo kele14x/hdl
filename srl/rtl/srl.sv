@@ -32,8 +32,9 @@
 module srl #(
     parameter int ADDR_WIDTH = 4,
     parameter int DATA_WIDTH = 8,
-    parameter reg OUTPUT_REG = 1'b1,
-    parameter reg INIT       = 1'b0
+    //
+    parameter bit OUTPUT_REG = 1'b1,
+    parameter bit INIT       = 1'b0
 ) (
     // Read Interface
     input  wire                  clk,

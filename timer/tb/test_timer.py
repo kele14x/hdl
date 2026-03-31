@@ -139,9 +139,9 @@ def test_timer_runner():
 
     verilog_sources = [
         prj_path / "../cdc/rtl/cdc_array_single.v",
-        prj_path / "../cdc/rtl/cdc_handshake_f.v",
-        prj_path / "../cdc/rtl/cdc_pulse.v",
-        prj_path / "../cdc/rtl/cdc_single.v",
+        prj_path / "../cdc/rtl/cdc_handshake_f.sv",
+        prj_path / "../cdc/rtl/cdc_pulse.sv",
+        prj_path / "../cdc/rtl/cdc_single.sv",
         prj_path / "../common/rtl/delay.v",
         prj_path / "rtl/timer_core_400.v",
         prj_path / "rtl/timer_core_491p52.v",
