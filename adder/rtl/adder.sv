@@ -8,8 +8,8 @@ module adder #(
     parameter int P_WIDTH  = 17,
     parameter int SHIFT    = 0,
     //
-    parameter bit ROUND    = 1'b0,
-    parameter bit SATURATE = 1'b0
+    parameter int ROUND    = 0,
+    parameter int SATURATE = 0
 ) (
     input  wire                      clk,
     input  wire                      rst,
@@ -22,11 +22,44 @@ module adder #(
     output wire                      ovf
 );
 
+  /* verilator lint_off UNUSEDPARAM */
   localparam int Latency = 1;
   localparam int FullWidth = (A_WIDTH >= B_WIDTH) ? A_WIDTH + 1 : B_WIDTH + 1;
   localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
 
-  localparam signed [FullWidth-1:0] Rng = (ROUND && (SHIFT > 0)) ? (1 << (SHIFT - 1)) : 0;
+  initial begin : drc_check
+    assert (A_WIDTH >= 1)
+    else begin
+      $error("[%m]: A_WIDTH (%0d) is outside of valid range.", A_WIDTH);
+    end
+
+    assert (B_WIDTH >= 1)
+    else begin
+      $error("[%m]: B_WIDTH (%0d) is outside of valid range.", B_WIDTH);
+    end
+
+    assert (P_WIDTH >= 1)
+    else begin
+      $error("[%m]: P_WIDTH (%0d) is outside of valid range.", P_WIDTH);
+    end
+
+    assert (SHIFT >= 0)
+    else begin
+      $error("[%m]: SHIFT (%0d) is outside of valid range.", SHIFT);
+    end
+
+    assert (ROUND == 0 || ROUND == 1)
+    else begin
+      $error("[%m]: ROUND (%0d) value is outside of valid range.", ROUND);
+    end
+
+    assert (SATURATE == 0 || SATURATE == 1)
+    else begin
+      $error("[%m]: SATURATE (%0d) value is outside of valid range.", SATURATE);
+    end
+  end
+
+  localparam signed [FullWidth-1:0] Rng = ((ROUND != 0) && (SHIFT > 0)) ? (1 << (SHIFT - 1)) : 0;
 
   logic signed [FullWidth-1:0] a_full;
   logic signed [FullWidth-1:0] b_full;
@@ -66,8 +99,8 @@ module adder #(
     end
   endgenerate
 
-  assign p_sat = (SATURATE && overflow) ? {1'b0, {P_WIDTH - 1{1'b1}}} :
-                 (SATURATE && underflow) ? {1'b1, {P_WIDTH - 1{1'b0}}} : p_ext;
+  assign p_sat = ((SATURATE != 0) && overflow) ? {1'b0, {P_WIDTH - 1{1'b1}}} :
+                 ((SATURATE != 0) && underflow) ? {1'b1, {P_WIDTH - 1{1'b0}}} : p_ext;
 
   always_ff @(posedge clk) begin
     if (rst) begin
