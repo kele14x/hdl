@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, Combine, RisingEdge
+from cocotb.queue import Queue
+from cocotb.triggers import ClockCycles, Event, RisingEdge
 from cocotb_tools.runner import get_runner
 
 ADDR_WIDTH = 10
@@ -38,105 +39,202 @@ async def reset_dut(dut):
     await ClockCycles(dut.s_axi_aclk, 10)
 
 
-async def axi_aw(dut, addr: int | list[int]):
-    if isinstance(addr, int):
-        addr = [addr]
-    for a in addr:
-        dut.s_axi_awaddr.value = a
-        dut.s_axi_awvalid.value = 1
-        for t in range(AXI_TIMEOUT_CYCLES):
-            await RisingEdge(dut.s_axi_aclk)
-            if int(dut.s_axi_awready.value):
-                break
-            elif t == AXI_TIMEOUT_CYCLES - 1:
-                raise TimeoutError("AXI AW handshake timeout")
-    dut.s_axi_awvalid.value = 0
+def implicit_mem_data(addr: int) -> int:
+    return (0xDEADBEEF + (addr >> 2)) & ((1 << DATA_WIDTH) - 1)
 
 
-async def axi_w(dut, data: int | list[int]):
-    if isinstance(data, int):
-        data = [data]
-    for d in data:
-        dut.s_axi_wdata.value = d
-        dut.s_axi_wstrb.value = (2 ** (DATA_WIDTH // 8)) - 1
-        dut.s_axi_wvalid.value = 1
-        for t in range(AXI_TIMEOUT_CYCLES):
-            await RisingEdge(dut.s_axi_aclk)
-            if int(dut.s_axi_wready.value):
-                break
-            elif t == AXI_TIMEOUT_CYCLES - 1:
-                raise TimeoutError("AXI W handshake timeout")
-    dut.s_axi_wvalid.value = 0
+class AxiOpHandle:
+    def __init__(self):
+        self._event = Event()
+        self._result = None
+        self._exc = None
+
+    def set_result(self, result):
+        if self._event.is_set():
+            return
+        self._result = result
+        self._event.set()
+
+    def set_exception(self, exc: Exception):
+        if self._event.is_set():
+            return
+        self._exc = exc
+        self._event.set()
+
+    def done(self) -> bool:
+        return self._event.is_set()
+
+    def result(self):
+        if not self._event.is_set():
+            raise RuntimeError("Operation not completed")
+        if self._exc is not None:
+            raise self._exc
+        return self._result
+
+    async def wait(self):
+        await self._event.wait()
+        return self.result()
 
 
-async def axi_b(dut, n: int = 1) -> int | list[int]:
-    bresp = []
-    for i in range(n):
-        dut.s_axi_bready.value = 1
-        for t in range(AXI_TIMEOUT_CYCLES):
-            await RisingEdge(dut.s_axi_aclk)
-            if int(dut.s_axi_bvalid.value):
-                bresp.append(int(dut.s_axi_bresp.value))
-                break
-            elif t == AXI_TIMEOUT_CYCLES - 1:
-                raise TimeoutError("AXI B handshake timeout")
-    dut.s_axi_bready.value = 0
-    return bresp[0] if n == 1 else bresp
+@dataclass
+class _WriteReq:
+    addr: int
+    data: int
+    handle: AxiOpHandle
 
 
-async def axi_ar(dut, addr: int | list[int]):
-    if isinstance(addr, int):
-        addr = [addr]
-    for a in addr:
-        dut.s_axi_araddr.value = a
-        dut.s_axi_arvalid.value = 1
-        for t in range(AXI_TIMEOUT_CYCLES):
-            await RisingEdge(dut.s_axi_aclk)
-            if int(dut.s_axi_arready.value):
-                break
-            elif t == AXI_TIMEOUT_CYCLES - 1:
-                raise TimeoutError("AXI AR handshake timeout")
-    dut.s_axi_arvalid.value = 0
+@dataclass
+class _ReadReq:
+    addr: int
+    handle: AxiOpHandle
 
 
-async def axi_r(dut, n: int = 1) -> tuple[int, int] | list[tuple[int, int]]:
-    res = []
-    for i in range(n):
-        dut.s_axi_rready.value = 1
-        for t in range(AXI_TIMEOUT_CYCLES):
-            await RisingEdge(dut.s_axi_aclk)
-            if int(dut.s_axi_rvalid.value):
-                rdata = int(dut.s_axi_rdata.value)
-                rresp = int(dut.s_axi_rresp.value)
-                res.append((rdata, rresp))
-                break
-            elif t == AXI_TIMEOUT_CYCLES - 1:
-                raise TimeoutError("AXI R handshake timeout")
-    dut.s_axi_rready.value = 0
-    return res[0] if n == 1 else res
+class AxiMstAgent:
+    def __init__(self, dut, timeout_cycles: int = AXI_TIMEOUT_CYCLES):
+        self.dut = dut
+        self.timeout_cycles = timeout_cycles
+        self._full_wstrb = (2 ** (DATA_WIDTH // 8)) - 1
 
+        self._wr_submit_q = Queue()
+        self._rd_submit_q = Queue()
+        self._tasks = []
+        self._running = False
 
-async def axi_write(
-    dut, addr: int | list[int], data: int | list[int]
-) -> int | list[int]:
-    data_len = 1 if isinstance(data, int) else len(data)
-    addr_len = 1 if isinstance(addr, int) else len(addr)
-    assert addr_len == data_len, "Address and data length mismatch"
-    aw = cocotb.start_soon(axi_aw(dut, addr))
-    w = cocotb.start_soon(axi_w(dut, data))
-    b = cocotb.start_soon(axi_b(dut, addr_len))
-    await Combine(aw, w, b)
-    return b.result()
+    def start(self):
+        if self._running:
+            return
+        self._running = True
+        self.dut.s_axi_awvalid.value = 0
+        self.dut.s_axi_wvalid.value = 0
+        self.dut.s_axi_bready.value = 0
+        self.dut.s_axi_arvalid.value = 0
+        self.dut.s_axi_rready.value = 0
 
+        self._tasks = [
+            cocotb.start_soon(self._wr_loop()),
+            cocotb.start_soon(self._rd_loop()),
+        ]
 
-async def axi_read(
-    dut, addr: int | list[int]
-) -> tuple[int, int] | list[tuple[int, int]]:
-    addr_len = 1 if isinstance(addr, int) else len(addr)
-    ar = cocotb.start_soon(axi_ar(dut, addr))
-    r = cocotb.start_soon(axi_r(dut, addr_len))
-    await Combine(ar, r)
-    return r.result()
+    def stop(self):
+        if not self._running:
+            return
+        self._running = False
+        for task in self._tasks:
+            task.cancel()
+        self._tasks = []
+
+        self.dut.s_axi_awvalid.value = 0
+        self.dut.s_axi_wvalid.value = 0
+        self.dut.s_axi_bready.value = 0
+        self.dut.s_axi_arvalid.value = 0
+        self.dut.s_axi_rready.value = 0
+
+    def write_nowait(self, addr: int, data: int) -> AxiOpHandle:
+        handle = AxiOpHandle()
+        self._wr_submit_q.put_nowait(_WriteReq(addr=addr, data=data, handle=handle))
+        return handle
+
+    async def write(self, addr: int, data: int) -> int:
+        handle = self.write_nowait(addr=addr, data=data)
+        return await handle.wait()
+
+    def read_nowait(self, addr: int) -> AxiOpHandle:
+        handle = AxiOpHandle()
+        self._rd_submit_q.put_nowait(_ReadReq(addr=addr, handle=handle))
+        return handle
+
+    async def read(self, addr: int) -> tuple[int, int]:
+        handle = self.read_nowait(addr=addr)
+        return await handle.wait()
+
+    async def _wait_ready(self, ready, timeout_msg: str):
+        for _ in range(self.timeout_cycles):
+            await RisingEdge(self.dut.s_axi_aclk)
+            if int(ready.value):
+                return
+        raise TimeoutError(timeout_msg)
+
+    async def _wait_valid(self, valid, timeout_msg: str):
+        for _ in range(self.timeout_cycles):
+            await RisingEdge(self.dut.s_axi_aclk)
+            if int(valid.value):
+                return
+        raise TimeoutError(timeout_msg)
+
+    async def _drive_write(self, addr: int, data: int):
+        self.dut.s_axi_awaddr.value = addr
+        self.dut.s_axi_wdata.value = data
+        self.dut.s_axi_wstrb.value = self._full_wstrb
+        self.dut.s_axi_awvalid.value = 1
+        self.dut.s_axi_wvalid.value = 1
+
+        aw_done = False
+        w_done = False
+        try:
+            for _ in range(self.timeout_cycles):
+                await RisingEdge(self.dut.s_axi_aclk)
+                if not aw_done and int(self.dut.s_axi_awready.value):
+                    aw_done = True
+                    self.dut.s_axi_awvalid.value = 0
+                if not w_done and int(self.dut.s_axi_wready.value):
+                    w_done = True
+                    self.dut.s_axi_wvalid.value = 0
+                if aw_done and w_done:
+                    return
+            missing = []
+            if not aw_done:
+                missing.append("AW")
+            if not w_done:
+                missing.append("W")
+            raise TimeoutError(f"AXI {'/'.join(missing)} handshake timeout")
+        finally:
+            self.dut.s_axi_awvalid.value = 0
+            self.dut.s_axi_wvalid.value = 0
+
+    async def _recv_b(self) -> int:
+        self.dut.s_axi_bready.value = 1
+        try:
+            await self._wait_valid(self.dut.s_axi_bvalid, "AXI B handshake timeout")
+            return int(self.dut.s_axi_bresp.value)
+        finally:
+            self.dut.s_axi_bready.value = 0
+
+    async def _drive_ar(self, addr: int):
+        self.dut.s_axi_araddr.value = addr
+        self.dut.s_axi_arvalid.value = 1
+        try:
+            await self._wait_ready(self.dut.s_axi_arready, "AXI AR handshake timeout")
+        finally:
+            self.dut.s_axi_arvalid.value = 0
+
+    async def _recv_r(self) -> tuple[int, int]:
+        self.dut.s_axi_rready.value = 1
+        try:
+            await self._wait_valid(self.dut.s_axi_rvalid, "AXI R handshake timeout")
+            rdata = int(self.dut.s_axi_rdata.value)
+            rresp = int(self.dut.s_axi_rresp.value)
+            return (rdata, rresp)
+        finally:
+            self.dut.s_axi_rready.value = 0
+
+    async def _wr_loop(self):
+        while True:
+            req = await self._wr_submit_q.get()
+            try:
+                await self._drive_write(req.addr, req.data)
+                bresp = await self._recv_b()
+                req.handle.set_result(bresp)
+            except Exception as exc:
+                req.handle.set_exception(exc)
+
+    async def _rd_loop(self):
+        while True:
+            req = await self._rd_submit_q.get()
+            try:
+                await self._drive_ar(req.addr)
+                req.handle.set_result(await self._recv_r())
+            except Exception as exc:
+                req.handle.set_exception(exc)
 
 
 async def model(dut):
@@ -175,7 +273,7 @@ async def model(dut):
             addr = int(dut.int_addr.value)
             read_ack = True
             read_err = False
-            read_data = mem[addr] if addr in mem else 0
+            read_data = mem[addr] if addr in mem else implicit_mem_data(addr)
 
         # Write response
         dut.int_wr_ack.value = 1 if write_ack else 0
@@ -188,20 +286,78 @@ async def model(dut):
         read_ack = False
 
 
+async def axi_int_checker(dut, stop_evt: Event):
+    aw_q = []
+    w_q = []
+    ar_q = []
+    full_wstrb = (2 ** (DATA_WIDTH // 8)) - 1
+
+    while True:
+        await RisingEdge(dut.s_axi_aclk)
+        if stop_evt.is_set():
+            break
+
+        if int(dut.s_axi_awvalid.value) and int(dut.s_axi_awready.value):
+            aw_q.append(int(dut.s_axi_awaddr.value))
+
+        if int(dut.s_axi_wvalid.value) and int(dut.s_axi_wready.value):
+            w_q.append((int(dut.s_axi_wdata.value), int(dut.s_axi_wstrb.value)))
+
+        if int(dut.s_axi_arvalid.value) and int(dut.s_axi_arready.value):
+            ar_q.append(int(dut.s_axi_araddr.value))
+
+        if int(dut.int_wr_en.value):
+            assert aw_q, "Checker: int_wr_en without AXI AW"
+            assert w_q, "Checker: int_wr_en without AXI W"
+            exp_awaddr = aw_q.pop(0)
+            exp_wdata, exp_wstrb = w_q.pop(0)
+
+            got_addr = int(dut.int_addr.value)
+            got_data = int(dut.int_wr_data.value)
+            got_strb = int(dut.int_wr_strb.value)
+
+            assert got_addr == exp_awaddr, (
+                f"Checker: write addr mismatch got=0x{got_addr:x} exp=0x{exp_awaddr:x}"
+            )
+            assert got_data == exp_wdata, (
+                f"Checker: write data mismatch got=0x{got_data:x} exp=0x{exp_wdata:x}"
+            )
+            assert got_strb == exp_wstrb == full_wstrb, (
+                f"Checker: write strb mismatch got=0x{got_strb:x} exp=0x{exp_wstrb:x}"
+            )
+
+        if int(dut.int_rd_en.value):
+            assert ar_q, "Checker: int_rd_en without AXI AR"
+            exp_araddr = ar_q.pop(0)
+            got_addr = int(dut.int_addr.value)
+            assert got_addr == exp_araddr, (
+                f"Checker: read addr mismatch got=0x{got_addr:x} exp=0x{exp_araddr:x}"
+            )
+
+
 @cocotb.test()
-async def test_axi4l_ipif_simple_one_write(dut):
+async def test_axi4l_ipif_simple_write(dut):
     # Start clock and model
     Clock(dut.s_axi_aclk, 10, unit="ns").start()
     cocotb.start_soon(model(dut))
 
     # Reset DUT
     await reset_dut(dut)
+    mst_agent = AxiMstAgent(dut)
+    mst_agent.start()
+    checker_stop_evt = Event()
+    checker_task = cocotb.start_soon(axi_int_checker(dut, checker_stop_evt))
 
-    # Simple write test
-    test_addr = 0x04
-    test_data = 0xDEADBEEF
-    bresp = await axi_write(dut, test_addr, test_data)
-    assert bresp == 0, f"AXI write response error: bresp={bresp}"
+    # Sequential write test (submit each write after previous completes).
+    test_addr = [0x04 + i * 4 for i in range(10)]
+    test_data = [0xDEADBEEF + i for i in range(10)]
+    for addr, data in zip(test_addr, test_data):
+        bresp = await mst_agent.write(addr, data)
+        assert bresp == 0, f"AXI write response error: addr=0x{addr:x} bresp={bresp}"
+
+    mst_agent.stop()
+    checker_stop_evt.set()
+    checker_task.cancel()
 
     # Recovery
     await ClockCycles(dut.s_axi_aclk, 10)
@@ -215,13 +371,87 @@ async def test_axi4l_ipif_simple_b2b_write(dut):
 
     # Reset DUT
     await reset_dut(dut)
+    mst_agent = AxiMstAgent(dut)
+    mst_agent.start()
+    checker_stop_evt = Event()
+    checker_task = cocotb.start_soon(axi_int_checker(dut, checker_stop_evt))
 
-    # Simple write test
+    # Submit multiple writes first, then collect responses.
     test_addr = [0x04 + i * 4 for i in range(5)]
     test_data = [0xDEADBEEF + i for i in range(5)]
-    bresp = await axi_write(dut, test_addr, test_data)
-    assert isinstance(bresp, list), "AXI write response should be a list"
+    handles = [mst_agent.write_nowait(a, d) for a, d in zip(test_addr, test_data)]
+    bresp = [await handle.wait() for handle in handles]
     assert all(b == 0 for b in bresp), f"AXI write response error: bresp={bresp}"
+
+    mst_agent.stop()
+    checker_stop_evt.set()
+    checker_task.cancel()
+
+    # Recovery
+    await ClockCycles(dut.s_axi_aclk, 10)
+
+
+@cocotb.test()
+async def test_axi4l_ipif_simple_read(dut):
+    # Start clock and model
+    Clock(dut.s_axi_aclk, 10, unit="ns").start()
+    cocotb.start_soon(model(dut))
+
+    # Reset DUT
+    await reset_dut(dut)
+    mst_agent = AxiMstAgent(dut)
+    mst_agent.start()
+    checker_stop_evt = Event()
+    checker_task = cocotb.start_soon(axi_int_checker(dut, checker_stop_evt))
+
+    # Read implicitly initialized data.
+    test_addr = 0x20
+    test_data = implicit_mem_data(test_addr)
+
+    rdata, rresp = await mst_agent.read(test_addr)
+    assert rresp == 0, f"AXI read response error: rresp={rresp}"
+    assert rdata == test_data, (
+        f"AXI read data mismatch: got=0x{rdata:x} exp=0x{test_data:x}"
+    )
+
+    mst_agent.stop()
+    checker_stop_evt.set()
+    checker_task.cancel()
+
+    # Recovery
+    await ClockCycles(dut.s_axi_aclk, 10)
+
+
+@cocotb.test()
+async def test_axi4l_ipif_simple_b2b_read(dut):
+    # Start clock and model
+    Clock(dut.s_axi_aclk, 10, unit="ns").start()
+    cocotb.start_soon(model(dut))
+
+    # Reset DUT
+    await reset_dut(dut)
+    mst_agent = AxiMstAgent(dut)
+    mst_agent.start()
+    checker_stop_evt = Event()
+    checker_task = cocotb.start_soon(axi_int_checker(dut, checker_stop_evt))
+
+    # Read implicitly initialized data.
+    test_addr = [0x40 + i * 4 for i in range(8)]
+    test_data = [implicit_mem_data(addr) for addr in test_addr]
+
+    # Submit reads as fast as possible, then collect responses.
+    handles = [mst_agent.read_nowait(addr) for addr in test_addr]
+    results = [await handle.wait() for handle in handles]
+
+    for addr, exp_data, (rdata, rresp) in zip(test_addr, test_data, results):
+        assert rresp == 0, f"AXI read response error: addr=0x{addr:x} rresp={rresp}"
+        assert rdata == exp_data, (
+            f"AXI read data mismatch: addr=0x{addr:x} got=0x{rdata:x} exp=0x{exp_data:x}"
+        )
+
+    mst_agent.stop()
+    checker_stop_evt.set()
+    checker_task.cancel()
 
     # Recovery
     await ClockCycles(dut.s_axi_aclk, 10)
