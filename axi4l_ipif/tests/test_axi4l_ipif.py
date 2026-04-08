@@ -14,33 +14,14 @@ ADDR_WIDTH = 10
 DATA_WIDTH = 32
 
 AXI_TIMEOUT_CYCLES = 16
+TEST_TXN_COUNT = 10
 
 
 async def reset_dut(dut):
     dut.s_axi_aresetn.value = 0
-    # AW
-    dut.s_axi_awaddr.value = 0
-    # dut.s_axi_awprot.value = 0
-    dut.s_axi_awvalid.value = 0
-    # W
-    dut.s_axi_wdata.value = 0
-    dut.s_axi_wstrb.value = 0
-    dut.s_axi_wvalid.value = 0
-    # B
-    dut.s_axi_bready.value = 0
-    # AR
-    dut.s_axi_araddr.value = 0
-    # dut.s_axi_arprot.value = 0
-    dut.s_axi_arvalid.value = 0
-    # R
-    dut.s_axi_rready.value = 0
     await ClockCycles(dut.s_axi_aclk, 10)
     dut.s_axi_aresetn.value = 1
     await ClockCycles(dut.s_axi_aclk, 10)
-
-
-def implicit_mem_data(addr: int) -> int:
-    return (0xDEADBEEF + (addr >> 2)) & ((1 << DATA_WIDTH) - 1)
 
 
 class AxiOpHandle:
@@ -100,15 +81,22 @@ class AxiMstAgent:
         self._tasks = []
         self._running = False
 
+    def drive_idle(self):
+        self.dut.s_axi_awaddr.value = 0
+        self.dut.s_axi_awvalid.value = 0
+        self.dut.s_axi_wdata.value = 0
+        self.dut.s_axi_wstrb.value = 0
+        self.dut.s_axi_wvalid.value = 0
+        self.dut.s_axi_bready.value = 0
+        self.dut.s_axi_araddr.value = 0
+        self.dut.s_axi_arvalid.value = 0
+        self.dut.s_axi_rready.value = 0
+
     def start(self):
         if self._running:
             return
         self._running = True
-        self.dut.s_axi_awvalid.value = 0
-        self.dut.s_axi_wvalid.value = 0
-        self.dut.s_axi_bready.value = 0
-        self.dut.s_axi_arvalid.value = 0
-        self.dut.s_axi_rready.value = 0
+        self.drive_idle()
 
         self._tasks = [
             cocotb.start_soon(self._wr_loop()),
@@ -122,12 +110,7 @@ class AxiMstAgent:
         for task in self._tasks:
             task.cancel()
         self._tasks = []
-
-        self.dut.s_axi_awvalid.value = 0
-        self.dut.s_axi_wvalid.value = 0
-        self.dut.s_axi_bready.value = 0
-        self.dut.s_axi_arvalid.value = 0
-        self.dut.s_axi_rready.value = 0
+        self.drive_idle()
 
     def write_nowait(self, addr: int, data: int) -> AxiOpHandle:
         handle = AxiOpHandle()
@@ -237,6 +220,13 @@ class AxiMstAgent:
                 req.handle.set_exception(exc)
 
 
+# Model
+
+
+def implicit_mem_data(addr: int) -> int:
+    return (0xDEADBEEF + (addr >> 2)) & ((1 << DATA_WIDTH) - 1)
+
+
 async def model(dut):
     mem = {}
     write_ack = False
@@ -286,15 +276,26 @@ async def model(dut):
         read_ack = False
 
 
-async def axi_int_checker(dut, stop_evt: Event):
+async def checker(dut, stop_evt: Event):
     aw_q = []
     w_q = []
     ar_q = []
     full_wstrb = (2 ** (DATA_WIDTH // 8)) - 1
+    wr_cmp_cnt = 0
+    rd_cmp_cnt = 0
 
     while True:
         await RisingEdge(dut.s_axi_aclk)
         if stop_evt.is_set():
+            assert not aw_q, f"Checker: pending AW transactions at stop: {len(aw_q)}"
+            assert not w_q, f"Checker: pending W transactions at stop: {len(w_q)}"
+            assert not ar_q, f"Checker: pending AR transactions at stop: {len(ar_q)}"
+            cocotb.log.info(
+                "Checker: compared transactions: writes=%d reads=%d total=%d",
+                wr_cmp_cnt,
+                rd_cmp_cnt,
+                wr_cmp_cnt + rd_cmp_cnt,
+            )
             break
 
         if int(dut.s_axi_awvalid.value) and int(dut.s_axi_awready.value):
@@ -325,6 +326,7 @@ async def axi_int_checker(dut, stop_evt: Event):
             assert got_strb == exp_wstrb == full_wstrb, (
                 f"Checker: write strb mismatch got=0x{got_strb:x} exp=0x{exp_wstrb:x}"
             )
+            wr_cmp_cnt += 1
 
         if int(dut.int_rd_en.value):
             assert ar_q, "Checker: int_rd_en without AXI AR"
@@ -333,6 +335,13 @@ async def axi_int_checker(dut, stop_evt: Event):
             assert got_addr == exp_araddr, (
                 f"Checker: read addr mismatch got=0x{got_addr:x} exp=0x{exp_araddr:x}"
             )
+            rd_cmp_cnt += 1
+
+
+async def stop_checker(dut, stop_evt: Event, checker_task):
+    stop_evt.set()
+    await RisingEdge(dut.s_axi_aclk)
+    await checker_task
 
 
 @cocotb.test()
@@ -342,22 +351,22 @@ async def test_axi4l_ipif_simple_write(dut):
     cocotb.start_soon(model(dut))
 
     # Reset DUT
-    await reset_dut(dut)
     mst_agent = AxiMstAgent(dut)
+    mst_agent.drive_idle()
+    await reset_dut(dut)
     mst_agent.start()
     checker_stop_evt = Event()
-    checker_task = cocotb.start_soon(axi_int_checker(dut, checker_stop_evt))
+    checker_task = cocotb.start_soon(checker(dut, checker_stop_evt))
 
     # Sequential write test (submit each write after previous completes).
-    test_addr = [0x04 + i * 4 for i in range(10)]
-    test_data = [0xDEADBEEF + i for i in range(10)]
+    test_addr = [0x04 + i * 4 for i in range(TEST_TXN_COUNT)]
+    test_data = [0xDEADBEEF + i for i in range(TEST_TXN_COUNT)]
     for addr, data in zip(test_addr, test_data):
         bresp = await mst_agent.write(addr, data)
         assert bresp == 0, f"AXI write response error: addr=0x{addr:x} bresp={bresp}"
 
     mst_agent.stop()
-    checker_stop_evt.set()
-    checker_task.cancel()
+    await stop_checker(dut, checker_stop_evt, checker_task)
 
     # Recovery
     await ClockCycles(dut.s_axi_aclk, 10)
@@ -370,22 +379,22 @@ async def test_axi4l_ipif_simple_b2b_write(dut):
     cocotb.start_soon(model(dut))
 
     # Reset DUT
-    await reset_dut(dut)
     mst_agent = AxiMstAgent(dut)
+    mst_agent.drive_idle()
+    await reset_dut(dut)
     mst_agent.start()
     checker_stop_evt = Event()
-    checker_task = cocotb.start_soon(axi_int_checker(dut, checker_stop_evt))
+    checker_task = cocotb.start_soon(checker(dut, checker_stop_evt))
 
     # Submit multiple writes first, then collect responses.
-    test_addr = [0x04 + i * 4 for i in range(5)]
-    test_data = [0xDEADBEEF + i for i in range(5)]
+    test_addr = [0x04 + i * 4 for i in range(TEST_TXN_COUNT)]
+    test_data = [0xDEADBEEF + i for i in range(TEST_TXN_COUNT)]
     handles = [mst_agent.write_nowait(a, d) for a, d in zip(test_addr, test_data)]
     bresp = [await handle.wait() for handle in handles]
     assert all(b == 0 for b in bresp), f"AXI write response error: bresp={bresp}"
 
     mst_agent.stop()
-    checker_stop_evt.set()
-    checker_task.cancel()
+    await stop_checker(dut, checker_stop_evt, checker_task)
 
     # Recovery
     await ClockCycles(dut.s_axi_aclk, 10)
@@ -398,25 +407,26 @@ async def test_axi4l_ipif_simple_read(dut):
     cocotb.start_soon(model(dut))
 
     # Reset DUT
-    await reset_dut(dut)
     mst_agent = AxiMstAgent(dut)
+    mst_agent.drive_idle()
+    await reset_dut(dut)
     mst_agent.start()
     checker_stop_evt = Event()
-    checker_task = cocotb.start_soon(axi_int_checker(dut, checker_stop_evt))
+    checker_task = cocotb.start_soon(checker(dut, checker_stop_evt))
 
     # Read implicitly initialized data.
-    test_addr = 0x20
-    test_data = implicit_mem_data(test_addr)
+    test_addr = [0x20 + i * 4 for i in range(TEST_TXN_COUNT)]
+    test_data = [implicit_mem_data(addr) for addr in test_addr]
 
-    rdata, rresp = await mst_agent.read(test_addr)
-    assert rresp == 0, f"AXI read response error: rresp={rresp}"
-    assert rdata == test_data, (
-        f"AXI read data mismatch: got=0x{rdata:x} exp=0x{test_data:x}"
-    )
+    for addr, exp_data in zip(test_addr, test_data):
+        rdata, rresp = await mst_agent.read(addr)
+        assert rresp == 0, f"AXI read response error: addr=0x{addr:x} rresp={rresp}"
+        assert rdata == exp_data, (
+            f"AXI read data mismatch: addr=0x{addr:x} got=0x{rdata:x} exp=0x{exp_data:x}"
+        )
 
     mst_agent.stop()
-    checker_stop_evt.set()
-    checker_task.cancel()
+    await stop_checker(dut, checker_stop_evt, checker_task)
 
     # Recovery
     await ClockCycles(dut.s_axi_aclk, 10)
@@ -429,14 +439,15 @@ async def test_axi4l_ipif_simple_b2b_read(dut):
     cocotb.start_soon(model(dut))
 
     # Reset DUT
-    await reset_dut(dut)
     mst_agent = AxiMstAgent(dut)
+    mst_agent.drive_idle()
+    await reset_dut(dut)
     mst_agent.start()
     checker_stop_evt = Event()
-    checker_task = cocotb.start_soon(axi_int_checker(dut, checker_stop_evt))
+    checker_task = cocotb.start_soon(checker(dut, checker_stop_evt))
 
     # Read implicitly initialized data.
-    test_addr = [0x40 + i * 4 for i in range(8)]
+    test_addr = [0x40 + i * 4 for i in range(TEST_TXN_COUNT)]
     test_data = [implicit_mem_data(addr) for addr in test_addr]
 
     # Submit reads as fast as possible, then collect responses.
@@ -450,8 +461,7 @@ async def test_axi4l_ipif_simple_b2b_read(dut):
         )
 
     mst_agent.stop()
-    checker_stop_evt.set()
-    checker_task.cancel()
+    await stop_checker(dut, checker_stop_evt, checker_task)
 
     # Recovery
     await ClockCycles(dut.s_axi_aclk, 10)
