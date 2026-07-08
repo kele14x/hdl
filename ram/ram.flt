@@ -1,0 +1,8 @@
+rtl/ram_sdp.sv
+rtl/ram_sdp_asym.v
+rtl/ram_sdp_pipe.sv
+rtl/ram_sp.sv
+rtl/ram_sp_pipe.sv
+rtl/ram_tdp.sv
+rtl/ram_tdp_asym.v
+rtl/ram_tdp_pipe.sv

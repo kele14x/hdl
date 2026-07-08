@@ -1,19 +1,15 @@
-import random
-from typing import Dict, Tuple
+import os
+from pathlib import Path
 
 import cocotb
-import matlab.engine
+import pytest
 from cocotb.clock import Clock
-from cocotb.handle import SimHandleBase
-from cocotb.queue import Queue
-from cocotb.triggers import RisingEdge, ClockCycles
+from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb_tools.runner import get_runner
 
+prj_path = Path(__file__).resolve().parent.parent
 
-CSR_SUPPORT = cocotb.top.CSR_SUPPORT.value
-NUM_STAGES = cocotb.top.NUM_STAGES.value
-DATA_WIDTH = cocotb.top.DATA_WIDTH.value
-COE_DATA_WIDTH = cocotb.top.COE_DATA_WIDTH.value
-SRA_BITS = cocotb.top.SRA_BITS.value
+SIM = os.environ.get("SIM", "verilator")
 
 
 @cocotb.test()
@@ -21,6 +17,8 @@ async def test_ch_fir_basic(dut):
     """
     Perform some basic test of the ch_fir module.
     """
+    NUM_STAGES = dut.NUM_STAGES.value
+
     # Create clock and start it
     cocotb.start_soon(Clock(dut.clk, 2).start())
     cocotb.start_soon(Clock(dut.ctrl_clk, 10).start())
@@ -34,8 +32,6 @@ async def test_ch_fir_basic(dut):
     dut.ctrl_coe_addr.value = 0
     dut.ctrl_coe_data_in.value = 0
     await ClockCycles(dut.ctrl_clk, 100)
-    # assert dut.data_out.value == 0, "data_out port should be reset to 0"
-    # assert dut.ctrl_coe_data_out.value == 0, "ctrl_coe_data_out port should be reset to 0"
     dut.rst.value = 0
     dut.ctrl_rst.value = 0
     await ClockCycles(dut.ctrl_clk, 10)
@@ -74,3 +70,33 @@ async def test_ch_fir_basic(dut):
     # Wait for the simulation to finish
     await ClockCycles(dut.clk, 1000)
     dut._log.info("Simulation finished")
+
+
+def test_fir_runner():
+    hdl_toplevel = "fir"
+    hdl_toplevel_lang = "verilog"
+
+    verilog_sources = [
+        prj_path / "rtl/fir.sv",
+        prj_path / "rtl/fir_mac.sv",
+        prj_path / "rtl/fir_stage.sv",
+    ]
+
+    runner = get_runner(SIM)
+    runner.build(
+        hdl_toplevel=hdl_toplevel,
+        verilog_sources=verilog_sources,
+        always=True,
+        waves=True,
+    )
+
+    runner.test(
+        hdl_toplevel=hdl_toplevel,
+        hdl_toplevel_lang=hdl_toplevel_lang,
+        test_module="test_fir",
+        waves=True,
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-q"]))

@@ -3,12 +3,3 @@ rtl/cfr_pc_cpg.sv
 rtl/cfr_pc_pd.sv
 rtl/cfr_pc_softclipper.sv
 rtl/cfr_pc_upx.sv
-
-[testbench]
-tb/tb_cfr_pc.sv
-tb/test_cfr_pc_cancellation_pulse_i.txt
-tb/test_cfr_pc_cancellation_pulse_q.txt
-tb/test_cfr_pc_data_i_in.txt
-tb/test_cfr_pc_data_i_out.txt
-tb/test_cfr_pc_data_q_in.txt
-tb/test_cfr_pc_data_q_out.txt

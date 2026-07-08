@@ -1,10 +1,2 @@
 ../util/reg_pipeline.sv
 rtl/cordic_rotate.sv
-
-[testbench]
-tb/tb_cordic_rotate.sv
-tb/test_cordic_rotate_input_theta.txt
-tb/test_cordic_rotate_input_xin.txt
-tb/test_cordic_rotate_input_yin.txt
-tb/test_cordic_rotate_output_xout.txt
-tb/test_cordic_rotate_output_yout.txt

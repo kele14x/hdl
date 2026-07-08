@@ -1,0 +1,11 @@
+src/pps_checker.sv
+src/pps_counter.sv
+src/pps_delay.sv
+src/pps_expand.sv
+src/pps_resync.sv
+src/pps_symbol_timer.sv
+src/pps_timer.sv
+src/pps_timer_cdc.sv
+src/pps_top.sv
+src/pps_top_regs.v
+src/pps_ts_checker.sv

@@ -1,141 +1,169 @@
-from numbers import Complex
+import math
+import os
 import random
-from typing import Tuple
+from pathlib import Path
 
 import cocotb
-import matlab.engine
+import pytest
 from cocotb.clock import Clock
-from cocotb.handle import SimHandleBase
+from cocotb.queue import Queue
+from cocotb_tools.runner import get_runner
 from cocotb.triggers import ClockCycles, RisingEdge
-from tester import DataMonitor
 
-PHASE_FRACTION_WIDTH = cocotb.top.PHASE_FRACTION_WIDTH.value
-PHASE_ENTRIES = cocotb.top.PHASE_ENTRIES.value
-DATA_WIDTH = cocotb.top.DATA_WIDTH.value
-LFSR_INITIAL = cocotb.top.LFSR_INITIAL.value
-LFSR_POLYNOMIAL = cocotb.top.LFSR_POLYNOMIAL.value
+prj_path = Path(__file__).resolve().parent.parent
 
 
-class NcoTester:
-    """
-    Tester of a NCO instance.
-    """
+NUM_PARALLEL = int(os.environ.get("NUM_PARALLEL", 1))
+PHASE_INTEGER_WIDTH = int(os.environ.get("PHASE_INTEGER_WIDTH", 12))
+PHASE_FRACTION_WIDTH = int(os.environ.get("PHASE_FRACTION_WIDTH", 20))
 
-    def __init__(self, dut: SimHandleBase):
-        self.dut = dut
-        self._checker = None
+GUI = os.environ.get("GUI", "FALSE") == "TRUE"
 
-        self.input_mon = DataMonitor(
-            dut=dut,
-            signals=['sync']
-        )
+SIM = os.environ.get("SIM", "verilator")
 
-        self.output_mon = DataMonitor(
-            dut=dut,
-            signals=['cos', 'sin'],
-            delay=self.dut.Latency.value
-        )
+LATENCY = 6
 
-        # Start MATLAB session
-        self._eng = matlab.engine.start_matlab('-sd ~/Workspaces/dfe')
-        self._eng.setpath(nargout=0)
+AMPLITUDE = 2 ** 15 - 2
+PHASE_ENTRIES = (3 << (PHASE_FRACTION_WIDTH + PHASE_INTEGER_WIDTH - 2)) * NUM_PARALLEL
+TOLERANCE = math.ceil(AMPLITUDE * math.sin(2 * math.pi * 1 / 2 ** PHASE_INTEGER_WIDTH))
 
-        # Create MATLAB reference System object
-        self._model = self._eng.dfe.NCO(
-            'PhaseFractionWidth', float(PHASE_FRACTION_WIDTH),
-            'PhaseEntries', float(PHASE_ENTRIES),
-            'DataWidth', float(DATA_WIDTH),
-            'LFSRInitial', float(LFSR_INITIAL),
-            'LFSRPolynomial', float(LFSR_POLYNOMIAL)
-        )
-
-    def start(self) -> None:
-        """Start the checker."""
-        if self._checker is not None:
-            raise RuntimeError("Checker already started")
-        self.input_mon.start()
-        self.output_mon.start()
-        self._checker = cocotb.start_soon(self._check())
-
-    def stop(self) -> None:
-        """Stop the checker."""
-        if self._checker is None:
-            raise RuntimeError("Checker not started")
-        self.input_mon.stop()
-        self.output_mon.stop()
-        self._checker.kill()
-        self._checker = None
-
-    def model(self, sync) -> Complex:
-        """The golden model of the NCO."""
-        result = self._eng.step(self._model, 1, sync)
-        return result
-
-    async def _check(self) -> None:
-        """Checker function."""
-        while True:
-            input = await self.input_mon.values.get()
-            output = await self.output_mon.values.get()
-
-            # Simulation output
-            sync = input["sync"].integer
-            cos = output["cos"].integer
-            sin = output["sin"].integer
-            result = cos + sin * 1j
-
-            # Golden output
-            ref = self.model(sync)
-
-            assert result == ref, f"Output mismatch: result = {result}, ref = {ref}"
+input_queue = Queue()
+output_queue = Queue()
 
 
-@cocotb.test()
-async def test_nco_basic(dut):
-    """
-    Perform some basic test of NCO.
-    """
+def model(state, sync, pinc, poff):
+    state = poff if sync else state + pinc
+    ret = (state,)
+    for i in range(NUM_PARALLEL):
+        cos = round(AMPLITUDE * math.cos(2 * math.pi * (state + pinc * i / NUM_PARALLEL) / PHASE_ENTRIES))
+        sin = round(AMPLITUDE * math.sin(2 * math.pi * (state + pinc * i / NUM_PARALLEL) / PHASE_ENTRIES))
+        ret += (cos, sin)
+    return ret
 
-    # Start clock
-    cocotb.start_soon(Clock(dut.clk, 10).start(start_high=False))
 
-    # Reset DUT
+async def reset(dut):
+    F0 = -10e6
+    Fs = 491.52e6
+
+    # Reset the DUT
     dut.rst.value = 1
+
     dut.sync.value = 0
-    dut.ctrl_pinc.value = 0
+    if F0 >= 0:
+        dut.ctrl_pinc.value = int(F0 / Fs * PHASE_ENTRIES)
+    else:
+        dut.ctrl_pinc.value = PHASE_ENTRIES + int(F0 / Fs * PHASE_ENTRIES)
     dut.ctrl_poff.value = 0
-    await ClockCycles(dut.clk, 16)
-    dut.rst.value = 0
 
-    dut.sync.value = 1
-    await RisingEdge(dut.clk)
-    dut.sync.value = 0
-    await ClockCycles(dut.clk, 3)
-    assert dut.cos.value == 2 ** (DATA_WIDTH - 1) - 2
-    assert dut.sin.value == 0
+    await ClockCycles(dut.clk, 10)
+    dut.rst.value = 0
+    await ClockCycles(dut.clk, 10)
+
+
+async def drive(dut):
+    for i in range(10000):
+        dut.sync.value = 1 if i == 0 else 0
+        await RisingEdge(dut.clk)
+
+
+async def input_monitor(dut):
+    while True:
+        await RisingEdge(dut.clk)
+        input_queue.put_nowait(
+            (
+                dut.sync.value.integer,
+                dut.ctrl_pinc.value.integer,
+                dut.ctrl_poff.value.integer,
+            )
+        )
+
+
+async def output_monitor(dut):
+    await ClockCycles(dut.clk, LATENCY)
+    while True:
+        await RisingEdge(dut.clk)
+        output = ()
+        for i in range(NUM_PARALLEL):
+            cos = (dut.cos.value.integer >> (i * 16)) & 0xFFFF
+            sin = (dut.sin.value.integer >> (i * 16)) & 0xFFFF
+            cos = cos - 2 ** 16 if cos >= 2 ** 15 else cos
+            sin = sin - 2 ** 16 if sin >= 2 ** 15 else sin
+            output += (cos, sin)
+        output_queue.put_nowait(output)
+
+
+async def checker():
+    n = 0
+    state = 0
+    with open("nco_output.txt", "w") as f:
+        while True:
+            input = await input_queue.get()
+            output = await output_queue.get()
+            for i in range(int(len(output) / 2)):
+                f.write(f"{output[i*2]}, {output[i*2+1]}\n")
+            n += 1
+
+            (state, *ref) = model(state, input[0], input[1], input[2])
+            for i in range(len(output)):
+                assert (
+                    abs(ref[i] - output[i]) < TOLERANCE
+                ), f"ref = {ref}, output = {output}"
 
 
 @cocotb.test()
-async def test_nco_advanced(dut):
-    """
-    Test NCO instance against with MATLAB model.
-    """
+async def test_nco(dut):
+    dut._log.info("Simulation started")
+    # Create clock and start it
+    cocotb.start_soon(Clock(dut.clk, 10).start())
 
-    # Start clock
-    cocotb.start_soon(Clock(dut.clk, 10).start(start_high=False))
+    # Reset the DUT
+    await reset(dut)
 
-    # Create tester
-    nco_tester = NcoTester(dut=dut)
-    nco_tester._eng.set(nco_tester._model, 'PhaseIncrement', 400000, nargout=0)
-    nco_tester._eng.set(nco_tester._model, 'PhaseOffset', 100000, nargout=0)
+    # Start monitor and checker
+    cocotb.start_soon(input_monitor(dut))
+    cocotb.start_soon(output_monitor(dut))
+    cocotb.start_soon(checker())
 
-    # Reset DUT
-    dut.rst.value = 1
-    dut.sync.value = 0
-    dut.ctrl_pinc.value = 400000
-    dut.ctrl_poff.value = 100000
-    await ClockCycles(dut.clk, 16)
-    dut.rst.value = 0
+    # Run test multiple times
+    await drive(dut)
 
-    nco_tester.start()
+    await ClockCycles(dut.clk, 10)
+    dut._log.info("Simulation finished")
 
-    await ClockCycles(dut.clk, 100)
+
+def test_nco_runner():
+    hdl_toplevel = "nco"
+    hdl_toplevel_lang = "verilog"
+
+    verilog_sources = [
+        prj_path / "../dds_lut/rtl/dds_lut.sv",
+        prj_path / "../dds_lut/rtl/dds_lut_rom.sv",
+        prj_path / "../lfsr/rtl/lfsr.sv",
+        prj_path / "rtl/nco.v",
+    ]
+
+    parameters = {
+        "NUM_PARALLEL": NUM_PARALLEL,
+        "PHASE_INTEGER_WIDTH": PHASE_INTEGER_WIDTH,
+        "PHASE_FRACTION_WIDTH": PHASE_FRACTION_WIDTH,
+    }
+
+    runner = get_runner(SIM)
+    runner.build(
+        hdl_toplevel=hdl_toplevel,
+        verilog_sources=verilog_sources,
+        parameters=parameters,
+        always=True,
+    )
+
+    runner.test(
+        hdl_toplevel=hdl_toplevel,
+        hdl_toplevel_lang=hdl_toplevel_lang,
+        test_module="test_nco",
+        waves=True,
+        gui=False,
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-q"]))

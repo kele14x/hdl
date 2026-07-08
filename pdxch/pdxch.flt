@@ -1,0 +1,9 @@
+rtl/pdxch.sv
+rtl/pdxch_block2stream.sv
+rtl/pdxch_channel.sv
+rtl/pdxch_conv.sv
+rtl/pdxch_conv_nco.sv
+rtl/pdxch_fdv_buffer.sv
+rtl/pdxch_fdv_buffer_readout.sv
+rtl/pdxch_regs.v
+rtl/pdxch_top.sv

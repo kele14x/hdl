@@ -1,0 +1,7 @@
+rtl/puxch.sv
+rtl/puxch_buffer.sv
+rtl/puxch_channel.sv
+rtl/puxch_conv.sv
+rtl/puxch_regs.v
+rtl/puxch_resync.sv
+rtl/puxch_top.sv

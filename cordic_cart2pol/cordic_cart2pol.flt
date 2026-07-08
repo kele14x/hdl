@@ -1,9 +1,2 @@
 ../util/reg_pipeline.sv
 rtl/cordic_cart2pol.sv
-
-[testbench]
-tb/tb_cordic_cart2pol.sv
-tb/test_cordic_cart2pol_input_xin.txt
-tb/test_cordic_cart2pol_input_yin.txt
-tb/test_cordic_cart2pol_output_r.txt
-tb/test_cordic_cart2pol_output_theta.txt

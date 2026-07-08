@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import cocotb
+import pytest
 from cocotb.clock import Clock
 from cocotb.queue import Queue
 from cocotb.triggers import ClockCycles, Event, RisingEdge
@@ -12,6 +13,8 @@ from cocotb_tools.runner import get_runner
 
 ADDR_WIDTH = 10
 DATA_WIDTH = 32
+
+SIM = os.environ.get("SIM", "verilator")
 
 AXI_TIMEOUT_CYCLES = 16
 TEST_TXN_COUNT = 10
@@ -468,15 +471,13 @@ async def test_axi4l_ipif_simple_b2b_read(dut):
 
 
 def test_axi4l_ipif_runner():
-    sim = os.getenv("SIM", "verilator")
-
     proj_path = Path(__file__).resolve().parent
     sources = [
         proj_path / "../rtl/axi4l_ipif.sv",
     ]
     hdl_toplevel = "axi4l_ipif"
 
-    runner = get_runner(sim)
+    runner = get_runner(SIM)
     runner.build(
         sources=sources,
         hdl_toplevel=hdl_toplevel,
@@ -495,4 +496,4 @@ def test_axi4l_ipif_runner():
 
 
 if __name__ == "__main__":
-    test_axi4l_ipif_runner()
+    raise SystemExit(pytest.main([__file__, "-q"]))

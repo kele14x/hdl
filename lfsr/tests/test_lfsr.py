@@ -1,127 +1,85 @@
-from numbers import Complex
-import random
+import os
+from pathlib import Path
 
 import cocotb
-import matlab.engine
+import pytest
 from cocotb.clock import Clock
-from cocotb.handle import SimHandleBase
+from cocotb_tools.runner import get_runner
 from cocotb.triggers import ClockCycles, RisingEdge
-from tester import DataMonitor
+
+prj_path = Path(__file__).resolve().parent.parent
 
 
-BIT_WIDTH = cocotb.top.BIT_WIDTH.value
-INITIAL = cocotb.top.INITIAL.value
-POLYNOMIAL = cocotb.top.POLYNOMIAL.value
-STRUCTURE = cocotb.top.STRUCTURE.value
-GATE_TYPE = cocotb.top.GATE_TYPE.value
-PARALLEL_OUTPUT = cocotb.top.PARALLEL_OUTPUT.value
+BIT_WIDTH = int(os.environ.get("BIT_WIDTH", 8))
+INITIAL = int(os.environ.get("INITIAL", 2**BIT_WIDTH - 1))
+POLYNOMIAL = int(os.environ.get("POLYNOMIAL", 259))
+STRUCTURE = os.environ.get("STRUCTURE", "FIBONACCI")
+GATE_TYPE = os.environ.get("GATE_TYPE", "XOR")
+PARALLEL_OUTPUT = int(os.environ.get("PARALLEL_OUTPUT", 1))
+
+GUI = os.environ.get("GUI", "False") == "True"
+
+SIM = os.environ.get("SIM", "verilator")
 
 
-class LfsrTester:
-    """
-    Checker for a LFSR instance.
-    """
-
-    def __init__(self, dut: SimHandleBase):
-        self.dut = dut
-        self._checker = None
-
-        self.input_mon = DataMonitor(
-            dut=self.dut,
-            signals=['rst']
-        )
-
-        self.output_mon = DataMonitor(
-            dut=self.dut,
-            signals=['dout'],
-            delay=1
-        )
-
-        # Start MATLAB session
-        self._eng = matlab.engine.start_matlab('-sd ~/Workspaces/dfe')
-        self._eng.setpath(nargout=0)
-
-        # Create MATLAB reference System object
-        self._model = self._eng.dfe.LFSR(
-            'BitWidth', float(BIT_WIDTH),
-            'Initial', float(INITIAL),
-            'Polynomial', float(POLYNOMIAL),
-            'Structure', str(STRUCTURE, 'utf-8').title(),
-            'GateType', str(GATE_TYPE, 'utf-8'),
-            'PalleralOutput', PARALLEL_OUTPUT
-        )
-
-    def start(self) -> None:
-        """Starts monitors, model, and checker coroutine."""
-        if self._checker is not None:
-            raise RuntimeError('Monitor already started')
-        self.input_mon.start()
-        self.output_mon.start()
-        self._checker = cocotb.start_soon(self._check())
-
-    def stop(self) -> None:
-        """Stops everything."""
-        if self._checker is None:
-            raise RuntimeError('Monitor never started')
-        self.input_mon.stop()
-        self.output_mon.stop()
-        self._checker.kill()
-        self._checker = None
-
-    def model(self, rstSeq: float) -> Complex:
-        """Golden reference model."""
-        stat = self._eng.step(self._model, 1, rstSeq)
-        return stat
-
-    async def _check(self) -> None:
-        """Checker function."""
-        while True:
-            input = await self.input_mon.values.get()
-            output = await self.output_mon.values.get()
-            rstSeq = input['rst'].value
-            ref = self.model(float(rstSeq))
-            result = output['dout'].value
-            assert ref == result, f"ref= {ref}, result={result}"
-
-
-@cocotb.test()
-async def test_lfsr_basic(dut):
-    """Perform some basic test of LFSR module."""
-
-    # Create clock and start it
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start(start_high=False))
-
+async def reset(dut):
     # Reset DUT
     dut.rst.value = 1
     dut.en.value = 1
     dut.load.value = 0
     dut.din.value = 0
+
     await ClockCycles(dut.clk, 16)
     dut.rst.value = 0
-    await RisingEdge(dut.clk)
+
+
+@cocotb.test()
+async def test_lfsr(dut):
+    # Create clock and start it
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    await reset(dut)
 
     # `dout` should be reset to initial value
+    await RisingEdge(dut.clk)
     assert dut.dout.value == INITIAL
 
-
-@cocotb.test()
-async def test_lfsr_advanced(dut):
-    """Test LFSR against a MATLAB model."""
-
-    # Create clock and start it
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start(start_high=False))
-
-    # Create Python tester
-    tester = LfsrTester(dut)
-
-    # Reset DUT
-    dut.rst.value = 1
-    dut.en.value = 1
-    dut.load.value = 0
-    dut.din.value = 0
-    await ClockCycles(dut.clk, 16)
-    dut.rst.value = 0
-
-    # Reset DUT
-    tester.start()
     await ClockCycles(dut.clk, 100)
+
+
+def test_lfsr_runner():
+    hdl_toplevel = "lfsr"
+    hdl_toplevel_lang = "verilog"
+
+    verilog_sources = [
+        prj_path / "rtl/lfsr.sv",
+    ]
+
+    parameters = {
+        "BIT_WIDTH": BIT_WIDTH,
+        "INITIAL": INITIAL,
+        "POLYNOMIAL": POLYNOMIAL,
+        "STRUCTURE": STRUCTURE,
+        "GATE_TYPE": GATE_TYPE,
+        "PARALLEL_OUTPUT": PARALLEL_OUTPUT,
+    }
+
+    runner = get_runner(SIM)
+    runner.build(
+        hdl_toplevel=hdl_toplevel,
+        verilog_sources=verilog_sources,
+        parameters=parameters,
+        always=True,
+    )
+
+    runner.test(
+        hdl_toplevel=hdl_toplevel,
+        hdl_toplevel_lang=hdl_toplevel_lang,
+        test_module="test_lfsr",
+        waves=True,
+        gui=GUI,
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-q"]))

@@ -1,5 +1,2 @@
 ../ram/bram_sdp.sv
 rtl/eth_pkt_fifo.sv
-
-[testbench]
-tb/eth_pkt_fifo_ooc.xdc

@@ -1,8 +1,1 @@
 rtl/cfr_hardclipping.sv
-
-[testbench]
-tb/tb_cfr_hardclipping.sv
-tb/test_cfr_hardclipping_data_i_in.txt
-tb/test_cfr_hardclipping_data_i_out.txt
-tb/test_cfr_hardclipping_data_q_in.txt
-tb/test_cfr_hardclipping_data_q_out.txt

@@ -1,0 +1,7 @@
+rtl/timer.v
+rtl/timer_core_400.v
+rtl/timer_core_491p52.v
+rtl/timer_pps.v
+rtl/timer_regs.v
+rtl/timer_rfs.v
+rtl/timer_wrapper.v

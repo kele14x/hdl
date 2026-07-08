@@ -1,15 +1,15 @@
-import random
-from typing import Dict, Tuple
+import os
+from pathlib import Path
 
 import cocotb
-import matlab.engine
+import pytest
 from cocotb.clock import Clock
-from cocotb.handle import SimHandleBase
-from cocotb.queue import Queue
-from cocotb.triggers import RisingEdge, ClockCycles
+from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb_tools.runner import get_runner
 
+prj_path = Path(__file__).resolve().parent.parent
 
-DATA_WIDTH = cocotb.top.DATA_WIDTH.value
+SIM = os.environ.get("SIM", "verilator")
 
 
 @cocotb.test()
@@ -38,3 +38,34 @@ async def test_dummy_source_basic(dut):
     # Wait for the simulation to finish
     await ClockCycles(dut.clk, 2**20)
     dut._log.info("Simulation finished")
+
+
+def test_dummy_source_runner():
+    hdl_toplevel = "dummy_source"
+    hdl_toplevel_lang = "verilog"
+
+    verilog_sources = [
+        prj_path / "../lfsr/rtl/lfsr.sv",
+        prj_path / "../mult/rtl/mult.sv",
+        prj_path / "../util/delay.sv",
+        prj_path / "rtl/dummy_source.sv",
+    ]
+
+    runner = get_runner(SIM)
+    runner.build(
+        hdl_toplevel=hdl_toplevel,
+        verilog_sources=verilog_sources,
+        always=True,
+        waves=True,
+    )
+
+    runner.test(
+        hdl_toplevel=hdl_toplevel,
+        hdl_toplevel_lang=hdl_toplevel_lang,
+        test_module="test_dummy_source",
+        waves=True,
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-q"]))

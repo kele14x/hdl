@@ -2,7 +2,3 @@
 ../ram/bram_sdp_pipe.sv
 hdl/fir_macc.sv
 hdl/fir_macc_mac.sv
-
-constr/fir_macc_ooc.xdc
-
-tb/tb_fir_macc.sv

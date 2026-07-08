@@ -1,0 +1,5 @@
+rtl/timer_syncer.v
+rtl/timer_syncer_156p25.v
+rtl/timer_syncer_312p5.v
+rtl/timer_syncer_390p625.v
+rtl/timer_syncer_ch.v

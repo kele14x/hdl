@@ -1,18 +1,26 @@
+import os
 import random
-import numpy as np
+from pathlib import Path
 from typing import List
 
 import cocotb
+import numpy as np
+import pytest
 from cocotb.clock import Clock
 from cocotb.handle import SimHandleBase
 from cocotb.queue import Queue
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb_tools.runner import get_runner
 
-LOG_FFT_SIZE = cocotb.top.LOG_FFT_SIZE.value
-INPUT_DATA_WIDTH = cocotb.top.INPUT_DATA_WIDTH.value
-PHASE_WIDTH = cocotb.top.PHASE_WIDTH.value
-OUTPUT_DATA_WIDTH = cocotb.top.OUTPUT_DATA_WIDTH.value
-BIT_REVERSED_INPUT = cocotb.top.BIT_REVERSED_INPUT.value
+prj_path = Path(__file__).resolve().parent.parent
+
+SIM = os.environ.get("SIM", "verilator")
+
+LOG_FFT_SIZE = int(os.environ.get("LOG_FFT_SIZE", 10))
+INPUT_DATA_WIDTH = int(os.environ.get("INPUT_DATA_WIDTH", 16))
+PHASE_WIDTH = int(os.environ.get("PHASE_WIDTH", 16))
+OUTPUT_DATA_WIDTH = int(os.environ.get("OUTPUT_DATA_WIDTH", 18))
+BIT_REVERSED_INPUT = int(os.environ.get("BIT_REVERSED_INPUT", 1))
 
 
 def model(x: List[complex]) -> List[complex]:
@@ -115,3 +123,49 @@ async def test_fft_radix2(dut: SimHandleBase):
 
     await cocotb.start_soon(driver(dut))
     await Timer(10000, units="ns")
+
+
+def test_fft_radix2_runner():
+    hdl_toplevel = "fft_radix2"
+    hdl_toplevel_lang = "verilog"
+
+    verilog_sources = [
+        prj_path / "../cmult/rtl/cmult.sv",
+        prj_path / "../ram/rtl/ram_sdp.sv",
+        prj_path / "../shift_ram/rtl/shift_ram.sv",
+        prj_path / "../util/delay.sv",
+        prj_path / "rtl/fft_radix2_bf2.sv",
+        prj_path / "rtl/fft_radix2_core.sv",
+        prj_path / "rtl/fft_radix2_stage.sv",
+        prj_path / "rtl/fft_radix2_twiddle_rom.sv",
+        prj_path / "rtl/fft_radix2_twiddle.sv",
+        prj_path / "rtl/fft_radix2.sv",
+    ]
+
+    parameters = {
+        "LOG_FFT_SIZE": LOG_FFT_SIZE,
+        "INPUT_DATA_WIDTH": INPUT_DATA_WIDTH,
+        "PHASE_WIDTH": PHASE_WIDTH,
+        "OUTPUT_DATA_WIDTH": OUTPUT_DATA_WIDTH,
+        "BIT_REVERSED_INPUT": BIT_REVERSED_INPUT,
+    }
+
+    runner = get_runner(SIM)
+    runner.build(
+        hdl_toplevel=hdl_toplevel,
+        verilog_sources=verilog_sources,
+        parameters=parameters,
+        always=True,
+        waves=True,
+    )
+
+    runner.test(
+        hdl_toplevel=hdl_toplevel,
+        hdl_toplevel_lang=hdl_toplevel_lang,
+        test_module="test_fft_radix2",
+        waves=True,
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-q"]))

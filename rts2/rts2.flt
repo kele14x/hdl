@@ -1,0 +1,7 @@
+rtl/rts2.v
+rtl/rts2_capture.v
+rtl/rts2_playback.v
+rtl/rts2_playback_ctrl.v
+rtl/rts2_playback_parser.v
+rtl/rts2_regs.v
+rtl/rts2_wrapper.v

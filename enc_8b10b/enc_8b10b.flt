@@ -1,0 +1,2 @@
+src/enc_8b10b.sv
+src/enc_8b10b_synth.sv
