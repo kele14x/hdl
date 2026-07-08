@@ -6,8 +6,8 @@ module tb_prach_top;
 
   // Parameters
 
-  parameter int NUM_CC = 1;
-  parameter int NUM_ANT = 1;
+  parameter int NUM_CC = 3;
+  parameter int NUM_ANT = 2;
   parameter int ANT_ID = 'h40;
   parameter bit HAS_BFP = 1'b0;
 
@@ -286,7 +286,7 @@ module tb_prach_top;
 
     for (int sf = 0; sf < 2; sf++) begin
       // Send PRACH C-Plane messages
-      for (int i = 0; i < 1; i++) begin
+      for (int i = 1; i < 2; i++) begin
         s_prach_tvalid <= 1;
         s_prach_rtc_pc_id <= 0;
         s_prach_cc <= 0;

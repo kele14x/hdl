@@ -77,7 +77,7 @@ module pdxch_fdv_buffer_write #(
 
   always_ff @(posedge clk) begin
     if (rx_u_sos) begin
-      addr_lsb <= rx_u_startPrb * 6;
+      addr_lsb <= rx_u_startPrb * 3;
     end else if (wr_en_r) begin
       addr_lsb <= addr_lsb + 1'b1;
     end

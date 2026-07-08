@@ -1,0 +1,55 @@
+<mxfile host="Electron" agent="OpenCode" version="30.0.2">
+  <diagram id="cfi-iq-plane" name="cfi_iq_plane">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="xAxis" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1" source="xAxisStart" target="xAxisEnd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="xAxisStart" value="" style="ellipse;html=1;aspect=fixed;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="55" y="180" width="1" height="1" as="geometry" />
+        </mxCell>
+        <mxCell id="xAxisEnd" value="" style="ellipse;html=1;aspect=fixed;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="365" y="180" width="1" height="1" as="geometry" />
+        </mxCell>
+        <mxCell id="yAxis" value="" style="endArrow=none;html=1;strokeWidth=2;strokeColor=#666666;" edge="1" parent="1" source="yAxisStart" target="yAxisEnd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="yAxisStart" value="" style="ellipse;html=1;aspect=fixed;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="210" y="325" width="1" height="1" as="geometry" />
+        </mxCell>
+        <mxCell id="yAxisEnd" value="" style="ellipse;html=1;aspect=fixed;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="210" y="35" width="1" height="1" as="geometry" />
+        </mxCell>
+        <mxCell id="unitCircle" value="" style="ellipse;html=1;strokeWidth=3;strokeColor=#6c8ebf;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="100" y="70" width="220" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="vector" value="" style="endArrow=classic;html=1;strokeWidth=3;strokeColor=#b85450;endFill=1;" edge="1" parent="1" source="origin" target="samplePoint">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="origin" value="" style="ellipse;html=1;aspect=fixed;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="210" y="180" width="1" height="1" as="geometry" />
+        </mxCell>
+        <mxCell id="samplePoint" value="" style="ellipse;html=1;aspect=fixed;strokeColor=#b85450;fillColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="285" y="99" width="6" height="6" as="geometry" />
+        </mxCell>
+        <mxCell id="iAxisLabel" value="I" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="372" y="175" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="qAxisLabel" value="Q" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="217" y="15" width="20" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="radiusLabel" value="r = 1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="220" y="66" width="50" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="sampleLabel" value="x(t)" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="296" y="88" width="40" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="dbfsLabel" value="0 dBFS locus" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="260" y="326" width="90" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

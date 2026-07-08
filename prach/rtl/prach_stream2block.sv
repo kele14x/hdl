@@ -249,7 +249,7 @@ module prach_stream2block #(
   // Reader FSM
 
   generate
-    for (genvar i = 0; i < 4; i++) begin : g_ack
+    for (genvar i = 0; i < NUM_ANT; i++) begin : g_ack
 
       always_ff @(posedge clk) begin
         // This is start symbol ID of RACH sequence
@@ -388,7 +388,7 @@ module prach_stream2block #(
   end
 
   generate
-    for (genvar i = 0; i < 4; i++) begin : g_ant
+    for (genvar i = 0; i < NUM_ANT; i++) begin : g_ant
 
       xpm_memory_sdpram #(
           .ADDR_WIDTH_A           (AddrWidth),
@@ -404,7 +404,7 @@ module prach_stream2block #(
           .MEMORY_INIT_FILE       ("none"),
           .MEMORY_INIT_PARAM      ("0"),
           .MEMORY_OPTIMIZATION    ("true"),
-          .MEMORY_PRIMITIVE       ("auto"),
+          .MEMORY_PRIMITIVE       ("block"),
           .MEMORY_SIZE            (32 * NumPrb * 2),
           .MESSAGE_CONTROL        (0),
           .RAM_DECOMP             ("area"),

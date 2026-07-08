@@ -1,0 +1,28 @@
+<mxfile host="Electron" agent="OpenCode" version="30.0.2">
+  <diagram id="prach-flow" name="prach_flow">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="500" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="p0" value="PRACH control or static cfg" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="20" y="35" width="110" height="50" as="geometry"/></mxCell>
+        <mxCell id="p1" value="Trigger control" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="145" y="35" width="95" height="50" as="geometry"/></mxCell>
+        <mxCell id="p2" value="Sample resync" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="255" y="35" width="95" height="50" as="geometry"/></mxCell>
+        <mxCell id="p3" value="DDC and decimation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="365" y="35" width="95" height="50" as="geometry"/></mxCell>
+        <mxCell id="p4" value="Stream to block" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="475" y="35" width="95" height="50" as="geometry"/></mxCell>
+        <mxCell id="p5" value="1536-point FFT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="585" y="35" width="95" height="50" as="geometry"/></mxCell>
+        <mxCell id="p6" value="Framer buffer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="695" y="35" width="95" height="50" as="geometry"/></mxCell>
+        <mxCell id="p7" value="Async and BFP" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="805" y="35" width="95" height="50" as="geometry"/></mxCell>
+        <mxCell id="p8" value="Carrier arbiter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="915" y="35" width="95" height="50" as="geometry"/></mxCell>
+        <mxCell id="p9" value="PRACH U-Plane output" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="905" y="98" width="140" height="20" as="geometry"/></mxCell>
+        <mxCell id="pe01" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="p0" target="p1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe12" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="p1" target="p2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe23" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="p2" target="p3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe34" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="p3" target="p4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe45" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="p4" target="p5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe56" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="p5" target="p6"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe67" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="p6" target="p7"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="pe78" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="p7" target="p8"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

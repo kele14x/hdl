@@ -1,0 +1,27 @@
+<mxfile host="Electron" agent="OpenCode" version="30.0.2">
+  <diagram id="downlink-flow" name="downlink_flow">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="500" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="d0" value="Deframer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="20" y="35" width="85" height="50" as="geometry"/></mxCell>
+        <mxCell id="d1" value="Input adaptation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="125" y="35" width="85" height="50" as="geometry"/></mxCell>
+        <mxCell id="d2" value="FDV buffer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="230" y="35" width="85" height="50" as="geometry"/></mxCell>
+        <mxCell id="d3" value="Gain" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="335" y="35" width="85" height="50" as="geometry"/></mxCell>
+        <mxCell id="d4" value="Pre-IFFT conversion" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="440" y="35" width="85" height="50" as="geometry"/></mxCell>
+        <mxCell id="d5" value="IFFT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="545" y="35" width="85" height="50" as="geometry"/></mxCell>
+        <mxCell id="d6" value="Phase comp" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="650" y="35" width="85" height="50" as="geometry"/></mxCell>
+        <mxCell id="d7" value="Block to stream" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="755" y="35" width="85" height="50" as="geometry"/></mxCell>
+        <mxCell id="d8" value="Radio DL" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1"><mxGeometry x="875" y="53" width="60" height="20" as="geometry"/></mxCell>
+        <mxCell id="e01" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="d0" target="d1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e12" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="d1" target="d2"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e23" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="d2" target="d3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e34" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="d3" target="d4"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e45" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="d4" target="d5"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e56" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="d5" target="d6"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e67" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="d6" target="d7"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e78" value="" style="endArrow=classic;html=1;rounded=0;strokeWidth=2;strokeColor=#555555;endFill=1;" edge="1" parent="1" source="d7" target="d8"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

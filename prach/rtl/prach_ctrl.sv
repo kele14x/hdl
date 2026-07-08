@@ -302,7 +302,7 @@ module prach_ctrl #(
   // Start Symbol ID from C-Plane
 
   always_ff @(posedge clk) begin
-    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID == s_prach_ss_s)) begin
+    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID <= s_prach_ss_s) && (ANT_ID + NUM_ANT > s_prach_ss_s)) begin
       if (ctrl_rat_s[1] == 1'b0) begin  // 15 kHz SCS
         c_start_symbol <= s_prach_sf_s * 14;
       end else begin  // 30 kHz SCS
@@ -320,7 +320,7 @@ module prach_ctrl #(
   // Ts = 1/30.72e6
 
   always_ff @(posedge clk) begin
-    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID == s_prach_ss_s)) begin
+    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID <= s_prach_ss_s) && (ANT_ID + NUM_ANT > s_prach_ss_s)) begin
       if (s_prach_cp_length_s == '0) begin
         if (s_prach_num_symbol_s == 1) begin  // F0
           if (s_prach_time_offset_s == 0) begin
@@ -343,7 +343,7 @@ module prach_ctrl #(
 
   // Number of symbol, F0 = 1, F1 = 2
   always_ff @(posedge clk) begin
-    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID == s_prach_ss_s)) begin
+    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID <= s_prach_ss_s) && (ANT_ID + NUM_ANT > s_prach_ss_s)) begin
       c_num_symbol <= s_prach_num_symbol_s;
     end
   end
@@ -359,7 +359,7 @@ module prach_ctrl #(
   //   |  PRACH  |
 
   always_ff @(posedge clk) begin
-    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID == s_prach_ss_s)) begin
+    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID <= s_prach_ss_s) && (ANT_ID + NUM_ANT > s_prach_ss_s)) begin
       c_fcw <= get_fcw(s_prach_freqoffset_s);
     end
   end
@@ -451,7 +451,7 @@ module prach_ctrl #(
   //---------------
 
   always_ff @(posedge clk) begin
-    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID == s_prach_ss_s)) begin
+    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID <= s_prach_ss_s) && (ANT_ID + NUM_ANT > s_prach_ss_s)) begin
       stat_subframe_id_r <= s_prach_sf_s;
       stat_slot_id_r     <= s_prach_sl_s;
       stat_symbol_id_r   <= s_prach_sy_s;

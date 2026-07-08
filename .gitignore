@@ -18,6 +18,10 @@ transcript
 *.wlf
 
 # Editors & IDEs
+.agents/
+.codex/
+.claude/
+.qoder/
 .vscode/
 *.swp
 *~

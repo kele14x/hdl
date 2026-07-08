@@ -1,0 +1,37 @@
+<mxfile host="Electron" agent="OpenCode" version="30.0.2">
+  <diagram id="cfi-word-layout" name="cfi_word_layout">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="b31" value="bit 31" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="120" y="30" width="60" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="b16" value="bit 16" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="460" y="30" width="80" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="b15" value="bit 15" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="810" y="30" width="80" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="b0" value="bit 0" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="900" y="30" width="50" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="qWord" value="Q[31:16]&lt;br&gt;&lt;font style=&quot;font-size:14px;&quot;&gt;fi(1, 16, 15)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=20;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="80" y="70" width="420" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="iWord" value="I[15:0]&lt;br&gt;&lt;font style=&quot;font-size:14px;&quot;&gt;fi(1, 16, 15)&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=20;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="500" y="70" width="420" height="84" as="geometry" />
+        </mxCell>
+        <mxCell id="wordLabel" value="32-bit word" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="80" y="180" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="msbLabel" value="MSB half" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="420" y="180" width="90" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="lsbLabel" value="LSB half" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="830" y="180" width="90" height="20" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
