@@ -96,7 +96,7 @@ def test_fifo_sync_runner():
     hdl_toplevel_lang = "verilog"
 
     verilog_sources = [
-        prj_path / "../ram/rtl/ram_sdp.v",
+        prj_path / "../ram/rtl/ram_sdp.sv",
         prj_path / "rtl/fifo_sync.v",
     ]
 

@@ -205,7 +205,7 @@ def test_axis_fifo_runner():
     verilog_sources = [
         prj_path / "../cdc/rtl/cdc_async_rst.sv",
         prj_path / "../cdc/rtl/cdc_gray.sv",
-        prj_path / "../ram/rtl/ram_sdp.v",
+        prj_path / "../ram/rtl/ram_sdp.sv",
         prj_path / "rtl/axis_fifo.v",
     ]
 

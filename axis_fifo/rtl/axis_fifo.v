@@ -265,14 +265,14 @@ module axis_fifo #(
   // The Dual-Port RAM
 
   ram_sdp #(
-      .ADDR_WIDTH(AddrWidth),
-      .DATA_WIDTH(DataWidth),
-      .OUTPUT_REG(OutputReg),
-      .INIT_WORD (0),
-      .INIT_FILE (""),
-      .RAM_STYLE ("BLOCK")
+      .ADDR_WIDTH  (AddrWidth),
+      .DATA_WIDTH  (DataWidth),
+      .READ_LATENCY(OutputReg + 1),
+      .INIT_WORD   (0),
+      .INIT_FILE   ("")
   ) i_ram (
       .clka (wr_clk),
+      .ena  (wr_en),
       .wea  (wr_en),
       .addra(wr_addr),
       .dina (wr_din),

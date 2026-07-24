@@ -153,14 +153,11 @@ module prach_framer_buffer #(
     for (genvar ant = 0; ant < NUM_ANT; ant++) begin : g_ram
 
       ram_sdp_asym #(
-          .ADDR_WIDTH_A(AddrWidthA),
-          .DATA_WIDTH_A(DataWidthA),
-          //
-          .ADDR_WIDTH_B(AddrWidthB),
-          .DATA_WIDTH_B(DataWidthB),
-          .OUTPUT_REG_B(1'b1),
-          //
-          .RAM_STYLE("AUTO")
+          .ADDR_WIDTH_A (AddrWidthA),
+          .DATA_WIDTH_A (DataWidthA),
+          .ADDR_WIDTH_B (AddrWidthB),
+          .DATA_WIDTH_B (DataWidthB),
+          .READ_LATENCY_B(2)
       ) u_ram_sdp (
           .clka (clk),
           .wea  (wr_we[ant]),

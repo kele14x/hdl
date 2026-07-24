@@ -242,14 +242,15 @@ module coe_deframer_data (
   // The data is stored in a simple dual port RAM.
 
   ram_sdp_pipe #(
-      .ADDR_WIDTH(AddrWidth),
-      .DATA_WIDTH(DataWidth),
-      .OUTPUT_REG(1),
-      .INIT_WORD (0),
-      .INIT_FILE ("")
+      .ADDR_WIDTH  (AddrWidth),
+      .DATA_WIDTH  (DataWidth),
+      .READ_LATENCY(2),
+      .INIT_WORD   (0),
+      .INIT_FILE   ("")
   ) i_ram_sdp (
       // Port A
       .clka (clk),
+      .ena  (1'b1),
       .wea  (wr_we),
       .addra(wr_addr),
       .dina (wr_din),

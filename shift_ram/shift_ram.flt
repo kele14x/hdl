@@ -1,4 +1,4 @@
-../ram/rtl/ram_sdp.v
+../ram/rtl/ram_sdp.sv
 ../common/rtl/delay.v
 
 rtl/shift_ram.sv

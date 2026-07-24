@@ -211,14 +211,14 @@ module pdxch_block2stream #(
 
       // 2 * 4k * 32, read latency = 2
       ram_sdp #(
-          .ADDR_WIDTH(AddrWidth),
-          .DATA_WIDTH(DataWidth),
-          .OUTPUT_REG(1),
-          .INIT_WORD ('b0),
-          .INIT_FILE (""),
-          .RAM_STYLE ("BLOCK")
+          .ADDR_WIDTH  (AddrWidth),
+          .DATA_WIDTH  (DataWidth),
+          .READ_LATENCY(2),
+          .INIT_WORD   ('b0),
+          .INIT_FILE   ("")
       ) u_ram (
           .clka (clk),
+          .ena  (wr_en[i]),
           .wea  (wr_en[i]),
           .addra(wr_addr),
           .dina (wr_data),

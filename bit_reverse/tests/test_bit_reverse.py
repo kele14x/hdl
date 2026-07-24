@@ -156,7 +156,7 @@ def test_bit_reverse_runner():
     hdl_toplevel_lang = "verilog"
 
     verilog_sources = [
-        prj_path / "../ram/rtl/ram_sdp.v",
+        prj_path / "../ram/rtl/ram_sdp.sv",
         prj_path / "../shift_ram/rtl/shift_ram.v",
         prj_path / "rtl/bit_reverse_stage.v",
         prj_path / "rtl/bit_reverse.v",

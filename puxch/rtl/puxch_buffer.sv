@@ -243,15 +243,12 @@ module puxch_buffer #(
         // The ping-pong buffer, write side is 4096 x 32-bit
         // The read side is 2048 x 64-bit
         ram_sdp_asym #(
-            .ADDR_WIDTH_A(12),
-            .DATA_WIDTH_A(32),
-            //
-            .ADDR_WIDTH_B(11),
-            .DATA_WIDTH_B(64),
-            .OUTPUT_REG_B(1'b1),
-            //
-            .INIT_FILE   (""),
-            .RAM_STYLE   ("BLOCK")
+            .ADDR_WIDTH_A  (12),
+            .DATA_WIDTH_A  (32),
+            .ADDR_WIDTH_B  (11),
+            .DATA_WIDTH_B  (64),
+            .READ_LATENCY_B(2),
+            .INIT_FILE     ("")
         ) u_ram (
             .clka (clk),
             .wea  (wr_we_s),
@@ -270,15 +267,12 @@ module puxch_buffer #(
         // The ping-pong buffer, write side is 8192 x 32-bit
         // The read side is 4096 x 64-bit
         ram_sdp_asym #(
-            .ADDR_WIDTH_A(13),
-            .DATA_WIDTH_A(32),
-            //
-            .ADDR_WIDTH_B(12),
-            .DATA_WIDTH_B(64),
-            .OUTPUT_REG_B(1'b1),
-            //
-            .INIT_FILE   (""),
-            .RAM_STYLE   ("BLOCK")
+            .ADDR_WIDTH_A  (13),
+            .DATA_WIDTH_A  (32),
+            .ADDR_WIDTH_B  (12),
+            .DATA_WIDTH_B  (64),
+            .READ_LATENCY_B(2),
+            .INIT_FILE     ("")
         ) u_ram (
             .clka (clk),
             .wea  (wr_we[cc]),

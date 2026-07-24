@@ -105,15 +105,15 @@ module shift_ram #(
   end
 
   ram_sdp #(
-      .ADDR_WIDTH(AddrWidth),
-      .DATA_WIDTH(WIDTH),
-      .OUTPUT_REG(1),
-      .INIT_WORD ({WIDTH{1'b0}}),
-      .INIT_FILE (""),
-      .RAM_STYLE ("BLOCK")
+      .ADDR_WIDTH  (AddrWidth),
+      .DATA_WIDTH  (WIDTH),
+      .READ_LATENCY(2),
+      .INIT_WORD   ({WIDTH{1'b0}}),
+      .INIT_FILE   ("")
   ) i_ram_sdp (
       // Port A, write port
       .clka (clk),
+      .ena  (cen),
       .wea  (cen),
       .addra(addra),
       .dina (dina),

@@ -63,15 +63,15 @@ module rts_cap_buffer #(
   // The RAM
 
   ram_sdp_pipe #(
-      .ADDR_WIDTH(ADDR_WIDTH),
-      .DATA_WIDTH(DATA_WIDTH),
-      .OUTPUT_REG(1),
-      .INIT_WORD (0),
-      .INIT_FILE (""),
-      .RAM_STYLE ("BLOCK")
+      .ADDR_WIDTH  (ADDR_WIDTH),
+      .DATA_WIDTH  (DATA_WIDTH),
+      .READ_LATENCY(2),
+      .INIT_WORD   (0),
+      .INIT_FILE   ("")
   ) i_cap_ram (
       // Port A
       .clka (clka_l),
+      .ena  (1'b1),
       .wea  (ram_wea_s),
       .addra(ram_addra_s),
       .dina (ram_dina_s),

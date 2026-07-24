@@ -164,7 +164,7 @@ def test_phase_comp_runner():
     verilog_sources = [
         prj_path / "../cmult/rtl/cmult.v",
         prj_path / "../common/rtl/delay.v",
-        prj_path / "../ram/rtl/ram_sdp.v",
+        prj_path / "../ram/rtl/ram_sdp.sv",
         prj_path / "rtl/phase_comp.sv",
     ]
 

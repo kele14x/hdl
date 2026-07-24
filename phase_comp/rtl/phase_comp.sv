@@ -120,14 +120,14 @@ module phase_comp #(
 
   // Read latency = 1
   ram_sdp #(
-      .ADDR_WIDTH(4),
-      .DATA_WIDTH(32),
-      .OUTPUT_REG(0),
-      .INIT_WORD (32'h00004000),
-      .INIT_FILE (""),
-      .RAM_STYLE ("AUTO")
+      .ADDR_WIDTH  (4),
+      .DATA_WIDTH  (32),
+      .READ_LATENCY(1),
+      .INIT_WORD   (32'h00004000),
+      .INIT_FILE   ("")
   ) i_ram (
       .clka (ctrl_clk),
+      .ena  (1'b1),
       .wea  (ctrl_phase_comp_we),
       .addra(ctrl_phase_comp_addr),
       .dina (ctrl_phase_comp_din),

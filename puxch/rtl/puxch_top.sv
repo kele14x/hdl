@@ -210,13 +210,12 @@ module puxch_top #(
 
   // PhaseComp RAM read back, read latency = 1
   ram_sp #(
-      .ADDR_WIDTH(6),
-      .DATA_WIDTH(32),
-      .WRITE_MODE("READ_FIRST"),
-      .OUTPUT_REG(0),
-      .INIT_WORD (32'h4000),
-      .INIT_FILE (""),
-      .RAM_STYLE ("AUTO")
+      .ADDR_WIDTH  (6),
+      .DATA_WIDTH  (32),
+      .WRITE_MODE  ("READ_FIRST"),
+      .READ_LATENCY(1),
+      .INIT_WORD   (32'h4000),
+      .INIT_FILE   ("")
   ) u_phase_comp_ram (
       .clk (ctrl_clk),
       .rst (ctrl_rst),

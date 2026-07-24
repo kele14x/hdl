@@ -227,13 +227,14 @@ module fifo_async #(
   // The dual-port memory
 
   ram_sdp #(
-      .ADDR_WIDTH(AddrWidth),
-      .DATA_WIDTH(DATA_WIDTH),
-      .OUTPUT_REG(OutputReg),
-      .INIT_WORD (0),
-      .INIT_FILE ("")
+      .ADDR_WIDTH  (AddrWidth),
+      .DATA_WIDTH  (DATA_WIDTH),
+      .READ_LATENCY(OutputReg + 1),
+      .INIT_WORD   (0),
+      .INIT_FILE   ("")
   ) i_ram (
       .clka (wr_clk),
+      .ena  (wr_en_mem),
       .wea  (wr_en_mem),
       .addra(wr_addr),
       .dina (wr_din),

@@ -1,4 +1,4 @@
-// File: ram_sdp.v
+// File: ram_sdp.sv
 // Brief: Simplified Simple Dual Port (SDP) memory. Port A is the
 //        write port, port B is the read port. Each port has dedicated address
 //        port.

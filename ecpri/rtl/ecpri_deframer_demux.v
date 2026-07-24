@@ -326,13 +326,14 @@ module ecpri_deframer_demux (
   // Buffer
 
   ram_sdp #(
-      .ADDR_WIDTH(AddrWidth),
-      .DATA_WIDTH(DataWidth),
-      .OUTPUT_REG(1),
-      .INIT_WORD (0),
-      .INIT_FILE ("")
+      .ADDR_WIDTH  (AddrWidth),
+      .DATA_WIDTH  (DataWidth),
+      .READ_LATENCY(2),
+      .INIT_WORD   (0),
+      .INIT_FILE   ("")
   ) i_ram (
       .clka (rx_eth_clk),
+      .ena  (wr_en),
       .wea  (wr_en),
       .addra(wr_addr),
       .dina (wr_data),
