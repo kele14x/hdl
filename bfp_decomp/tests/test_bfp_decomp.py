@@ -144,7 +144,7 @@ def test_bfp_decomp_runner():
 
     verilog_sources = [
         prj_path / "../cdc/rtl/cdc_array_single.sv",
-        prj_path / "../srl/rtl/srl.sv",
+        prj_path / "../util/srl.sv",
         prj_path / "rtl/bfp_decomp.sv",
     ]
 
