@@ -1,21 +1,16 @@
 `timescale 1 ns / 1 ps
-//
 `default_nettype none
 
 module util_gpio_gw #(
-    parameter WIDTH = 4
+    parameter integer WIDTH = 4
 ) (
-    // verilog_format: off
-    (* X_INTERFACE_INFO = "xilinx.com:interface:gpio_rtl:1.0 GPIO TRI_I" *)
+    // Connect to 3-state style GPIO
     output wire [WIDTH-1:0] gpio_io_i,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:gpio_rtl:1.0 GPIO TRI_O" *)
     input  wire [WIDTH-1:0] gpio_io_o,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:gpio_rtl:1.0 GPIO TRI_T" *)
     input  wire [WIDTH-1:0] gpio_io_t,
-    //
+    // Bridged signals
     input  wire [WIDTH-1:0] gpio_in,
     output reg  [WIDTH-1:0] gpio_out
-    // verilog_format: on
 );
 
   genvar i;
