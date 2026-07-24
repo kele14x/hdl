@@ -189,7 +189,7 @@ def test_ecpri_runner():
         prj_path / "../cdc/rtl/cdc_single.sv",
         prj_path / "../common/rtl/delay.v",
         prj_path / "../fifo_async/rtl/fifo_async.v",
-        prj_path / "../fifo_sync/rtl/fifo_sync.v",
+        prj_path / "../fifo_sync/rtl/fifo_sync.sv",
         prj_path / "../ram/rtl/ram_sdp.sv",
         prj_path / "rtl/ecpri_deframer_common.v",
         prj_path / "rtl/ecpri_deframer_demux.v",

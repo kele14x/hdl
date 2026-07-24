@@ -28,6 +28,38 @@ module fifo_sync #(
   //=================
 
   localparam int AddrWidth = $clog2(FIFO_DEPTH);
+  localparam int RamLatency = FIFO_LATENCY >= 2 ? 2 : 1;
+  localparam bit FabricReg = FIFO_LATENCY >= 3;
+
+
+  // DRC
+  //====
+
+  initial begin : drc_check
+    assert (4 <= FIFO_DEPTH && FIFO_DEPTH <= 32768 && (FIFO_DEPTH & (FIFO_DEPTH - 1)) == 0)
+    else begin
+      $error("FIFO_DEPTH must be a power of two within the range 4 to 32768, got %0d.", FIFO_DEPTH);
+      #1 $finish;
+    end
+
+    assert (1 <= FIFO_LATENCY && FIFO_LATENCY <= 3)
+    else begin
+      $error("FIFO_LATENCY must be within the range 1 to 3, got %0d.", FIFO_LATENCY);
+      #1 $finish;
+    end
+
+    assert (1 <= DATA_WIDTH && DATA_WIDTH <= 4096)
+    else begin
+      $error("DATA_WIDTH must be within the range 1 to 4096, got %0d.", DATA_WIDTH);
+      #1 $finish;
+    end
+
+    assert (FWFT_MODE)
+    else begin
+      $error("fifo_sync only supports FWFT_MODE=1.");
+      #1 $finish;
+    end
+  end
 
 
   // Signals
@@ -43,7 +75,8 @@ module fifo_sync #(
   logic [   AddrWidth-1:0] rd_addr;
   logic [FIFO_LATENCY-1:0] rd_en_mem;
 
-  logic [  FIFO_LATENCY:0] empty_int;
+  logic [  DATA_WIDTH-1:0] rd_data;
+  logic [  FIFO_LATENCY:0] valid;
 
 
   // Main
@@ -92,37 +125,46 @@ module fifo_sync #(
 
   assign rd_addr = rd_count[AddrWidth-1:0];
 
-  always_comb begin
-    for (int i = 0; i < FIFO_LATENCY; i++) begin
-      rd_en_mem[i] = !empty_int[i] && (empty_int[i+1] || rden);
+
+  // Read pipeline enables
+
+  generate
+    for (genvar i = 0; i < FIFO_LATENCY; i++) begin : g_rd_en_mem
+      assign rd_en_mem[i] = valid[i] && (~&valid[FIFO_LATENCY:i+1] || rden);
     end
-  end
+  endgenerate
 
-  // Empty flag
 
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      empty_int[0] <= 1'b1;
-    end else if (wr_count_next == rd_count_next) begin
-      empty_int[0] <= 1'b1;
-    end else begin
-      empty_int[0] <= 1'b0;
-    end
-  end
+  // Valid flags
 
-  always_ff @(posedge clk) begin
-    for (int i = 1; i <= FIFO_LATENCY; i++) begin
-      if (rst) begin
-        empty_int[i] <= 1'b1;
-      end else if (empty_int[i] || rden) begin
-        empty_int[i] <= empty_int[i-1];
-      end else begin
-        empty_int[i] <= empty_int[i];
+  generate
+    for (genvar i = 0; i <= FIFO_LATENCY; i++) begin : g_valid
+      if (i == 0) begin : g_first
+        always_ff @(posedge clk) begin
+          if (rst) begin
+            valid[0] <= 1'b0;
+          end else if (wr_count_next == rd_count_next) begin
+            valid[0] <= 1'b0;
+          end else begin
+            valid[0] <= 1'b1;
+          end
+        end
+      end else begin : g_left
+        always_ff @(posedge clk) begin
+          if (rst) begin
+            valid[i] <= 1'b0;
+          end else if (~&valid[FIFO_LATENCY:i] || rden) begin
+            valid[i] <= valid[i-1];
+          end else begin
+            valid[i] <= valid[i];
+          end
+        end
       end
     end
-  end
+  endgenerate
 
-  assign empty = empty_int[FIFO_LATENCY];
+  assign empty = !valid[FIFO_LATENCY];
+
 
   // Full flag
 
@@ -137,13 +179,15 @@ module fifo_sync #(
     end
   end
 
+
   // The dual-port memory
 
   ram_sdp #(
       .ADDR_WIDTH  (AddrWidth),
       .DATA_WIDTH  (DATA_WIDTH),
-      .READ_LATENCY(FIFO_LATENCY),
-      .INIT_WORD   ('0)
+      .READ_LATENCY(RamLatency),
+      .INIT_WORD   ('0),
+      .INIT_FILE   ("")
   ) i_ram (
       .clka (clk),
       .ena  (wr_en_mem),
@@ -152,11 +196,27 @@ module fifo_sync #(
       .dina (din),
       //
       .clkb (clk),
-      .rstb (rst),
-      .enb  (rd_en_mem),
+      .rstb ({RamLatency{rst}}),
+      .enb  (rd_en_mem[RamLatency-1:0]),
       .addrb(rd_addr),
-      .doutb(dout)
+      .doutb(rd_data)
   );
+
+  generate
+    if (!FabricReg) begin : g_no_reg
+      always_comb begin
+        dout = rd_data;
+      end
+    end else begin : g_reg
+      always_ff @(posedge clk) begin
+        if (rst) begin
+          dout <= '0;
+        end else if (rd_en_mem[2]) begin
+          dout <= rd_data;
+        end
+      end
+    end
+  endgenerate
 
 endmodule
 
