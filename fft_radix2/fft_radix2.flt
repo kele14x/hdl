@@ -1,7 +1,7 @@
 ../cmult/rtl/cmult.sv
 ../ram/ram_sdp.sv
 ../shift_ram/shift_ram.flt
-../util/delay.sv
+../util/rtl/delay.sv
 rtl/fft.sv
 rtl/fft_bf2.sv
 rtl/fft_core.sv

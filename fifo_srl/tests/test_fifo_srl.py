@@ -127,7 +127,7 @@ def test_fifo_srl_runner(params):
         runner.build(
             hdl_toplevel=hdl_toplevel,
             sources=[
-                prj_path / "../util/srl.sv",
+                prj_path / "../util/rtl/srl.sv",
                 prj_path / "rtl/fifo_srl.sv",
             ],
             parameters=params,

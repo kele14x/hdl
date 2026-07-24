@@ -47,7 +47,7 @@ def test_dummy_source_runner():
     verilog_sources = [
         prj_path / "../lfsr/rtl/lfsr.sv",
         prj_path / "../mult/rtl/mult.sv",
-        prj_path / "../util/delay.sv",
+        prj_path / "../util/rtl/delay.sv",
         prj_path / "rtl/dummy_source.sv",
     ]
 

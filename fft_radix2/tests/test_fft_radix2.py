@@ -133,7 +133,7 @@ def test_fft_radix2_runner():
         prj_path / "../cmult/rtl/cmult.sv",
         prj_path / "../ram/rtl/ram_sdp.sv",
         prj_path / "../shift_ram/rtl/shift_ram.sv",
-        prj_path / "../util/delay.sv",
+        prj_path / "../util/rtl/delay.sv",
         prj_path / "rtl/fft_radix2_bf2.sv",
         prj_path / "rtl/fft_radix2_core.sv",
         prj_path / "rtl/fft_radix2_stage.sv",

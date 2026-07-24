@@ -41,4 +41,5 @@ Each IP follows `<block>/{rtl|src}/*.sv|*.v`, `<block>/tests/` (cocotb `.py` tes
 
 ## Git
 
-Commit messages are lowercase and concise (e.g. `add prach`, `fix fft`, `refactor test`); no conventional-commit prefixes.
+- **Never auto-commit.** Only create a commit when the user explicitly asks for one.
+- Commit messages are lowercase and concise (e.g. `add prach`, `fix fft`, `refactor test`); no conventional-commit prefixes.

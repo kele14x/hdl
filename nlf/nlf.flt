@@ -2,8 +2,8 @@
 ../cmult_chain/cmult_chain.flt
 ../ram/ram_tdp.sv
 ../ram/ram_tdp_pipe.sv
-../util/delay.sv
-../util/srl.sv
+../util/rtl/delay.sv
+../util/rtl/srl.sv
 rtl/nlf.sv
 rtl/nlf_core.sv
 rtl/nlf_delay_line.sv
