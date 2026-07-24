@@ -1,0 +1,7 @@
+[
+  {
+    "FIFO_DEPTH": 16,
+    "FIFO_LATENCY": 3,
+    "DATA_WIDTH": 8
+  }
+]
