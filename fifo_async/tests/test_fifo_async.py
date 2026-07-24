@@ -1,116 +1,71 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
 import os
 from pathlib import Path
+import sys
 
 import cocotb
-import numpy as np
 import pytest
-from cocotb.clock import Clock
-from cocotb.queue import Queue
 from cocotb_tools.runner import get_runner
-from cocotb.triggers import ClockCycles, RisingEdge
+
 
 prj_path = Path(__file__).resolve().parent.parent
-rng = np.random.default_rng()
+repo_path = prj_path.parent
+sys.path.insert(0, str(repo_path / "tests"))
+
+from libfifo import (  # noqa: E402
+    FifoReadBus,
+    FifoTestbench,
+    FifoWriteBus,
+    directed_sequences,
+    random_sequences,
+)
+
 
 FIFO_DEPTH = int(os.getenv("FIFO_DEPTH", 16))
 FIFO_LATENCY = int(os.getenv("FIFO_LATENCY", 3))
 DATA_WIDTH = int(os.getenv("DATA_WIDTH", 8))
+RANDOM_TRANSFER_COUNT = int(os.getenv("RANDOM_TRANSFER_COUNT", 256))
 
 GUI = os.getenv("GUI", "False").lower() == "true"
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM", "verilator").lower()
 
 
-input_queue = Queue()
-output_queue = Queue()
-
-
-async def reset(dut):
-    """Reset the DUT"""
-    dut.rst.value = 1
-
-    dut.wr_en.value = 0
-    dut.wr_din.value = 0
-    dut.rd_en.value = 0
-
-    await ClockCycles(dut.wr_clk, 10)
-    dut.rst.value = 0
-    await ClockCycles(dut.wr_clk, 10)
-
-
-async def input_driver(dut):
-    """Drive the write interface of FIFO"""
-    await RisingEdge(dut.wr_clk)
-    while True:
-        await RisingEdge(dut.wr_clk)
-        dut.wr_en.value = int(rng.choice([0, 1], p=[0.5, 0.5]))
-        dut.wr_din.value = int(rng.integers(0, 2**DATA_WIDTH))
-
-
-async def output_driver(dut):
-    """Drive the read interface of FIFO"""
-    await RisingEdge(dut.rd_clk)
-    while True:
-        await RisingEdge(dut.rd_clk)
-        dut.rd_en.value = int(rng.choice([0, 1], p=[0.5, 0.5]))
-
-
-async def input_monitor(dut):
-    """Monitor the write interface of FIFO"""
-    while True:
-        await RisingEdge(dut.wr_clk)
-        if dut.wr_en.value and not dut.wr_full.value:
-            input_queue.put_nowait(dut.wr_din.value.integer)
-
-
-async def output_monitor(dut):
-    """Monitor the read interface of FIFO"""
-    while True:
-        await RisingEdge(dut.rd_clk)
-        if dut.rd_en.value and not dut.rd_empty.value:
-            output_queue.put_nowait(dut.rd_dout.value.integer)
-
-
-async def checker():
-    """Check the result of FIFO"""
-    n = 0
-    while True:
-        input_data = await input_queue.get()
-        output_data = await output_queue.get()
-        n += 1
-
-        assert input_data == output_data, (
-            f"Result mismatch!\n" f"input = {hex(input_data)}\n" f"output = {hex(output_data)}"
-        )
-
-
-@cocotb.test
+@cocotb.test()
 async def test_fifo_async(dut):
-    """Test case for the FIFO"""
-    cocotb.log.info("Simulation started")
-    # Create clock and start it
-    cocotb.start_soon(Clock(dut.wr_clk, 10).start())
-    cocotb.start_soon(Clock(dut.rd_clk, 10).start())
+    tb = FifoTestbench(
+        write_bus=FifoWriteBus(
+            clk=dut.wr_clk,
+            en=dut.wr_en,
+            data=dut.wr_din,
+            full=dut.wr_full,
+        ),
+        read_bus=FifoReadBus(
+            clk=dut.rd_clk,
+            en=dut.rd_en,
+            data=dut.rd_dout,
+            empty=dut.rd_empty,
+        ),
+        reset_signal=dut.rst,
+        data_width=int(dut.DATA_WIDTH.value),
+    )
+    await tb.start(clocks=((dut.wr_clk, 10, "ns"), (dut.rd_clk, 13, "ns")))
 
-    # Reset the DUT
-    await reset(dut)
+    write_sequence, read_sequence = directed_sequences(tb.data_width)
+    await tb.run(write_sequence, read_sequence, timeout_ns=200_000)
 
-    cocotb.start_soon(input_driver(dut))
-    cocotb.start_soon(output_driver(dut))
-    cocotb.start_soon(input_monitor(dut))
-    cocotb.start_soon(output_monitor(dut))
-    cocotb.start_soon(checker())
+    write_sequence, read_sequence = random_sequences(tb.data_width, RANDOM_TRANSFER_COUNT)
+    await tb.run(write_sequence, read_sequence, timeout_ns=200_000)
 
-    # Run test driver
-    await ClockCycles(dut.wr_clk, 10000)
-    cocotb.log.info("Simulation finished")
+    assert tb.write_agent.aborted_cycles > 0
+    assert tb.read_agent.aborted_cycles > 0
 
 
 def test_fifo_async_runner():
-    """Run the test for FIFO"""
     hdl_toplevel = "fifo_async"
-    hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
+    sources = [
         prj_path / "../cdc/rtl/cdc_async_rst.sv",
         prj_path / "../cdc/rtl/cdc_gray.sv",
         prj_path / "../ram/rtl/ram_sdp.sv",
@@ -123,17 +78,23 @@ def test_fifo_async_runner():
         "DATA_WIDTH": DATA_WIDTH,
     }
 
+    build_args = []
+    if SIM == "verilator":
+        build_args = ["--timing", "-Wno-WIDTHTRUNC", "-Wno-MULTIDRIVEN"]
+
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel=hdl_toplevel,
-        verilog_sources=verilog_sources,
+        sources=sources,
         parameters=parameters,
+        build_args=build_args,
+        waves=True,
         always=True,
     )
 
     runner.test(
         hdl_toplevel=hdl_toplevel,
-        hdl_toplevel_lang=hdl_toplevel_lang,
+        hdl_toplevel_lang="verilog",
         test_module="test_fifo_async",
         waves=True,
         gui=GUI,

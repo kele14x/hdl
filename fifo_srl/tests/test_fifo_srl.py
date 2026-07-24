@@ -1,91 +1,55 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
+from __future__ import annotations
+
 import json
 import os
-import tempfile
 from pathlib import Path
+import sys
+import tempfile
 
 import cocotb
-import numpy as np
 import pytest
-from cocotb.clock import Clock
-from cocotb.queue import Queue
-from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
+
 prj_path = Path(__file__).resolve().parent.parent
-rng = np.random.default_rng(12345)
+repo_path = prj_path.parent
+sys.path.insert(0, str(repo_path / "tests"))
+
+from libfifo import (  # noqa: E402
+    FifoReadBus,
+    FifoTestbench,
+    FifoWriteBus,
+    directed_sequences,
+    random_sequences,
+)
+
 
 PARAM_SETS_FILE = Path(__file__).resolve().parent / "param_sets.json"
+RANDOM_TRANSFER_COUNT = int(os.getenv("RANDOM_TRANSFER_COUNT", 256))
 
 SIM = os.environ.get("SIM", "verilator").lower()
 GUI = os.environ.get("GUI", "False").lower() == "true"
 
-input_queue = Queue()
-output_queue = Queue()
-
-
-async def reset(dut):
-    dut.rst.value = 1
-    dut.wren.value = 0
-    dut.din.value = 0
-    dut.rden.value = 0
-    await ClockCycles(dut.clk, 10)
-    dut.rst.value = 0
-    await ClockCycles(dut.clk, 10)
-
-
-async def drive(dut, cfg):
-    data_width = cfg["DATA_WIDTH"]
-    for _ in range(10000):
-        await RisingEdge(dut.clk)
-        dut.wren.value = int(rng.integers(0, 2))
-        dut.din.value = int(rng.integers(0, 2**data_width))
-        dut.rden.value = int(rng.integers(0, 2))
-
-
-async def input_monitor(dut):
-    while True:
-        await RisingEdge(dut.clk)
-        if int(dut.wren.value) and not int(dut.full.value):
-            input_queue.put_nowait(int(dut.din.value))
-
-
-async def output_monitor(dut):
-    while True:
-        await RisingEdge(dut.clk)
-        if int(dut.rden.value) and not int(dut.empty.value):
-            output_queue.put_nowait(int(dut.dout.value))
-
-
-async def checker():
-    while True:
-        input_value = await input_queue.get()
-        output_value = await output_queue.get()
-        assert input_value == output_value, (
-            f"Result mismatch! input = {input_value}, output = {output_value}"
-        )
-
 
 @cocotb.test()
 async def test_fifo_srl(dut):
-    cfg = {
-        "FIFO_DEPTH": int(dut.FIFO_DEPTH.value),
-        "DATA_WIDTH": int(dut.DATA_WIDTH.value),
-    }
+    tb = FifoTestbench(
+        write_bus=FifoWriteBus(clk=dut.clk, en=dut.wren, data=dut.din, full=dut.full),
+        read_bus=FifoReadBus(clk=dut.clk, en=dut.rden, data=dut.dout, empty=dut.empty),
+        reset_signal=dut.rst,
+        data_width=int(dut.DATA_WIDTH.value),
+    )
+    await tb.start(clocks=((dut.clk, 10, "ns"),))
 
-    cocotb.log.info("Simulation started")
-    cocotb.start_soon(Clock(dut.clk, 10).start())
+    write_sequence, read_sequence = directed_sequences(tb.data_width)
+    await tb.run(write_sequence, read_sequence)
 
-    await reset(dut)
+    write_sequence, read_sequence = random_sequences(tb.data_width, RANDOM_TRANSFER_COUNT)
+    await tb.run(write_sequence, read_sequence)
 
-    cocotb.start_soon(input_monitor(dut))
-    cocotb.start_soon(output_monitor(dut))
-    cocotb.start_soon(checker())
-
-    await drive(dut, cfg)
-
-    await ClockCycles(dut.clk, 10)
-    cocotb.log.info("Simulation finished")
+    assert tb.write_agent.aborted_cycles > 0
+    assert tb.read_agent.aborted_cycles > 0
 
 
 def _normalize_param_sets(data):
