@@ -3,25 +3,28 @@
 `default_nettype none
 
 module bfp_comp #(
-    parameter bit BYTE_REVERSE = 1'b1
+    parameter bit BYTE_REVERSE = 1'b1,
+    parameter int USER_WIDTH   = 32
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire                  clk,
+    input  wire                  rst,
     //
-    input  wire [63:0] s_axis_tdata,
-    input  wire [ 7:0] s_axis_tkeep,
-    input  wire        s_axis_tvalid,
-    input  wire        s_axis_tlast,
+    input  wire [          63:0] s_axis_tdata,
+    input  wire [           7:0] s_axis_tkeep,
+    input  wire                  s_axis_tvalid,
+    input  wire                  s_axis_tlast,
+    input  wire [USER_WIDTH-1:0] s_axis_tuser,
     //
-    output reg  [63:0] m_axis_tdata,
-    output reg  [ 7:0] m_axis_tkeep,
-    output reg         m_axis_tvalid,
-    output reg         m_axis_tlast,
+    output reg  [          63:0] m_axis_tdata,
+    output reg  [           7:0] m_axis_tkeep,
+    output reg                   m_axis_tvalid,
+    output reg                   m_axis_tlast,
+    output reg  [USER_WIDTH-1:0] m_axis_tuser,
     // Control
     //--------
-    input  wire [ 3:0] ctrl_ud_comp_meth,
-    input  wire [ 3:0] ctrl_ud_iq_width,
-    input  wire [ 3:0] ctrl_fs_offset
+    input  wire [           3:0] ctrl_ud_comp_meth,
+    input  wire [           3:0] ctrl_ud_iq_width,
+    input  wire [           3:0] ctrl_fs_offset
 );
 
   // Parameters
@@ -29,64 +32,86 @@ module bfp_comp #(
 
   localparam int NumIq = 4;
 
+  initial begin : drc_check
+    assert (USER_WIDTH >= 1)
+    else $error("[%m]: USER_WIDTH (%0d) must be at least 1.", USER_WIDTH);
+  end
+
   // Signals
   //========
 
-  logic [ 3:0] ctrl_ud_comp_meth_s;
-  logic [ 3:0] ctrl_ud_iq_width_s;
-  logic [ 3:0] ctrl_fs_offset_s;
-  logic        ctrl_en_s;
+  logic [           3:0] ctrl_ud_comp_meth_s;
+  logic [           3:0] ctrl_ud_iq_width_s;
+  logic [           3:0] ctrl_fs_offset_s;
+  logic                  ctrl_en_s;
 
-  logic [63:0] s_axis_tdata_rev;
+  logic [          63:0] s_axis_tdata_rev;
 
-  logic [15:0] t0_data             [  NumIq];
-  logic [ 2:0] t0_state_pre;
-  logic [ 2:0] t0_state;
-  logic        t0_valid;
-  logic        t0_eop;
+  logic [          15:0] t0_data             [  NumIq];
+  logic [           2:0] t0_state_pre;
+  logic [           2:0] t0_state;
+  logic [USER_WIDTH-1:0] t0_user;
+  logic                  t0_sop;
+  logic                  t0_valid;
+  logic                  t0_eop;
 
-  logic [15:0] t1_data             [  NumIq];
-  logic [ 2:0] t1_state;
-  logic [ 3:0] t1_msb              [  NumIq];
-  logic        t1_valid;
-  logic        t1_eop;
+  logic [          15:0] t1_data             [  NumIq];
+  logic [           2:0] t1_state;
+  logic [           3:0] t1_msb              [  NumIq];
+  logic [USER_WIDTH-1:0] t1_user;
+  logic                  t1_sop;
+  logic                  t1_valid;
+  logic                  t1_eop;
 
-  logic [15:0] t2_data             [  NumIq];
-  logic [ 2:0] t2_state;
-  logic [ 3:0] t2_msb;
-  logic        t2_prb_valid;
-  logic        t2_valid;
-  logic        t2_eop;
+  logic [          15:0] t2_data             [  NumIq];
+  logic [           2:0] t2_state;
+  logic [           3:0] t2_msb;
+  logic [USER_WIDTH-1:0] t2_user;
+  logic                  t2_sop;
+  logic                  t2_prb_valid;
+  logic                  t2_valid;
+  logic                  t2_eop;
 
-  logic [15:0] t3_data             [NumIq*6];
-  logic [ 2:0] t3_state;
-  logic [ 3:0] t3_msb;
-  logic        t3_valid;
-  logic        t3_eop_req;
-  logic        t3_eop;
+  logic [          15:0] t3_data             [NumIq*6];
+  logic [           2:0] t3_state;
+  logic [           3:0] t3_msb;
+  logic [USER_WIDTH-1:0] t3_user;
+  logic                  t3_sop_req;
+  logic                  t3_sop;
+  logic                  t3_valid;
+  logic                  t3_eop_req;
+  logic                  t3_eop;
 
-  logic [15:0] t4_data             [  NumIq];
-  logic [ 2:0] t4_state;
-  logic [ 3:0] t4_shift;
-  logic [ 3:0] t4_exp;
-  logic        t4_valid;
-  logic        t4_eop;
+  logic [          15:0] t4_data             [  NumIq];
+  logic [           2:0] t4_state;
+  logic [           3:0] t4_shift;
+  logic [           3:0] t4_exp;
+  logic [USER_WIDTH-1:0] t4_user;
+  logic                  t4_sop;
+  logic                  t4_valid;
+  logic                  t4_eop;
 
-  logic [15:0] t5_data             [  NumIq];
-  logic [35:0] t5_data_b;
-  logic [ 2:0] t5_state;
-  logic [ 3:0] t5_exp;
-  logic        t5_valid;
-  logic        t5_eop;
+  logic [          15:0] t5_data             [  NumIq];
+  logic [          35:0] t5_data_b;
+  logic [           2:0] t5_state;
+  logic [           3:0] t5_exp;
+  logic [USER_WIDTH-1:0] t5_user;
+  logic                  t5_sop;
+  logic                  t5_valid;
+  logic                  t5_eop;
 
-  logic [ 3:0] t6_cnt;
+  logic [           3:0] t6_cnt;
 
-  logic [63:0] t6_data;
-  logic [63:0] t6_data_f;
-  logic [ 7:0] t6_keep;
-  logic        t6_valid;
-  logic        t6_eop;
-  logic        t6_eop_ext;
+  logic [          63:0] t6_data;
+  logic [          63:0] t6_data_f;
+  logic [           7:0] t6_keep;
+  logic [USER_WIDTH-1:0] t6_user;
+  logic                  t6_valid;
+  logic                  t6_eop;
+  logic                  t6_eop_ext;
+  logic [          63:0] t6_eop_data;
+  logic [USER_WIDTH-1:0] t6_eop_user;
+  logic                  t6_eop_ext_out;
 
   // Helpers
   //========
@@ -227,6 +252,13 @@ module bfp_comp #(
     end
   end
 
+  always_ff @(posedge clk) begin
+    if (s_axis_tvalid) begin
+      t0_user <= s_axis_tuser;
+      t0_sop  <= (t0_state_pre == 0);
+    end
+  end
+
   // This state machine has 0/1/2/3/4/5
   always_ff @(posedge clk) begin
     if (rst) begin
@@ -257,6 +289,8 @@ module bfp_comp #(
   always_ff @(posedge clk) begin
     t1_data  <= t0_data;
     t1_state <= t0_state;
+    t1_user  <= t0_user;
+    t1_sop   <= t0_sop;
     t1_valid <= t0_valid;
     t1_eop   <= t0_eop;
   end
@@ -280,6 +314,8 @@ module bfp_comp #(
   always_ff @(posedge clk) begin
     t2_data  <= t1_data;
     t2_state <= t1_state;
+    t2_user  <= t1_user;
+    t2_sop   <= t1_sop;
     t2_valid <= t1_valid;
     t2_eop   <= t1_eop;
   end
@@ -314,6 +350,28 @@ module bfp_comp #(
   always_ff @(posedge clk) begin
     if (t2_prb_valid) begin
       t3_msb <= t2_msb;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (t2_valid && t2_sop) begin
+      t3_user <= t2_user;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      t3_sop_req <= 1'b0;
+    end else if (t2_valid && t2_sop) begin
+      t3_sop_req <= 1'b1;
+    end else if (t2_prb_valid) begin
+      t3_sop_req <= 1'b0;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (t2_prb_valid) begin
+      t3_sop <= t3_sop_req;
     end
   end
 
@@ -376,6 +434,8 @@ module bfp_comp #(
 
   always_ff @(posedge clk) begin
     t4_state <= t3_state;
+    t4_user  <= t3_user;
+    t4_sop   <= t3_sop;
     t4_valid <= t3_valid;
     t4_eop   <= t3_eop;
   end
@@ -395,6 +455,8 @@ module bfp_comp #(
   always_ff @(posedge clk) begin
     t5_state <= t4_state;
     t5_exp   <= t4_exp;
+    t5_user  <= t4_user;
+    t5_sop   <= t4_sop;
     t5_valid <= t4_valid;
     t5_eop   <= t4_eop;
   end
@@ -413,6 +475,14 @@ module bfp_comp #(
   end
 
   always_ff @(posedge clk) begin
+    if (rst) begin
+      t6_user <= '0;
+    end else if (t5_valid && t5_sop && (t5_state == 0)) begin
+      t6_user <= t5_user;
+    end
+  end
+
+  always_ff @(posedge clk) begin
     if (ctrl_en_s) begin
       t6_eop_ext <= t5_valid && t5_eop && (t6_cnt == 5);
     end else begin
@@ -421,10 +491,21 @@ module bfp_comp #(
   end
 
   always_ff @(posedge clk) begin
-    if (t6_eop_ext) begin
-      // For odd number PRB, output last half word
-      t6_data <= {t6_data_f[63:32], 32'b0};
-    end else if (t5_valid) begin
+    if (rst) begin
+      t6_eop_data    <= '0;
+      t6_eop_user    <= '0;
+      t6_eop_ext_out <= 1'b0;
+    end else begin
+      t6_eop_ext_out <= t6_eop_ext;
+      if (t6_eop_ext) begin
+        t6_eop_data <= {t6_data_f[63:32], 32'b0};
+        t6_eop_user <= t6_user;
+      end
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (t5_valid) begin
       if (ctrl_en_s) begin
         case (t6_cnt)
           0:       t6_data[63:20] <= {4'b0, t5_exp, t5_data_b};  // +44b
@@ -475,7 +556,7 @@ module bfp_comp #(
 
   always_ff @(posedge clk) begin
     if (ctrl_en_s) begin
-      t6_valid <= t6_eop_ext || (t5_valid && t5_eop && (t6_cnt != 5)) ||
+      t6_valid <= (t5_valid && t5_eop && (t6_cnt != 5)) ||
         (t5_valid && (t6_cnt == 1 || t6_cnt == 3 || t6_cnt == 5 || t6_cnt == 6 || t6_cnt == 8 || t6_cnt == 10 || t6_cnt == 11));
     end else begin
       t6_valid <= t5_valid;
@@ -484,7 +565,7 @@ module bfp_comp #(
 
   always_ff @(posedge clk) begin
     if (ctrl_en_s) begin
-      t6_eop <= t6_eop_ext || (t5_valid && t5_eop && (t6_cnt != 5));
+      t6_eop <= t5_valid && t5_eop && (t6_cnt != 5);
     end else begin
       t6_eop <= t5_eop;
     end
@@ -492,12 +573,26 @@ module bfp_comp #(
 
   // Byte reversed output?
   always_ff @(posedge clk) begin
-    if (t6_valid) begin
+    if (rst) begin
+      m_axis_tuser <= '0;
+      m_axis_tvalid <= 1'b0;
+    end else if (t6_eop_ext_out) begin
+      // Emit the final half word of an odd-PRB packet directly. This leaves
+      // the gearbox free to accept the first word of a following packet.
+      m_axis_tdata  <= BYTE_REVERSE ? byte_reverse(t6_eop_data) : t6_eop_data;
+      m_axis_tkeep  <= 8'h0F;
+      m_axis_tlast  <= 1'b1;
+      m_axis_tuser  <= t6_eop_user;
+      m_axis_tvalid <= 1'b1;
+    end else if (t6_valid) begin
       m_axis_tdata <= BYTE_REVERSE ? byte_reverse(t6_data) : t6_data;
       m_axis_tkeep <= t6_keep;
       m_axis_tlast <= t6_eop;
+      m_axis_tuser <= t6_user;
+      m_axis_tvalid <= 1'b1;
+    end else begin
+      m_axis_tvalid <= 1'b0;
     end
-    m_axis_tvalid <= t6_valid;
   end
 
 endmodule

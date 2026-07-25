@@ -85,7 +85,8 @@ module prach_framer #(
     if (HAS_BFP) begin : g_bfp
 
       bfp_comp #(
-          .BYTE_REVERSE(1'b1)
+          .BYTE_REVERSE(1'b1),
+          .USER_WIDTH  (32)
       ) u_bfp_comp (
           .clk              (clk),
           .rst              (rst),
@@ -93,11 +94,13 @@ module prach_framer #(
           .s_axis_tdata     (s0_axis_tdata),
           .s_axis_tkeep     (s0_axis_tkeep),
           .s_axis_tlast     (s0_axis_tlast),
+          .s_axis_tuser     (s0_axis_tuser),
           .s_axis_tvalid    (s0_axis_tvalid),
           //
           .m_axis_tdata     (s1_axis_tdata),
           .m_axis_tkeep     (s1_axis_tkeep),
           .m_axis_tlast     (s1_axis_tlast),
+          .m_axis_tuser     (s1_axis_tuser),
           .m_axis_tvalid    (s1_axis_tvalid),
           // Control
           //--------
@@ -111,12 +114,11 @@ module prach_framer #(
       assign s1_axis_tdata  = s0_axis_tdata;
       assign s1_axis_tkeep  = s0_axis_tkeep;
       assign s1_axis_tlast  = s0_axis_tlast;
+      assign s1_axis_tuser  = s0_axis_tuser;
       assign s1_axis_tvalid = s0_axis_tvalid;
 
     end
   endgenerate
-
-  assign s1_axis_tuser = s0_axis_tuser;
 
   axis_fifo_alt #(
       .ASYNC_MODE  (1'b1),

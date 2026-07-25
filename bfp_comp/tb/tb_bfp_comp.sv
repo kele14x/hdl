@@ -14,11 +14,13 @@ module tb_bfp_comp;
   logic [ 7:0] s_axis_tkeep;
   logic        s_axis_tvalid;
   logic        s_axis_tlast;
+  logic [31:0] s_axis_tuser;
 
   logic [63:0] m_axis_tdata;
   logic [ 7:0] m_axis_tkeep;
   logic        m_axis_tvalid;
   logic        m_axis_tlast;
+  logic [31:0] m_axis_tuser;
 
   logic [ 3:0] ctrl_ud_comp_meth;
   logic [ 3:0] ctrl_ud_iq_width;
@@ -48,10 +50,12 @@ module tb_bfp_comp;
       .s_axis_tkeep     (s_axis_tkeep),
       .s_axis_tvalid    (s_axis_tvalid),
       .s_axis_tlast     (s_axis_tlast),
+      .s_axis_tuser     (s_axis_tuser),
       .m_axis_tdata     (m_axis_tdata),
       .m_axis_tkeep     (m_axis_tkeep),
       .m_axis_tvalid    (m_axis_tvalid),
       .m_axis_tlast     (m_axis_tlast),
+      .m_axis_tuser     (m_axis_tuser),
       .ctrl_ud_comp_meth(ctrl_ud_comp_meth),
       .ctrl_ud_iq_width (ctrl_ud_iq_width),
       .ctrl_fs_offset   (ctrl_fs_offset)
@@ -64,6 +68,7 @@ module tb_bfp_comp;
     s_axis_tkeep = 0;
     s_axis_tvalid = 0;
     s_axis_tlast = 0;
+    s_axis_tuser = 0;
 
     ctrl_ud_comp_meth = 1;
     ctrl_ud_iq_width = 9;  // BFP9 mode
@@ -82,6 +87,7 @@ module tb_bfp_comp;
       s_axis_tkeep  <= 8'hFF;
       s_axis_tvalid <= 1;
       s_axis_tlast  <= (i == 5);  // Assert tlast on last cycle
+      s_axis_tuser  <= 32'hA5A5_0001;
       @(posedge clk);
     end
     s_axis_tvalid <= 0;

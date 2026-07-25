@@ -181,11 +181,13 @@ module puxch_top #(
             .s_axis_tkeep     (s0_axis_tkeep[ant]),
             .s_axis_tvalid    (s0_axis_tvalid[ant]),
             .s_axis_tlast     (s0_axis_tlast[ant]),
+            .s_axis_tuser     ('0),
             //
             .m_axis_tdata     (m_fram_data_tdata[ant]),
             .m_axis_tkeep     (m_fram_data_tkeep[ant]),
             .m_axis_tvalid    (m_fram_data_tvalid[ant]),
             .m_axis_tlast     (m_fram_data_tlast[ant]),
+            .m_axis_tuser     (),
             // Control
             //--------
             .ctrl_ud_comp_meth(ctrl_ud_comp_meth),

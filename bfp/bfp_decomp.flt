@@ -1,5 +1,0 @@
-src/bfp_decomp_exp.sv
-src/bfp_decomp_gearbox.sv
-src/bfp_decomp.sv
-src/bfp_pkg.sv
-src/fifo_srl.sv
