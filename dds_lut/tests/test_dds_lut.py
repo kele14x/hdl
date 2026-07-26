@@ -8,6 +8,7 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.queue import Queue
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
 
 prj_path = Path(__file__).resolve().parent.parent
@@ -119,10 +120,7 @@ def test_dds_lut_runner():
     hdl_toplevel = "dds_lut"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "rtl/dds_lut.v",
-        prj_path / "rtl/dds_lut_rom.v",
-    ]
+    verilog_sources = resolve_flt(prj_path / "dds_lut.flt")
 
     parameters = {
         "STRUCTURE": STRUCTURE,

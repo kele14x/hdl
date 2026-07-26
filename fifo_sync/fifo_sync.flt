@@ -1,2 +1,2 @@
-../ram/ram_sdp.sv
+../ram/ram.flt
 rtl/fifo_sync.sv

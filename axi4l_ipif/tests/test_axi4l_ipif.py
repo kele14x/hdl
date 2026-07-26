@@ -10,6 +10,7 @@ from cocotb.clock import Clock
 from cocotb.queue import Queue
 from cocotb.triggers import ClockCycles, Event, RisingEdge
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 
 ADDR_WIDTH = 10
 DATA_WIDTH = 32
@@ -471,10 +472,8 @@ async def test_axi4l_ipif_simple_b2b_read(dut):
 
 
 def test_axi4l_ipif_runner():
-    proj_path = Path(__file__).resolve().parent
-    sources = [
-        proj_path / "../rtl/axi4l_ipif.sv",
-    ]
+    prj_path = Path(__file__).resolve().parent.parent
+    sources = resolve_flt(prj_path / "axi4l_ipif.flt")
     hdl_toplevel = "axi4l_ipif"
 
     runner = get_runner(SIM)

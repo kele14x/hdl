@@ -1,9 +1,7 @@
-../cdc/cdc_array_single.sv
+../cdc/cdc.flt
 ../cmult_chain/cmult_chain.flt
-../ram/ram_tdp.sv
-../ram/ram_tdp_pipe.sv
-../common/rtl/delay.v
-../common/rtl/srl.sv
+../ram/ram.flt
+../common/common.flt
 rtl/nlf.sv
 rtl/nlf_core.sv
 rtl/nlf_delay_line.sv

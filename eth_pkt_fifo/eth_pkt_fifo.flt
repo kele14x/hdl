@@ -1,2 +1,2 @@
-../ram/bram_sdp.sv
+../ram/ram.flt
 rtl/eth_pkt_fifo.sv

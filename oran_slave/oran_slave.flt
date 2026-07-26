@@ -1,4 +1,4 @@
-../common/rtl/fifo_srl.sv
+../common/common.flt
 src/oran_deframer.sv
 src/oran_deframer_dl_ss.sv
 src/oran_deframer_dl_ss_adaptor.sv

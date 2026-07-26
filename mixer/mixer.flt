@@ -1,4 +1,4 @@
 ../cmult/cmult.flt
-../common/src/delay.v
+../common/common.flt
 ../nco/nco.flt
 rtl/mixer.sv

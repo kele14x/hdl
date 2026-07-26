@@ -1,4 +1,4 @@
-../common/rtl/delay.v
+../common/common.flt
 rtl/cfr_pc.sv
 rtl/cfr_pc_cpg.sv
 rtl/cfr_pc_pd.sv

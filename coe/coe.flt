@@ -1,9 +1,10 @@
+../ecpri/ecpri.flt
+rtl/coe_deframer_data.v
+rtl/coe_deframer_hdr.v
 rtl/coe_deframer.v
+rtl/coe_framer_data.v
+rtl/coe_framer_hdr.v
 rtl/coe_framer.v
-rtl/coe_ptp_lite.v
 rtl/coe_regs.v
-rtl/coe_timer.v
 rtl/coe_wrapper.v
 rtl/coe.v
-
-../ecpri/ecpri.flt

@@ -12,6 +12,7 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, ReadWrite, RisingEdge, with_timeout
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 
 
 PRJ_PATH = Path(__file__).resolve().parent.parent
@@ -117,7 +118,7 @@ def test_axi4l_bram_runner() -> None:
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel="axi4l_bram",
-        sources=[PRJ_PATH / "rtl" / "axi4l_bram.v"],
+        sources=resolve_flt(PRJ_PATH / "axi4l_bram.flt"),
         parameters={"ADDR_WIDTH": ADDR_WIDTH, "DATA_WIDTH": DATA_WIDTH},
         always=True,
         waves=True,

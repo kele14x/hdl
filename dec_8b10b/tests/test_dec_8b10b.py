@@ -6,6 +6,7 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 
 
 prj_path = Path(__file__).resolve().parent.parent
@@ -97,12 +98,7 @@ def test_dec_8b10b_runner(use_lut, tmp_path):
     build_dir = tmp_path / f"dec_8b10b_lut_{use_lut}"
     runner.build(
         hdl_toplevel="dec_8b10b",
-        sources=[
-            prj_path / "hdl" / "dec_8b10b_logic.sv",
-            prj_path / "hdl" / "dec_8b10b_lut.sv",
-            prj_path / "hdl" / "dec_8b10b.sv",
-            prj_path / "hdl" / "dec_8b10b_synth.sv",
-        ],
+        sources=resolve_flt(prj_path / "dec_8b10b.flt"),
         parameters={
             "C_USE_LUT": use_lut,
             "C_LUT_FILE": LUT_FILE.as_posix(),

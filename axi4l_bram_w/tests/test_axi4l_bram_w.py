@@ -20,6 +20,7 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, ReadWrite, RisingEdge, with_timeout
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 
 
 prj_path = Path(__file__).resolve().parent.parent
@@ -597,9 +598,7 @@ def test_axi4l_bram_w_runner():
     """Run the test for AXI4-Lite BRAM write adapter"""
     hdl_toplevel = "axi4l_bram_w"
 
-    verilog_sources = [
-        prj_path / "rtl/axi4l_bram_w.v",
-    ]
+    verilog_sources = resolve_flt(prj_path / "axi4l_bram_w.flt")
 
     parameters = {
         "ADDR_WIDTH": ADDR_WIDTH,

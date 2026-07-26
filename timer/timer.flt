@@ -1,3 +1,5 @@
+../cdc/cdc.flt
+../common/common.flt
 rtl/timer.v
 rtl/timer_core_400.v
 rtl/timer_core_491p52.v

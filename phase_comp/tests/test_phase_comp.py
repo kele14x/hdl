@@ -7,6 +7,7 @@ import numpy as np
 from cocotb.clock import Clock
 from cocotb.queue import Queue
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
 
 prj_path = Path(__file__).resolve().parent.parent
@@ -161,12 +162,7 @@ def test_phase_comp_runner():
     hdl_toplevel = "phase_comp"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "../cmult/rtl/cmult.v",
-        prj_path / "../common/rtl/delay.v",
-        prj_path / "../ram/rtl/ram_sdp.sv",
-        prj_path / "rtl/phase_comp.sv",
-    ]
+    verilog_sources = resolve_flt(prj_path / "phase_comp.flt")
 
     parameters = {
         "HAS_CDC": HAS_CDC,

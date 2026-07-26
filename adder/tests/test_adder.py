@@ -11,6 +11,7 @@ from cocotb.clock import Clock
 from cocotb.queue import Queue
 from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 rng = np.random.default_rng(12345)
@@ -173,7 +174,7 @@ def test_adder_runner(params):
     with tempfile.TemporaryDirectory(prefix="adder_param_") as run_dir:
         runner.build(
             hdl_toplevel=hdl_toplevel,
-            sources=[prj_path / "rtl/adder.sv"],
+            sources=resolve_flt(prj_path / "adder.flt"),
             parameters=params,
             always=True,
             waves=True,

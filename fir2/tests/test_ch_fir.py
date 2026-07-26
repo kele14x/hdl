@@ -6,6 +6,7 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 
@@ -76,11 +77,7 @@ def test_ch_fir_runner():
     hdl_toplevel = "fir2"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "rtl/fir2.sv",
-        prj_path / "rtl/fir2_mac.sv",
-        prj_path / "rtl/fir2_stage.sv",
-    ]
+    verilog_sources = resolve_flt(prj_path / "fir2.flt")
 
     runner = get_runner(SIM)
     runner.build(

@@ -1,4 +1,4 @@
 ../cmult/cmult.flt
 ../nco/nco.flt
-../common/rtl/delay.v
+../common/common.flt
 rtl/ft.sv

@@ -19,6 +19,7 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, ReadWrite, RisingEdge, with_timeout
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 
 
 prj_path = Path(__file__).resolve().parent.parent
@@ -381,9 +382,7 @@ def test_skid_buffer_runner():
     """Run the test for skid buffer"""
     hdl_toplevel = "skid_buffer"
 
-    verilog_sources = [
-        prj_path / "rtl/skid_buffer.v",
-    ]
+    verilog_sources = resolve_flt(prj_path / "skid_buffer.flt")
 
     parameters = {
         "DATA_WIDTH": DATA_WIDTH,

@@ -8,6 +8,7 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.queue import Queue
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
 
 prj_path = Path(__file__).resolve().parent.parent
@@ -135,12 +136,7 @@ def test_nco_runner():
     hdl_toplevel = "nco"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "../dds_lut/rtl/dds_lut.sv",
-        prj_path / "../dds_lut/rtl/dds_lut_rom.sv",
-        prj_path / "../lfsr/rtl/lfsr.sv",
-        prj_path / "rtl/nco.v",
-    ]
+    verilog_sources = resolve_flt(prj_path / "nco.flt")
 
     parameters = {
         "NUM_PARALLEL": NUM_PARALLEL,

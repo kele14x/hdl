@@ -7,6 +7,7 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.queue import Queue
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
 
 
@@ -202,12 +203,7 @@ def test_axis_fifo_runner():
     hdl_toplevel = "axis_fifo"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "../cdc/rtl/cdc_async_rst.sv",
-        prj_path / "../cdc/rtl/cdc_gray.sv",
-        prj_path / "../ram/rtl/ram_sdp.sv",
-        prj_path / "rtl/axis_fifo.v",
-    ]
+    verilog_sources = resolve_flt(prj_path / "axis_fifo.flt")
 
     parameters = {
         "ASYNC_MODE": ASYNC_MODE,

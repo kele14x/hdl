@@ -5,6 +5,7 @@ import cocotb
 import pytest
 from cocotb.clock import Clock
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
 from libaxi4l import axi_reset, axi_read, axi_write
 
@@ -138,19 +139,7 @@ def test_timer_runner():
     hdl_toplevel = "timer"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "../cdc/rtl/cdc_array_single.sv",
-        prj_path / "../cdc/rtl/cdc_handshake_f.sv",
-        prj_path / "../cdc/rtl/cdc_pulse.sv",
-        prj_path / "../cdc/rtl/cdc_single.sv",
-        prj_path / "../common/rtl/delay.v",
-        prj_path / "rtl/timer_core_400.v",
-        prj_path / "rtl/timer_core_491p52.v",
-        prj_path / "rtl/timer_pps.v",
-        prj_path / "rtl/timer_regs.v",
-        prj_path / "rtl/timer_rfs.v",
-        prj_path / "rtl/timer.v",
-    ]
+    verilog_sources = resolve_flt(prj_path / "timer.flt")
 
     parameters = {
         "SIM_SPEED_UP": SIM_SPEED_UP,

@@ -1,3 +1,6 @@
 pcap_pkg.sv
 rtl/async_input_sync.v
 rtl/delay.v
+rtl/srl.sv
+rtl/util_clk_fwd.v
+rtl/util_gpio_gw.v

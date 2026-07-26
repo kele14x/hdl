@@ -9,6 +9,7 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.queue import Queue
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
 from libaxi4l import axi_reset, axi_read, axi_write
 
@@ -181,38 +182,7 @@ def test_ecpri_runner():
     hdl_toplevel = "ecpri"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "../cdc/rtl/cdc_async_rst.sv",
-        prj_path / "../cdc/rtl/cdc_gray.sv",
-        prj_path / "../cdc/rtl/cdc_handshake_f.sv",
-        prj_path / "../cdc/rtl/cdc_pulse.sv",
-        prj_path / "../cdc/rtl/cdc_single.sv",
-        prj_path / "../common/rtl/delay.v",
-        prj_path / "../fifo_async/rtl/fifo_async.v",
-        prj_path / "../fifo_sync/rtl/fifo_sync.sv",
-        prj_path / "../ram/rtl/ram_sdp.sv",
-        prj_path / "rtl/ecpri_deframer_common.v",
-        prj_path / "rtl/ecpri_deframer_demux.v",
-        prj_path / "rtl/ecpri_deframer_eth.v",
-        prj_path / "rtl/ecpri_deframer_iq.v",
-        prj_path / "rtl/ecpri_deframer_odm.v",
-        prj_path / "rtl/ecpri_deframer.v",
-        prj_path / "rtl/ecpri_framer_fifo.v",
-        prj_path / "rtl/ecpri_framer_message.v",
-        prj_path / "rtl/ecpri_framer_odm.v",
-        prj_path / "rtl/ecpri_framer_ptp.v",
-        prj_path / "rtl/ecpri_framer_reg.v",
-        prj_path / "rtl/ecpri_framer_trans_reg.v",
-        prj_path / "rtl/ecpri_framer_trans.v",
-        prj_path / "rtl/ecpri_framer.v",
-        prj_path / "rtl/ecpri_if.v",
-        prj_path / "rtl/ecpri_odm.v",
-        prj_path / "rtl/ecpri_packet_fifo.v",
-        prj_path / "rtl/ecpri_regs.v",
-        prj_path / "rtl/ecpri_statistics.v",
-        prj_path / "rtl/ecpri_switch.v",
-        prj_path / "rtl/ecpri.v",
-    ]
+    verilog_sources = resolve_flt(prj_path / "ecpri.flt")
 
     parameters = {}
 

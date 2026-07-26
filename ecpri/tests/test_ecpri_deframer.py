@@ -7,6 +7,7 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.queue import Queue
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
 from libecpri import EcpriPacket, EthernetPacket, EcpriOdmMessage, EcpriIqMessage
 
@@ -309,22 +310,7 @@ def test_ecpri_deframer_runner():
     hdl_toplevel = "ecpri_deframer"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "../cdc/rtl/cdc_async_rst.sv",
-        prj_path / "../cdc/rtl/cdc_gray.sv",
-        prj_path / "../cdc/rtl/cdc_pulse.sv",
-        prj_path / "../cdc/rtl/cdc_single.sv",
-        prj_path / "../common/rtl/delay.v",
-        prj_path / "../fifo_async/rtl/fifo_async.v",
-        prj_path / "../ram/rtl/ram_sdp.sv",
-        prj_path / "rtl/ecpri_deframer_common.v",
-        prj_path / "rtl/ecpri_deframer_demux.v",
-        prj_path / "rtl/ecpri_deframer_eth.v",
-        prj_path / "rtl/ecpri_deframer_iq.v",
-        prj_path / "rtl/ecpri_deframer_odm.v",
-        prj_path / "rtl/ecpri_deframer_packet_fifo.v",
-        prj_path / "rtl/ecpri_deframer.v",
-    ]
+    verilog_sources = resolve_flt(prj_path / "ecpri.flt")
 
     parameters = {}
 

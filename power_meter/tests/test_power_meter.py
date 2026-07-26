@@ -6,6 +6,7 @@ import cocotb
 import pytest
 from cocotb.clock import Clock
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
 
 prj_path = Path(__file__).resolve().parent.parent
@@ -87,11 +88,7 @@ def test_power_meter_runner():
     hdl_toplevel = "power_meter"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "../common/rtl/cdc_bits.sv",
-        prj_path / "../common/rtl/delay.v",
-        prj_path / "rtl/power_meter.sv",
-    ]
+    verilog_sources = resolve_flt(prj_path / "power_meter.flt")
 
     parameters = {
         "NUM_CC": 1,

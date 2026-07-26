@@ -11,6 +11,7 @@ from cocotb.handle import SimHandleBase
 from cocotb.queue import Queue
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 
@@ -129,18 +130,7 @@ def test_fft_radix2_runner():
     hdl_toplevel = "fft_radix2"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "../cmult/rtl/cmult.sv",
-        prj_path / "../ram/rtl/ram_sdp.sv",
-        prj_path / "../shift_ram/rtl/shift_ram.sv",
-        prj_path / "../common/rtl/delay.v",
-        prj_path / "rtl/fft_radix2_bf2.sv",
-        prj_path / "rtl/fft_radix2_core.sv",
-        prj_path / "rtl/fft_radix2_stage.sv",
-        prj_path / "rtl/fft_radix2_twiddle_rom.sv",
-        prj_path / "rtl/fft_radix2_twiddle.sv",
-        prj_path / "rtl/fft_radix2.sv",
-    ]
+    verilog_sources = resolve_flt(prj_path / "fft_radix2.flt")
 
     parameters = {
         "LOG_FFT_SIZE": LOG_FFT_SIZE,

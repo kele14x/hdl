@@ -10,11 +10,12 @@ import tempfile
 import cocotb
 import pytest
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 
 
 prj_path = Path(__file__).resolve().parent.parent
 repo_path = prj_path.parent
-sys.path.insert(0, str(repo_path / "tests"))
+sys.path.insert(0, str(repo_path / "common" / "tests"))
 
 from libfifo import (  # noqa: E402
     FifoReadBus,
@@ -90,10 +91,7 @@ def test_fifo_srl_runner(params):
     with tempfile.TemporaryDirectory(prefix="fifo_srl_param_") as run_dir:
         runner.build(
             hdl_toplevel=hdl_toplevel,
-            sources=[
-                prj_path / "../common/rtl/srl.sv",
-                prj_path / "rtl/fifo_srl.sv",
-            ],
+            sources=resolve_flt(prj_path / "fifo_srl.flt"),
             parameters=params,
             waves=True,
             always=True,

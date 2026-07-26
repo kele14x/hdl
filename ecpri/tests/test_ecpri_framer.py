@@ -7,6 +7,7 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.queue import Queue
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
 
 
@@ -192,17 +193,7 @@ def test_ecpri_framer_runner():
     hdl_toplevel = "ecpri_framer"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "rtl/ecpri_axis_reg.v",
-        prj_path / "rtl/ecpri_framer_common.v",
-        prj_path / "rtl/ecpri_framer_eth_reg.v",
-        prj_path / "rtl/ecpri_framer_eth.v",
-        prj_path / "rtl/ecpri_framer_eth.v",
-        prj_path / "rtl/ecpri_framer_odm.v",
-        prj_path / "rtl/ecpri_framer_trans.v",
-        prj_path / "rtl/ecpri_framer.v",
-        prj_path / "rtl/ecpri_switch.v",
-    ]
+    verilog_sources = resolve_flt(prj_path / "ecpri.flt")
 
     parameters = {}
 

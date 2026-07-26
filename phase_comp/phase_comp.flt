@@ -1,1 +1,4 @@
+../cmult/cmult.flt
+../common/common.flt
+../ram/ram.flt
 rtl/phase_comp.sv

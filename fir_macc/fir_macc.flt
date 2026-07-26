@@ -1,4 +1,3 @@
-../ram/bram_sdp.sv
-../ram/bram_sdp_pipe.sv
-hdl/fir_macc.sv
-hdl/fir_macc_mac.sv
+../ram/ram.flt
+rtl/fir_macc.sv
+rtl/fir_macc_mac.sv

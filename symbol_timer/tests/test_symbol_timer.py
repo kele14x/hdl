@@ -5,6 +5,7 @@ import cocotb
 import pytest
 from cocotb.clock import Clock
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
 
 prj_path = Path(__file__).resolve().parent.parent
@@ -61,9 +62,7 @@ def test_symbol_timer_runner():
     hdl_toplevel = "symbol_timer"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "rtl/symbol_timer.v",
-    ]
+    verilog_sources = resolve_flt(prj_path / "symbol_timer.flt")
 
     parameters = {
         "ASYNC": ASYNC,

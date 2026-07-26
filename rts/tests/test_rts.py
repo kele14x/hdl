@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 from cocotb.clock import Clock
 from cocotb_tools.runner import get_runner
+from tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
 from libaxi4l import axi_reset, axi_read, axi_write
 
@@ -188,33 +189,7 @@ def test_rts_runner():
     hdl_toplevel = "rts"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = [
-        prj_path / "../cdc/rtl/cdc_array_single.sv",
-        prj_path / "../cdc/rtl/cdc_async_rst.sv",
-        prj_path / "../cdc/rtl/cdc_gray.sv",
-        prj_path / "../cdc/rtl/cdc_handshake_f.sv",
-        prj_path / "../cdc/rtl/cdc_pulse.sv",
-        prj_path / "../cdc/rtl/cdc_single.sv",
-        prj_path / "../common/rtl/delay.v",
-        prj_path / "../dds_lut/rtl/dds_lut_rom.v",
-        prj_path / "../dds_lut/rtl/dds_lut.v",
-        prj_path / "../fifo_async/rtl/fifo_async.v",
-        prj_path / "../lfsr/rtl/lfsr.v",
-        prj_path / "../mult/rtl/mult.sv",
-        prj_path / "../nco/rtl/nco.v",
-        prj_path / "../ram/rtl/ram_sdp.sv",
-        prj_path / "../ram/rtl/ram_sdp_pipe.sv",
-        prj_path / "rtl/rts_cap_buffer.v",
-        prj_path / "rtl/rts_cap_mux.v",
-        prj_path / "rtl/rts_cap_ram.v",
-        prj_path / "rtl/rts_cw.v",
-        prj_path / "rtl/rts_mux.v",
-        prj_path / "rtl/rts_ram_block.v",
-        prj_path / "rtl/rts_ram_buffer.v",
-        prj_path / "rtl/rts_ram.v",
-        prj_path / "rtl/rts_regs.v",
-        prj_path / "rtl/rts.v",
-    ]
+    verilog_sources = resolve_flt(prj_path / "rts.flt")
 
     parameters = {}
 

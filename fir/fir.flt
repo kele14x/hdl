@@ -1,5 +1,5 @@
-../ram/ram_sdp.sv
-../common/rtl/delay.v
+../ram/ram.flt
+../common/common.flt
 rtl/fir.sv
 rtl/fir_mac.sv
 rtl/fir_stage.sv
