@@ -29,7 +29,10 @@ async def reset(dut) -> None:
     dut.arvalid.value = 0
     dut.bready.value = 0
     dut.rready.value = 0
-    dut.bram_ack.value = 0
+    dut.bram_wr_ack.value = 0
+    dut.bram_wr_err.value = 0
+    dut.bram_rd_ack.value = 0
+    dut.bram_rd_err.value = 0
     dut.bram_rdata.value = 0
     await ClockCycles(dut.aclk, 4)
     dut.aresetn.value = 1
@@ -50,66 +53,99 @@ async def send(dut, prefix: str, value: int) -> None:
     getattr(dut, f"{prefix}valid").value = 0
 
 
-async def bram_model(dut, issued: list[tuple[bool, int, int]]) -> None:
-    pending: deque[tuple[bool, int]] = deque()
-    dut.bram_ack.value = 0
+async def bram_model(
+    dut,
+    issued: list[tuple[bool, int, int]],
+    acknowledged: list[tuple[bool, int]],
+) -> None:
+    pending_writes: deque[int] = deque()
+    pending_reads: deque[int] = deque()
+    write_delay = 0
+    read_delay = 0
+    dut.bram_wr_ack.value = 0
+    dut.bram_rd_ack.value = 0
     while True:
         await RisingEdge(dut.aclk)
         await ReadWrite()
-        dut.bram_ack.value = 0
+        dut.bram_wr_ack.value = 0
+        dut.bram_wr_err.value = 0
+        dut.bram_rd_ack.value = 0
+        dut.bram_rd_err.value = 0
+
+        if pending_writes:
+            if write_delay == 0:
+                address = pending_writes.popleft()
+                dut.bram_wr_ack.value = 1
+                dut.bram_wr_err.value = address == 0x204
+                acknowledged.append((True, address))
+                write_delay = 8
+            else:
+                write_delay -= 1
+        if pending_reads:
+            if read_delay == 0:
+                address = pending_reads.popleft()
+                dut.bram_rd_ack.value = 1
+                dut.bram_rd_err.value = address == 0x104
+                dut.bram_rdata.value = address ^ DATA_XOR
+                acknowledged.append((False, address))
+                read_delay = 1
+            else:
+                read_delay -= 1
+
         if int(dut.bram_en.value):
             is_write = bool(int(dut.bram_we.value))
             address = int(dut.bram_addr.value)
             data = int(dut.bram_wdata.value) if is_write else 0
             issued.append((is_write, address, data))
-            pending.append((is_write, address))
-        if pending:
-            is_write, address = pending.popleft()
-            dut.bram_rdata.value = address ^ DATA_XOR
-            dut.bram_ack.value = 1
+            if is_write:
+                pending_writes.append(address)
+            else:
+                pending_reads.append(address)
 
 
 @cocotb.test()
 async def test_mixed_read_write_traffic(dut) -> None:
-    """Read and write responses retain command order on one BRAM port."""
+    """Independent BRAM read/write completion and error responses."""
     cocotb.start_soon(Clock(dut.aclk, 10, unit="ns").start())
     await reset(dut)
     issued: list[tuple[bool, int, int]] = []
-    cocotb.start_soon(bram_model(dut, issued))
+    acknowledged: list[tuple[bool, int]] = []
+    cocotb.start_soon(bram_model(dut, issued, acknowledged))
 
     dut.bready.value = 1
     dut.rready.value = 1
     writes = [(0x200, 0x1234_5678), (0x204, 0xCAFE_BABE)]
     reads = [0x100, 0x104]
-    for address, data in writes:
-        await with_timeout(
-            cocotb.start_soon(send(dut, "aw", address)), 2, "us"
-        )
-        await with_timeout(cocotb.start_soon(send(dut, "w", data)), 2, "us")
-    for address in reads:
-        await with_timeout(cocotb.start_soon(send(dut, "ar", address)), 2, "us")
+    await with_timeout(cocotb.start_soon(send(dut, "aw", writes[0][0])), 2, "us")
+    await with_timeout(cocotb.start_soon(send(dut, "w", writes[0][1])), 2, "us")
+    await with_timeout(cocotb.start_soon(send(dut, "ar", reads[0])), 2, "us")
+    await with_timeout(cocotb.start_soon(send(dut, "aw", writes[1][0])), 2, "us")
+    await with_timeout(cocotb.start_soon(send(dut, "w", writes[1][1])), 2, "us")
+    await with_timeout(cocotb.start_soon(send(dut, "ar", reads[1])), 2, "us")
 
-    got_b = 0
-    got_r: list[int] = []
+    got_b: list[int] = []
+    got_r: list[tuple[int, int]] = []
     for _ in range(100):
         await RisingEdge(dut.aclk)
         if int(dut.bvalid.value):
-            assert int(dut.bresp.value) == 0
-            got_b += 1
+            got_b.append(int(dut.bresp.value))
         if int(dut.rvalid.value):
-            assert int(dut.rresp.value) == 0
-            got_r.append(int(dut.rdata.value))
-        if got_b == len(writes) and len(got_r) == len(reads):
+            got_r.append((int(dut.rdata.value), int(dut.rresp.value)))
+        if len(got_b) == len(writes) and len(got_r) == len(reads):
             break
-    assert got_b == len(writes)
-    assert got_r == [address ^ DATA_XOR for address in reads]
+    assert got_b == [0, 2]
+    assert got_r == [
+        (reads[0] ^ DATA_XOR, 0),
+        (reads[1] ^ DATA_XOR, 2),
+    ]
+    assert acknowledged[0] == (False, reads[0])
     # The arbiter flips preference after every allocation, so the buffered
     # traffic is interleaved while both reads and writes are available.
     assert issued == [
-        (True, writes[0][0], writes[0][1]),
         (False, reads[0], 0),
-        (True, writes[1][0], writes[1][1]),
+        (True, writes[0][0], writes[0][1]),
         (False, reads[1], 0),
+        (True, writes[1][0], writes[1][1]),
     ]
 
 

@@ -22,7 +22,8 @@ module axi4l_bram_r #(
     output wire                  bram_en,
     //
     input  wire [DATA_WIDTH-1:0] bram_rdata,
-    input  wire                  bram_ack
+    input  wire                  bram_ack,
+    input  wire                  bram_err
 );
 
   // 3'b000: under reset
@@ -56,6 +57,10 @@ module axi4l_bram_r #(
   reg  [DATA_WIDTH-1:0] r_slot1;
   reg  [DATA_WIDTH-1:0] r_slot0_next;
   reg  [DATA_WIDTH-1:0] r_slot1_next;
+  reg                   r_err_slot0;
+  reg                   r_err_slot1;
+  reg                   r_err_slot0_next;
+  reg                   r_err_slot1_next;
 
   // AR state
 
@@ -330,10 +335,72 @@ module axi4l_bram_r #(
     endcase
   end
 
+  // r_err_slot0
+
+  always @(posedge aclk or negedge aresetn) begin
+    if (!aresetn) begin
+      r_err_slot0 <= 1'b0;
+    end else begin
+      r_err_slot0 <= r_err_slot0_next;
+    end
+  end
+
+  always @(*) begin
+    r_err_slot0_next = r_err_slot0;
+    case (r_state)
+      2'b00: begin
+        if (bram_ack) begin
+          r_err_slot0_next = bram_err;
+        end
+      end
+
+      2'b01: begin
+        if (bram_ack && rready) begin
+          r_err_slot0_next = bram_err;
+        end
+      end
+
+      2'b11: begin
+        if (rready) begin
+          r_err_slot0_next = r_err_slot1;
+        end
+      end
+
+      default: begin
+        r_err_slot0_next = r_err_slot0;
+      end
+    endcase
+  end
+
+  // r_err_slot1
+
+  always @(posedge aclk or negedge aresetn) begin
+    if (!aresetn) begin
+      r_err_slot1 <= 1'b0;
+    end else begin
+      r_err_slot1 <= r_err_slot1_next;
+    end
+  end
+
+  always @(*) begin
+    r_err_slot1_next = r_err_slot1;
+    case (r_state)
+      2'b01: begin
+        if (bram_ack && !rready) begin
+          r_err_slot1_next = bram_err;
+        end
+      end
+
+      default: begin
+        r_err_slot1_next = r_err_slot1;
+      end
+    endcase
+  end
+
   // R channel
 
   assign rdata  = r_slot0;
-  assign rresp  = 2'b00;
+  assign rresp  = r_err_slot0 ? 2'b10 : 2'b00;
   assign rvalid = r_state[0];
 
 endmodule

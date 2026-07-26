@@ -27,7 +27,8 @@ module axi4l_bram_w #(
     output wire [DATA_WIDTH/8-1:0] bram_wstrb,
     output wire                    bram_en,
     //
-    input  wire                    bram_ack
+    input  wire                    bram_ack,
+    input  wire                    bram_err
 );
 
   // 3'b000: under reset
@@ -69,6 +70,10 @@ module axi4l_bram_w #(
   // 2'b10: 2 B responses are pending
   reg  [                        1:0] b_pend;
   reg  [                        1:0] b_pend_next;
+  reg                               b_err_slot0;
+  reg                               b_err_slot1;
+  reg                               b_err_slot0_next;
+  reg                               b_err_slot1_next;
 
   wire                               b_rdy;
   wire                               b_hs;
@@ -382,6 +387,49 @@ module axi4l_bram_w #(
     endcase
   end
 
+  // B response errors
+
+  always @(posedge aclk or negedge aresetn) begin
+    if (!aresetn) begin
+      b_err_slot0 <= 1'b0;
+      b_err_slot1 <= 1'b0;
+    end else begin
+      b_err_slot0 <= b_err_slot0_next;
+      b_err_slot1 <= b_err_slot1_next;
+    end
+  end
+
+  always @(*) begin
+    b_err_slot0_next = b_err_slot0;
+    b_err_slot1_next = b_err_slot1;
+    case (b_pend)
+      2'b00: begin
+        if (bram_ack) begin
+          b_err_slot0_next = bram_err;
+        end
+      end
+
+      2'b01: begin
+        if (bram_ack && b_hs) begin
+          b_err_slot0_next = bram_err;
+        end else if (bram_ack) begin
+          b_err_slot1_next = bram_err;
+        end
+      end
+
+      2'b10: begin
+        if (b_hs) begin
+          b_err_slot0_next = b_err_slot1;
+        end
+      end
+
+      default: begin
+        b_err_slot0_next = b_err_slot0;
+        b_err_slot1_next = b_err_slot1;
+      end
+    endcase
+  end
+
   assign b_hs = bvalid && bready;
 
   assign wr_issue = aw_state[0] && w_state[0] && b_rdy;
@@ -406,7 +454,7 @@ module axi4l_bram_w #(
 
   // B channel
 
-  assign bresp   = 2'b00;
+  assign bresp   = b_err_slot0 ? 2'b10 : 2'b00;
   assign bvalid  = |b_pend;
 
 endmodule

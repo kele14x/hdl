@@ -303,10 +303,15 @@ class BramWriteModel:
         self,
         dut,
         latency: int | Callable[[int, int], int] = 1,
+        error_fn: Callable[[int], bool] | None = None,
     ):
         self.dut = dut
         self.latency = latency
+        self.error_fn = error_fn or (lambda _address: False)
         self.writes: list[tuple[int, int, int]] = []
+
+    def expected_resp(self, address: int) -> int:
+        return 2 if self.error_fn(address) else 0
 
     def _latency_for(self, address: int) -> int:
         value = self.latency(address, len(self.writes)) if callable(self.latency) else self.latency
@@ -320,6 +325,7 @@ class BramWriteModel:
         pending: deque[list[int]] = deque()
         cycle = 0
         self.dut.bram_ack.value = 0
+        self.dut.bram_err.value = 0
         while True:
             await RisingEdge(self.dut.aclk)
             # bram_en is assigned by a nonblocking assignment in the DUT.
@@ -328,6 +334,7 @@ class BramWriteModel:
             await ReadWrite()
             cycle += 1
             self.dut.bram_ack.value = 0
+            self.dut.bram_err.value = 0
 
             if int(self.dut.bram_en.value):
                 address = int(self.dut.bram_addr.value)
@@ -341,8 +348,9 @@ class BramWriteModel:
             # ordering and turns a same-cycle collision into a one-cycle delay
             # for the later response.
             if pending and pending[0][0] <= cycle:
-                pending.popleft()
+                _, address = pending.popleft()
                 self.dut.bram_ack.value = 1
+                self.dut.bram_err.value = self.error_fn(address)
 
     async def run(self) -> None:
         await self._run_clocked_latency()
@@ -386,9 +394,12 @@ class WriteScoreboard:
                 f"Write count mismatch: AW={len(expected_addresses)}, B={len(self.b_agent.observed)}"
             )
 
-        for index, response in enumerate(self.b_agent.observed):
-            if response.resp != 0:
-                raise AssertionError(f"B[{index}] has BRESP={response.resp}, expected OKAY")
+        for index, (address, response) in enumerate(zip(expected_addresses, self.b_agent.observed)):
+            expected_resp = self.ram.expected_resp(address)
+            if response.resp != expected_resp:
+                raise AssertionError(
+                    f"B[{index}] has BRESP={response.resp}, expected {expected_resp}"
+                )
 
         expected_writes = [
             (aw.address, w.data, w.strb) for aw, w in zip(aw_vector, w_vector)
@@ -424,12 +435,17 @@ async def check_no_stray_ack(dut) -> None:
 class WriteTestbench:
     """Owns agents, reference model, reset, and scenario execution."""
 
-    def __init__(self, dut, bram_latency: int | Callable[[int, int], int] = 1):
+    def __init__(
+        self,
+        dut,
+        bram_latency: int | Callable[[int, int], int] = 1,
+        bram_error: Callable[[int], bool] | None = None,
+    ):
         self.dut = dut
         self.aw = AWAgent(dut)
         self.w = WAgent(dut)
         self.b = BAgent(dut)
-        self.ram = BramWriteModel(dut, latency=bram_latency)
+        self.ram = BramWriteModel(dut, latency=bram_latency, error_fn=bram_error)
         self.scoreboard = WriteScoreboard(self.aw, self.w, self.b, self.ram)
 
     async def reset(self) -> None:
@@ -441,6 +457,7 @@ class WriteTestbench:
         self.dut.wstrb.value = 0
         self.dut.bready.value = 0
         self.dut.bram_ack.value = 0
+        self.dut.bram_err.value = 0
         await ClockCycles(self.dut.aclk, 5)
         self.dut.aresetn.value = 1
         await ClockCycles(self.dut.aclk, 2)
@@ -500,9 +517,13 @@ class WriteTestbench:
         await ClockCycles(self.dut.aclk, post_idle_cycles)
 
 
-async def make_testbench(dut, latency: int | Callable[[int, int], int] = 1) -> WriteTestbench:
+async def make_testbench(
+    dut,
+    latency: int | Callable[[int, int], int] = 1,
+    bram_error: Callable[[int], bool] | None = None,
+) -> WriteTestbench:
     cocotb.start_soon(Clock(dut.aclk, 10, unit="ns").start())
-    tb = WriteTestbench(dut, bram_latency=latency)
+    tb = WriteTestbench(dut, bram_latency=latency, bram_error=bram_error)
     await tb.start()
     return tb
 
@@ -515,6 +536,18 @@ async def test_single_write(dut):
         AWSequence([AWTransaction(0x1000)]),
         WSequence([WTransaction(0xDEADBEEF)]),
         BSequence([BTransaction(0)]),
+    )
+
+
+@cocotb.test()
+async def test_bram_errors(dut):
+    """BRAM write errors must become AXI SLVERR responses."""
+    tb = await make_testbench(dut, latency=1, bram_error=lambda address: address == 0x104)
+    addresses = [0x100, 0x104, 0x108]
+    await tb.run(
+        AWSequence([AWTransaction(address) for address in addresses]),
+        WSequence([WTransaction(0xABCD_0000 + index) for index in range(len(addresses))]),
+        BSequence([BTransaction(-1) for _ in addresses]),
     )
 
 

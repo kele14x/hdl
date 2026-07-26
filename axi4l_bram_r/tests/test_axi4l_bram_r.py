@@ -234,14 +234,19 @@ class BramReadModel:
         dut,
         latency: int | Callable[[int, int], int] = 1,
         data_fn: Callable[[int], int] | None = None,
+        error_fn: Callable[[int], bool] | None = None,
     ):
         self.dut = dut
         self.latency = latency
         self.data_fn = data_fn or (lambda address: address ^ DATA_XOR)
+        self.error_fn = error_fn or (lambda _address: False)
         self.requests: list[int] = []
 
     def expected_data(self, address: int) -> int:
         return self.data_fn(address)
+
+    def expected_resp(self, address: int) -> int:
+        return 2 if self.error_fn(address) else 0
 
     def _latency_for(self, address: int) -> int:
         value = self.latency(address, len(self.requests)) if callable(self.latency) else self.latency
@@ -255,6 +260,7 @@ class BramReadModel:
         pending: deque[list[int]] = deque()
         cycle = 0
         self.dut.bram_ack.value = 0
+        self.dut.bram_err.value = 0
         while True:
             await RisingEdge(self.dut.aclk)
             # bram_en is assigned by a nonblocking assignment in the DUT.
@@ -263,6 +269,7 @@ class BramReadModel:
             await ReadWrite()
             cycle += 1
             self.dut.bram_ack.value = 0
+            self.dut.bram_err.value = 0
 
             if int(self.dut.bram_en.value):
                 address = int(self.dut.bram_addr.value)
@@ -277,6 +284,7 @@ class BramReadModel:
                 _, address = pending.popleft()
                 self.dut.bram_rdata.value = self.expected_data(address)
                 self.dut.bram_ack.value = 1
+                self.dut.bram_err.value = self.error_fn(address)
 
     async def run(self) -> None:
         await self._run_clocked_latency()
@@ -315,8 +323,11 @@ class ReadScoreboard:
 
         for index, (address, response) in enumerate(zip(expected_addresses, self.r_agent.observed)):
             expected_data = self.ram.expected_data(address)
-            if response.resp != 0:
-                raise AssertionError(f"R[{index}] has RRESP={response.resp}, expected OKAY")
+            expected_resp = self.ram.expected_resp(address)
+            if response.resp != expected_resp:
+                raise AssertionError(
+                    f"R[{index}] has RRESP={response.resp}, expected {expected_resp}"
+                )
             if response.data != expected_data:
                 raise AssertionError(
                     f"R[{index}] data mismatch for address 0x{address:08X}: "
@@ -336,11 +347,16 @@ async def check_no_ack_when_full(dut) -> None:
 class ReadTestbench:
     """Owns agents, reference model, reset, and scenario execution."""
 
-    def __init__(self, dut, bram_latency: int | Callable[[int, int], int] = 1):
+    def __init__(
+        self,
+        dut,
+        bram_latency: int | Callable[[int, int], int] = 1,
+        bram_error: Callable[[int], bool] | None = None,
+    ):
         self.dut = dut
         self.ar = ARAgent(dut)
         self.r = RAgent(dut)
-        self.ram = BramReadModel(dut, latency=bram_latency)
+        self.ram = BramReadModel(dut, latency=bram_latency, error_fn=bram_error)
         self.scoreboard = ReadScoreboard(self.ar, self.r, self.ram)
 
     async def reset(self) -> None:
@@ -350,6 +366,7 @@ class ReadTestbench:
         self.dut.rready.value = 0
         self.dut.bram_rdata.value = 0
         self.dut.bram_ack.value = 0
+        self.dut.bram_err.value = 0
         await ClockCycles(self.dut.aclk, 5)
         self.dut.aresetn.value = 1
         await ClockCycles(self.dut.aclk, 2)
@@ -393,9 +410,13 @@ class ReadTestbench:
         await ClockCycles(self.dut.aclk, post_idle_cycles)
 
 
-async def make_testbench(dut, latency: int | Callable[[int, int], int] = 1) -> ReadTestbench:
+async def make_testbench(
+    dut,
+    latency: int | Callable[[int, int], int] = 1,
+    bram_error: Callable[[int], bool] | None = None,
+) -> ReadTestbench:
     cocotb.start_soon(Clock(dut.aclk, 10, unit="ns").start())
-    tb = ReadTestbench(dut, bram_latency=latency)
+    tb = ReadTestbench(dut, bram_latency=latency, bram_error=bram_error)
     await tb.start()
     return tb
 
@@ -405,6 +426,17 @@ async def test_single_read(dut):
     """Simple one-read scenario."""
     tb = await make_testbench(dut, latency=bram_latency_from_env(1))
     await tb.run(ARSequence([ARTransaction(0x1000)]), RSequence([RTransaction(0)]))
+
+
+@cocotb.test()
+async def test_bram_errors(dut):
+    """BRAM read errors must become AXI SLVERR responses."""
+    tb = await make_testbench(dut, latency=1, bram_error=lambda address: address == 0x104)
+    addresses = [0x100, 0x104, 0x108]
+    await tb.run(
+        ARSequence([ARTransaction(address) for address in addresses]),
+        RSequence([RTransaction(-1) for _ in addresses]),
+    )
 
 
 @cocotb.test()
