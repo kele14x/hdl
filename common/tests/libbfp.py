@@ -1,4 +1,4 @@
-"""BFP compression and decompression reference model."""
+"""Shared BFP compression and decompression reference model."""
 
 import math
 import os

@@ -1,4 +1,4 @@
 ../lfsr/lfsr.flt
 ../mult/mult.flt
-../util/rtl/delay.sv
+../common/rtl/delay.v
 rtl/dummy_source.sv

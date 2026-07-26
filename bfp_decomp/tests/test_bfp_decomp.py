@@ -13,7 +13,7 @@ from cocotb.triggers import ClockCycles, RisingEdge
 
 prj_path = Path(__file__).resolve().parent.parent
 repo_path = prj_path.parent
-sys.path.insert(0, str(repo_path / "tests"))
+sys.path.insert(0, str(repo_path / "common" / "tests"))
 
 import libbfp  # noqa: E402
 
@@ -149,7 +149,7 @@ def test_bfp_decomp_runner():
     verilog_sources = [
         prj_path / "../cdc/rtl/cdc_array_single.sv",
         prj_path / "../common/rtl/delay.v",
-        prj_path / "../util/rtl/srl.sv",
+        prj_path / "../common/rtl/srl.sv",
         prj_path / "rtl/bfp_decomp.sv",
     ]
 

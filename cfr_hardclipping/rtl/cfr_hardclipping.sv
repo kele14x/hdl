@@ -90,11 +90,14 @@ module cfr_hardclipping #(
 
   // Delay input data for `DataPathLatency` clocks
 
-  reg_pipeline #(
-      .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(DataPathLatency)
+  delay #(
+      .WIDTH(DATA_WIDTH * 2),
+      .DEPTH(DataPathLatency),
+      .INIT (1'b0)
   ) i_delay (
       .clk (clk),
+      .rst (1'b0),
+      .cen (1'b1),
       .din ({data_q_in, data_i_in}),
       .dout({data_q_in_d, data_i_in_d})
   );

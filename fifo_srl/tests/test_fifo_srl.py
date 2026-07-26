@@ -91,7 +91,7 @@ def test_fifo_srl_runner(params):
         runner.build(
             hdl_toplevel=hdl_toplevel,
             sources=[
-                prj_path / "../util/rtl/srl.sv",
+                prj_path / "../common/rtl/srl.sv",
                 prj_path / "rtl/fifo_srl.sv",
             ],
             parameters=params,
@@ -104,6 +104,7 @@ def test_fifo_srl_runner(params):
             hdl_toplevel=hdl_toplevel,
             hdl_toplevel_lang="verilog",
             test_module="test_fifo_srl",
+            test_args=["-suppress", "7061"] if SIM == "questa" else [],
             gui=GUI,
             test_dir=run_dir,
         )

@@ -94,11 +94,14 @@ module cordic_cart2pol #(
   endgenerate
 
   // CTRL path, the module itself does not use it
-  reg_pipeline #(
-      .DATA_WIDTH     (CTRL_WIDTH),
-      .PIPELINE_STAGES(Latency)
+  delay #(
+      .WIDTH(CTRL_WIDTH),
+      .DEPTH(Latency),
+      .INIT (1'b0)
   ) i_delay (
       .clk (clk),
+      .rst (1'b0),
+      .cen (1'b1),
       .din (ctrl_in),
       .dout(ctrl_out)
   );

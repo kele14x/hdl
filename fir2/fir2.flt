@@ -1,6 +1,6 @@
 ../ram/ram_sp.sv
 ../ram/ram_sdp.sv
-../util/rtl/delay.sv
+../common/rtl/delay.v
 rtl/fir2.sv
 rtl/fir2_mac.sv
 rtl/fir2_stage.sv

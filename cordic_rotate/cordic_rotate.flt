@@ -1,2 +1,2 @@
-../util/reg_pipeline.sv
+../common/rtl/delay.v
 rtl/cordic_rotate.sv

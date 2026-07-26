@@ -179,20 +179,26 @@ module cfr_pc_cpg #(
       .doutb({cpw_rd_data_q, cpw_rd_data_i})
   );
 
-  reg_pipeline #(
-      .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(3)
+  delay #(
+      .WIDTH(DATA_WIDTH * 2),
+      .DEPTH(3),
+      .INIT (1'b0)
   ) i_delay_state_iq (
       .clk (clk),
+      .rst (1'b0),
+      .cen (1'b1),
       .din ({state_q[0], state_i[0]}),
       .dout({state_q_d, state_i_d})
   );
 
-  reg_pipeline #(
-      .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(1)
+  delay #(
+      .WIDTH(DATA_WIDTH * 2),
+      .DEPTH(1),
+      .INIT (1'b0)
   ) i_delay_cpw_rd_data_iq (
       .clk (clk),
+      .rst (1'b0),
+      .cen (1'b1),
       .din ({cpw_rd_data_q, cpw_rd_data_i}),
       .dout({cpw_rd_data_q_d, cpw_rd_data_i_d})
   );

@@ -1,2 +1,2 @@
-../util/rtl/srl.sv
+../common/rtl/srl.sv
 rtl/fifo_srl.sv

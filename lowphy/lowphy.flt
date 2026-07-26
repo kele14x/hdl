@@ -10,4 +10,4 @@ src/lowphy_regs.v
 src/lowphy_top.sv
 src/lowphy_transform.sv
 ../common/rtl/complex_mult.sv
-../common/rtl/delay.sv
+../common/rtl/delay.v

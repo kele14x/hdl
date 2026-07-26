@@ -268,22 +268,28 @@ module cfr_pc #(
       .ctrl_out(  /* Not used */)
   );
 
-  reg_pipeline #(
-      .DATA_WIDTH     (PhaseWidth + 1),
-      .PIPELINE_STAGES(10)
+  delay #(
+      .WIDTH(PhaseWidth + 1),
+      .DEPTH(10),
+      .INIT (1'b0)
   ) i_delay_peak (
       .clk (clk),
+      .rst (1'b0),
+      .cen (1'b1),
       .din ({peak_phase, peak_valid}),
       .dout({peak_phase_d, peak_valid_d})
   );
 
   // Delay input data for `DataPathLatency` clocks
 
-  reg_pipeline #(
-      .DATA_WIDTH     (DATA_WIDTH * 2),
-      .PIPELINE_STAGES(DataPathLatency)
+  delay #(
+      .WIDTH(DATA_WIDTH * 2),
+      .DEPTH(DataPathLatency),
+      .INIT (1'b0)
   ) i_delay (
       .clk (clk),
+      .rst (1'b0),
+      .cen (1'b1),
       .din ({data_q_in, data_i_in}),
       .dout({data_q_in_d, data_i_in_d})
   );

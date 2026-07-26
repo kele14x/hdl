@@ -1,5 +1,5 @@
 ../cmult/cmult.flt
-../common/src/delay.sv
+../common/rtl/delay.v
 rtl/fft_bf2.sv
 rtl/fft_stage.sv
 rtl/fft_twiddle.sv

@@ -1,1 +1,2 @@
+../common/rtl/delay.v
 rtl/cfr_hardclipping.sv

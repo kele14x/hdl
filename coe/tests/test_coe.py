@@ -284,7 +284,7 @@ def test_coe_runner():
         prj_path / "../ptp/rtl/ptp_lite.v",
         prj_path / "../ram/rtl/ram_sdp_pipe.sv",
         prj_path / "../ram/rtl/ram_sdp.sv",
-        prj_path / "../util/rtl/srl.sv",
+        prj_path / "../common/rtl/srl.sv",
         prj_path / "../timer_syncer/rtl/timer_syncer_ch.v",
         prj_path / "../timer_syncer/rtl/timer_syncer.v",
         prj_path / "rtl/coe_deframer_data.v",

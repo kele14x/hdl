@@ -1,4 +1,0 @@
-rtl/delay.sv
-rtl/srl.sv
-rtl/util_clk_fwd.v
-rtl/util_gpio_gw.v

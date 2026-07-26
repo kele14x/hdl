@@ -95,11 +95,14 @@ module cfr #(
     end
   endgenerate
 
-  reg_pipeline #(
-      .DATA_WIDTH     (3),
-      .PIPELINE_STAGES(341 + 23)
-  ) i_reg_pipeline (
+  delay #(
+      .WIDTH(3),
+      .DEPTH(341 + 23),
+      .INIT (1'b0)
+  ) i_delay (
       .clk (clk),
+      .rst (1'b0),
+      .cen (1'b1),
       .din ({data_sof_in, data_sop_in, data_valid_in}),
       .dout({data_sof_out, data_sop_out, data_valid_out})
   );
