@@ -1,6 +1,0 @@
-../nlf/nlf.flt
-rtl/dpd.sv
-rtl/dpd_channel.sv
-rtl/dpd_compander.sv
-rtl/dpd_compander_compand.sv
-rtl/dpd_compander_magsq.sv
