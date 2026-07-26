@@ -1,9 +1,9 @@
 import os
 import random
 from pathlib import Path
+import sys
 
 import cocotb
-import libbfp
 import numpy as np
 import pytest
 from cocotb.clock import Clock
@@ -12,6 +12,10 @@ from cocotb_tools.runner import get_runner
 from cocotb.triggers import ClockCycles, RisingEdge
 
 prj_path = Path(__file__).resolve().parent.parent
+repo_path = prj_path.parent
+sys.path.insert(0, str(repo_path / "tests"))
+
+import libbfp  # noqa: E402
 
 UD_COMP_METH = int(os.environ.get("UD_COMP_WIDTH", 1))
 UD_IQ_WIDTH = int(os.environ.get("UD_IQ_WIDTH", 9))

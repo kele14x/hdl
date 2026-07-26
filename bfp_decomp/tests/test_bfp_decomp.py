@@ -1,8 +1,8 @@
-import libbfp
 import math
 import os
 import random
 from pathlib import Path
+import sys
 
 import cocotb
 import pytest
@@ -12,6 +12,10 @@ from cocotb_tools.runner import get_runner
 from cocotb.triggers import ClockCycles, RisingEdge
 
 prj_path = Path(__file__).resolve().parent.parent
+repo_path = prj_path.parent
+sys.path.insert(0, str(repo_path / "tests"))
+
+import libbfp  # noqa: E402
 
 UD_COMP_METH = int(os.environ.get("UD_COMP_WIDTH", 1))
 UD_IQ_WIDTH = int(os.environ.get("UD_IQ_WIDTH", 9))
@@ -144,6 +148,7 @@ def test_bfp_decomp_runner():
 
     verilog_sources = [
         prj_path / "../cdc/rtl/cdc_array_single.sv",
+        prj_path / "../common/rtl/delay.v",
         prj_path / "../util/rtl/srl.sv",
         prj_path / "rtl/bfp_decomp.sv",
     ]
@@ -155,6 +160,7 @@ def test_bfp_decomp_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=["-suppress", "2892"] if SIM == "questa" else [],
         always=True,
     )
 
@@ -162,6 +168,7 @@ def test_bfp_decomp_runner():
         hdl_toplevel=hdl_toplevel,
         hdl_toplevel_lang=hdl_toplevel_lang,
         test_module="test_bfp_decomp",
+        test_args=["-suppress", "7061"] if SIM == "questa" else [],
         waves=True,
         gui=False,
     )
