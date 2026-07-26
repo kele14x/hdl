@@ -1,2 +1,4 @@
-rtl/dec_8b10b.sv
-rtl/dec_8b10b_synth.sv
+hdl/dec_8b10b_logic.sv
+hdl/dec_8b10b_lut.sv
+hdl/dec_8b10b.sv
+hdl/dec_8b10b_synth.sv

@@ -1,2 +1,3 @@
-src/enc_8b10b.sv
-src/enc_8b10b_synth.sv
+hdl/enc_8b10b_logic.sv
+hdl/enc_8b10b_lut.sv
+hdl/enc_8b10b.sv
