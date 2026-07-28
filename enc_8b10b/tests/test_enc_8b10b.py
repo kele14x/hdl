@@ -10,7 +10,7 @@ from tools.flt_tool import resolve_flt
 
 
 prj_path = Path(__file__).resolve().parent.parent
-LUT_FILE = prj_path / "hdl" / "enc_8b10b.mif"
+LUT_FILE = prj_path / "rtl" / "enc_8b10b.mif"
 
 SIM = os.environ.get("SIM", "verilator").lower()
 GUI = os.environ.get("GUI", "false").lower() == "true"
