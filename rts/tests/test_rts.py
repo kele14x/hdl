@@ -65,11 +65,26 @@ async def reset(dut):
 
     dut.rfs_in.value = 0
     dut.m_axis_tready.value = 1
+    dut.s_axis_tdata.value = 0
+    dut.s_axis_tuser.value = 0
+    dut.s_axis_tlast.value = 0
+    dut.s_axis_tvalid.value = 0
 
     await ClockCycles(dut.s_axi_aclk, 10)
     dut.rst.value = 0
     dut.s_axi_aresetn.value = 1
     await ClockCycles(dut.clk, 10)
+
+
+async def drive_capture_stream(dut, cycles):
+    for sample in range(cycles):
+        dut.s_axis_tdata.value = sample + 1
+        dut.s_axis_tuser.value = int(sample == 0)
+        dut.s_axis_tlast.value = 0
+        dut.s_axis_tvalid.value = 1
+        await RisingEdge(dut.clk)
+
+    dut.s_axis_tvalid.value = 0
 
 
 @cocotb.test
@@ -137,23 +152,26 @@ async def test_rts_cap(dut):
     dut.rfs_in.value = 0
 
     # Set capture point, length and mode
-    await axi_write(dut, REG_CAP_SEL, 0x00)
+    await axi_write(dut, REG_CAP_SEL, 0x100)
     await axi_write(dut, REG_CAP_MODE, 0x0)
     await axi_write(dut, REG_CAP_OFFSET, 0x0)
     await axi_write(dut, REG_CAP_LEN, 0x4)
 
-    # Force trigger the capture
+    capture_stream = cocotb.start_soon(drive_capture_stream(dut, cycles=300))
+
+    # Force a 16-word capture. Mode 0 writes once per 16 stream samples.
     await axi_write(dut, REG_CAP_CTRL, 0x2)
+    await capture_stream
 
-    # Wait for the capture to finish
-    while True:
+    for _ in range(64):
         status = await axi_read(dut, REG_CAP_CTRL)
-        if status & 0x10 == 0x0:
+        if (status & 0x10) == 0:
             break
+    else:
+        raise AssertionError("capture did not complete within 64 AXI polls")
 
-    # Read the capture RAM
-    for i in range(16):
-        data = await axi_read(dut, REG_CAP_RAM + i * 4)
+    first_data = await axi_read(dut, REG_CAP_RAM)
+    assert first_data != 0
 
     # Done
     await ClockCycles(dut.clk, 100)

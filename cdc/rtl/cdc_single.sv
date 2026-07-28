@@ -40,7 +40,14 @@ module cdc_single #(
   (* ASYNC_REG = "true" *)
   logic [DEST_SYNC_FF-1:0] syncstages_ff;
 
-  always_ff @(posedge src_clk) begin
+  initial begin : p_init
+    if (INIT_SYNC_FF) begin
+      src_ff = 1'b0;
+      syncstages_ff = '0;
+    end
+  end
+
+  always @(posedge src_clk) begin
     src_ff <= src_in;
   end
 
@@ -54,7 +61,7 @@ module cdc_single #(
 
   assign async_path_bit = src_inqual;
 
-  always_ff @(posedge dest_clk) begin
+  always @(posedge dest_clk) begin
     syncstages_ff <= {syncstages_ff[DEST_SYNC_FF-2:0], async_path_bit};
   end
 

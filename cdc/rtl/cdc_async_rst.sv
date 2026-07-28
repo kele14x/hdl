@@ -36,17 +36,17 @@ module cdc_async_rst #(
     if (RST_ACTIVE_HIGH != 0) begin : g_active_high
       always_ff @(posedge dest_clk) begin
         if (src_arst) begin
-          arststages_ff <= '0;
+          arststages_ff <= '1;
         end else begin
-          arststages_ff <= {arststages_ff[DEST_SYNC_FF-2:0], 1'b1};
+          arststages_ff <= {arststages_ff[DEST_SYNC_FF-2:0], 1'b0};
         end
       end
     end else begin : g_active_low
       always_ff @(posedge dest_clk) begin
         if (!src_arst) begin
-          arststages_ff <= '1;
+          arststages_ff <= '0;
         end else begin
-          arststages_ff <= {arststages_ff[DEST_SYNC_FF-2:0], 1'b0};
+          arststages_ff <= {arststages_ff[DEST_SYNC_FF-2:0], 1'b1};
         end
       end
     end

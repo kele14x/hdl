@@ -44,7 +44,7 @@ module cdc_sync_rst #(
 
   assign async_path_bit = src_rst;
 
-  always_ff @(posedge dest_clk) begin
+  always @(posedge dest_clk) begin
     syncstages_ff <= {syncstages_ff[DEST_SYNC_FF-2:0], async_path_bit};
   end
 

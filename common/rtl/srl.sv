@@ -59,7 +59,7 @@ module srl #(
     end
   end
 
-  always_ff @(posedge clk) begin
+  always @(posedge clk) begin
     if (cen) begin
       dsrl[0] <= din;
       for (int i = 1; i < 2 ** ADDR_WIDTH; i = i + 1) begin

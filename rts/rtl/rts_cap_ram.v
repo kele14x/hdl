@@ -87,7 +87,7 @@ module rts_cap_ram (
       .DEST_SYNC_FF(4),
       .INIT_SYNC_FF(0),
       .REG_OUTPUT  (0),
-      .RST_USED    (0)
+      .RST_USED    (1)
   ) i_cdc_ctrl_cap_trigger (
       .src_clk   (ctrl_clk),
       .src_rst   (ctrl_rst),
@@ -102,7 +102,7 @@ module rts_cap_ram (
       .DEST_SYNC_FF(4),
       .INIT_SYNC_FF(0),
       .REG_OUTPUT  (0),
-      .RST_USED    (0)
+      .RST_USED    (1)
   ) i_cdc_ctrl_cap_force (
       .src_clk   (ctrl_clk),
       .src_rst   (ctrl_rst),
@@ -159,7 +159,7 @@ module rts_cap_ram (
       .DEST_SYNC_FF(4),
       .INIT_SYNC_FF(0),
       .REG_OUTPUT  (0),
-      .RST_USED    (0)
+      .RST_USED    (1)
   ) i_cdc_state_is_idle (
       .src_clk   (clk),
       .src_rst   (rst),

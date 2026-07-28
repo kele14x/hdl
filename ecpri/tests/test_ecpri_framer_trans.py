@@ -8,7 +8,7 @@ from cocotb.clock import Clock
 from cocotb.queue import Queue
 from cocotb_tools.runner import get_runner
 from tools.flt_tool import resolve_flt
-from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb.triggers import ClockCycles, ReadOnly, RisingEdge
 
 # MARK: Env
 
@@ -41,6 +41,7 @@ async def reset(dut):
     dut.s_axis_tvalid.value = 0
     dut.s_axis_tlast.value = 0
 
+    dut.s_trans_messagetype.value = 0
     dut.s_trans_payloadsize.value = 0
     dut.s_trans_rtc_pc_id.value = 0
 
@@ -105,6 +106,7 @@ async def slave_monitor(dut):
     p = np.zeros(0, dtype=np.uint8)
     while True:
         await RisingEdge(dut.clk)
+        await ReadOnly()
         if dut.s_axis_tvalid.value and dut.s_axis_tready.value:
             a = [(int(dut.s_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(4)]
             keep = dut.s_axis_tkeep.value
@@ -131,6 +133,7 @@ async def master_monitor(dut):
     p = np.zeros(0, dtype=np.uint8)
     while True:
         await RisingEdge(dut.clk)
+        await ReadOnly()
         if dut.m_axis_tvalid.value and dut.m_axis_tready.value:
             a = [(int(dut.m_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(4)]
             keep = dut.m_axis_tkeep.value
@@ -173,7 +176,7 @@ async def test_ecpri_framer_trans(dut):
     """Test case for eCPRI Framer Trans"""
     cocotb.log.info("Simulation started")
     # Create clock and start it
-    cocotb.start_soon(Clock(dut.clk, 10).start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     # Reset the DUT
     await reset(dut)

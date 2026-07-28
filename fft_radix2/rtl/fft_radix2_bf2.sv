@@ -145,7 +145,7 @@ module fft_radix2_bf2 #(
           .INIT (1'b0)
       ) i_delay (
           .clk (clk),
-          .rst (1'b0),
+          .rst (rst),
           .cen (shift_en),
           .din (delay_in),
           .dout(delay_out)

@@ -50,11 +50,9 @@ module cdc_handshake_f #(
 
   logic [WIDTH-1:0] src_hsdata_ff;
   logic             src_valid_nxt;
-  logic             src_count_nxt;
   logic             src_count_ff;
   logic             src_count_sync_ff;
   logic             src_count_eq;
-  logic             src_ready_nxt;
   logic             src_ready_ext_ff;
 
   logic [WIDTH-1:0] dest_hsdata_ff;
@@ -68,25 +66,45 @@ module cdc_handshake_f #(
   logic             dest_count_ff;
   logic             dest_count_sync_ff;
 
+  initial begin : p_init
+    if (INIT_SYNC_FF) begin
+      src_hsdata_ff     = '0;
+      src_count_ff      = 1'b0;
+      // Start not-ready for one source clock so an uninitialized valid input
+      // cannot toggle the handshake state before its synchronizer settles.
+      src_ready_ext_ff  = 1'b0;
+      dest_hsdata_ff    = '0;
+      dest_valid_ext_ff = 1'b0;
+      dest_count_ff     = 1'b0;
+    end
+  end
+
   assign src_valid_nxt = src_valid && src_ready;
 
-  always_ff @(posedge src_clk) begin
+  always @(posedge src_clk) begin
     if (src_valid_nxt) begin
       src_hsdata_ff <= src_in;
     end
   end
 
-  assign src_count_nxt = src_valid_nxt ? ~src_count_ff : src_count_ff;
-
-  always_ff @(posedge src_clk) begin
-    src_count_ff <= src_count_nxt;
+  always @(posedge src_clk) begin
+    if (src_valid_nxt) begin
+      src_count_ff <= ~src_count_ff;
+    end
   end
 
   assign src_count_eq  = (src_count_ff == dest_count_sync_ff);
-  assign src_ready_nxt = src_count_eq && !src_valid_nxt;
 
-  always_ff @(posedge src_clk) begin
-    src_ready_ext_ff <= src_ready_nxt;
+  always @(posedge src_clk) begin
+    if (src_count_eq) begin
+      if (src_valid_nxt) begin
+        src_ready_ext_ff <= 1'b0;
+      end else begin
+        src_ready_ext_ff <= 1'b1;
+      end
+    end else begin
+      src_ready_ext_ff <= 1'b0;
+    end
   end
 
   assign src_ready = src_ready_ext_ff;
@@ -96,7 +114,7 @@ module cdc_handshake_f #(
   assign dest_ready_nxt = dest_valid_ext_ff && dest_ready_in;
   assign dest_count_nxt = dest_ready_nxt ? ~dest_count_ff : dest_count_ff;
 
-  always_ff @(posedge dest_clk) begin
+  always @(posedge dest_clk) begin
     dest_count_ff <= dest_count_nxt;
   end
 
@@ -104,7 +122,7 @@ module cdc_handshake_f #(
   assign dest_count_eq = (src_count_sync_ff == dest_count_ff);
   assign dest_hsdata_ff_en = !dest_count_eq && !dest_valid_ext_ff;
 
-  always_ff @(posedge dest_clk) begin
+  always @(posedge dest_clk) begin
     if (dest_hsdata_ff_en) begin
       dest_hsdata_ff <= src_hsdata_ff;
     end
@@ -112,7 +130,7 @@ module cdc_handshake_f #(
 
   assign dest_valid_nxt = !dest_count_eq && !dest_ready_nxt;
 
-  always_ff @(posedge dest_clk) begin
+  always @(posedge dest_clk) begin
     dest_valid_ext_ff <= dest_valid_nxt;
   end
 

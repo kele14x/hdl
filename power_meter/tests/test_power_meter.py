@@ -1,5 +1,4 @@
 import os
-import random
 from pathlib import Path
 
 import cocotb
@@ -7,11 +6,12 @@ import pytest
 from cocotb.clock import Clock
 from cocotb_tools.runner import get_runner
 from tools.flt_tool import resolve_flt
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 
 prj_path = Path(__file__).resolve().parent.parent
 
 SIM = os.environ.get("SIM", "verilator")
+GUI = os.environ.get("GUI", "false").lower() == "true"
 
 
 async def reset(dut):
@@ -51,26 +51,16 @@ async def reset(dut):
     dut.rst_csr_n.value = 1
 
 
-async def drive(dut):
-    await RisingEdge(dut.clk)
+async def drive_slot(dut, symbol, cycles):
+    for _ in range(cycles):
+        dut.din0_dr[0][0].value = 16384
+        dut.din0_di[0][0].value = 0
+        dut.din0_chn[0][0].value = 0
+        dut.din0_sym[0][0].value = symbol
+        dut.din0_dv[0][0].value = 1
+        await RisingEdge(dut.clk)
 
-    for sym in range(0, 140):
-        for chn in range(0, 4):
-            for i in range(0, 2048):
-                #
-                for cc in range(0, 1):
-                    for band in range(0, 1):
-                        dut.din0_dr[cc][band].value = random.randint(-2**15, 2**15-1)
-                        dut.din0_di[cc][band].value = random.randint(-2**15, 2**15-1)
-                        dut.din0_chn[cc][band].value = chn
-                        dut.din0_sym[cc][band].value = sym
-                        dut.din0_dv[cc][band].value = 1
-                        dut.din0_sync[cc][band].value = 1 if i == 0 else 0
-                await RisingEdge(dut.clk)
-            for cc in range(0, 1):
-                for band in range(0, 1):
-                    dut.din0_dv[cc][band].value = 0
-            await RisingEdge(dut.clk)
+    dut.din0_dv[0][0].value = 0
 
 
 @cocotb.test()
@@ -81,10 +71,19 @@ async def test_power_meter(dut):
 
     # Reset DUT
     await reset(dut)
-    cocotb.start_soon(drive(dut))
+    # Allow the control selection to cross to the sample clock domain.
+    await ClockCycles(dut.clk, 6)
 
-    # finish
-    await Timer(1000 * 1000, units="ns")
+    # Accumulate known slot-0 samples, then advance to slot 1 to commit the
+    # accumulated value to stat_power[0].
+    await drive_slot(dut, symbol=0, cycles=8)
+    await drive_slot(dut, symbol=7, cycles=1)
+
+    await ClockCycles(dut.clk, 12)
+    await ClockCycles(dut.clk_csr, 8)
+
+    assert dut.stat_power[0].value.is_resolvable
+    assert int(dut.stat_power[0].value) > 0
 
 
 def test_power_meter_runner():
@@ -113,7 +112,7 @@ def test_power_meter_runner():
         hdl_toplevel_lang=hdl_toplevel_lang,
         test_module="test_power_meter",
         waves=True,
-        gui=True,
+        gui=GUI,
     )
 
 

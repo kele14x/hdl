@@ -68,7 +68,7 @@ module cdc_array_single #(
 
   assign async_path_bit = src_inqual;
 
-  always_ff @(posedge dest_clk) begin : p_syncstages_ff
+  always @(posedge dest_clk) begin : p_syncstages_ff
     syncstages_ff[0] <= async_path_bit;
     for (int i = 1; i < DEST_SYNC_FF; i++) begin
       syncstages_ff[i] <= syncstages_ff[i-1];

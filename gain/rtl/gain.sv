@@ -49,7 +49,14 @@ module gain #(
   logic unused_cmult_ovf;
   logic unused_mult_dr_ovf;
   logic unused_mult_di_ovf;
-  wire unused_real_gain_di = &{1'b0, ctrl_gain_di, ctrl_gain_di_s, ctrl_gain_di_ch};
+
+  generate
+    if (!COMPLEX) begin : g_unused_real_gain_di
+      for (genvar i = 0; i < NUM_ANT; i++) begin : g_ant
+        wire unused = &{1'b0, ctrl_gain_di[i], ctrl_gain_di_s[i], ctrl_gain_di_ch};
+      end
+    end
+  endgenerate
 
   generate
     if (HAS_CDC) begin : g_dr_cdc

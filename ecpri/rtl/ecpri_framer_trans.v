@@ -215,7 +215,13 @@ module ecpri_framer_trans (
   // TDATA/TKEEP/TLAST/EXTRA_LAST changes their value at the "edge" of state
   // transfer
   always @(posedge clk) begin
-    case (state)
+    if (rst) begin
+      m_axis_tdata <= '0;
+      m_axis_tkeep <= '0;
+      m_axis_tlast <= 1'b0;
+      extra_last   <= 1'b0;
+    end else begin
+      case (state)
       S_IDLE: begin
         if (int_tvalid) begin
           // state_next == S_DMACH
@@ -325,11 +331,15 @@ module ecpri_framer_trans (
           extra_last   <= int_tlast_extra;
         end
       end
-    endcase
+      endcase
+    end
   end
 
   always @(posedge clk) begin
-    case (state)
+    if (rst) begin
+      m_axis_tvalid <= 1'b0;
+    end else begin
+      case (state)
       S_RST: begin
         // state_next == S_IDLE
         m_axis_tvalid <= 1'b0;
@@ -420,7 +430,8 @@ module ecpri_framer_trans (
       default: begin
         m_axis_tvalid <= 1'b0;
       end
-    endcase
+      endcase
+    end
   end
 
   // AXI Register

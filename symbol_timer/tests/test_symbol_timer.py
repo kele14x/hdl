@@ -5,8 +5,9 @@ import cocotb
 import pytest
 from cocotb.clock import Clock
 from cocotb_tools.runner import get_runner
+from cocotb.utils import get_sim_time
 from tools.flt_tool import resolve_flt
-from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb.triggers import ClockCycles, ReadOnly, RisingEdge
 
 prj_path = Path(__file__).resolve().parent.parent
 
@@ -33,26 +34,37 @@ async def reset(dut):
 
 
 async def drive(dut):
+    frame_ticks = 38400 * FREQ
+
+    async def wait_for_frame_start(limit):
+        for ticks in range(1, limit + 1):
+            await RisingEdge(dut.clk)
+            await ReadOnly()
+            if int(dut.start_of_frame.value):
+                return get_sim_time(unit="ns")
+        raise AssertionError(f"no start_of_frame pulse within {limit} clock cycles")
+
     await ClockCycles(dut.clk, 100)
     dut.sync.value = 1
+    first_frame_time = await wait_for_frame_start(1000)
     await RisingEdge(dut.clk)
     dut.sync.value = 0
-    pulses = []
-    for i in range(38400 + 10):
-        await RisingEdge(dut.clk)
-        if int(dut.start_of_symbol.value) == 3:
-            pulses.append(i + 1)
-    # First frame-start pulse, then one full frame (38400 ticks) later the
-    # timer must roll over and pulse again
-    assert pulses, "no start_of_symbol pulse observed"
-    assert pulses[0] + 38400 in pulses, f"no frame roll-over pulse: {pulses[:3]}... last={pulses[-3:]}"
+
+    # The external sync starts a frame; with AUTO enabled, the next one is
+    # generated precisely one frame later. This ports the legacy SV bench's
+    # only functional assertion while using the accelerated FREQ=1 default.
+    next_frame_time = await wait_for_frame_start(frame_ticks + 10)
+    assert next_frame_time - first_frame_time == frame_ticks * 10, (
+        f"frame period {next_frame_time - first_frame_time} ns, "
+        f"expected {frame_ticks * 10} ns"
+    )
 
 
 @cocotb.test()
 async def test_symbol_timer(dut):
     dut._log.info("Simulation started")
     # Create clock and start it
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     # Reset the DUT
     await reset(dut)

@@ -15,6 +15,7 @@ prj_path = Path(__file__).resolve().parent.parent
 
 
 SIM_SPEED_UP = int(os.environ.get("SIM_SPEED_UP", 1))
+NS_PER_SECOND = 100_000 if SIM_SPEED_UP else 1_000_000_000
 
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
@@ -84,7 +85,8 @@ async def set_offset(dut, ns, sec):
 async def get_time(dut):
     """Get the current time"""
     await axi_write(dut, REG_RTC_CURRENT_SNAP, 0x1)
-    await ClockCycles(dut.s_axi_aclk, 5)
+    # Allow both CDC handshakes to return the corresponding snapshot.
+    await ClockCycles(dut.s_axi_aclk, 20)
     ns = await axi_read(dut, REG_RTC_CURRENT_NS)
     sec_l = await axi_read(dut, REG_RTC_CURRENT_SEC_L)
     sec_h = await axi_read(dut, REG_RTC_CURRENT_SEC_H)
@@ -102,10 +104,10 @@ async def set_time(dut, ns, sec):
     offset_ns = int(ns - current_ns + offset_ns)
     offset_sec = int(sec - current_sec + offset_sec)
     if offset_ns < 0:
-        offset_ns += 1e9
+        offset_ns += NS_PER_SECOND
         offset_sec -= 1
-    if offset_ns >= 1e9:
-        offset_ns -= 1e9
+    if offset_ns >= NS_PER_SECOND:
+        offset_ns -= NS_PER_SECOND
         offset_sec += 1
 
     # Set the offset
@@ -117,20 +119,30 @@ async def test_timer(dut):
     """Test the timer"""
     cocotb.log.info("Simulation started")
     # Create clock and start it
-    cocotb.start_soon(Clock(dut.clk, 2, units="ns").start(start_high=False))
-    cocotb.start_soon(Clock(dut.s_axi_aclk, 10, units="ns").start(start_high=False))
+    cocotb.start_soon(Clock(dut.clk, 2, unit="ns").start(start_high=False))
+    cocotb.start_soon(Clock(dut.s_axi_aclk, 10, unit="ns").start(start_high=False))
 
     # Reset the DUT
     await reset(dut)
     await config(dut)
 
     await set_offset(dut, 0, 0)
-    await ClockCycles(dut.clk, 100000)
+    await ClockCycles(dut.clk, 64)
 
+    ns_before, sec_before = await get_time(dut)
+    await ClockCycles(dut.clk, 64)
+    ns_after, sec_after = await get_time(dut)
+    elapsed = (sec_after - sec_before) * NS_PER_SECOND + ns_after - ns_before
+    assert elapsed > 0, "RTC did not advance"
+    assert 0 <= ns_after < NS_PER_SECOND, "RTC nanoseconds are out of range"
+
+    # Place the RTC just before its (accelerated) second boundary, then verify
+    # that the carry reaches the seconds counter in a bounded number of cycles.
+    await set_time(dut, NS_PER_SECOND - 20, 10)
+    await ClockCycles(dut.clk, 128)
     ns, sec = await get_time(dut)
-    await set_time(dut, 0.99999e9, 10000)
-
-    await ClockCycles(dut.clk, 10000)
+    assert sec >= 11, "RTC second carry did not occur"
+    assert 0 <= ns < NS_PER_SECOND, "RTC nanoseconds did not wrap correctly"
     cocotb.log.info("Simulation finished")
 
 

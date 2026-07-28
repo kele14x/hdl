@@ -108,21 +108,29 @@ module ecpri_framer_trans_reg (
   assign s_axis_tdata_reversed = byte_reverse(s_axis_tdata);
 
   always @(posedge clk) begin
-    if (s_axis_tvalid && s_axis_tready) begin
+    if (rst) begin
+      s_axis_tdata_d  <= '0;
+      s_axis_tdata_dd <= '0;
+    end else if (s_axis_tvalid && s_axis_tready) begin
       s_axis_tdata_d  <= s_axis_tdata_reversed;
       s_axis_tdata_dd <= s_axis_tdata_d[15:0];
     end
   end
 
   always @(posedge clk) begin
-    if (s_axis_tvalid && s_axis_tready) begin
+    if (rst) begin
+      s_axis_tkeep_d  <= '0;
+      s_axis_tkeep_dd <= '0;
+    end else if (s_axis_tvalid && s_axis_tready) begin
       s_axis_tkeep_d  <= s_axis_tkeep;
       s_axis_tkeep_dd <= s_axis_tkeep_d;
     end
   end
 
   always @(posedge clk) begin
-    if (s_axis_tvalid && s_axis_tready) begin
+    if (rst) begin
+      s_axis_tlast_d <= 1'b0;
+    end else if (s_axis_tvalid && s_axis_tready) begin
       s_axis_tlast_d <= s_axis_tlast;
     end
   end
@@ -130,7 +138,11 @@ module ecpri_framer_trans_reg (
   // AXIS Slave
 
   always @(posedge clk) begin
-    s_axis_tready <= (state_next == S_DEPTH0);
+    if (rst) begin
+      s_axis_tready <= 1'b0;
+    end else begin
+      s_axis_tready <= (state_next == S_DEPTH0);
+    end
   end
 
   // AXIS Master
@@ -151,13 +163,16 @@ module ecpri_framer_trans_reg (
       s_axis_tkeep_d[2] && s_axis_tlast_d :
       s_axis_tkeep[2] && s_axis_tlast;
 
-  assign m_axis_tvalid = (state == S_DEPTH1) || s_axis_tvalid;
+  assign m_axis_tvalid = (state == S_DEPTH1) || (s_axis_tvalid && s_axis_tready);
 
   // OOB signals register
 
   always @(posedge clk) begin
     if (rst) begin
       sync_n <= 1'b0;
+      m_trans_messagetype <= '0;
+      m_trans_payloadsize <= '0;
+      m_trans_rtc_pc_id   <= '0;
     end else if (s_axis_tvalid && s_axis_tready) begin
       sync_n <= 1'b0;
     end else if (s_axis_tvalid) begin
