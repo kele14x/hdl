@@ -127,7 +127,7 @@ module dummy_source #(
   end
 
   always_ff @(posedge clk) begin
-    if ((0 <= sample_counter && sample_counter < 1638) || (2458 <= sample_counter && sample_counter <= 4096)) begin
+    if (sample_counter < 1638 || (2458 <= sample_counter && sample_counter <= 4096)) begin
       lfsr_en <= counter_valid;
     end else begin
       lfsr_en <= 1'b0;
@@ -174,10 +174,10 @@ module dummy_source #(
   end
 
   mult #(
-      .A_WIDTH (5),
-      .B_WIDTH (16),
-      .P_WIDTH (DATA_WIDTH),
-      .SRA_BITS(4)
+      .A_WIDTH(5),
+      .B_WIDTH(16),
+      .P_WIDTH(DATA_WIDTH),
+      .SHIFT  (4)
   ) i_mult (
       .clk(clk),
       .rst(rst),
@@ -191,10 +191,11 @@ module dummy_source #(
   // Output
 
   delay #(
-      .DATA_WIDTH(8),
-      .DEPTH     (Latency)
+      .WIDTH(8),
+      .DEPTH(Latency)
   ) i_delay_sync (
       .clk (clk),
+      .rst (1'b0),
       .cen (1'b1),
       //
       .din (data_sync_in),

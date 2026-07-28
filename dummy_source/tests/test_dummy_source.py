@@ -25,7 +25,7 @@ async def test_dummy_source_basic(dut):
     dut.rst.value = 1
     dut.data_sync_in.value = 0
     dut.ctrl_numerology.value = 0
-    dut.ctrl_mask.value = 0
+    dut.ctrl_iq_width.value = 0
     dut.ctrl_shift.value = 0
     dut.ctrl_scalar.value = 0
     await ClockCycles(dut.clk, 16)
@@ -51,6 +51,7 @@ def test_dummy_source_runner():
     runner.build(
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
+        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND"],
         always=True,
         waves=True,
     )
