@@ -101,9 +101,10 @@ def test_dec_8b10b_runner(use_lut, tmp_path):
         sources=resolve_flt(prj_path / "dec_8b10b.flt"),
         parameters={
             "C_USE_LUT": use_lut,
-            "C_LUT_FILE": LUT_FILE.as_posix(),
+            "C_LUT_FILE": f'"{LUT_FILE.as_posix()}"',
         },
         build_dir=build_dir,
+        waves=True,
         always=True,
     )
     runner.test(

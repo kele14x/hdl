@@ -174,6 +174,8 @@ def test_phase_comp_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND"],
+        waves=True,
         always=True,
     )
 

@@ -35,7 +35,10 @@ async def reset(dut):
 
     dut.rst_csr_n.value = 0
 
-    dut.ctrl_mu.value = 0
+    for cc in range(0, 1):
+        for band in range(0, 1):
+            dut.ctrl_mu[cc][band].value = 0
+
     dut.ctrl_cc_sel.value = 0
     dut.ctrl_band_sel.value = 0
     dut.ctrl_ant_sel.value = 0
@@ -100,6 +103,8 @@ def test_power_meter_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND", "-Wno-MULTIDRIVEN"],
+        waves=True,
         always=True,
     )
 

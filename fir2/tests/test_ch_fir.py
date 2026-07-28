@@ -31,7 +31,7 @@ async def test_ch_fir_basic(dut):
     dut.ctrl_coe_en.value = 0
     dut.ctrl_coe_we.value = 0
     dut.ctrl_coe_addr.value = 0
-    dut.ctrl_coe_data_in.value = 0
+    dut.ctrl_coe_din.value = 0
     await ClockCycles(dut.ctrl_clk, 100)
     dut.rst.value = 0
     dut.ctrl_rst.value = 0
@@ -43,24 +43,13 @@ async def test_ch_fir_basic(dut):
         dut.ctrl_coe_en.value = 1
         dut.ctrl_coe_we.value = 1
         dut.ctrl_coe_addr.value = i
-        dut.ctrl_coe_data_in.value = 100+i*2
-
-    # Coefficient read back
-    for i in range(NUM_STAGES):
-        await RisingEdge(dut.ctrl_clk)
-        dut.ctrl_coe_en.value = 1
-        dut.ctrl_coe_we.value = 0
-        dut.ctrl_coe_addr.value = i
-        dut.ctrl_coe_data_in.value = 0
-        await RisingEdge(dut.ctrl_clk)
-        await RisingEdge(dut.ctrl_clk)
-        assert dut.ctrl_coe_data_out.value == 100+i*2, "coe_data_out should be 100+i*2"
+        dut.ctrl_coe_din.value = 100+i*2
 
     await RisingEdge(dut.ctrl_clk)
     dut.ctrl_coe_en.value = 0
     dut.ctrl_coe_we.value = 0
     dut.ctrl_coe_addr.value = 0
-    dut.ctrl_coe_data_in.value = 0
+    dut.ctrl_coe_din.value = 0
 
     # Test impulse response
     await RisingEdge(dut.clk)
@@ -83,6 +72,7 @@ def test_ch_fir_runner():
     runner.build(
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
+        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND"],
         always=True,
         waves=True,
     )

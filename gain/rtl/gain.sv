@@ -37,7 +37,7 @@ module gain #(
   logic [GAIN_WIDTH-1:0] ctrl_gain_dr_s[NUM_ANT];
   logic [GAIN_WIDTH-1:0] ctrl_gain_di_s[NUM_ANT];
 
-  localparam int Latency = COMPLEX ? 8 : 5;
+  localparam int Latency = COMPLEX ? 6 : 5;
 
   logic [          15:0] din_dr_d;
   logic [          15:0] din_di_d;
@@ -123,7 +123,7 @@ module gain #(
         end
       end
 
-      cmult #(
+      cmult4 #(
           .A_WIDTH (16),
           .B_WIDTH (GAIN_WIDTH),
           .P_WIDTH (16),

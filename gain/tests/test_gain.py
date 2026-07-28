@@ -18,7 +18,7 @@ NUM_ANT = int(os.environ.get("NUM_ANT", 4))
 COMPLEX = int(os.environ.get("COMPLEX", 1))
 GAIN_WIDTH = int(os.environ.get("GAIN_WIDTH", 16))
 
-LATENCY = 8 if COMPLEX else 5
+LATENCY = 6 if COMPLEX else 5
 
 GUI = os.environ.get("GUI", "False").lower() == "true"
 
@@ -103,11 +103,11 @@ async def input_monitor(dut):
             (
                 dut.din_dr.value,
                 dut.din_di.value,
-                dut.din_sf.value.integer,
-                dut.din_sl.value.integer,
-                dut.din_sy.value.integer,
-                dut.din_chn.value.integer,
-                dut.din_dv.value.integer,
+                int(dut.din_sf.value),
+                int(dut.din_sl.value),
+                int(dut.din_sy.value),
+                int(dut.din_chn.value),
+                int(dut.din_dv.value),
             )
         )
 
@@ -121,11 +121,11 @@ async def output_monitor(dut):
             (
                 dut.dout_dr.value,
                 dut.dout_di.value,
-                dut.dout_sf.value.integer,
-                dut.dout_sl.value.integer,
-                dut.dout_sy.value.integer,
-                dut.dout_chn.value.integer,
-                dut.dout_dv.value.integer,
+                int(dut.dout_sf.value),
+                int(dut.dout_sl.value),
+                int(dut.dout_sy.value),
+                int(dut.dout_chn.value),
+                int(dut.dout_dv.value),
             )
         )
 
@@ -202,6 +202,8 @@ def test_gain_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=["--timing", "-Wno-WIDTHTRUNC"],
+        waves=True,
         always=True,
     )
 

@@ -43,9 +43,6 @@ async def reset(dut):
 
     dut.s_trans_payloadsize.value = 0
     dut.s_trans_rtc_pc_id.value = 0
-    dut.s_trans_seqid.value = 0
-    dut.s_trans_ebit.value = 0
-    dut.s_trans_subseqid.value = 0
 
     dut.m_axis_tready.value = 0
 
@@ -73,9 +70,6 @@ async def slave_driver(dut):
         # Send the packet
         dut.s_trans_payloadsize.value = int(packet_size)
         dut.s_trans_rtc_pc_id.value = int(rng.integers(0, 1 << 16))
-        dut.s_trans_seqid.value = int(rng.integers(0, 1 << 8))
-        dut.s_trans_ebit.value = int(rng.choice([0, 1]))
-        dut.s_trans_subseqid.value = int(rng.integers(0, 1 << 7))
         for i in range((len(packet_bytes) + 3) // 4):
             # Send the word
             tdata = 0
@@ -112,7 +106,7 @@ async def slave_monitor(dut):
     while True:
         await RisingEdge(dut.clk)
         if dut.s_axis_tvalid.value and dut.s_axis_tready.value:
-            a = [(dut.s_axis_tdata.value >> (i * 8)) & 0xFF for i in range(4)]
+            a = [(int(dut.s_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(4)]
             keep = dut.s_axis_tkeep.value
             if dut.s_axis_tlast.value:
                 if keep == 1:
@@ -138,7 +132,7 @@ async def master_monitor(dut):
     while True:
         await RisingEdge(dut.clk)
         if dut.m_axis_tvalid.value and dut.m_axis_tready.value:
-            a = [(dut.m_axis_tdata.value >> (i * 8)) & 0xFF for i in range(4)]
+            a = [(int(dut.m_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(4)]
             keep = dut.m_axis_tkeep.value
             if dut.m_axis_tlast.value:
                 if keep == 1:
@@ -166,8 +160,9 @@ async def checker():
         p2 = await output_queue.get()
         n += 1
         cocotb.log.info("# %d / %d", n, TEST_NUM_PACKETS)
-        assert len(p1) + 26 + TEST_HAS_VLAN * 4 == len(p2), "Length check failed"
-        assert np.all(p1 == p2[26 + TEST_HAS_VLAN * 4 :]), "Data check failed"
+        header_len = 22 + TEST_HAS_VLAN * 4
+        assert len(p1) + header_len == len(p2), "Length check failed"
+        assert np.all(p1 == p2[header_len:]), "Data check failed"
 
 
 # MARK: Tests
@@ -209,6 +204,14 @@ def test_ecpri_framer_trans_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=[
+            "--timing",
+            "-Wno-WIDTHEXPAND",
+            "-Wno-WIDTHTRUNC",
+            "-Wno-MULTIDRIVEN",
+            f"-I{prj_path / 'rtl'}",
+        ],
+        waves=True,
         always=True,
     )
 

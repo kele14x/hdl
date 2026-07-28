@@ -106,7 +106,7 @@ async def slave_monitor(dut):
         await RisingEdge(dut.s_axis_aclk)
 
         if dut.s_axis_tvalid.value and dut.s_axis_tready.value:
-            a = [(dut.s_axis_tdata.value >> (i * 8)) & 0xFF for i in range(4)]
+            a = [(int(dut.s_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(4)]
             keep = dut.s_axis_tkeep.value
             if dut.s_axis_tlast.value:
                 assert keep in [1, 3, 7, 15]
@@ -138,7 +138,7 @@ async def master_monitor(dut):
             check_continuous_valid = True
         # Read the data
         if dut.m_axis_tvalid.value and dut.m_axis_tready.value:
-            a = [(dut.m_axis_tdata.value >> (i * 8)) & 0xFF for i in range(4)]
+            a = [(int(dut.m_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(4)]
             keep = dut.m_axis_tkeep.value
             if dut.m_axis_tlast.value:
                 assert keep in [1, 3, 7, 15]
@@ -217,6 +217,8 @@ def test_axis_fifo_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=["--timing"],
+        waves=True,
         always=True,
     )
 

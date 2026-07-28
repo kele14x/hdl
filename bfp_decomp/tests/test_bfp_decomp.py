@@ -156,7 +156,10 @@ def test_bfp_decomp_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
-        build_args=["-suppress", "2892"] if SIM == "questa" else [],
+        build_args=["-suppress", "2892"]
+        if SIM == "questa"
+        else ["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND"],
+        waves=True,
         always=True,
     )
 

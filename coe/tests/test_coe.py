@@ -262,6 +262,15 @@ def test_coe_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=[
+            "--timing",
+            "-Wno-WIDTHEXPAND",
+            "-Wno-WIDTHTRUNC",
+            "-Wno-MULTIDRIVEN",
+            f"-I{prj_path / 'rtl'}",
+            f"-I{prj_path.parent / 'ecpri' / 'rtl'}",
+        ],
+        waves=True,
         always=True,
     )
 

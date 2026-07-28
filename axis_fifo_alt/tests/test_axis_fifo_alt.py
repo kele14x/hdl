@@ -110,7 +110,7 @@ async def slave_monitor(dut):
                 discarded = True
             # Read the data
             num_bytes = DATA_WIDTH // 8
-            a = [(dut.s_axis_tdata.value >> (i * 8)) & 0xFF for i in range(num_bytes)]
+            a = [(int(dut.s_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(num_bytes)]
             keep = dut.s_axis_tkeep.value
             if dut.s_axis_tlast.value:
                 assert keep in [2 ** (i + 1) - 1 for i in range(num_bytes)]
@@ -139,7 +139,7 @@ async def master_monitor(dut):
         # Read the data
         num_bytes = DATA_WIDTH // 8
         if dut.m_axis_tvalid.value and dut.m_axis_tready.value:
-            a = [(dut.m_axis_tdata.value >> (i * 8)) & 0xFF for i in range(num_bytes)]
+            a = [(int(dut.m_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(num_bytes)]
             keep = dut.m_axis_tkeep.value
             if dut.m_axis_tlast.value:
                 assert keep in [2 ** (i + 1) - 1 for i in range(num_bytes)]
@@ -211,6 +211,8 @@ def test_axis_fifo_alt_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-MULTIDRIVEN"],
+        waves=True,
         always=True,
     )
 

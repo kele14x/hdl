@@ -92,9 +92,11 @@ def test_enc_8b10b_runner(use_lut, tmp_path):
         sources=resolve_flt(prj_path / "enc_8b10b.flt"),
         parameters={
             "C_USE_LUT": use_lut,
-            "C_LUT_FILE": LUT_FILE.as_posix(),
+            "C_LUT_FILE": f'"{LUT_FILE.as_posix()}"',
         },
         build_dir=build_dir,
+        build_args=["-Wno-WIDTHEXPAND"],
+        waves=True,
         always=True,
     )
     runner.test(

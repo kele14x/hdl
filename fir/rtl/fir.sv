@@ -188,10 +188,11 @@ module fir #(
   endgenerate
 
   delay #(
-      .DATA_WIDTH(1),
-      .DEPTH     (7)
+      .WIDTH(1),
+      .DEPTH(7)
   ) i_sync_delay (
       .clk (clk),
+      .rst (rst),
       .cen (1'b1),
       //
       .din (data_sync_in),

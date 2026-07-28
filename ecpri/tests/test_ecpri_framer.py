@@ -42,9 +42,6 @@ async def reset(dut):
     #
     dut.s_trans_payloadsize.value = 0
     dut.s_trans_rtc_pc_id.value = 0
-    dut.s_trans_seqid.value = 0
-    dut.s_trans_ebit.value = 0
-    dut.s_trans_subseqid.value = 0
     # ODM message
     dut.s_axis_odm_tvalid.value = 0
     #
@@ -202,6 +199,14 @@ def test_ecpri_framer_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=[
+            "--timing",
+            "-Wno-WIDTHEXPAND",
+            "-Wno-WIDTHTRUNC",
+            "-Wno-MULTIDRIVEN",
+            f"-I{prj_path / 'rtl'}",
+        ],
+        waves=True,
         always=True,
     )
 

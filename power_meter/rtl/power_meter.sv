@@ -77,32 +77,32 @@ module power_meter #(
   end
 
   // verilog_format: off
-  cdc_bits #(
-      .DATA_WIDTH   ($bits({ctrl_mu_sel, ctrl_pos_sel, ctrl_ant_sel, ctrl_band_sel, ctrl_cc_sel})),
-      .NUM_STAGES   (3),
-      .INITIAL_VALUE('0),
-      .USE_SRC_CLK  (0)
+  cdc_array_single #(
+      .WIDTH        ($bits({ctrl_mu_sel, ctrl_pos_sel, ctrl_ant_sel, ctrl_band_sel, ctrl_cc_sel})),
+      .DEST_SYNC_FF (3),
+      .INIT_SYNC_FF (1),
+      .SRC_INPUT_REG(0)
   ) i_cdc_ctrl (
-      .src_clk(1'b0),
-      .src_sig({ctrl_mu_sel, ctrl_pos_sel, ctrl_ant_sel, ctrl_band_sel, ctrl_cc_sel}),
-      .dst_clk(clk),
-      .dst_sig({ctrl_mu_s, ctrl_pos_sel_s, ctrl_ant_sel_s, ctrl_band_sel_s, ctrl_cc_sel_s})
+      .src_clk (1'b0),
+      .src_in  ({ctrl_mu_sel, ctrl_pos_sel, ctrl_ant_sel, ctrl_band_sel, ctrl_cc_sel}),
+      .dest_clk(clk),
+      .dest_out({ctrl_mu_s, ctrl_pos_sel_s, ctrl_ant_sel_s, ctrl_band_sel_s, ctrl_cc_sel_s})
   );
   // verilog_format: on
 
   generate
     for (genvar i = 0; i < 20; i++) begin : g_stat
 
-      cdc_bits #(
-          .DATA_WIDTH   (32),
-          .NUM_STAGES   (3),
-          .INITIAL_VALUE('0),
-          .USE_SRC_CLK  (0)
+      cdc_array_single #(
+          .WIDTH        (32),
+          .DEST_SYNC_FF (3),
+          .INIT_SYNC_FF (1),
+          .SRC_INPUT_REG(0)
       ) i_cdc_stat (
-          .src_clk(1'b0),
-          .src_sig(stat_power_r[i]),
-          .dst_clk(clk_csr),
-          .dst_sig(stat_power[i])
+          .src_clk (1'b0),
+          .src_in  (stat_power_r[i]),
+          .dest_clk(clk_csr),
+          .dest_out(stat_power[i])
       );
     end
   endgenerate
@@ -205,12 +205,13 @@ module power_meter #(
 
   delay #(
       .WIDTH($bits(data_slot)),
-      .DELAY(3)
+      .DEPTH(3)
   ) u_delay (
-      .clk  (clk),
-      .rst_n(1'b1),
-      .din  (data_slot),
-      .dout (data_slot_d)
+      .clk (clk),
+      .rst (~rst_n),
+      .cen (1'b1),
+      .din (data_slot),
+      .dout(data_slot_d)
   );
 
   always_ff @(posedge clk) begin

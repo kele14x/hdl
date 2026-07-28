@@ -111,10 +111,11 @@ module fir2_stage #(
   // of sync signal, we delay the sync signal for N ticks and pass it to next
   // stage.
   delay #(
-      .DATA_WIDTH(1),
-      .DEPTH     (CSR_SUPPORT)
+      .WIDTH(1),
+      .DEPTH(CSR_SUPPORT)
   ) i_sync_delay (
       .clk (clk),
+      .rst (rst),
       .cen (1'b1),
       //
       .din (sync_in),

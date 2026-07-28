@@ -159,10 +159,11 @@ module fir2 #(
   // Output
 
   delay #(
-      .DATA_WIDTH(1),
-      .DEPTH     (6)
+      .WIDTH(1),
+      .DEPTH(6)
   ) i_sync_delay (
       .clk (clk),
+      .rst (rst),
       .cen (1'b1),
       //
       .din (data_valid_in),

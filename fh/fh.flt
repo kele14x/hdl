@@ -1,3 +1,11 @@
+../cdc/cdc.flt
+../common/common.flt
+../axis_fifo/axis_fifo.flt
+../axis_fifo_alt/axis_fifo_alt.flt
+../axis_reg/axis_reg.flt
+../fifo_async/fifo_async.flt
+../fifo_sync/fifo_sync.flt
+../ram/ram.flt
 rtl/fh.v
 rtl/fh_deframer.v
 rtl/fh_deframer_64to32.v

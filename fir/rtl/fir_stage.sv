@@ -54,10 +54,11 @@ module fir_stage #(
   //=====
 
   delay #(
-      .DATA_WIDTH(DATA_WIDTH),
-      .DEPTH     (FORWARD_DELAY)
+      .WIDTH(DATA_WIDTH),
+      .DEPTH(FORWARD_DELAY)
   ) i_forward_delay (
       .clk (clk),
+      .rst (rst),
       .cen (1'b1),
       //
       .din (forward_data_in),
@@ -67,10 +68,11 @@ module fir_stage #(
   assign backward_data_s = LOOPBACK ? forward_data_out : backward_data_in;
 
   delay #(
-      .DATA_WIDTH(DATA_WIDTH),
-      .DEPTH     (BACKWARD_DELAY)
+      .WIDTH(DATA_WIDTH),
+      .DEPTH(BACKWARD_DELAY)
   ) i_backward_delay (
       .clk (clk),
+      .rst (rst),
       .cen (1'b1),
       //
       .din (backward_data_s),

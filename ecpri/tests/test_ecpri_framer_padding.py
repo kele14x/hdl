@@ -119,7 +119,7 @@ async def slave_monitor(dut):
     while True:
         await RisingEdge(dut.clk)
         if dut.s_axis_tvalid.value and dut.s_axis_tready.value:
-            a = [(dut.s_axis_tdata.value >> (i * 8)) & 0xFF for i in range(4)]
+            a = [(int(dut.s_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(4)]
             keep = dut.s_axis_tkeep.value
             if dut.s_axis_tlast.value:
                 if keep == 1:
@@ -149,7 +149,7 @@ async def master_monitor(dut):
         if continuous and not dut.m_axis_tvalid.value:
             assert False, "TVALID is not continuous"
         if dut.m_axis_tvalid.value and dut.m_axis_tready.value:
-            a = [(dut.m_axis_tdata.value >> (i * 8)) & 0xFF for i in range(4)]
+            a = [(int(dut.m_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(4)]
             keep = dut.m_axis_tkeep.value
             continuous = True
             if dut.m_axis_tlast.value:
@@ -275,6 +275,14 @@ def test_ecpri_framer_padding_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=[
+            "--timing",
+            "-Wno-WIDTHEXPAND",
+            "-Wno-WIDTHTRUNC",
+            "-Wno-MULTIDRIVEN",
+            f"-I{prj_path / 'rtl'}",
+        ],
+        waves=True,
         always=True,
     )
 
