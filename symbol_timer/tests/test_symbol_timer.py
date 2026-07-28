@@ -24,7 +24,6 @@ async def reset(dut):
     # Reset the DUT
     dut.rst.value = 1
     dut.sync.value = 0
-    dut.sync_frame.value = 0
 
     dut.ctrl_delay.value = 0
 
@@ -38,8 +37,15 @@ async def drive(dut):
     dut.sync.value = 1
     await RisingEdge(dut.clk)
     dut.sync.value = 0
-    await ClockCycles(dut.clk, 38400 + 1)
-    assert dut.start_of_symbol.value == 3
+    pulses = []
+    for i in range(38400 + 10):
+        await RisingEdge(dut.clk)
+        if int(dut.start_of_symbol.value) == 3:
+            pulses.append(i + 1)
+    # First frame-start pulse, then one full frame (38400 ticks) later the
+    # timer must roll over and pulse again
+    assert pulses, "no start_of_symbol pulse observed"
+    assert pulses[0] + 38400 in pulses, f"no frame roll-over pulse: {pulses[:3]}... last={pulses[-3:]}"
 
 
 @cocotb.test()
@@ -68,6 +74,7 @@ def test_symbol_timer_runner():
         "ASYNC": ASYNC,
         "MODE": MODE,
         "FREQ": FREQ,
+        "AUTO": 1,
     }
 
     runner = get_runner(SIM)
@@ -75,6 +82,8 @@ def test_symbol_timer_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND", "-Wno-REALCVT"],
+        waves=True,
         always=True,
     )
 

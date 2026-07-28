@@ -1,1 +1,6 @@
+../cdc/cdc.flt
+rtl/ptp_pkg.vh
+rtl/ptp_ctrl.v
+rtl/ptp_deframer.v
+rtl/ptp_framer.v
 rtl/ptp_lite.v

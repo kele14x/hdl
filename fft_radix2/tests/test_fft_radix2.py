@@ -145,8 +145,9 @@ def test_fft_radix2_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
-        always=True,
+        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND", "-Wno-REALCVT", "-Wno-PINMISSING", "-Wno-MULTIDRIVEN"],
         waves=True,
+        always=True,
     )
 
     runner.test(

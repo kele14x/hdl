@@ -123,7 +123,7 @@ def test_dds_lut_runner():
     verilog_sources = resolve_flt(prj_path / "dds_lut.flt")
 
     parameters = {
-        "STRUCTURE": STRUCTURE,
+        "STRUCTURE": f'"{STRUCTURE}"',
         "PHASE_WIDTH": PHASE_WIDTH,
         "RASTERIZED": RASTERIZED,
         "NEGATIVE_COS": NEGATIVE_COS,
@@ -135,6 +135,8 @@ def test_dds_lut_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND", "-Wno-REALCVT"],
+        waves=True,
         always=True,
     )
 

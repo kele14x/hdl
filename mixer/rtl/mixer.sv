@@ -225,7 +225,7 @@ module mixer #(
 
   // Complex multiplier
 
-  cmult #(
+  cmult3 #(
       .A_WIDTH (16),
       .B_WIDTH (16),
       .P_WIDTH (16),

@@ -136,16 +136,37 @@ module fft_radix2_bf2 #(
   assign delay_in = {delay_last_in, delay_valid_in, delay_q_in, delay_i_in};
   assign {delay_last_out, delay_valid_out, delay_q_out, delay_i_out} = delay_out;
 
-  shift_ram #(
-      .DEPTH     (2 ** (LOG_SIZE - 1)),
-      .DATA_WIDTH((DATA_WIDTH + 1) * 2 + 2)
-  ) i_delay (
-      .clk (clk),
-      .rst (rst),
-      .cen (shift_en),
-      .din (delay_in),
-      .dout(delay_out)
-  );
+  generate
+    if (2 ** (LOG_SIZE - 1) <= 128) begin : g_srl
+
+      delay #(
+          .WIDTH(2 * (DATA_WIDTH + 1) + 2),
+          .DEPTH(2 ** (LOG_SIZE - 1)),
+          .INIT (1'b0)
+      ) i_delay (
+          .clk (clk),
+          .rst (1'b0),
+          .cen (shift_en),
+          .din (delay_in),
+          .dout(delay_out)
+      );
+
+    end else begin : g_shift_ram
+
+      shift_ram #(
+          .WIDTH    (2 * (DATA_WIDTH + 1) + 2),
+          .DEPTH    (2 ** (LOG_SIZE - 1)),
+          .INPUT_REG(1'b0)
+      ) i_delay (
+          .clk (clk),
+          .rst (rst),
+          .cen (shift_en),
+          .din (delay_in),
+          .dout(delay_out)
+      );
+
+    end
+  endgenerate
 
   // Output register
 

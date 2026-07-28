@@ -46,7 +46,7 @@ module fft_radix2_stage #(
   // Latency of Butterfly II
   localparam int LatencyBf2ii = HasBf2ii ? (2 ** (LOG_FFT_SIZE - 1) + 1) : 0;
   // Latency of Twiddle
-  localparam int LatencyTwiddle = 10;
+  localparam int LatencyTwiddle = 11;
   // Total latency
   localparam int Latency = LatencyBf2i + LatencyBf2ii + LatencyTwiddle;
 

@@ -86,7 +86,7 @@ module fft_radix2_twiddle #(
 
   delay #(
       .WIDTH(2),
-      .DEPTH(10)
+      .DEPTH(11)
   ) i_valid_delay (
       .clk (clk),
       .cen (1'b1),
@@ -109,11 +109,12 @@ module fft_radix2_twiddle #(
       .twiddle_q_out(twiddle_q_s)
   );
 
-  cmult #(
+  cmult3 #(
       .A_WIDTH(DATA_WIDTH),
       .B_WIDTH(PHASE_WIDTH),
       .P_WIDTH(DATA_WIDTH),
-      .SHIFT  (PHASE_WIDTH - 2)
+      .SHIFT  (PHASE_WIDTH - 2),
+      .ROUND  (1'b1)
   ) i_cmult (
       .clk(clk),
       .rst(rst),

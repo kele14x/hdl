@@ -58,8 +58,8 @@ def test_lfsr_runner():
         "BIT_WIDTH": BIT_WIDTH,
         "INITIAL": INITIAL,
         "POLYNOMIAL": POLYNOMIAL,
-        "STRUCTURE": STRUCTURE,
-        "GATE_TYPE": GATE_TYPE,
+        "STRUCTURE": f'"{STRUCTURE}"',
+        "GATE_TYPE": f'"{GATE_TYPE}"',
         "PARALLEL_OUTPUT": PARALLEL_OUTPUT,
     }
 
@@ -68,6 +68,8 @@ def test_lfsr_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND", "-Wno-REALCVT"],
+        waves=True,
         always=True,
     )
 

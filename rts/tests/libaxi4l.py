@@ -74,7 +74,7 @@ async def axi_r(dut):
         if dut.s_axi_rvalid.value:
             break
     dut.s_axi_rready.value = 0
-    return dut.s_axi_rdata.value
+    return int(dut.s_axi_rdata.value)
 
 
 async def axi_write(dut, addr, data):

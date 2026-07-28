@@ -73,11 +73,11 @@ async def input_monitor(dut):
             (
                 dut.din_dr.value.signed_integer,
                 dut.din_di.value.signed_integer,
-                dut.din_sf.value.integer,
-                dut.din_sl.value.integer,
-                dut.din_sy.value.integer,
-                dut.din_chn.value.integer,
-                dut.din_dv.value.integer,
+                int(dut.din_sf.value),
+                int(dut.din_sl.value),
+                int(dut.din_sy.value),
+                int(dut.din_chn.value),
+                int(dut.din_dv.value),
             )
         )
 
@@ -91,11 +91,11 @@ async def output_monitor(dut):
             (
                 dut.dout_dr.value.signed_integer,
                 dut.dout_di.value.signed_integer,
-                dut.dout_sf.value.integer,
-                dut.dout_sl.value.integer,
-                dut.dout_sy.value.integer,
-                dut.dout_chn.value.integer,
-                dut.dout_dv.value.integer,
+                int(dut.dout_sf.value),
+                int(dut.dout_sl.value),
+                int(dut.dout_sy.value),
+                int(dut.dout_chn.value),
+                int(dut.dout_dv.value),
             )
         )
 
@@ -209,6 +209,8 @@ def test_mixer_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND", "-Wno-REALCVT"],
+        waves=True,
         always=True,
     )
 

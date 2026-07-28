@@ -72,9 +72,9 @@ async def input_monitor(dut):
         await RisingEdge(dut.clk)
         input_queue.put_nowait(
             (
-                dut.sync.value.integer,
-                dut.ctrl_pinc.value.integer,
-                dut.ctrl_poff.value.integer,
+                int(dut.sync.value),
+                int(dut.ctrl_pinc.value),
+                int(dut.ctrl_poff.value),
             )
         )
 
@@ -85,8 +85,8 @@ async def output_monitor(dut):
         await RisingEdge(dut.clk)
         output = ()
         for i in range(NUM_PARALLEL):
-            cos = (dut.cos.value.integer >> (i * 16)) & 0xFFFF
-            sin = (dut.sin.value.integer >> (i * 16)) & 0xFFFF
+            cos = (int(dut.cos.value) >> (i * 16)) & 0xFFFF
+            sin = (int(dut.sin.value) >> (i * 16)) & 0xFFFF
             cos = cos - 2 ** 16 if cos >= 2 ** 15 else cos
             sin = sin - 2 ** 16 if sin >= 2 ** 15 else sin
             output += (cos, sin)
@@ -149,6 +149,8 @@ def test_nco_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
+        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND", "-Wno-REALCVT"],
+        waves=True,
         always=True,
     )
 
