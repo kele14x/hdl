@@ -1,5 +1,6 @@
 ../ecpri/ecpri.flt
 ../timer_syncer/timer_syncer.flt
+rtl/coe_pkg.sv
 rtl/coe_deframer_data.v
 rtl/coe_deframer_hdr.v
 rtl/coe_deframer.v

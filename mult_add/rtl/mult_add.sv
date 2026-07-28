@@ -12,15 +12,15 @@ module mult_add #(
     parameter int ROUND    = 0,
     parameter int SATURATE = 0
 ) (
-    input  logic                      clk,
-    input  logic                      rst,
+    input  wire                       clk,
+    input  wire                       rst,
     //
-    input  logic signed [A_WIDTH-1:0] a,
-    input  logic signed [B_WIDTH-1:0] b,
-    input  logic signed [C_WIDTH-1:0] c,
+    input  wire signed [A_WIDTH-1:0]  a,
+    input  wire signed [B_WIDTH-1:0]  b,
+    input  wire signed [C_WIDTH-1:0]  c,
     //
-    output logic signed [P_WIDTH-1:0] p,
-    output logic                      ovf
+    output wire signed [P_WIDTH-1:0]  p,
+    output wire                       ovf
 );
 
   /* verilator lint_off UNUSEDPARAM */

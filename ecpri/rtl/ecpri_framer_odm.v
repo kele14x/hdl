@@ -30,7 +30,7 @@ module ecpri_framer_odm (
     input  wire [15:0] ctrl_topology_id
 );
 
-  `include "ecpri_pkg.vh"
+  import ecpri_pkg::*;
 
   // Parameters
 
@@ -202,12 +202,12 @@ module ecpri_framer_odm (
         if (m_axis_tready) begin
           if (ctrl_has_vlan) begin
             // state_next == S_VLAN
-            m_axis_tdata <= byte_reverse({`ECPRI_ETHERTYPE_VLAN, ctrl_vlan_tag});
+            m_axis_tdata <= byte_reverse({ECPRI_ETHERTYPE_VLAN, ctrl_vlan_tag});
             m_axis_tkeep <= 4'b1111;
             m_axis_tlast <= 1'b0;
           end else begin
             // state_next == S_ETYPE_COMMH
-            m_axis_tdata <= byte_reverse({`ECPRI_ETHERTYPE_ECPRI, EcpriHeader[31:16]});
+            m_axis_tdata <= byte_reverse({ECPRI_ETHERTYPE_ECPRI, EcpriHeader[31:16]});
             m_axis_tkeep <= 4'b1111;
             m_axis_tlast <= 1'b0;
           end
@@ -217,7 +217,7 @@ module ecpri_framer_odm (
       S_VLAN: begin
         if (m_axis_tready) begin
           // state_next == S_ETYPE_COMMH
-          m_axis_tdata <= byte_reverse({`ECPRI_ETHERTYPE_ECPRI, EcpriHeader[31:16]});
+          m_axis_tdata <= byte_reverse({ECPRI_ETHERTYPE_ECPRI, EcpriHeader[31:16]});
           m_axis_tkeep <= 4'b1111;
           m_axis_tlast <= 1'b0;
         end

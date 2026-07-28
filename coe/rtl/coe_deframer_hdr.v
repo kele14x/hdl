@@ -23,7 +23,7 @@ module coe_deframer_hdr (
     output reg  [18:0] m_app_ts
 );
 
-  `include "coe_pkg.vh"
+  import coe_pkg::*;
 
   // Parameters
 

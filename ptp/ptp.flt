@@ -1,4 +1,5 @@
 ../cdc/cdc.flt
+rtl/ptp_pkg.sv
 rtl/ptp_ctrl.v
 rtl/ptp_deframer.v
 rtl/ptp_framer.v

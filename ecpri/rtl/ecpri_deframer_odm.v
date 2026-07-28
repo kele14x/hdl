@@ -23,7 +23,7 @@ module ecpri_deframer_odm (
     output reg  [15:0] stat_topology_id
 );
 
-  `include "ecpri_pkg.vh"
+  import ecpri_pkg::*;
 
   // FSM
 

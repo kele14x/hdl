@@ -199,9 +199,6 @@ def test_ecpri_framer_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
-        build_args=[
-            f"-I{prj_path / 'rtl'}",
-        ],
         waves=True,
         always=True,
     )

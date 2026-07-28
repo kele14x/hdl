@@ -19,7 +19,7 @@ module fh_framer_message (
     input  wire        m_axis_tready
 );
 
-  `include "ecpri_pkg.vh"
+  import ecpri_pkg::*;
 
   // State
 

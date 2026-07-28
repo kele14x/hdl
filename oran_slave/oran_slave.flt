@@ -1,5 +1,7 @@
 ../common/common.flt
 ../xpm/xpm.flt
+../fifo_srl/fifo_srl.flt
+rtl/oran_pkg.sv
 rtl/oran_deframer.sv
 rtl/oran_deframer_dl_ss.sv
 rtl/oran_deframer_dl_ss_adaptor.sv
@@ -28,9 +30,9 @@ rtl/oran_framer_ul_ss_comp.sv
 rtl/oran_framer_ul_ss_comp_exp.sv
 rtl/oran_framer_ul_ss_comp_gearbox.sv
 rtl/oran_framer_ul_ss_ctrl.sv
+rtl/oran_framer_ul_ss_section.sv
 rtl/oran_framer_ul_ss_trans.sv
 rtl/oran_if.sv
-rtl/oran_pkg.sv
 rtl/oran_slave_regs.v
 rtl/oran_statistics.sv
 rtl/oran_switch.sv

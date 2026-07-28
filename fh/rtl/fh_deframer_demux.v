@@ -42,7 +42,7 @@ module fh_deframer_demux (
     output wire        stat_corrupt_pkt
 );
 
-  `include "fh_pkg.vh"
+  import fh_pkg::*;
 
   // Parameters
 

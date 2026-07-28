@@ -10,15 +10,15 @@ module cdc_handshake_f #(
     parameter int SRC_SYNC_FF  = 32'd4,
     parameter int WIDTH        = 32'd1
 ) (
-    input  logic             src_clk,
-    input  logic [WIDTH-1:0] src_in,
-    input  logic             src_valid,
-    output logic             src_ready,
+    input  wire              src_clk,
+    input  wire [WIDTH-1:0]  src_in,
+    input  wire              src_valid,
+    output wire              src_ready,
     //
-    input  logic             dest_clk,
-    output logic [WIDTH-1:0] dest_out,
-    output logic             dest_valid,
-    input  logic             dest_ready
+    input  wire              dest_clk,
+    output wire [WIDTH-1:0]  dest_out,
+    output wire              dest_valid,
+    input  wire              dest_ready
 );
 
   initial begin : drc_check

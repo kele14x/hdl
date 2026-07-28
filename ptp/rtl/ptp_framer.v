@@ -29,7 +29,7 @@ module ptp_framer (
 
   // Parameters
 
-  `include "ptp_pkg.vh"
+  import ptp_pkg::*;
 
   wire unused_ptp_pkg_params = |{
     PTP_MESSAGE_TYPE_PDELAY_REQ,

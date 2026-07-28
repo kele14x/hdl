@@ -8,6 +8,7 @@
 ../fifo_async/fifo_async.flt
 ../fifo_sync/fifo_sync.flt
 ../ram/ram.flt
+rtl/ecpri_pkg.sv
 rtl/ecpri_deframer_common.v
 rtl/ecpri_deframer_demux.v
 rtl/ecpri_deframer_eth.v

@@ -28,7 +28,7 @@ module ecpri_framer_trans_reg (
     output reg  [15:0] m_trans_rtc_pc_id
 );
 
-  `include "ecpri_pkg.vh"
+  import ecpri_pkg::*;
 
   // Parameters
 

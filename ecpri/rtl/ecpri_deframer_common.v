@@ -36,7 +36,7 @@ module ecpri_deframer_common (
     output reg  [15:0] m_ecpri_payloadsize
 );
 
-  `include "ecpri_pkg.vh"
+  import ecpri_pkg::*;
 
   // FSM states
 

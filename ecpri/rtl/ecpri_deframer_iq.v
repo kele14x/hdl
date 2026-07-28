@@ -29,7 +29,7 @@ module ecpri_deframer_iq (
     output reg  [ 6:0] m_trans_subseqid
 );
 
-  `include "ecpri_pkg.vh"
+  import ecpri_pkg::*;
 
   // FSM
 

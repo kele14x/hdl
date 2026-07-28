@@ -52,7 +52,7 @@ module ecpri_deframer_demux (
     output wire        stat_corrupt_pkt
 );
 
-  `include "ecpri_pkg.vh"
+  import ecpri_pkg::*;
 
   // Parameters
 
@@ -194,7 +194,7 @@ module ecpri_deframer_demux (
         end else if (s_axis_tvalid) begin
           // Check EtherType field, if it's VLAN, we need to skip it and check
           // again.
-          if (mac_ethertype == `ECPRI_ETHERTYPE_VLAN) begin
+          if (mac_ethertype == ECPRI_ETHERTYPE_VLAN) begin
             state_next = S_ETYPE;
           end else begin
             state_next = S_PAYLOAD;
@@ -278,7 +278,7 @@ module ecpri_deframer_demux (
   end
 
   always @(posedge rx_eth_clk) begin
-    if ((state == S_ETYPE) && (mac_ethertype != `ECPRI_ETHERTYPE_VLAN) && s_axis_tvalid) begin
+    if ((state == S_ETYPE) && (mac_ethertype != ECPRI_ETHERTYPE_VLAN) && s_axis_tvalid) begin
       packet_ethertype <= mac_ethertype;
     end
   end
@@ -380,7 +380,7 @@ module ecpri_deframer_demux (
       .clk (clk),
       .rst (1'b0),
       .cen (1'b1),
-      .din (packet_valid_s && (packet_ethertype_s == `ECPRI_ETHERTYPE_ECPRI)),
+      .din (packet_valid_s && (packet_ethertype_s == ECPRI_ETHERTYPE_ECPRI)),
       //
       .dout(m_axis_tvalid)
   );
@@ -393,7 +393,7 @@ module ecpri_deframer_demux (
       .rst (1'b0),
       .cen (1'b1),
       //
-      .din (packet_valid_s && (packet_ethertype_s == `ECPRI_ETHERTYPE_PTP)),
+      .din (packet_valid_s && (packet_ethertype_s == ECPRI_ETHERTYPE_PTP)),
       .dout(m_ptp_tvalid)
   );
 
@@ -405,8 +405,8 @@ module ecpri_deframer_demux (
       .rst (1'b0),
       .cen (1'b1),
       //
-      .din (packet_valid_s && (packet_ethertype_s != `ECPRI_ETHERTYPE_ECPRI) &&
-        (packet_ethertype_s != `ECPRI_ETHERTYPE_PTP)),
+      .din (packet_valid_s && (packet_ethertype_s != ECPRI_ETHERTYPE_ECPRI) &&
+        (packet_ethertype_s != ECPRI_ETHERTYPE_PTP)),
       .dout(m_message_tvalid)
   );
 

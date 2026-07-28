@@ -9,11 +9,11 @@ module cdc_gray #(
     parameter bit REG_OUTPUT   = 1'b0,
     parameter int WIDTH        = 2
 ) (
-    input  logic [WIDTH-1:0] src_in_bin,
-    input  logic             src_clk,
+    input  wire [WIDTH-1:0]  src_in_bin,
+    input  wire              src_clk,
     //
-    input  logic             dest_clk,
-    output logic [WIDTH-1:0] dest_out_bin
+    input  wire              dest_clk,
+    output wire [WIDTH-1:0]  dest_out_bin
 );
 
   initial begin : drc_check

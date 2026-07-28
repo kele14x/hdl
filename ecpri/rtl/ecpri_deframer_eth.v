@@ -38,7 +38,7 @@ module ecpri_deframer_eth (
     output reg  [15:0] m_mac_ethertype
 );
 
-  `include "ecpri_pkg.vh"
+  import ecpri_pkg::*;
 
   // FSM states
 
@@ -107,7 +107,7 @@ module ecpri_deframer_eth (
 
   assign mac_vlan_tag = s_axis_tdata_reversed[15:0];
 
-  assign mac_with_vlan = (mac_ethertype == `ECPRI_ETHERTYPE_VLAN);
+  assign mac_with_vlan = (mac_ethertype == ECPRI_ETHERTYPE_VLAN);
 
   // Packet filter FSM
   // Ethernet packets are filtered by Ethertype field. If it's Ethertype field
@@ -161,9 +161,9 @@ module ecpri_deframer_eth (
           // Check EtherType field, if it's VLAN, we need to skip it and check
           // again. If it's eCPRI message, we goes to S_PAYLOAD. Other type
           // means we need to discard the entire packet.
-          if (mac_ethertype == `ECPRI_ETHERTYPE_VLAN) begin
+          if (mac_ethertype == ECPRI_ETHERTYPE_VLAN) begin
             state_next = S_ETYPE;
-          end else if (mac_ethertype == `ECPRI_ETHERTYPE_ECPRI) begin
+          end else if (mac_ethertype == ECPRI_ETHERTYPE_ECPRI) begin
             state_next = S_PAYLOAD;
           end else begin
             state_next = S_DISCARD;

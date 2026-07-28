@@ -8,3 +8,5 @@ rtl/lowphy_regs.v
 rtl/lowphy_band.sv
 rtl/lowphy0.sv
 rtl/lowphy1.sv
+rtl/lowphy0_wrapper.v
+rtl/lowphy1_wrapper.v

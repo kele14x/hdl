@@ -10,19 +10,19 @@ module cmult3 #(
     parameter bit ROUND    = 1'b0,
     parameter bit SATURATE = 1'b0
 ) (
-    input  logic                      clk,
-    input  logic                      rst,
+    input  wire                       clk,
+    input  wire                       rst,
     //
-    input  logic signed [A_WIDTH-1:0] ar,
-    input  logic signed [A_WIDTH-1:0] ai,
+    input  wire signed [A_WIDTH-1:0]  ar,
+    input  wire signed [A_WIDTH-1:0]  ai,
     //
-    input  logic signed [B_WIDTH-1:0] br,
-    input  logic signed [B_WIDTH-1:0] bi,
+    input  wire signed [B_WIDTH-1:0]  br,
+    input  wire signed [B_WIDTH-1:0]  bi,
     //
-    output logic signed [P_WIDTH-1:0] pr,
-    output logic signed [P_WIDTH-1:0] pi,
+    output wire signed [P_WIDTH-1:0]  pr,
+    output wire signed [P_WIDTH-1:0]  pi,
     //
-    output logic                      ovf
+    output wire                       ovf
 );
 
   /* verilator lint_off UNUSEDPARAM */

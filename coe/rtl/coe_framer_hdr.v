@@ -29,7 +29,7 @@ module coe_framer_hdr (
     output reg  [15:0] m_trans_rtc_pc_id
 );
 
-  `include "coe_pkg.vh"
+  import coe_pkg::*;
 
   // State
 

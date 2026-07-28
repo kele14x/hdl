@@ -6,6 +6,8 @@
 ../fifo_async/fifo_async.flt
 ../fifo_sync/fifo_sync.flt
 ../ram/ram.flt
+../ecpri/rtl/ecpri_pkg.sv
+rtl/fh_pkg.sv
 rtl/fh.v
 rtl/fh_deframer.v
 rtl/fh_deframer_64to32.v
