@@ -49,12 +49,12 @@ module power_meter #(
   logic        [ 1:0] data_chn;
   logic        [ 8:0] data_sym;
   logic               data_dv;
-  logic               data_sync;
+  logic               unused_data_sync;
 
-  logic        [ 3:0] data_slot;
-  logic        [ 3:0] data_slot_d;
-  logic        [ 3:0] data_slot_dd;
-  logic        [ 3:0] data_slot_ddd;
+  logic        [ 4:0] data_slot;
+  logic        [ 4:0] data_slot_d;
+  logic        [ 4:0] data_slot_dd;
+  logic        [ 4:0] data_slot_ddd;
 
   logic               clear;
 
@@ -73,7 +73,11 @@ module power_meter #(
   logic        [31:0] stat_power_r    [20];
 
   always_ff @(posedge clk_csr) begin
-    ctrl_mu_sel <= ctrl_mu[ctrl_cc_sel][ctrl_band_sel];
+    if (~rst_csr_n) begin
+      ctrl_mu_sel <= 1'b0;
+    end else begin
+      ctrl_mu_sel <= ctrl_mu[ctrl_cc_sel][ctrl_band_sel];
+    end
   end
 
   // verilog_format: off
@@ -149,9 +153,9 @@ module power_meter #(
 
   always_ff @(posedge clk) begin
     if (ctrl_pos_sel_s == 1'b0) begin
-      data_sync <= din0_sync[ctrl_cc_sel_s][ctrl_band_sel_s];
+      unused_data_sync <= din0_sync[ctrl_cc_sel_s][ctrl_band_sel_s];
     end else begin
-      data_sync <= din1_sync[ctrl_cc_sel_s][ctrl_band_sel_s];
+      unused_data_sync <= din1_sync[ctrl_cc_sel_s][ctrl_band_sel_s];
     end
   end
 
@@ -189,7 +193,8 @@ module power_meter #(
     if (clear) begin
       data_sum <= '0;
     end else begin
-      data_sum <= data_sum + data_dr_sqrt + data_di_sqrt;
+      data_sum <= data_sum + {{32{data_dr_sqrt[31]}}, data_dr_sqrt}
+                  + {{32{data_di_sqrt[31]}}, data_di_sqrt};
     end
   end
 
@@ -197,9 +202,9 @@ module power_meter #(
 
   always_comb begin
     if (ctrl_mu_s == 1'b0) begin
-      data_slot = data_sym / 7;
+      data_slot = 5'(data_sym / 9'd7);
     end else begin
-      data_slot = data_sym / 14;
+      data_slot = 5'(data_sym / 9'd14);
     end
   end
 

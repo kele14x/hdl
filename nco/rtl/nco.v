@@ -66,26 +66,20 @@ module nco #(
   // Total bit with of phase control word
   localparam integer PhaseWidth = PhaseParallelWidth + PHASE_INTEGER_WIDTH + PHASE_FRACTION_WIDTH;
 
-  // Constant 2 Pi
-  localparam reg [PhaseWidth-1:0] Phase2Pi = 3 << (PhaseWidth - 2);
-
   // Check parameters
 
   // verilog_format: off
   initial begin
     if (PHASE_INTEGER_WIDTH < 4 || 12 < PHASE_INTEGER_WIDTH) begin
-      $display("[%m]: Phase integer word width (PHASE_INTEGER_WIDTH) must be within the range 4 to 12, got %d.", PHASE_INTEGER_WIDTH);
-      #1 $finish();
+      $fatal(1, "[%m]: Phase integer word width (PHASE_INTEGER_WIDTH) must be within the range 4 to 12, got %d.", PHASE_INTEGER_WIDTH);
     end
 
     if (PHASE_FRACTION_WIDTH < 0 || 20 < PHASE_FRACTION_WIDTH) begin
-      $display("[%m]: Phase fraction word width (PHASE_FRACTION_WIDTH) must be within the range 0 to 20, got %d.", PHASE_FRACTION_WIDTH);
-      #1 $finish();
+      $fatal(1, "[%m]: Phase fraction word width (PHASE_FRACTION_WIDTH) must be within the range 0 to 20, got %d.", PHASE_FRACTION_WIDTH);
     end
 
     if (1 != NUM_PARALLEL && 2 != NUM_PARALLEL && 4 != NUM_PARALLEL) begin
-      $display("[%m]: Number of parallel output (NUM_PARALLEL) must be within the range 1, 2 or 4, got %d.", NUM_PARALLEL);
-      #1 $finish();
+      $fatal(1, "[%m]: Number of parallel output (NUM_PARALLEL) must be within the range 1, 2 or 4, got %d.", NUM_PARALLEL);
     end
   end
   // verilog_format: on
@@ -93,7 +87,7 @@ module nco #(
   // Signals
 
   reg         [          PhaseWidth-1:0] phase_accumulator;
-  wire        [            PhaseWidth:0] phase_wrapped;
+  wire        [          PhaseWidth-1:0] phase_wrapped;
   wire        [            PhaseWidth:0] phase_pre_round   [0:NUM_PARALLEL-1];
 
   wire        [PHASE_FRACTION_WIDTH-1:0] lfsr;
@@ -105,14 +99,16 @@ module nco #(
 
   genvar i;
 
-  function [PhaseWidth:0] wrap_2pi;
+  function [PhaseWidth-1:0] wrap_2pi;
     input [PhaseWidth:0] phase;
+    reg   [PhaseWidth:0] phase_mod;
     begin
       // equals to wrap_2pi = phase % Phase2Pi;
-      wrap_2pi = phase;
-      if (wrap_2pi[PhaseWidth-:3] >= 3'b011) begin
-        wrap_2pi[PhaseWidth-:3] = wrap_2pi[PhaseWidth-:3] - 3'b011;
+      phase_mod = phase;
+      if (phase_mod[PhaseWidth-:3] >= 3'b011) begin
+        phase_mod[PhaseWidth-:3] = phase_mod[PhaseWidth-:3] - 3'b011;
       end
+      wrap_2pi = phase_mod[PhaseWidth-1:0];
     end
   endfunction
 
@@ -135,7 +131,7 @@ module nco #(
     end else if (sync) begin
       phase_accumulator <= ctrl_poff;
     end else begin
-      phase_accumulator <= phase_wrapped[PhaseWidth-1:0];
+      phase_accumulator <= phase_wrapped;
     end
   end
 
@@ -143,14 +139,18 @@ module nco #(
   // exceed 2*Pi (Phase2Pi), and need to be wrapped. Unlike 2^N phase case,
   // phase in modulus M mode does not wrap naturally. Wrap could be done
   // by subtract by Phase2Pi.
-  assign phase_wrapped = wrap_2pi(phase_accumulator + ctrl_pinc);
+  assign phase_wrapped = wrap_2pi({1'b0, phase_accumulator} + {1'b0, ctrl_pinc});
 
   // #2, Random rounding and wrap again
 
   generate
     for (i = 0; i < NUM_PARALLEL; i = i + 1) begin : g_phase_int
 
-      assign phase_pre_round[i] = wrap_int(phase_accumulator + lfsr + ctrl_pinc * i / NUM_PARALLEL);
+      assign phase_pre_round[i] = wrap_int(
+          {1'b0, phase_accumulator}
+          + {{(PhaseWidth + 1 - PHASE_FRACTION_WIDTH) {1'b0}}, lfsr}
+          + ({1'b0, ctrl_pinc} * i / NUM_PARALLEL)
+      );
 
       always @(posedge clk) begin
         phase_int[i] <= phase_pre_round[i][PHASE_INTEGER_WIDTH+PHASE_FRACTION_WIDTH-1:PHASE_FRACTION_WIDTH];

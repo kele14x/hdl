@@ -39,14 +39,12 @@ module ram_sdp_asym #(
   initial begin
     assert (1 <= READ_LATENCY_B && READ_LATENCY_B <= 3)
     else begin
-      $error("READ_LATENCY_B should be within range 1 to 3.");
-      #1 $finish;
+      $fatal(1, "READ_LATENCY_B should be within range 1 to 3.");
     end
 
     assert (MaxWidth % MinWidth == 0)
     else begin
-      $error("The wider RAM port width should be an integer multiple of the narrower port width.");
-      #1 $finish;
+      $fatal(1, "The wider RAM port width should be an integer multiple of the narrower port width.");
     end
   end
 

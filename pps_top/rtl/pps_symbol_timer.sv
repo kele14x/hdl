@@ -20,10 +20,10 @@ module pps_symbol_timer #(
     output var [32:0] start_of_symbol_frac
 );
 
-  localparam logic [14:0] SampleCntMax0 = (4096 + 352) * FREQUENCY - 1;
-  localparam logic [14:0] SampleCntMax1 = (4096 + 288) * FREQUENCY - 1;
-  localparam logic [14:0] SampleCntMax2 = (4096 + 352) * FREQUENCY - 2;
-  localparam logic [14:0] SampleCntMax3 = (4096 + 288) * FREQUENCY - 2;
+  localparam logic [14:0] SampleCntMax0 = 15'((4096 + 352) * FREQUENCY - 1);
+  localparam logic [14:0] SampleCntMax1 = 15'((4096 + 288) * FREQUENCY - 1);
+  localparam logic [14:0] SampleCntMax2 = 15'((4096 + 352) * FREQUENCY - 2);
+  localparam logic [14:0] SampleCntMax3 = 15'((4096 + 288) * FREQUENCY - 2);
   localparam logic [3:0] SymbolCntMax = 13;
   localparam logic [4:0] SubframeSlotCntMax = 19;
 

@@ -53,6 +53,7 @@ module pdxch_conv #(
   //-------+---------+---------+
 
   localparam int Latency = 15;
+  localparam int AntAddrWidth = $clog2(NUM_ANT);
 
   // Signals
 
@@ -78,6 +79,8 @@ module pdxch_conv #(
 
   logic signed [15:0] din_dr_d;
   logic signed [15:0] din_di_d;
+  logic        unused_mult_ovf;
+  logic        unused_cmult_ovf;
 
   // Main
 
@@ -140,8 +143,8 @@ module pdxch_conv #(
   always_comb begin
     if (din_sy) begin
       index_next = '0;
-    end else if (din_dv && (din_chn < NUM_ANT)) begin
-      index_next = index[din_chn] + fft_size;
+    end else if (din_dv && (din_chn < 4'(NUM_ANT))) begin
+      index_next = index[din_chn[AntAddrWidth-1:0]] + {9'd0, fft_size};
     end else begin
       index_next = '0;
     end
@@ -176,8 +179,8 @@ module pdxch_conv #(
       pinc_next = (ctrl_rat_s == 0) ? -7'sd10 : -7'sd11;
     end else if (din_sy) begin
       pinc_next = -7'sd9;
-    end else if (din_dv && (din_chn < NUM_ANT)) begin
-      pinc_next = pinc[din_chn];
+    end else if (din_dv && (din_chn < 4'(NUM_ANT))) begin
+      pinc_next = pinc[din_chn[AntAddrWidth-1:0]];
     end else begin
       pinc_next = '0;
     end
@@ -212,7 +215,7 @@ module pdxch_conv #(
       .b  (pinc_r),
       .p  (phase),
       //
-      .ovf()
+      .ovf(unused_mult_ovf)
   );
 
   pdxch_conv_nco u_nco (
@@ -253,7 +256,7 @@ module pdxch_conv #(
       .pr (dout_dr),
       .pi (dout_di),
       //
-      .ovf()
+      .ovf(unused_cmult_ovf)
   );
 
   delay #(

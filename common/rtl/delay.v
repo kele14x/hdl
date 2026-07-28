@@ -3,7 +3,8 @@
 `default_nettype none
 
 module delay #(
-    parameter integer WIDTH = 8,
+    parameter integer DATA_WIDTH = 8,
+    parameter integer WIDTH = DATA_WIDTH,
     parameter integer DEPTH = 8,
     parameter reg     INIT  = 1'b0
 ) (
@@ -20,19 +21,19 @@ module delay #(
   // verilog_format: off
   initial begin
     if (DEPTH < 0 || 16384 < DEPTH) begin
-      $display("Delay depth (DEPTH) must be within the range 0 to 16384, got %d. [%m]", DEPTH);
-      #1 $finish();
+      $fatal(1, "Delay depth (DEPTH) must be within the range 0 to 16384, got %d. [%m]", DEPTH);
     end
 
     if (WIDTH < 1 || 1024 < WIDTH) begin
-      $display("Data width (WIDTH) must be within the range 1 to 1024, got %d. [%m]", WIDTH);
-      #1 $finish();
+      $fatal(1, "Data width (WIDTH) must be within the range 1 to 1024, got %d. [%m]", WIDTH);
     end
   end
   // verilog_format: on
 
   generate
     if (DEPTH == 0) begin : g_no_reg
+
+      wire unused = &{1'b0, clk, rst, cen};
 
       assign dout = din;
 

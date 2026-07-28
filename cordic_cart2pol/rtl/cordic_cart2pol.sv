@@ -1,7 +1,8 @@
 // File: cordic_cart2pol.sv
 // Breif: CORDIC-based approximation of cartesian-to-polar conversion
 
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module cordic_cart2pol #(
     parameter int DATA_WIDTH           = 16,
@@ -23,33 +24,33 @@ module cordic_cart2pol #(
 
   localparam int Latency = ITERATIONS + 2 * COMPENSATION_SCALING + 1;
 
-  // During iteration, x need 2 more bits, one for magnitude, one for CORDIC
+  // During iteration, x and y need 2 more bits, one for magnitude, one for CORDIC
   // growth factor.
   logic signed [DATA_WIDTH+1:0] x            [ITERATIONS+1];
-  logic signed [DATA_WIDTH-1:0] y            [ITERATIONS+1];
+  logic signed [DATA_WIDTH+1:0] y            [ITERATIONS+1];
   logic        [  ITERATIONS:0] z            [ITERATIONS+1];
   // Rotation direction, 0 = clockwise, 1 = counterclockwise
   logic                         d            [  ITERATIONS];
 
   // CORDIC interactions output
-  logic        [ITERATIONS+1:0] theta_cordic;
+  logic        [  ITERATIONS:0] theta_cordic;
   logic signed [DATA_WIDTH+1:0] r_cordic;
 
   // Iteration initialization
   assign x[0] = {xin[DATA_WIDTH-1], xin[DATA_WIDTH-1], xin};
-  assign y[0] = yin;
+  assign y[0] = {yin[DATA_WIDTH-1], yin[DATA_WIDTH-1], yin};
   assign z[0] = {{ITERATIONS{1'b0}}, x[0][DATA_WIDTH+1]};
 
   // Pseudo rotation iterations
   generate
     for (genvar i = 0; i < ITERATIONS; i++) begin : g_pseudo_rotation
 
-      assign d[i] = y[i][DATA_WIDTH-1] ^ x[i][DATA_WIDTH+1];
+      assign d[i] = y[i][DATA_WIDTH+1] ^ x[i][DATA_WIDTH+1];
 
       always_ff @(posedge clk) begin
         x[i+1] <= d[i] ? (x[i] - (y[i] >>> i)) : (x[i] + (y[i] >>> i));
         y[i+1] <= d[i] ? (y[i] + (x[i] >>> i)) : (y[i] - (x[i] >>> i));
-        z[i+1] <= {z[i], ~d[i]};
+        z[i+1] <= {z[i][ITERATIONS-1:0], ~d[i]};
       end
 
     end
@@ -64,10 +65,10 @@ module cordic_cart2pol #(
   // Scale growth compensation
   generate
 
-    if (COMPENSATION_SCALING) begin : g_comp_scaling
+    if (COMPENSATION_SCALING != 0) begin : g_comp_scaling
 
       // Compensation is done by r = r * (1/2 + 1/8) * (1 - 1/32)
-      logic        [ITERATIONS+1:0] theta_compensation[2];
+      logic        [  ITERATIONS:0] theta_compensation[2];
       logic signed [DATA_WIDTH+1:0] r_compensation    [2];
 
       always_ff @(posedge clk) begin
@@ -100,7 +101,7 @@ module cordic_cart2pol #(
       .INIT (1'b0)
   ) i_delay (
       .clk (clk),
-      .rst (1'b0),
+      .rst (rst),
       .cen (1'b1),
       .din (ctrl_in),
       .dout(ctrl_out)

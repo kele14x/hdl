@@ -1,7 +1,8 @@
 // File: cordic_rotate.sv
 // Brief: Rotate input using CORDIC-based approximation
 
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module cordic_rotate #(
     parameter int DATA_WIDTH           = 16,
@@ -65,7 +66,7 @@ module cordic_rotate #(
   // Scale growth compensation
   generate
 
-    if (COMPENSATION_SCALING) begin : g_comp_scaling
+    if (COMPENSATION_SCALING != 0) begin : g_comp_scaling
 
       // Compensation is done by r = r * (1/2 + 1/8) * (1 - 1/32)
       logic signed [DATA_WIDTH+1:0] x_compensation[2];
@@ -101,7 +102,7 @@ module cordic_rotate #(
       .INIT (1'b0)
   ) i_delay (
       .clk (clk),
-      .rst (1'b0),
+      .rst (rst),
       .cen (1'b1),
       .din (ctrl_in),
       .dout(ctrl_out)

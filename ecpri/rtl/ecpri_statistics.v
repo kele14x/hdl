@@ -64,18 +64,28 @@ module ecpri_statistics (
     output wire [31:0] stat_fram_odm_pkt_cnt
 );
 
+  wire unused_statistics_inputs = &{1'b0,
+    m_mac_dest_mac, m_mac_source_mac, m_mac_with_vlan, m_mac_vlan_tag, m_mac_ethertype,
+    m_ecpri_concat, m_ecpri_messagetype, m_ecpri_payloadsize,
+    m_trans_rtc_pc_id, m_trans_seqid, m_trans_ebit, m_trans_subseqid,
+    m_odm_measurementid, m_odm_actiontype, m_odm_timestamp, m_odm_compensation,
+    m_odm_timestamp2,
+    s_trans_messagetype, s_trans_payloadsize, s_trans_rtc_pc_id,
+    s_odm_measurementid, s_odm_actiontype, s_odm_timestamp, s_odm_compensation
+  };
+
   // Signals
 
   wire        tick_snap;
   wire        tick_clear;
+  wire [ 5:0] unused_stat_src_ready;
+  wire [ 5:0] unused_stat_dest_valid;
 
   reg  [31:0] defm_total_pkt_cnt;
   reg  [31:0] defm_ecpri_pkt_cnt;
   reg  [31:0] defm_trans_pkt_cnt;
   reg  [31:0] defm_odm_pkt_cnt;
 
-  reg  [31:0] fram_total_pkt_cnt;
-  reg  [31:0] fram_ecpri_pkt_cnt;
   reg  [31:0] fram_trans_pkt_cnt;
   reg  [31:0] fram_odm_pkt_cnt;
 
@@ -131,11 +141,11 @@ module ecpri_statistics (
       .src_clk   (clk),
       .src_in    (defm_total_pkt_cnt),
       .src_valid (tick_snap),
-      .src_ready (),
+      .src_ready (unused_stat_src_ready[0]),
       //
       .dest_clk  (ctrl_clk),
       .dest_out  (stat_defm_total_pkt_cnt),
-      .dest_valid(  /* not used */),
+      .dest_valid(unused_stat_dest_valid[0]),
       .dest_ready(1'b1)
   );
 
@@ -159,11 +169,11 @@ module ecpri_statistics (
       .src_clk   (clk),
       .src_in    (defm_ecpri_pkt_cnt),
       .src_valid (tick_snap),
-      .src_ready (),
+      .src_ready (unused_stat_src_ready[1]),
       //
       .dest_clk  (ctrl_clk),
       .dest_out  (stat_defm_ecpri_pkt_cnt),
-      .dest_valid(  /* not used */),
+      .dest_valid(unused_stat_dest_valid[1]),
       .dest_ready(1'b1)
   );
 
@@ -187,11 +197,11 @@ module ecpri_statistics (
       .src_clk   (clk),
       .src_in    (defm_trans_pkt_cnt),
       .src_valid (tick_snap),
-      .src_ready (),
+      .src_ready (unused_stat_src_ready[2]),
       //
       .dest_clk  (ctrl_clk),
       .dest_out  (stat_defm_trans_pkt_cnt),
-      .dest_valid(  /* not used */),
+      .dest_valid(unused_stat_dest_valid[2]),
       .dest_ready(1'b1)
   );
 
@@ -215,11 +225,11 @@ module ecpri_statistics (
       .src_clk   (clk),
       .src_in    (defm_odm_pkt_cnt),
       .src_valid (tick_snap),
-      .src_ready (),
+      .src_ready (unused_stat_src_ready[3]),
       //
       .dest_clk  (ctrl_clk),
       .dest_out  (stat_defm_odm_pkt_cnt),
-      .dest_valid(  /* not used */),
+      .dest_valid(unused_stat_dest_valid[3]),
       .dest_ready(1'b1)
   );
 
@@ -253,11 +263,11 @@ module ecpri_statistics (
       .src_clk   (clk),
       .src_in    (fram_trans_pkt_cnt),
       .src_valid (tick_snap),
-      .src_ready (),
+      .src_ready (unused_stat_src_ready[4]),
       //
       .dest_clk  (ctrl_clk),
       .dest_out  (stat_fram_trans_pkt_cnt),
-      .dest_valid(  /* not used */),
+      .dest_valid(unused_stat_dest_valid[4]),
       .dest_ready(1'b1)
   );
 
@@ -281,11 +291,11 @@ module ecpri_statistics (
       .src_clk   (clk),
       .src_in    (fram_odm_pkt_cnt),
       .src_valid (tick_snap),
-      .src_ready (),
+      .src_ready (unused_stat_src_ready[5]),
       //
       .dest_clk  (ctrl_clk),
       .dest_out  (stat_fram_odm_pkt_cnt),
-      .dest_valid(  /* not used */),
+      .dest_valid(unused_stat_dest_valid[5]),
       .dest_ready(1'b1)
   );
 

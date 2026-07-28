@@ -25,12 +25,6 @@ module bit_reverse #(
 
   localparam integer NumStage = LOG_FFT_SIZE / 2;
 
-  // D = (N - 2*sqrt(N) + 1 + log2(N))              if log2(N) is even
-  //   = (N - sqrt(N*2) - sqrt(N/2) + 1 + log2(N))  if log2(N) is odd
-  localparam integer Latency = (LOG_FFT_SIZE % 2 == 0) ?
-        (2 ** LOG_FFT_SIZE - 2 ** (LOG_FFT_SIZE / 2 + 1) + LOG_FFT_SIZE + 1) :
-        (2 ** LOG_FFT_SIZE - 2 ** ((LOG_FFT_SIZE + 1) / 2) - 2 ** ((LOG_FFT_SIZE - 1) / 2) + LOG_FFT_SIZE + 1);
-
   localparam integer IdWidth = NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV);
 
   wire [DATA_WIDTH-1:0] data_dr_s   [0:NumStage];

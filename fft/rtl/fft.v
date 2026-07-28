@@ -105,6 +105,8 @@ module fft #(
 
   genvar i;
 
+  wire unused_din_chn = &{1'b0, din_chn, 1'b0};
+
   // Helpers
 
   function automatic [DATA_WIDTH-1:0] saturate(input [DataWidthInt-1:0] din);
@@ -131,8 +133,8 @@ module fft #(
   end
 
   // Connect input
-  assign data_dr_s[0] = data_dr;
-  assign data_di_s[0] = data_di;
+  assign data_dr_s[0] = {{(DataWidthInt-DATA_WIDTH){data_dr[DATA_WIDTH-1]}}, data_dr};
+  assign data_di_s[0] = {{(DataWidthInt-DATA_WIDTH){data_di[DATA_WIDTH-1]}}, data_di};
   assign data_dv_s[0] = data_dv;
 
   always @(posedge clk) begin
@@ -216,21 +218,21 @@ module fft #(
   always @(posedge clk) begin
     if (ctrl_size == 2'b00) begin  // 1k
       case (ctrl_itlv)
-        2'b00:   latency <= 1023 * 16 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler;
-        2'b01:   latency <= 1023 * 8 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler;
-        default: latency <= 1023 * 4 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler;
+        2'b00:   latency <= 17'(1023 * 16 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler);
+        2'b01:   latency <= 17'(1023 * 8 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler);
+        default: latency <= 17'(1023 * 4 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler);
       endcase
     end else if (ctrl_size == 2'b01) begin  // 2k
       case (ctrl_itlv)
-        2'b00:   latency <= 2047 * 16 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler;
-        2'b01:   latency <= 2047 * 8 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler;
-        default: latency <= 2047 * 4 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler;
+        2'b00:   latency <= 17'(2047 * 16 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler);
+        2'b01:   latency <= 17'(2047 * 8 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler);
+        default: latency <= 17'(2047 * 4 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler);
       endcase
     end else begin  // 4k
       case (ctrl_itlv)
-        2'b00:   latency <= 4095 * 16 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler;
-        2'b01:   latency <= 4095 * 8 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler;
-        default: latency <= 4095 * 4 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler;
+        2'b00:   latency <= 17'(4095 * 16 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler);
+        2'b01:   latency <= 17'(4095 * 8 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler);
+        default: latency <= 17'(4095 * 4 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler);
       endcase
     end
   end

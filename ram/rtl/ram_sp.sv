@@ -25,14 +25,12 @@ module ram_sp #(
   initial begin
     assert (1 <= READ_LATENCY && READ_LATENCY <= 3)
     else begin
-      $error("[%m]: Read layency (READ_LATENCY) should be within range 1 to 3, got %d", READ_LATENCY);
-      #1 $finish;
+      $fatal(1, "[%m]: Read layency (READ_LATENCY) should be within range 1 to 3, got %d", READ_LATENCY);
     end
 
     assert (WRITE_MODE == "WRITE_FIRST" || WRITE_MODE == "READ_FIRST" || WRITE_MODE == "NO_CHANGE")
     else begin
-      $error("[%m]: Write mode (WRITE_MODE) should be one of \"WRITE_FIRST\", \"READ_FIRST\" and \"NO_CHANGE\", got %s", WRITE_MODE);
-      #1 $finish;
+      $fatal(1, "[%m]: Write mode (WRITE_MODE) should be one of \"WRITE_FIRST\", \"READ_FIRST\" and \"NO_CHANGE\", got %s", WRITE_MODE);
     end
   end
 

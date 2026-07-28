@@ -98,6 +98,7 @@ module nlf #(
   ) i_index_delay_line (
       // Read Interface
       .clk     (clk),
+      .rst     (rst),
       //
       .data_in (index_in),
       .data_out(index_d),
@@ -117,6 +118,7 @@ module nlf #(
       .DEPTH      (3)
   ) i_delay (
       .clk (clk),
+      .rst (rst),
       .cen (1'b1),
       .din (signal_in),
       .dout(signal_s)
@@ -129,6 +131,7 @@ module nlf #(
   ) i_signal_delay_line (
       // Read Interface
       .clk     (clk),
+      .rst     (rst),
       //
       .data_in (signal_s),
       .data_out(signal_d),

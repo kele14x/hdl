@@ -28,7 +28,6 @@ module cmult_chain #(
 );
 
 
-  localparam int Latency = NUM_TAPS + 4;
   localparam int PWidthInt = A_WIDTH + B_WIDTH + 1 + $clog2(NUM_TAPS);
 
 
@@ -75,7 +74,7 @@ module cmult_chain #(
       .A_WIDTH (PWidthInt),
       .B_WIDTH (PWidthInt),
       .P_WIDTH (P_WIDTH),
-      .SRA_BITS(SRA_BITS)
+      .SHIFT(SRA_BITS)
   ) i_adder_r (
       .clk(clk),
       .rst(rst),
@@ -90,7 +89,7 @@ module cmult_chain #(
       .A_WIDTH (PWidthInt),
       .B_WIDTH (PWidthInt),
       .P_WIDTH (P_WIDTH),
-      .SRA_BITS(SRA_BITS)
+      .SHIFT(SRA_BITS)
   ) i_adder_i (
       .clk(clk),
       .rst(rst),

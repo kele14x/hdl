@@ -83,9 +83,6 @@ module symbol_timer #(
   // Clock ticks of left symbol:               |      274 |      137 |
   //------------------------------------------------------------------
 
-  // Frome `sync` to `start_of_frame`, not counting the async regs
-  localparam integer Latency = 1;
-
   wire        sync_s0;
   reg         sync_s1;
   wire        sync_posedge;
@@ -111,6 +108,40 @@ module symbol_timer #(
   reg  [14:0] sample_counter_max;
 
   reg  [ 8:0] symbol_id;
+
+  localparam [31:0] LongSymbolSamplesFull  = (128 + 11) * FREQ - 1;
+  localparam [31:0] ShortSymbolSamplesFull = (128 + 9) * FREQ - 1;
+  localparam [14:0] LongSymbolSamples      = LongSymbolSamplesFull[14:0];
+  localparam [14:0] ShortSymbolSamples     = ShortSymbolSamplesFull[14:0];
+
+  function [8:0] slot_last_symbol;
+    input integer slot;
+    begin
+      case (slot)
+        0: slot_last_symbol = 9'd13;
+        1: slot_last_symbol = 9'd27;
+        2: slot_last_symbol = 9'd41;
+        3: slot_last_symbol = 9'd55;
+        4: slot_last_symbol = 9'd69;
+        5: slot_last_symbol = 9'd83;
+        6: slot_last_symbol = 9'd97;
+        7: slot_last_symbol = 9'd111;
+        8: slot_last_symbol = 9'd125;
+        9: slot_last_symbol = 9'd139;
+        10: slot_last_symbol = 9'd153;
+        11: slot_last_symbol = 9'd167;
+        12: slot_last_symbol = 9'd181;
+        13: slot_last_symbol = 9'd195;
+        14: slot_last_symbol = 9'd209;
+        15: slot_last_symbol = 9'd223;
+        16: slot_last_symbol = 9'd237;
+        17: slot_last_symbol = 9'd251;
+        18: slot_last_symbol = 9'd265;
+        19: slot_last_symbol = 9'd279;
+        default: slot_last_symbol = 9'd0;
+      endcase
+    end
+  endfunction
 
   // Pulse posedge detector
 
@@ -224,9 +255,9 @@ module symbol_timer #(
 
   always @(posedge clk) begin
     if ((MODE == 1'b0 && symbol_id % 14 == 13) || (MODE == 1'b1 && symbol_id % 14 == 0)) begin
-      sample_counter_max <= (128 + 11) * FREQ - 1;
+      sample_counter_max <= LongSymbolSamples;
     end else begin
-      sample_counter_max <= (128 + 9) * FREQ - 1;
+      sample_counter_max <= ShortSymbolSamples;
     end
   end
 
@@ -236,7 +267,7 @@ module symbol_timer #(
     integer s;
     slot_wrap = 1'b0;
     for (s = 0; s < 20; s = s + 1) begin
-      if ((symbol_id == s * 14 + 13) && symbol_wrap) begin
+      if ((symbol_id == slot_last_symbol(s)) && symbol_wrap) begin
         slot_wrap = 1'b1;
       end
     end

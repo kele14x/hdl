@@ -73,9 +73,6 @@ module oran_deframer_dl_ss_mgr #(
 
   // Each symbol is stored in dedicate bank
   localparam int BankWidth = $clog2(BUFFER_SYMBOL);
-  // Each symbol hs 2k x 64-bit buffer (cost ~=4 BRAM per symbol)
-  // TODO: the buffer size could be optimized by sharing between CC & Symbol
-  localparam int AddrWidth = BankWidth + 11;
 
   // Symbol counter
 
@@ -158,6 +155,22 @@ module oran_deframer_dl_ss_mgr #(
   logic        section_extra_last;
   logic        section_extra_last_d;
 
+  wire unused_mgr_inputs = &{1'b0, s_axis_tkeep, app_payloadversion, section_reserved};
+
+  always_comb begin
+    m_app_numsections     = '0;
+    m_app_sectiontype     = '0;
+    m_app_udcomphdr       = '0;
+    m_app_timeoffset      = '0;
+    m_app_framestructure  = '0;
+    m_app_cplength        = '0;
+    m_section_remask      = '0;
+    m_section_numsymbol   = '0;
+    m_section_ef          = 1'b0;
+    m_section_beamid      = '0;
+    m_section_freqoffset  = '0;
+  end
+
 
   //
   // This function reverse byte order of 64-bit data
@@ -174,12 +187,12 @@ module oran_deframer_dl_ss_mgr #(
   // from current symbol to received symbol number, and it is always a
   // positive number. The return value is between 1 and 280.
   //
-  function automatic logic [8:0] offset_in_symbol(input logic [8:0] current_symbol,
+  function automatic logic [8:0] offset_in_symbol(input logic [8:0] current_symbol_i,
                                                   input logic [8:0] symbol_number);
-    if (symbol_number > current_symbol) begin
-      offset_in_symbol = symbol_number - current_symbol;
+    if (symbol_number > current_symbol_i) begin
+      offset_in_symbol = symbol_number - current_symbol_i;
     end else begin
-      offset_in_symbol = 280 - current_symbol + symbol_number;
+      offset_in_symbol = 9'd280 - current_symbol_i + symbol_number;
     end
   endfunction
 
@@ -193,7 +206,7 @@ module oran_deframer_dl_ss_mgr #(
     if (rst | timer_sof) begin
       current_symbol <= '0;
     end else if (timer_sos) begin
-      current_symbol <= current_symbol + 1;
+      current_symbol <= current_symbol + 9'd1;
     end
   end
 
@@ -289,7 +302,7 @@ module oran_deframer_dl_ss_mgr #(
 
   // The packet is considered "in window" if it arrives at least 1 symbol early
   // and not too early so it could fit into buffer.
-  assign app_packet_in_window = (1 <= app_offset_in_symbol) && (app_offset_in_symbol < BUFFER_SYMBOL);
+  assign app_packet_in_window = (app_offset_in_symbol >= 9'd1) && (int'(app_offset_in_symbol) < BUFFER_SYMBOL);
 
   assign app_header = s_axis_tdata_reversed[63:32];
 
@@ -318,16 +331,16 @@ module oran_deframer_dl_ss_mgr #(
   // But left sections may appear at any byte position, based on the number of
   // bytes for IQ data. The position could be calculated from section size and
   // number of bytes we received.
-  assign section_header_shift = 0 - packet_c_size - section_hdr_size;
+  assign section_header_shift = 3'(16'd0 - packet_c_size - {13'b0, section_hdr_size});
 
   always_ff @(posedge clk) begin
-    section_hdr_size <= ctrl_has_udcomphdr ? 6 : 4;
+    section_hdr_size <= ctrl_has_udcomphdr ? 3'd6 : 3'd4;
   end
 
   // If we received 4 or more bytes than current section, it means we received
   // another section header
-  // section_header_valid = packet_cnt + 8 >= packet_c_size + section_hdr_size;
-  assign section_header_valid = (packet_cnt + 8 >= packet_c_size + section_hdr_size) && ~s_axis_tlast;
+  // section_header_valid = packet_cnt + 16'd8 >= packet_c_size + section_hdr_size;
+  assign section_header_valid = (packet_cnt + 16'd8 >= packet_c_size + {13'b0, section_hdr_size}) && ~s_axis_tlast;
 
   assign {
     section_sectionid,
@@ -365,7 +378,7 @@ module oran_deframer_dl_ss_mgr #(
     logic [5:0] the_lut [16];
     the_lut[0] = 48;
     for (int i = 1; i < 15; i++) begin
-      the_lut[i] = (3 * i + 1);
+      the_lut[i] = 6'(3 * i + 1);
     end
     iq_bytes_lut = the_lut[iq_width];
   endfunction
@@ -386,7 +399,7 @@ module oran_deframer_dl_ss_mgr #(
     end else if (s_axis_tvalid && s_axis_tlast) begin
       packet_cnt <= '0;
     end else if (s_axis_tvalid) begin
-      packet_cnt <= packet_cnt + 8;
+      packet_cnt <= packet_cnt + 16'd8;
     end
   end
 
@@ -400,7 +413,7 @@ module oran_deframer_dl_ss_mgr #(
       packet_c_size <= 'd4;
     end else if (section_header_valid && s_axis_tvalid) begin
       // From second section, the section size is (section_numprb * iq_bytes + 4)
-      packet_c_size <= packet_c_size + section_hdr_size + section_numprb * iq_bytes;
+      packet_c_size <= packet_c_size + {13'b0, section_hdr_size} + ({8'b0, section_numprb} * {10'b0, iq_bytes});
     end
   end
 
@@ -410,23 +423,23 @@ module oran_deframer_dl_ss_mgr #(
     end else if (s_axis_tlast && s_axis_tvalid) begin
       packet_h_size <= 'd4;
     end else if (section_header_valid && s_axis_tvalid) begin
-      packet_h_size <= packet_c_size + section_hdr_size;
+      packet_h_size <= packet_c_size + {13'b0, section_hdr_size};
     end
   end
 
   always_ff @(posedge clk) begin
-    section_data_shift <= 0 - packet_h_size;
+    section_data_shift <= 3'(16'd0 - packet_h_size);
   end
 
   always_ff @(posedge clk) begin
-    section_data_valid <= (packet_cnt + 8 >= packet_h_size + 8) &&
-                          (packet_cnt + 8 <= packet_c_size + 7);
+    section_data_valid <= (packet_cnt + 16'd8 >= packet_h_size + 16'd8) &&
+                          (packet_cnt + 16'd8 <= packet_c_size + 16'd7);
   end
 
   // last tick of data
 
   always_ff @(posedge clk) begin
-    if ((state == S_PAYLOAD) && (packet_cnt + 8 >= packet_c_size) && s_axis_tvalid && section_data_valid && ~section_extra_last_c) begin
+    if ((state == S_PAYLOAD) && (packet_cnt + 16'd8 >= packet_c_size) && s_axis_tvalid && section_data_valid && ~section_extra_last_c) begin
       section_data_last <= 1'b1;
     end else begin
       section_data_last <= 1'b0;
@@ -448,7 +461,7 @@ module oran_deframer_dl_ss_mgr #(
   end
 
   always_ff @(posedge clk) begin
-    if ((state == S_PAYLOAD) && (packet_cnt + 8 >= packet_c_size) && s_axis_tvalid && section_data_valid && section_extra_last_c) begin
+    if ((state == S_PAYLOAD) && (packet_cnt + 16'd8 >= packet_c_size) && s_axis_tvalid && section_data_valid && section_extra_last_c) begin
       section_extra_last <= 1'b1;
     end else begin
       section_extra_last <= 1'b0;
@@ -474,10 +487,10 @@ module oran_deframer_dl_ss_mgr #(
     if (rst) begin
       buffer_rd_bank <= '0;
     end else if (timer_sos) begin
-      if (buffer_rd_bank == BUFFER_SYMBOL - 1) begin
-        buffer_rd_bank <= 0;
+      if (int'(buffer_rd_bank) == BUFFER_SYMBOL - 1) begin
+        buffer_rd_bank <= '0;
       end else begin
-        buffer_rd_bank <= buffer_rd_bank + 1;
+        buffer_rd_bank <= buffer_rd_bank + BankWidth'(1);
       end
     end
   end
@@ -508,7 +521,7 @@ module oran_deframer_dl_ss_mgr #(
       app_packet_in_window_d <= app_packet_in_window;
       app_offset_in_symbol_d <= app_offset_in_symbol;
     end
-    m_axis_data_tuser <= (buffer_rd_bank_d + app_offset_in_symbol_d) % BUFFER_SYMBOL;
+    m_axis_data_tuser <= BankWidth'((int'(buffer_rd_bank_d) + int'(app_offset_in_symbol_d)) % BUFFER_SYMBOL);
   end
 
 

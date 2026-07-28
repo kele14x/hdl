@@ -60,6 +60,7 @@ module pdxch_fdv_buffer #(
   logic [ 12:0] rd_addr                   [NUM_ANT];
   logic         rd_en                     [NUM_ANT];
   logic [ 31:0] rd_data                   [NUM_ANT];
+  logic         unused_stat_resync;
 
   // Main
 
@@ -137,7 +138,7 @@ module pdxch_fdv_buffer #(
       .start_of_symbol(start_of_symbol),
       //
       .ctrl_delay     ('0),
-      .stat_resync    ()
+      .stat_resync    (unused_stat_resync)
   );
 
   generate
@@ -169,6 +170,7 @@ module pdxch_fdv_buffer #(
 
         logic [11:0] rd_addr_s;
         logic        rd_en_s;
+        logic [127:0] unused_ram_douta;
 
         assign wr_addr_s = {wr_addr[ant][10], wr_addr[ant][8:0]};
         assign wr_en_s   = wr_en[ant] && ~wr_addr[ant][9];
@@ -199,18 +201,20 @@ module pdxch_fdv_buffer #(
             .wea  (wr_en_s),
             .addra(wr_addr_s),
             .dina (wr_data[ant]),
-            .douta(),
+            .douta(unused_ram_douta),
             //
             .clkb (clk),
             .rstb (2'b00),
             .enb  ({1'b1, rd_en_s}),
-            .web  (rd_en_s),
+            .web  (1'b0),
             .addrb(rd_addr_s),
             .dinb ('d0),
             .doutb(rd_data[ant])
         );
 
       end else begin : g_full
+
+        logic [127:0] unused_ram_douta;
 
         ram_tdp_asym #(
             .ADDR_WIDTH_A(11),
@@ -232,12 +236,12 @@ module pdxch_fdv_buffer #(
             .wea  (wr_en[ant]),
             .addra(wr_addr[ant]),
             .dina (wr_data[ant]),
-            .douta(),
+            .douta(unused_ram_douta),
             //
             .clkb (clk),
             .rstb (2'b00),
             .enb  ({1'b1, rd_en[ant]}),
-            .web  (rd_en[ant]),
+            .web  (1'b0),
             .addrb(rd_addr[ant]),
             .dinb ('d0),
             .doutb(rd_data[ant])

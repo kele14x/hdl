@@ -78,6 +78,8 @@ module oran_deframer_eth_common (
   logic                stat_last;  // in-phase last word
   logic                extra_last;
 
+  wire unused_common_fields = &{1'b0, s_axis_tkeep_d, ecpri_version, ecpri_reserved};
+
 
   // Get the TKEEP pattern based on the byte ending position
   function static bit [7:0] get_tkeep(input logic [2:0] cnt);
@@ -160,9 +162,9 @@ module oran_deframer_eth_common (
 
   // Received bytes at current tick
   always_comb begin
-    stat_counter_next = stat_counter + 8;
+    stat_counter_next = stat_counter + 16'd8;
     if (s_axis_tvalid && s_axis_tlast) begin
-      stat_counter_next = stat_counter + tkeep_size(s_axis_tkeep);
+      stat_counter_next = stat_counter + 16'(tkeep_size(s_axis_tkeep));
     end
   end
 
@@ -173,7 +175,7 @@ module oran_deframer_eth_common (
     end else if (s_axis_tvalid && s_axis_tlast) begin
       stat_counter_c <= '0;
     end else if (s_axis_tvalid && ecpri_header_valid) begin
-      stat_counter_c <= stat_counter_c + ecpri_payloadsize + 4;
+      stat_counter_c <= stat_counter_c + ecpri_payloadsize + 16'd4;
     end
   end
 
@@ -184,16 +186,16 @@ module oran_deframer_eth_common (
     end else if (s_axis_tvalid && s_axis_tlast) begin
       stat_counter_h <= 'd4;
     end else if (s_axis_tvalid && ecpri_header_valid) begin
-      stat_counter_h <= stat_counter_c + 4;
+      stat_counter_h <= stat_counter_c + 16'd4;
     end
   end
 
   always_comb begin
-    stat_payload_shift = 8 - stat_counter_h[2:0];
+    stat_payload_shift = 3'(4'd8 - {1'b0, stat_counter_h[2:0]});
   end
 
   always_comb begin
-    stat_header_shift = 4 - stat_counter_c[2:0];
+    stat_header_shift = 3'(4'd4 - {1'b0, stat_counter_c[2:0]});
   end
 
   // In-phase last, marks last word of message
@@ -203,8 +205,8 @@ module oran_deframer_eth_common (
     // `stat_counter_c` indicates the end position of the section
     // This tick is last tick in section when we receive more bytes than `stat_counter_c`
     // but it should be only 0~7 bytes more. 8+ indicate the last is already generated
-    end else if (s_axis_tvalid && (stat_counter_next - stat_counter_c >= 0) &&
-      (stat_counter_next - stat_counter_c < 8)) begin
+    end else if (s_axis_tvalid && (stat_counter_next >= stat_counter_c) &&
+      (stat_counter_next - stat_counter_c < 16'd8)) begin
       stat_last = 1'b1;
     end else begin
       stat_last = 1'b0;
@@ -252,7 +254,7 @@ module oran_deframer_eth_common (
   logic [7:0] stat_keep_d;
 
   always_comb begin
-    stat_keep = {get_tkeep(stat_counter_c - stat_counter_h)};
+    stat_keep = get_tkeep(3'(stat_counter_c - stat_counter_h));
   end
 
   always_ff @(posedge clk) begin

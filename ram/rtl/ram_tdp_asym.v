@@ -16,16 +16,16 @@
 module ram_tdp_asym #(
     parameter integer ADDR_WIDTH_A = 11,
     parameter integer DATA_WIDTH_A = 16,
-    parameter reg     OUTPUT_REG_A = 1'b1,
-    parameter         WRITE_MODE_A = "READ_FIRST",
+    parameter bit     OUTPUT_REG_A = 1'b1,
+    parameter string  WRITE_MODE_A = "READ_FIRST",
     //
     parameter integer ADDR_WIDTH_B = 10,
     parameter integer DATA_WIDTH_B = 32,
-    parameter reg     OUTPUT_REG_B = 1'b1,
-    parameter         WRITE_MODE_B = "READ_FIRST",
+    parameter bit     OUTPUT_REG_B = 1'b1,
+    parameter string  WRITE_MODE_B = "READ_FIRST",
     //
-    parameter         INIT_FILE    = "",
-    parameter         RAM_STYLE    = "AUTO"
+    parameter string  INIT_FILE    = "",
+    parameter string  RAM_STYLE    = "AUTO"
 ) (
     input  wire                    clka,
     input  wire [  OUTPUT_REG_A:0] rsta,
@@ -83,21 +83,23 @@ module ram_tdp_asym #(
 
   wire                       ena_s;
   wire                       enb_s;
+  wire                       unused_inputs;
 
   reg     [DATA_WIDTH_A-1:0] rega;
   reg     [DATA_WIDTH_B-1:0] regb;
 
-  integer                    i;
+  integer                    init_idx;
 
   // This makes Vivado recognize correct EN pin
   assign ena_s = ena[0];
   assign enb_s = enb[0];
+  assign unused_inputs = ^{rsta[0], ena[OUTPUT_REG_A], rstb[0], enb[OUTPUT_REG_B]};
 
   // Initialize memory
 
   initial begin
-    for (i = 0; i < MaxSize; i = i + 1) begin
-      mem[i] = 'b0;
+    for (init_idx = 0; init_idx < MaxSize; init_idx = init_idx + 1) begin
+      mem[init_idx] = 'b0;
     end
     if (INIT_FILE != "") begin
       $readmemh(INIT_FILE, mem);
@@ -136,18 +138,18 @@ module ram_tdp_asym #(
 
       // Port A read
       always @(posedge clka) begin : p_rd
-        integer i;
+        integer a_rd_idx;
         reg [Log2Ratio-1:0] lsbaddr;
-        for (i = 0; i < Ratio; i = i + 1) begin
-          lsbaddr = i;
+        for (a_rd_idx = 0; a_rd_idx < Ratio; a_rd_idx = a_rd_idx + 1) begin
+          lsbaddr = a_rd_idx[Log2Ratio-1:0];
           // TODO: rsta[0] does not work here
           if (ena_s) begin
             if (wea && (WRITE_MODE_A == "WRITE_FIRST")) begin
-              rega[(i+1)*MinWidth-1-:MinWidth] <= dina[(i+1)*MinWidth-1-:MinWidth];
+              rega[(a_rd_idx+1)*MinWidth-1-:MinWidth] <= dina[(a_rd_idx+1)*MinWidth-1-:MinWidth];
             end else if (wea && (WRITE_MODE_A == "NO_CHANGE")) begin
-              rega[(i+1)*MinWidth-1-:MinWidth] <= rega[(i+1)*MinWidth-1-:MinWidth];
+              rega[(a_rd_idx+1)*MinWidth-1-:MinWidth] <= rega[(a_rd_idx+1)*MinWidth-1-:MinWidth];
             end else begin  // no wea, or write mode is "READ_FIRST"
-              rega[(i+1)*MinWidth-1-:MinWidth] <= mem[{addra, lsbaddr}];
+              rega[(a_rd_idx+1)*MinWidth-1-:MinWidth] <= mem[{addra, lsbaddr}];
             end
           end
         end
@@ -155,13 +157,13 @@ module ram_tdp_asym #(
 
       // Port A write
       always @(posedge clka) begin : p_wr
-        integer i;
+        integer a_wr_idx;
         reg [Log2Ratio-1:0] lsbaddr;
-        for (i = 0; i < Ratio; i = i + 1) begin
-          lsbaddr = i;
+        for (a_wr_idx = 0; a_wr_idx < Ratio; a_wr_idx = a_wr_idx + 1) begin
+          lsbaddr = a_wr_idx[Log2Ratio-1:0];
           if (ena_s) begin
             if (wea) begin
-              mem[{addra, lsbaddr}] <= dina[(i+1)*MinWidth-1-:MinWidth];
+              mem[{addra, lsbaddr}] <= dina[(a_wr_idx+1)*MinWidth-1-:MinWidth];
             end
           end
         end
@@ -177,18 +179,18 @@ module ram_tdp_asym #(
 
       // Port B read
       always @(posedge clkb) begin : p_rd
-        integer i;
+        integer b_rd_idx;
         reg [Log2Ratio-1:0] lsbaddr;
-        for (i = 0; i < Ratio; i = i + 1) begin
-          lsbaddr = i;
+        for (b_rd_idx = 0; b_rd_idx < Ratio; b_rd_idx = b_rd_idx + 1) begin
+          lsbaddr = b_rd_idx[Log2Ratio-1:0];
           // TODO: rstb[0] does not work here
           if (enb_s) begin
             if (web && (WRITE_MODE_B == "WRITE_FIRST")) begin
-              regb[(i+1)*MinWidth-1-:MinWidth] <= dinb[(i+1)*MinWidth-1-:MinWidth];
+              regb[(b_rd_idx+1)*MinWidth-1-:MinWidth] <= dinb[(b_rd_idx+1)*MinWidth-1-:MinWidth];
             end else if (web && (WRITE_MODE_B == "NO_CHANGE")) begin
-              regb[(i+1)*MinWidth-1-:MinWidth] <= regb[(i+1)*MinWidth-1-:MinWidth];
+              regb[(b_rd_idx+1)*MinWidth-1-:MinWidth] <= regb[(b_rd_idx+1)*MinWidth-1-:MinWidth];
             end else begin  // no web, or write mode is "READ_FIRST"
-              regb[(i+1)*MinWidth-1-:MinWidth] <= mem[{addrb, lsbaddr}];
+              regb[(b_rd_idx+1)*MinWidth-1-:MinWidth] <= mem[{addrb, lsbaddr}];
             end
           end
         end
@@ -196,13 +198,13 @@ module ram_tdp_asym #(
 
       // Port B write
       always @(posedge clkb) begin : p_wr
-        integer i;
+        integer b_wr_idx;
         reg [Log2Ratio-1:0] lsbaddr;
-        for (i = 0; i < Ratio; i = i + 1) begin
-          lsbaddr = i;
+        for (b_wr_idx = 0; b_wr_idx < Ratio; b_wr_idx = b_wr_idx + 1) begin
+          lsbaddr = b_wr_idx[Log2Ratio-1:0];
           if (enb_s) begin
             if (web) begin
-              mem[{addrb, lsbaddr}] <= dinb[(i+1)*MinWidth-1-:MinWidth];
+              mem[{addrb, lsbaddr}] <= dinb[(b_wr_idx+1)*MinWidth-1-:MinWidth];
             end
           end
         end

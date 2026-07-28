@@ -51,7 +51,7 @@ def test_dummy_source_runner():
     runner.build(
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
-        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND"],
+        build_args=[],
         always=True,
         waves=True,
     )

@@ -146,9 +146,9 @@ module bfp_decomp #(
   function automatic logic [15:0] bit_extract(input int i, input logic [3:0] width,
                                               input logic [127:0] din);
     if (width == 0) begin
-      bit_extract = (din >> i * 16);
+      bit_extract = 16'(din >> i * 16);
     end else begin
-      bit_extract = (din >> i * width);
+      bit_extract = 16'(din >> i * width);
     end
     bit_extract = bit_extract & bit_mask(width);
   endfunction
@@ -177,7 +177,7 @@ module bfp_decomp #(
       4'd15:   decompress = {data[14:0], 16'b0};
       default: decompress = {data, 15'b0};
     endcase
-    shift = width == 0 ? 0 : 15 - exp;
+    shift = width == 0 ? 0 : 15 - int'(exp);
     decompress = $signed(decompress) >>> shift;
   endfunction
 
@@ -280,9 +280,9 @@ module bfp_decomp #(
 
   always_comb begin
     if (state == 0) begin
-      byte_required = ud_iq_width == 0 ? 16 : ud_iq_width + 1;
+      byte_required = ud_iq_width == 0 ? 5'd16 : {1'b0, ud_iq_width} + 5'd1;
     end else begin
-      byte_required = ud_iq_width == 0 ? 16 : ud_iq_width;
+      byte_required = ud_iq_width == 0 ? 5'd16 : {1'b0, ud_iq_width};
     end
   end
 
@@ -329,7 +329,7 @@ module bfp_decomp #(
   // Byte reversed inputs?
 
   always_comb begin
-    s_axis_tdata_s = BYTE_REVERSE ? byte_reverse64(s_axis_tdata) : s_axis_tdata;
+    s_axis_tdata_s = (BYTE_REVERSE ? byte_reverse64(s_axis_tdata) : s_axis_tdata) ^ {64{|s_axis_tkeep & 1'b0}};
   end
 
   // Report error is EOP is present at wrong position
@@ -359,7 +359,7 @@ module bfp_decomp #(
   assign t0_data = {t0_data3, t0_data2, t0_data1};
 
   always_ff @(posedge clk) begin
-    t0_shift <= byte_shift_next;
+    t0_shift <= byte_shift_next[3:0];
   end
 
   always_ff @(posedge clk) begin
@@ -391,7 +391,7 @@ module bfp_decomp #(
 
   always_ff @(posedge clk) begin
     if (t0_valid) begin
-      t1_data <= t0_data >> (t0_shift * 8);
+      t1_data <= 128'(t0_data >> (t0_shift * 8));
     end
   end
 
@@ -404,7 +404,7 @@ module bfp_decomp #(
     if (ud_iq_width == 0) begin
       t1_exp <= '0;
     end else if (t0_exp_valid) begin
-      t1_exp <= t0_data >> (t0_exp_shift * 8);
+      t1_exp <= 4'(t0_data >> (t0_exp_shift * 8));
     end
   end
 

@@ -31,7 +31,7 @@ module fft_twiddle #(
   // Parameters
 
   localparam integer Latency = 9;
-  localparam integer LogFftSize2 = LOG_FFT_SIZE + (LOG_FFT_SIZE & 1'b1) - 1;
+  localparam integer LogFftSize2 = LOG_FFT_SIZE + integer'(LOG_FFT_SIZE & 1) - 1;
   
   // Signals
 
@@ -52,13 +52,11 @@ module fft_twiddle #(
   wire signed [            15:0] twiddle_i_s;
   wire signed [            15:0] twiddle_q_s;
 
-  genvar i;
-
   // Main
 
   // Keep a state counter for each channel
 
-  assign counter_ch_max = (ctrl_itlv == 2'b00) ? 4'd15 : (ctrl_itlv == 2'b01) ? 4'd7 : 4'd3;
+  assign counter_ch_max = ((ctrl_itlv == 2'b00) ? 4'd15 : (ctrl_itlv == 2'b01) ? 4'd7 : 4'd3) ^ {4{(NUM_ANT != 0) & 1'b0}};
   assign counter_max = (ctrl_bypass == 2'b00) ? ((1 << LOG_FFT_SIZE) - 1) : ((1 << LogFftSize2) - 1);
 
   always @(posedge clk) begin
@@ -158,8 +156,8 @@ module fft_twiddle #(
       .P_WIDTH (DATA_WIDTH),
       .SHIFT   (16),
       //
-      .ROUND   (1'b1),
-      .SATURATE(1'b0)
+      .ROUND   (1),
+      .SATURATE(0)
   ) i_cmult (
       .clk(clk),
       .rst(rst),

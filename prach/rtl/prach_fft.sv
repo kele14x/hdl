@@ -70,8 +70,8 @@ module prach_fft #(
   end
 
   // Connect input
-  assign s0_dr[0]   = din_dr_r;
-  assign s0_di[0]   = din_di_r;
+  assign s0_dr[0]   = {{(DataWidthInt-DATA_WIDTH){din_dr_r[DATA_WIDTH-1]}}, din_dr_r};
+  assign s0_di[0]   = {{(DataWidthInt-DATA_WIDTH){din_di_r[DATA_WIDTH-1]}}, din_di_r};
   assign s0_dv[0]   = din_dv_r;
 
   generate
@@ -150,7 +150,7 @@ module prach_fft #(
       .rst      (rst),
       .pulse_in (din_last),
       .pulse_out(dout_last),
-      .delay    (Latency)
+      .delay    (11'(Latency))
   );
 
   pulse_delay #(
@@ -160,7 +160,7 @@ module prach_fft #(
       .rst      (rst),
       .pulse_in (din_sf),
       .pulse_out(dout_sf),
-      .delay    (Latency)
+      .delay    (11'(Latency))
   );
 
   pulse_delay #(
@@ -170,7 +170,7 @@ module prach_fft #(
       .rst      (rst),
       .pulse_in (din_sl),
       .pulse_out(dout_sl),
-      .delay    (Latency)
+      .delay    (11'(Latency))
   );
 
   pulse_delay #(
@@ -180,7 +180,7 @@ module prach_fft #(
       .rst      (rst),
       .pulse_in (din_sy),
       .pulse_out(dout_sy),
-      .delay    (Latency)
+      .delay    (11'(Latency))
   );
 
 endmodule

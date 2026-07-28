@@ -1,7 +1,8 @@
 // File: cfr_branch.sv
 // Brief: CFR for one branch (two antenna)
 
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module cfr_branch #(
     parameter int ID             = 0,
@@ -44,6 +45,8 @@ module cfr_branch #(
     input var  [      DATA_WIDTH:0] ctrl_hc_threshold
 );
 
+
+  localparam int unused_id = ID;
 
   logic [DATA_WIDTH-1:0] data_i_s;
   logic [DATA_WIDTH-1:0] data_q_s;
@@ -101,7 +104,7 @@ module cfr_branch #(
   );
 
   // For CPW memory read back
-  bram_sp_pipe #(
+  ram_sp_pipe #(
       .ADDR_WIDTH  (CPW_ADDR_WIDTH),
       .DATA_WIDTH  (CPW_DATA_WIDTH * 2),
       .READ_LATENCY(1),

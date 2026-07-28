@@ -65,8 +65,8 @@ module prach_fft_ditfft3_bf3 #(
   always_comb begin
     if (cnt == 0 || cnt == 1) begin
       // x0, x1 + x2
-      x1r_s = din_dr;
-      x1i_s = din_di;
+      x1r_s = {din_dr[DATA_WIDTH-1], din_dr};
+      x1i_s = {din_di[DATA_WIDTH-1], din_di};
     end else begin
       // x1 - x2
       x1r_s = x1r - din_dr;
@@ -86,14 +86,14 @@ module prach_fft_ditfft3_bf3 #(
       x2i_s = x1i + din_di;
     end else begin
       // x0, x1 - x2
-      x2r_s = x1r;
-      x2i_s = x1i;
+      x2r_s = {x1r[DATA_WIDTH-1], x1r};
+      x2i_s = {x1i[DATA_WIDTH-1], x1i};
     end
   end
 
   always_ff @(posedge clk) begin
-    x2r = x2r_s[DATA_WIDTH-1:0];
-    x2i = x2i_s[DATA_WIDTH-1:0];
+    x2r <= x2r_s[DATA_WIDTH-1:0];
+    x2i <= x2i_s[DATA_WIDTH-1:0];
   end
 
   always_ff @(posedge clk) begin

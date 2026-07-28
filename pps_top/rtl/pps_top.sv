@@ -94,6 +94,8 @@ module pps_top #(
   logic [22:0] ctrl_dl_offset;
   logic [22:0] ctrl_ul_offset;
 
+  wire unused_axi_addr = |{s_axi_awaddr[31:7], s_axi_araddr[31:7]};
+
   logic [31:0] stat_pps_offset;
 
   logic [31:0] stat_ts_cnt;
@@ -124,7 +126,7 @@ module pps_top #(
       .s_axi_aclk        (s_axi_aclk),
       .s_axi_aresetn     (s_axi_aresetn),
       //
-      .s_axi_awaddr      (s_axi_awaddr),
+      .s_axi_awaddr      (s_axi_awaddr[6:0]),
       .s_axi_awprot      (s_axi_awprot),
       .s_axi_awvalid     (s_axi_awvalid),
       .s_axi_awready     (s_axi_awready),
@@ -138,7 +140,7 @@ module pps_top #(
       .s_axi_bvalid      (s_axi_bvalid),
       .s_axi_bready      (s_axi_bready),
       //
-      .s_axi_araddr      (s_axi_araddr),
+      .s_axi_araddr      (s_axi_araddr[6:0]),
       .s_axi_arprot      (s_axi_arprot),
       .s_axi_arvalid     (s_axi_arvalid),
       .s_axi_arready     (s_axi_arready),
@@ -185,7 +187,7 @@ module pps_top #(
       // System
       //-------
       .clk        (clk),
-      .rst        (rst),
+      .rst        (rst | ctrl_soft_reset),
       //
       .rst_int    (rst_int),
       .sync_int   (sync_int),
@@ -285,12 +287,10 @@ module pps_top #(
       //
       .pps_in         (pps_in),
       //
-      .sys_timer_s    (sys_timer_s),
       .sys_timer_ns   (sys_timer_ns),
       // CSR
       //----
       .ctrl_clk       (ctrl_clk),
-      .ctrl_rst       (ctrl_rst),
       //
       .stat_pps_offset(stat_pps_offset)
   );
@@ -299,7 +299,7 @@ module pps_top #(
       .DEST_SYNC_FF  (2),
       .INIT_SYNC_FF  (0),
       .REG_OUTPUT    (1),
-      .RST_USED      (0),
+      .RST_USED      (1),
       .SIM_ASSERT_CHK(0)
   ) xpm_cdc_pulse_pps (
       .src_clk   (clk),
@@ -323,13 +323,14 @@ module pps_top #(
       // CSR
       //----
       .ctrl_clk      (ctrl_clk),
-      .ctrl_rst      (ctrl_rst),
       //
       .stat_ts_cnt   (stat_ts_cnt),
       .stat_ts_offset(stat_ts_offset)
   );
 
   assign raw_10ms_strobe = start_of_frame;
+  assign ctrl_dl_offset = 23'd0;
+  assign ctrl_ul_offset = 23'd0;
 
   pps_delay i_dl (
       .clk        (clk),

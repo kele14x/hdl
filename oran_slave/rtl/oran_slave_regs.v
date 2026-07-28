@@ -189,6 +189,10 @@ module oran_slave_regs (
     reg         int_rd_err;
     reg  [31:0] int_rd_data;
 
+    wire        unused_reg_inputs;
+
+    assign unused_reg_inputs = &{1'b0, s_axi_awprot, s_axi_arprot, int_addr[1:0], int_wr_strb};
+
 
     //--------------------------------------------------------------------------
     // AXI4-Lite Interface
@@ -215,7 +219,7 @@ module oran_slave_regs (
 
     always @(posedge aclk) begin
         if (!aresetn) begin
-            aw_addr <= 1'sb0;
+            aw_addr <= '0;
         end else if (aw_hsk == 1'b1) begin
             aw_addr <= s_axi_awaddr;
         end
@@ -251,7 +255,7 @@ module oran_slave_regs (
 
     always @(posedge aclk) begin
         if (!aresetn) begin
-            w_data <= 1'sb0;
+            w_data <= '0;
         end else if (w_hsk == 1'b1) begin
             w_data <= s_axi_wdata;
         end
@@ -259,7 +263,7 @@ module oran_slave_regs (
 
     always @(posedge aclk) begin
         if (!aresetn) begin
-            w_strb <= 1'sb0;
+            w_strb <= '0;
         end else if (w_hsk == 1'b1) begin
             w_strb <= s_axi_wstrb;
         end
@@ -320,7 +324,7 @@ module oran_slave_regs (
 
     always @(posedge aclk) begin
         if (!aresetn) begin
-            ar_addr <= 1'sb0;
+            ar_addr <= '0;
         end else if (ar_hsk == 1'b1) begin
             ar_addr <= s_axi_araddr;
         end
@@ -358,7 +362,7 @@ module oran_slave_regs (
 
     always @(posedge aclk) begin
         if (!aresetn) begin
-            r_data <= 1'sb0;
+            r_data <= '0;
         end else if (int_rd_ack) begin
             r_data <= int_rd_data;
         end
@@ -1526,7 +1530,7 @@ module oran_slave_regs (
     reg        field_strb;
 
     always @(*) begin
-        field_rd_data_next = 1'sb0;
+        field_rd_data_next = '0;
         if (int_rd_en && version_val_strb) begin
             field_rd_data_next[31:0] = field_rd_data_next[31:0] | version_val_value;
         end
@@ -1820,7 +1824,7 @@ module oran_slave_regs (
     end
 
     always @(*) begin
-        int_rd_data = 1'sb0;
+        int_rd_data = '0;
         if (field_strb) begin
             int_rd_data = int_rd_data | field_rd_data;
         end

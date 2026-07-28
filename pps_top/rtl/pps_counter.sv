@@ -31,6 +31,7 @@ module pps_counter (
   logic        ctrl_freq_send;
   logic        ctrl_freq_rcv;
   logic [31:0] ctrl_freq_cdc;
+  wire         unused_ctrl_freq_req;
 
   logic [31:0] sample_cnt;
   logic [32:0] sample_cnt_adder;
@@ -85,7 +86,7 @@ module pps_counter (
       //
       .dest_clk(clk),
       .dest_out(ctrl_freq_cdc),
-      .dest_req(  /* not used */),
+      .dest_req(unused_ctrl_freq_req),
       .dest_ack(1'b1)
   );
 

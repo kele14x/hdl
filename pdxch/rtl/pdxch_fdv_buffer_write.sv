@@ -36,6 +36,8 @@ module pdxch_fdv_buffer_write #(
   logic         wr_en_r;
   logic [127:0] wr_data_r;
 
+  wire unused_inputs = &{1'b0, rst, s_dl_sym_num[11:1], s_axis_tkeep, s_axis_tlast, s_axis_tuser[89:31], s_axis_tuser[26:18], rx_u_numPrb};
+
   assign rx_u_sos      = s_axis_tuser[90];
   assign rx_u_cc       = s_axis_tuser[30:27];
   assign rx_u_numPrb   = s_axis_tuser[17:10];
@@ -87,12 +89,12 @@ module pdxch_fdv_buffer_write #(
 
   always_ff @(posedge clk) begin
     if (rx_u_sos) begin
-      wr_cc_r <= (rx_u_cc == CC_ID);
+      wr_cc_r <= (rx_u_cc == 4'(CC_ID));
     end
   end
 
   always_ff @(posedge clk) begin
-    wr_en_r <= s_axis_tvalid && (wr_cc_r || (rx_u_sos && (rx_u_cc == CC_ID)));
+    wr_en_r <= s_axis_tvalid && (wr_cc_r || (rx_u_sos && (rx_u_cc == 4'(CC_ID))));
   end
 
   assign wr_en = wr_en_r;

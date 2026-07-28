@@ -158,7 +158,7 @@ def test_bfp_decomp_runner():
         parameters=parameters,
         build_args=["-suppress", "2892"]
         if SIM == "questa"
-        else ["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND"],
+        else [],
         waves=True,
         always=True,
     )

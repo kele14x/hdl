@@ -91,6 +91,7 @@ module puxch_channel #(
 
   logic [15:0] fft_dout_dr;
   logic [15:0] fft_dout_di;
+  logic        fft_stat_ovf;
   logic        fft_dout_sf;
   logic        fft_dout_sl;
   logic        fft_dout_sy;
@@ -114,42 +115,42 @@ module puxch_channel #(
 
   always_ff @(posedge ctrl_clk) begin
     if (ctrl_rat == 2'b00) begin  // LTE
-      ctrl_size = 2'b01;  // 2k
+      ctrl_size <= 2'b01;  // 2k
     end else if (ctrl_rat == 2'b01) begin  // NR 15 kHz SCS
       case (ctrl_bw)
-        4'd0:    ctrl_size = 2'b01; // 2k
-        4'd1:    ctrl_size = 2'b01; // 2k
-        4'd2:    ctrl_size = 2'b01; // 2k
-        default: ctrl_size = 2'b10; // 4k
+        4'd0:    ctrl_size <= 2'b01; // 2k
+        4'd1:    ctrl_size <= 2'b01; // 2k
+        4'd2:    ctrl_size <= 2'b01; // 2k
+        default: ctrl_size <= 2'b10; // 4k
       endcase
     end else begin  // NR 30kHz SCS
       case (ctrl_bw)
-        4'd0:    ctrl_size = 2'b00; // 1k
-        4'd1:    ctrl_size = 2'b00; // 1k
-        4'd2:    ctrl_size = 2'b00; // 1k
-        4'd3:    ctrl_size = 2'b01; // 2k
-        default: ctrl_size = 2'b10; // 4k
+        4'd0:    ctrl_size <= 2'b00; // 1k
+        4'd1:    ctrl_size <= 2'b00; // 1k
+        4'd2:    ctrl_size <= 2'b00; // 1k
+        4'd3:    ctrl_size <= 2'b01; // 2k
+        default: ctrl_size <= 2'b10; // 4k
       endcase
     end
   end
 
   always_ff @(posedge ctrl_clk) begin
     if (ctrl_rat == 2'b00) begin  // LTE
-      ctrl_itlv = 2'b00;  // 16
+      ctrl_itlv <= 2'b00;  // 16
     end else if (ctrl_rat == 2'b01) begin  // NR 15 kHz SCS
       case (ctrl_bw)
-        4'd0:    ctrl_itlv = 2'b00; // 16
-        4'd1:    ctrl_itlv = 2'b00; // 16
-        4'd2:    ctrl_itlv = 2'b00; // 16
-        default: ctrl_itlv = 2'b01; // 8
+        4'd0:    ctrl_itlv <= 2'b00; // 16
+        4'd1:    ctrl_itlv <= 2'b00; // 16
+        4'd2:    ctrl_itlv <= 2'b00; // 16
+        default: ctrl_itlv <= 2'b01; // 8
       endcase
     end else begin  // NR 30kHz SCS
       case (ctrl_bw)
-        4'd0:    ctrl_itlv = 2'b00; // 16
-        4'd1:    ctrl_itlv = 2'b00; // 16
-        4'd2:    ctrl_itlv = 2'b00; // 16
-        4'd3:    ctrl_itlv = 2'b01; // 8
-        default: ctrl_itlv = 2'b10; // 4
+        4'd0:    ctrl_itlv <= 2'b00; // 16
+        4'd1:    ctrl_itlv <= 2'b00; // 16
+        4'd2:    ctrl_itlv <= 2'b00; // 16
+        4'd3:    ctrl_itlv <= 2'b01; // 8
+        default: ctrl_itlv <= 2'b10; // 4
       endcase
     end
   end
@@ -341,8 +342,8 @@ module puxch_channel #(
       //
       .ctrl_size(ctrl_size),
       .ctrl_itlv(ctrl_itlv),
+      .stat_ovf (fft_stat_ovf)
       //
-      .stat_ovf ()
   );
 
   phase_comp #(
@@ -388,6 +389,8 @@ module puxch_channel #(
   assign dout_chn  = phase_comp_dout_chn;
   assign dout_dv   = phase_comp_dout_dv;
   assign dout_last = phase_comp_dout_last;
+
+  wire unused_channel = &{1'b0, fft_stat_ovf};
 
 endmodule
 

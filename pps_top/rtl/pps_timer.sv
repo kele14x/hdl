@@ -75,6 +75,7 @@ module pps_timer (
   logic [39:0] counter_ns;
   logic [39:0] counter_ns_pre;
   logic [39:0] counter_ns_adder;
+  wire         unused_counter_ns_pre_frac = |counter_ns_pre[7:0];
 
   // logic        ns_wrap1;
   // logic        ns_wrap2;
@@ -90,6 +91,10 @@ module pps_timer (
 
   logic        ctrl_adj_valid_cdc;
   logic [31:0] ctrl_adj_ns_cdc;
+
+  wire         unused_ctrl_get_req;
+  wire         unused_ctrl_set_rcv;
+  wire         unused_ctrl_adj_rcv;
 
 
   // System Timer
@@ -145,7 +150,7 @@ module pps_timer (
   // counter_ns_pre
   always_comb begin
     if (~sample_inc[0]) begin
-      counter_ns_pre = counter_ns + 0;
+      counter_ns_pre = counter_ns;
     end else if (~sample_inc[1]) begin
       counter_ns_pre = counter_ns + (ns_frac == 0 ? AdderConst0 : AdderConst1);
     end else begin  // sample_inc[1] == 1
@@ -247,7 +252,7 @@ module pps_timer (
       //
       .dest_clk(ctrl_clk),
       .dest_out({ctrl_get_s, ctrl_get_ns}),
-      .dest_req(  /* not used */),
+      .dest_req(unused_ctrl_get_req),
       .dest_ack(1'b1)
   );
 
@@ -276,7 +281,7 @@ module pps_timer (
       .src_clk (ctrl_clk),
       .src_in  ({ctrl_set_s, ctrl_set_ns}),
       .src_send(ctrl_set_valid),
-      .src_rcv (),
+      .src_rcv (unused_ctrl_set_rcv),
       //
       .dest_clk(clk),
       .dest_out({ctrl_set_s_cdc, ctrl_set_ns_cdc}),
@@ -299,7 +304,7 @@ module pps_timer (
       .src_clk (ctrl_clk),
       .src_in  (ctrl_adj_ns),
       .src_send(ctrl_adj_valid),
-      .src_rcv (),
+      .src_rcv (unused_ctrl_adj_rcv),
       //
       .dest_clk(clk),
       .dest_out(ctrl_adj_ns_cdc),

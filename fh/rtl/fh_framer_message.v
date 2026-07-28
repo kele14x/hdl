@@ -37,6 +37,8 @@ module fh_framer_message (
   wire        int_tvalid;
   wire        int_tlast;
   wire        int_tready;
+  wire        int_tuser;
+  wire        unused_tuser = &{1'b0, int_tuser};
 
   // Main
 
@@ -170,7 +172,7 @@ module fh_framer_message (
       .m_axis_tdata (int_tdata),
       .m_axis_tkeep (int_tkeep),
       .m_axis_tlast (int_tlast),
-      .m_axis_tuser (),
+      .m_axis_tuser (int_tuser),
       .m_axis_tvalid(int_tvalid),
       .m_axis_tready(int_tready)
   );

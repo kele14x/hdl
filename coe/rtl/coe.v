@@ -216,13 +216,37 @@ module coe (
   wire [15:0] s0_trans_payloadsize;
   wire [15:0] s0_trans_rtc_pc_id;
 
+  wire unused_axi_addr = &{1'b0, s_axi_awaddr[31:10], s_axi_araddr[31:10],
+    stat_fram_total_pkt_cnt, stat_fram_ecpri_pkt_cnt, stat_fram_trans_pkt_cnt,
+    stat_fram_odm_pkt_cnt,
+    m0_mac_header_valid, m0_mac_dest_mac, m0_mac_source_mac, m0_mac_with_vlan,
+    m0_mac_vlan_tag, m0_mac_ethertype, m0_ecpri_header_valid, m0_ecpri_concat,
+    m0_ecpri_messagetype, m0_ecpri_payloadsize, m0_odm_header_valid,
+    m0_odm_measurementid, m0_odm_actiontype, m0_odm_timestamp,
+    m0_odm_compensation, m0_odm_timestamp2};
+
+  assign ctrl_defm_reset = 1'b0;
+  assign ctrl_fram_reset = 1'b0;
+  assign ctrl_defm_has_vlan = 1'b0;
+  assign ctrl_defm_vlan_tag = 16'd0;
+  assign ctrl_defm_src_mac_flt_mask = 48'd0;
+  assign ctrl_defm_vlan_flt_en = 1'b0;
+  assign ctrl_defm_vlan_flt_mask = 16'd0;
+
+  wire [31:0] unused_ptp_tdata;
+  wire [ 3:0] unused_ptp_tkeep;
+  wire        unused_ptp_tlast;
+  wire [79:0] unused_ptp_tuser;
+  wire        unused_ptp_tvalid;
+  wire        unused_s_ptp_tready;
+
   // Main
 
   coe_regs i_regs (
       .s_axi_aclk                   (s_axi_aclk),
       .s_axi_aresetn                (s_axi_aresetn),
       //
-      .s_axi_awaddr                 (s_axi_awaddr),
+      .s_axi_awaddr                 (s_axi_awaddr[9:0]),
       .s_axi_awprot                 (s_axi_awprot),
       .s_axi_awvalid                (s_axi_awvalid),
       .s_axi_awready                (s_axi_awready),
@@ -236,7 +260,7 @@ module coe (
       .s_axi_bvalid                 (s_axi_bvalid),
       .s_axi_bready                 (s_axi_bready),
       //
-      .s_axi_araddr                 (s_axi_araddr),
+      .s_axi_araddr                 (s_axi_araddr[9:0]),
       .s_axi_arprot                 (s_axi_arprot),
       .s_axi_arvalid                (s_axi_arvalid),
       .s_axi_arready                (s_axi_arready),
@@ -483,11 +507,11 @@ module coe (
       .m_odm_compensation        (m0_odm_compensation),
       .m_odm_timestamp2          (m0_odm_timestamp2),
       // PTP
-      .m_ptp_tdata               (  /* not used */),
-      .m_ptp_tkeep               (  /* not used */),
-      .m_ptp_tlast               (  /* not used */),
-      .m_ptp_tuser               (  /* not used */),
-      .m_ptp_tvalid              (  /* not used */),
+      .m_ptp_tdata               (unused_ptp_tdata),
+      .m_ptp_tkeep               (unused_ptp_tkeep),
+      .m_ptp_tlast               (unused_ptp_tlast),
+      .m_ptp_tuser               (unused_ptp_tuser),
+      .m_ptp_tvalid              (unused_ptp_tvalid),
       .m_ptp_tready              (1'b1),
       // Message
       .m_message_tdata           (m_message_tdata),
@@ -511,7 +535,7 @@ module coe (
       .s_ptp_tlast               ('b0),
       .s_ptp_tuser               ('b0),
       .s_ptp_tvalid              ('b0),
-      .s_ptp_tready              (  /* not used */),
+      .s_ptp_tready              (unused_s_ptp_tready),
       // Message
       .s_message_tdata           (s_message_tdata),
       .s_message_tkeep           (s_message_tkeep),

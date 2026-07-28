@@ -73,6 +73,12 @@ module puxch_conv #(
 
   logic               last;
 
+  localparam int AntIndexWidth = (NUM_ANT <= 1) ? 1 : $clog2(NUM_ANT);
+
+  wire [AntIndexWidth-1:0] din_chn_idx;
+
+  assign din_chn_idx = din_chn[AntIndexWidth-1:0];
+
   logic        [11:0] pinc_r;
 
   logic        [11:0] phase;
@@ -82,6 +88,8 @@ module puxch_conv #(
 
   logic signed [15:0] din_dr_d;
   logic signed [15:0] din_di_d;
+  logic               mult_ovf;
+  logic               cmult_ovf;
 
 
   // CDC for control signals
@@ -148,8 +156,8 @@ module puxch_conv #(
   always_comb begin
     if (din_sy) begin
       index_next = '0;
-    end else if (din_dv && (din_chn < NUM_ANT)) begin
-      index_next = (index[din_chn] + fft_size);
+    end else if (din_dv && (din_chn < 4'(NUM_ANT))) begin
+      index_next = (index[din_chn_idx] + 12'(fft_size));
     end else begin
       index_next = '0;
     end
@@ -178,8 +186,8 @@ module puxch_conv #(
   always_comb begin
     if (din_sy) begin
       valid_next = din_dv;
-    end else if (din_dv && (din_chn < NUM_ANT)) begin
-      valid_next = ((index[din_chn] == index_mask) ? 1'b0 : valid[din_chn]);
+    end else if (din_dv && (din_chn < 4'(NUM_ANT))) begin
+      valid_next = ((index[din_chn_idx] == index_mask) ? 1'b0 : valid[din_chn_idx]);
     end else begin
       valid_next = 1'b0;
     end
@@ -235,8 +243,8 @@ module puxch_conv #(
       .a  ({1'b0, index_r}),
       .b  ({1'b0, pinc_r}),
       .p  (phase),
+      .ovf(mult_ovf)
       //
-      .ovf()
   );
 
   dds_lut #(
@@ -288,8 +296,8 @@ module puxch_conv #(
       //
       .pr (dout_dr),
       .pi (dout_di),
+      .ovf(cmult_ovf)
       //
-      .ovf()
   );
 
   delay #(
@@ -313,6 +321,8 @@ module puxch_conv #(
       .din ({last, valid_r}),
       .dout({dout_last, dout_dv})
   );
+
+  wire unused_conv = &{1'b0, din_last, mult_ovf, cmult_ovf};
 
 endmodule
 

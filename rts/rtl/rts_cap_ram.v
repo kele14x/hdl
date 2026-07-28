@@ -78,13 +78,16 @@ module rts_cap_ram (
 
   reg                  ctrl_ram_en_d;
 
+  wire                 unused_s_axis_meta = |{s_axis_tuser[7:1], s_axis_tlast};
+  wire                 unused_ctrl_ram_write = |{ctrl_ram_we, ctrl_ram_din};
+
   // Control signals CDC
 
   cdc_pulse #(
       .DEST_SYNC_FF(4),
       .INIT_SYNC_FF(0),
       .REG_OUTPUT  (0),
-      .RST_USED    (1)
+      .RST_USED    (0)
   ) i_cdc_ctrl_cap_trigger (
       .src_clk   (ctrl_clk),
       .src_rst   (ctrl_rst),
@@ -99,7 +102,7 @@ module rts_cap_ram (
       .DEST_SYNC_FF(4),
       .INIT_SYNC_FF(0),
       .REG_OUTPUT  (0),
-      .RST_USED    (1)
+      .RST_USED    (0)
   ) i_cdc_ctrl_cap_force (
       .src_clk   (ctrl_clk),
       .src_rst   (ctrl_rst),
@@ -156,7 +159,7 @@ module rts_cap_ram (
       .DEST_SYNC_FF(4),
       .INIT_SYNC_FF(0),
       .REG_OUTPUT  (0),
-      .RST_USED    (1)
+      .RST_USED    (0)
   ) i_cdc_state_is_idle (
       .src_clk   (clk),
       .src_rst   (rst),
@@ -167,10 +170,12 @@ module rts_cap_ram (
       .dest_pulse(state_is_idle_s)
   );
 
+  initial begin
+    stat_cap_status = 1'b0;
+  end
+
   always @(posedge ctrl_clk) begin
-    if (ctrl_rst) begin
-      stat_cap_status <= 1'b0;
-    end else if (ctrl_cap_trigger || ctrl_cap_force) begin
+    if (ctrl_cap_trigger || ctrl_cap_force) begin
       stat_cap_status <= 1'b1;
     end else if (state_is_idle_s) begin
       stat_cap_status <= 1'b0;
@@ -301,15 +306,15 @@ module rts_cap_ram (
     case (ctrl_cap_mode_s)
       2'b00: begin
         // 30.72 Msps, 1/16 tick
-        ram_wea <= (state == S_CAPTURE) && seq_counter_d == 4'd0;
+        ram_wea <= (state == S_CAPTURE) && s_axis_tvalid && seq_counter_d == 4'd0;
       end
       2'b01: begin
         // 61.44 Msps, 1/8 tick
-        ram_wea <= (state == S_CAPTURE) && seq_counter_d[2:0] == 3'd0;
+        ram_wea <= (state == S_CAPTURE) && s_axis_tvalid && seq_counter_d[2:0] == 3'd0;
       end
       2'b10: begin
         // 122.88 Msps, 1/4 tick
-        ram_wea <= (state == S_CAPTURE) && seq_counter_d[1:0] == 2'd0;
+        ram_wea <= (state == S_CAPTURE) && s_axis_tvalid && seq_counter_d[1:0] == 2'd0;
       end
       default: begin
         ram_wea <= 1'b0;

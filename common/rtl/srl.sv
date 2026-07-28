@@ -72,7 +72,11 @@ module srl #(
     if (OUTPUT_REG == 0) begin : g_no_reg
 
       always_comb begin
-        dout_s = dsrl[addr];
+        if (rst) begin
+          dout_s = {DATA_WIDTH{1'b0}};
+        end else begin
+          dout_s = dsrl[addr];
+        end
       end
 
     end else begin : g_reg

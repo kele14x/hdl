@@ -9,12 +9,8 @@ module pdxch_conv_nco (
     output wire [15:0] sin
 );
 
-  localparam int Latency = 3;
 
-  localparam logic [6:0] Phase000 = 7'b0000000;
-  localparam logic [6:0] PhasePI4 = 7'b0010000;
   localparam logic [6:0] PhasePi2 = 7'b0100000;
-  localparam logic [6:0] Phase1Pi = 7'b1000000;
 
   logic [15:0] cos_lut  [128];
 
@@ -31,7 +27,7 @@ module pdxch_conv_nco (
 
   initial begin
     for (int i = 0; i < 128; i++) begin
-      cos_lut[i] = int'($cos(3.1415926535 * 2 * i / 128) * 2 ** 14);
+      cos_lut[i] = 16'(int'($cos(3.1415926535 * 2 * i / 128) * 2 ** 14));
     end
   end
 

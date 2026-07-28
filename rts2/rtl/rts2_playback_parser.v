@@ -72,7 +72,7 @@ module rts2_playback_parser (
   wire               sync_in_posedge;
 
   wire        [63:0] s_axis_tdata_rev;
-  reg         [63:0] s_axis_tdata_reg;
+  reg         [55:0] s_axis_tdata_reg;
   reg         [63:0] s_axis_tdata_shift;
   reg         [63:0] s_axis_tdata_shift2;
 
@@ -106,11 +106,17 @@ module rts2_playback_parser (
   reg         [ 8:0] timestamp_counter_lsb;
   reg         [13:0] timestamp_counter;
   reg                timestamp_counter_odd;
-  reg                timestamp_counter_valid = 1'b0;
+  reg                timestamp_counter_valid;
 
   wire        [13:0] timestamp_counter_cdc;
   wire               timestamp_counter_cdc_odd;
   wire               timestamp_counter_cdc_valid;
+
+  wire [31:0] shift_next_full;
+  wire signed [31:0] record_timestamp_plus;
+  wire signed [31:0] record_timestamp_minus;
+  wire timestamp_counter_src_ready;
+  wire unused_axis_inputs = &{1'b0, s_axis_tkeep, shift_next_full[31:3], record_timestamp_plus[31:14], record_timestamp_minus[31:14], timestamp_counter_src_ready, 1'b0};
 
   integer state, state_next;
 
@@ -211,8 +217,9 @@ module rts2_playback_parser (
       S_WAIT: begin
         if (!ctrl_en_s) begin
           state_next = S_IDLE;
-        end else if ((timestamp_counter_cdc >= record_timestamp_wrapped) ^
-                      timestamp_counter_cdc_odd ^ record_timestamp_wrapped_odd ^ record_timestamp_wrapped_swap) begin
+        end else if (timestamp_counter_cdc_valid &&
+                    ((timestamp_counter_cdc >= record_timestamp_wrapped) ^
+                      timestamp_counter_cdc_odd ^ record_timestamp_wrapped_odd ^ record_timestamp_wrapped_swap)) begin
           // We wait until the timestamp counter reaches the record timestamp
           state_next = S_DATA;
         end
@@ -243,7 +250,7 @@ module rts2_playback_parser (
 
   always @(posedge ddr4_clk) begin
     if (s_axis_tvalid && s_axis_tready) begin
-      s_axis_tdata_reg <= s_axis_tdata_rev;
+      s_axis_tdata_reg <= s_axis_tdata_rev[55:0];
     end
   end
 
@@ -318,7 +325,8 @@ module rts2_playback_parser (
 
   assign shift                  = length_counter[2:0];
 
-  assign shift_next             = 3'h7 & (length_counter + 32'd8 - record_length_reg);
+  assign shift_next_full        = length_counter + 32'd8 - record_length_reg;
+  assign shift_next             = shift_next_full[2:0];
 
   // Record timestamp (Microseconds) field is at Record Header 0
 
@@ -347,15 +355,18 @@ module rts2_playback_parser (
   // Instead of using the real modulo operation, we use a simple wrap-around
   // to avoid the complexity of the modulo operation. But this only works
   // when the record timestamp is between -10000 and 20000.
+  assign record_timestamp_plus  = record_timestamp_reg + 32'sd10000;
+  assign record_timestamp_minus = record_timestamp_reg - 32'sd10000;
+
   always @(posedge ddr4_clk) begin
     if (record_timestamp_reg < 0) begin
-      record_timestamp_wrapped      <= record_timestamp_reg + 32'd10000;
+      record_timestamp_wrapped      <= record_timestamp_plus[13:0];
       record_timestamp_wrapped_swap <= 1'b1;
-    end else if (record_timestamp_reg >= 32'd10000) begin
-      record_timestamp_wrapped      <= record_timestamp_reg - 32'd10000;
+    end else if (record_timestamp_reg >= 32'sd10000) begin
+      record_timestamp_wrapped      <= record_timestamp_minus[13:0];
       record_timestamp_wrapped_swap <= 1'b1;
     end else begin
-      record_timestamp_wrapped      <= record_timestamp_reg;
+      record_timestamp_wrapped      <= record_timestamp_reg[13:0];
       record_timestamp_wrapped_swap <= 1'b0;
     end
   end
@@ -391,7 +402,7 @@ module rts2_playback_parser (
       timestamp_counter_lsb <= 9'd0;
     end else if (sync_in_posedge) begin
       timestamp_counter_lsb <= 9'd0;
-    end else if (timestamp_counter_lsb == 399) begin
+    end else if (timestamp_counter_lsb == 9'd399) begin
       timestamp_counter_lsb <= 9'd0;
     end else begin
       timestamp_counter_lsb <= timestamp_counter_lsb + 9'd1;
@@ -400,13 +411,13 @@ module rts2_playback_parser (
 
   always @(posedge clk) begin
     if (rst) begin
-      timestamp_counter     <= 32'd0;
+      timestamp_counter     <= 14'd0;
       timestamp_counter_odd <= 1'b0;
     end else if (sync_in_posedge) begin
-      timestamp_counter     <= 32'd0;
+      timestamp_counter     <= 14'd0;
       timestamp_counter_odd <= ~timestamp_counter_odd;
-    end else if (timestamp_counter_lsb == 399 && timestamp_counter < 9999) begin
-      timestamp_counter <= timestamp_counter + 1;
+    end else if (timestamp_counter_lsb == 9'd399 && timestamp_counter < 14'd9999) begin
+      timestamp_counter <= timestamp_counter + 14'd1;
     end
   end
 
@@ -415,7 +426,7 @@ module rts2_playback_parser (
       timestamp_counter_valid <= 1'b0;
     end else if (sync_in_posedge) begin
       timestamp_counter_valid <= 1'b1;
-    end else if (timestamp_counter_lsb == 399) begin
+    end else if (timestamp_counter_lsb == 9'd399) begin
       timestamp_counter_valid <= 1'b1;
     end else begin
       timestamp_counter_valid <= 1'b0;
@@ -433,7 +444,7 @@ module rts2_playback_parser (
       .src_clk   (clk),
       .src_in    ({timestamp_counter_odd, timestamp_counter}),
       .src_valid (timestamp_counter_valid),
-      .src_ready (),
+      .src_ready (timestamp_counter_src_ready),
       //
       .dest_clk  (ddr4_clk),
       .dest_out  ({timestamp_counter_cdc_odd, timestamp_counter_cdc}),

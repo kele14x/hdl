@@ -161,9 +161,17 @@ module ecpri_if #(
     output wire [15:0] stat_topology_id
 );
 
+  wire unused_control_inputs = &{1'b0,
+    ctrl_defm_reset, ctrl_fram_reset, ctrl_defm_en, ctrl_fram_en,
+    ctrl_defm_dest_mac, ctrl_defm_src_mac, ctrl_defm_has_vlan, ctrl_defm_vlan_tag,
+    ctrl_defm_dest_mac_flt_en, ctrl_defm_src_mac_flt_en, ctrl_defm_src_mac_flt_mask,
+    ctrl_defm_vlan_flt_en, ctrl_defm_vlan_flt_mask
+  };
+
   wire [79:0] tx_ptp_timestamp_s;
   wire [15:0] tx_ptp_timestamp_tag_s;
   wire        tx_ptp_timestamp_valid_s;
+  wire        unused_tx_ptp_timestamp_ready;
 
   wire [15:0] stat_topology_id_s;
 
@@ -320,7 +328,7 @@ module ecpri_if #(
           .src_clk   (tx_eth_clk),
           .src_in    ({tx_ptp_timestamp_tag, tx_ptp_timestamp}),
           .src_valid (tx_ptp_timestamp_valid),
-          .src_ready (),
+          .src_ready (unused_tx_ptp_timestamp_ready),
           //
           .dest_clk  (clk),
           .dest_out  ({tx_ptp_timestamp_tag_s, tx_ptp_timestamp_s}),

@@ -12,8 +12,15 @@ module async_input_sync #(
     output wire sync_out
 );
 
+  initial begin : drc_check
+    assert (INIT == 1'b0 || INIT == 1'b1)
+    else begin
+      $error("[%m]: INIT value is outside of valid range.");
+    end
+  end
+
   (* ASYNC_REG="TRUE" *)
-  reg [SYNC_STAGES-1:0] sreg = {SYNC_STAGES{INIT}};
+  reg [SYNC_STAGES-1:0] sreg;
 
   always @(posedge clk) begin
     sreg <= {sreg[SYNC_STAGES-2:0], async_in};
@@ -26,7 +33,7 @@ module async_input_sync #(
 
     end else if (PIPELINE_STAGES == 1) begin : g_one_pipeline
 
-      reg sreg_pipe = INIT;
+      reg sreg_pipe;
 
       always @(posedge clk) begin
         sreg_pipe <= sreg[SYNC_STAGES-1];
@@ -37,7 +44,7 @@ module async_input_sync #(
     end else begin : g_multiple_pipeline
 
       (* shreg_extract = "no" *)
-      reg [PIPELINE_STAGES-1:0] sreg_pipe = {PIPELINE_STAGES{INIT}};
+      reg [PIPELINE_STAGES-1:0] sreg_pipe;
 
       always @(posedge clk) begin
         sreg_pipe <= {sreg_pipe[PIPELINE_STAGES-2:0], sreg[SYNC_STAGES-1]};

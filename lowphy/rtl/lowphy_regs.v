@@ -383,6 +383,10 @@ module lowphy_regs (
     reg         int_rd_err;
     reg  [31:0] int_rd_data;
 
+    wire        unused_axi_inputs;
+
+    assign unused_axi_inputs = &{1'b0, s_axi_awprot, s_axi_arprot, int_addr[1:0], int_wr_strb};
+
 
     //--------------------------------------------------------------------------
     // AXI4-Lite Interface
@@ -408,7 +412,7 @@ module lowphy_regs (
 
     always @(posedge aclk) begin
         if (!aresetn) begin
-            aw_addr <= 1'sb0;
+            aw_addr <= '0;
         end else if (aw_hsk) begin
             aw_addr <= s_axi_awaddr;
         end
@@ -447,7 +451,7 @@ module lowphy_regs (
 
     always @(posedge aclk) begin
         if (!aresetn) begin
-            w_data <= 1'sb0;
+            w_data <= '0;
         end else if (w_hsk) begin
             w_data <= s_axi_wdata;
         end
@@ -455,7 +459,7 @@ module lowphy_regs (
 
     always @(posedge aclk) begin
         if (!aresetn) begin
-            w_strb <= 1'sb0;
+            w_strb <= '0;
         end else if (w_hsk) begin
             w_strb <= s_axi_wstrb;
         end
@@ -522,7 +526,7 @@ module lowphy_regs (
 
     always @(posedge aclk) begin
         if (!aresetn) begin
-            ar_addr <= 1'sb0;
+            ar_addr <= '0;
         end else if (ar_hsk) begin
             ar_addr <= s_axi_araddr;
         end
@@ -563,7 +567,7 @@ module lowphy_regs (
 
     always @(posedge aclk) begin
         if (!aresetn) begin
-            r_data <= 1'sb0;
+            r_data <= '0;
         end else if (~r_valid && int_rd_pend) begin
             r_data <= int_rd_data_reg;
         end else if (~r_valid && int_rd_req && int_rd_ack) begin
@@ -599,7 +603,7 @@ module lowphy_regs (
 
     always @(posedge s_axi_aclk) begin
         if (~s_axi_aresetn) begin
-            int_addr <= 1'sb0;
+            int_addr <= '0;
         end else if (aw_req && w_req && ~int_wr_req) begin
             int_addr <= aw_addr;
         end else if (~(aw_req && w_req) && ar_req && ~int_rd_req) begin
@@ -609,7 +613,7 @@ module lowphy_regs (
 
     always @(posedge s_axi_aclk) begin
         if (~s_axi_aresetn) begin
-            int_wr_data <= 1'sb0;
+            int_wr_data <= '0;
         end else if (w_req && aw_req && ~int_wr_req) begin
             int_wr_data <= w_data;
         end
@@ -617,7 +621,7 @@ module lowphy_regs (
 
     always @(posedge s_axi_aclk) begin
         if (~s_axi_aresetn) begin
-            int_wr_strb <= 2'b00;
+            int_wr_strb <= '0;
         end else if (w_req && aw_req && ~int_wr_req) begin
             int_wr_strb <= w_strb;
         end
@@ -4111,7 +4115,7 @@ module lowphy_regs (
     reg        field_strb;
 
     always @(*) begin
-        field_rd_data_next = 1'sb0;
+        field_rd_data_next = '0;
         if (int_rd_en && version_val_strb) begin
             field_rd_data_next[31:0] = field_rd_data_next[31:0] | version_val_value;
         end
@@ -4987,7 +4991,7 @@ module lowphy_regs (
     end
 
     always @(*) begin
-        int_rd_data = 1'sb0;
+        int_rd_data = '0;
         if (field_strb) begin
             int_rd_data = int_rd_data | field_rd_data;
         end

@@ -19,10 +19,7 @@ module prach_conv_nco (
   //            chn
   localparam int PhaseWidth = 5;
 
-  localparam logic [PhaseWidth-1:0] Phase000 = 0;
-  localparam logic [PhaseWidth-1:0] PhasePI4 = 1 << (PhaseWidth - 3);
   localparam logic [PhaseWidth-1:0] PhasePi2 = 1 << (PhaseWidth - 2);
-  localparam logic [PhaseWidth-1:0] Phase1Pi = 1 << (PhaseWidth - 1);
 
   logic [           7:0] chn;
 
@@ -54,7 +51,7 @@ module prach_conv_nco (
 
   initial begin
     for (int i = 0; i < 2 ** PhaseWidth; i++) begin
-      sin_lut[i] = int'($sin(3.1415926535 * 2 * i / 2 ** PhaseWidth) * 2 ** 14);
+      sin_lut[i] = 16'(int'($sin(3.1415926535 * 2 * i / 2 ** PhaseWidth) * 2 ** 14));
     end
   end
 

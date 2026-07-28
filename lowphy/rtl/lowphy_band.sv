@@ -15,8 +15,8 @@ module lowphy_band #(
     input  wire         s_axi_aclk,
     input  wire         s_axi_aresetn,
     //
-    input  wire [ 15:0] s_axi_awaddr,
-    input  wire [  1:0] s_axi_awprot,
+    input  wire [ 11:0] s_axi_awaddr,
+    input  wire [  2:0] s_axi_awprot,
     input  wire         s_axi_awvalid,
     output wire         s_axi_awready,
     //
@@ -29,8 +29,8 @@ module lowphy_band #(
     output wire         s_axi_bvalid,
     input  wire         s_axi_bready,
     //
-    input  wire [ 15:0] s_axi_araddr,
-    input  wire [  1:0] s_axi_arprot,
+    input  wire [ 11:0] s_axi_araddr,
+    input  wire [  2:0] s_axi_arprot,
     input  wire         s_axi_arvalid,
     output wire         s_axi_arready,
     //
@@ -274,14 +274,17 @@ module lowphy_band #(
   initial begin
     // Check NUM_CC
     if (NUM_CC < 1 || NUM_CC > 3) begin
-      $error("Number of CCs (NUM_CC) must be between 1 and 3, get %d [%m]", NUM_CC);
-      #1 $finish;
+      $fatal(1, "Number of CCs (NUM_CC) must be between 1 and 3, get %d [%m]", NUM_CC);
     end
 
     // Check NUM_ANT
     if (NUM_ANT != 1 && NUM_ANT != 2 && NUM_ANT != 4) begin
-      $error("Number of antennas (NUM_ANT) must be 1, 2, or 4, get %d [%m]", NUM_ANT);
-      #1 $finish;
+      $fatal(1, "Number of antennas (NUM_ANT) must be 1, 2, or 4, get %d [%m]", NUM_ANT);
+    end
+
+    // Check CC_ID
+    if (CC_ID < 0 || CC_ID >= NUM_CC) begin
+      $fatal(1, "Carrier ID (CC_ID) must be between 0 and NUM_CC-1, get %d [%m]", CC_ID);
     end
   end
 
@@ -301,6 +304,7 @@ module lowphy_band #(
   logic [ 3:0] ctrl_dl_fs_offset;
 
   logic [16:0] ctrl_dl_gain                   [NUM_CC] [NUM_ANT];
+  logic [16:0] ctrl_dl_gain_reg               [NUM_CC] [4];
 
   // UL control signals
 
@@ -316,6 +320,7 @@ module lowphy_band #(
   logic [ 3:0] ctrl_ul_fs_offset;
 
   logic [16:0] ctrl_ul_gain                   [NUM_CC] [NUM_ANT];
+  logic [16:0] ctrl_ul_gain_reg               [NUM_CC] [4];
 
   // PRACH control signals
 
@@ -374,6 +379,164 @@ module lowphy_band #(
   logic        defm_reset_s;
   logic        fram_reset_s;
 
+  wire         unused_inputs;
+
+  assign unused_inputs = &{
+      1'b0,
+      s_defm_ebid_tdata,
+      s_defm_ebid_tvalid,
+      s_defm_ebid_tlast,
+      s_fram_ebid_tdata,
+      s_fram_ebid_tvalid,
+      s_fram_ebid_tlast,
+      m_fram_unsol_tready,
+      s_ep_debug,
+      s_t_header_offset_valid,
+      s_runt_packet_len,
+      s_rtc_pc_id,
+      s_concat,
+      s_messagetype,
+      s_seqid,
+      s_subseqid,
+      s_ebit,
+      s_payloadsize,
+      s_packet_in_window,
+      s_offset_in_symbol,
+      s_radio_app_head_valid,
+      s_datadirection,
+      s_numsections,
+      s_sectiontype,
+      s_filterindex,
+      s_frameid,
+      s_subframeid,
+      s_slotid,
+      s_symbolid,
+      s_udcomphdr,
+      s_timeoffset,
+      s_framestructure,
+      s_cplength,
+      s_section_header_valid,
+      s_numsymbol,
+      s_numprbc,
+      s_startprbc,
+      s_sectionid,
+      s_rb,
+      s_remask,
+      s_beamid15,
+      s_freqoffset,
+      s_beamweights_tdata,
+      s_beamweights_tvalid,
+      s_beamweights_tlast,
+      s_beamweights_tuser,
+      s_raw_cplane_tdata,
+      s_raw_cplane_tvalid,
+      s_raw_cplane_tuser,
+      s_raw_cplane_tlast,
+      s_raw_cplane_tkeep,
+      s_unsupport_ext_tuser,
+      s_unsupport_ext_tdata,
+      s_unsupport_ext_tvalid,
+      s_unsupport_ext_tkeep,
+      s_unsupport_ext_tlast,
+      defm_reset_active,
+      fram0_reset_active,
+      s_ssb_data_tdata,
+      s_ssb_data_tkeep,
+      s_ssb_data_tvalid,
+      s_ssb_data_tlast,
+      s_ssb_data_tuser,
+      s_ssb_ebid_tdata,
+      s_ssb_ebid_tvalid,
+      s_ssb_ebid_tlast,
+      s_ssb_bid_tvalid,
+      s_ssb_bid_tlast,
+      s_ssb_bid_off,
+      s_ssb_bid_beamid15,
+      s_ssb_bid_remask,
+      s_ssb_bid_rb,
+      s_ssb_bid_start_prbc,
+      s_ssb_bid_num_prbc,
+      s_ssb_bid_num_symbol,
+      s_ssb_bid_cc_id,
+      s_ssb_bid_frequency_offset,
+      s_ssb_bid_time_offset,
+      s_ssb_bid_frame_structure,
+      s_ssb_bid_cp_length,
+      fram_ready,
+      defm_ready
+  };
+
+  generate
+    for (genvar cc = 0; cc < NUM_CC; cc++) begin : gen_unused_cc
+      wire unused_cc_inputs;
+
+      assign unused_cc_inputs = &{
+          1'b0,
+          s_ul_cta_sym_num[cc],
+          s_ul_update[cc],
+          s_ul_slot_update[cc],
+          s_dl_cta_sym_num[cc],
+          s_dl_update[cc],
+          s_dl_slot_update[cc],
+          s_ul_toggle[cc],
+          s_dl_toggle[cc],
+          s_cc_enable[cc],
+          s_cc_reload[cc],
+          ctrl_prach_format[cc]
+      };
+    end
+
+    for (genvar ant = 0; ant < NUM_ANT; ant++) begin : gen_unused_ant
+      wire unused_ant_inputs;
+
+      assign unused_ant_inputs = &{
+          1'b0,
+          s_fram_bid_debug[ant],
+          s_fram_bid_valid[ant],
+          s_fram_bid_tlast[ant],
+          s_fram_bid_off[ant],
+          s_fram_bid_beamid15[ant],
+          s_fram_bid_remask[ant],
+          s_fram_bid_rb[ant],
+          s_fram_bid_start_prbc[ant],
+          s_fram_bid_num_prbc[ant],
+          s_fram_bid_num_symbol[ant],
+          s_fram_bid_cc_id[ant],
+          s_fram_bid_frequency_offset[ant],
+          s_fram_bid_time_offset[ant],
+          s_fram_bid_frame_structure[ant],
+          s_fram_bid_cp_length[ant],
+          s_defm_bid_valid[ant],
+          s_defm_bid_tlast[ant],
+          s_defm_bid_off[ant],
+          s_defm_bid_beamid15[ant],
+          s_defm_bid_remask[ant],
+          s_defm_bid_rb[ant],
+          s_defm_bid_start_prbc[ant],
+          s_defm_bid_num_prbc[ant],
+          s_defm_bid_num_symbol[ant],
+          s_defm_bid_cc_id[ant],
+          s_defm_bid_frequency_offset[ant],
+          s_defm_bid_time_offset[ant],
+          s_defm_bid_frame_structure[ant],
+          s_defm_bid_cp_length[ant]
+      };
+    end
+
+    for (genvar cc = 0; cc < NUM_CC; cc++) begin : gen_gain_cc
+      for (genvar ant = 0; ant < 4; ant++) begin : gen_gain_ant
+        if (ant < NUM_ANT) begin : gen_active_gain
+          assign ctrl_dl_gain[cc][ant] = ctrl_dl_gain_reg[cc][ant];
+          assign ctrl_ul_gain[cc][ant] = ctrl_ul_gain_reg[cc][ant];
+        end else begin : gen_inactive_gain
+          wire unused_gain_inputs;
+
+          assign unused_gain_inputs = &{1'b0, ctrl_dl_gain_reg[cc][ant], ctrl_ul_gain_reg[cc][ant]};
+        end
+      end
+    end
+  endgenerate
+
   // Main
 
   // Eearly BID
@@ -396,11 +559,10 @@ module lowphy_band #(
 
   assign s_defm_bid_ready = '{NUM_ANT{1'b1}};
 
-  xpm_cdc_single #(
+  cdc_single #(
       .DEST_SYNC_FF  (2),
-      .INIT_SYNC_FF  (0),
-      .SIM_ASSERT_CHK(0),
-      .SRC_INPUT_REG (0)
+      .INIT_SYNC_FF  (1'b0),
+      .SRC_INPUT_REG (1'b0)
   ) defm_reset_cdc (
       .src_clk (1'b0),
       .src_in  (defm_reset),
@@ -408,11 +570,10 @@ module lowphy_band #(
       .dest_out(defm_reset_s)
   );
 
-  xpm_cdc_single #(
+  cdc_single #(
       .DEST_SYNC_FF  (2),
-      .INIT_SYNC_FF  (0),
-      .SIM_ASSERT_CHK(0),
-      .SRC_INPUT_REG (0)
+      .INIT_SYNC_FF  (1'b0),
+      .SRC_INPUT_REG (1'b0)
   ) fram_reset_cdc (
       .src_clk (1'b0),
       .src_in  (fram_reset),
@@ -716,29 +877,29 @@ module lowphy_band #(
       // dl_ud.fs_offset,
       .dl_ud_fs_offset_out             (ctrl_dl_fs_offset),
       // dl_gain_0_0.val,
-      .dl_gain_0_0_val_out             (ctrl_dl_gain[0][0]),
+      .dl_gain_0_0_val_out             (ctrl_dl_gain_reg[0][0]),
       // dl_gain_0_1.val,
-      .dl_gain_0_1_val_out             (ctrl_dl_gain[0][1]),
+      .dl_gain_0_1_val_out             (ctrl_dl_gain_reg[0][1]),
       // dl_gain_0_2.val,
-      .dl_gain_0_2_val_out             (ctrl_dl_gain[0][2]),
+      .dl_gain_0_2_val_out             (ctrl_dl_gain_reg[0][2]),
       // dl_gain_0_3.val,
-      .dl_gain_0_3_val_out             (ctrl_dl_gain[0][3]),
+      .dl_gain_0_3_val_out             (ctrl_dl_gain_reg[0][3]),
       // dl_gain_1_0.val,
-      .dl_gain_1_0_val_out             (ctrl_dl_gain[1][0]),
+      .dl_gain_1_0_val_out             (ctrl_dl_gain_reg[1][0]),
       // dl_gain_1_1.val,
-      .dl_gain_1_1_val_out             (ctrl_dl_gain[1][1]),
+      .dl_gain_1_1_val_out             (ctrl_dl_gain_reg[1][1]),
       // dl_gain_1_2.val,
-      .dl_gain_1_2_val_out             (ctrl_dl_gain[1][2]),
+      .dl_gain_1_2_val_out             (ctrl_dl_gain_reg[1][2]),
       // dl_gain_1_3.val,
-      .dl_gain_1_3_val_out             (ctrl_dl_gain[1][3]),
+      .dl_gain_1_3_val_out             (ctrl_dl_gain_reg[1][3]),
       // dl_gain_2_0.val,
-      .dl_gain_2_0_val_out             (ctrl_dl_gain[2][0]),
+      .dl_gain_2_0_val_out             (ctrl_dl_gain_reg[2][0]),
       // dl_gain_2_1.val,
-      .dl_gain_2_1_val_out             (ctrl_dl_gain[2][1]),
+      .dl_gain_2_1_val_out             (ctrl_dl_gain_reg[2][1]),
       // dl_gain_2_2.val,
-      .dl_gain_2_2_val_out             (ctrl_dl_gain[2][2]),
+      .dl_gain_2_2_val_out             (ctrl_dl_gain_reg[2][2]),
       // dl_gain_2_3.val,
-      .dl_gain_2_3_val_out             (ctrl_dl_gain[2][3]),
+      .dl_gain_2_3_val_out             (ctrl_dl_gain_reg[2][3]),
       // ul_en.cc0,
       .ul_en_cc0_out                   (ctrl_ul_en[0]),
       // ul_en.cc1,
@@ -782,29 +943,29 @@ module lowphy_band #(
       // ul_ud.fs_offset,
       .ul_ud_fs_offset_out             (ctrl_ul_fs_offset),
       // ul_gain_0_0.val,
-      .ul_gain_0_0_val_out             (ctrl_ul_gain[0][0]),
+      .ul_gain_0_0_val_out             (ctrl_ul_gain_reg[0][0]),
       // ul_gain_0_1.val,
-      .ul_gain_0_1_val_out             (ctrl_ul_gain[0][1]),
+      .ul_gain_0_1_val_out             (ctrl_ul_gain_reg[0][1]),
       // ul_gain_0_2.val,
-      .ul_gain_0_2_val_out             (ctrl_ul_gain[0][2]),
+      .ul_gain_0_2_val_out             (ctrl_ul_gain_reg[0][2]),
       // ul_gain_0_3.val,
-      .ul_gain_0_3_val_out             (ctrl_ul_gain[0][3]),
+      .ul_gain_0_3_val_out             (ctrl_ul_gain_reg[0][3]),
       // ul_gain_1_0.val,
-      .ul_gain_1_0_val_out             (ctrl_ul_gain[1][0]),
+      .ul_gain_1_0_val_out             (ctrl_ul_gain_reg[1][0]),
       // ul_gain_1_1.val,
-      .ul_gain_1_1_val_out             (ctrl_ul_gain[1][1]),
+      .ul_gain_1_1_val_out             (ctrl_ul_gain_reg[1][1]),
       // ul_gain_1_2.val,
-      .ul_gain_1_2_val_out             (ctrl_ul_gain[1][2]),
+      .ul_gain_1_2_val_out             (ctrl_ul_gain_reg[1][2]),
       // ul_gain_1_3.val,
-      .ul_gain_1_3_val_out             (ctrl_ul_gain[1][3]),
+      .ul_gain_1_3_val_out             (ctrl_ul_gain_reg[1][3]),
       // ul_gain_2_0.val,
-      .ul_gain_2_0_val_out             (ctrl_ul_gain[2][0]),
+      .ul_gain_2_0_val_out             (ctrl_ul_gain_reg[2][0]),
       // ul_gain_2_1.val,
-      .ul_gain_2_1_val_out             (ctrl_ul_gain[2][1]),
+      .ul_gain_2_1_val_out             (ctrl_ul_gain_reg[2][1]),
       // ul_gain_2_2.val,
-      .ul_gain_2_2_val_out             (ctrl_ul_gain[2][2]),
+      .ul_gain_2_2_val_out             (ctrl_ul_gain_reg[2][2]),
       // ul_gain_2_3.val,
-      .ul_gain_2_3_val_out             (ctrl_ul_gain[2][3]),
+      .ul_gain_2_3_val_out             (ctrl_ul_gain_reg[2][3]),
       // prach_en.cc0,
       .prach_en_cc0_out                (ctrl_prach_en[0]),
       // prach_en.cc1,

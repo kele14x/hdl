@@ -2,7 +2,8 @@
 // Brief: cfr_pc_cpg is Canceling Pulse Generator (CPG) for PC-CFR. It' designed
 //        as cascade-able.
 
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module cfr_pc_cpg #(
     parameter int CSR            = 2,
@@ -41,7 +42,7 @@ module cfr_pc_cpg #(
 );
 
 
-  localparam int CpgLatency = 12 + 2 ** (CPW_ADDR_WIDTH - PHASE_WIDTH);
+  wire unused_ctrl_rst = ctrl_rst;
 
   // BRAM read port
   logic                                         cpw_rd_en;
@@ -54,16 +55,20 @@ module cfr_pc_cpg #(
 
   // State of CPG stage
 
-  logic                                         state_busy      [CSR] = '{CSR{1'b0}};
-  logic        [CPW_ADDR_WIDTH-PHASE_WIDTH-1:0] state_addr      [CSR] = '{CSR{'0}};
+  logic                                         state_busy      [CSR];
+  logic        [CPW_ADDR_WIDTH-PHASE_WIDTH-1:0] state_addr      [CSR];
 
-  logic        [                DATA_WIDTH-1:0] state_i         [CSR] = '{CSR{'0}};
-  logic        [                DATA_WIDTH-1:0] state_q         [CSR] = '{CSR{'0}};
-  logic        [               PHASE_WIDTH-1:0] state_phase     [CSR] = '{CSR{'0}};
+  logic        [                DATA_WIDTH-1:0] state_i         [CSR];
+  logic        [                DATA_WIDTH-1:0] state_q         [CSR];
+  logic        [               PHASE_WIDTH-1:0] state_phase     [CSR];
 
   logic [DATA_WIDTH-1:0] state_i_d, state_q_d;
 
   logic [DATA_WIDTH-1:0] delta_i, delta_q;
+
+  logic unused_cmult_ovf;
+  logic unused_adder_i_ovf;
+  logic unused_adder_q_ovf;
 
 
   // State transfer, the basic idea is `state_*[0]` is for current channel, which
@@ -158,13 +163,13 @@ module cfr_pc_cpg #(
   assign cpw_rd_en   = state_busy[0];
   assign cpw_rd_addr = {state_phase[0], state_addr[0]};
 
-  bram_sdp_pipe #(
+  ram_sdp_pipe #(
       .ADDR_WIDTH  (CPW_ADDR_WIDTH),
       .DATA_WIDTH  (DATA_WIDTH * 2),
       .READ_LATENCY(2),
       .INIT_WORD   ('0),
       .INIT_FILE   ("")
-  ) i_bram_sdp_pipe (
+  ) i_ram_sdp_pipe (
       //
       .clka (ctrl_clk),
       .ena  (ctrl_cpw_en),
@@ -204,10 +209,10 @@ module cfr_pc_cpg #(
   );
 
   cmult #(
-      .AWIDTH (DATA_WIDTH),
-      .BWIDTH (DATA_WIDTH),
-      .PWIDTH (DATA_WIDTH),
-      .SRABITS(14)
+      .A_WIDTH(DATA_WIDTH),
+      .B_WIDTH(DATA_WIDTH),
+      .P_WIDTH(DATA_WIDTH),
+      .SHIFT  (14)
   ) i_cmult (
       .clk(clk),
       .rst(rst),
@@ -221,37 +226,37 @@ module cfr_pc_cpg #(
       .pr (delta_i),
       .pi (delta_q),
       //
-      .ovf(  /* Not Used */)
+      .ovf(unused_cmult_ovf)
   );
 
   adder #(
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (DATA_WIDTH),
       .P_WIDTH (DATA_WIDTH),
-      .SRA_BITS(0)
+      .SHIFT(0)
   ) i_adder_i (
       .clk    (clk),
       .rst    (rst),
       .a      (data_i_in),
       .b      (delta_i),
-      .add_sub(1'b1),
+      .sub(1'b1),
       .p      (data_i_out),
-      .ovf    (  /* Not Used */)
+      .ovf    (unused_adder_i_ovf)
   );
 
   adder #(
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (DATA_WIDTH),
       .P_WIDTH (DATA_WIDTH),
-      .SRA_BITS(0)
+      .SHIFT(0)
   ) i_adder_q (
       .clk    (clk),
       .rst    (rst),
       .a      (data_q_in),
       .b      (delta_q),
-      .add_sub(1'b1),
+      .sub(1'b1),
       .p      (data_q_out),
-      .ovf    (  /* Not Used */)
+      .ovf    (unused_adder_q_ovf)
   );
 
 endmodule

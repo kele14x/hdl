@@ -130,12 +130,15 @@ module fh (
 
   wire [31:0] stat_rx_resync_cnt;
   wire [31:0] stat_tx_resync_cnt;
+  wire        tx_ptp_timestamp_ready;
+  wire unused_axi_addr = &{1'b0, s_axi_awaddr[31:10], s_axi_araddr[31:10]};
+  wire unused_status = &{1'b0, stat_rx_resync_cnt, stat_tx_resync_cnt, tx_ptp_timestamp_ready};
 
   fh_regs i_regs (
       .s_axi_aclk                       (s_axi_aclk),
       .s_axi_aresetn                    (s_axi_aresetn),
       //
-      .s_axi_awaddr                     (s_axi_awaddr),
+      .s_axi_awaddr                     (s_axi_awaddr[9:0]),
       .s_axi_awprot                     (s_axi_awprot),
       .s_axi_awvalid                    (s_axi_awvalid),
       .s_axi_awready                    (s_axi_awready),
@@ -149,7 +152,7 @@ module fh (
       .s_axi_bvalid                     (s_axi_bvalid),
       .s_axi_bready                     (s_axi_bready),
       //
-      .s_axi_araddr                     (s_axi_araddr),
+      .s_axi_araddr                     (s_axi_araddr[9:0]),
       .s_axi_arprot                     (s_axi_arprot),
       .s_axi_arvalid                    (s_axi_arvalid),
       .s_axi_arready                    (s_axi_arready),
@@ -286,7 +289,7 @@ module fh (
       .src_clk   (tx_eth_clk),
       .src_in    ({tx_ptp_timestamp, tx_ptp_timestamp_tag}),
       .src_valid (tx_ptp_timestamp_valid),
-      .src_ready (  /* assume always ready */),
+      .src_ready (tx_ptp_timestamp_ready),
       //
       .dest_clk  (clk),
       .dest_out  ({tx_ptp_timestamp_s, tx_ptp_timestamp_tag_s}),

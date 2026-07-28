@@ -40,13 +40,11 @@ module ram_tdp #(
   initial begin
     assert (1 <= READ_LATENCY_A && READ_LATENCY_A <= 3)
     else begin
-      $error("READ_LATENCY_A should be within range 1 to 3.");
-      #1 $finish;
+      $fatal(1, "READ_LATENCY_A should be within range 1 to 3.");
     end
     assert (1 <= READ_LATENCY_B && READ_LATENCY_B <= 3)
     else begin
-      $error("READ_LATENCY_B should be within range 1 to 3.");
-      #1 $finish;
+      $fatal(1, "READ_LATENCY_B should be within range 1 to 3.");
     end
   end
 

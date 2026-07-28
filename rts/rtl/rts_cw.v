@@ -34,6 +34,11 @@ module rts_cw (
   wire signed [15:0] cw1_cos_gain;
   wire signed [15:0] cw1_sin_gain;
 
+  wire unused_gain0_cos_ovf;
+  wire unused_gain0_sin_ovf;
+  wire unused_gain1_cos_ovf;
+  wire unused_gain1_sin_ovf;
+
   cdc_array_single #(
       .DEST_SYNC_FF (2),
       .INIT_SYNC_FF (0),
@@ -133,7 +138,7 @@ module rts_cw (
       .b  ({1'b0, ctrl_cw0_pow_s}),
       //
       .p  (cw0_cos_gain),
-      .ovf()
+      .ovf(unused_gain0_cos_ovf)
   );
 
   mult #(
@@ -149,7 +154,7 @@ module rts_cw (
       .b  ({1'b0, ctrl_cw0_pow_s}),
       //
       .p  (cw0_sin_gain),
-      .ovf()
+      .ovf(unused_gain0_sin_ovf)
   );
 
   mult #(
@@ -165,7 +170,7 @@ module rts_cw (
       .b  ({1'b0, ctrl_cw1_pow_s}),
       //
       .p  (cw1_cos_gain),
-      .ovf()
+      .ovf(unused_gain1_cos_ovf)
   );
 
   mult #(
@@ -181,7 +186,7 @@ module rts_cw (
       .b  ({1'b0, ctrl_cw1_pow_s}),
       //
       .p  (cw1_sin_gain),
-      .ovf()
+      .ovf(unused_gain1_sin_ovf)
   );
 
   // Add two tones together

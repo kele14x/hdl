@@ -18,9 +18,9 @@ module timer_rfs #(
 
   // Parameters
 
-  localparam integer TickPerPulse = FREQ_MODE == 0 ? 20000 : 24576;
+  localparam [15:0] TickPerPulse = FREQ_MODE == 0 ? 16'd20000 : 16'd24576;
 
-  localparam integer TickPer10ms = FREQ_MODE == 0 ? 4000000 : 4915200;
+  localparam [22:0] TickPer10ms = FREQ_MODE == 0 ? 23'd4000000 : 23'd4915200;
 
   // Signals
 

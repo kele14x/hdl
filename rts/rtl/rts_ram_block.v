@@ -67,8 +67,13 @@ module rts_ram_block #(
   end
 
   always @(posedge clk) begin
-    ena_d  <= ena;
-    ena_dd <= ena_d;
+    if (rsta) begin
+      ena_d  <= 1'b0;
+      ena_dd <= 1'b0;
+    end else begin
+      ena_d  <= ena;
+      ena_dd <= ena_d;
+    end
   end
 
   always @(posedge clk) begin
@@ -109,8 +114,13 @@ module rts_ram_block #(
   end
 
   always @(posedge clk) begin
-    enb_d  <= enb;
-    enb_dd <= enb_d;
+    if (rstb) begin
+      enb_d  <= 1'b0;
+      enb_dd <= 1'b0;
+    end else begin
+      enb_d  <= enb;
+      enb_dd <= enb_d;
+    end
   end
 
   always @(posedge clk) begin

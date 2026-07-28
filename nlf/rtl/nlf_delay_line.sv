@@ -11,6 +11,7 @@ module nlf_delay_line #(
 ) (
     // Read Interface
     input var                    clk,
+    input var                    rst,
     //
     input var  [DATA_WIDTH -1:0] data_in,
     output var [DATA_WIDTH -1:0] data_out[NUM_UNITS],
@@ -18,9 +19,6 @@ module nlf_delay_line #(
     input var  [DELAY_WIDTH-1:0] delay   [NUM_UNITS]
 );
 
-
-  // This is fixed/minimum latency when `delay` is 0
-  localparam int Latency = 3;
 
   logic [DATA_WIDTH-1:0] data_s[NUM_UNITS];
 
@@ -45,6 +43,7 @@ module nlf_delay_line #(
       ) i_srl (
           // Read Interface
           .clk (clk),
+          .rst (rst),
           .cen (1'b1),
           //
           .addr(delay[i]),

@@ -4,7 +4,7 @@
 
 module timer #(
     parameter integer FREQ_MODE    = 0,  // 0: 400 MHz, 1: 491.52 MHz
-    parameter reg     SIM_SPEED_UP = 0
+    parameter reg     SIM_SPEED_UP = 1'b0
 ) (
     input  wire        s_axi_aclk,
     input  wire        s_axi_aresetn,
@@ -65,11 +65,13 @@ module timer #(
   wire [47:0] tod_sec_s;
   wire [31:0] tod_ns_s;
 
+  wire unused_axi_addr_msb = &{1'b0, s_axi_awaddr[15:9], s_axi_araddr[15:9], 1'b0};
+
   timer_regs i_regs (
       .s_axi_aclk              (s_axi_aclk),
       .s_axi_aresetn           (s_axi_aresetn),
       //
-      .s_axi_awaddr            (s_axi_awaddr),
+      .s_axi_awaddr            (s_axi_awaddr[8:0]),
       .s_axi_awprot            (s_axi_awprot),
       .s_axi_awvalid           (s_axi_awvalid),
       .s_axi_awready           (s_axi_awready),
@@ -83,7 +85,7 @@ module timer #(
       .s_axi_bvalid            (s_axi_bvalid),
       .s_axi_bready            (s_axi_bready),
       //
-      .s_axi_araddr            (s_axi_araddr),
+      .s_axi_araddr            (s_axi_araddr[8:0]),
       .s_axi_arprot            (s_axi_arprot),
       .s_axi_arvalid           (s_axi_arvalid),
       .s_axi_arready           (s_axi_arready),
@@ -178,6 +180,7 @@ module timer #(
       .INIT (0)
   ) i_delay_tod (
       .clk (clk),
+      .rst (rst),
       .cen (1'b1),
       .din ({tod_sec_s, tod_ns_s}),
       .dout({tod_sec, tod_ns})

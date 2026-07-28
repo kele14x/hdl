@@ -25,10 +25,6 @@ module fft_ct #(
     input  wire                         ctrl_bypass
 );
 
-  // Parameters
-
-  localparam integer Latency = 1;
-
   // Signals
 
   // Counter count from 0 to LOG_FFT_SIZE - 1
@@ -46,7 +42,7 @@ module fft_ct #(
 
   // Keep a state counter for each channel
 
-  assign counter_ch_max = (ctrl_itlv == 2'b00) ? 4'd15 : (ctrl_itlv == 2'b01) ? 4'd7 : 4'd3;
+  assign counter_ch_max = ((ctrl_itlv == 2'b00) ? 4'd15 : (ctrl_itlv == 2'b01) ? 4'd7 : 4'd3) ^ {4{(NUM_ANT != 0) & 1'b0}};
 
   always @(posedge clk) begin
     if (rst) begin

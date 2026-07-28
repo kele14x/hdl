@@ -64,7 +64,31 @@ module oran_deframer_dl_ss_adaptor #(
   logic                 syml_rd_en_d;
   logic [         31:0] syml_rd_data;
 
+  logic [         63:0] ram_douta;
+  logic                 ram_dbiterra;
+  logic                 ram_sbiterra;
+  logic                 ram_dbiterrb;
+  logic                 ram_sbiterrb;
+
+  wire unused_ram_outputs = &{
+    1'b0,
+    ram_douta,
+    ram_dbiterra,
+    ram_sbiterra,
+    ram_dbiterrb,
+    ram_sbiterrb
+  };
+
   logic                 synced;
+
+  wire unused_section_fields = &{
+    1'b0,
+    s_axis_tkeep,
+    section_sectionid,
+    section_rb,
+    section_syminc,
+    section_numprbu
+  };
 
 
   // Main
@@ -97,9 +121,9 @@ module oran_deframer_dl_ss_adaptor #(
   // number divided by 2;
   always_ff @(posedge clk) begin
     if (s_axis_tvalid && !synced) begin
-      syml_wr_addr <= {1'b0, section_startprbu} * 6;
+      syml_wr_addr <= (AddrWidth - 1)'({1'b0, section_startprbu} * 6);
     end else if (s_axis_tvalid) begin
-      syml_wr_addr <= syml_wr_addr + 1;
+      syml_wr_addr <= syml_wr_addr + {{(AddrWidth - 2){1'b0}}, 1'b1};
     end
   end
 
@@ -170,9 +194,9 @@ module oran_deframer_dl_ss_adaptor #(
 
   always_ff @(posedge clk) begin
     if (current_sample == 1000) begin
-      syml_rd_cnt <= 0;
+      syml_rd_cnt <= '0;
     end else if (syml_rd_run) begin
-      syml_rd_cnt <= syml_rd_cnt + 1;
+      syml_rd_cnt <= syml_rd_cnt + {{(AddrWidth - 1){1'b0}}, 1'b1};
     end
   end
 
@@ -187,7 +211,7 @@ module oran_deframer_dl_ss_adaptor #(
   // The RD shift value controls which RE we starts to read. For example, for
   // 4096 FFT size, read RE at 1638 gives a proper sequence for iFFT transform.
   always_ff @(posedge clk) begin
-    syml_rd_addr <= syml_rd_cnt + ctrl_syml_rd_shift;
+    syml_rd_addr <= AddrWidth'(syml_rd_cnt + ctrl_syml_rd_shift);
     syml_rd_en   <= syml_rd_run;
   end
 
@@ -277,13 +301,13 @@ module oran_deframer_dl_ss_adaptor #(
       .addra         (syml_wr_addr),
       .regcea        (1'b1),
       .dina          (syml_wr_data),
-      .douta         (),
+      .douta         (ram_douta),
       //
       .injectdbiterra('0),
       .injectsbiterra('0),
+      .dbiterra      (ram_dbiterra),
+      .sbiterra      (ram_sbiterra),
       //
-      .dbiterra      (),
-      .sbiterra      (),
       // Read side
       .clkb          (clk),
       .rstb          (1'b0),
@@ -296,9 +320,9 @@ module oran_deframer_dl_ss_adaptor #(
       //
       .injectdbiterrb('0),
       .injectsbiterrb('0),
+      .dbiterrb      (ram_dbiterrb),
+      .sbiterrb      (ram_sbiterrb),
       //
-      .dbiterrb      (),
-      .sbiterrb      (),
       //
       .sleep         ('0)
   );

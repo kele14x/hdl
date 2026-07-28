@@ -7,8 +7,8 @@ module cmult4 #(
     parameter int B_WIDTH  = 16,
     parameter int P_WIDTH  = 16,
     parameter int SHIFT    = 15,
-    parameter int ROUND    = 0,
-    parameter int SATURATE = 0
+    parameter bit ROUND    = 1'b0,
+    parameter bit SATURATE = 1'b0
 ) (
 
     input  logic                      clk,

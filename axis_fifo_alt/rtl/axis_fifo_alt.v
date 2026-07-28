@@ -90,7 +90,7 @@ module axis_fifo_alt #(
   // Signals
 
   wire                    wr_clk;
-  wire                    wr_rstn;
+  reg                     wr_rstn;
 
   reg                     wr_sync_n;
   reg  [     AddrWidth:0] wr_count;
@@ -122,8 +122,11 @@ module axis_fifo_alt #(
 
   // Write side
 
-  assign wr_clk  = s_axis_aclk;
-  assign wr_rstn = s_axis_aresetn;
+  assign wr_clk = s_axis_aclk;
+
+  always @(posedge wr_clk) begin
+    wr_rstn <= s_axis_aresetn;
+  end
 
   // Synchronize the first word of the packet
   always @(posedge wr_clk) begin
@@ -192,7 +195,14 @@ module axis_fifo_alt #(
 
   assign wr_addr = wr_count[AddrWidth-1:0];
 
-  assign wr_din  = {s_axis_tuser, s_axis_tlast, s_axis_tkeep, s_axis_tdata};
+  generate
+    if (USER_WIDTH > 0) begin : g_wr_din_user
+      assign wr_din  = {s_axis_tuser, s_axis_tlast, s_axis_tkeep, s_axis_tdata};
+    end else begin : g_wr_din_no_user
+      wire unused_s_axis_tuser = &{1'b0, s_axis_tuser};
+      assign wr_din  = {s_axis_tlast, s_axis_tkeep, s_axis_tdata};
+    end
+  endgenerate
 
   // The full flag `wr_full` is set when the write pointer catches up to the
   // read pointer. It can be computed as:
@@ -280,22 +290,45 @@ module axis_fifo_alt #(
   // Optional output register
 
   generate
-    if (FabricReg == 0) begin : g_no_reg
+    if (USER_WIDTH > 0) begin : g_unpack_user
+      if (FabricReg == 0) begin : g_no_reg
 
-      always @(*) begin
-        {m_axis_tuser, m_axis_tlast, m_axis_tkeep, m_axis_tdata} = rd_dout;
-      end
-
-    end else begin : g_reg
-
-      always @(posedge rd_clk) begin
-        if (!rd_rstn) begin
-          {m_axis_tuser, m_axis_tlast, m_axis_tkeep, m_axis_tdata} <= 'd0;
-        end else if (rd_en[2]) begin
-          {m_axis_tuser, m_axis_tlast, m_axis_tkeep, m_axis_tdata} <= rd_dout;
+        always @(*) begin
+          {m_axis_tuser, m_axis_tlast, m_axis_tkeep, m_axis_tdata} = rd_dout;
         end
-      end
 
+      end else begin : g_reg
+
+        always @(posedge rd_clk) begin
+          if (!rd_rstn) begin
+            {m_axis_tuser, m_axis_tlast, m_axis_tkeep, m_axis_tdata} <= 'd0;
+          end else if (rd_en[2]) begin
+            {m_axis_tuser, m_axis_tlast, m_axis_tkeep, m_axis_tdata} <= rd_dout;
+          end
+        end
+
+      end
+    end else begin : g_unpack_no_user
+      if (FabricReg == 0) begin : g_no_reg
+
+        always @(*) begin
+          m_axis_tuser = 'd0;
+          {m_axis_tlast, m_axis_tkeep, m_axis_tdata} = rd_dout;
+        end
+
+      end else begin : g_reg
+
+        always @(posedge rd_clk) begin
+          if (!rd_rstn) begin
+            m_axis_tuser <= 'd0;
+            {m_axis_tlast, m_axis_tkeep, m_axis_tdata} <= 'd0;
+          end else if (rd_en[2]) begin
+            m_axis_tuser <= 'd0;
+            {m_axis_tlast, m_axis_tkeep, m_axis_tdata} <= rd_dout;
+          end
+        end
+
+      end
     end
   endgenerate
 
@@ -331,7 +364,7 @@ module axis_fifo_alt #(
           .INIT_SYNC_FF   (0),
           .RST_ACTIVE_HIGH(0)
       ) i_rd_rst (
-          .src_arst (wr_rstn),
+          .src_arst (s_axis_aresetn),
           .dest_clk (rd_clk),
           .dest_arst(rd_rstn)
       );

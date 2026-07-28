@@ -47,7 +47,7 @@ module rts_ram_buffer (
   reg  [         63:0] mem_dinb;
   wire [         63:0] mem_doutb         [0:NumBlocks-1];
   reg  [         63:0] mem_doutb_c;
-  reg  [         63:0] mem_doutb_d;
+  reg  [         31:0] mem_doutb_d;
 
   // Port A
 
@@ -64,7 +64,7 @@ module rts_ram_buffer (
   always @(posedge clk) begin : p_ena
     integer i;
     for (i = 0; i < NumBlocks; i = i + 1) begin
-      mem_ena[i] <= addra[19:16] == i ? ena : 1'b0;
+      mem_ena[i] <= addra[19:16] == i[3:0] ? ena : 1'b0;
     end
   end
 
@@ -77,7 +77,7 @@ module rts_ram_buffer (
   always @(posedge clk) begin : p_wea
     integer i;
     for (i = 0; i < NumBlocks; i = i + 1) begin
-      mem_wea[i] <= ((addra[19:16] == i) && ena && wea) ? (addra[0] ? 8'b11110000 : 8'b00001111) : 8'b0;
+      mem_wea[i] <= ((addra[19:16] == i[3:0]) && ena && wea) ? (addra[0] ? 8'b11110000 : 8'b00001111) : 8'b0;
     end
   end
 
@@ -118,7 +118,7 @@ module rts_ram_buffer (
   always @(posedge clk) begin : p_enb
     integer i;
     for (i = 0; i < NumBlocks; i = i + 1) begin
-      mem_enb[i] <= addrb[19:16] == i ? enb : 1'b0;
+      mem_enb[i] <= addrb[19:16] == i[3:0] ? enb : 1'b0;
     end
   end
 
@@ -131,7 +131,7 @@ module rts_ram_buffer (
   always @(posedge clk) begin : p_web
     integer i;
     for (i = 0; i < NumBlocks; i = i + 1) begin
-      mem_web[i] <= ((addrb[19:16] == i) && enb && web) ? (addrb[0] ? 8'b11110000 : 8'b00001111) : 8'b0;
+      mem_web[i] <= ((addrb[19:16] == i[3:0]) && enb && web) ? (addrb[0] ? 8'b11110000 : 8'b00001111) : 8'b0;
     end
   end
 

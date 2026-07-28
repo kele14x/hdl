@@ -91,13 +91,57 @@ module oran_statistics #(
   logic [ 8:0] earliest_u_pkt_per[ NUM_ANTENNA_PORT] [NUM_CC];
   logic [ 8:0] latest_u_pkt_per  [ NUM_ANTENNA_PORT] [NUM_CC];
 
+  wire unused_statistics_inputs = &{
+    1'b0,
+    rx_eth_rst,
+    rst,
+    m_mac_dest_mac,
+    m_mac_source_mac,
+    m_mac_with_vlan,
+    m_mac_vlan_tag,
+    m_mac_ethertype,
+    m_ecpri_header_valid,
+    m_ecpri_concat,
+    m_ecpri_messagetype,
+    m_ecpri_payloadsize,
+    m_trans_rtc_pc_id,
+    m_trans_seqid,
+    m_trans_ebit,
+    m_trans_subseqid,
+    m_app_datadirection,
+    m_app_filterindex,
+    m_app_frameid,
+    m_app_subframeid,
+    m_app_slotid,
+    m_app_symbolid,
+    m_app_numsections,
+    m_app_sectiontype,
+    m_app_udcomphdr,
+    m_app_timeoffset,
+    m_app_framestructure,
+    m_app_cplength,
+    m_section_header_valid,
+    m_section_sectionid,
+    m_section_rb,
+    m_section_syminc,
+    m_section_startprb,
+    m_section_numprb,
+    m_section_remask,
+    m_section_numsymbol,
+    m_section_ef,
+    m_section_beamid,
+    m_section_freqoffset,
+    ctrl_tick_snap,
+    ctrl_tick_clear
+  };
+
   // Use a local version for timing
   always_ff @(posedge clk) begin
     if (defm_radio_start_10ms) begin
       if (frame_cnt >= 99) begin
         frame_cnt <= '0;
       end else begin
-        frame_cnt <= frame_cnt + 1;
+        frame_cnt <= frame_cnt + 8'd1;
       end
     end
   end
@@ -138,7 +182,7 @@ module oran_statistics #(
   // O-RAN packet counter
 
   generate
-    for (genvar e = 0; e < NUM_ETHERNET_PORT; e++) begin
+    for (genvar e = 0; e < NUM_ETHERNET_PORT; e++) begin : g_oran_pkt_cnt
       always @(posedge rx_eth_clk[e]) begin
         if (clear_int) begin
           oran_pkt_cnt_per[e] <= '0;
@@ -163,8 +207,8 @@ module oran_statistics #(
   // On-time packet counter
 
   generate
-    for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin
-      for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin
+    for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin : g_ontime_ant
+      for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin : g_ontime_eth
         always @(posedge clk) begin
           if (clear_int) begin
             ontime_pkt_cnt_per[i][cc] <= '0;
@@ -192,8 +236,8 @@ module oran_statistics #(
   // Early packet counter
 
   generate
-    for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin
-      for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin
+    for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin : g_early_ant
+      for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin : g_early_eth
         always @(posedge clk) begin
           if (clear_int) begin
             early_pkt_cnt_per[i][cc] <= '0;
@@ -221,8 +265,8 @@ module oran_statistics #(
   // Late packet counter
 
   generate
-    for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin
-      for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin
+    for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin : g_late_ant
+      for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin : g_late_eth
         always @(posedge clk) begin
           if (clear_int) begin
             late_pkt_cnt_per[i][cc] <= '0;
@@ -250,8 +294,8 @@ module oran_statistics #(
   // Earliest packet
 
   generate
-    for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin
-      for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin
+    for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin : g_earliest_ant
+      for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin : g_earliest_eth
         always @(posedge clk) begin
           if (clear_int) begin
             earliest_u_pkt_per[i][cc] <= '0;
@@ -283,8 +327,8 @@ module oran_statistics #(
   // Latest packet
 
   generate
-    for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin
-      for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin
+    for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin : g_latest_ant
+      for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin : g_latest_eth
         always @(posedge clk) begin
           if (clear_int) begin
             latest_u_pkt_per[i][cc] <= '1;

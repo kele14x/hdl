@@ -40,6 +40,8 @@ module pdxch_fdv_buffer_readout #(
   wire  [ 3:0] ctrl_bw_s;
   wire  [ 8:0] ctrl_nprb_s;
 
+  wire         unused_ctrl_bist = &{1'b0, ctrl_bist_s[3:2]};
+
   // Internal signals
 
   logic        init_n;
@@ -66,6 +68,7 @@ module pdxch_fdv_buffer_readout #(
   // BIST data
 
   logic [23:0] lfsr;
+  wire unused_lfsr = &{1'b0, lfsr[23:2]};
 
   logic        bist_en_c           [NUM_ANT];
   logic        bist_en_r           [NUM_ANT];
@@ -294,7 +297,7 @@ module pdxch_fdv_buffer_readout #(
     for (genvar ant = 0; ant < NUM_ANT; ant = ant + 1) begin : g_bist
 
       always_ff @(posedge clk) begin
-        bist_en_c[ant] <= run && ctrl_en_s[ant] && ctrl_bist_s[ant] && (phase == ant)
+        bist_en_c[ant] <= run && ctrl_en_s[ant] && ctrl_bist_s[ant] && (phase == 4'(ant))
             && ~(ctrl_rat_s == 0 && (index_rev == 0));
       end
 
@@ -366,7 +369,7 @@ module pdxch_fdv_buffer_readout #(
   always_comb begin
     rd_dv = 1'b0;
     for (int ant = 0; ant < NUM_ANT; ant++) begin
-      rd_dv = rd_dv | (run & ctrl_en_s[ant] & (phase == ant));
+      rd_dv = rd_dv | (run & ctrl_en_s[ant] & (phase == 4'(ant)));
     end
   end
 
@@ -380,9 +383,9 @@ module pdxch_fdv_buffer_readout #(
       assign rd_addr[ant] = rd_addr_r;
 
       always_ff @(posedge clk) begin
-        rd_en_c[ant] <= run && ctrl_en_s[ant] && ~ctrl_bist_s[ant] && (phase == ant)
+        rd_en_c[ant] <= run && ctrl_en_s[ant] && ~ctrl_bist_s[ant] && (phase == 4'(ant))
             && ~(ctrl_rat_s == 0 && (index_rev == 0));
-        //        rd_en_c[ant] <= run && ctrl_en[ant] && (phase == ant)
+        //        rd_en_c[ant] <= run && ctrl_en[ant] && (phase == 4'(ant))
         //            && ~(ctrl_rat_s == 0 && (index_rev == 0));
       end
 
@@ -436,7 +439,7 @@ module pdxch_fdv_buffer_readout #(
       dout_sy_r <= 1'b0;
     end else if (dout_sy_req) begin
       dout_sy_r <= 1'b1;
-    end else if (dout_chn == NUM_ANT - 1) begin
+    end else if (dout_chn == 4'(NUM_ANT - 1)) begin
       dout_sy_r <= 1'b0;
     end
   end
@@ -448,7 +451,7 @@ module pdxch_fdv_buffer_readout #(
       dout_sl_r <= 1'b0;
     end else if (dout_sl_req) begin
       dout_sl_r <= 1'b1;
-    end else if (dout_chn == NUM_ANT - 1) begin
+    end else if (dout_chn == 4'(NUM_ANT - 1)) begin
       dout_sl_r <= 1'b0;
     end
   end
@@ -460,7 +463,7 @@ module pdxch_fdv_buffer_readout #(
       dout_sf_r <= 1'b0;
     end else if (dout_sf_req) begin
       dout_sf_r <= 1'b1;
-    end else if (dout_chn == NUM_ANT - 1) begin
+    end else if (dout_chn == 4'(NUM_ANT - 1)) begin
       dout_sf_r <= 1'b0;
     end
   end

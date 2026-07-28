@@ -78,6 +78,7 @@ module fft_radix2_twiddle #(
       .DEPTH(2)
   ) i_data_delay (
       .clk (clk),
+      .rst (rst),
       .cen (1'b1),
       //
       .din ({data_q_in, data_i_in}),
@@ -89,6 +90,7 @@ module fft_radix2_twiddle #(
       .DEPTH(11)
   ) i_valid_delay (
       .clk (clk),
+      .rst (rst),
       .cen (1'b1),
       //
       .din ({data_last_in, data_valid_in}),

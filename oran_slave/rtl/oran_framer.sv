@@ -74,6 +74,8 @@ module oran_framer #(
   logic                         s1_axis_tlast [NUM_ETHERNET_PORT];
   logic                         s1_axis_tready[NUM_ETHERNET_PORT];
 
+  assign fram_ready = 1'b1;
+
   generate
     for (genvar i = 0; i < NUM_ETHERNET_PORT; i++) begin : g_eth
 
@@ -138,7 +140,7 @@ module oran_framer #(
       for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_cc
 
         oran_framer_ul_ss #(
-            .PC_ID       (cc * NUM_ANTENNA_PORT + i),
+            .PC_ID       (16'(cc * NUM_ANTENNA_PORT + i)),
             .ADAPTOR_SIZE(ADAPTOR_SIZE),
             .BUFFER_SIZE (BUFFER_SIZE)
         ) i_ul_ss (

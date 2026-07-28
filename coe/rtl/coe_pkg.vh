@@ -4,6 +4,7 @@ function [1:0] tkeep_size(input reg [3:0] tkeep);
     if (tkeep[3]) tkeep_size = 2'b11;
     else if (tkeep[2]) tkeep_size = 2'b10;
     else if (tkeep[1]) tkeep_size = 2'b01;
+    else if (tkeep[0]) tkeep_size = 2'b00;
     else tkeep_size = 2'b00;
   end
 endfunction

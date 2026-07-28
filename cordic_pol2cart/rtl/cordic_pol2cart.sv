@@ -1,7 +1,8 @@
 // File: cordic_pol2cart.sv
 // Brief: CORDIC-based approximation of polar-to-Cartesian conversion
 
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module cordic_pol2cart #(
     parameter int DATA_WIDTH           = 16,
@@ -20,8 +21,6 @@ module cordic_pol2cart #(
     output var logic [DATA_WIDTH+1:0] yout,
     output var logic [CTRL_WIDTH-1:0] ctrl_out
 );
-
-  localparam int Latency = ITERATIONS + 2 * COMPENSATION_SCALING + 1;
 
   cordic_rotate #(
       .DATA_WIDTH          (DATA_WIDTH),

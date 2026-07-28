@@ -33,12 +33,12 @@
 `default_nettype none
 
 module dds_lut #(
-    parameter         STRUCTURE    = "AUTO",
-    parameter reg     RASTERIZED   = 1'b0,
-    parameter integer DATA_WIDTH   = 16,
-    parameter integer PHASE_WIDTH  = 12,
-    parameter reg     NEGATIVE_COS = 1'b0,
-    parameter reg     NEGATIVE_SIN = 1'b0
+    parameter [8*7-1:0] STRUCTURE    = "AUTO",
+    parameter reg       RASTERIZED   = 1'b0,
+    parameter integer   DATA_WIDTH   = 16,
+    parameter integer   PHASE_WIDTH  = 12,
+    parameter reg       NEGATIVE_COS = 1'b0,
+    parameter reg       NEGATIVE_SIN = 1'b0
 ) (
     input  wire                         clk,
     input  wire                         rst,
@@ -61,20 +61,23 @@ module dds_lut #(
 
   localparam MinPhaseWidth = RASTERIZED ? 4 : 2;
 
+  localparam [8*7-1:0] StructureAuto = "AUTO";
+  localparam [8*7-1:0] StructureFull = "FULL";
+  localparam [8*7-1:0] StructureHalf = "HALF";
+  localparam [8*7-1:0] StructureQuarter = "QUARTER";
+
   // Check parameters
 
   // verilog_format: off
   initial begin
     // Check STRUCTURE
-    if(STRUCTURE != "AUTO" && STRUCTURE != "FULL" && STRUCTURE != "HALF" && STRUCTURE != "QUARTER") begin
-      $display("DDS structure (STRUCTURE) should be one of \"AUTO\", \"FULL\", \"HALF\" or \"QUARTER\", got %s. [%m]", STRUCTURE);
-      #1 $finish();
+    if(STRUCTURE != StructureAuto && STRUCTURE != StructureFull && STRUCTURE != StructureHalf && STRUCTURE != StructureQuarter) begin
+      $fatal(1, "DDS structure (STRUCTURE) should be one of \"AUTO\", \"FULL\", \"HALF\" or \"QUARTER\", got %s. [%m]", STRUCTURE);
     end
 
     // Check PHASE_WIDTH
     if (PHASE_WIDTH < MinPhaseWidth || 14 < PHASE_WIDTH) begin
-      $display("DDS phase width (PHASE_WIDTH) should be with in range %0d to 14, got %0d. [%m]", MinPhaseWidth, PHASE_WIDTH);
-      #1 $finish();
+      $fatal(1, "DDS phase width (PHASE_WIDTH) should be with in range %0d to 14, got %0d. [%m]", MinPhaseWidth, PHASE_WIDTH);
     end
   end
   // verilog_format: on
@@ -84,11 +87,11 @@ module dds_lut #(
   // store half or a quarter of the waveform and relies on the trigonometric
   // function to get the correct result.
   // When Phase Word Width is small, directly store the full waveform.
-  localparam StructureInternal = (STRUCTURE == "AUTO") ?
-    ((PHASE_WIDTH <= 9) ? "FULL" : (PHASE_WIDTH <= 11) ? "HALF" : "QUARTER") : STRUCTURE;
+  localparam [8*7-1:0] StructureInternal = (STRUCTURE == StructureAuto) ?
+    ((PHASE_WIDTH <= 9) ? StructureFull : (PHASE_WIDTH <= 11) ? StructureHalf : StructureQuarter) : STRUCTURE;
 
-  localparam AddressWidth = (StructureInternal == "FULL") ? PHASE_WIDTH :
-    (StructureInternal == "HALF") ? (PHASE_WIDTH - 1): (PHASE_WIDTH - 2);
+  localparam AddressWidth = (StructureInternal == StructureFull) ? PHASE_WIDTH :
+    (StructureInternal == StructureHalf) ? (PHASE_WIDTH - 1): (PHASE_WIDTH - 2);
 
   // Note:
   // |                                    | Normal     | Rasterized   |
@@ -111,15 +114,15 @@ module dds_lut #(
   //   - When StructureInternal is "FULL", phase could be directly used as address.
   //   - When StructureInternal is "HALF", phase should be reduce to [0, pi)
   //   - When StructureInternal is "QUARTER", phase should be reduce to [0, pi/2)
-  function automatic [AddressWidth-1:0] phase_addr_mapping(input reg [PHASE_WIDTH-1:0] phase);
+  function automatic [AddressWidth-1:0] phase_addr_mapping(input reg [PHASE_WIDTH-1:0] phase_value);
     reg [PHASE_WIDTH-1:0] mapped;
     begin
-      mapped = phase;
+      mapped = phase_value;
 
       // phase-cosine look-up table only contains 1/2 of the waveform. Phase in
       // range [pi, 2*pi) could be mapped to [0, pi) with sign changed:
       //   cos(x) = -cos(x - pi),  (pi <= x < 2*pi)
-      if (StructureInternal == "HALF") begin
+      if (StructureInternal == StructureHalf) begin
         if (RASTERIZED) begin
           case (mapped[PHASE_WIDTH-1:PHASE_WIDTH-4])
             4'b0000: mapped[PHASE_WIDTH-1:PHASE_WIDTH-4] = 4'b0000;  // 0 -> 0
@@ -153,7 +156,7 @@ module dds_lut #(
       //   cos(x) = -cos(pi - x), (pi/2 <= x < pi)
       //   cos(x) = -cos(x - pi), (pi <= x < 3*pi/2)
       //   cos(x) = cos(2*pi - x), (3*pi/2 <= x < pi)
-      if (StructureInternal == "QUARTER") begin
+      if (StructureInternal == StructureQuarter) begin
         if (RASTERIZED) begin
           case (mapped[PHASE_WIDTH-1:PHASE_WIDTH-4])
             4'b0000: mapped = mapped;
@@ -168,7 +171,7 @@ module dds_lut #(
             4'b1001: mapped = Phase2Pi - mapped;
             4'b1010: mapped = Phase2Pi - mapped;
             4'b1011: mapped = Phase2Pi - mapped;
-            default: mapped = 'bx;
+            default: mapped = {PHASE_WIDTH{1'bx}};
           endcase
         end else begin
           case (mapped[PHASE_WIDTH-1:PHASE_WIDTH-2])
@@ -176,7 +179,7 @@ module dds_lut #(
             2'b01:   mapped = PhasePi - mapped;
             2'b10:   mapped = mapped - PhasePi;
             2'b11:   mapped = Phase2Pi - mapped;
-            default: mapped = 'bx;
+            default: mapped = {PHASE_WIDTH{1'bx}};
           endcase
         end
       end
@@ -187,64 +190,16 @@ module dds_lut #(
 
   // This function tells when look-up the phase-cosine table, which output
   // should be sign changed. (Phase in range [1/2*pi, 3/2*pi)).
-  function automatic negative_output(input reg [PHASE_WIDTH-1:0] phase, input reg negative);
+  function automatic negative_output(input reg [PHASE_WIDTH-1:0] phase_value, input reg negative);
     begin
-      negative_output = 0;
+      negative_output = 1'b0;
 
-      if (StructureInternal == "HALF") begin
-        if (RASTERIZED) begin
-          case (phase[PHASE_WIDTH-1:PHASE_WIDTH-4])
-            4'b0000: negative_output = 1'b0;
-            4'b0001: negative_output = 1'b0;
-            4'b0010: negative_output = 1'b0;
-            4'b0011: negative_output = 1'b0;
-            4'b0100: negative_output = 1'b0;
-            4'b0101: negative_output = 1'b0;
-            4'b0110: negative_output = 1'b1;
-            4'b0111: negative_output = 1'b1;
-            4'b1000: negative_output = 1'b1;
-            4'b1001: negative_output = 1'b1;
-            4'b1010: negative_output = 1'b1;
-            4'b1011: negative_output = 1'b1;
-            default: negative_output = 1'bx;
-          endcase
-        end else begin
-          case (phase[PHASE_WIDTH-1:PHASE_WIDTH-2])
-            2'b00:   negative_output = 1'b0;
-            2'b01:   negative_output = 1'b0;
-            2'b10:   negative_output = 1'b1;
-            2'b11:   negative_output = 1'b1;
-            default: negative_output = 1'bx;
-          endcase
-        end
+      if (StructureInternal == StructureHalf) begin
+        negative_output = phase_value >= PhasePi;
       end
 
-      if (StructureInternal == "QUARTER") begin
-        if (RASTERIZED) begin
-          case (phase[PHASE_WIDTH-1:PHASE_WIDTH-4])
-            4'b0000: negative_output = 1'b0;
-            4'b0001: negative_output = 1'b0;
-            4'b0010: negative_output = 1'b0;
-            4'b0011: negative_output = 1'b1;
-            4'b0100: negative_output = 1'b1;
-            4'b0101: negative_output = 1'b1;
-            4'b0110: negative_output = 1'b1;
-            4'b0111: negative_output = 1'b1;
-            4'b1000: negative_output = 1'b1;
-            4'b1001: negative_output = 1'b0;
-            4'b1010: negative_output = 1'b0;
-            4'b1011: negative_output = 1'b0;
-            default: negative_output = 1'bx;
-          endcase
-        end else begin
-          case (phase[PHASE_WIDTH-1:PHASE_WIDTH-2])
-            2'b00:   negative_output = 1'b0;
-            2'b01:   negative_output = 1'b1;
-            2'b10:   negative_output = 1'b1;
-            2'b11:   negative_output = 1'b0;
-            default: negative_output = 1'bx;
-          endcase
-        end
+      if (StructureInternal == StructureQuarter) begin
+        negative_output = (phase_value >= PhasePi2) && (phase_value < Phase3Pi2);
       end
 
       negative_output = negative ? ~negative_output : negative_output;
@@ -254,12 +209,12 @@ module dds_lut #(
   // This function tells when look-up the phase-cosine table, which output
   // should be zero, since the zero point (cos(1/2*pi) and cos(3/2*pi)) is not
   // in table.
-  function automatic zero_output(input reg [PHASE_WIDTH-1:0] phase);
+  function automatic zero_output(input reg [PHASE_WIDTH-1:0] phase_value);
     begin
       zero_output = 1'b0;
 
-      if (StructureInternal == "QUARTER") begin
-        if (phase == PhasePi2 || phase == Phase3Pi2) begin
+      if (StructureInternal == StructureQuarter) begin
+        if (phase_value == PhasePi2 || phase_value == Phase3Pi2) begin
           zero_output = 1'b1;
         end
       end
@@ -357,12 +312,12 @@ module dds_lut #(
   ) i_rom (
       .clk  (clk),
       //
-      .rsta (1'b0),
+      .rsta (rst),
       .ena  (1'b1),
       .addra(cos_addr),
       .douta(cos_dout),
       //
-      .rstb (1'b0),
+      .rstb (rst),
       .enb  (1'b1),
       .addrb(sin_addr),
       .doutb(sin_dout)

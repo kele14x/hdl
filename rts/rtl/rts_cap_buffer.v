@@ -32,7 +32,9 @@ module rts_cap_buffer #(
 
 
   always @(posedge clka) begin
-    if (wea) begin
+    if (rsta) begin
+      ram_wea <= 1'b0;
+    end else if (wea) begin
       ram_wea <= 1'b1;
     end else if (cnt == 0) begin
       ram_wea <= 1'b0;
@@ -40,7 +42,9 @@ module rts_cap_buffer #(
   end
 
   always @(posedge clka) begin
-    if (wea) begin
+    if (rsta) begin
+      cnt <= 1'b0;
+    end else if (wea) begin
       cnt <= 1'b1;
     end else if (cnt != 0) begin
       cnt <= cnt - 1'b1;

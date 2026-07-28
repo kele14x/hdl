@@ -98,11 +98,11 @@ module fft_radix2_bf2 #(
   // * -j
   always_comb begin
     if (nj) begin
-      data_i_t = data_q_in;
-      data_q_t = -data_i_in;
+      data_i_t = {data_q_in[DATA_WIDTH-1], data_q_in};
+      data_q_t = -{data_i_in[DATA_WIDTH-1], data_i_in};
     end else begin
-      data_i_t = data_i_in;
-      data_q_t = data_q_in;
+      data_i_t = {data_i_in[DATA_WIDTH-1], data_i_in};
+      data_q_t = {data_q_in[DATA_WIDTH-1], data_q_in};
     end
   end
 
@@ -112,8 +112,8 @@ module fft_radix2_bf2 #(
       delay_i_in = delay_i_out - data_i_t;
       delay_q_in = delay_q_out - data_q_t;
     end else begin
-      delay_i_in = {data_i_t[DATA_WIDTH-1], data_i_t};
-      delay_q_in = {data_q_t[DATA_WIDTH-1], data_q_t};
+      delay_i_in = data_i_t;
+      delay_q_in = data_q_t;
     end
   end
 

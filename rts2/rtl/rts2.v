@@ -99,13 +99,15 @@ module rts2 (
   wire [31:0] ctrl_ram1_size;
   wire [31:0] ctrl_ram2_size;
 
+  wire unused_ctrl_outputs = &{1'b0, s_axi_awaddr[15:9], s_axi_araddr[15:9], ctrl_ram1_offset, ctrl_ram2_offset, ctrl_ram1_size, ctrl_ram2_size, 1'b0};
+
   // Main
 
   rts2_regs i_regs (
       .s_axi_aclk         (s_axi_aclk),
       .s_axi_aresetn      (s_axi_aresetn),
       //
-      .s_axi_awaddr       (s_axi_awaddr),
+      .s_axi_awaddr       (s_axi_awaddr[8:0]),
       .s_axi_awprot       (s_axi_awprot),
       .s_axi_awvalid      (s_axi_awvalid),
       .s_axi_awready      (s_axi_awready),
@@ -119,7 +121,7 @@ module rts2 (
       .s_axi_bvalid       (s_axi_bvalid),
       .s_axi_bready       (s_axi_bready),
       //
-      .s_axi_araddr       (s_axi_araddr),
+      .s_axi_araddr       (s_axi_araddr[8:0]),
       .s_axi_arprot       (s_axi_arprot),
       .s_axi_arvalid      (s_axi_arvalid),
       .s_axi_arready      (s_axi_arready),

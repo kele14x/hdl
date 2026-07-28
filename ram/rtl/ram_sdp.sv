@@ -31,8 +31,7 @@ module ram_sdp #(
   initial begin
     assert (1 <= READ_LATENCY && READ_LATENCY <= 3)
     else begin
-      $error("READ_LATENCY should be within range 1 to 3.");
-      #1 $finish;
+      $fatal(1, "READ_LATENCY should be within range 1 to 3.");
     end
   end
 

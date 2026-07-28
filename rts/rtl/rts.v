@@ -78,7 +78,8 @@ module rts (
   wire [             31:0] ctrl_injt_ram_dout;
   wire                     ctrl_injt_ram_valid;
 
-  wire [$clog2(NumCc)-1:0] ctrl_cap_cc_sel;
+  wire [              5:0] ctrl_cap_cc_sel;
+  wire                     unused_ctrl_cap_cc_sel_msb = ctrl_cap_cc_sel[5];
   wire                     ctrl_cap_pos_sel;
   wire [              1:0] ctrl_cap_mode;
   wire [             18:0] ctrl_cap_offset;
@@ -352,7 +353,7 @@ module rts (
       .m_axis_tvalid (mux_axis_tvalid),
       //
       .ctrl_pos_sel  (ctrl_cap_pos_sel),
-      .ctrl_cc_sel   (ctrl_cap_cc_sel)
+      .ctrl_cc_sel   (ctrl_cap_cc_sel[$clog2(NumCc)-1:0])
   );
 
   rts_cap_ram i_cap_ram (

@@ -108,6 +108,8 @@ module oran_deframer_dl_ss #(
   logic                             s2_axis_tlast;
   logic [                     31:0] s2_axis_tuser;
 
+  wire unused_s1_axis_tuser = &{1'b0, s1_axis_tuser[39:32]};
+
 
   oran_deframer_dl_ss_symnum i_symnum (
       .clk          (clk),

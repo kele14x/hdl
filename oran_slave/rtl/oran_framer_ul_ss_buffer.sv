@@ -26,6 +26,37 @@ module oran_framer_ul_ss_buffer #(
 
   localparam int FifoDepth = BUFFER_SIZE;
 
+  logic [$clog2(FifoDepth):0] fifo_wr_data_count;
+  logic [$clog2(FifoDepth):0] fifo_rd_data_count;
+  logic                       fifo_s_axis_tready;
+  logic                       fifo_almost_full;
+  logic                       fifo_prog_full;
+  logic                       fifo_m_axis_tdest;
+  logic                       fifo_m_axis_tid;
+  logic [                7:0] fifo_m_axis_tstrb;
+  logic                       fifo_m_axis_tuser;
+  logic                       fifo_almost_empty;
+  logic                       fifo_prog_empty;
+  logic                       fifo_sbiterr;
+  logic                       fifo_dbiterr;
+
+  wire unused_fifo_outputs = &{
+    1'b0,
+    fifo_wr_data_count,
+    fifo_rd_data_count,
+    fifo_s_axis_tready,
+    fifo_almost_full,
+    fifo_prog_full,
+    fifo_m_axis_tdest,
+    fifo_m_axis_tid,
+    fifo_m_axis_tstrb,
+    fifo_m_axis_tuser,
+    fifo_almost_empty,
+    fifo_prog_empty,
+    fifo_sbiterr,
+    fifo_dbiterr
+  };
+
   xpm_fifo_axis #(
       .CASCADE_HEIGHT     (0),
       .CDC_SYNC_STAGES    (2),
@@ -53,35 +84,35 @@ module oran_framer_ul_ss_buffer #(
       .s_axis_tid        ('0),
       .s_axis_tkeep      (s_axis_tkeep),
       .s_axis_tlast      (s_axis_tlast),
-      .s_axis_tready     (),
       .s_axis_tstrb      (s_axis_tkeep),
       .s_axis_tuser      ('0),
       .s_axis_tvalid     (s_axis_tvalid),
+      .s_axis_tready     (fifo_s_axis_tready),
       //
       .injectdbiterr_axis(1'b0),
       .injectsbiterr_axis(1'b0),
+      .wr_data_count_axis(fifo_wr_data_count),
+      .almost_full_axis  (fifo_almost_full),
+      .prog_full_axis    (fifo_prog_full),
       //
-      .wr_data_count_axis(),
-      .almost_full_axis  (),
-      .prog_full_axis    (),
       //
       .m_aclk            (clk),
       .m_axis_tdata      (m_axis_tdata),
-      .m_axis_tdest      (),
-      .m_axis_tid        (),
+      .m_axis_tdest      (fifo_m_axis_tdest),
+      .m_axis_tid        (fifo_m_axis_tid),
       .m_axis_tkeep      (m_axis_tkeep),
       .m_axis_tlast      (m_axis_tlast),
       .m_axis_tready     (m_axis_tready),
-      .m_axis_tstrb      (),
-      .m_axis_tuser      (),
+      .m_axis_tstrb      (fifo_m_axis_tstrb),
+      .m_axis_tuser      (fifo_m_axis_tuser),
       .m_axis_tvalid     (m_axis_tvalid),
+      .rd_data_count_axis(fifo_rd_data_count),
+      .almost_empty_axis (fifo_almost_empty),
+      .prog_empty_axis   (fifo_prog_empty),
+      .sbiterr_axis      (fifo_sbiterr),
+      .dbiterr_axis      (fifo_dbiterr)
       //
-      .rd_data_count_axis(),
-      .almost_empty_axis (),
-      .prog_empty_axis   (),
       //
-      .sbiterr_axis      (),
-      .dbiterr_axis      ()
   );
 
 endmodule

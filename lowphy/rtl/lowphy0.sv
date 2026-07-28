@@ -8,8 +8,8 @@ module lowphy0 (
     input  wire         s_axi_aclk,
     input  wire         s_axi_aresetn,
     //
-    input  wire [ 15:0] s0_axi_awaddr,
-    input  wire [  1:0] s0_axi_awprot,
+    input  wire [ 11:0] s0_axi_awaddr,
+    input  wire [  2:0] s0_axi_awprot,
     input  wire         s0_axi_awvalid,
     output wire         s0_axi_awready,
     //
@@ -22,8 +22,8 @@ module lowphy0 (
     output wire         s0_axi_bvalid,
     input  wire         s0_axi_bready,
     //
-    input  wire [ 15:0] s0_axi_araddr,
-    input  wire [  1:0] s0_axi_arprot,
+    input  wire [ 11:0] s0_axi_araddr,
+    input  wire [  2:0] s0_axi_arprot,
     input  wire         s0_axi_arvalid,
     output wire         s0_axi_arready,
     //
@@ -751,7 +751,7 @@ module lowphy0 (
   assign m_dl_axis_tlast  = m_axis_tlast[0][0];
   assign m_dl_axis_tvalid = m_axis_tvalid[0][0];
 
-  assign s_ul_axis_tready = 1'b1;
+  assign s_ul_axis_tready = s_axis_tready[0][0];
 
 endmodule
 

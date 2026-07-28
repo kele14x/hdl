@@ -5,8 +5,8 @@
 (* KEEP_HIERARCHY = "yes" *)
 module cdc_single #(
     parameter int DEST_SYNC_FF  = 4,
-    parameter int INIT_SYNC_FF  = 0,
-    parameter int SRC_INPUT_REG = 1
+    parameter bit INIT_SYNC_FF  = 1'b0,
+    parameter bit SRC_INPUT_REG = 1'b1
 ) (
     input  logic src_clk,
     input  logic src_in,
@@ -39,13 +39,6 @@ module cdc_single #(
 
   (* ASYNC_REG = "true" *)
   logic [DEST_SYNC_FF-1:0] syncstages_ff;
-
-  initial begin : p_init
-    if (INIT_SYNC_FF != 0) begin
-      src_ff = 1'b0;
-      syncstages_ff = '0;
-    end
-  end
 
   always_ff @(posedge src_clk) begin
     src_ff <= src_in;

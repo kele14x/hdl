@@ -100,6 +100,8 @@ module prach_reshape #(
       .dout({dout_last, dout_dv, dout_chn, dout_sy, dout_sl, dout_sf})
   );
 
+  wire unused_reshape = &{1'b0, rst};
+
 endmodule
 
 `default_nettype wire

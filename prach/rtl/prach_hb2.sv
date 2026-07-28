@@ -32,8 +32,6 @@ module prach_hb2 #(
   // Parameters
 
   // fi(1, 18, 17)
-  localparam int NumUniqCoe = 2;
-
   localparam logic signed [35:0] Rng = 1 << 16;
 
   localparam int Latency = 8;
@@ -57,7 +55,7 @@ module prach_hb2 #(
 
   logic signed [16:0] asum;
   logic signed [34:0] amult;
-  logic signed [34:0] aresult;
+  logic signed [35:0] aresult;
 
   logic signed [16:0] bsum;
   logic signed [34:0] bmult;
@@ -111,7 +109,7 @@ module prach_hb2 #(
   end
 
   always_ff @(posedge clk) begin
-    aresult <= amult + Rng;
+    aresult <= 36'(amult) + Rng;
   end
 
   // DSP2
@@ -130,13 +128,13 @@ module prach_hb2 #(
   end
 
   always_ff @(posedge clk) begin
-    bresult <= aresult + bmult;
+    bresult <= aresult + 36'(bmult);
   end
 
   // Output
 
   always_ff @(posedge clk) begin
-    dq <= bresult + $signed({xp1[DELAY_BASE*1+5], 16'b0});
+    dq <= 37'(bresult) + $signed({{5{xp1[DELAY_BASE*1+5][15]}}, xp1[DELAY_BASE*1+5], 16'b0});
   end
 
   // TODO: saturate
@@ -159,6 +157,8 @@ module prach_hb2 #(
       .din ({din_last, din_dv, din_chn, din_sy, din_sl, din_sf}),
       .dout({dout_last, dout_dv, dout_chn, dout_sy, dout_sl, dout_sf})
   );
+
+  wire unused_hb2 = &{1'b0, rst, dq[36:33], dq[16:0]};
 
 endmodule
 

@@ -59,6 +59,9 @@ module ecpri_deframer_common (
   reg  [15:0] payload_counter;  // Received message bytes counter
 
   wire        payload_end;
+  wire        unused_header_fields;
+
+  assign unused_header_fields = &{1'b0, ecpri_version, ecpri_reserved};
 
   integer state, state_next;
 

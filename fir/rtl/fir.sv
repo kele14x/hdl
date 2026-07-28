@@ -45,11 +45,10 @@ module fir #(
   // Local parameters
   //=================
 
-  // From `data_sync_in` to `data_sync_out`, first sample to first sample latency
-  localparam int Latency = 7;
-
   localparam int CoeAddrWidth = $clog2(NUM_STAGES) + COE_ADDR_WIDTH;
   localparam int MacDataWidth = DATA_WIDTH + COE_DATA_WIDTH + $clog2(NUM_STAGES);
+  localparam logic [31:0] CoeAddrStepFull = (NUM_CHANNELS - 1) / 2;
+  localparam logic [COE_ADDR_WIDTH-1:0] CoeAddrStep = CoeAddrStepFull[COE_ADDR_WIDTH-1:0];
 
 
   // Signals
@@ -64,6 +63,7 @@ module fir #(
 
   // MAC cascade
   logic signed [        MacDataWidth-1:0] mac_data_s      [NUM_STAGES+1];
+  logic        [       COE_DATA_WIDTH-1:0] ctrl_coe_dout_s[NUM_STAGES];
 
   // Channel index
   logic        [$clog2(NUM_CHANNELS)-1:0] ch_index;
@@ -107,7 +107,7 @@ module fir #(
   always_ff @(posedge clk) begin
     coe_addr[0] <= ch_index[$clog2(NUM_CHANNELS)-1-:COE_ADDR_WIDTH];
     for (int i = 1; i < NUM_STAGES; i++) begin
-      coe_addr[i] <= coe_addr[i-1] - (NUM_CHANNELS - 1) / 2;
+      coe_addr[i] <= coe_addr[i-1] - CoeAddrStep;
     end
   end
 
@@ -156,7 +156,7 @@ module fir #(
           .ctrl_coe_we      (ctrl_coe_we),
           .ctrl_coe_addr    (ctrl_coe_addr_l),
           .ctrl_coe_din     (ctrl_coe_din),
-          .ctrl_coe_dout    (  /* not used */)
+          .ctrl_coe_dout    (ctrl_coe_dout_s[i])
       );
 
       assign ctrl_coe_en_s[i] = ctrl_coe_en && (ctrl_coe_addr_h == i);
@@ -204,6 +204,7 @@ module fir #(
 
   assign ctrl_coe_addr_h = ctrl_coe_addr[CoeAddrWidth-1:COE_ADDR_WIDTH];
   assign ctrl_coe_addr_l = ctrl_coe_addr[COE_ADDR_WIDTH-1:0];
+  assign ctrl_coe_dout = ctrl_coe_dout_s[ctrl_coe_addr_h];
 
 endmodule
 

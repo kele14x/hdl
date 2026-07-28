@@ -117,6 +117,9 @@ module ecpri_framer (
   wire        s4_axis_tvalid;
   wire        s4_axis_tready;
 
+  wire        unused_s0_axis_tuser;
+  wire        unused_s3_axis_tuser;
+
   // Control CDC
 
   cdc_array_single #(
@@ -230,7 +233,7 @@ module ecpri_framer (
       .m_axis_tdata (s0_axis_tdata),
       .m_axis_tkeep (s0_axis_tkeep),
       .m_axis_tlast (s0_axis_tlast),
-      .m_axis_tuser (  /* not used */),
+      .m_axis_tuser (unused_s0_axis_tuser),
       .m_axis_tvalid(s0_axis_tvalid),
       .m_axis_tready(s0_axis_tready)
   );
@@ -334,7 +337,7 @@ module ecpri_framer (
       .m_axis_tdata (s3_axis_tdata),
       .m_axis_tkeep (s3_axis_tkeep),
       .m_axis_tlast (s3_axis_tlast),
-      .m_axis_tuser (  /* not used */),
+      .m_axis_tuser (unused_s3_axis_tuser),
       .m_axis_tvalid(s3_axis_tvalid),
       .m_axis_tready(s3_axis_tready)
   );

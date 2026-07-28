@@ -83,7 +83,7 @@ def _param_sets_for_pytest():
 def test_fifo_sync_runner(params):
     hdl_toplevel = "fifo_sync"
     coverage_dir = os.getenv("VERILATOR_COVERAGE_DIR")
-    build_args = ["--timing"]
+    build_args = []
     test_args = []
     if SIM == "verilator" and coverage_dir:
         coverage_path = Path(coverage_dir)

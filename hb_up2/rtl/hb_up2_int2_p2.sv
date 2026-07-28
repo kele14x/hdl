@@ -1,13 +1,14 @@
 // File: hb_up2.sv
 // Brief: Half band up-sample by 2. Interleaved 2 channels.
 
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module hb_up2_int2_p2 #(
     parameter int XIN_WIDTH = 16,
     parameter int COE_WIDTH = 16,
     parameter int NUM_UNIQUE_COE = 5,
-    parameter signed [COE_WIDTH-1:0] COE_NUMS[NUM_UNIQUE_COE] = {952, -1609, 3090, -6260, 20622},
+    parameter signed [COE_WIDTH-1:0] COE_NUMS[NUM_UNIQUE_COE] = '{16'sd952, -16'sd1609, 16'sd3090, -16'sd6260, 16'sd20622},
     parameter int YOUT_WIDTH = 16,
     parameter int SRA_BITS = 15
 ) (
@@ -23,7 +24,7 @@ module hb_up2_int2_p2 #(
 );
 
 
-  localparam int RND = (1 <<< (SRA_BITS - 1));
+  localparam logic signed [XIN_WIDTH+COE_WIDTH:0] RND = 1 <<< (SRA_BITS - 1);
   localparam int BASE = (NUM_UNIQUE_COE + 1) / 2 + 1;  // ceil(N/2) + 1
   localparam int TAPS = BASE * 4 + NUM_UNIQUE_COE * 2 > BASE * 4 + 6 ?
       BASE * 4 + NUM_UNIQUE_COE * 2 : BASE * 4 + 6;

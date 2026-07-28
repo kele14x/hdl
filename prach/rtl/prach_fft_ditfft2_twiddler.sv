@@ -26,6 +26,8 @@ module prach_fft_ditfft2_twiddler #(
   localparam int Latency = 8;
   localparam int CounterWidth = $clog2(FFT_SIZE);
   localparam int PhaseWidth = 18;
+  localparam logic [CounterWidth-1:0] LastCount = CounterWidth'(FFT_SIZE - 1);
+  localparam logic [CounterWidth-1:0] HalfCount = CounterWidth'(FFT_SIZE / 2);
   localparam RamStyle = CounterWidth >= 9 ? "BLOCK" : "DISTRIBUTED";
 
   // Signals
@@ -51,14 +53,14 @@ module prach_fft_ditfft2_twiddler #(
     if (rst) begin
       cnt <= 0;
     end else if (din_dv || state) begin
-      cnt <= (cnt >= FFT_SIZE - 1) ? '0 : (cnt + 1'd1);
+      cnt <= (cnt >= LastCount) ? '0 : (cnt + 1'd1);
     end
   end
 
   always_ff @(posedge clk) begin
     if (rst) begin
       state <= 0;
-    end else if (cnt >= FFT_SIZE - 1) begin
+    end else if (cnt >= LastCount) begin
       state <= 1'b0;
     end else if (din_dv) begin
       state <= 1'b1;
@@ -69,11 +71,11 @@ module prach_fft_ditfft2_twiddler #(
     dv <= din_dv || state;
   end
 
-  assign sel = !(cnt < FFT_SIZE / 2);
+  assign sel = !(cnt < HalfCount);
 
   always_comb begin
     if (sel) begin
-      addr = cnt - FFT_SIZE / 2;
+      addr = (CounterWidth - 1)'(cnt - HalfCount);
     end else begin
       addr = '0;
     end

@@ -34,6 +34,7 @@ module coe_deframer_hdr (
   reg         init_n;
 
   wire [31:0] s_axis_tdata_reversed;
+  wire        unused_inputs = &{1'b0, sync, s_axis_tdata_reversed[31:19]};
 
   assign s_axis_tdata_reversed = byte_reverse(s_axis_tdata);
 

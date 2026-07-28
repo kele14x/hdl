@@ -46,6 +46,8 @@ module oran_framer_eth #(
   logic [63:0] s_axis_tdata_d;
   logic [ 7:0] s_axis_tkeep_d;
 
+  wire unused_framer_eth_inputs = &{1'b0, tx_eth_rst, s_axis_tdata_d[63:48], s_axis_tkeep_d[1:0]};
+
   typedef enum int {
     S_RST,          // Under reset
     S_DMAC_SMAC0,   // Write Destination MAC [47:0] (6) and Source MAC [47:32] (2)
@@ -67,6 +69,35 @@ module oran_framer_eth #(
   logic        m0_axis_tvalid;
   logic        m0_axis_tlast;
   logic        m0_axis_tready;
+
+  logic [$clog2(FIFO_DEPTH):0] fifo_wr_data_count;
+  logic [$clog2(FIFO_DEPTH):0] fifo_rd_data_count;
+  logic                        fifo_almost_full;
+  logic                        fifo_prog_full;
+  logic                        fifo_m_axis_tdest;
+  logic                        fifo_m_axis_tid;
+  logic [                 7:0] fifo_m_axis_tstrb;
+  logic                        fifo_m_axis_tuser;
+  logic                        fifo_almost_empty;
+  logic                        fifo_prog_empty;
+  logic                        fifo_sbiterr;
+  logic                        fifo_dbiterr;
+
+  wire unused_fifo_outputs = &{
+    1'b0,
+    fifo_wr_data_count,
+    fifo_rd_data_count,
+    fifo_almost_full,
+    fifo_prog_full,
+    fifo_m_axis_tdest,
+    fifo_m_axis_tid,
+    fifo_m_axis_tstrb,
+    fifo_m_axis_tuser,
+    fifo_almost_empty,
+    fifo_prog_empty,
+    fifo_sbiterr,
+    fifo_dbiterr
+  };
 
   logic [15:0] mac_vlan_type = 16'h8100;
   logic [15:0] mac_ethertype = 16'hAEFE;
@@ -272,29 +303,29 @@ module oran_framer_eth #(
       .s_axis_tuser      ('0),
       .s_axis_tvalid     (m0_axis_tvalid),
       //
-      .almost_full_axis  (),
-      .prog_full_axis    (),
-      .wr_data_count_axis(),
-      .injectsbiterr_axis(),
-      .injectdbiterr_axis(),
+      .injectdbiterr_axis(1'b0),
+      .injectsbiterr_axis(1'b0),
+      .wr_data_count_axis(fifo_wr_data_count),
+      .almost_full_axis  (fifo_almost_full),
+      .prog_full_axis    (fifo_prog_full),
       //
       .m_aclk            (tx_eth_clk),
       //
       .m_axis_tdata      (m_eth_fram_tdata),
-      .m_axis_tdest      (),
-      .m_axis_tid        (),
+      .m_axis_tdest      (fifo_m_axis_tdest),
+      .m_axis_tid        (fifo_m_axis_tid),
       .m_axis_tkeep      (m_eth_fram_tkeep),
       .m_axis_tlast      (m_eth_fram_tlast),
       .m_axis_tready     (m_eth_fram_tready),
-      .m_axis_tstrb      (),
-      .m_axis_tuser      (),
+      .m_axis_tstrb      (fifo_m_axis_tstrb),
+      .m_axis_tuser      (fifo_m_axis_tuser),
       .m_axis_tvalid     (m_eth_fram_tvalid),
+      .rd_data_count_axis(fifo_rd_data_count),
+      .almost_empty_axis (fifo_almost_empty),
+      .prog_empty_axis   (fifo_prog_empty),
+      .sbiterr_axis      (fifo_sbiterr),
+      .dbiterr_axis      (fifo_dbiterr)
       //
-      .almost_empty_axis (),
-      .prog_empty_axis   (),
-      .rd_data_count_axis(),
-      .sbiterr_axis      (),
-      .dbiterr_axis      ()
   );
 
 

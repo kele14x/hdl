@@ -217,7 +217,7 @@ def test_axis_fifo_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
-        build_args=["--timing"],
+        build_args=[],
         waves=True,
         always=True,
     )

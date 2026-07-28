@@ -40,6 +40,17 @@ module oran_deframer_dl_ss_decomp (
   logic        fifo_rd_pre;
   logic        fifo_rd;
 
+  logic        gearbox_err_unexpected_tlast;
+  logic        user_fifo_full;
+  logic        user_fifo_empty;
+
+  wire unused_decomp_outputs = &{
+    1'b0,
+    gearbox_err_unexpected_tlast,
+    user_fifo_full,
+    user_fifo_empty
+  };
+
 
   always_ff @(posedge clk) begin
     if (rst) begin
@@ -96,7 +107,7 @@ module oran_deframer_dl_ss_decomp (
       .dout_last           (d0_last),
       //
       .ud_iq_width         (ud_iq_width),
-      .err_unexpected_tlast(  /* not used */)
+      .err_unexpected_tlast(gearbox_err_unexpected_tlast)
   );
 
   oran_deframer_dl_ss_decomp_exp i_exp (
@@ -125,12 +136,12 @@ module oran_deframer_dl_ss_decomp (
       .rst  (rst),
       //
       .din  (fifo_din),
-      .wr_en(fifo_wr),
-      .full (  /* not used */),
+      .wren(fifo_wr),
+      .full (user_fifo_full),
       //
       .dout (fifo_dout),
-      .empty(  /* not used */),
-      .rd_en(fifo_rd)
+      .empty(user_fifo_empty),
+      .rden(fifo_rd)
   );
 
 endmodule

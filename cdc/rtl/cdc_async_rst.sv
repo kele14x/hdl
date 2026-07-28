@@ -1,6 +1,7 @@
 `timescale 1 ns / 1 ps
 //
-`default_nettype none (* KEEP_HIERARCHY = "yes" *)
+`default_nettype none
+(* KEEP_HIERARCHY = "yes" *)
 module cdc_async_rst #(
     parameter int DEST_SYNC_FF    = 4,
     parameter int INIT_SYNC_FF    = 0,
@@ -28,30 +29,28 @@ module cdc_async_rst #(
     end
   end
 
-  localparam logic DefVal = (RST_ACTIVE_HIGH != 0) ? 1'b0 : 1'b1;
-  localparam logic InvDefVal = (RST_ACTIVE_HIGH == 0) ? 1'b0 : 1'b1;
-
   (* ASYNC_REG = "true" *)
   logic [DEST_SYNC_FF-1:0] arststages_ff;
-  logic                    async_path_bit;
-  logic                    reset_pol;
 
-  initial begin : p_init
-    if (INIT_SYNC_FF != 0) begin
-      arststages_ff = {DEST_SYNC_FF{DefVal}};
+  generate
+    if (RST_ACTIVE_HIGH != 0) begin : g_active_high
+      always_ff @(posedge dest_clk) begin
+        if (src_arst) begin
+          arststages_ff <= '0;
+        end else begin
+          arststages_ff <= {arststages_ff[DEST_SYNC_FF-2:0], 1'b1};
+        end
+      end
+    end else begin : g_active_low
+      always_ff @(posedge dest_clk) begin
+        if (!src_arst) begin
+          arststages_ff <= '1;
+        end else begin
+          arststages_ff <= {arststages_ff[DEST_SYNC_FF-2:0], 1'b0};
+        end
+      end
     end
-  end
-
-  assign reset_pol = src_arst ^ DefVal;
-  assign async_path_bit = DefVal;
-
-  always_ff @(posedge dest_clk or posedge reset_pol) begin
-    if (reset_pol) begin
-      arststages_ff <= {DEST_SYNC_FF{InvDefVal}};
-    end else begin
-      arststages_ff <= {arststages_ff[DEST_SYNC_FF-2:0], async_path_bit};
-    end
-  end
+  endgenerate
 
   assign dest_arst = arststages_ff[DEST_SYNC_FF-1];
 

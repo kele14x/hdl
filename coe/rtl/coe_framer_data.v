@@ -48,7 +48,7 @@ module coe_framer_data (
 
   // Parameters
 
-  localparam integer SamplePerFrame = 4915200;
+  localparam [22:0] SamplePerFrameCount = 23'd4915200;
 
   // Signals
 
@@ -98,7 +98,11 @@ module coe_framer_data (
   reg  [11:0] trans_payloadsize;
   reg  [ 7:0] trans_seqid;
 
-  genvar i;
+  genvar gen_i;
+
+  wire unused_inputs = &{1'b0, s_axis_tuser, s_axis_tlast, s_axis_tvalid};
+  wire unused_fifo_tuser;
+  wire unused_fifo_err_discard;
 
   // Main
 
@@ -123,7 +127,7 @@ module coe_framer_data (
     if (sync_posedge) begin
       sample_counter <= 'd0;
     end else begin
-      sample_counter <= (sample_counter == SamplePerFrame - 1) ? 'd0 : sample_counter + 1'd1;
+      sample_counter <= (sample_counter == SamplePerFrameCount - 23'd1) ? 'd0 : sample_counter + 1'd1;
     end
   end
 
@@ -142,7 +146,7 @@ module coe_framer_data (
     if (sync_posedge) begin
       seq_counter <= 'd0;
     end else if (&seq_val) begin
-      seq_counter <= seq_counter == ctrl_seq_cnt_s - 1 ? 'd0 : seq_counter + 1'd1;
+      seq_counter <= seq_counter == ({8'd0, ctrl_seq_cnt_s} - 16'd1) ? 'd0 : seq_counter + 1'd1;
     end
   end
 
@@ -186,7 +190,7 @@ module coe_framer_data (
     if (sync_posedge) begin
       for (i = 0; i < 16; i = i + 1) begin
         if (ctrl_seq_en_s[i]) begin
-          seq_last_val <= i;
+          seq_last_val <= i[3:0];
         end
       end
     end
@@ -243,15 +247,15 @@ module coe_framer_data (
 
   assign seq_first = seq_valid && (seq_counter == 0) && ctrl_en_s && |ctrl_seq_cnt_s;
 
-  assign seq_last  = (seq_counter == ctrl_seq_cnt_s - 1) && (seq_val == seq_last_val);
+  assign seq_last  = (seq_counter == ({8'd0, ctrl_seq_cnt_s} - 16'd1)) && (seq_val == seq_last_val);
 
   //
 
   generate
-    for (i = 0; i < 24; i = i + 1) begin : g_seq_sel_ch
+    for (gen_i = 0; gen_i < 24; gen_i = gen_i + 1) begin : g_seq_sel_ch
 
       always @(posedge clk) begin
-        s0_seq_sel[i] <= (seq_sel == i) && seq_valid;
+        s0_seq_sel[gen_i] <= (seq_sel == gen_i) && seq_valid;
       end
 
     end
@@ -282,17 +286,17 @@ module coe_framer_data (
   end
 
   generate
-    for (i = 0; i < 24; i = i + 1) begin : g_axis_d
+    for (gen_i = 0; gen_i < 24; gen_i = gen_i + 1) begin : g_axis_d
 
       always @(posedge clk) begin
-        s_axis_tdata_d[i] <= s_axis_tdata[i*32+31-:32];
+        s_axis_tdata_d[gen_i] <= s_axis_tdata[gen_i*32+31-:32];
       end
 
       always @(posedge clk) begin
-        if (s0_seq_sel[i]) begin
-          s_axis_tdata_dd[i] <= s_axis_tdata_d[i];
+        if (s0_seq_sel[gen_i]) begin
+          s_axis_tdata_dd[gen_i] <= s_axis_tdata_d[gen_i];
         end else begin
-          s_axis_tdata_dd[i] <= 'b0;
+          s_axis_tdata_dd[gen_i] <= 'b0;
         end
       end
 
@@ -454,11 +458,11 @@ module coe_framer_data (
       .m_axis_tdata  (m_axis_tdata),
       .m_axis_tkeep  (m_axis_tkeep),
       .m_axis_tlast  (m_axis_tlast),
-      .m_axis_tuser  (  /* not used */),
+      .m_axis_tuser  (unused_fifo_tuser),
       .m_axis_tvalid (m_axis_tvalid),
       .m_axis_tready (m_axis_tready),
       //
-      .err_discard   ()
+      .err_discard   (unused_fifo_err_discard)
   );
 
 endmodule

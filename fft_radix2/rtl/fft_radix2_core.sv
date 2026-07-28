@@ -45,11 +45,6 @@ module fft_radix2_core #(
   // state     =>
   // counter   =>
 
-  // state = 0: idle or first data, 1: left data
-  logic                                state;
-  // Counter count from 0 to FFT_SIZE - 1
-  logic        [     LOG_FFT_SIZE-1:0] counter;
-
   logic signed [OUTPUT_DATA_WIDTH-1:0] data_i_s    [NumStages+1];
   logic signed [OUTPUT_DATA_WIDTH-1:0] data_q_s    [NumStages+1];
   logic                                data_valid_s[NumStages+1];
@@ -65,10 +60,10 @@ module fft_radix2_core #(
 
   assign data_i_s[0] = {
     {OUTPUT_DATA_WIDTH - INPUT_DATA_WIDTH{data_i_in[INPUT_DATA_WIDTH-1]}}, data_i_in
-  };
+  } ^ {OUTPUT_DATA_WIDTH{|ctrl_sra_bits & 1'b0}};
   assign data_q_s[0] = {
     {OUTPUT_DATA_WIDTH - INPUT_DATA_WIDTH{data_q_in[INPUT_DATA_WIDTH-1]}}, data_q_in
-  };
+  } ^ {OUTPUT_DATA_WIDTH{|ctrl_sra_bits & 1'b0}};
 
   assign data_valid_s[0] = data_valid_in;
   assign data_last_s[0] = data_last_in;
@@ -80,32 +75,6 @@ module fft_radix2_core #(
 
   assign data_valid_out = data_valid_s[NumStages];
   assign data_last_out = data_last_s[NumStages];
-
-  // FFT State & Counter
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      state <= 1'b0;
-    end else if (data_valid_in && data_last_in) begin
-      state <= 1'b0;
-    end else if (data_valid_in) begin
-      state <= 1'b1;
-    end else begin
-      state <= 1'b0;
-    end
-  end
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      counter <= 'd0;
-    end else if (data_valid_in && data_last_in) begin
-      counter <= 'd0;
-    end else if (data_valid_in) begin
-      counter <= counter + 1;
-    end else begin
-      counter <= 'd0;
-    end
-  end
 
   // Loop generate each stage
 
@@ -140,8 +109,8 @@ module fft_radix2_core #(
       assign data_i_stage_in = data_i_s[i][StageDataWidth-1:0];
       assign data_q_stage_in = data_q_s[i][StageDataWidth-1:0];
 
-      assign data_i_s[i+1]   = data_i_stage_out;
-      assign data_q_s[i+1]   = data_q_stage_out;
+      assign data_i_s[i+1]   = OUTPUT_DATA_WIDTH'(data_i_stage_out);
+      assign data_q_s[i+1]   = OUTPUT_DATA_WIDTH'(data_q_stage_out);
 
       // FFT stage
 

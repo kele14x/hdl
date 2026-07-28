@@ -39,11 +39,12 @@ module rts_ram (
 
   localparam integer NumChannel = 3;
 
-  localparam integer CounterWrap = 307200 - 1;
-
   // Signals
 
   wire [         19:0] ctrl_ram_offset_s   [0:NumChannel-1];
+  wire                 unused_ctrl_ram_mode = |ctrl_ram_mode;
+  wire                 unused_ctrl2ram_full;
+  wire                 unused_ram2ctrl_full;
 
   wire [          6:0] ctrl_ram_addr_msb_s;
   wire [         12:0] ctrl_ram_addr_s;
@@ -149,7 +150,7 @@ module rts_ram (
       .wr_clk  (ctrl_clk),
       .wr_en   (ctrl_ram_en),
       .wr_din  ({ctrl_ram_din, ctrl_ram_we, ctrl_ram_addr}),
-      .wr_full (),
+      .wr_full (unused_ctrl2ram_full),
       //
       .rd_clk  (clk_l),
       .rd_dout ({ctrl_ram_din_s, ctrl_ram_we_s, ctrl_ram_addr_s}),
@@ -170,6 +171,7 @@ module rts_ram (
       .INIT (1)
   ) i_delay_ram_en (
       .clk (clk_l),
+      .rst (rst),
       .cen (1'b1),
       .din (ctrl_ram_en_s),
       .dout(ctrl_ram_en_d)
@@ -185,7 +187,7 @@ module rts_ram (
       .wr_clk  (clk_l),
       .wr_din  (douta),
       .wr_en   (ctrl_ram_en_d),
-      .wr_full (),
+      .wr_full (unused_ram2ctrl_full),
       //
       .rd_clk  (ctrl_clk),
       .rd_dout (ctrl_ram_dout),
@@ -256,16 +258,16 @@ module rts_ram (
 
   always @(posedge clk_l) begin
     if (count == 0) begin
-      addrb = count_ch[0];
+      addrb <= count_ch[0];
     end else if (count == 1) begin
-      addrb = count_ch[1];
+      addrb <= count_ch[1];
     end else if (count == 2) begin
-      addrb = count_ch[2];
+      addrb <= count_ch[2];
     end
   end
 
   always @(posedge clk_l) begin
-    enb = (count == 0 || count == 1 || count == 2) && init_n;
+    enb <= (count == 0 || count == 1 || count == 2) && init_n;
   end
 
   assign web  = 1'b0;
@@ -293,6 +295,7 @@ module rts_ram (
       .INIT (0)
   ) i_delay_init_n (
       .clk (clk_l),
+      .rst (rst),
       .cen (1'b1),
       .din (init_n),
       .dout(init_n_d)
@@ -304,6 +307,7 @@ module rts_ram (
       .INIT (0)
   ) i_delay_count (
       .clk (clk_l),
+      .rst (rst),
       .cen (1'b1),
       .din (count),
       .dout(count_d)

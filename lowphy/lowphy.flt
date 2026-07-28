@@ -1,4 +1,5 @@
 ../axis_switch/axis_switch.flt
+../cdc/cdc.flt
 ../common/common.flt
 ../pdxch/pdxch.flt
 ../prach/prach.flt

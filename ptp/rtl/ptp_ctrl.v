@@ -35,9 +35,17 @@ module ptp_ctrl #(
 
   // Parameters
 
-  `include "ptp_pkg.vh"
+  localparam [3:0] PTP_MESSAGE_TYPE_SYNC = 4'h0;
+  localparam [3:0] PTP_MESSAGE_TYPE_DELAY_REQ = 4'h1;
+  localparam [3:0] PTP_MESSAGE_TYPE_FOLLOW_UP = 4'h8;
+  localparam [3:0] PTP_MESSAGE_TYPE_DELAY_RESP = 4'h9;
+  localparam [3:0] PTP_MESSAGE_TYPE_ANNOUNCE = 4'hB;
 
   localparam integer CounterWidth = $clog2(CLK_FREQ);
+  localparam [CounterWidth-1:0] ClkFreq = CLK_FREQ[CounterWidth-1:0];
+  localparam [CounterWidth-1:0] OneCount = {{(CounterWidth-1){1'b0}}, 1'b1};
+
+  wire unused_origin_timestamp = |s_msg_origin_timestamp;
 
   // Signals
 
@@ -168,10 +176,10 @@ module ptp_ctrl #(
   always @(posedge clk) begin
     if (ctrl_log_sync_interval_s[7]) begin
       // Interval is negative (less than 1s), so we need to count up to 1s / 2^ctrl_log_sync_interval
-      sync_counter_max <= (CLK_FREQ >> sync_counter_shift) - 1;
+      sync_counter_max <= (ClkFreq >> sync_counter_shift) - OneCount;
     end else begin
       // Interval is positive (larger than 1s), so we need to count up to 1s
-      sync_counter_max <= CLK_FREQ - 1;
+      sync_counter_max <= ClkFreq - OneCount;
     end
   end
 
@@ -333,10 +341,10 @@ module ptp_ctrl #(
   always @(posedge clk) begin
     if (ctrl_log_announce_interval_s[7]) begin
       // Interval is negative (less than 1s), so we need to count up to 1s / 2^ctrl_log_announce_interval
-      announce_counter_max <= (CLK_FREQ >> announce_counter_shift) - 1;
+      announce_counter_max <= (ClkFreq >> announce_counter_shift) - OneCount;
     end else begin
       // Interval is positive (larger than 1s), so we need to count up to 1s
-      announce_counter_max <= CLK_FREQ - 1;
+      announce_counter_max <= ClkFreq - OneCount;
     end
   end
 
@@ -432,21 +440,21 @@ module ptp_ctrl #(
     end else if (delay_req_req && ~ap_valid) begin
       ap_message_type             <= PTP_MESSAGE_TYPE_DELAY_REQ;
       ap_sequence_id              <= delay_req_sequence_id;
-      ap_log_message_interval     <= 16'h7F;
+      ap_log_message_interval     <= 8'h7F;
       ap_origin_timestamp         <= 80'd0;
       ap_requesting_port_identity <= 80'd0;
       ap_tag_field                <= tag_field;
     end else if (follow_up_req && ~ap_valid) begin
       ap_message_type             <= PTP_MESSAGE_TYPE_FOLLOW_UP;
       ap_sequence_id              <= follow_up_sequence_id;
-      ap_log_message_interval     <= 16'h7F;
+      ap_log_message_interval     <= 8'h7F;
       ap_origin_timestamp         <= follow_up_origin_timestamp;
       ap_requesting_port_identity <= 80'b0;
       ap_tag_field                <= 16'b0;
     end else if (delay_resp_req && ~ap_valid) begin
       ap_message_type             <= PTP_MESSAGE_TYPE_DELAY_RESP;
       ap_sequence_id              <= delay_resp_sequence_id;
-      ap_log_message_interval     <= 16'h7F;
+      ap_log_message_interval     <= 8'h7F;
       ap_origin_timestamp         <= delay_resp_timestamp;
       ap_requesting_port_identity <= delay_resp_port_identity;
       ap_tag_field                <= 16'b0;

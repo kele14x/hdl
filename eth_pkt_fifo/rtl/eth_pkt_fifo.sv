@@ -6,7 +6,8 @@
 //        forward mode and causes one packet latency. The buffer should be
 //        large enough to hold at least one (largest) packet.
 //-----------------------------------------------------------------------------
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module eth_pkt_fifo #(
     parameter int ADDR_WIDTH = 10
@@ -160,14 +161,14 @@ module eth_pkt_fifo #(
     // wr_addr change
     case (wr_state)
       S_WR_WORD0: begin
-        if (s_axis_tvalid && !wr_full) begin
+        if (s_axis_tvalid && !wr_full && !(s_axis_tlast && s_axis_tuser)) begin
           wr_addr_next = wr_addr + 1;
         end
       end
 
       S_WR_PASS: begin
         if (s_axis_tvalid) begin
-          if (wr_full) begin
+          if (wr_full || (s_axis_tlast && s_axis_tuser)) begin
             wr_addr_next = wr_addr_last;
           end else begin
             wr_addr_next = wr_addr + 1;
@@ -181,7 +182,8 @@ module eth_pkt_fifo #(
     endcase
   end
 
-  assign wr_we = s_axis_tvalid && (wr_state == S_WR_WORD0 || wr_state == S_WR_PASS) && !wr_full;
+  assign wr_we = s_axis_tvalid && (wr_state == S_WR_WORD0 || wr_state == S_WR_PASS) &&
+    !wr_full && !(s_axis_tlast && s_axis_tuser);
 
   // We does not need to write tvalid and tready, tuser and bad_fcs flag
   assign wr_data = {
@@ -199,7 +201,7 @@ module eth_pkt_fifo #(
     if (!aresetn) begin
       tail_addr <= '0;
     end else if ((wr_state == S_WR_PASS || wr_state == S_WR_WORD0)
-      && s_axis_tvalid && s_axis_tlast && !wr_full) begin
+      && s_axis_tvalid && s_axis_tlast && !wr_full && !s_axis_tuser) begin
       tail_addr <= wr_addr + 1;
     end
   end
@@ -266,7 +268,7 @@ module eth_pkt_fifo #(
   // The Buffer
   //===========
 
-  bram_sdp #(
+  ram_sdp #(
       .ADDR_WIDTH  (ADDR_WIDTH),
       .DATA_WIDTH  (DATA_WIDTH),
       .READ_LATENCY(3),

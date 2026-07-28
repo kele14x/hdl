@@ -184,6 +184,24 @@ module ecpri (
 
   wire [15:0] stat_topology_id;
   wire [15:0] stat_lp_topology_id;
+  wire [31:0] unused_stat_rx_resync_cnt;
+  wire [31:0] unused_stat_tx_resync_cnt;
+  wire        unused_m_odm_header_valid;
+  wire [ 7:0] unused_m_odm_measurementid;
+  wire [ 7:0] unused_m_odm_actiontype;
+  wire [79:0] unused_m_odm_timestamp;
+  wire [63:0] unused_m_odm_compensation;
+  wire [79:0] unused_m_odm_timestamp2;
+
+  assign ctrl_defm_has_vlan = 1'b0;
+  assign ctrl_defm_vlan_tag = 16'd0;
+  assign ctrl_defm_src_mac_flt_mask = 48'd0;
+  assign ctrl_defm_vlan_flt_en = 1'b0;
+  assign ctrl_defm_vlan_flt_mask = 16'd0;
+
+  wire unused_axi_addr = &{1'b0, s_axi_awaddr[31:10], s_axi_araddr[31:10],
+    stat_fram_total_pkt_cnt, stat_fram_ecpri_pkt_cnt, stat_fram_trans_pkt_cnt,
+    stat_fram_odm_pkt_cnt};
 
   // Main
 
@@ -191,7 +209,7 @@ module ecpri (
       .s_axi_aclk                  (s_axi_aclk),
       .s_axi_aresetn               (s_axi_aresetn),
       //
-      .s_axi_awaddr                (s_axi_awaddr),
+      .s_axi_awaddr                (s_axi_awaddr[9:0]),
       .s_axi_awprot                (s_axi_awprot),
       .s_axi_awvalid               (s_axi_awvalid),
       .s_axi_awready               (s_axi_awready),
@@ -205,7 +223,7 @@ module ecpri (
       .s_axi_bvalid                (s_axi_bvalid),
       .s_axi_bready                (s_axi_bready),
       //
-      .s_axi_araddr                (s_axi_araddr),
+      .s_axi_araddr                (s_axi_araddr[9:0]),
       .s_axi_arprot                (s_axi_arprot),
       .s_axi_arvalid               (s_axi_arvalid),
       .s_axi_arready               (s_axi_arready),
@@ -301,8 +319,8 @@ module ecpri (
       .ctl_rx_systemtimer(ctl_rx_systemtimer),
       .ctl_tx_systemtimer(ctl_tx_systemtimer),
       //
-      .stat_rx_resync_cnt(),
-      .stat_tx_resync_cnt()
+      .stat_rx_resync_cnt(unused_stat_rx_resync_cnt),
+      .stat_tx_resync_cnt(unused_stat_tx_resync_cnt)
   );
 
   ecpri_if #(
@@ -364,12 +382,12 @@ module ecpri (
       .m_trans_ebit              (m_trans_ebit),
       .m_trans_subseqid          (m_trans_subseqid),
       //
-      .m_odm_header_valid        (),
-      .m_odm_measurementid       (),
-      .m_odm_actiontype          (),
-      .m_odm_timestamp           (),
-      .m_odm_compensation        (),
-      .m_odm_timestamp2          (),
+      .m_odm_header_valid        (unused_m_odm_header_valid),
+      .m_odm_measurementid       (unused_m_odm_measurementid),
+      .m_odm_actiontype          (unused_m_odm_actiontype),
+      .m_odm_timestamp           (unused_m_odm_timestamp),
+      .m_odm_compensation        (unused_m_odm_compensation),
+      .m_odm_timestamp2          (unused_m_odm_timestamp2),
       //
       .m_ptp_tdata               (m_ptp_tdata),
       .m_ptp_tkeep               (m_ptp_tkeep),

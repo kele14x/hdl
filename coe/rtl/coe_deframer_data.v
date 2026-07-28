@@ -44,7 +44,7 @@ module coe_deframer_data (
 
   // Parameters
 
-  localparam integer SamplePerFrame = 4915200;
+  localparam [22:0] SamplePerFrameCount = 23'd4915200;
   localparam integer MaxSeqLen = 16;
 
   localparam integer NumChannel = 24;
@@ -68,7 +68,7 @@ module coe_deframer_data (
   endfunction
 
   // This function returns the channel delay for the given sequence ID.
-  function automatic [3:0] get_ch_delay(input integer id, input reg [15:0] seq_en,
+  function automatic [3:0] get_ch_delay(input reg [5:0] id, input reg [15:0] seq_en,
                                         input reg [95:0] seq_id);
     integer i;
     reg found;
@@ -78,7 +78,7 @@ module coe_deframer_data (
       for (i = 0; i < MaxSeqLen; i = i + 1) begin
         if (!found && seq_en[i] && id_sel_map(seq_id[i*6+5-:6]) == id) begin
           found = 1;
-          get_ch_delay = 15 - i;
+          get_ch_delay = 4'd15 - i[3:0];
         end
       end
     end
@@ -135,16 +135,31 @@ module coe_deframer_data (
   wire [         15:0] ctrl_seq_en_s;
   wire [         95:0] ctrl_seq_id_s;
   wire [          5:0] ctrl_seq_id_ch      [ 0:MaxSeqLen-1];
-  wire [          5:0] ctrl_seq_sel_ch     [ 0:MaxSeqLen-1];
 
   reg  [          4:0] ctrl_seq_n_valid;
   reg  [          3:0] ctrl_ch_delay       [0:NumChannel-1];
 
   wire [          8:0] ctrl_ts_offset_s;
 
+  wire                 unused_inputs = &{
+    1'b0,
+    s_axis_tkeep,
+    s_axis_tlast,
+    s_trans_header_valid,
+    s_trans_rtc_pc_id,
+    s_trans_seqid,
+    s_trans_ebit,
+    s_trans_subseqid,
+    s_app_ts[18:9],
+    m_axis_rx_tready,
+    ctrl_rst,
+    ctrl_seq_n_valid[4]
+  };
+
   // Write side signals
 
   wire                 wr_we;
+  wire [          3:0] wr_seq_last;
   reg  [          3:0] wr_seq;
   reg  [AddrWidth-5:0] wr_cnt;
   wire [AddrWidth-1:0] wr_addr;
@@ -265,13 +280,14 @@ module coe_deframer_data (
   // Write side
 
   assign wr_we = s_axis_tvalid;
+  assign wr_seq_last = ctrl_seq_n_valid[3:0] - 4'd1;
 
   // `s_app_valid` is always 1 clock tick ahead of data, so we can safely reset
   // the sequence counter when it's asserted.
   always @(posedge clk) begin
     if (s_app_valid) begin
       wr_seq <= 'd0;
-    end else if (wr_we && (wr_seq == ctrl_seq_n_valid - 1)) begin
+    end else if (wr_we && (wr_seq == wr_seq_last)) begin
       wr_seq <= 'd0;
     end else if (wr_we) begin
       wr_seq <= wr_seq + 1'd1;
@@ -281,7 +297,7 @@ module coe_deframer_data (
   always @(posedge clk) begin
     if (s_app_valid) begin
       wr_cnt <= s_app_ts[AddrWidth-5:0];
-    end else if (wr_we && (wr_seq == ctrl_seq_n_valid - 1)) begin
+    end else if (wr_we && (wr_seq == wr_seq_last)) begin
       wr_cnt <= wr_cnt + 1'd1;
     end
   end
@@ -309,7 +325,7 @@ module coe_deframer_data (
     end else if (sync_posedge) begin
       sample_counter <= 'd0;
     end else begin
-      sample_counter <= (sample_counter == SamplePerFrame - 1) ? 'd0 : sample_counter + 1'd1;
+      sample_counter <= (sample_counter == SamplePerFrameCount - 23'd1) ? 'd0 : sample_counter + 1'd1;
     end
   end
 
@@ -372,10 +388,10 @@ module coe_deframer_data (
   // Output AXIS
 
   always @(posedge clk) begin : p_m_axis_rx_tdata
-    integer i;
-    for (i = 0; i < NumChannel; i = i + 1) begin
-      if (rd_en_d && rd_sel_d == i) begin
-        dout_reg[i] <= rd_dout;
+    integer k;
+    for (k = 0; k < NumChannel; k = k + 1) begin
+      if (rd_en_d && rd_sel_d == k[5:0]) begin
+        dout_reg[k] <= rd_dout;
       end
     end
   end

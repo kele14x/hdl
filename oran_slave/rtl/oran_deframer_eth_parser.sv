@@ -50,6 +50,8 @@ module oran_deframer_eth_parser #(
   logic [63:0] s_axis_tdata_d;
   logic [ 7:0] s_axis_tkeep_d;
 
+  wire unused_parser_delayed_axis = &{1'b0, s_axis_tdata_d[63:32], s_axis_tkeep_d[3:0]};
+
   logic        extra_last;
 
   // U-Plane Header

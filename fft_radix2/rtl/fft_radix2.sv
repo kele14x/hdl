@@ -40,10 +40,6 @@ module fft_radix2 #(
   // Local parameters
   //=================
 
-  // Total core latency in clock ticks
-  localparam int Latency = LOG_FFT_SIZE * 9 + LOG_FFT_SIZE - 8;
-
-
   // Check parameters
   //=================
 
@@ -51,27 +47,24 @@ module fft_radix2 #(
     // Check FFT size
     assert (1 <= LOG_FFT_SIZE && LOG_FFT_SIZE <= 14)
     else begin
-      $error("[%m]: Log2 FFT size (LOG_FFT_SIZE) must be within the range 1 to 14, got %d.",
+      $fatal(1, "[%m]: Log2 FFT size (LOG_FFT_SIZE) must be within the range 1 to 14, got %d.",
              LOG_FFT_SIZE);
-      #1 $finish;
     end
 
     // Check input data width
     assert (8 <= INPUT_DATA_WIDTH && INPUT_DATA_WIDTH <= 32)
     else begin
-      $error("[%m]: Input data width (INPUT_DATA_WIDTH) must be within the range 8 to 32, got %d.",
+      $fatal(1, "[%m]: Input data width (INPUT_DATA_WIDTH) must be within the range 8 to 32, got %d.",
              INPUT_DATA_WIDTH);
-      #1 $finish;
     end
 
     // Check output data width
     assert(INPUT_DATA_WIDTH <= OUTPUT_DATA_WIDTH &&
       OUTPUT_DATA_WIDTH <= INPUT_DATA_WIDTH + LOG_FFT_SIZE + 1)
     else begin
-      $error(
+      $fatal(1,
           "[%m]: Output data width (OUTPUT_DATA_WIDTH) must be within the range %0d to %0d, got %0d.",
           INPUT_DATA_WIDTH, INPUT_DATA_WIDTH + LOG_FFT_SIZE + 1, OUTPUT_DATA_WIDTH);
-      #1 $finish;
     end
   end
 
@@ -79,15 +72,8 @@ module fft_radix2 #(
   // Signals
   //========
 
-  // state = 0: idle or first data, 1: left data
-  logic                        state;
   // Counter count from 0 to LOG_FFT_SIZE - 1
   logic [    LOG_FFT_SIZE-1:0] counter;
-
-  logic [INPUT_DATA_WIDTH-1:0] data_i_r;
-  logic [INPUT_DATA_WIDTH-1:0] data_q_r;
-  logic                        data_valid_r;
-  logic                        data_last_r;
 
 
   // Main
@@ -99,18 +85,6 @@ module fft_radix2 #(
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      state <= 1'b0;
-    end else if (data_valid_in && data_last_in) begin
-      state <= 1'b0;
-    end else if (data_valid_in) begin
-      state <= 1'b1;
-    end else begin
-      state <= 1'b0;
-    end
-  end
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
       counter <= 'd0;
     end else if (data_valid_in && data_last_in) begin
       counter <= 'd0;
@@ -119,15 +93,6 @@ module fft_radix2 #(
     end else begin
       counter <= 'd0;
     end
-  end
-
-  // Input register
-
-  always_ff @(posedge clk) begin
-    data_i_r     <= data_i_in;
-    data_q_r     <= data_q_in;
-    data_valid_r <= data_valid_in;
-    data_last_r  <= data_last_in;
   end
 
   always_ff @(posedge clk) begin

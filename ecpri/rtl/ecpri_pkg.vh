@@ -1,10 +1,12 @@
-localparam reg [15:0] EtherTypeVlan = 16'h8100;
-localparam reg [15:0] EtherTypePtp = 16'h88F7;
-localparam reg [15:0] EtherTypeEcpri = 16'hAEFE;
-
-localparam reg [7:0] EcpriMessageTypeIq = 8'd0;  // IQ Data
-localparam reg [7:0] EcpriMessageTypeRtc = 8'd2;  // Real-Time Control Data
-localparam reg [7:0] EcpriMessageTypeOdm = 8'd5;  // One-way delay measurement
+`ifndef ECPRI_ETHERTYPE_VLAN
+`define ECPRI_ETHERTYPE_VLAN 16'h8100
+`endif
+`ifndef ECPRI_ETHERTYPE_PTP
+`define ECPRI_ETHERTYPE_PTP 16'h88F7
+`endif
+`ifndef ECPRI_ETHERTYPE_ECPRI
+`define ECPRI_ETHERTYPE_ECPRI 16'hAEFE
+`endif
 
 // Get the TKEEP size based on the pattern
 function [1:0] tkeep_size(input reg [3:0] tkeep);
@@ -12,6 +14,7 @@ function [1:0] tkeep_size(input reg [3:0] tkeep);
     if (tkeep[3]) tkeep_size = 2'b11;
     else if (tkeep[2]) tkeep_size = 2'b10;
     else if (tkeep[1]) tkeep_size = 2'b01;
+    else if (tkeep[0]) tkeep_size = 2'b00;
     else tkeep_size = 2'b00;
   end
 endfunction

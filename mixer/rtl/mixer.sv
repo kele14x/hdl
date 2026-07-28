@@ -34,6 +34,8 @@ module mixer #(
   // Local parameters
 
   localparam int Latency = 13;
+  localparam int AntSelWidth = (NUM_ANT <= 1) ? 1 : $clog2(NUM_ANT);
+  localparam logic [3:0] NumAnt = 4'(NUM_ANT);
 
   // Helper functions
 
@@ -50,16 +52,18 @@ module mixer #(
     end
   endfunction
 
-  function automatic logic [19:0] phase_correct;
+  function automatic logic [11:0] phase_correct;
     input logic [19:0] phase;
-    input logic [19:0] lfsr;
+    input logic [ 7:0] lfsr_round;
     begin
-      logic [32:0] temp;
-      temp = {phase, 12'b0} + lfsr;
-      if (temp[32:30] >= 3'b011) begin
-        temp[32:30] = temp[32:30] - 3'b011;
+      logic        carry;
+      logic [12:0] temp;
+      carry = ({1'b0, phase[7:0]} + {1'b0, lfsr_round}) > 9'h0ff;
+      temp  = {1'b0, phase[19:8]} + {12'b0, carry};
+      if (temp[12:10] >= 3'b011) begin
+        temp[12:10] = temp[12:10] - 3'b011;
       end
-      phase_correct = temp[31:12];
+      phase_correct = temp[11:0];
     end
   endfunction
 
@@ -77,11 +81,13 @@ module mixer #(
   logic [19:0] phase      [NUM_ANT];
   logic [19:0] phase_next;
   logic [19:0] phase_r;
-  logic [19:0] phase_lfsr;
+  logic [AntSelWidth-1:0] din_chn_sel;
 
-  logic [19:0] lfsr;
+  logic [ 7:0] lfsr_round;
+  logic [11:0] unused_lfsr_tail;
 
   logic [11:0] phase_lut;
+  logic        unused_cmult_ovf;
 
   // Main
 
@@ -124,6 +130,8 @@ module mixer #(
     end
   endgenerate
 
+  assign din_chn_sel = din_chn[AntSelWidth-1:0];
+
   // Phase accumulator
 
   generate
@@ -142,11 +150,11 @@ module mixer #(
 
   // The phase accumulator is controlled by din_chn, but not din_dv
   always_comb begin
-    if (din_chn < NUM_ANT) begin
+    if (din_chn < NumAnt) begin
       if (din_sf) begin
-        phase_next = ctrl_poff_s[din_chn];
+        phase_next = ctrl_poff_s[din_chn_sel];
       end else begin
-        phase_next = phase_add(phase[din_chn], ctrl_pinc_s[din_chn]);
+        phase_next = phase_add(phase[din_chn_sel], ctrl_pinc_s[din_chn_sel]);
       end
     end else begin
       phase_next = '0;
@@ -158,10 +166,8 @@ module mixer #(
   end
 
   always_ff @(posedge clk) begin
-    phase_lfsr <= phase_correct(phase_r, lfsr);
+    phase_lut <= phase_correct(phase_r, lfsr_round);
   end
-
-  assign phase_lut = phase_lfsr[19:8];
 
   lfsr #(
       .BIT_WIDTH      (20),
@@ -176,7 +182,7 @@ module mixer #(
       .en  (1'b1),
       .load(1'b0),
       .din ({20{1'b1}}),
-      .dout(lfsr)
+      .dout({lfsr_round, unused_lfsr_tail})
   );
 
   dds_lut #(
@@ -231,8 +237,8 @@ module mixer #(
       .P_WIDTH (16),
       .SHIFT   (15),
       //
-      .ROUND   (1'b1),
-      .SATURATE(1'b0)
+      .ROUND   (1),
+      .SATURATE(0)
   ) i_cmult (
       .clk(clk),
       .rst(rst),
@@ -246,7 +252,7 @@ module mixer #(
       .pr (dout_dr),
       .pi (dout_di),
       //
-      .ovf(  /* not used */)
+      .ovf(unused_cmult_ovf)
   );
 
   delay #(

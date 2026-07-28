@@ -71,6 +71,7 @@ module puxch_top #(
   logic        dout_sy             [ NUM_CC];
   logic [ 3:0] dout_chn            [ NUM_CC];
   logic        dout_dv             [ NUM_CC];
+  logic        dout_last           [ NUM_CC];
 
   logic        ctrl_phase_comp_we_s[ NUM_CC];
 
@@ -79,6 +80,7 @@ module puxch_top #(
   wire         s0_axis_tvalid      [NUM_ANT];
   wire         s0_axis_tlast       [NUM_ANT];
   wire         s0_axis_tready      [NUM_ANT];
+  wire  [31:0] bfp_m_axis_tuser    [NUM_ANT];
 
   generate
     for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_cc
@@ -102,6 +104,7 @@ module puxch_top #(
           .dout_sy              (dout_sy[cc]),
           .dout_chn             (dout_chn[cc]),
           .dout_dv              (dout_dv[cc]),
+          .dout_last            (dout_last[cc]),
           //
           .clk_eth_xran         (clk_eth_xran),
           .rst_eth_xran         (rst_eth_xran),
@@ -187,7 +190,7 @@ module puxch_top #(
             .m_axis_tkeep     (m_fram_data_tkeep[ant]),
             .m_axis_tvalid    (m_fram_data_tvalid[ant]),
             .m_axis_tlast     (m_fram_data_tlast[ant]),
-            .m_axis_tuser     (),
+            .m_axis_tuser     (bfp_m_axis_tuser[ant]),
             // Control
             //--------
             .ctrl_ud_comp_meth(ctrl_ud_comp_meth),
@@ -232,6 +235,8 @@ module puxch_top #(
   always_ff @(posedge ctrl_clk) begin
     ctrl_phase_comp_valid <= ctrl_phase_comp_en;
   end
+
+  wire unused_top = &{1'b0, dout_last, bfp_m_axis_tuser};
 
 endmodule
 

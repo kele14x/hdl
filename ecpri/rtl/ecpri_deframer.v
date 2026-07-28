@@ -105,6 +105,11 @@ module ecpri_deframer (
   wire [79:0] s2_axis_tuser;
   wire        s2_axis_tvalid;
 
+  wire        unused_stat_corrupt_pkt;
+  wire        unused_ptp_err_discard;
+  wire        unused_message_err_discard;
+  wire        unused_message_tuser;
+
   // Main
 
   ecpri_deframer_demux i_demux (
@@ -141,7 +146,7 @@ module ecpri_deframer (
       .m_message_tlast       (m0_message_tlast),
       .m_message_tvalid      (m0_message_tvalid),
       //
-      .stat_corrupt_pkt      ()
+      .stat_corrupt_pkt      (unused_stat_corrupt_pkt)
   );
 
   axis_fifo_alt #(
@@ -168,7 +173,7 @@ module ecpri_deframer (
       .m_axis_tvalid (m_ptp_tvalid),
       .m_axis_tready (m_ptp_tready),
       //
-      .err_discard   ()
+      .err_discard   (unused_ptp_err_discard)
   );
 
   axis_fifo_alt #(
@@ -191,11 +196,11 @@ module ecpri_deframer (
       .m_axis_tdata  (m_message_tdata),
       .m_axis_tkeep  (m_message_tkeep),
       .m_axis_tlast  (m_message_tlast),
-      .m_axis_tuser  (  /* not used */),
+      .m_axis_tuser  (unused_message_tuser),
       .m_axis_tvalid (m_message_tvalid),
       .m_axis_tready (m_message_tready),
       //
-      .err_discard   ()
+      .err_discard   (unused_message_err_discard)
   );
 
   ecpri_deframer_eth i_eth (

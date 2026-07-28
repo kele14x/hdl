@@ -96,7 +96,7 @@ def test_fifo_srl_runner(params):
             waves=True,
             always=True,
             build_dir=run_dir,
-            build_args=["-Wno-TIMESCALEMOD", "-Wno-WIDTHTRUNC"],
+            build_args=[],
         )
 
         runner.test(

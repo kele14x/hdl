@@ -59,6 +59,8 @@ module rts2_playback_ctrl #(
 
   integer state, state_next;
 
+  wire unused_status_inputs = &{1'b0, s_axis_mm2s_sts_tdata, s_axis_mm2s_sts_tkeep, s_axis_mm2s_sts_tlast, mm2s_err, 1'b0};
+
   // CDC for control signals
 
   cdc_array_single #(
@@ -199,12 +201,12 @@ module rts2_playback_ctrl #(
 
   assign mm2s_rsvd  = 4'h0;
   assign mm2s_tag   = tag_reg;
-  assign mm2s_saddr = AddrBase + offset_reg;
+  assign mm2s_saddr = AddrBase + {{(ADDR_WIDTH-32){1'b0}}, offset_reg};
   assign mm2s_drr   = 1'b0;
   assign mm2s_eof   = size_reg > PageSize ? 1'b0 : 1'b1;
   assign mm2s_dsa   = 6'h0;
   assign mm2s_type  = 1'b1;
-  assign mm2s_btt   = size_reg > PageSize ? PageSize : size_reg;
+  assign mm2s_btt   = size_reg > PageSize ? PageSize[22:0] : size_reg[22:0];
 
 endmodule
 

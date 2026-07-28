@@ -13,18 +13,24 @@ module fh_deframer_buffer #(
     input  wire [63:0] s_axis_tdata,
     input  wire [ 7:0] s_axis_tkeep,
     input  wire        s_axis_tlast,
-    input  wire [79:0] s_axis_tuser,
+    input  wire [USER_WIDTH-1:0] s_axis_tuser,
     input  wire        s_axis_tvalid,
     //
-    output wire [31:0] m_axis_tdata,
-    output wire [ 3:0] m_axis_tkeep,
+    output wire [63:0] m_axis_tdata,
+    output wire [ 7:0] m_axis_tkeep,
     output wire        m_axis_tlast,
-    output wire [79:0] m_axis_tuser,
+    output wire [USER_WIDTH-1:0] m_axis_tuser,
     output wire        m_axis_tvalid,
     input  wire        m_axis_tready
 );
 
   reg         sync_n;
+
+  wire        axis_fifo_tuser;
+  wire        axis_fifo_err_discard;
+  wire        tuser_fifo_full;
+  wire        tuser_fifo_empty;
+  wire        unused_fifo_status = &{1'b0, axis_fifo_tuser, axis_fifo_err_discard, tuser_fifo_full, tuser_fifo_empty};
 
   always @(posedge clk) begin
     if (rst) begin
@@ -41,7 +47,7 @@ module fh_deframer_buffer #(
       .FIFO_DEPTH  (FIFO_DEPTH),
       .FIFO_LATENCY(FIFO_LATENCY),
       .DATA_WIDTH  (64),
-      .USER_WIDTH  (1'b0)
+      .USER_WIDTH  (0)
   ) i_axis_fifo (
       .s_axis_aclk   (clk),
       .s_axis_aresetn(!rst),
@@ -49,7 +55,7 @@ module fh_deframer_buffer #(
       .s_axis_tdata  (s_axis_tdata),
       .s_axis_tkeep  (s_axis_tkeep),
       .s_axis_tlast  (s_axis_tlast),
-      .s_axis_tuser  ('b0),
+      .s_axis_tuser  (1'b0),
       .s_axis_tvalid (s_axis_tvalid),
       //
       .m_axis_aclk   (clk),
@@ -57,28 +63,28 @@ module fh_deframer_buffer #(
       .m_axis_tdata  (m_axis_tdata),
       .m_axis_tkeep  (m_axis_tkeep),
       .m_axis_tlast  (m_axis_tlast),
-      .m_axis_tuser  (  /* not used */),
+      .m_axis_tuser  (axis_fifo_tuser),
       .m_axis_tvalid (m_axis_tvalid),
       .m_axis_tready (m_axis_tready),
       //
-      .err_discard   ()
+      .err_discard   (axis_fifo_err_discard)
   );
 
   fifo_sync #(
       .FIFO_DEPTH  (FIFO_DEPTH / 8),
       .FIFO_LATENCY(2),
-      .DATA_WIDTH  (80)
+      .DATA_WIDTH  (USER_WIDTH)
   ) i_fifo_sync (
       .clk  (clk),
       .rst  (rst),
       //
       .wren (~sync_n && s_axis_tvalid),
       .din  (s_axis_tuser),
-      .full (  /* assume never full */),
+      .full (tuser_fifo_full),
       //
       .rden (m_axis_tvalid && m_axis_tready && m_axis_tlast),
       .dout (m_axis_tuser),
-      .empty(  /* not used */)
+      .empty(tuser_fifo_empty)
   );
 
 endmodule

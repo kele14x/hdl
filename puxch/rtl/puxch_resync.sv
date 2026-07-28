@@ -33,8 +33,6 @@ module puxch_resync #(
 
   // sync_in => start_of_frame => chn => dout_chn
   //
-  localparam int Latency = 3;
-
   localparam int CtrlSignalWidth = 4 + 2 + 4 + 4;
 
   // Signals
@@ -44,7 +42,7 @@ module puxch_resync #(
   logic [3:0] ctrl_bist_s;
   logic [3:0] ctrl_bw_s;
 
-  logic       init_n;
+  logic       stat_resync;
 
   logic       start_of_frame;
   logic       start_of_slot;
@@ -56,6 +54,12 @@ module puxch_resync #(
 
   logic [3:0] chn_max;
   logic [3:0] chn;
+
+  localparam int AntIndexWidth = (NUM_ANT <= 1) ? 1 : $clog2(NUM_ANT);
+
+  wire [AntIndexWidth-1:0] chn_idx;
+
+  assign chn_idx = chn[AntIndexWidth-1:0];
 
   // CDC for control signals
 
@@ -75,14 +79,6 @@ module puxch_resync #(
   // Main
 
   assign s_axis_tready = '{NUM_ANT{1'b1}};
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      init_n <= 1'b0;
-    end else begin
-      init_n <= 1'b1;
-    end
-  end
 
   always_comb begin
     case (ctrl_bw_s)
@@ -105,9 +101,9 @@ module puxch_resync #(
   end
 
   always_ff @(posedge clk) begin
-    if ((chn < NUM_ANT)) begin
-      if (ctrl_en_s[chn]) begin
-        {dout_di, dout_dr} <= s_axis_tdata[chn];
+    if (chn < 4'(NUM_ANT)) begin
+      if (ctrl_en_s[chn[1:0]]) begin
+        {dout_di, dout_dr} <= s_axis_tdata[chn_idx];
       end else begin
         {dout_di, dout_dr} <= '0;
       end
@@ -119,7 +115,7 @@ module puxch_resync #(
   always_ff @(posedge clk) begin
     start_of_frame_d <= start_of_frame;
     start_of_slot_d  <= start_of_slot;
-    if (ctrl_rat_s <= 4'd1) begin
+    if (ctrl_rat_s <= 2'd1) begin
       // 15 kHz SCS
       start_of_symbol_d <= start_of_symbol[0];
     end else begin
@@ -133,7 +129,7 @@ module puxch_resync #(
       dout_sf <= 1'b0;
     end else if (start_of_frame_d) begin
       dout_sf <= 1'b1;
-    end else if (dout_chn == NUM_ANT - 1) begin
+    end else if (dout_chn == 4'(NUM_ANT - 1)) begin
       dout_sf <= 1'b0;
     end
   end
@@ -143,7 +139,7 @@ module puxch_resync #(
       dout_sl <= 1'b0;
     end else if (start_of_slot_d) begin
       dout_sl <= 1'b1;
-    end else if (dout_chn == NUM_ANT - 1) begin
+    end else if (dout_chn == 4'(NUM_ANT - 1)) begin
       dout_sl <= 1'b0;
     end
   end
@@ -153,7 +149,7 @@ module puxch_resync #(
       dout_sy <= 1'b0;
     end else if (start_of_symbol_d) begin
       dout_sy <= 1'b1;
-    end else if (dout_chn == NUM_ANT - 1) begin
+    end else if (dout_chn == 4'(NUM_ANT - 1)) begin
       dout_sy <= 1'b0;
     end
   end
@@ -163,7 +159,7 @@ module puxch_resync #(
   end
 
   always_ff @(posedge clk) begin
-    if ((chn < NUM_ANT)) begin
+    if (chn < 4'(NUM_ANT)) begin
       // Assert all dout_dv if at least one channel is enabled
       dout_dv <= |ctrl_en_s;
     end else begin
@@ -191,8 +187,10 @@ module puxch_resync #(
       .start_of_symbol(start_of_symbol),
       //
       .ctrl_delay     ('0),
-      .stat_resync    ()
+      .stat_resync    (stat_resync)
   );
+
+  wire unused_resync = &{1'b0, s_axis_tuser, s_axis_tlast, s_axis_tvalid, ctrl_bist_s, stat_resync};
 
 endmodule
 

@@ -32,17 +32,28 @@ module oran_framer_ul_ss_section (
   logic        extra_last;
 
   // Section Header (32-bit)
-  logic [11:0] section_sectionid = 12'b0;
-  logic        section_rb = 1'b0;
-  logic        section_syminc = 1'b0;
-  logic [ 9:0] section_startprbu = 10'b0;
-  logic [ 7:0] section_numprbu = 8'b0;
+  logic [11:0] section_sectionid;
+  logic        section_rb;
+  logic        section_syminc;
+  logic [ 9:0] section_startprbu;
+  logic [ 7:0] section_numprbu;
 
   logic [31:0] section_header;
 
   logic [63:0] s_axis_tdata_rev;
   logic [63:0] s_axis_tdata_d;
   logic [ 7:0] s_axis_tkeep_d;
+
+  wire unused_section_header_fields = &{
+    1'b0,
+    ctrl_ud_iq_width,
+    section_sectionid,
+    section_rb,
+    section_syminc,
+    section_startprbu,
+    s_axis_tdata_d[63:48],
+    s_axis_tkeep_d[1:0]
+  };
 
 
   // Main
@@ -107,7 +118,7 @@ module oran_framer_ul_ss_section (
       if (ctrl_has_udcomphdr) begin
         m_axis_tdata <= byte_reverse({s_axis_tdata_d[47:0], 16'b0});
       end else begin
-        m_axis_tdata <= byte_reverse({s_axis_tdata_d[31:0], 16'b0});
+        m_axis_tdata <= byte_reverse({s_axis_tdata_d[31:0], 32'b0});
       end
     end else if (!insert_sec_hdr_n && s_axis_tvalid) begin
       if (ctrl_has_udcomphdr) begin
@@ -169,9 +180,9 @@ module oran_framer_ul_ss_section (
   always_ff @(posedge clk) begin
     if (!insert_sec_hdr_n && s_axis_tvalid) begin
       if (ctrl_ud_comp_meth == 0) begin
-        m_axis_tuser <= {section_numprbu * 48 + 8 + ctrl_has_udcomphdr * 2, s_axis_tuser[63:32]};
+        m_axis_tuser <= {16'((32'(section_numprbu) * 32'd48) + 32'd8 + (ctrl_has_udcomphdr ? 32'd2 : 32'd0)), s_axis_tuser[63:32]};
       end else begin
-        m_axis_tuser <= {section_numprbu * 28 + 8 + ctrl_has_udcomphdr * 2, s_axis_tuser[63:32]};
+        m_axis_tuser <= {16'((32'(section_numprbu) * 32'd28) + 32'd8 + (ctrl_has_udcomphdr ? 32'd2 : 32'd0)), s_axis_tuser[63:32]};
       end
     end
   end

@@ -8,8 +8,8 @@ module lowphy1 (
     input  wire         s_axi_aclk,
     input  wire         s_axi_aresetn,
     //
-    input  wire [ 15:0] s0_axi_awaddr,
-    input  wire [  1:0] s0_axi_awprot,
+    input  wire [ 11:0] s0_axi_awaddr,
+    input  wire [  2:0] s0_axi_awprot,
     input  wire         s0_axi_awvalid,
     output wire         s0_axi_awready,
     //
@@ -22,8 +22,8 @@ module lowphy1 (
     output wire         s0_axi_bvalid,
     input  wire         s0_axi_bready,
     //
-    input  wire [ 15:0] s0_axi_araddr,
-    input  wire [  1:0] s0_axi_arprot,
+    input  wire [ 11:0] s0_axi_araddr,
+    input  wire [  2:0] s0_axi_arprot,
     input  wire         s0_axi_arvalid,
     output wire         s0_axi_arready,
     //
@@ -32,8 +32,8 @@ module lowphy1 (
     output wire         s0_axi_rvalid,
     input  wire         s0_axi_rready,
     //
-    input  wire [ 15:0] s1_axi_awaddr,
-    input  wire [  1:0] s1_axi_awprot,
+    input  wire [ 11:0] s1_axi_awaddr,
+    input  wire [  2:0] s1_axi_awprot,
     input  wire         s1_axi_awvalid,
     output wire         s1_axi_awready,
     //
@@ -46,8 +46,8 @@ module lowphy1 (
     output wire         s1_axi_bvalid,
     input  wire         s1_axi_bready,
     //
-    input  wire [ 15:0] s1_axi_araddr,
-    input  wire [  1:0] s1_axi_arprot,
+    input  wire [ 11:0] s1_axi_araddr,
+    input  wire [  2:0] s1_axi_arprot,
     input  wire         s1_axi_arvalid,
     output wire         s1_axi_arready,
     //
@@ -56,8 +56,8 @@ module lowphy1 (
     output wire         s1_axi_rvalid,
     input  wire         s1_axi_rready,
     //
-    input  wire [ 15:0] s2_axi_awaddr,
-    input  wire [  1:0] s2_axi_awprot,
+    input  wire [ 11:0] s2_axi_awaddr,
+    input  wire [  2:0] s2_axi_awprot,
     input  wire         s2_axi_awvalid,
     output wire         s2_axi_awready,
     //
@@ -70,8 +70,8 @@ module lowphy1 (
     output wire         s2_axi_bvalid,
     input  wire         s2_axi_bready,
     //
-    input  wire [ 15:0] s2_axi_araddr,
-    input  wire [  1:0] s2_axi_arprot,
+    input  wire [ 11:0] s2_axi_araddr,
+    input  wire [  2:0] s2_axi_arprot,
     input  wire         s2_axi_arvalid,
     output wire         s2_axi_arready,
     //
@@ -826,6 +826,32 @@ module lowphy1 (
   logic        s2_axis_tlast        [NumCc][2];
   logic        s2_axis_tvalid       [NumCc][2];
   logic        s2_axis_tready       [NumCc][2];
+
+  generate
+    for (genvar unused_cc = 0; unused_cc < NumCc; unused_cc++) begin : gen_unused_cc
+      for (genvar unused_ant0 = 0; unused_ant0 < 4; unused_ant0++) begin : gen_unused_ant0
+        wire unused_s0_ready;
+
+        assign unused_s0_ready = &{1'b0, s0_axis_tready[unused_cc][unused_ant0]};
+      end
+
+      for (genvar unused_ant = 0; unused_ant < 2; unused_ant++) begin : gen_unused_ant12
+        wire unused_secondary_axis;
+
+        assign unused_secondary_axis = &{
+            1'b0,
+            m1_axis_tuser[unused_cc][unused_ant],
+            m1_axis_tlast[unused_cc][unused_ant],
+            m1_axis_tvalid[unused_cc][unused_ant],
+            s1_axis_tready[unused_cc][unused_ant],
+            m2_axis_tuser[unused_cc][unused_ant],
+            m2_axis_tlast[unused_cc][unused_ant],
+            m2_axis_tvalid[unused_cc][unused_ant],
+            s2_axis_tready[unused_cc][unused_ant]
+        };
+      end
+    end
+  endgenerate
 
   // Unsol
 
@@ -1683,7 +1709,7 @@ module lowphy1 (
   generate
     for (genvar cc = 0; cc < NumCc; cc++) begin : gen_cc
       for (genvar ant = 0; ant < NumAnt; ant++) begin : gen_ant
-        if (ant < 4) begin
+        if (ant < 4) begin : gen_band0_ant
 
           assign m_dl_axis_tdata[(cc*NumAnt+ant)*32+31-:32] = m0_axis_tdata[cc][ant];
           assign m0_axis_tready[cc][ant] = m_dl_axis_tready;
@@ -1692,7 +1718,7 @@ module lowphy1 (
           assign s0_axis_tlast[cc][ant] = s_ul_axis_tlast;
           assign s0_axis_tvalid[cc][ant] = s_ul_axis_tvalid;
 
-        end else if (ant < 6) begin
+        end else if (ant < 6) begin : gen_band1_ant
 
           assign m_dl_axis_tdata[(cc*NumAnt+ant)*32+31-:32] = m1_axis_tdata[cc][ant-4];
           assign m1_axis_tready[cc][ant-4] = m_dl_axis_tready;
@@ -1701,7 +1727,7 @@ module lowphy1 (
           assign s1_axis_tlast[cc][ant-4] = s_ul_axis_tlast;
           assign s1_axis_tvalid[cc][ant-4] = s_ul_axis_tvalid;
 
-        end else if (ant < 8) begin
+        end else if (ant < 8) begin : gen_band2_ant
 
           assign m_dl_axis_tdata[(cc*NumAnt+ant)*32+31-:32] = m2_axis_tdata[cc][ant-6];
           assign m2_axis_tready[cc][ant-6] = m_dl_axis_tready;
@@ -1720,7 +1746,7 @@ module lowphy1 (
   assign m_dl_axis_tlast  = m0_axis_tlast[0][0];
   assign m_dl_axis_tvalid = m0_axis_tvalid[0][0];
 
-  assign s_ul_axis_tready = 1'b1;
+  assign s_ul_axis_tready = s0_axis_tready[0][0] & s1_axis_tready[0][0] & s2_axis_tready[0][0];
 
   // Unsol AXIS Switch
 

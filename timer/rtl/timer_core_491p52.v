@@ -3,7 +3,7 @@
 `default_nettype none
 
 module timer_core_491p52 #(
-    parameter integer SIM_SPEED_UP = 0
+    parameter reg SIM_SPEED_UP = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst,
@@ -37,12 +37,14 @@ module timer_core_491p52 #(
   // Parameters
 
   // 11'b10_000010001, ~= 2.0332 ns
-  localparam [10:0] TimerIncrement0 = 11'd1041;
+  localparam [40:0] TimerIncrement0 = 41'd1041;
 
   // 11'b10_000010010, ~= 2.0352 ns
-  localparam [10:0] TimerIncrement1 = 11'd1042;
+  localparam [40:0] TimerIncrement1 = 41'd1042;
 
   localparam [31:0] NsPerSecond = (SIM_SPEED_UP ? 32'd100_000 : 32'd1_000_000_000);
+
+  wire unused_pps_in = pps_in;
 
   // The nanosecond counter value that is about to wrap
   localparam [31:0] IntTimerNsWrapConst = NsPerSecond - 3;
@@ -73,6 +75,16 @@ module timer_core_491p52 #(
 
   wire [31:0] rtc_offset_ns;
   wire [47:0] rtc_offset_sec;
+
+  wire cdc_rtc_current_ns_src_ready;
+  wire cdc_rtc_current_ns_dest_valid;
+  wire cdc_rtc_current_sec_src_ready;
+  wire cdc_rtc_current_sec_dest_valid;
+  wire cdc_rtc_offset_ns_src_ready;
+  wire cdc_rtc_offset_ns_dest_valid;
+  wire cdc_rtc_offset_sec_src_ready;
+  wire cdc_rtc_offset_sec_dest_valid;
+  wire unused_cdc_outputs = &{1'b0, unused_pps_in, cdc_rtc_current_ns_src_ready, cdc_rtc_current_ns_dest_valid, cdc_rtc_current_sec_src_ready, cdc_rtc_current_sec_dest_valid, cdc_rtc_offset_ns_src_ready, cdc_rtc_offset_ns_dest_valid, cdc_rtc_offset_sec_src_ready, cdc_rtc_offset_sec_dest_valid, 1'b0};
 
   // Internal second and nanosecond counter
   // Which is free running, predictable counter
@@ -187,11 +199,11 @@ module timer_core_491p52 #(
       .src_clk   (clk),
       .src_in    (timer_ns),
       .src_valid (rtc_current_snap),
-      .src_ready (),
+      .src_ready (cdc_rtc_current_ns_src_ready),
       //
       .dest_clk  (ctrl_clk),
       .dest_out  (stat_rtc_current_ns),
-      .dest_valid(),
+      .dest_valid(cdc_rtc_current_ns_dest_valid),
       .dest_ready(1'b1)
   );
 
@@ -205,11 +217,11 @@ module timer_core_491p52 #(
       .src_clk   (clk),
       .src_in    (timer_sec),
       .src_valid (rtc_current_snap),
-      .src_ready (),
+      .src_ready (cdc_rtc_current_sec_src_ready),
       //
       .dest_clk  (ctrl_clk),
       .dest_out  (stat_rtc_current_sec),
-      .dest_valid(),
+      .dest_valid(cdc_rtc_current_sec_dest_valid),
       .dest_ready(1'b1)
   );
 
@@ -225,11 +237,11 @@ module timer_core_491p52 #(
       .src_clk   (ctrl_clk),
       .src_in    (ctrl_rtc_offset_ns),
       .src_valid (ctrl_rtc_offset_valid),
-      .src_ready (),
+      .src_ready (cdc_rtc_offset_ns_src_ready),
       //
       .dest_clk  (clk),
       .dest_out  (rtc_offset_ns),
-      .dest_valid(),
+      .dest_valid(cdc_rtc_offset_ns_dest_valid),
       .dest_ready(1'b1)
   );
 
@@ -243,11 +255,11 @@ module timer_core_491p52 #(
       .src_clk   (ctrl_clk),
       .src_in    (ctrl_rtc_offset_sec),
       .src_valid (ctrl_rtc_offset_valid),
-      .src_ready (),
+      .src_ready (cdc_rtc_offset_sec_src_ready),
       //
       .dest_clk  (clk),
       .dest_out  (rtc_offset_sec),
-      .dest_valid(),
+      .dest_valid(cdc_rtc_offset_sec_dest_valid),
       .dest_ready(1'b1)
   );
 

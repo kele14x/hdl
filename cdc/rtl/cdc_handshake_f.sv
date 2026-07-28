@@ -4,11 +4,11 @@
 //
 (* KEEP_HIERARCHY = "yes" *)
 module cdc_handshake_f #(
-    parameter int DEST_EXT_HSK = 1,
-    parameter int DEST_SYNC_FF = 4,
-    parameter int INIT_SYNC_FF = 0,
-    parameter int SRC_SYNC_FF  = 4,
-    parameter int WIDTH        = 1
+    parameter bit DEST_EXT_HSK = 1'b1,
+    parameter int DEST_SYNC_FF = 32'd4,
+    parameter bit INIT_SYNC_FF = 1'b0,
+    parameter int SRC_SYNC_FF  = 32'd4,
+    parameter int WIDTH        = 32'd1
 ) (
     input  logic             src_clk,
     input  logic [WIDTH-1:0] src_in,
@@ -44,8 +44,7 @@ module cdc_handshake_f #(
 
     assert (WIDTH >= 1 && WIDTH <= 1024)
     else begin
-      $error("[%m]: WIDTH (%0d) is outside of valid range of 1-1024.", WIDTH);
-      #1 $finish;
+      $fatal(1, "[%m]: WIDTH (%0d) is outside of valid range of 1-1024.", WIDTH);
     end
   end
 
@@ -68,15 +67,6 @@ module cdc_handshake_f #(
   logic             dest_count_eq;
   logic             dest_count_ff;
   logic             dest_count_sync_ff;
-
-  initial begin : p_init
-    if (INIT_SYNC_FF != 0) begin
-      src_count_ff = 1'b0;
-      src_ready_ext_ff = 1'b0;
-      dest_valid_ext_ff = 1'b0;
-      dest_count_ff = 1'b0;
-    end
-  end
 
   assign src_valid_nxt = src_valid && src_ready;
 
@@ -101,13 +91,7 @@ module cdc_handshake_f #(
 
   assign src_ready = src_ready_ext_ff;
 
-  generate
-    if (DEST_EXT_HSK != 0) begin : g_ext_desthsk
-      assign dest_ready_in = dest_ready;
-    end else begin : g_internal_desthsk
-      assign dest_ready_in = 1'b1;
-    end
-  endgenerate
+  assign dest_ready_in = (DEST_EXT_HSK != 0) ? dest_ready : (dest_ready | 1'b1);
 
   assign dest_ready_nxt = dest_valid_ext_ff && dest_ready_in;
   assign dest_count_nxt = dest_ready_nxt ? ~dest_count_ff : dest_count_ff;

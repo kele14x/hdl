@@ -9,7 +9,7 @@
 
 module enc_8b10b #(
     parameter int C_USE_LUT = 0,
-    parameter int C_RST_CODE = 10'b0101010101,
+    parameter logic [9:0] C_RST_CODE = 10'b0101010101,
     parameter string C_LUT_FILE = "enc_8b10b.mif"
 ) (
     input  wire       clk,

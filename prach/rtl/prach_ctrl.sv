@@ -100,13 +100,12 @@ module prach_ctrl #(
     // Which is [-61.44 MHz, 61.44 - 0.54 MHz]
     // The output is the FCW, which should be in the range [0, 196608)
     logic signed [23:0] temp;
-    temp = -864 - $signed(freq_offset);
+    temp = -24'sd864 - $signed(freq_offset);
     if (temp >= 0) begin
-      return temp;
+      return temp[17:0];
     end else begin
-      return 196608 + temp;
+      return 18'(25'sd196608 + temp);
     end
-    return temp[17:0];
   endfunction
 
   // Control signals
@@ -178,7 +177,16 @@ module prach_ctrl #(
   logic [                  8:0] c_start_symbol;
   logic [                 18:0] c_start_sample;
   logic [                  3:0] c_num_symbol;
-  logic [                 16:0] c_fcw;
+  logic [                 17:0] c_fcw;
+
+  logic                         c_plane_match;
+  logic                         prach_src_ready;
+  logic                         static_c_en;
+  logic [                  8:0] static_symbol_base;
+  logic [                 18:0] static_sample_offset;
+  logic [                 18:0] prach_sample_offset;
+  logic [                  1:0] unused_ctrl_rat_lsb;
+  logic [                  5:0] unused_ctrl_slot_id_msb;
 
   // Control CDC
 
@@ -265,12 +273,12 @@ module prach_ctrl #(
       .src_clk   (clk_eth_xran),
       .src_in    (s_prach_combined),
       .src_valid (s_prach_tvalid),
-      .src_ready (),
       //
       .dest_clk  (clk),
       .dest_out  (s_prach_combined_s),
       .dest_valid(s_prach_tvalid_s),
-      .dest_ready(1'b1)
+      .dest_ready(1'b1),
+      .src_ready (prach_src_ready)
   );
 
   // Unpack the combined signals
@@ -299,10 +307,26 @@ module prach_ctrl #(
     s_prach_freqoffset_s
   } = s_prach_combined_s;
 
+  generate
+    if (ANT_ID == 0) begin : g_c_plane_match_ant0
+      assign c_plane_match = s_prach_tvalid_s && (4'(CC_ID) == s_prach_cc_s) &&
+                             (s_prach_ss_s < 8'(NUM_ANT));
+    end else begin : g_c_plane_match_antn
+      assign c_plane_match = s_prach_tvalid_s && (4'(CC_ID) == s_prach_cc_s) &&
+                             (s_prach_ss_s >= 8'(ANT_ID)) && (s_prach_ss_s < 8'(ANT_ID + NUM_ANT));
+    end
+  endgenerate
+  assign static_c_en = |ctrl_static_c_s;
+  assign static_symbol_base = 9'(ctrl_subframe_id_s) + 9'(ctrl_subframe_inc_s);
+  assign prach_sample_offset = 19'(s_prach_time_offset_s) - 19'(ctrl_sampling_offset_s);
+  assign static_sample_offset = 19'(ctrl_time_offset_s) - 19'(ctrl_sampling_offset_s);
+  assign unused_ctrl_rat_lsb = {ctrl_rat_s[0], 1'b0};
+  assign unused_ctrl_slot_id_msb = {ctrl_slot_id_s[5:1], 1'b0};
+
   // Start Symbol ID from C-Plane
 
   always_ff @(posedge clk) begin
-    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID <= s_prach_ss_s) && (ANT_ID + NUM_ANT > s_prach_ss_s)) begin
+    if (c_plane_match) begin
       if (ctrl_rat_s[1] == 1'b0) begin  // 15 kHz SCS
         c_start_symbol <= s_prach_sf_s * 14;
       end else begin  // 30 kHz SCS
@@ -320,30 +344,30 @@ module prach_ctrl #(
   // Ts = 1/30.72e6
 
   always_ff @(posedge clk) begin
-    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID <= s_prach_ss_s) && (ANT_ID + NUM_ANT > s_prach_ss_s)) begin
+    if (c_plane_match) begin
       if (s_prach_cp_length_s == '0) begin
         if (s_prach_num_symbol_s == 1) begin  // F0
           if (s_prach_time_offset_s == 0) begin
-            c_start_sample <= 19'(3168 + s_prach_time_offset_s - ctrl_sampling_offset_s);
+            c_start_sample <= 19'd3168 + prach_sample_offset;
           end else begin
-            c_start_sample <= 19'(s_prach_time_offset_s - ctrl_sampling_offset_s);
+            c_start_sample <= prach_sample_offset;
           end
         end else begin  // F1
           if (s_prach_time_offset_s == 0) begin
-            c_start_sample <= 19'(21024 + s_prach_time_offset_s - ctrl_sampling_offset_s);
+            c_start_sample <= 19'd21024 + prach_sample_offset;
           end else begin
-            c_start_sample <= 19'(s_prach_time_offset_s - ctrl_sampling_offset_s);
+            c_start_sample <= prach_sample_offset;
           end
         end
       end else begin
-        c_start_sample <= 19'(s_prach_cp_length_s + s_prach_time_offset_s - ctrl_sampling_offset_s);
+        c_start_sample <= 19'(s_prach_cp_length_s) + prach_sample_offset;
       end
     end
   end
 
   // Number of symbol, F0 = 1, F1 = 2
   always_ff @(posedge clk) begin
-    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID <= s_prach_ss_s) && (ANT_ID + NUM_ANT > s_prach_ss_s)) begin
+    if (c_plane_match) begin
       c_num_symbol <= s_prach_num_symbol_s;
     end
   end
@@ -359,7 +383,7 @@ module prach_ctrl #(
   //   |  PRACH  |
 
   always_ff @(posedge clk) begin
-    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID <= s_prach_ss_s) && (ANT_ID + NUM_ANT > s_prach_ss_s)) begin
+    if (c_plane_match) begin
       c_fcw <= get_fcw(s_prach_freqoffset_s);
     end
   end
@@ -367,13 +391,13 @@ module prach_ctrl #(
   // Static C-Plane
 
   always_ff @(posedge clk) begin
-    if (ctrl_static_c_s) begin
+    if (static_c_en) begin
       if (ctrl_rat_s[1] == 1'b0) begin  // 15 kHz SCS
-        rd_start_symbol0 <= ctrl_subframe_id_s * 14;
-        rd_start_symbol1 <= (ctrl_subframe_id_s + ctrl_subframe_inc_s) * 14;
+        rd_start_symbol0 <= 9'(ctrl_subframe_id_s) * 9'd14;
+        rd_start_symbol1 <= static_symbol_base * 9'd14;
       end else begin  // 30 kHz SCS
-        rd_start_symbol0 <= ctrl_subframe_id_s * 28 + ctrl_slot_id_s[0] * 14;
-        rd_start_symbol1 <= (ctrl_subframe_id_s + ctrl_subframe_inc_s) * 28 + ctrl_slot_id_s[0] * 14;
+        rd_start_symbol0 <= 9'(ctrl_subframe_id_s) * 9'd28 + {8'd0, ctrl_slot_id_s[0]} * 9'd14;
+        rd_start_symbol1 <= static_symbol_base * 9'd28 + {8'd0, ctrl_slot_id_s[0]} * 9'd14;
       end
     end else begin
       rd_start_symbol0 <= c_start_symbol;
@@ -382,23 +406,23 @@ module prach_ctrl #(
   end
 
   always_ff @(posedge clk) begin
-    if (ctrl_static_c_s) begin
+    if (static_c_en) begin
       if (ctrl_cp_length_s == '0) begin
         if (ctrl_num_symbol_s <= 1) begin  // F0
           if (ctrl_time_offset_s == '0) begin
-            rd_start_sample <= 19'(3168 + ctrl_time_offset_s - ctrl_sampling_offset_s);
+            rd_start_sample <= 19'd3168 + static_sample_offset;
           end else begin
-            rd_start_sample <= 19'(ctrl_time_offset_s - ctrl_sampling_offset_s);
+            rd_start_sample <= static_sample_offset;
           end
         end else begin  // F1
           if (ctrl_time_offset_s == '0) begin
-            rd_start_sample <= 19'(21024 + ctrl_time_offset_s - ctrl_sampling_offset_s);
+            rd_start_sample <= 19'd21024 + static_sample_offset;
           end else begin
-            rd_start_sample <= 19'(ctrl_time_offset_s - ctrl_sampling_offset_s);
+            rd_start_sample <= static_sample_offset;
           end
         end
       end else begin
-        rd_start_sample <= 19'(ctrl_cp_length_s + ctrl_time_offset_s - ctrl_sampling_offset_s);
+        rd_start_sample <= 19'(ctrl_cp_length_s) + static_sample_offset;
       end
     end else begin
       rd_start_sample <= c_start_sample;
@@ -406,7 +430,7 @@ module prach_ctrl #(
   end
 
   always_ff @(posedge clk) begin
-    if (ctrl_static_c_s) begin
+    if (static_c_en) begin
       rd_num_symbol <= ctrl_num_symbol_s;
     end else begin
       rd_num_symbol <= c_num_symbol;
@@ -414,7 +438,7 @@ module prach_ctrl #(
   end
 
   always_ff @(posedge clk) begin
-    if (ctrl_static_c_s) begin
+    if (static_c_en) begin
       rd_fcw <= get_fcw(ctrl_freq_offset_s);
     end else begin
       rd_fcw <= c_fcw;
@@ -422,7 +446,7 @@ module prach_ctrl #(
   end
 
   always_ff @(posedge clk) begin
-    if (ctrl_static_c_s) begin
+    if (static_c_en) begin
       rd_section_id <= 12'd2048;
     end else begin
       rd_section_id <= s_prach_section_id_s;
@@ -435,9 +459,9 @@ module prach_ctrl #(
       always_ff @(posedge clk) begin
         if (rst) begin
           rd_channel_req[i] <= 1'b0;
-        end else if (ctrl_static_c_s) begin
+        end else if (static_c_en) begin
           rd_channel_req[i] <= 1'b1;
-        end else if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID + i == s_prach_ss_s)) begin
+        end else if (s_prach_tvalid_s && (4'(CC_ID) == s_prach_cc_s) && (8'(ANT_ID + i) == s_prach_ss_s)) begin
           rd_channel_req[i] <= 1'b1;
         end else if (rd_channel_ack[i]) begin
           rd_channel_req[i] <= 1'b0;
@@ -451,7 +475,7 @@ module prach_ctrl #(
   //---------------
 
   always_ff @(posedge clk) begin
-    if (s_prach_tvalid_s && (CC_ID == s_prach_cc_s) && (ANT_ID <= s_prach_ss_s) && (ANT_ID + NUM_ANT > s_prach_ss_s)) begin
+    if (c_plane_match) begin
       stat_subframe_id_r <= s_prach_sf_s;
       stat_slot_id_r     <= s_prach_sl_s;
       stat_symbol_id_r   <= s_prach_sy_s;
@@ -498,6 +522,28 @@ module prach_ctrl #(
     stat_slot_id     ,
     stat_subframe_id
   } = stat_combined;
+
+  wire unused_ctrl = &{
+    1'b0,
+    rst_eth_xran,
+    ctrl_rst,
+    ctrl_symbol_id_s,
+    s_prach_rtc_pc_id_s,
+    s_prach_return_port_s,
+    s_prach_filter_index_s,
+    s_prach_f_s,
+    s_prach_frame_structure_s,
+    s_prach_udcomphdr_s,
+    s_prach_rb_s,
+    s_prach_syminc_s,
+    s_prach_start_prbc_s,
+    s_prach_num_prbc_s,
+    s_prach_remask_s,
+    s_prach_beamid_s,
+    unused_ctrl_rat_lsb,
+    unused_ctrl_slot_id_msb,
+    prach_src_ready
+  };
 
 endmodule
 

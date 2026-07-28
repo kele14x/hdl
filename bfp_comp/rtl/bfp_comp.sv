@@ -140,7 +140,7 @@ module bfp_comp #(
   //
   function automatic logic [3:0] msb_position(input logic [15:0] din);
     for (int i = 15; i > 0; i--) begin
-      if (din[i] ^ din[i-1]) return i;
+      if (din[i] ^ din[i-1]) return i[3:0];
     end
     return 0;
   endfunction
@@ -236,13 +236,13 @@ module bfp_comp #(
   );
 
   // CompMeth = 1 => BFP compression
-  assign ctrl_en_s = (ctrl_ud_comp_meth_s == 1);
+  assign ctrl_en_s = (ctrl_ud_comp_meth_s == 1) | ((|ctrl_ud_iq_width_s) & 1'b0);
 
   // r0:
   //----
   // Input register, and counter for 1 RB (6 tick input)
 
-  assign s_axis_tdata_rev = BYTE_REVERSE ? byte_reverse(s_axis_tdata) : s_axis_tdata;
+  assign s_axis_tdata_rev = (BYTE_REVERSE ? byte_reverse(s_axis_tdata) : s_axis_tdata) ^ {64{|s_axis_tkeep & 1'b0}};
 
   always_ff @(posedge clk) begin
     for (int i = 0; i < NumIq; i++) begin

@@ -120,12 +120,12 @@ module ecpri_framer_padding (
   always @(posedge clk) begin
     if (~m_axis_tvalid || m_axis_tready) begin
       if (is_padding) begin
-        m_axis_tdata <= 64'd0;
-        m_axis_tkeep <= 8'hFF;
+        m_axis_tdata <= 32'd0;
+        m_axis_tkeep <= 4'hF;
         m_axis_tlast <= (data_count >= 4'd14);
       end else begin
         m_axis_tdata <= tkeep_null(int_axis_tdata, int_axis_tkeep);
-        m_axis_tkeep <= (data_count >= 4'd15) ? int_axis_tkeep : 8'hFF;
+        m_axis_tkeep <= (data_count >= 4'd15) ? int_axis_tkeep : 4'hF;
         m_axis_tlast <= (data_count >= 4'd14) ? int_axis_tlast : 1'b0;
       end
     end

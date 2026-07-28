@@ -28,12 +28,6 @@ module equalizer #(
 );
 
 
-  // Local parameters
-  //=================
-
-  localparam integer Latency = NUM_TAPS + 3;
-
-
   // Internal signals
   //=================
 
@@ -43,10 +37,10 @@ module equalizer #(
   reg signed [COE_WIDTH-1:0] coe_i_r [0:NUM_TAPS-1];
   reg signed [COE_WIDTH-1:0] coe_q_r [0:NUM_TAPS-1];
 
-  wire signed [INPUT_DATA_WIDTH*NUM_TAPS-1:0] ar;
-  wire signed [INPUT_DATA_WIDTH*NUM_TAPS-1:0] ai;
-  wire signed [       COE_WIDTH*NUM_TAPS-1:0] br;
-  wire signed [       COE_WIDTH*NUM_TAPS-1:0] bi;
+  wire signed [INPUT_DATA_WIDTH-1:0] ar[NUM_TAPS];
+  wire signed [INPUT_DATA_WIDTH-1:0] ai[NUM_TAPS];
+  wire signed [       COE_WIDTH-1:0] br[NUM_TAPS];
+  wire signed [       COE_WIDTH-1:0] bi[NUM_TAPS];
 
 
   initial begin : p_init
@@ -79,11 +73,11 @@ module equalizer #(
     genvar i;
     for (i = 0; i < NUM_TAPS; i = i + 1) begin
       //
-      assign ar[INPUT_DATA_WIDTH*(i+1)-1:INPUT_DATA_WIDTH*i] = data_i_d[2*i];
-      assign ai[INPUT_DATA_WIDTH*(i+1)-1:INPUT_DATA_WIDTH*i] = data_q_d[2*i];
+      assign ar[i] = data_i_d[2*i];
+      assign ai[i] = data_q_d[2*i];
       //
-      assign br[COE_WIDTH*(i+1)-1:COE_WIDTH*i] = coe_i_r[i];
-      assign bi[COE_WIDTH*(i+1)-1:COE_WIDTH*i] = coe_q_r[i];
+      assign br[i] = coe_i_r[i];
+      assign bi[i] = coe_q_r[i];
     end
   endgenerate
 

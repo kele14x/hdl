@@ -82,47 +82,48 @@ module pdxch_channel #(
 
   logic [ 1:0] ctrl_size;
   logic [ 1:0] ctrl_itlv;
+  logic        unused_fft_stat_ovf;
 
   // Main
 
   always_ff @(posedge ctrl_clk) begin
     if (ctrl_rat == 2'b00) begin  // LTE
-      ctrl_size = 2'b01;  // 2k
+      ctrl_size <= 2'b01;  // 2k
     end else if (ctrl_rat == 2'b01) begin  // NR 15 kHz SCS
       case (ctrl_bw)
-        4'd0:    ctrl_size = 2'b01; // 2k
-        4'd1:    ctrl_size = 2'b01; // 2k
-        4'd2:    ctrl_size = 2'b01; // 2k
-        default: ctrl_size = 2'b10; // 4k
+        4'd0:    ctrl_size <= 2'b01; // 2k
+        4'd1:    ctrl_size <= 2'b01; // 2k
+        4'd2:    ctrl_size <= 2'b01; // 2k
+        default: ctrl_size <= 2'b10; // 4k
       endcase
     end else begin  // NR 30kHz SCS
       case (ctrl_bw)
-        4'd0:    ctrl_size = 2'b00; // 1k
-        4'd1:    ctrl_size = 2'b00; // 1k
-        4'd2:    ctrl_size = 2'b00; // 1k
-        4'd3:    ctrl_size = 2'b01; // 2k
-        default: ctrl_size = 2'b10; // 4k
+        4'd0:    ctrl_size <= 2'b00; // 1k
+        4'd1:    ctrl_size <= 2'b00; // 1k
+        4'd2:    ctrl_size <= 2'b00; // 1k
+        4'd3:    ctrl_size <= 2'b01; // 2k
+        default: ctrl_size <= 2'b10; // 4k
       endcase
     end
   end
 
   always_ff @(posedge ctrl_clk) begin
     if (ctrl_rat == 2'b00) begin  // LTE
-      ctrl_itlv = 2'b00;  // 16
+      ctrl_itlv <= 2'b00;  // 16
     end else if (ctrl_rat == 2'b01) begin  // NR 15 kHz SCS
       case (ctrl_bw)
-        4'd0:    ctrl_itlv = 2'b00; // 16
-        4'd1:    ctrl_itlv = 2'b00; // 16
-        4'd2:    ctrl_itlv = 2'b00; // 16
-        default: ctrl_itlv = 2'b01; // 8
+        4'd0:    ctrl_itlv <= 2'b00; // 16
+        4'd1:    ctrl_itlv <= 2'b00; // 16
+        4'd2:    ctrl_itlv <= 2'b00; // 16
+        default: ctrl_itlv <= 2'b01; // 8
       endcase
     end else begin  // NR 30kHz SCS
       case (ctrl_bw)
-        4'd0:    ctrl_itlv = 2'b00; // 16
-        4'd1:    ctrl_itlv = 2'b00; // 16
-        4'd2:    ctrl_itlv = 2'b00; // 16
-        4'd3:    ctrl_itlv = 2'b01; // 8
-        default: ctrl_itlv = 2'b10; // 4
+        4'd0:    ctrl_itlv <= 2'b00; // 16
+        4'd1:    ctrl_itlv <= 2'b00; // 16
+        4'd2:    ctrl_itlv <= 2'b00; // 16
+        4'd3:    ctrl_itlv <= 2'b01; // 8
+        default: ctrl_itlv <= 2'b10; // 4
       endcase
     end
   end
@@ -218,7 +219,7 @@ module pdxch_channel #(
       .ctrl_size(ctrl_size),
       .ctrl_itlv(ctrl_itlv),
       //
-      .stat_ovf ()
+      .stat_ovf (unused_fft_stat_ovf)
   );
 
   phase_comp #(

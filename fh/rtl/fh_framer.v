@@ -68,6 +68,11 @@ module fh_framer (
   wire        s3_axis_tvalid;
   wire        s3_axis_tready;
 
+  wire        fh_fifo_tuser;
+  wire        fh_fifo_err_discard;
+  wire [17:0] message_tuser_unused;
+  wire        unused_outputs = &{1'b0, fh_fifo_tuser, fh_fifo_err_discard, message_tuser_unused};
+
   axis_fifo_alt #(
       .ASYNC_MODE  (1'b1),
       .FIFO_DEPTH  (4096),
@@ -89,11 +94,11 @@ module fh_framer (
       .m_axis_tdata  (s0_axis_tdata),
       .m_axis_tkeep  (s0_axis_tkeep),
       .m_axis_tlast  (s0_axis_tlast),
-      .m_axis_tuser  (  /* not used */),
+      .m_axis_tuser  (fh_fifo_tuser),
       .m_axis_tvalid (s0_axis_tvalid),
       .m_axis_tready (s0_axis_tready),
       //
-      .err_discard   (  /* not used */)
+      .err_discard   (fh_fifo_err_discard)
   );
 
   fh_framer_32to64 i_ptp (
@@ -135,7 +140,7 @@ module fh_framer (
       .m_axis_tdata (s2_axis_tdata),
       .m_axis_tkeep (s2_axis_tkeep),
       .m_axis_tlast (s2_axis_tlast),
-      .m_axis_tuser (  /* not used */),
+      .m_axis_tuser (message_tuser_unused),
       .m_axis_tvalid(s2_axis_tvalid),
       .m_axis_tready(s2_axis_tready)
   );

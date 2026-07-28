@@ -56,20 +56,23 @@ module shift_ram #(
   initial begin
     // Check DEPTH
     if (DEPTH < MinDepth || 16384 < DEPTH) begin
-      $display("Delay depth (DEPTH) must be within the range %0d to 16384, got %0d. [%m]", MinDepth, DEPTH);
-      #1 $finish();
+      $fatal(1, "Delay depth (DEPTH) must be within the range %0d to 16384, got %0d. [%m]", MinDepth, DEPTH);
     end
   end
   // verilog_format: on
 
   // Signals
 
-  reg  [AddrWidth-1:0] addra = 'd0;
+  reg  [AddrWidth-1:0] addra;
   reg  [AddrWidth-1:0] addrb;
 
   reg  [    WIDTH-1:0] dina;
 
   wire [    WIDTH-1:0] doutb;
+
+  function automatic [AddrWidth-1:0] addr_cast(input integer value);
+    addr_cast = value[AddrWidth-1:0] ^ {AddrWidth{|value[31:AddrWidth] & 1'b0}};
+  endfunction
 
   // Write & read address
 
@@ -98,9 +101,9 @@ module shift_ram #(
   // At minimal depth=4, read address is reset to -1, which is bottom of RAM.
   always @(posedge clk) begin
     if (rst) begin
-      addrb <= -DEPTH + 3 + (INPUT_REG ? 1 : 0);
+      addrb <= addr_cast(-DEPTH + 3 + (INPUT_REG ? 1 : 0));
     end else if (cen) begin
-      addrb <= addra - DEPTH + 4 + (INPUT_REG ? 1 : 0);
+      addrb <= addr_cast(integer'(addra) + 4 - DEPTH + (INPUT_REG ? 1 : 0));
     end
   end
 

@@ -95,7 +95,7 @@ def test_enc_8b10b_runner(use_lut, tmp_path):
             "C_LUT_FILE": f'"{LUT_FILE.as_posix()}"',
         },
         build_dir=build_dir,
-        build_args=["-Wno-WIDTHEXPAND"],
+        build_args=[],
         waves=True,
         always=True,
     )

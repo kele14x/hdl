@@ -35,6 +35,7 @@ module rts_cap_mux #(
   reg  [               7:0] tuser_d;
   reg                       tlast_d;
   reg                       tvalid_d;
+  wire                      unused_rst = rst;
 
   wire                      ctrl_pos_sel_s;
   wire [$clog2(NUM_CC)-1:0] ctrl_cc_sel_s;

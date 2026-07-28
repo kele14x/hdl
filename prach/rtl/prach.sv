@@ -124,13 +124,6 @@ module prach #(
   logic [ 3:0] stat_num_symbol     [NUM_CC];
   logic [23:0] stat_freq_offset    [NUM_CC];
 
-  logic [63:0] m_axis_tdata        [NUM_CC];
-  logic [ 7:0] m_axis_tkeep        [NUM_CC];
-  logic        m_axis_tlast        [NUM_CC];
-  logic [31:0] m_axis_tuser        [NUM_CC];
-  logic        m_axis_tvalid       [NUM_CC];
-  logic        m_axis_tready       [NUM_CC];
-
   // Main
 
   prach_regs i_prach_regs (
@@ -409,6 +402,8 @@ module prach #(
       .stat_num_symbol        (stat_num_symbol),
       .stat_freq_offset       (stat_freq_offset)
   );
+
+  wire unused_prach = &{1'b0, ctrl_format};
 
 endmodule
 

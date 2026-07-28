@@ -28,19 +28,32 @@ module oran_framer_ul_ss_app (
   logic        extra_last;
 
   // Application Header (32-bit)
-  logic        app_datadirection = 1'b0;  // 0 for UL, 1 for DL
-  logic [ 2:0] app_payloadversion = 3'b001;
-  logic [ 3:0] app_filterindex = 4'b0;
-  logic [ 7:0] app_frameid = 8'b0;
-  logic [ 3:0] app_subframeid = 4'b0;
-  logic [ 5:0] app_slotid = 6'b0;
-  logic [ 5:0] app_symbolid = 6'b0;
+  logic        app_datadirection;  // 0 for UL, 1 for DL
+  logic [ 2:0] app_payloadversion;
+  logic [ 3:0] app_filterindex;
+  logic [ 7:0] app_frameid;
+  logic [ 3:0] app_subframeid;
+  logic [ 5:0] app_slotid;
+  logic [ 5:0] app_symbolid;
 
   logic [31:0] app_header;
 
   logic [63:0] s_axis_tdata_rev;
   logic [63:0] s_axis_tdata_d;
   logic [ 7:0] s_axis_tkeep_d;
+
+  wire unused_app_header_fields = &{
+    1'b0,
+    app_datadirection,
+    app_payloadversion,
+    app_filterindex,
+    app_frameid,
+    app_subframeid,
+    app_slotid,
+    app_symbolid,
+    s_axis_tdata_d[63:32],
+    s_axis_tkeep_d[3:0]
+  };
 
 
   // Main

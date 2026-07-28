@@ -114,9 +114,9 @@ module pps_timer_cdc (
     end else if (ns_overflow) begin
       counter_ns <= '0;
     end else if (counter_ns_frac == 0) begin
-      counter_ns <= counter_ns + AdderConst0;
+      counter_ns <= counter_ns + {30'd0, AdderConst0};
     end else begin
-      counter_ns <= counter_ns + AdderConst1;
+      counter_ns <= counter_ns + {30'd0, AdderConst1};
     end
   end
 

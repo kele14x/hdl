@@ -1,3 +1,4 @@
+../cmult/cmult.flt
 rtl/puxch.sv
 rtl/puxch_buffer.sv
 rtl/puxch_channel.sv

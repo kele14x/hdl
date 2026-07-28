@@ -1,7 +1,8 @@
 // File: fir_rc_u3d2.sv
 // Brief: 3/2 rate change filer.
 
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
  
 module fir_rc_u3d2 #(
     parameter int XIN_WIDTH = 16,
@@ -23,9 +24,10 @@ module fir_rc_u3d2 #(
 );
 
 
-  localparam int Latency = NUM_UNIQUE_COE + 2;
   localparam int Base = NUM_UNIQUE_COE + 1;
-  localparam int RND = (1 <<< (SRA_BITS - 1));
+  localparam logic signed [XIN_WIDTH+COE_WIDTH:0] RND = 1 <<< (SRA_BITS - 1);
+
+  wire unused_rst = rst;
 
   logic signed [        XIN_WIDTH-1:0] xin_d[Base*2];
 
@@ -60,10 +62,10 @@ module fir_rc_u3d2 #(
   generate
     for (genvar ii = 0; ii < NUM_UNIQUE_COE; ii++) begin : g_dsp1
 
-      int idx1 = (2*ii < NUM_UNIQUE_COE) ? 2*ii : (2*NUM_UNIQUE_COE - 2*ii - 1);
+      localparam int idx1 = (2*ii < NUM_UNIQUE_COE) ? 2*ii : (2*NUM_UNIQUE_COE - 2*ii - 1);
 
       always_ff @(posedge clk) begin
-        adreg1[ii] <= xin_d[ii+1];
+        adreg1[ii] <= {xin_d[ii+1][XIN_WIDTH-1], xin_d[ii+1]};
         mreg1[ii]  <= adreg1[ii] * COE_NUMS[idx1];
         preg1[ii]  <= mreg1[ii] + (ii == 0 ? RND : preg1[ii-1]);
       end
@@ -74,10 +76,10 @@ module fir_rc_u3d2 #(
   generate
     for (genvar ii = 0; ii < NUM_UNIQUE_COE; ii++) begin : g_dsp2
 
-      int idx2 = (2*ii < NUM_UNIQUE_COE) ? 2*ii + 1 : (2*NUM_UNIQUE_COE - 2*ii - 2);
+      localparam int idx2 = (2*ii < NUM_UNIQUE_COE) ? 2*ii + 1 : (2*NUM_UNIQUE_COE - 2*ii - 2);
 
       always_ff @(posedge clk) begin
-        adreg2[ii] <= xin_d[ii];
+        adreg2[ii] <= {xin_d[ii][XIN_WIDTH-1], xin_d[ii]};
         mreg2[ii]  <= adreg2[ii] * COE_NUMS[idx2];
         preg2[ii]  <= mreg2[ii] + (ii == 0 ? RND : preg2[ii-1]);
       end

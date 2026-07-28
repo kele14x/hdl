@@ -1,7 +1,8 @@
 // File: cfr_pc_pd.sv
 // Brief: cfr_pc_pd Peak Detector for `cfr_pc` module
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module cfr_pc_pd #(
     // Architecture parameters
@@ -30,7 +31,6 @@ module cfr_pc_pd #(
 );
 
   localparam int PhaseWidth = $clog2(UP_FACTOR);
-  localparam int Latency = 1 + 2 + MAX_SPACING * CSR;
 
   logic [  DATA_WIDTH:0] data_r;
   logic [  ITERATIONS:0] data_theta;
@@ -54,21 +54,18 @@ module cfr_pc_pd #(
 
 
   // Select the max from multi-phase
-  max_parallel #(
-      .NUM_INPUT (UP_FACTOR),
-      .DATA_WIDTH(DATA_WIDTH + 1),
-      .CTRL_WIDTH(ITERATIONS + 1)
-  ) i_max_parallel (
-      .clk     (clk),
-      .rst     (rst),
-      //
-      .data_in (data_r_px),
-      .ctrl_in (data_theta_px),
-      //
-      .data_out(data_r),
-      .ctrl_out(data_theta),
-      .idx_out (data_phase)
-  );
+  always_ff @(posedge clk) begin
+    data_r     <= data_r_px[0];
+    data_theta <= data_theta_px[0];
+    data_phase <= '0;
+    for (int pp = 1; pp < UP_FACTOR; pp++) begin
+      if (data_r_px[pp] > data_r) begin
+        data_r     <= data_r_px[pp];
+        data_theta <= data_theta_px[pp];
+        data_phase <= PhaseWidth'(pp);
+      end
+    end
+  end
 
 
   // Peak search logic

@@ -3,6 +3,7 @@
 //        some variants in the world. The following will only provide support
 //        for pcap format used by Wireshark.
 
+`timescale 1 ns / 1 ps
 `default_nettype none
 package pcap_pkg;
 
@@ -85,7 +86,9 @@ package pcap_pkg;
     int file;
     int read_mode;
     int magic_number;
+`ifdef DEBUG
     pcap_header_t global_header;
+`endif
     pcap_handler_t ret;
 
 `ifdef DEBUG
@@ -98,7 +101,7 @@ package pcap_pkg;
       $stop();
     end
 
-    magic_number = read_4bytes(file, 1);
+    magic_number = read_4bytes(file, 1'b1);
     read_mode = read_magic_number(magic_number);
 
 `ifdef DEBUG
@@ -106,13 +109,22 @@ package pcap_pkg;
     $display(" magic_number: %x", magic_number);
 `endif
 
+`ifdef DEBUG
     global_header.magic_number = magic_number;
-    global_header.version_major = read_2bytes(file, (read_mode & 1));
-    global_header.version_minor = read_2bytes(file, (read_mode & 1));
-    global_header.thiszone = read_4bytes(file, (read_mode & 1));
-    global_header.sigfigs = read_4bytes(file, (read_mode & 1));
-    global_header.snaplen = read_4bytes(file, (read_mode & 1));
-    global_header.network = read_4bytes(file, (read_mode & 1));
+    global_header.version_major = read_2bytes(file, (read_mode & 1) != 0);
+    global_header.version_minor = read_2bytes(file, (read_mode & 1) != 0);
+    global_header.thiszone = read_4bytes(file, (read_mode & 1) != 0);
+    global_header.sigfigs = read_4bytes(file, (read_mode & 1) != 0);
+    global_header.snaplen = read_4bytes(file, (read_mode & 1) != 0);
+    global_header.network = read_4bytes(file, (read_mode & 1) != 0);
+`else
+    void'(read_2bytes(file, (read_mode & 1) != 0));
+    void'(read_2bytes(file, (read_mode & 1) != 0));
+    void'(read_4bytes(file, (read_mode & 1) != 0));
+    void'(read_4bytes(file, (read_mode & 1) != 0));
+    void'(read_4bytes(file, (read_mode & 1) != 0));
+    void'(read_4bytes(file, (read_mode & 1) != 0));
+`endif
 
 `ifdef DEBUG
     $display(" version_major: %x", global_header.version_major);
@@ -146,10 +158,10 @@ package pcap_pkg;
     read_mode = h.read_mode;
 
     // Assume the next 16 bytes is packet header
-    pkt_header.ts_sec   = read_4bytes(file, (read_mode & 1));
-    pkt_header.ts_usec  = read_4bytes(file, (read_mode & 1));
-    pkt_header.incl_len = read_4bytes(file, (read_mode & 1));
-    pkt_header.orig_len = read_4bytes(file, (read_mode & 1));
+    pkt_header.ts_sec   = read_4bytes(file, (read_mode & 1) != 0);
+    pkt_header.ts_usec  = read_4bytes(file, (read_mode & 1) != 0);
+    pkt_header.incl_len = read_4bytes(file, (read_mode & 1) != 0);
+    pkt_header.orig_len = read_4bytes(file, (read_mode & 1) != 0);
 
     // Test if file is reached to end during previous read operation, if so
     // return an packet with 0 length
@@ -169,7 +181,7 @@ package pcap_pkg;
     for (int i = 0; i < pkt_header.incl_len; i++) begin
       pkt.buffer[i] = $fgetc(file);
     end
-    pkt.ts = pkt_header.ts_sec * 1000000000 + pkt_header.ts_usec * (read_mode & 2 ? 1 : 1000);
+    pkt.ts = pkt_header.ts_sec * 1000000000 + pkt_header.ts_usec * ((read_mode & 2) != 0 ? 1 : 1000);
     pkt.len = pkt_header.incl_len;
 
     h.pkt_cnt++;
@@ -178,7 +190,7 @@ package pcap_pkg;
 
 
   // Read 4 bytes from file, set le = 1 if file is stored in little endian.
-  function automatic logic [31:0] read_4bytes(input int fPtr, input int le);
+  function automatic logic [31:0] read_4bytes(input int fPtr, input bit le);
     logic [31:0] ret;
     if (le) begin
       ret[7:0]   = $fgetc(fPtr);
@@ -195,7 +207,7 @@ package pcap_pkg;
   endfunction
 
   // Read 2 bytes from file, set le = 1 if file is stored in little endian.
-  function automatic logic [15:0] read_2bytes(input int fPtr, input int le);
+  function automatic logic [15:0] read_2bytes(input int fPtr, input bit le);
     logic [15:0] ret;
     if (le) begin
       ret[7:0]  = $fgetc(fPtr);

@@ -1,3 +1,5 @@
+../cmult/cmult.flt
+../ram/ram.flt
 rtl/prach.sv
 rtl/prach_channel.sv
 rtl/prach_conv.sv

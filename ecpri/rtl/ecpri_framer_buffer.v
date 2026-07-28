@@ -33,6 +33,8 @@ module ecpri_framer_buffer #(
     input  wire                                         m_axis_tready
 );
 
+  wire unused_tx_eth_rst = tx_eth_rst;
+
   // The FIFO
 
   axis_fifo #(

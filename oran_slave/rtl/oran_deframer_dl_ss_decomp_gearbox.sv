@@ -28,6 +28,8 @@ module oran_deframer_dl_ss_decomp_gearbox (
 
   import oran_pkg::*;
 
+  wire unused_s_axis_tkeep = &{1'b0, s_axis_tkeep};
+
   logic         init_n;
   logic         sync_n;
 
@@ -40,7 +42,7 @@ module oran_deframer_dl_ss_decomp_gearbox (
   logic [  3:0] bit_remain;
   logic [  3:0] bit_remain_next;
 
-  logic [  3:0] bit_required;
+  logic [  4:0] bit_required;
 
   logic [ 63:0] temp_data1;
   logic [ 63:0] temp_data2;
@@ -149,9 +151,9 @@ module oran_deframer_dl_ss_decomp_gearbox (
 
   always_comb begin
     if (state == 0) begin
-      bit_required = ud_iq_width == 0 ? 16 : ud_iq_width + 2;
+      bit_required = ud_iq_width == 4'd0 ? 5'd16 : {1'b0, ud_iq_width} + 5'd2;
     end else begin
-      bit_required = ud_iq_width == 0 ? 16 : ud_iq_width;
+      bit_required = ud_iq_width == 4'd0 ? 5'd16 : {1'b0, ud_iq_width};
     end
   end
 
@@ -174,13 +176,13 @@ module oran_deframer_dl_ss_decomp_gearbox (
     end else if (~s_axis_tready && extend_tlast && ({1'b0, bit_remain} + bit_required >= 16)) begin
       bit_remain_next = 0;
     end else if (~s_axis_tready) begin
-      bit_remain_next = (bit_remain + bit_required);  // mod 64 naturally
+      bit_remain_next = 4'({1'b0, bit_remain} + bit_required);  // mod 64 naturally
     end else if (s_axis_tvalid && s_axis_tlast && state == 5) begin
       // we are at state 5, so could safely goes to init state
       bit_remain_next = 0;
     end else if (s_axis_tvalid) begin
       // at other state, we still tries go further
-      bit_remain_next = (bit_remain + bit_required);
+      bit_remain_next = 4'({1'b0, bit_remain} + bit_required);
     end else begin
       bit_remain_next = bit_remain;
     end
@@ -211,7 +213,7 @@ module oran_deframer_dl_ss_decomp_gearbox (
   assign temp_data = {temp_data2, temp_data1};
 
   always_ff @(posedge clk) begin
-    temp_shift <= -bit_remain - bit_required;
+    temp_shift <= 4'(-({1'b0, bit_remain} + bit_required));
   end
 
   always_ff @(posedge clk) begin
@@ -241,7 +243,7 @@ module oran_deframer_dl_ss_decomp_gearbox (
 
   always_ff @(posedge clk) begin
     if (temp_valid) begin
-      dout_data <= (temp_data >> (temp_shift * 4));
+      dout_data <= 64'(temp_data >> (temp_shift * 4));
     end
   end
 

@@ -45,6 +45,8 @@ module fir2_stage #(
     assert ($clog2(CSR_SUPPORT) == ADDR_WIDTH);
   end
 
+  wire unused_ctrl_rst = ctrl_rst;
+
 
   // Signals
   //========
@@ -97,13 +99,13 @@ module fir2_stage #(
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      state <= 1;
+      state <= {{(ADDR_WIDTH-1){1'b0}}, 1'b1};
     end else if (sync_in) begin
-      state <= 0;
-    end else if (state == 0) begin
-      state <= CSR_SUPPORT - 1;
+      state <= '0;
+    end else if (state == '0) begin
+      state <= ADDR_WIDTH'(CSR_SUPPORT - 1);
     end else begin
-      state <= state - 1;
+      state <= state - {{(ADDR_WIDTH-1){1'b0}}, 1'b1};
     end
   end
 
@@ -130,6 +132,7 @@ module fir2_stage #(
   // directly used as address. The RAM latency should be 1. This match MAC's
   // B input port latency.
   assign coe_addr = state;
+  assign ctrl_coe_dout = '0;
 
   ram_sdp #(
       .ADDR_WIDTH  (ADDR_WIDTH),
@@ -170,10 +173,10 @@ module fir2_stage #(
   end
 
   always_comb begin
-   if (fds_addr >= CSR_SUPPORT - 2) begin
+   if (fds_addr >= ADDR_WIDTH'(CSR_SUPPORT - 2)) begin
       fds_addr_next = '0;
     end else begin
-      fds_addr_next = fds_addr + 1;
+      fds_addr_next = fds_addr + {{(ADDR_WIDTH-1){1'b0}}, 1'b1};
     end
   end
 
@@ -197,13 +200,13 @@ module fir2_stage #(
   // we need to buffer the RAM output at `state = N - 1`.
 
   always_ff @(posedge clk) begin
-    if (state == CSR_SUPPORT - 1) begin
+    if (state == ADDR_WIDTH'(CSR_SUPPORT - 1)) begin
       fds_dout_r <= fds_dout;
     end
   end
 
   always_comb begin
-    if (state == CSR_SUPPORT - 1) begin
+    if (state == ADDR_WIDTH'(CSR_SUPPORT - 1)) begin
       forward_data_out = fds_dout;
     end else begin
       forward_data_out = fds_dout_r;
@@ -233,14 +236,14 @@ module fir2_stage #(
   end
 
   always_comb begin
-    if (state == 1) begin
+    if (state == {{(ADDR_WIDTH-1){1'b0}}, 1'b1}) begin
       bds_addr_next = bds_addr;
-    end else if (state == 0 && ctrl_odd_tap) begin
+    end else if (state == '0 && ctrl_odd_tap) begin
       bds_addr_next = bds_addr;
-    end else if (bds_addr == CSR_SUPPORT - 1) begin
-      bds_addr_next = 0;
+    end else if (bds_addr == ADDR_WIDTH'(CSR_SUPPORT - 1)) begin
+      bds_addr_next = '0;
     end else begin
-      bds_addr_next = bds_addr + 1;
+      bds_addr_next = bds_addr + {{(ADDR_WIDTH-1){1'b0}}, 1'b1};
     end
   end
 
@@ -248,7 +251,7 @@ module fir2_stage #(
     if (ctrl_odd_tap == 0 || ctrl_loop_back == 0) begin
       bds_rst = 1'b0;
     end else begin
-      bds_rst = (state == CSR_SUPPORT - 1);
+      bds_rst = (state == ADDR_WIDTH'(CSR_SUPPORT - 1));
     end
   end
 

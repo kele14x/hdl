@@ -2,7 +2,8 @@
 // Brief: cfr_pc performs PC-CFR on input signal.
 //        Do not change parameters, they will not work.
 
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module cfr_pc #(
     // Architecture parameters:
@@ -62,6 +63,13 @@ module cfr_pc #(
 
   logic                  local_rst;
 
+  logic                  unused_cart2pol_ctrl[UP_FACTOR];
+  logic                  unused_pol2cart_ctrl;
+  logic [DATA_WIDTH-1:0] unused_peak_i_out;
+  logic [DATA_WIDTH-1:0] unused_peak_q_out;
+  logic [PhaseWidth-1:0] unused_peak_phase_out;
+  logic                  unused_peak_valid_out;
+
   logic                  ctrl_enable_s;
   logic [           3:0] ctrl_spacing_s;
   logic [  DATA_WIDTH:0] ctrl_clipping_threshold_s;
@@ -83,6 +91,9 @@ module cfr_pc #(
   logic peak_valid, peak_valid_d;
   logic [PhaseWidth-1:0] peak_phase, peak_phase_d;
 
+  wire unused_peak_truncated_bits = &{1'b0, peak_i[DATA_WIDTH+2:DATA_WIDTH],
+                                     peak_q[DATA_WIDTH+2:DATA_WIDTH], 1'b0};
+
   logic [DATA_WIDTH-1:0] data_i_in_d;
   logic [DATA_WIDTH-1:0] data_q_in_d;
 
@@ -97,15 +108,19 @@ module cfr_pc #(
       $display("ERROR: cfr_pc: Invalid UP_FACTOR value %d", UP_FACTOR);
       $finish;
     end
+    if (CPW_DATA_WIDTH != DATA_WIDTH) begin
+      $display("ERROR: cfr_pc: CPW_DATA_WIDTH (%d) must match DATA_WIDTH (%d)", CPW_DATA_WIDTH,
+               DATA_WIDTH);
+      $finish;
+    end
   end
 
 
   // Ctrl interface CDC
 
-  xpm_cdc_array_single #(
+  cdc_array_single #(
       .DEST_SYNC_FF  (2),
       .INIT_SYNC_FF  (0),
-      .SIM_ASSERT_CHK(0),
       .SRC_INPUT_REG (0),
       .WIDTH         (1)
   ) i_cdc_array_single_ctrl_enable (
@@ -115,10 +130,9 @@ module cfr_pc #(
       .dest_out(ctrl_enable_s)
   );
 
-  xpm_cdc_array_single #(
+  cdc_array_single #(
       .DEST_SYNC_FF  (2),
       .INIT_SYNC_FF  (0),
-      .SIM_ASSERT_CHK(0),
       .SRC_INPUT_REG (0),
       .WIDTH         (4)
   ) i_cdc_array_single_ctrl_spacing (
@@ -128,10 +142,9 @@ module cfr_pc #(
       .dest_out(ctrl_spacing_s)
   );
 
-  xpm_cdc_array_single #(
+  cdc_array_single #(
       .DEST_SYNC_FF  (2),
       .INIT_SYNC_FF  (0),
-      .SIM_ASSERT_CHK(0),
       .SRC_INPUT_REG (0),
       .WIDTH         (DATA_WIDTH + 1)
   ) i_cdc_array_single_ctrl_clipping_threshold (
@@ -141,7 +154,7 @@ module cfr_pc #(
       .dest_out(ctrl_clipping_threshold_s)
   );
 
-  xpm_cdc_array_single #(
+  cdc_array_single #(
       .DEST_SYNC_FF (2),
       .INIT_SYNC_FF (0),
       .SRC_INPUT_REG(0),
@@ -155,7 +168,7 @@ module cfr_pc #(
 
   // Reset CDC
 
-  xpm_cdc_async_rst #(
+  cdc_async_rst #(
       .DEST_SYNC_FF   (4),
       .INIT_SYNC_FF   (0),
       .RST_ACTIVE_HIGH(1)
@@ -209,7 +222,7 @@ module cfr_pc #(
           //
           .r       (data_r_px[pp]),
           .theta   (data_theta_px[pp]),
-          .ctrl_out(  /* Not used */)
+          .ctrl_out(unused_cart2pol_ctrl[pp])
       );
 
       // Truncate 1 MSB
@@ -265,7 +278,7 @@ module cfr_pc #(
       //
       .xout    (peak_i),
       .yout    (peak_q),
-      .ctrl_out(  /* Not used */)
+      .ctrl_out(unused_pol2cart_ctrl)
   );
 
   delay #(
@@ -318,10 +331,10 @@ module cfr_pc #(
       .data_i_out        (data_i_out),
       .data_q_out        (data_q_out),
       //
-      .peak_i_out        (  /* Not used */),
-      .peak_q_out        (  /* Not used */),
-      .peak_phase_out    (  /* Not used */),
-      .peak_valid_out    (  /* Not used */),
+      .peak_i_out        (unused_peak_i_out),
+      .peak_q_out        (unused_peak_q_out),
+      .peak_phase_out    (unused_peak_phase_out),
+      .peak_valid_out    (unused_peak_valid_out),
       //
       .ctrl_clk          (ctrl_clk),
       .ctrl_rst          (ctrl_rst),

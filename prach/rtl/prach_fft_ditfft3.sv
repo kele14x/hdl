@@ -93,6 +93,8 @@ module prach_fft_ditfft3 #(
   assign dout_dv = s2_dv;
   assign ovf     = s0_ovf | s1_ovf | s2_ovf;
 
+  wire unused_ditfft3 = &{1'b0, 32'(FftSize), 32'(Latency)};
+
 endmodule
 
 `default_nettype wire

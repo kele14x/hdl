@@ -36,7 +36,7 @@ module oran_top #(
     output var        s_axi_rvalid,
     input var         s_axi_rready,
     //
-    output var        interrupt,
+    output var        irq,
     // Ethernet
     //---------
     input var         eth_clk,
@@ -110,8 +110,8 @@ module oran_top #(
   (* max_fanout=500 *)
   logic        local_resetn;
 
-  logic        fram_ready;
-  logic        defm_ready;
+  logic        unused_fram_ready;
+  logic        unused_defm_ready;
 
   logic        rx_eth_clk          [ NumEth];
   logic        rx_eth_rst          [ NumEth];
@@ -155,6 +155,51 @@ module oran_top #(
   logic [79:0] m_odm_timestamp2_s  [ NumEth];
 
   logic [ 7:0] m_app_frameid_s     [ANT_NUM] [NumCc];
+
+  logic        unused_m_mac_header_valid    [NumEth];
+  logic [47:0] unused_m_mac_dest_mac        [NumEth];
+  logic [47:0] unused_m_mac_source_mac      [NumEth];
+  logic        unused_m_mac_with_vlan       [NumEth];
+  logic [15:0] unused_m_mac_vlan_tag        [NumEth];
+  logic [15:0] unused_m_mac_ethertype       [NumEth];
+  logic        unused_m_ecpri_header_valid  [NumEth];
+  logic        unused_m_ecpri_concat        [NumEth];
+  logic [ 7:0] unused_m_ecpri_messagetype   [NumEth];
+  logic [15:0] unused_m_ecpri_payloadsize   [NumEth];
+  logic [ 7:0] unused_m_odm_measurementid   [NumEth];
+  logic [ 7:0] unused_m_odm_actiontype      [NumEth];
+  logic [63:0] unused_m_odm_compensation    [NumEth];
+  logic        unused_m_trans_header_valid  [NumEth];
+  logic [15:0] unused_m_trans_rtc_pc_id     [NumEth];
+  logic [ 7:0] unused_m_trans_seqid         [NumEth];
+  logic        unused_m_trans_ebit          [NumEth];
+  logic [ 6:0] unused_m_trans_subseqid      [NumEth];
+  logic        unused_m_app_header_valid    [ANT_NUM] [NumCc];
+  logic        unused_m_app_datadirection   [ANT_NUM] [NumCc];
+  logic [ 3:0] unused_m_app_filterindex     [ANT_NUM] [NumCc];
+  logic [ 3:0] unused_m_app_subframeid      [ANT_NUM] [NumCc];
+  logic [ 5:0] unused_m_app_slotid          [ANT_NUM] [NumCc];
+  logic [ 5:0] unused_m_app_symbolid        [ANT_NUM] [NumCc];
+  logic        unused_m_app_packet_in_window[ANT_NUM] [NumCc];
+  logic [ 8:0] unused_m_app_offset_in_symbol[ANT_NUM] [NumCc];
+  logic [ 7:0] unused_m_app_numsections     [ANT_NUM] [NumCc];
+  logic [ 2:0] unused_m_app_sectiontype     [ANT_NUM] [NumCc];
+  logic [ 7:0] unused_m_app_udcomphdr       [ANT_NUM] [NumCc];
+  logic [15:0] unused_m_app_timeoffset      [ANT_NUM] [NumCc];
+  logic [ 7:0] unused_m_app_framestructure  [ANT_NUM] [NumCc];
+  logic [15:0] unused_m_app_cplength        [ANT_NUM] [NumCc];
+  logic        unused_m_section_header_valid[ANT_NUM] [NumCc];
+  logic [11:0] unused_m_section_sectionid   [ANT_NUM] [NumCc];
+  logic        unused_m_section_rb          [ANT_NUM] [NumCc];
+  logic        unused_m_section_syminc      [ANT_NUM] [NumCc];
+  logic [ 9:0] unused_m_section_startprb    [ANT_NUM] [NumCc];
+  logic [ 7:0] unused_m_section_numprb      [ANT_NUM] [NumCc];
+  logic [ 7:0] unused_m_section_udcomphdr   [ANT_NUM] [NumCc];
+  logic [11:0] unused_m_section_remask      [ANT_NUM] [NumCc];
+  logic [ 3:0] unused_m_section_numsymbol   [ANT_NUM] [NumCc];
+  logic        unused_m_section_ef          [ANT_NUM] [NumCc];
+  logic [14:0] unused_m_section_beamid      [ANT_NUM] [NumCc];
+  logic [23:0] unused_m_section_freqoffset  [ANT_NUM] [NumCc];
 
 
   // Main
@@ -264,7 +309,7 @@ module oran_top #(
       .s_axi_rvalid          (s_axi_rvalid),
       .s_axi_rready          (s_axi_rready),
       // IRQ
-      .interrupt             (interrupt),
+      .irq                   (irq),
       // Ethernet
       //---------
       .rx_eth_clk            (rx_eth_clk),
@@ -296,8 +341,8 @@ module oran_top #(
       .timer_sos             (timer_sos_s),
       .timer_frac            (timer_frac_s),
       //
-      .defm_ready            (defm_ready),
-      .fram_ready            (fram_ready),
+      .defm_ready            (unused_defm_ready),
+      .fram_ready            (unused_fram_ready),
       // DL
       .dl_syml_frame         (dl_syml_frame_s),
       .dl_syml_sof           (dl_syml_sof_s),
@@ -311,60 +356,56 @@ module oran_top #(
       .ul_syml_sos           (ul_syml_sos_s),
       .ul_syml_data          (ul_syml_data_s),
       .ul_syml_valid         (ul_syml_valid_s),
-      //
-      .m_mac_header_valid    (),
-      .m_mac_dest_mac        (),
-      .m_mac_source_mac      (),
-      .m_mac_with_vlan       (),
-      .m_mac_vlan_tag        (),
-      .m_mac_ethertype       (),
-      //
-      .m_ecpri_header_valid  (),
-      .m_ecpri_concat        (),
-      .m_ecpri_messagetype   (),
-      .m_ecpri_payloadsize   (),
-      //
+      // O-RAN parse/status outputs
+      .m_mac_header_valid    (unused_m_mac_header_valid),
+      .m_mac_dest_mac        (unused_m_mac_dest_mac),
+      .m_mac_source_mac      (unused_m_mac_source_mac),
+      .m_mac_with_vlan       (unused_m_mac_with_vlan),
+      .m_mac_vlan_tag        (unused_m_mac_vlan_tag),
+      .m_mac_ethertype       (unused_m_mac_ethertype),
+      .m_ecpri_header_valid  (unused_m_ecpri_header_valid),
+      .m_ecpri_concat        (unused_m_ecpri_concat),
+      .m_ecpri_messagetype   (unused_m_ecpri_messagetype),
+      .m_ecpri_payloadsize   (unused_m_ecpri_payloadsize),
       .m_odm_header_valid    (m_odm_header_valid_s),
-      .m_odm_measurementid   (),
-      .m_odm_actiontype      (),
+      .m_odm_measurementid   (unused_m_odm_measurementid),
+      .m_odm_actiontype      (unused_m_odm_actiontype),
       .m_odm_timestamp       (m_odm_timestamp_s),
-      .m_odm_compensation    (),
+      .m_odm_compensation    (unused_m_odm_compensation),
       .m_odm_timestamp2      (m_odm_timestamp2_s),
-      //
-      .m_trans_header_valid  (),
-      .m_trans_rtc_pc_id     (),
-      .m_trans_seqid         (),
-      .m_trans_ebit          (),
-      .m_trans_subseqid      (),
-      //
-      .m_app_header_valid    (),
-      .m_app_datadirection   (),
-      .m_app_filterindex     (),
+      .m_trans_header_valid  (unused_m_trans_header_valid),
+      .m_trans_rtc_pc_id     (unused_m_trans_rtc_pc_id),
+      .m_trans_seqid         (unused_m_trans_seqid),
+      .m_trans_ebit          (unused_m_trans_ebit),
+      .m_trans_subseqid      (unused_m_trans_subseqid),
+      .m_app_header_valid    (unused_m_app_header_valid),
+      .m_app_datadirection   (unused_m_app_datadirection),
+      .m_app_filterindex     (unused_m_app_filterindex),
       .m_app_frameid         (m_app_frameid_s),
-      .m_app_subframeid      (),
-      .m_app_slotid          (),
-      .m_app_packet_in_window(),
-      .m_app_offset_in_symbol(),
-      .m_app_symbolid        (),
-      .m_app_numsections     (),
-      .m_app_sectiontype     (),
-      .m_app_udcomphdr       (),
-      .m_app_timeoffset      (),
-      .m_app_framestructure  (),
-      .m_app_cplength        (),
+      .m_app_subframeid      (unused_m_app_subframeid),
+      .m_app_slotid          (unused_m_app_slotid),
+      .m_app_symbolid        (unused_m_app_symbolid),
+      .m_app_packet_in_window(unused_m_app_packet_in_window),
+      .m_app_offset_in_symbol(unused_m_app_offset_in_symbol),
+      .m_app_numsections     (unused_m_app_numsections),
+      .m_app_sectiontype     (unused_m_app_sectiontype),
+      .m_app_udcomphdr       (unused_m_app_udcomphdr),
+      .m_app_timeoffset      (unused_m_app_timeoffset),
+      .m_app_framestructure  (unused_m_app_framestructure),
+      .m_app_cplength        (unused_m_app_cplength),
+      .m_section_header_valid(unused_m_section_header_valid),
+      .m_section_sectionid   (unused_m_section_sectionid),
+      .m_section_rb          (unused_m_section_rb),
+      .m_section_syminc      (unused_m_section_syminc),
+      .m_section_startprb    (unused_m_section_startprb),
+      .m_section_numprb      (unused_m_section_numprb),
+      .m_section_udcomphdr   (unused_m_section_udcomphdr),
+      .m_section_remask      (unused_m_section_remask),
+      .m_section_numsymbol   (unused_m_section_numsymbol),
+      .m_section_ef          (unused_m_section_ef),
+      .m_section_beamid      (unused_m_section_beamid),
+      .m_section_freqoffset  (unused_m_section_freqoffset)
       //
-      .m_section_header_valid(),
-      .m_section_sectionid   (),
-      .m_section_rb          (),
-      .m_section_syminc      (),
-      .m_section_startprb    (),
-      .m_section_numprb      (),
-      .m_section_udcomphdr   (),
-      .m_section_remask      (),
-      .m_section_numsymbol   (),
-      .m_section_ef          (),
-      .m_section_beamid      (),
-      .m_section_freqoffset  ()
   );
 
 endmodule

@@ -59,6 +59,7 @@ module hb_up2 #(
       .DEPTH     (ImpulseLatency)
   ) i_p0_delay (
       .clk (clk),
+      .rst (rst),
       .cen (1'b1),
       //
       .din (data_in),

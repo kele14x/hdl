@@ -71,6 +71,15 @@ module oran_framer_ul_ss_ctrl (
 
   state_t state, state_next;
 
+  wire unused_ctrl_fields = &{
+    1'b0,
+    ctrl_rst,
+    ctrl_mask_wr_din[31:14],
+    section_sectionid,
+    section_rb,
+    section_syminc
+  };
+
   //
   // This function helps you build a line of section control message in
   // buffer, using start PRB and number PRB

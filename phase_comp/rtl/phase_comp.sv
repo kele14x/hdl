@@ -41,10 +41,14 @@ module phase_comp #(
 
   localparam int Latency = 10;
   localparam int AddrWidth = 4;
+  localparam int AntSelWidth = (NUM_ANT <= 1) ? 1 : $clog2(NUM_ANT);
+  localparam logic [3:0] NumAnt = 4'(NUM_ANT);
 
   // Signals
 
   logic        [          1:0] ctrl_rat_s;
+  logic        [AntSelWidth-1:0] din_chn_sel;
+  wire                          unused_ctrl_rst = ctrl_rst;
 
   logic        [AddrWidth-1:0] din_sym       [NUM_ANT];
   logic        [AddrWidth-1:0] din_sym_next;
@@ -58,6 +62,8 @@ module phase_comp #(
 
   logic signed [         15:0] din_dr_d;
   logic signed [         15:0] din_di_d;
+
+  logic                        unused_cmult_ovf;
 
   // Main
 
@@ -84,15 +90,17 @@ module phase_comp #(
     end
   endgenerate
 
+  assign din_chn_sel = din_chn[AntSelWidth-1:0];
+
   // Symbol Counter
 
   always_comb begin
     if (din_dv && din_sl) begin
       din_sym_next = '0;
-    end else if (din_dv && din_sy) begin
-      din_sym_next = din_sym[din_chn] + 1'b1;
-    end else if (din_dv) begin
-      din_sym_next = din_sym[din_chn];
+    end else if (din_dv && din_chn < NumAnt && din_sy) begin
+      din_sym_next = din_sym[din_chn_sel] + 1'b1;
+    end else if (din_dv && din_chn < NumAnt) begin
+      din_sym_next = din_sym[din_chn_sel];
     end else begin
       din_sym_next = '0;
     end
@@ -165,8 +173,8 @@ module phase_comp #(
       .P_WIDTH (16),
       .SHIFT   (14),
       //
-      .ROUND   (1'b1),
-      .SATURATE(1'b0)
+      .ROUND   (1),
+      .SATURATE(0)
   ) i_cmult (
       .clk(clk),
       .rst(rst),
@@ -180,7 +188,7 @@ module phase_comp #(
       .pr (dout_dr),
       .pi (dout_di),
       //
-      .ovf()
+      .ovf(unused_cmult_ovf)
   );
 
   delay #(

@@ -84,6 +84,15 @@ module ecpri_deframer_demux (
   wire [             31:0] s_axis_tdata_reversed;
 
   wire [             15:0] mac_ethertype;
+  reg                      rx_eth_rst_sync;
+
+  always @(posedge rx_eth_clk) begin
+    rx_eth_rst_sync <= rx_eth_rst;
+  end
+
+  wire                     unused_inputs;
+
+  assign unused_inputs = &{1'b0, rx_ptp_timestamp_valid, s_axis_tdata_reversed[15:0]};
 
   wire                     wr_en;
   reg  [    AddrWidth-1:0] wr_addr;
@@ -109,6 +118,7 @@ module ecpri_deframer_demux (
   wire                     fifo_rd_en;
   wire [FiFoDataWidth-1:0] fifo_rd_dout;
   wire                     fifo_rd_empty;
+  wire                     unused_fifo_wr_full;
 
   wire                     packet_valid_s;
   wire [             15:0] packet_ethertype_s;
@@ -130,7 +140,7 @@ module ecpri_deframer_demux (
   // field
 
   always @(posedge rx_eth_clk) begin
-    if (rx_eth_rst) begin
+    if (rx_eth_rst_sync) begin
       state <= S_RST;
     end else begin
       state <= state_next;
@@ -184,7 +194,7 @@ module ecpri_deframer_demux (
         end else if (s_axis_tvalid) begin
           // Check EtherType field, if it's VLAN, we need to skip it and check
           // again.
-          if (mac_ethertype == EtherTypeVlan) begin
+          if (mac_ethertype == `ECPRI_ETHERTYPE_VLAN) begin
             state_next = S_ETYPE;
           end else begin
             state_next = S_PAYLOAD;
@@ -217,7 +227,7 @@ module ecpri_deframer_demux (
   assign wr_en = s_axis_tvalid;
 
   always @(posedge rx_eth_clk) begin
-    if (rx_eth_rst) begin
+    if (rx_eth_rst_sync) begin
       wr_addr <= 0;
     end else if ((state == S_DMACH) && s_axis_tvalid && s_axis_tuser) begin
       // We received TUSER at first tick of the packet, we already marked the
@@ -236,7 +246,7 @@ module ecpri_deframer_demux (
   // Register the address at the first tick of the packet, in the case of we need to
   // discard the packet
   always @(posedge rx_eth_clk) begin
-    if (rx_eth_rst) begin
+    if (rx_eth_rst_sync) begin
       wr_addr_last <= 0;
     end else if ((state == S_DMACH) && s_axis_tvalid) begin
       wr_addr_last <= wr_addr;
@@ -268,7 +278,7 @@ module ecpri_deframer_demux (
   end
 
   always @(posedge rx_eth_clk) begin
-    if ((state == S_ETYPE) && (mac_ethertype != EtherTypeVlan) && s_axis_tvalid) begin
+    if ((state == S_ETYPE) && (mac_ethertype != `ECPRI_ETHERTYPE_VLAN) && s_axis_tvalid) begin
       packet_ethertype <= mac_ethertype;
     end
   end
@@ -355,7 +365,7 @@ module ecpri_deframer_demux (
       .wr_clk  (rx_eth_clk),
       .wr_en   (fifo_wr_en),
       .wr_din  (fifo_wr_din),
-      .wr_full (),
+      .wr_full (unused_fifo_wr_full),
       //
       .rd_clk  (clk),
       .rd_en   (fifo_rd_en),
@@ -370,7 +380,7 @@ module ecpri_deframer_demux (
       .clk (clk),
       .rst (1'b0),
       .cen (1'b1),
-      .din (packet_valid_s && (packet_ethertype_s == EtherTypeEcpri)),
+      .din (packet_valid_s && (packet_ethertype_s == `ECPRI_ETHERTYPE_ECPRI)),
       //
       .dout(m_axis_tvalid)
   );
@@ -383,7 +393,7 @@ module ecpri_deframer_demux (
       .rst (1'b0),
       .cen (1'b1),
       //
-      .din (packet_valid_s && (packet_ethertype_s == EtherTypePtp)),
+      .din (packet_valid_s && (packet_ethertype_s == `ECPRI_ETHERTYPE_PTP)),
       .dout(m_ptp_tvalid)
   );
 
@@ -395,8 +405,8 @@ module ecpri_deframer_demux (
       .rst (1'b0),
       .cen (1'b1),
       //
-      .din (packet_valid_s && (packet_ethertype_s != EtherTypeEcpri) &&
-        (packet_ethertype_s != EtherTypePtp)),
+      .din (packet_valid_s && (packet_ethertype_s != `ECPRI_ETHERTYPE_ECPRI) &&
+        (packet_ethertype_s != `ECPRI_ETHERTYPE_PTP)),
       .dout(m_message_tvalid)
   );
 

@@ -1,0 +1,24 @@
+PYTHON ?= python3
+PYTEST ?= uv run pytest
+VERILATOR ?= verilator
+VERILATOR_LINT_FLAGS ?= --lint-only -Wall
+
+REPO_ROOT := $(abspath ..)
+MODULE := $(notdir $(CURDIR))
+FLT ?= $(MODULE).flt
+LINT_TOPS ?= ptp_lite
+
+RTL_SOURCES := $(shell $(PYTHON) $(REPO_ROOT)/tools/flt_tool.py $(FLT))
+RTL_DIRS := $(sort $(dir $(RTL_SOURCES)))
+REPO_RTL_DIRS := $(wildcard $(REPO_ROOT)/*/rtl)
+VERILATOR_INCLUDES := $(addprefix -I,$(sort $(RTL_DIRS) $(REPO_RTL_DIRS)))
+
+.PHONY: lint test
+
+lint:
+	@for top in $(LINT_TOPS); do \
+		$(VERILATOR) $(VERILATOR_LINT_FLAGS) --top-module $$top $(VERILATOR_INCLUDES) $(RTL_SOURCES) || exit $$?; \
+	done
+
+test:
+	PYTHONPATH="$(REPO_ROOT):$(PYTHONPATH)" $(PYTEST) -q tests

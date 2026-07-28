@@ -21,6 +21,7 @@ module prach_fft_ditfft2_rom #(
 
   localparam int Latency = 2;
   localparam real Pi = 3.1415926535;
+  localparam bit RamStyleKnown = (RAM_STYLE == "BLOCK") || (RAM_STYLE == "DISTRIBUTED");
 
   // Signals
 
@@ -69,6 +70,8 @@ module prach_fft_ditfft2_rom #(
   end
 
   assign {ti, tr} = dout_dd;
+
+  wire unused_ditfft2_rom = &{1'b0, rst, 32'(Latency), Pi != 0.0, RamStyleKnown};
 
 endmodule
 

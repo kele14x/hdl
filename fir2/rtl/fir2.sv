@@ -47,10 +47,9 @@ module fir2 #(
   initial begin
     assert (CSR_SUPPORT >= 2)
     else begin
-      $error(
+      $fatal(1,
           "[%m]: Clock frequency to sample rate ratio (CSR_SUPPORT) should be larger or equal to 2, got %d",
           CSR_SUPPORT);
-      #1 $finish;
     end
   end
 
@@ -89,6 +88,7 @@ module fir2 #(
   logic        [    StageAddrWidth-1:0] ctrl_coe_addr_l;
   logic        [$clog2(NUM_STAGES)-1:0] ctrl_coe_addr_h;
   logic                                 ctrl_coe_en_s   [  NUM_STAGES];
+  logic        [    COE_DATA_WIDTH-1:0] ctrl_coe_dout_s [  NUM_STAGES];
 
 
   // Main
@@ -150,7 +150,7 @@ module fir2 #(
           .ctrl_coe_we      (ctrl_coe_we),
           .ctrl_coe_addr    (ctrl_coe_addr_l),
           .ctrl_coe_din     (ctrl_coe_din),
-          .ctrl_coe_dout    (  /* not used */)
+          .ctrl_coe_dout    (ctrl_coe_dout_s[i])
       );
 
     end
@@ -200,6 +200,7 @@ module fir2 #(
 
   assign ctrl_coe_addr_l = ctrl_coe_addr[StageAddrWidth-1:0];
   assign ctrl_coe_addr_h = ctrl_coe_addr[CoeAddrWidth-1:StageAddrWidth];
+  assign ctrl_coe_dout   = ctrl_coe_dout_s[ctrl_coe_addr_h];
 
 endmodule
 

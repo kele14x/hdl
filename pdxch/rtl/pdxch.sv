@@ -72,6 +72,7 @@ module pdxch #(
   logic [ 3:0] ctrl_en               [NUM_CC];
   //
   logic [ 1:0] ctrl_rat              [NUM_CC];
+  logic [ 3:0] ctrl_rat_regs         [NUM_CC];
   //
   logic [ 3:0] ctrl_bist             [NUM_CC];
   //
@@ -95,7 +96,7 @@ module pdxch #(
       .s_axi_aclk             (s_axi_aclk),
       .s_axi_aresetn          (s_axi_aresetn),
       //
-      .s_axi_awaddr           (s_axi_awaddr),
+      .s_axi_awaddr           ({3'b000, s_axi_awaddr}),
       .s_axi_awprot           (s_axi_awprot),
       .s_axi_awvalid          (s_axi_awvalid),
       .s_axi_awready          (s_axi_awready),
@@ -109,7 +110,7 @@ module pdxch #(
       .s_axi_bvalid           (s_axi_bvalid),
       .s_axi_bready           (s_axi_bready),
       //
-      .s_axi_araddr           (s_axi_araddr),
+      .s_axi_araddr           ({3'b000, s_axi_araddr}),
       .s_axi_arprot           (s_axi_arprot),
       .s_axi_arvalid          (s_axi_arvalid),
       .s_axi_arready          (s_axi_arready),
@@ -125,11 +126,11 @@ module pdxch #(
       // dl_en.cc2,
       .dl_en_cc2_out          (ctrl_en[2]),
       // dl_rat.cc0,
-      .dl_rat_cc0_out         (ctrl_rat[0]),
+      .dl_rat_cc0_out         (ctrl_rat_regs[0]),
       // dl_rat.cc1,
-      .dl_rat_cc1_out         (ctrl_rat[1]),
+      .dl_rat_cc1_out         (ctrl_rat_regs[1]),
       // dl_rat.cc2,
-      .dl_rat_cc2_out         (ctrl_rat[2]),
+      .dl_rat_cc2_out         (ctrl_rat_regs[2]),
       // dl_bist.cc0,
       .dl_bist_cc0_out        (ctrl_bist[0]),
       // dl_bist.cc1,
@@ -192,6 +193,13 @@ module pdxch #(
       .dl_phase_comp_dout     (ctrl_phase_comp_dout),
       .dl_phase_comp_valid    (ctrl_phase_comp_valid)
   );
+
+
+  generate
+    for (genvar rat_idx = 0; rat_idx < NUM_CC; rat_idx++) begin : g_ctrl_rat
+      assign ctrl_rat[rat_idx] = ctrl_rat_regs[rat_idx][1:0];
+    end
+  endgenerate
 
   pdxch_top #(
       .NUM_CC    (NUM_CC),

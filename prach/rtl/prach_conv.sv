@@ -32,6 +32,9 @@ module prach_conv (
 
   logic        [15:0] din_dr_d;
   logic        [15:0] din_di_d;
+  logic        [ 7:0] nco_dout_chn;
+  logic               nco_sync_out;
+  logic               cmult_ovf;
 
   prach_conv_nco u_nco (
       .clk     (clk),
@@ -41,8 +44,8 @@ module prach_conv (
       //
       .dout_cos(cos),
       .dout_sin(sin),
-      .dout_chn(),
-      .sync_out()
+      .dout_chn(nco_dout_chn),
+      .sync_out(nco_sync_out)
   );
 
   delay #(
@@ -77,8 +80,8 @@ module prach_conv (
       //
       .pr (dout_dr),
       .pi (dout_di),
+      .ovf(cmult_ovf)
       //
-      .ovf()
   );
 
   delay #(
@@ -92,6 +95,8 @@ module prach_conv (
       .din ({din_last, din_dv, din_chn, din_sy, din_sl, din_sf}),
       .dout({dout_last, dout_dv, dout_chn, dout_sy, dout_sl, dout_sf})
   );
+
+  wire unused_conv = &{1'b0, nco_dout_chn, nco_sync_out, cmult_ovf};
 
 endmodule
 

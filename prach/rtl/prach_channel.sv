@@ -147,6 +147,7 @@ module prach_channel #(
   logic [        1:0] fft_dout_chn;
   logic               fft_dout_dv;
   logic               fft_dout_last;
+  logic               fft_ovf;
 
   // Main
 
@@ -382,8 +383,8 @@ module prach_channel #(
       .dout_chn (fft_dout_chn),
       .dout_dv  (fft_dout_dv),
       .dout_last(fft_dout_last),
+      .ovf      (fft_ovf)
       //
-      .ovf      ()
   );
 
   prach_framer #(
@@ -420,6 +421,8 @@ module prach_channel #(
       .ctrl_ud_iq_width (ctrl_ud_iq_width),
       .ctrl_fs_offset   (ctrl_fs_offset)
   );
+
+  wire unused_channel = &{1'b0, ctrl_ta3_offset, fft_ovf};
 
 endmodule
 

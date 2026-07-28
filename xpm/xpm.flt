@@ -1,0 +1,3 @@
+rtl/xpm_fifo_axis.sv
+rtl/xpm_memory_sdpram.sv
+rtl/xpm_memory_tdpram.sv

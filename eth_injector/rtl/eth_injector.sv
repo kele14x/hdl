@@ -1,6 +1,7 @@
 // File: eth_injector
 // Brief: Inject Ethernet packet to target DUT
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module eth_injector #(
     parameter int TDATA_WIDTH = 64
@@ -18,23 +19,6 @@ module eth_injector #(
 
   import pcap_pkg::*;
 
-  axi4s_vip #(
-      .INIT_MODE  (1),
-      .HAS_TKEEP  (1),
-      .HAS_TLAST  (1),
-      .TDATA_WIDTH(TDATA_WIDTH),
-      .TUSER_WIDTH(1)
-  ) i_vip (
-      .aclk        (aclk),
-      .aresetn     (aresetn),
-      //
-      .m_axis_tdata (m_eth_tdata),
-      .m_axis_tkeep (m_eth_tkeep),
-      .m_axis_tvalid(m_eth_tvalid),
-      .m_axis_tlast (m_eth_tlast),
-      .m_axis_tready(m_eth_tready)
-  );
-
   // synthesis translate_off
 
   pcap_handler_t pcap;
@@ -42,8 +26,6 @@ module eth_injector #(
 
   logic [TDATA_WIDTH-1:0]   buf_tdata [2000];
   logic [TDATA_WIDTH/8-1:0] buf_tkeep [2000];
-  logic                     buf_tuser [2000];
-  
   int     buf_bytes;
   int     buf_len;
   longint wait_time;
@@ -73,11 +55,29 @@ module eth_injector #(
       #(wait_time);
   
       copy_pkg();
-      i_vip.IF.master_send(buf_len, buf_tdata, buf_tkeep, buf_tuser);
+      send_buffer();
 
       pkt = pcap_read_packet(pcap);
     end
 
+  endtask
+
+  task automatic send_buffer();
+    for (int i = 0; i < buf_len; i++) begin
+      @(posedge aclk);
+      m_eth_tdata  <= buf_tdata[i];
+      m_eth_tkeep  <= buf_tkeep[i];
+      m_eth_tvalid <= 1'b1;
+      m_eth_tlast  <= (i == buf_len - 1);
+      while (!m_eth_tready) begin
+        @(posedge aclk);
+      end
+    end
+    @(posedge aclk);
+    m_eth_tdata  <= '0;
+    m_eth_tkeep  <= '0;
+    m_eth_tvalid <= 1'b0;
+    m_eth_tlast  <= 1'b0;
   endtask
 
   function automatic void copy_pkg();
@@ -96,9 +96,18 @@ module eth_injector #(
     end
   endfunction
 
+  always @(negedge aresetn) begin
+    m_eth_tdata  <= '0;
+    m_eth_tkeep  <= '0;
+    m_eth_tvalid <= 1'b0;
+    m_eth_tlast  <= 1'b0;
+  end
+
   initial begin
-    i_vip.set_master_mode();
-    i_vip.IF.reset();
+    m_eth_tdata  = '0;
+    m_eth_tkeep  = '0;
+    m_eth_tvalid = 1'b0;
+    m_eth_tlast  = 1'b0;
   end
 
   // synthesis translate_on

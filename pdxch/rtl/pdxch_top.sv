@@ -70,7 +70,8 @@ module pdxch_top #(
   logic         ctrl_phase_comp_we_s [ NUM_CC];
   logic         ctrl_phase_comp_en_d;
 
-  logic         s0_cnt               [NUM_ANT];
+  logic         unused_bfp_err_unexpected_tlast [NUM_ANT];
+  wire          unused_defm_tdest = &{1'b0, s_defm_data_tdest};
 
   logic [127:0] s0_axis_tdata        [NUM_ANT];
   logic [ 15:0] s0_axis_tkeep        [NUM_ANT];
@@ -118,25 +119,27 @@ module pdxch_top #(
             .ctrl_ud_iq_width    (ctrl_ud_iq_width),
             .ctrl_fs_offset      (ctrl_fs_offset),
             //
-            .err_unexpected_tlast()
+            .err_unexpected_tlast(unused_bfp_err_unexpected_tlast[ant])
         );
 
       end else begin : g_no_bfp
+
+        logic s0_cnt;
 
         // We need to combine two 64-bit into one 128-bit and send to next module
 
         always_ff @(posedge clk_eth_xran) begin
           if (rst_eth_xran) begin
-            s0_cnt[ant] <= 1'b0;
+            s0_cnt <= 1'b0;
           end else if (s_defm_data_tvalid[ant] && s_defm_data_tlast[ant]) begin
-            s0_cnt[ant] <= 1'b0;
+            s0_cnt <= 1'b0;
           end else if (s_defm_data_tvalid[ant]) begin
-            s0_cnt[ant] <= ~s0_cnt[ant];
+            s0_cnt <= ~s0_cnt;
           end
         end
 
         always_ff @(posedge clk_eth_xran) begin
-          if (s_defm_data_tvalid[ant] && ~s0_cnt[ant]) begin
+          if (s_defm_data_tvalid[ant] && ~s0_cnt) begin
             s0_axis_tdata[ant][63:0] <= s_defm_data_tdata[ant];
             s0_axis_tkeep[ant][7:0]  <= s_defm_data_tkeep[ant];
           end else if (s_defm_data_tvalid[ant]) begin
@@ -153,7 +156,7 @@ module pdxch_top #(
         end
 
         always_ff @(posedge clk_eth_xran) begin
-          s0_axis_tvalid[ant] = s_defm_data_tvalid[ant] && s0_cnt[ant];
+          s0_axis_tvalid[ant] <= s_defm_data_tvalid[ant] && s0_cnt;
         end
 
         assign s_defm_data_tready[ant] = 1'b1;

@@ -52,6 +52,7 @@ module prach_framer #(
   logic        s1_axis_tlast;
   logic [31:0] s1_axis_tuser;
   logic        s1_axis_tvalid;
+  logic        fifo_err_discard;
 
   // Main
 
@@ -144,9 +145,11 @@ module prach_framer #(
       .m_axis_tuser  (m_axis_tuser),
       .m_axis_tvalid (m_axis_tvalid),
       .m_axis_tready (m_axis_tready),
+      .err_discard   (fifo_err_discard)
       //
-      .err_discard   ()
   );
+
+  wire unused_framer = &{1'b0, rst_eth_xran, fifo_err_discard};
 
 endmodule
 

@@ -30,7 +30,6 @@ module fft_bf2 #(
 
   localparam integer DelayWidth = DATA_WIDTH * 2;
   localparam integer DelayDepth = (1 << (LOG_FFT_SIZE + $clog2(NUM_ANT) - 1));
-  localparam integer Latency = DelayDepth + 1;
 
   // Signals
 
@@ -108,7 +107,7 @@ module fft_bf2 #(
     end
   end
 
-  assign first_half_last = (counter_ch == 'd0) && (counter == (1 << (LOG_FFT_SIZE - 1)));
+  assign first_half_last = (counter_ch == 'd0) && (counter == LOG_FFT_SIZE'(1 << (LOG_FFT_SIZE - 1)));
 
   always @(posedge clk) begin
     if (rst) begin
@@ -147,7 +146,7 @@ module fft_bf2 #(
     if (ctrl_bypass) begin
       dv <= din_dv;
     end else begin
-      dv <= (first_half_last || state2) && (counter_ch2 < NUM_ANT);
+      dv <= (first_half_last || state2) && (counter_ch2 < 4'(NUM_ANT));
     end
   end
 
@@ -157,11 +156,11 @@ module fft_bf2 #(
   always @(*) begin
     if (sel) begin
       // Second half
-      x1r_s = x1r - din_dr;
-      x1i_s = x1i - din_di;
+      x1r_s = {x1r[DATA_WIDTH-1], x1r} - {din_dr[DATA_WIDTH-1], din_dr};
+      x1i_s = {x1i[DATA_WIDTH-1], x1i} - {din_di[DATA_WIDTH-1], din_di};
     end else begin
-      x1r_s = din_dr;
-      x1i_s = din_di;
+      x1r_s = {din_dr[DATA_WIDTH-1], din_dr};
+      x1i_s = {din_di[DATA_WIDTH-1], din_di};
     end
   end
 
@@ -169,11 +168,11 @@ module fft_bf2 #(
   always @(*) begin
     if (sel) begin
       // First half
-      x2r_s = x1r + din_dr;
-      x2i_s = x1i + din_di;
+      x2r_s = {x1r[DATA_WIDTH-1], x1r} + {din_dr[DATA_WIDTH-1], din_dr};
+      x2i_s = {x1i[DATA_WIDTH-1], x1i} + {din_di[DATA_WIDTH-1], din_di};
     end else begin
-      x2r_s = x1r;
-      x2i_s = x1i;
+      x2r_s = {x1r[DATA_WIDTH-1], x1r};
+      x2i_s = {x1i[DATA_WIDTH-1], x1i};
     end
   end
 
@@ -184,7 +183,7 @@ module fft_bf2 #(
         x2i <= din_di;
       end
     end else begin
-      if ((first_half_last || state2) && (counter_ch2 < NUM_ANT)) begin
+      if ((first_half_last || state2) && (counter_ch2 < 4'(NUM_ANT))) begin
         x2r <= x2r_s[DATA_WIDTH-1:0];
         x2i <= x2i_s[DATA_WIDTH-1:0];
       end
@@ -199,7 +198,7 @@ module fft_bf2 #(
   // For smaller FFT size, choose register based delay for optimized resource
   // and lower latency. For big FFT size, choose RAMs based implementation
 
-  assign shift = ctrl_bypass ? 1'b0 : ((counter_ch < NUM_ANT) && (counter_ch2 < NUM_ANT));
+  assign shift = ctrl_bypass ? 1'b0 : ((counter_ch < 4'(NUM_ANT)) && (counter_ch2 < 4'(NUM_ANT)));
 
   if (DelayDepth <= 128) begin : g_srl
 

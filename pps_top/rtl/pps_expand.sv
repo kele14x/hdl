@@ -20,7 +20,9 @@ module pps_expand (
   // Extern the pps pulse longer for output to pad
 
   always_ff @(posedge clk) begin
-    if (pps_in) begin
+    if (rst) begin
+      pps_ext <= '0;
+    end else if (pps_in) begin
       pps_ext <= 1;
     end else if (|pps_ext) begin
       pps_ext <= pps_ext + 1;
@@ -28,7 +30,11 @@ module pps_expand (
   end
 
   always_ff @(posedge clk) begin
-    pps_reg <= |pps_ext;
+    if (rst) begin
+      pps_reg <= 1'b0;
+    end else begin
+      pps_reg <= |pps_ext;
+    end
   end
 
   assign pps_out_pad = pps_reg;

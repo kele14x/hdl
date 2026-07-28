@@ -198,7 +198,7 @@ def test_rts_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
-        build_args=["--timing", "-Wno-WIDTHTRUNC", "-Wno-WIDTHEXPAND", "-Wno-REALCVT", "-Wno-PINMISSING", "-Wno-MULTIDRIVEN"],
+        build_args=[],
         waves=True,
         always=True,
     )

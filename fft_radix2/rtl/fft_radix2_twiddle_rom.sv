@@ -6,8 +6,7 @@
 
 module fft_radix2_twiddle_rom #(
     parameter int TWIDDLE_WIDTH = 4,
-    parameter int DATA_WIDTH    = 16,
-    parameter int PHASE_WIDTH   = 16
+    parameter int DATA_WIDTH    = 16
 ) (
     input var                             clk,
     input var                             rst,
@@ -19,7 +18,6 @@ module fft_radix2_twiddle_rom #(
     output var signed [   DATA_WIDTH-1:0] twiddle_q_out
 );
 
-  localparam int LATENCY = 2;
   localparam real PI = 3.14159265359;
 
 
@@ -48,8 +46,8 @@ module fft_radix2_twiddle_rom #(
   // TODO: reduce ROM usage using equation: -sin(x) = cos(pi/2+x)
   initial begin : p_init
     for (int i = 0; i < 2 ** TWIDDLE_WIDTH; i++) begin
-      COS_ROM[i] = (2 ** (DATA_WIDTH - 2)) * $cos(2 * PI * i / 2 ** TWIDDLE_WIDTH);
-      SIN_ROM[i] = -(2 ** (DATA_WIDTH - 2)) * $sin(2 * PI * i / 2 ** TWIDDLE_WIDTH);
+      COS_ROM[i] = DATA_WIDTH'($rtoi((2 ** (DATA_WIDTH - 2)) * $cos(2 * PI * i / 2 ** TWIDDLE_WIDTH)));
+      SIN_ROM[i] = DATA_WIDTH'($rtoi(-(2 ** (DATA_WIDTH - 2)) * $sin(2 * PI * i / 2 ** TWIDDLE_WIDTH)));
     end
   end
 

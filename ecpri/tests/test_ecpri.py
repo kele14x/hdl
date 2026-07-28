@@ -189,10 +189,6 @@ def test_ecpri_runner():
         verilog_sources=verilog_sources,
         parameters=parameters,
         build_args=[
-            "--timing",
-            "-Wno-WIDTHEXPAND",
-            "-Wno-WIDTHTRUNC",
-            "-Wno-MULTIDRIVEN",
             f"-I{prj_path / 'rtl'}",
         ],
         waves=True,

@@ -173,9 +173,9 @@ module ecpri_framer_odm (
           // [15:0] tx_ptp_tag_field = {s_odm_actiontype, s_odm_measurementid}
           // [17:16] tx_ptp_1588op    = 2'd2;
           if (s_odm_actiontype == 8'h01) begin  // REQUEST_WITH_FOLLOW_UP
-            m_axis_tuser <= {8'd0, 8'd2, s_odm_actiontype, s_odm_measurementid};
+            m_axis_tuser <= {2'd2, s_odm_actiontype, s_odm_measurementid};
           end else begin
-            m_axis_tuser <= 32'b0;
+            m_axis_tuser <= 18'd0;
           end
         end
       end
@@ -202,12 +202,12 @@ module ecpri_framer_odm (
         if (m_axis_tready) begin
           if (ctrl_has_vlan) begin
             // state_next == S_VLAN
-            m_axis_tdata <= byte_reverse({EtherTypeVlan, ctrl_vlan_tag});
+            m_axis_tdata <= byte_reverse({`ECPRI_ETHERTYPE_VLAN, ctrl_vlan_tag});
             m_axis_tkeep <= 4'b1111;
             m_axis_tlast <= 1'b0;
           end else begin
             // state_next == S_ETYPE_COMMH
-            m_axis_tdata <= byte_reverse({EtherTypeEcpri, EcpriHeader[31:16]});
+            m_axis_tdata <= byte_reverse({`ECPRI_ETHERTYPE_ECPRI, EcpriHeader[31:16]});
             m_axis_tkeep <= 4'b1111;
             m_axis_tlast <= 1'b0;
           end
@@ -217,7 +217,7 @@ module ecpri_framer_odm (
       S_VLAN: begin
         if (m_axis_tready) begin
           // state_next == S_ETYPE_COMMH
-          m_axis_tdata <= byte_reverse({EtherTypeEcpri, EcpriHeader[31:16]});
+          m_axis_tdata <= byte_reverse({`ECPRI_ETHERTYPE_ECPRI, EcpriHeader[31:16]});
           m_axis_tkeep <= 4'b1111;
           m_axis_tlast <= 1'b0;
         end
@@ -280,7 +280,7 @@ module ecpri_framer_odm (
   end
 
   always @(posedge clk) begin
-    m_axis_tvalid = (
+    m_axis_tvalid <= (
       state_next == S_DMACH || state_next == S_DMACL_SMACH ||
       state_next == S_SMACL || state_next == S_VLAN || state_next == S_ETYPE_COMMH ||
       state_next == S_COMML_DATA0 || state_next == S_DATA1 || state_next == S_DATA2 ||

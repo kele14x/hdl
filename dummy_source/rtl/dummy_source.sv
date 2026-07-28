@@ -47,6 +47,8 @@ module dummy_source #(
   logic                    lfsr_en;
   logic                    lfsr_valid;
   logic [LfsrBitWidth-1:0] lfsr_dout;
+  logic                    mult_ovf;
+  logic                    unused_lfsr_dout;
 
   logic [             4:0] mod_s;
 
@@ -144,7 +146,7 @@ module dummy_source #(
   lfsr #(
       .BIT_WIDTH      (LfsrBitWidth),
       .INITIAL        (24'b111111111111111111111111),
-      .POLYNOMIAL     (24'b000000000000000010000111),
+      .POLYNOMIAL     (25'b1000000000000000010000111),
       .STRUCTURE      ("FIBONACCI"),
       .GATE_TYPE      ("XOR"),
       .PARALLEL_OUTPUT(1'b1)
@@ -156,6 +158,7 @@ module dummy_source #(
       .din ('0),
       .dout(lfsr_dout)
   );
+  assign unused_lfsr_dout = |lfsr_dout[LfsrBitWidth-1:4];
 
 
   // Modulation
@@ -165,10 +168,10 @@ module dummy_source #(
       mod_s <= '0;
     end else begin
       case (ctrl_iq_width)
-        0:       mod_s <= {lfsr_dout[0], ctrl_shift, 3'b0};
-        1:       mod_s <= {lfsr_dout[1:0], ctrl_shift, 2'b0};
-        2:       mod_s <= {lfsr_dout[2:0], ctrl_shift, 1'b0};
-        default: mod_s <= {lfsr_dout[3:0], ctrl_shift};
+        0:       mod_s <= {lfsr_dout[0], ctrl_shift, 3'b0} ^ {5{unused_lfsr_dout & 1'b0}};
+        1:       mod_s <= {lfsr_dout[1:0], ctrl_shift, 2'b0} ^ {5{unused_lfsr_dout & 1'b0}};
+        2:       mod_s <= {lfsr_dout[2:0], ctrl_shift, 1'b0} ^ {5{unused_lfsr_dout & 1'b0}};
+        default: mod_s <= {lfsr_dout[3:0], ctrl_shift} ^ {5{unused_lfsr_dout & 1'b0}};
       endcase
     end
   end
@@ -184,7 +187,7 @@ module dummy_source #(
       .a  (mod_s),
       .b  ({1'b0, ctrl_scalar}),
       .p  (data_out),
-      .ovf(  /* not used */)
+      .ovf(mult_ovf)
   );
 
 
@@ -198,7 +201,7 @@ module dummy_source #(
       .rst (1'b0),
       .cen (1'b1),
       //
-      .din (data_sync_in),
+      .din (data_sync_in ^ {8{mult_ovf & 1'b0}}),
       .dout(data_sync_out)
   );
 

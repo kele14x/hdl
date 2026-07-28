@@ -38,6 +38,15 @@ module oran_deframer_dl_ss_symnum (
 
   logic [31:0] app_header;
 
+  wire unused_app_fields = &{
+    1'b0,
+    s_axis_tdata_reversed[31:0],
+    app_datadirection,
+    app_payloadversion,
+    app_filterindex,
+    app_frameid
+  };
+
   //
   // This function reverse byte order of 64-bit data
   //
@@ -81,7 +90,7 @@ module oran_deframer_dl_ss_symnum (
   } = app_header;
 
   // TODO: this only for mu = 1
-  assign app_symbol_num = (app_subframeid * 28 + app_slotid * 14 + app_symbolid);
+  assign app_symbol_num = ({5'b0, app_subframeid} * 9'd28) + ({3'b0, app_slotid} * 9'd14) + {3'b0, app_symbolid};
 
   assign app_header = s_axis_tdata_reversed[63:32];
 

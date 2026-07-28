@@ -105,6 +105,21 @@ module oran_framer_ul_ss_adaptor #(
 
   logic [AddrWidth-2:0] syml_rd_addr_max;
 
+  logic [         31:0] ram_douta;
+  logic                 ram_dbiterra;
+  logic                 ram_sbiterra;
+  logic                 ram_dbiterrb;
+  logic                 ram_sbiterrb;
+
+  wire unused_ram_outputs = &{
+    1'b0,
+    ram_douta,
+    ram_dbiterra,
+    ram_sbiterra,
+    ram_dbiterrb,
+    ram_sbiterrb
+  };
+
   logic                 m_axis_tlast_pre;
 
 
@@ -190,7 +205,7 @@ module oran_framer_ul_ss_adaptor #(
 
   always_ff @(posedge clk) begin
     if (state == S_IDLE && req_valid) begin
-      syml_rd_addr_max <= ({1'b0, req_startprb} + {3'b0, req_numprb}) * 6 - 1 + ctrl_syml_rd_shift;
+      syml_rd_addr_max <= (AddrWidth - 1)'((32'({1'b0, req_startprb}) + 32'({3'b0, req_numprb})) * 32'd6 - 32'd1 + 32'(ctrl_syml_rd_shift));
     end
   end
 
@@ -283,9 +298,9 @@ module oran_framer_ul_ss_adaptor #(
 
   always_ff @(posedge clk) begin
     if (state == S_IDLE && req_valid) begin
-      syml_rd_addr <= {1'b0, req_startprb} * 6 + ctrl_syml_rd_shift;
+      syml_rd_addr <= (AddrWidth - 1)'({1'b0, req_startprb} * 6 + ctrl_syml_rd_shift);
     end else if (state == S_WR) begin
-      syml_rd_addr <= syml_rd_addr + 1;
+      syml_rd_addr <= syml_rd_addr + {{(AddrWidth - 2){1'b0}}, 1'b1};
     end
   end
 
@@ -371,13 +386,13 @@ module oran_framer_ul_ss_adaptor #(
       .addra         (syml_wr_addr_f),
       .regcea        (1'b1),
       .dina          (syml_wr_data),
-      .douta         (),
+      .douta         (ram_douta),
       //
       .injectdbiterra('0),
       .injectsbiterra('0),
+      .dbiterra      (ram_dbiterra),
+      .sbiterra      (ram_sbiterra),
       //
-      .dbiterra      (),
-      .sbiterra      (),
       // Read side
       .clkb          (clk),
       .rstb          (~syml_rd_en_d),
@@ -390,9 +405,9 @@ module oran_framer_ul_ss_adaptor #(
       //
       .injectdbiterrb('0),
       .injectsbiterrb('0),
+      .dbiterrb      (ram_dbiterrb),
+      .sbiterrb      (ram_sbiterrb),
       //
-      .dbiterrb      (),
-      .sbiterrb      (),
       //
       .sleep         ('0)
   );

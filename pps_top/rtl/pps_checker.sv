@@ -8,12 +8,10 @@ module pps_checker (
     //
     input var         pps_in,
     //
-    input var  [47:0] sys_timer_s,
     input var  [31:0] sys_timer_ns,
     // CSR
     //----
     input var         ctrl_clk,
-    input var         ctrl_rst,
     //
     output var [31:0] stat_pps_offset
 );
@@ -31,6 +29,7 @@ module pps_checker (
   logic [31:0] stat_pps_offset_in;
   logic        stat_pps_offset_send;
   logic        stat_pps_offset_rcv;
+  wire         unused_stat_pps_offset_req;
 
 
   // Clear 1PPS glitch
@@ -99,7 +98,7 @@ module pps_checker (
       //
       .dest_clk(ctrl_clk),
       .dest_out(stat_pps_offset),
-      .dest_req(  /* not used */),
+      .dest_req(unused_stat_pps_offset_req),
       .dest_ack(1'b0)
   );
 

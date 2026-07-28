@@ -43,6 +43,8 @@ module oran_deframer_dl_ss_readout (
 
   logic m_axis_tvalid_s;
 
+  wire unused_m_axis_tready = &{1'b0, m_axis_tready};
+
   typedef enum int {
     S_RST,     // Under reset
     S_IDLE,    // Wait for start of symbol
@@ -85,7 +87,7 @@ module oran_deframer_dl_ss_readout (
     section_numprbu
   } = hdr_buffer_rd_dout;
 
-  assign iq_width = ctrl_ud_comp_meth == 0 ? 16 : ctrl_ud_iq_width;
+  assign iq_width = ctrl_ud_comp_meth == 0 ? 5'd16 : {1'b0, ctrl_ud_iq_width};
 
 
   // FSM
@@ -157,7 +159,7 @@ module oran_deframer_dl_ss_readout (
     if (rst | timer_sos) begin
       buffer_rd_addr <= '0;
     end else if (buffer_rd_en) begin
-      buffer_rd_addr <= buffer_rd_addr + 1;
+      buffer_rd_addr <= buffer_rd_addr + 11'd1;
     end
   end
 
@@ -165,9 +167,9 @@ module oran_deframer_dl_ss_readout (
     if (state_next == S_RD_DATA) begin
       if (section_hbyte == 0) begin
         buffer_rd_en <= 1'b1;
-      end else if (section_re2 == 5 && {1'b0, section_hbyte} + (iq_width == 16 ? iq_width : iq_width + 2) > 16) begin
+      end else if (section_re2 == 5 && {1'b0, section_hbyte} + ((iq_width == 5'd16) ? iq_width : iq_width + 5'd2) > 5'd16) begin
         buffer_rd_en <= 1'b1;
-      end else if ({1'b0, section_hbyte} + iq_width > 16) begin
+      end else if ({1'b0, section_hbyte} + iq_width > 5'd16) begin
         buffer_rd_en <= 1'b1;
       end else begin
         buffer_rd_en <= 1'b0;
@@ -191,7 +193,7 @@ module oran_deframer_dl_ss_readout (
     if (rst | timer_sos) begin
       hdr_buffer_rd_addr <= '0;
     end else if (state == S_RD_HDR) begin
-      hdr_buffer_rd_addr <= hdr_buffer_rd_addr + 1;
+      hdr_buffer_rd_addr <= hdr_buffer_rd_addr + 4'd1;
     end
   end
 
@@ -206,7 +208,7 @@ module oran_deframer_dl_ss_readout (
   //
   always_ff @(posedge clk) begin
     if (state == S_CHK_HDR && section_valid) begin
-      section_size <= section_numprbu;
+      section_size <= {6'b0, section_numprbu};
     end
   end
 
@@ -215,7 +217,7 @@ module oran_deframer_dl_ss_readout (
     if (state == S_CHK_HDR) begin
       section_count <= '0;
     end else if (state == S_RD_DATA && section_re2 == 5) begin
-      section_count <= section_count + 1;
+      section_count <= section_count + 14'd1;
     end
   end
 
@@ -223,19 +225,19 @@ module oran_deframer_dl_ss_readout (
     if (state == S_CHK_HDR) begin
       section_re2 <= '0;
     end else if (state == S_RD_DATA && section_re2 == 5) begin
-      section_re2 <= 0;
+      section_re2 <= 3'd0;
     end else if (state == S_RD_DATA) begin
-      section_re2 <= section_re2 + 1;
+      section_re2 <= section_re2 + 3'd1;
     end
   end
 
   always_ff @(posedge clk) begin
     if (state == S_CHK_HDR) begin
-      section_hbyte <= iq_width == 16 ? iq_width : iq_width + 2;
+      section_hbyte <= 4'((iq_width == 5'd16) ? iq_width : iq_width + 5'd2);
     end else if (state == S_RD_DATA && section_re2 == 5) begin
-      section_hbyte <= section_hbyte + (iq_width == 16 ? iq_width : iq_width + 2);
+      section_hbyte <= 4'({1'b0, section_hbyte} + ((iq_width == 5'd16) ? iq_width : iq_width + 5'd2));
     end else if (state == S_RD_DATA) begin
-      section_hbyte <= section_hbyte + iq_width;
+      section_hbyte <= 4'({1'b0, section_hbyte} + iq_width);
     end
   end
 

@@ -97,7 +97,7 @@ def test_fifo_async_runner(params):
 
     build_args = []
     if SIM == "verilator":
-        build_args = ["--timing", "-Wno-WIDTHTRUNC", "-Wno-MULTIDRIVEN"]
+        build_args = []
 
     runner = get_runner(SIM)
     with tempfile.TemporaryDirectory(prefix="fifo_async_param_") as run_dir:

@@ -14,7 +14,6 @@ module pps_ts_checker (
     // Control & Status
     //-----------------
     input var         ctrl_clk,
-    input var         ctrl_rst,
     //
     output var [31:0] stat_ts_cnt,
     output var [47:0] stat_ts_offset
@@ -36,6 +35,9 @@ module pps_ts_checker (
   logic signed [47:0] offset_acc;
   logic               offset_acc_send;
   logic               offset_acc_rcv;
+
+  wire                unused_ts_cnt_req;
+  wire                unused_offset_acc_req;
 
 
   
@@ -113,7 +115,7 @@ module pps_ts_checker (
       //
       .dest_clk(ctrl_clk),
       .dest_out(stat_ts_cnt),
-      .dest_req(),
+      .dest_req(unused_ts_cnt_req),
       .dest_ack(1'b0)
   );
 
@@ -125,7 +127,7 @@ module pps_ts_checker (
     if (pps_in_d) begin
       offset_acc <= '0;
     end else if (ts_valid2) begin
-      offset_acc <= offset_acc + ts_diff2;
+      offset_acc <= offset_acc + {{16{ts_diff2[31]}}, ts_diff2};
     end
   end
 
@@ -154,7 +156,7 @@ module pps_ts_checker (
       //
       .dest_clk(ctrl_clk),
       .dest_out(stat_ts_offset),
-      .dest_req(),
+      .dest_req(unused_offset_acc_req),
       .dest_ack(1'b0)
   );
 

@@ -27,6 +27,8 @@ module oran_deframer_eth_odm (
 
   import oran_pkg::*;
 
+  wire unused_tkeep = &{1'b0, s_axis_tkeep};
+
   // FSM
 
   typedef enum int {

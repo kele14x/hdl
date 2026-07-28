@@ -47,17 +47,19 @@ module axis_reg #(
 
   // Signals
 
-  reg [  DATA_WIDTH-1:0] tdata_d;
-  reg [DATA_WIDTH/8-1:0] tkeep_d;
-  reg [  USER_WIDTH-1:0] tuser_d;
-  reg                    tlast_d;
+  localparam integer USER_KEEP_WIDTH = USER_WIDTH > 0 ? USER_WIDTH : 1;
 
-  reg                    tvalid_d;
+  reg [        DATA_WIDTH-1:0] tdata_d;
+  reg [      DATA_WIDTH/8-1:0] tkeep_d;
+  reg [USER_KEEP_WIDTH-1:0] tuser_d;
+  reg                        tlast_d;
 
-  reg [  DATA_WIDTH-1:0] tdata_s;
-  reg [DATA_WIDTH/8-1:0] tkeep_s;
-  reg [  USER_WIDTH-1:0] tuser_s;
-  reg                    tlast_s;
+  reg                        tvalid_d;
+
+  reg [        DATA_WIDTH-1:0] tdata_s;
+  reg [      DATA_WIDTH/8-1:0] tkeep_s;
+  reg [USER_KEEP_WIDTH-1:0] tuser_s;
+  reg                        tlast_s;
 
   reg                    tvalid_d_next;
 

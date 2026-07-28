@@ -28,6 +28,8 @@ module prach_fft_ditfft2_bf #(
   localparam int DelayDepth = FFT_SIZE / 2;
 
   localparam int Latency = DelayDepth + 1;
+  localparam logic [CounterWidth-1:0] LastCount = CounterWidth'(FFT_SIZE - 1);
+  localparam logic [CounterWidth-1:0] HalfCount = CounterWidth'(FFT_SIZE / 2);
 
   // Signals
 
@@ -64,14 +66,14 @@ module prach_fft_ditfft2_bf #(
     if (rst) begin
       cnt <= 0;
     end else if (din_dv || state) begin
-      cnt <= (cnt >= FFT_SIZE - 1) ? '0 : (cnt + 1'd1);
+      cnt <= (cnt >= LastCount) ? '0 : (cnt + 1'd1);
     end
   end
 
   always_ff @(posedge clk) begin
     if (rst) begin
       state <= 0;
-    end else if (cnt >= FFT_SIZE - 1) begin
+    end else if (cnt >= LastCount) begin
       state <= 1'b0;
     end else if (din_dv) begin
       state <= 1'b1;
@@ -79,22 +81,22 @@ module prach_fft_ditfft2_bf #(
   end
 
   // sel marks the first half and second half of input data
-  assign sel = !(cnt < FFT_SIZE / 2);
+  assign sel = !(cnt < HalfCount);
 
-  assign first_half_last = (cnt == FFT_SIZE / 2);
+  assign first_half_last = (cnt == HalfCount);
 
   always_ff @(posedge clk) begin
     if (rst) begin
       cnt2 <= 0;
     end else if (first_half_last || state2) begin
-      cnt2 <= (cnt2 >= FFT_SIZE - 1) ? '0 : cnt2 + 1'd1;
+      cnt2 <= (cnt2 >= LastCount) ? '0 : cnt2 + 1'd1;
     end
   end
 
   always_ff @(posedge clk) begin
     if (rst) begin
       state2 <= 0;
-    end else if (cnt2 >= FFT_SIZE - 1) begin
+    end else if (cnt2 >= LastCount) begin
       state2 <= 1'b0;
     end else if (first_half_last) begin
       state2 <= 1'b1;
@@ -112,8 +114,8 @@ module prach_fft_ditfft2_bf #(
       x1i_s = x1i - din_di;
     end else begin
       // x0s, x0s + x1s
-      x1r_s = din_dr;
-      x1i_s = din_di;
+      x1r_s = {din_dr[DATA_WIDTH-1], din_dr};
+      x1i_s = {din_di[DATA_WIDTH-1], din_di};
     end
   end
 
@@ -124,8 +126,8 @@ module prach_fft_ditfft2_bf #(
       x2i_s = x1i + din_di;
     end else begin
       // x0s - x1s
-      x2r_s = x1r;
-      x2i_s = x1i;
+      x2r_s = {x1r[DATA_WIDTH-1], x1r};
+      x2i_s = {x1i[DATA_WIDTH-1], x1i};
     end
   end
 
@@ -182,6 +184,8 @@ module prach_fft_ditfft2_bf #(
   assign dout_di = x2i;
   assign dout_dv = dv;
   assign ovf     = ovf_r;
+
+  wire unused_ditfft2_bf = &{1'b0, 32'(Latency), x1r_s[DATA_WIDTH], x1i_s[DATA_WIDTH]};
 
 endmodule
 

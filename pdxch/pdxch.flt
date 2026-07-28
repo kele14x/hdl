@@ -1,3 +1,4 @@
+../cmult/cmult.flt
 rtl/pdxch.sv
 rtl/pdxch_block2stream.sv
 rtl/pdxch_channel.sv

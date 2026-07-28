@@ -39,7 +39,7 @@ module ecpri_odm (
     output wire [47:0] stat_ts_diff_egress_sec
 );
 
-  `include "ecpri_pkg.vh"
+  wire unused_inputs = &{1'b0, s_odm_compensation, ctrl_rst};
 
   // Note
 
@@ -88,6 +88,8 @@ module ecpri_odm (
 
   wire        ctrl_en_s;
   wire [31:0] ctrl_meas_interval_s;
+  wire [ 1:0] unused_stat_src_ready;
+  wire [ 1:0] unused_stat_dest_valid;
 
   reg  [31:0] timer;
   reg         timer_tick;
@@ -335,11 +337,11 @@ module ecpri_odm (
       .src_clk   (clk),
       .src_in    (ts_diff_ingress_wrap),
       .src_valid (ts_diff_ingress_wrap_valid),
-      .src_ready (),
+      .src_ready (unused_stat_src_ready[0]),
       //
       .dest_clk  (ctrl_clk),
       .dest_out  ({stat_ts_diff_ingress_sec, stat_ts_diff_ingress_ns}),
-      .dest_valid(  /* not used */),
+      .dest_valid(unused_stat_dest_valid[0]),
       .dest_ready(1'b1)
   );
 
@@ -353,11 +355,11 @@ module ecpri_odm (
       .src_clk   (clk),
       .src_in    (ts_diff_egress_wrap),
       .src_valid (ts_diff_egress_wrap_valid),
-      .src_ready (),
+      .src_ready (unused_stat_src_ready[1]),
       //
       .dest_clk  (ctrl_clk),
       .dest_out  ({stat_ts_diff_egress_sec, stat_ts_diff_egress_ns}),
-      .dest_valid(  /* not used */),
+      .dest_valid(unused_stat_dest_valid[1]),
       .dest_ready(1'b1)
   );
 

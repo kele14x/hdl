@@ -115,14 +115,9 @@ module oran_deframer #(
 
   localparam int NumDest = NUM_ANTENNA_PORT * NUM_CC;
 
-  // Timing signals for each CC
+  assign defm_ready = 1'b1;
 
-  logic               start_of_frame       [           NUM_CC];
-  logic               start_of_symbol      [           NUM_CC];
-
-  logic [       14:0] current_sample       [           NUM_CC];
-  logic [        3:0] current_symbol       [           NUM_CC];
-  logic [        4:0] current_subframe_slot[           NUM_CC];
+  wire unused_frequency = &{1'b0, 32'(FREQUENCY)};
 
   // AXIS signal
 

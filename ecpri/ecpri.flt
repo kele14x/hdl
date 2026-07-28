@@ -22,7 +22,6 @@ rtl/ecpri_framer_trans.v
 rtl/ecpri_framer.v
 rtl/ecpri_if.v
 rtl/ecpri_odm.v
-rtl/ecpri_pkg.vh
 rtl/ecpri_regs.v
 rtl/ecpri_statistics.v
 rtl/ecpri_wrapper.v

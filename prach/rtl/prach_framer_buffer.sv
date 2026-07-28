@@ -122,7 +122,7 @@ module prach_framer_buffer #(
   // Rise the AP_REQ flag when one channel is written
 
   generate
-    for (genvar i = 0; i < NUM_ANT; i++) begin
+    for (genvar i = 0; i < NUM_ANT; i++) begin : g_ap
 
       always_ff @(posedge clk) begin
         if (rst) begin
@@ -223,7 +223,7 @@ module prach_framer_buffer #(
   always_ff @(posedge clk) begin
     if (rst) begin
       rd_en_any <= 1'b0;
-    end else if (|(ap_req && ap_ack)) begin
+    end else if (|(ap_req & ap_ack)) begin
       rd_en_any <= 1'b1;
     end else if (rd_done) begin
       rd_en_any <= 1'b0;
@@ -233,7 +233,7 @@ module prach_framer_buffer #(
   assign rd_done = (rd_addr == 431);
 
   generate
-    for (genvar i = 0; i < NUM_ANT; i++) begin
+    for (genvar i = 0; i < NUM_ANT; i++) begin : g_rd_en
 
       always_ff @(posedge clk) begin
         if (rst) begin
@@ -302,10 +302,12 @@ module prach_framer_buffer #(
   );
 
   always_ff @(posedge clk) begin
-    if (|(ap_req && ap_ack)) begin
+    if (|(ap_req & ap_ack)) begin
       m_axis_tuser <= {8'b0, 4'(CC_ID), 8'(ANT_ID), rd_section_id};
     end
   end
+
+  wire unused_framer_buffer = &{1'b0, din_sf, din_sl, din_last, wr_done};
 
 endmodule
 

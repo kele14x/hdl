@@ -188,7 +188,7 @@ def test_bfp_comp_runner():
         parameters=parameters,
         build_args=["-suppress", "2892"]
         if SIM == "questa"
-        else ["-Wno-WIDTHEXPAND", "-Wno-WIDTHTRUNC", "-Wno-MULTIDRIVEN"],
+        else [],
         waves=True,
         always=True,
     )

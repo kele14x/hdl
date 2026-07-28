@@ -24,6 +24,8 @@ module oran_framer_ul_ss_comp_exp (
     input var  [ 3:0] ud_iq_width
 );
 
+  wire unused_din_sync = &{1'b0, din_sync};
+
 
   //
   // This function get the max value out of 2
@@ -52,17 +54,20 @@ module oran_framer_ul_ss_comp_exp (
   //
   function static logic [3:0] get_msb(input logic [15:0] din);
     for (int i = 15; i > 0; i--) begin
-      if (din[i] ^ din[i-1]) return i;
+      if (din[i] ^ din[i-1]) return 4'(i);
     end
-    return 0;
+    return 4'd0;
   endfunction
 
   //
   // This function get shift value
   //
   function static logic [3:0] get_shift(input logic [3:0] msb, input logic [3:0] width);
-    get_shift = width == 0 ? 0 : 15 - msb;
-    get_shift = get_shift < 16 - width ? get_shift : 16 - width;
+    logic [4:0] max_shift;
+    logic [4:0] shift;
+    shift = (width == 4'd0) ? 5'd0 : 5'd15 - {1'b0, msb};
+    max_shift = 5'd16 - {1'b0, width};
+    return (shift < max_shift) ? shift[3:0] : max_shift[3:0];
   endfunction
 
   //
@@ -336,6 +341,12 @@ module oran_framer_ul_ss_comp_exp (
   logic       exp_fifo_wr;
   logic [7:0] exp_fifo_dout;
   logic       exp_fifo_rd;
+  logic       exp_fifo_full;
+
+  logic       data_fifo_full;
+  logic       data_fifo_empty;
+
+  wire unused_fifo_status = &{1'b0, exp_fifo_full, data_fifo_full, data_fifo_empty};
 
   assign exp_fifo_din = {shift2, exp2};
   assign exp_fifo_wr  = valid2 && (state2 == 5 || last2);
@@ -350,12 +361,12 @@ module oran_framer_ul_ss_comp_exp (
       .rst  (rst),
       //
       .din  (exp_fifo_din),
-      .wr_en(exp_fifo_wr),
-      .full (  /* not used */),
+      .wren(exp_fifo_wr),
+      .full (exp_fifo_full),
       //
       .dout (exp_fifo_dout),
       .empty(empty3),
-      .rd_en(exp_fifo_rd)
+      .rden(exp_fifo_rd)
   );
 
   fifo_srl #(
@@ -365,12 +376,12 @@ module oran_framer_ul_ss_comp_exp (
       .rst  (rst),
       //
       .din  ({din_last, din_data}),
-      .wr_en(din_valid),
-      .full (  /* not used */),
+      .wren(din_valid),
+      .full (data_fifo_full),
       //
       .dout (fifo3),
-      .empty(  /* not used */),
-      .rd_en(valid3)
+      .empty(data_fifo_empty),
+      .rden(valid3)
   );
 
 endmodule

@@ -51,6 +51,8 @@ module puxch_buffer #(
   logic        fifo_rden;
   logic [20:0] fifo_dout;
   logic        fifo_empty;
+  logic        fifo_full;
+  logic        fifo_err_discard;
 
   logic        fifo_req_valid;
   logic [ 8:0] fifo_req_startprb;
@@ -89,6 +91,8 @@ module puxch_buffer #(
   logic        s1_axis_tlast;
   logic        s1_axis_tvalid;
   logic        s1_axis_tready;
+  logic        fifo_m_axis_tuser;
+  logic        reg_m_axis_tuser;
 
 
   // CDC for control signals
@@ -154,7 +158,7 @@ module puxch_buffer #(
       // Write interface
       .wren (req_valid),
       .din  (req_data),
-      .full (  /* assume never full */),
+      .full (fifo_full),
       // Read interface
       .rden (fifo_rden),
       .dout (fifo_dout),
@@ -167,7 +171,7 @@ module puxch_buffer #(
 
   always_ff @(posedge clk_eth_xran) begin
     if (fifo_req_valid && fifo_req_ready) begin
-      fifo_req_endprb <= (fifo_req_numprb + fifo_req_startprb) * 6 - 1;
+      fifo_req_endprb <= (11'(fifo_req_numprb) + 11'(fifo_req_startprb)) * 11'd6 - 11'd1;
     end
   end
 
@@ -189,8 +193,8 @@ module puxch_buffer #(
       always_ff @(posedge clk) begin
         if (din_sy[cc]) begin
           wr_cnt[cc] <= 'd0;
-        end else if (din_dv[cc] && (din_chn[cc] == ID)) begin
-          wr_cnt[cc] <= wr_cnt[cc] + fft_size[cc];
+        end else if (din_dv[cc] && (din_chn[cc] == 4'(ID))) begin
+          wr_cnt[cc] <= wr_cnt[cc] + 12'(fft_size[cc]);
         end
       end
 
@@ -204,7 +208,7 @@ module puxch_buffer #(
       assign wr_addr[cc] = {wr_bank[cc], wr_cnt_rev[cc]};
 
       always_ff @(posedge clk) begin
-        wr_we[cc] <= din_dv[cc] && (din_chn[cc] == ID);
+        wr_we[cc] <= din_dv[cc] && (din_chn[cc] == 4'(ID));
       end
 
       always_ff @(posedge clk) begin
@@ -225,7 +229,7 @@ module puxch_buffer #(
 
         logic [10:0] rd_addr_s;
         logic        rd_en_s;
-        logic        rd_en_d;
+        logic        rd_en_s_d;
 
         assign wr_addr_s = {wr_addr[cc][12], wr_addr[cc][10:0]};
         assign wr_we_s   = wr_we[cc] && ~wr_addr[cc][11];
@@ -234,7 +238,7 @@ module puxch_buffer #(
         assign rd_en_s   = rd_en[cc] && ~rd_addr[10];
 
         always_ff @(posedge clk_eth_xran) begin
-          rd_en_d <= rd_en_s;
+          rd_en_s_d <= rd_en_s;
         end
 
         // wr_addr: [12]: bank, [11]: null, [10:0]: address
@@ -257,7 +261,7 @@ module puxch_buffer #(
             //
             .clkb (clk_eth_xran),
             .rstb (2'b00),
-            .enb  ({rd_en_d, rd_en_s}),
+            .enb  ({rd_en_s_d, rd_en_s}),
             .addrb(rd_addr_s),
             .doutb(rd_dout[cc])
         );
@@ -316,7 +320,7 @@ module puxch_buffer #(
   always_ff @(posedge clk_eth_xran) begin
     if (rst_eth_xran) begin
       rd_busy <= 1'b0;
-    end else if (fifo_req_valid && fifo_req_ready && (fifo_req_cc < NUM_CC)) begin
+    end else if (fifo_req_valid && fifo_req_ready && (fifo_req_cc < 4'(NUM_CC))) begin
       rd_busy <= 1'b1;
     end else if (&rd_cnt || (rd_cnt == fifo_req_endprb)) begin
       rd_busy <= 1'b0;
@@ -328,7 +332,7 @@ module puxch_buffer #(
   // Use ORAN-IP counted symbol number as bank
   always_ff @(posedge clk_eth_xran) begin
     if (fifo_req_valid && fifo_req_ready) begin
-      rd_bank <= s_ul_sym_num[fifo_req_cc][0];
+      rd_bank <= s_ul_sym_num[fifo_req_cc[1:0]][0];
     end
   end
 
@@ -405,7 +409,7 @@ module puxch_buffer #(
       .FIFO_DEPTH  (2048),
       .FIFO_LATENCY(2),
       .DATA_WIDTH  (64),
-      .USER_WIDTH  (0)
+      .USER_WIDTH  (1)
   ) u_fifo (
       .s_axis_aclk   (clk_eth_xran),
       .s_axis_aresetn(~rst_eth_xran),
@@ -421,17 +425,17 @@ module puxch_buffer #(
       .m_axis_tdata  (s1_axis_tdata),
       .m_axis_tkeep  (s1_axis_tkeep),
       .m_axis_tlast  (s1_axis_tlast),
-      .m_axis_tuser  (  /* not used */),
+      .m_axis_tuser  (fifo_m_axis_tuser),
       .m_axis_tvalid (s1_axis_tvalid),
       .m_axis_tready (s1_axis_tready),
+      .err_discard   (fifo_err_discard)
       //
-      .err_discard   ()
   );
 
   // Add axis_reg to improve timing
   axis_reg #(
       .DATA_WIDTH(64),
-      .USER_WIDTH(0)
+      .USER_WIDTH(1)
   ) u_axis_reg (
       .aclk         (clk_eth_xran),
       .aresetn      (~rst_eth_xran),
@@ -439,17 +443,19 @@ module puxch_buffer #(
       .s_axis_tdata (s1_axis_tdata),
       .s_axis_tkeep (s1_axis_tkeep),
       .s_axis_tlast (s1_axis_tlast),
-      .s_axis_tuser ('0),
+      .s_axis_tuser (1'b0),
       .s_axis_tvalid(s1_axis_tvalid),
       .s_axis_tready(s1_axis_tready),
       //
       .m_axis_tdata (m_axis_tdata),
       .m_axis_tkeep (m_axis_tkeep),
       .m_axis_tlast (m_axis_tlast),
-      .m_axis_tuser (  /* not used */),
+      .m_axis_tuser (reg_m_axis_tuser),
       .m_axis_tvalid(m_axis_tvalid),
       .m_axis_tready(m_axis_tready)
   );
+
+  wire unused_buffer = &{1'b0, rst, din_sl, m_fram_data_req[32:25], m_fram_data_req[6:4], fifo_full, fifo_err_discard, fifo_m_axis_tuser, reg_m_axis_tuser};
 
 endmodule
 

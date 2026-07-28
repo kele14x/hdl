@@ -38,6 +38,7 @@ module gain #(
   logic [GAIN_WIDTH-1:0] ctrl_gain_di_s[NUM_ANT];
 
   localparam int Latency = COMPLEX ? 6 : 5;
+  localparam int AntAddrWidth = $clog2(NUM_ANT);
 
   logic [          15:0] din_dr_d;
   logic [          15:0] din_di_d;
@@ -45,10 +46,15 @@ module gain #(
   logic [GAIN_WIDTH-1:0] ctrl_gain_dr_ch;
   logic [GAIN_WIDTH-1:0] ctrl_gain_di_ch;
 
+  logic unused_cmult_ovf;
+  logic unused_mult_dr_ovf;
+  logic unused_mult_di_ovf;
+  wire unused_real_gain_di = &{1'b0, ctrl_gain_di, ctrl_gain_di_s, ctrl_gain_di_ch};
+
   generate
     if (HAS_CDC) begin : g_dr_cdc
 
-      for (genvar i = 0; i < 4; i++) begin : g_ch
+      for (genvar i = 0; i < NUM_ANT; i++) begin : g_ch
         cdc_array_single #(
             .DEST_SYNC_FF (2),
             .INIT_SYNC_FF (0),
@@ -73,7 +79,7 @@ module gain #(
   generate
     if (HAS_CDC && COMPLEX) begin : g_di_cdc
 
-      for (genvar i = 0; i < 4; i++) begin : g_ch
+      for (genvar i = 0; i < NUM_ANT; i++) begin : g_ch
         cdc_array_single #(
             .DEST_SYNC_FF (2),
             .INIT_SYNC_FF (0),
@@ -101,7 +107,7 @@ module gain #(
 
   always_ff @(posedge clk) begin
     if (din_dv) begin
-      ctrl_gain_dr_ch <= ctrl_gain_dr_s[din_chn];
+      ctrl_gain_dr_ch <= ctrl_gain_dr_s[din_chn[AntAddrWidth-1:0]];
     end else begin
       ctrl_gain_dr_ch <= '0;
     end
@@ -117,7 +123,7 @@ module gain #(
 
       always_ff @(posedge clk) begin
         if (din_dv) begin
-          ctrl_gain_di_ch <= ctrl_gain_di_s[din_chn];
+          ctrl_gain_di_ch <= ctrl_gain_di_s[din_chn[AntAddrWidth-1:0]];
         end else begin
           ctrl_gain_di_ch <= '0;
         end
@@ -143,7 +149,7 @@ module gain #(
           .pr (dout_dr),
           .pi (dout_di),
           //
-          .ovf()
+          .ovf(unused_cmult_ovf)
       );
 
     end else begin : g_real
@@ -165,7 +171,7 @@ module gain #(
           .b  (ctrl_gain_dr_ch),
           .p  (dout_dr),
           //
-          .ovf()
+          .ovf(unused_mult_dr_ovf)
       );
 
       mult #(
@@ -183,7 +189,7 @@ module gain #(
           .b  (ctrl_gain_dr_ch),
           .p  (dout_di),
           //
-          .ovf()
+          .ovf(unused_mult_di_ovf)
       );
 
     end

@@ -38,7 +38,7 @@
 module lfsr #(
     parameter int                    BIT_WIDTH       = 8,
     parameter bit    [BIT_WIDTH-1:0] INITIAL         = 8'b11111111,
-    parameter bit    [  BIT_WIDTH:0] POLYNOMIAL      = 9'b100000011,
+    parameter bit    [  BIT_WIDTH:0] POLYNOMIAL      = {{(BIT_WIDTH-8){1'b0}}, 9'b100000011},
     parameter string                 STRUCTURE       = "FIBONACCI",  // "FIBONACCI" or "GALOIS"
     parameter string                 GATE_TYPE       = "XOR",        // "XOR" or "XNOR"
     parameter bit                    PARALLEL_OUTPUT = 1'b0
@@ -57,20 +57,17 @@ module lfsr #(
   initial begin
     assert(STRUCTURE == "FIBONACCI" || STRUCTURE == "GALOIS")
     else begin
-      $error("[%m]: LFSR structure (STRUCTURE) should be one of \"FIBONACCI\" or \"GALOIS\".");
-      #1 $finish();
+      $fatal(1, "[%m]: LFSR structure (STRUCTURE) should be one of \"FIBONACCI\" or \"GALOIS\".");
     end
 
     assert(GATE_TYPE == "XOR" || GATE_TYPE == "XNOR")
     else begin
-      $error("[%m]: Gate type (GATE_TYPE) should be one of \"XOR\" or \"XNOR\".");
-      #1 $finish();
+      $fatal(1, "[%m]: Gate type (GATE_TYPE) should be one of \"XOR\" or \"XNOR\".");
     end
 
     assert(POLYNOMIAL[0] == 1'b1 && POLYNOMIAL[BIT_WIDTH] == 1'b1)
     else begin
-      $error("[%m]: Feedback polynomial (POLYNOMIAL) should have MSB & LSB both set to 1.");
-      #1 $finish();
+      $fatal(1, "[%m]: Feedback polynomial (POLYNOMIAL) should have MSB & LSB both set to 1.");
     end
   end
 
@@ -110,9 +107,9 @@ module lfsr #(
       // Pick taps defined by polynomial and XOR (XNOR) them together as feedback
       always_comb begin
         if (GATE_TYPE == "XOR") begin
-          feedback = ^{lfsr_regs & POLYNOMIAL};
+          feedback = ^{lfsr_regs & POLYNOMIAL[BIT_WIDTH-1:0]};
         end else begin
-          feedback = ~^{lfsr_regs | ~POLYNOMIAL};
+          feedback = ~^{lfsr_regs | ~POLYNOMIAL[BIT_WIDTH-1:0]};
         end
       end
 

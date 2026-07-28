@@ -54,6 +54,11 @@ module oran_deframer_dl_ss_buffer #(
   logic                             r0_rd_en_d;
   logic [            DataWidth-1:0] r0_rd_dout;
 
+  logic                             ram_dbiterrb;
+  logic                             ram_sbiterrb;
+
+  wire unused_ram_status = &{1'b0, ram_dbiterrb, ram_sbiterrb};
+
 
   // Write side
   //-----------
@@ -63,7 +68,7 @@ module oran_deframer_dl_ss_buffer #(
   end
 
   always_ff @(posedge clk) begin
-    r0_wr_en <= s_axis_data_tvalid && (s_axis_data_tuser < BUFFER_SYMBOL);
+    r0_wr_en <= s_axis_data_tvalid && (int'(s_axis_data_tuser) < BUFFER_SYMBOL);
   end
 
   always_ff @(posedge clk) begin
@@ -71,7 +76,7 @@ module oran_deframer_dl_ss_buffer #(
   end
 
   generate
-    for (genvar i = 0; i < BUFFER_SYMBOL; i++) begin
+    for (genvar i = 0; i < BUFFER_SYMBOL; i++) begin : g_write_addr
 
       always_ff @(posedge clk) begin
         if (rst) begin
@@ -79,7 +84,7 @@ module oran_deframer_dl_ss_buffer #(
         end else if (buffer_rd_bank == i && timer_sos) begin
           r0_wr_addr[i] <= '0;
         end else if (r0_wr_en && (r0_wr_bank == i)) begin
-          r0_wr_addr[i] <= r0_wr_addr[i] + 1;
+          r0_wr_addr[i] <= r0_wr_addr[i] + 11'd1;
         end
       end
 
@@ -87,7 +92,7 @@ module oran_deframer_dl_ss_buffer #(
   endgenerate
 
   always_ff @(posedge clk) begin
-    r1_wr_addr <= r0_wr_addr[r0_wr_bank] + ctrl_buffer_addr_offset[r0_wr_bank];
+    r1_wr_addr <= AddrWidth'(r0_wr_addr[r0_wr_bank] + ctrl_buffer_addr_offset[r0_wr_bank]);
   end
 
   always_ff @(posedge clk) begin
@@ -104,11 +109,11 @@ module oran_deframer_dl_ss_buffer #(
   // Make sure we readout write bank (symbol), so pointer is managed by buffer
   // itself
   always_ff @(posedge clk) begin
-    r0_rd_addr <= buffer_rd_addr + ctrl_buffer_addr_offset[buffer_rd_bank];
+    r0_rd_addr <= AddrWidth'(buffer_rd_addr + ctrl_buffer_addr_offset[buffer_rd_bank]);
   end
 
   always_ff @(posedge clk) begin
-    if (buffer_rd_bank < BUFFER_SYMBOL) begin
+    if (int'(buffer_rd_bank) < BUFFER_SYMBOL) begin
       r0_rd_en <= buffer_rd_en;
     end else begin
       r0_rd_en <= 1'b0;
@@ -175,9 +180,9 @@ module oran_deframer_dl_ss_buffer #(
       .regceb        (r0_rd_en_d),
       .addrb         (r0_rd_addr),
       .doutb         (r0_rd_dout),
+      .dbiterrb      (ram_dbiterrb),
+      .sbiterrb      (ram_sbiterrb),
       //
-      .sbiterrb      (),
-      .dbiterrb      (),
       //
       .sleep         (1'b0)
   );

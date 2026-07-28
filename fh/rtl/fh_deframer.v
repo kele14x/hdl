@@ -59,6 +59,10 @@ module fh_deframer (
   wire        s0_message_tlast;
   wire        s0_message_tvalid;
 
+  wire        stat_corrupt_pkt;
+  wire        message_tuser_unused;
+  wire        unused_outputs = &{1'b0, stat_corrupt_pkt, message_tuser_unused};
+
   fh_deframer_demux i_demux (
       // Ethernet clock domain
       //----------------------
@@ -96,7 +100,7 @@ module fh_deframer (
       .m_message_tvalid      (s0_message_tvalid),
       // Control & Status
       //-----------------
-      .stat_corrupt_pkt      ()
+      .stat_corrupt_pkt      (stat_corrupt_pkt)
   );
 
   fh_deframer_buffer #(
@@ -160,7 +164,7 @@ module fh_deframer (
       .m_axis_tdata  (m_message_tdata),
       .m_axis_tkeep  (m_message_tkeep),
       .m_axis_tlast  (m_message_tlast),
-      .m_axis_tuser  (  /* not used */),
+      .m_axis_tuser  (message_tuser_unused),
       .m_axis_tvalid (m_message_tvalid),
       .m_axis_tready (m_message_tready)
   );

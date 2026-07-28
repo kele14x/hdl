@@ -37,7 +37,20 @@ module rts2_capture #(
     input  wire        s_rx_axis_tvalid
 );
 
+  assign m_axis_s2mm_cmd_tdata  = {{(80-ADDR_WIDTH){1'b0}}, {ADDR_WIDTH{1'b0}}};
+  assign m_axis_s2mm_cmd_tvalid = 1'b0;
   assign s_axis_s2mm_sts_tready = 1'b1;
+  assign m_axis_tdata           = 64'd0;
+  assign m_axis_tkeep           = 8'd0;
+  assign m_axis_tlast           = 1'b0;
+  assign m_axis_tvalid          = 1'b0;
+
+  wire unused_inputs = &{
+    1'b0, clk, rst, sync_in, ddr4_clk, ddr4_rst, m_axis_s2mm_cmd_tready,
+    s_axis_s2mm_sts_tdata, s_axis_s2mm_sts_tkeep, s_axis_s2mm_sts_tlast,
+    s_axis_s2mm_sts_tvalid, s2mm_err, m_axis_tready, s_rx_axis_tdata,
+    s_rx_axis_tkeep, s_rx_axis_tlast, s_rx_axis_tvalid, 1'b0
+  };
 
 endmodule
 

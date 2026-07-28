@@ -213,9 +213,9 @@ module prach_stream2block #(
 
   always_ff @(posedge clk) begin
     if (wr_state == WR_SEQ0) begin
-      wr_cnt <= sample_cnt - ctrl_start_sample[18:4];
+      wr_cnt <= 11'(sample_cnt - {1'b0, ctrl_start_sample[18:4]});
     end else if (wr_state == WR_SEQ1) begin
-      wr_cnt <= sample_cnt - ctrl_start_sample[18:4] - 1536;
+      wr_cnt <= 11'(sample_cnt - {1'b0, ctrl_start_sample[18:4]} - 16'd1536);
     end else begin
       wr_cnt <= '0;
     end
@@ -233,7 +233,7 @@ module prach_stream2block #(
   assign wr_addr[8:0] = wr_cnt[8:0];
 
   generate
-    for (genvar i = 0; i < 4; i++) begin : g_wr_we
+    for (genvar i = 0; i < NUM_ANT; i++) begin : g_wr_we
 
       always_ff @(posedge clk) begin
         wr_we[i] <= din_dv_d && (din_chn_d == i) && (wr_state == WR_SEQ0 || wr_state == WR_SEQ1);
@@ -327,7 +327,7 @@ module prach_stream2block #(
     if (~busy) begin
       rd_cnt <= '0;
     end else begin
-      rd_cnt <= (rd_cnt[1:0] == 2'b10) ? (rd_cnt + 2'b10) : (rd_cnt + 1'b1);
+      rd_cnt <= (rd_cnt[1:0] == 2'b10) ? (rd_cnt + 11'd2) : (rd_cnt + 11'd1);
     end
   end
 
@@ -372,7 +372,7 @@ module prach_stream2block #(
     end else begin
       for (int i = 0; i < 4; i++) begin
         if (ap_ack[i]) begin
-          chn <= i;
+          chn <= 2'(i);
         end
       end
     end
@@ -390,57 +390,25 @@ module prach_stream2block #(
   generate
     for (genvar i = 0; i < NUM_ANT; i++) begin : g_ant
 
-      xpm_memory_sdpram #(
-          .ADDR_WIDTH_A           (AddrWidth),
-          .ADDR_WIDTH_B           (AddrWidth),
-          .AUTO_SLEEP_TIME        (0),
-          .BYTE_WRITE_WIDTH_A     (32),
-          .CASCADE_HEIGHT         (0),
-          .CLOCKING_MODE          ("common_clock"),
-          .ECC_BIT_RANGE          ("7:0"),
-          .ECC_MODE               ("no_ecc"),
-          .ECC_TYPE               ("none"),
-          .IGNORE_INIT_SYNTH      (0),
-          .MEMORY_INIT_FILE       ("none"),
-          .MEMORY_INIT_PARAM      ("0"),
-          .MEMORY_OPTIMIZATION    ("true"),
-          .MEMORY_PRIMITIVE       ("block"),
-          .MEMORY_SIZE            (32 * NumPrb * 2),
-          .MESSAGE_CONTROL        (0),
-          .RAM_DECOMP             ("area"),
-          .READ_DATA_WIDTH_B      (32),
-          .READ_LATENCY_B         (2),
-          .READ_RESET_VALUE_B     ("0"),
-          .RST_MODE_A             ("SYNC"),
-          .RST_MODE_B             ("SYNC"),
-          .SIM_ASSERT_CHK         (0),
-          .USE_EMBEDDED_CONSTRAINT(0),
-          .USE_MEM_INIT           (1),
-          .USE_MEM_INIT_MMI       (0),
-          .WAKEUP_TIME            ("disable_sleep"),
-          .WRITE_DATA_WIDTH_A     (32),
-          .WRITE_MODE_B           ("no_change"),
-          .WRITE_PROTECT          (1)
-      ) xpm_memory_sdpram_inst (
+      ram_sdp #(
+          .ADDR_WIDTH  (AddrWidth),
+          .DATA_WIDTH  (32),
+          .READ_LATENCY(2),
+          .INIT_WORD   ('0),
+          .INIT_FILE   ("")
+      ) u_ram (
           // Port A
-          .clka          (clk),
-          .ena           (wr_we[i]),
-          .wea           (wr_we[i]),
-          .addra         (wr_addr),
-          .dina          (wr_data),
-          .injectdbiterra(1'b0),
-          .injectsbiterra(1'b0),
+          .clka (clk),
+          .ena  (wr_we[i]),
+          .wea  (wr_we[i]),
+          .addra(wr_addr),
+          .dina (wr_data),
           // Port B
-          .clkb          (clk),
-          .rstb          (~rd_en_d[i]),
-          .enb           (rd_en[i]),
-          .regceb        (rd_en_d[i]),
-          .addrb         (rd_addr),
-          .doutb         (rd_data[i]),
-          .dbiterrb      (  /* not used */),
-          .sbiterrb      (  /* not used */),
-          //
-          .sleep         (1'b0)
+          .clkb (clk),
+          .rstb ({2{~rd_en_d[i]}}),
+          .enb  ({rd_en_d[i], rd_en[i]}),
+          .addrb(rd_addr),
+          .doutb(rd_data[i])
       );
 
     end
@@ -460,6 +428,8 @@ module prach_stream2block #(
 
   assign dout_sf = 1'b0;
   assign dout_sl = 1'b0;
+
+  wire unused_stream2block = &{1'b0, ctrl_start_sample[3:0], din_sf_d, din_sl_d, din_sy_d, din_last_d};
 
 endmodule
 

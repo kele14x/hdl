@@ -1,7 +1,8 @@
 // File: cfr_cpg.sv
 // Brief: cfr_cpg is Canceling pulse generator. It' designed as cascade-able.
 
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module cfr_pc_softclipper #(
     parameter int CSR            = 2,
@@ -44,7 +45,6 @@ module cfr_pc_softclipper #(
 
 
   localparam int CpgLatency = 12 + 2 ** (CPW_ADDR_WIDTH - PHASE_WIDTH);
-  localparam int Latency = CpgLatency + NUM_CPG;
 
   logic        [ DATA_WIDTH-1:0] data_i_s    [NUM_CPG+1];
   logic        [ DATA_WIDTH-1:0] data_q_s    [NUM_CPG+1];

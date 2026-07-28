@@ -3,7 +3,7 @@
 `default_nettype none
 
 module timer_syncer_312p5 #(
-    parameter integer SIM_SPEEDUP = 0
+    parameter reg SIM_SPEEDUP = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst,
@@ -26,7 +26,7 @@ module timer_syncer_312p5 #(
 
   // Parameters
 
-  localparam integer NanosecondsPerSecond = SIM_SPEEDUP ? 1_000_000 : 1_000_000_000;
+  localparam [31:0] NanosecondsPerSecond = SIM_SPEEDUP ? 32'd1_000_000 : 32'd1_000_000_000;
 
   // Signals
 
@@ -49,6 +49,9 @@ module timer_syncer_312p5 #(
   wire [31:0] tod_ns_eth;
 
   reg  [31:0] stat_resync_cnt_r;
+
+  wire cdc_pps_sync_rx_src_ready;
+  wire unused_inputs = &{1'b0, rst, ctrl_rst, cdc_pps_sync_rx_src_ready, 1'b0};
 
   // Main
 
@@ -114,7 +117,7 @@ module timer_syncer_312p5 #(
       .src_clk   (clk),
       .src_in    ({pps_in, tod_sec, tod_ns}),
       .src_valid (1'b1),
-      .src_ready (),
+      .src_ready (cdc_pps_sync_rx_src_ready),
       //
       .dest_clk  (eth_clk),
       .dest_out  ({pps_sync_eth, tod_sec_eth, tod_ns_eth}),

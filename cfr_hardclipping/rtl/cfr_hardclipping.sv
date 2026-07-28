@@ -4,7 +4,8 @@
 //        threshold. Those signal are hard clipped without maintains the
 //        spectrum.
 
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module cfr_hardclipping #(
     parameter int DATA_WIDTH = 16
@@ -25,9 +26,13 @@ module cfr_hardclipping #(
 
   localparam int Iterations = 7;
   localparam int DataPathLatency = Iterations * 2 + 8;
-  localparam int Latency = DataPathLatency + 1;
 
   logic local_rst;
+
+  logic                         unused_cart2pol_ctrl;
+  logic                         unused_pol2cart_ctrl;
+  logic                         unused_adder_i_ovf;
+  logic                         unused_adder_q_ovf;
 
   logic                         ctrl_enable_s;
   logic        [  DATA_WIDTH:0] ctrl_threshold_s;
@@ -47,13 +52,15 @@ module cfr_hardclipping #(
   logic signed [DATA_WIDTH+2:0] delta_i;
   logic signed [DATA_WIDTH+2:0] delta_q;
 
+  wire unused_truncated_bits = &{1'b0, delta_r[DATA_WIDTH+1], delta_i[DATA_WIDTH+2:DATA_WIDTH],
+                                delta_q[DATA_WIDTH+2:DATA_WIDTH], 1'b0};
+
 
   // CTRL CDC
 
-  xpm_cdc_array_single #(
+  cdc_array_single #(
     .DEST_SYNC_FF  (2),
     .INIT_SYNC_FF  (0),
-    .SIM_ASSERT_CHK(0),
     .SRC_INPUT_REG (0),
     .WIDTH         (1)
   ) i_cdc_array_single_ctrl_enable (
@@ -63,10 +70,9 @@ module cfr_hardclipping #(
     .dest_out(ctrl_enable_s)
   );
 
-  xpm_cdc_array_single #(
+  cdc_array_single #(
     .DEST_SYNC_FF  (2),
     .INIT_SYNC_FF  (0),
-    .SIM_ASSERT_CHK(0),
     .SRC_INPUT_REG (0),
     .WIDTH         (DATA_WIDTH + 1)
   ) i_cdc_array_single_ctrl_threshold (
@@ -78,7 +84,7 @@ module cfr_hardclipping #(
 
   // Reset CDC
 
-  xpm_cdc_async_rst #(
+  cdc_async_rst #(
       .DEST_SYNC_FF   (4),
       .INIT_SYNC_FF   (0),
       .RST_ACTIVE_HIGH(1)
@@ -119,7 +125,7 @@ module cfr_hardclipping #(
       //
       .theta   (data_theta),
       .r       (data_r),
-      .ctrl_out(/* Not used */)
+      .ctrl_out(unused_cart2pol_ctrl)
   );
 
   // Test if amplitude exceeds threshold
@@ -154,7 +160,7 @@ module cfr_hardclipping #(
       //
       .xout    (delta_i),
       .yout    (delta_q),
-      .ctrl_out(/* Not used */)
+      .ctrl_out(unused_pol2cart_ctrl)
   );
 
   // Output signal is delayed original signal subtract delta
@@ -163,30 +169,30 @@ module cfr_hardclipping #(
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (DATA_WIDTH),
       .P_WIDTH (DATA_WIDTH),
-      .SRA_BITS(0)
+      .SHIFT(0)
   ) i_adder_i (
       .clk    (clk),
       .rst    (local_rst),
       .a      (data_i_in_d),
       .b      (delta_i[DATA_WIDTH-1:0]),
-      .add_sub(1'b1),
+      .sub(1'b1),
       .p      (data_i_out),
-      .ovf    (  /* Not Used */)
+      .ovf    (unused_adder_i_ovf)
   );
 
   adder #(
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (DATA_WIDTH),
       .P_WIDTH (DATA_WIDTH),
-      .SRA_BITS(0)
+      .SHIFT(0)
   ) i_adder_q (
       .clk    (clk),
       .rst    (local_rst),
       .a      (data_q_in_d),
       .b      (delta_q[DATA_WIDTH-1:0]),
-      .add_sub(1'b1),
+      .sub(1'b1),
       .p      (data_q_out),
-      .ovf    (  /* Not Used */)
+      .ovf    (unused_adder_q_ovf)
   );
 
 endmodule

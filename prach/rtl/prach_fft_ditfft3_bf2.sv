@@ -21,8 +21,6 @@ module prach_fft_ditfft3_bf2 #(
 
   // x0, x1, x2 -> x0 + x1, x0 - 0.5 * x1, 0.8660j * x2
 
-  localparam int Latency = 4;
-
   localparam signed [DATA_WIDTH+17:0] RND = 1 << 15;
 
   logic signed [ DATA_WIDTH-1:0] din_dr_d;
@@ -58,7 +56,8 @@ module prach_fft_ditfft3_bf2 #(
   function automatic logic signed [DATA_WIDTH:0] op1(input logic signed [DATA_WIDTH-1:0] a,
                                                      input logic signed [DATA_WIDTH-1:0] b);
     logic signed [DATA_WIDTH+1:0] t;
-    t = a * 2 - b + 1;
+    t = {a[DATA_WIDTH-1], a, 1'b0} - {{2{b[DATA_WIDTH-1]}}, b} + {{(DATA_WIDTH+1){1'b0}}, 1'b1};
+    t[0] = t[0] & 1'b0;
     return $signed(t[DATA_WIDTH+1:1]);
   endfunction
 
@@ -70,7 +69,7 @@ module prach_fft_ditfft3_bf2 #(
 
   // coefficient is -0.866025403784439 as fi(1, 18, 16)
   always_ff @(posedge clk) begin
-    amult <= ay1 * -18'sd56756;
+    amult <= ay1 * -36'sd56756;
   end
 
   always_ff @(posedge clk) begin
@@ -118,8 +117,8 @@ module prach_fft_ditfft3_bf2 #(
 
   always_comb begin
     if (cnt == 0) begin
-      x1r_s = din_dr_d;
-      x1i_s = din_di_d;
+      x1r_s = {din_dr_d[DATA_WIDTH-1], din_dr_d};
+      x1i_s = {din_di_d[DATA_WIDTH-1], din_di_d};
     end else begin
       // x0 - x1 / 2
       x1r_s = op1(x1r, din_dr_d);
@@ -143,14 +142,14 @@ module prach_fft_ditfft3_bf2 #(
       x2i_s = x1i + din_di_d;
     end else begin
       // x0
-      x2r_s = x1r;
-      x2i_s = x1i;
+      x2r_s = {x1r[DATA_WIDTH-1], x1r};
+      x2i_s = {x1i[DATA_WIDTH-1], x1i};
     end
   end
 
   always_ff @(posedge clk) begin
-    x2r = x2r_s[DATA_WIDTH-1:0];
-    x2i = x2i_s[DATA_WIDTH-1:0];
+    x2r <= x2r_s[DATA_WIDTH-1:0];
+    x2i <= x2i_s[DATA_WIDTH-1:0];
   end
 
   always_ff @(posedge clk) begin
@@ -187,6 +186,8 @@ module prach_fft_ditfft3_bf2 #(
       .din (dv),
       .dout(dout_dv)
   );
+
+  wire unused_bf2 = &{1'b0, aresult[DATA_WIDTH+17], aresult[15:0], bresult[DATA_WIDTH+17], bresult[15:0]};
 
 endmodule
 

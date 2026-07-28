@@ -1,3 +1,5 @@
+../cdc/cdc.flt
+../ram/ram.flt
 ../common/common.flt
 rtl/cfr_pc.sv
 rtl/cfr_pc_cpg.sv

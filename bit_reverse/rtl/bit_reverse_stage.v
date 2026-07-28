@@ -29,9 +29,9 @@ module bit_reverse_stage #(
   //   k = i
   localparam integer DelayTaps = NUM_INLV * (2 ** (LOG_FFT_SIZE - 1 - IDX_STAGE) - 2 ** IDX_STAGE);
 
-  localparam integer Latency = DelayTaps + 1;
-
   localparam integer IdWidth = NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV);
+  localparam [31:0] LastIdFull = NUM_INLV - 1;
+  localparam [IdWidth-1:0] LastId = LastIdFull[IdWidth-1:0];
 
   // Each stage has a local counter, which counts from 0 to FFT_SIZE-1. Counter
   // synchronize with `din_dr`.
@@ -54,9 +54,9 @@ module bit_reverse_stage #(
   always @(posedge clk) begin
     if (rst) begin
       counter <= 'd0;
-    end else if (din_valid && din_last && din_id == NUM_INLV - 1) begin
+    end else if (din_valid && din_last && din_id == LastId) begin
       counter <= 'd0;
-    end else if (din_valid && din_id == NUM_INLV - 1) begin
+    end else if (din_valid && din_id == LastId) begin
       counter <= counter + 1'd1;
     end else begin
       counter <= counter;

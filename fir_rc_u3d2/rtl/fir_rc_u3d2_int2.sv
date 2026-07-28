@@ -1,7 +1,8 @@
 // File: hb_up2_int2.sv
 // Brief: Half band up-sample by 2. Interleaved 2 channels.
 
-`timescale 1 ns / 1 ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module hb_up2_int2 #(
     parameter int XIN_WIDTH = 16,

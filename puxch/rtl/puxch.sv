@@ -84,6 +84,7 @@ module puxch #(
   logic [31:0] ctrl_phase_comp_din;
   logic [31:0] ctrl_phase_comp_dout;
   logic        ctrl_phase_comp_valid;
+  logic [11:0] s_ul_sym_num[NUM_CC];
 
   puxch_regs i_regs (
       .s_axi_aclk             (s_axi_aclk),
@@ -215,6 +216,7 @@ module puxch #(
       .m_fram_data_tlast    (m_fram_data_tlast),
       .m_fram_data_tready   (m_fram_data_tready),
       .m_fram_data_req      (m_fram_data_req),
+      .s_ul_sym_num         (s_ul_sym_num),
       // CSR
       .ctrl_clk             (s_axi_aclk),
       .ctrl_rst             (~s_axi_aresetn),
@@ -239,6 +241,8 @@ module puxch #(
       .ctrl_phase_comp_dout (ctrl_phase_comp_dout),
       .ctrl_phase_comp_valid(ctrl_phase_comp_valid)
   );
+
+  assign s_ul_sym_num = '{NUM_CC{'0}};
 
 endmodule
 

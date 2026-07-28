@@ -1,7 +1,8 @@
 // file: cfr_upx.sv
 // brief: Perform up-sampling of input signal streams
 
-`timescale 1ns / 1ps `default_nettype none
+`timescale 1 ns / 1 ps
+`default_nettype none
 
 module cfr_pc_upx #(
     // Architecture parameters
@@ -22,24 +23,29 @@ module cfr_pc_upx #(
 );
 
 
-  localparam int Latency_1 = (UP_FACTOR < 2) ? 0 : (CSR == 1) ? 9 : 12;
-  localparam int Latency_2 = (UP_FACTOR < 4) ? 0 : (CSR == 1) ? 6 : 8;
-  localparam int Latency = Latency_1 + Latency_2;
-
 
   logic signed [DATA_WIDTH-1:0] data_up2_i_p0;
   logic signed [DATA_WIDTH-1:0] data_up2_i_p1;
   logic signed [DATA_WIDTH-1:0] data_up2_q_p0;
   logic signed [DATA_WIDTH-1:0] data_up2_q_p1;
 
-  logic signed [DATA_WIDTH-1:0] data_up4_i_p0;
-  logic signed [DATA_WIDTH-1:0] data_up4_i_p1;
-  logic signed [DATA_WIDTH-1:0] data_up4_i_p2;
-  logic signed [DATA_WIDTH-1:0] data_up4_i_p3;
-  logic signed [DATA_WIDTH-1:0] data_up4_q_p0;
-  logic signed [DATA_WIDTH-1:0] data_up4_q_p1;
-  logic signed [DATA_WIDTH-1:0] data_up4_q_p2;
-  logic signed [DATA_WIDTH-1:0] data_up4_q_p3;
+  logic signed [DATA_WIDTH-1:0] unused_data_up4_i_p0;
+  logic signed [DATA_WIDTH-1:0] unused_data_up4_i_p1;
+  logic signed [DATA_WIDTH-1:0] unused_data_up4_i_p2;
+  logic signed [DATA_WIDTH-1:0] unused_data_up4_i_p3;
+  logic signed [DATA_WIDTH-1:0] unused_data_up4_q_p0;
+  logic signed [DATA_WIDTH-1:0] unused_data_up4_q_p1;
+  logic signed [DATA_WIDTH-1:0] unused_data_up4_q_p2;
+  logic signed [DATA_WIDTH-1:0] unused_data_up4_q_p3;
+
+  logic unused_ovf_up2_i_csr1;
+  logic unused_ovf_up2_q_csr1;
+  logic unused_ovf_up2_i_csr2;
+  logic unused_ovf_up2_q_csr2;
+  logic unused_ovf_up4_i_csr1;
+  logic unused_ovf_up4_q_csr1;
+  logic unused_ovf_up4_i_csr2;
+  logic unused_ovf_up4_q_csr2;
 
 
   // TODO: absorb the logic into HB_UP2 module
@@ -52,11 +58,11 @@ module cfr_pc_upx #(
         // Up-sample by 2
         // 9 clock tick impulse latency
 
-        hb_up2 #(
+        hb_up2_int2 #(
             .XIN_WIDTH     (DATA_WIDTH),
             .COE_WIDTH     (16),
             .NUM_UNIQUE_COE(3),
-            .COE_NUMS      ({1277, -4710, 20014}),
+            .COE_NUMS      ('{16'sd1277, -16'sd4710, 16'sd20014, 16'sd0, 16'sd0}),
             .YOUT_WIDTH    (DATA_WIDTH),
             .SRA_BITS      (15)
         ) i_up2_i (
@@ -65,14 +71,14 @@ module cfr_pc_upx #(
             .xin  (data_i_in),
             .yout0(data_up2_i_p0),
             .yout1(data_up2_i_p1),
-            .ovf  (  /* Not used */)
+            .ovf  (unused_ovf_up2_i_csr1)
         );
 
-        hb_up2 #(
+        hb_up2_int2 #(
             .XIN_WIDTH     (DATA_WIDTH),
             .COE_WIDTH     (16),
             .NUM_UNIQUE_COE(3),
-            .COE_NUMS      ({1277, -4710, 20014}),
+            .COE_NUMS      ('{16'sd1277, -16'sd4710, 16'sd20014, 16'sd0, 16'sd0}),
             .YOUT_WIDTH    (DATA_WIDTH),
             .SRA_BITS      (15)
         ) i_up2_q (
@@ -81,7 +87,7 @@ module cfr_pc_upx #(
             .xin  (data_q_in),
             .yout0(data_up2_q_p0),
             .yout1(data_up2_q_p1),
-            .ovf  (  /* Not used */)
+            .ovf  (unused_ovf_up2_q_csr1)
         );
 
       end else begin : g_csr2_up2
@@ -93,7 +99,7 @@ module cfr_pc_upx #(
             .XIN_WIDTH     (DATA_WIDTH),
             .COE_WIDTH     (16),
             .NUM_UNIQUE_COE(3),
-            .COE_NUMS      ({1277, -4710, 20014}),
+            .COE_NUMS      ('{16'sd1277, -16'sd4710, 16'sd20014, 16'sd0, 16'sd0}),
             .YOUT_WIDTH    (DATA_WIDTH),
             .SRA_BITS      (15)
         ) i_up2_i (
@@ -102,14 +108,14 @@ module cfr_pc_upx #(
             .xin  (data_i_in),
             .yout0(data_up2_i_p0),
             .yout1(data_up2_i_p1),
-            .ovf  (  /* Not used */)
+            .ovf  (unused_ovf_up2_i_csr2)
         );
 
         hb_up2_int2 #(
             .XIN_WIDTH     (DATA_WIDTH),
             .COE_WIDTH     (16),
             .NUM_UNIQUE_COE(3),
-            .COE_NUMS      ({1277, -4710, 20014}),
+            .COE_NUMS      ('{16'sd1277, -16'sd4710, 16'sd20014, 16'sd0, 16'sd0}),
             .YOUT_WIDTH    (DATA_WIDTH),
             .SRA_BITS      (15)
         ) i_up2_q (
@@ -118,7 +124,7 @@ module cfr_pc_upx #(
             .xin  (data_q_in),
             .yout0(data_up2_q_p0),
             .yout1(data_up2_q_p1),
-            .ovf  (  /* Not used */)
+            .ovf  (unused_ovf_up2_q_csr2)
         );
 
       end  // CSR switch
@@ -136,11 +142,11 @@ module cfr_pc_upx #(
         // ?? clock tick impulse latency
         // TODO: may not exist
 
-        hb_up2_p2 #(
+        hb_up2_int2_p2 #(
             .XIN_WIDTH     (DATA_WIDTH),
             .COE_WIDTH     (16),
             .NUM_UNIQUE_COE(2),
-            .COE_NUMS      ({-2788, 19030}),
+            .COE_NUMS      ('{-16'sd2788, 16'sd19030, 16'sd0, 16'sd0, 16'sd0}),
             .YOUT_WIDTH    (DATA_WIDTH),
             .SRA_BITS      (15)
         ) i_up2_2_i (
@@ -148,18 +154,18 @@ module cfr_pc_upx #(
             .rst  (rst),
             .xin0 (data_up2_i_p0),
             .xin1 (data_up2_i_p1),
-            .yout0(data_up4_i_p0),
-            .yout1(data_up4_i_p1),
-            .yout2(data_up4_i_p2),
-            .yout3(data_up4_i_p3),
-            .ovf  (  /* Not used */)
+            .yout0(unused_data_up4_i_p0),
+            .yout1(unused_data_up4_i_p1),
+            .yout2(unused_data_up4_i_p2),
+            .yout3(unused_data_up4_i_p3),
+            .ovf  (unused_ovf_up4_i_csr1)
         );
 
-        hb_up2_p2 #(
+        hb_up2_int2_p2 #(
             .XIN_WIDTH     (DATA_WIDTH),
             .COE_WIDTH     (16),
             .NUM_UNIQUE_COE(2),
-            .COE_NUMS      ({-2788, 19030}),
+            .COE_NUMS      ('{-16'sd2788, 16'sd19030, 16'sd0, 16'sd0, 16'sd0}),
             .YOUT_WIDTH    (DATA_WIDTH),
             .SRA_BITS      (15)
         ) i_up2_2_q (
@@ -167,11 +173,11 @@ module cfr_pc_upx #(
             .rst  (rst),
             .xin0 (data_up2_q_p0),
             .xin1 (data_up2_q_p1),
-            .yout0(data_up4_q_p0),
-            .yout1(data_up4_q_p1),
-            .yout2(data_up4_q_p2),
-            .yout3(data_up4_q_p3),
-            .ovf  (  /* Not used */)
+            .yout0(unused_data_up4_q_p0),
+            .yout1(unused_data_up4_q_p1),
+            .yout2(unused_data_up4_q_p2),
+            .yout3(unused_data_up4_q_p3),
+            .ovf  (unused_ovf_up4_q_csr1)
         );
 
       end else begin : g_csr2_up4
@@ -183,7 +189,7 @@ module cfr_pc_upx #(
             .XIN_WIDTH     (DATA_WIDTH),
             .COE_WIDTH     (16),
             .NUM_UNIQUE_COE(2),
-            .COE_NUMS      ({-2788, 19030}),
+            .COE_NUMS      ('{-16'sd2788, 16'sd19030, 16'sd0, 16'sd0, 16'sd0}),
             .YOUT_WIDTH    (DATA_WIDTH),
             .SRA_BITS      (15)
         ) i_up2_2_i (
@@ -191,18 +197,18 @@ module cfr_pc_upx #(
             .rst  (rst),
             .xin0 (data_up2_i_p0),
             .xin1 (data_up2_i_p1),
-            .yout0(data_up4_i_p0),
-            .yout1(data_up4_i_p1),
-            .yout2(data_up4_i_p2),
-            .yout3(data_up4_i_p3),
-            .ovf  (  /* Not used */)
+            .yout0(unused_data_up4_i_p0),
+            .yout1(unused_data_up4_i_p1),
+            .yout2(unused_data_up4_i_p2),
+            .yout3(unused_data_up4_i_p3),
+            .ovf  (unused_ovf_up4_i_csr2)
         );
 
         hb_up2_int2_p2 #(
             .XIN_WIDTH     (DATA_WIDTH),
             .COE_WIDTH     (16),
             .NUM_UNIQUE_COE(2),
-            .COE_NUMS      ({-2788, 19030}),
+            .COE_NUMS      ('{-16'sd2788, 16'sd19030, 16'sd0, 16'sd0, 16'sd0}),
             .YOUT_WIDTH    (DATA_WIDTH),
             .SRA_BITS      (15)
         ) i_up2_2_q (
@@ -210,11 +216,11 @@ module cfr_pc_upx #(
             .rst  (rst),
             .xin0 (data_up2_q_p0),
             .xin1 (data_up2_q_p1),
-            .yout0(data_up4_q_p0),
-            .yout1(data_up4_q_p1),
-            .yout2(data_up4_q_p2),
-            .yout3(data_up4_q_p3),
-            .ovf  (  /* Not used */)
+            .yout0(unused_data_up4_q_p0),
+            .yout1(unused_data_up4_q_p1),
+            .yout2(unused_data_up4_q_p2),
+            .yout3(unused_data_up4_q_p3),
+            .ovf  (unused_ovf_up4_q_csr2)
         );
 
       end  // CSR switch
@@ -239,14 +245,14 @@ module cfr_pc_upx #(
 
     end else begin : g_up4_out
 
-      assign data_i_out[0] = data_up4_i_p0;
-      assign data_i_out[1] = data_up4_i_p1;
-      assign data_i_out[2] = data_up4_i_p2;
-      assign data_i_out[3] = data_up4_i_p3;
-      assign data_q_out[0] = data_up4_q_p0;
-      assign data_q_out[1] = data_up4_q_p1;
-      assign data_q_out[2] = data_up4_q_p2;
-      assign data_q_out[3] = data_up4_q_p3;
+      assign data_i_out[0] = unused_data_up4_i_p0;
+      assign data_i_out[1] = unused_data_up4_i_p1;
+      assign data_i_out[2] = unused_data_up4_i_p2;
+      assign data_i_out[3] = unused_data_up4_i_p3;
+      assign data_q_out[0] = unused_data_up4_q_p0;
+      assign data_q_out[1] = unused_data_up4_q_p1;
+      assign data_q_out[2] = unused_data_up4_q_p2;
+      assign data_q_out[3] = unused_data_up4_q_p3;
 
     end  // UP_FACTOR switch
   endgenerate

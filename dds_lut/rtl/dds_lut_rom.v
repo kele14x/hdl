@@ -33,11 +33,11 @@
 //
 (* KEEP_HIERARCHY="yes" *)
 module dds_lut_rom #(
-    parameter STRUCTURE  = "FULL",
-    parameter RASTERIZED = 1'b0,
-    parameter ADDR_WIDTH = 12,
-    parameter DATA_WIDTH = 16,
-    parameter OUTPUT_REG = 1'b1
+    parameter [8*7-1:0] STRUCTURE  = "FULL",
+    parameter           RASTERIZED = 1'b0,
+    parameter           ADDR_WIDTH = 12,
+    parameter           DATA_WIDTH = 16,
+    parameter           OUTPUT_REG = 1'b1
 ) (
     input  wire                        clk,
     //
@@ -54,7 +54,10 @@ module dds_lut_rom #(
 
   // Local parameters
 
-  localparam Factor = STRUCTURE == "FULL" ? 1 : (STRUCTURE == "HALF" ? 2 : 4);
+  localparam [8*7-1:0] StructureFull = "FULL";
+  localparam [8*7-1:0] StructureHalf = "HALF";
+
+  localparam Factor = STRUCTURE == StructureFull ? 1 : (STRUCTURE == StructureHalf ? 2 : 4);
   localparam K = (RASTERIZED ? 3 : 4) * (2 ** ADDR_WIDTH) / 4;
 
   // Signals
@@ -68,14 +71,16 @@ module dds_lut_rom #(
   initial begin : p_init
     integer i;
     for (i = 0; i < K; i = i + 1) begin
-      mem[i] = (2 ** (DATA_WIDTH - 1) - 2) * $cos(3.141592653589793 * 2 * i / Factor / K);
+      mem[i] = DATA_WIDTH'($rtoi((2 ** (DATA_WIDTH - 1) - 2) * $cos(3.141592653589793 * 2 * i / Factor / K)));
     end
   end
 
   // Memory port A
 
   always @(posedge clk) begin
-    if (ena) begin
+    if (rsta) begin
+      douta_s <= '0;
+    end else if (ena) begin
       douta_s <= mem[addra];
     end
   end
@@ -83,7 +88,9 @@ module dds_lut_rom #(
   // Memory port B
 
   always @(posedge clk) begin
-    if (enb) begin
+    if (rstb) begin
+      doutb_s <= '0;
+    end else if (enb) begin
       doutb_s <= mem[addrb];
     end
   end
@@ -110,13 +117,17 @@ module dds_lut_rom #(
       end
 
       always @(posedge clk) begin
-        if (ena_d) begin
+        if (rsta) begin
+          douta <= '0;
+        end else if (ena_d) begin
           douta <= douta_s;
         end
       end
 
       always @(posedge clk) begin
-        if (enb_d) begin
+        if (rstb) begin
+          doutb <= '0;
+        end else if (enb_d) begin
           doutb <= doutb_s;
         end
       end

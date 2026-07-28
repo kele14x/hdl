@@ -31,6 +31,14 @@ module ptp_framer (
 
   `include "ptp_pkg.vh"
 
+  wire unused_ptp_pkg_params = |{
+    PTP_MESSAGE_TYPE_PDELAY_REQ,
+    PTP_MESSAGE_TYPE_PDELAY_RESP,
+    PTP_MESSAGE_TYPE_PDELAY_RESP_FUP,
+    PTP_MESSAGE_TYPE_SIGNALING,
+    PTP_MULTICAST_MAC_PDELAY
+  };
+
   localparam integer S_RST = 0;
   localparam integer S_IDLE = 1;
   //

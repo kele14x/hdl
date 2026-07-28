@@ -42,6 +42,9 @@ module oran_deframer_dl_ss_hdr_buffer #(
 
   logic                 rd_dv     [BUFFER_SYMBOL];
 
+  logic                 ram_dbiterrb[BUFFER_SYMBOL];
+  logic                 ram_sbiterrb[BUFFER_SYMBOL];
+
   logic                 valid_flag[BUFFER_SYMBOL] [2**AddrWidth];
 
 
@@ -49,11 +52,11 @@ module oran_deframer_dl_ss_hdr_buffer #(
   //-----------
 
   generate
-    for (genvar i = 0; i < BUFFER_SYMBOL; i++) begin
+    for (genvar i = 0; i < BUFFER_SYMBOL; i++) begin : g_write
 
       assign wr_en[i]  = s_axis_header_tvalid && (s_axis_header_tuser == i);
 
-      assign wr_din[i] = {1'b1, s_axis_header_tdata};
+      assign wr_din[i] = s_axis_header_tdata;
 
       always_ff @(posedge clk) begin
         if (rst) begin
@@ -73,7 +76,7 @@ module oran_deframer_dl_ss_hdr_buffer #(
   //----------
 
   generate
-    for (genvar i = 0; i < BUFFER_SYMBOL; i++) begin
+    for (genvar i = 0; i < BUFFER_SYMBOL; i++) begin : g_read
 
       // Make sure we readout write bank (symbol), so pointer is managed by buffer
       // itself
@@ -138,12 +141,14 @@ module oran_deframer_dl_ss_hdr_buffer #(
           .regceb        (1'b1),
           .addrb         (rd_addr[i]),
           .doutb         (rd_dout[i]),
+          .dbiterrb      (ram_dbiterrb[i]),
+          .sbiterrb      (ram_sbiterrb[i]),
           //
-          .sbiterrb      (),
-          .dbiterrb      (),
           //
           .sleep         (1'b0)
       );
+
+      wire unused_ram_status = &{1'b0, ram_dbiterrb[i], ram_sbiterrb[i]};
 
       // Valid flag
       always_ff @(posedge clk) begin

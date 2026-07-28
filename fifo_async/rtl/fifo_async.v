@@ -64,20 +64,17 @@ module fifo_async #(
   initial begin
     // Check FIFO depth
     if ((FIFO_DEPTH < 4) || (32768 < FIFO_DEPTH)) begin
-      $display("ERROR: FIFO_DEPTH (%0d) is outside of valid range 4-32768. [%m]", FIFO_DEPTH);
-      #1 $finish();
+      $fatal(1, "ERROR: FIFO_DEPTH (%0d) is outside of valid range 4-32768. [%m]", FIFO_DEPTH);
     end
 
     // Check input FIFO latency
     if ((FIFO_LATENCY < 1) || (3 < FIFO_LATENCY)) begin
-      $display("ERROR: FIFO_LATENCY (%0d) is outside of valid range 1-3. [%m]", FIFO_LATENCY);
-      #1 $finish();
+      $fatal(1, "ERROR: FIFO_LATENCY (%0d) is outside of valid range 1-3. [%m]", FIFO_LATENCY);
     end
 
     // Check data width
     if ((DATA_WIDTH < 1) || (4096 < DATA_WIDTH)) begin
-      $display("ERROR: DATA_WIDTH (%0d) is outside of valid range 1-4096. [%m]", DATA_WIDTH);
-      #1 $finish();
+      $fatal(1, "ERROR: DATA_WIDTH (%0d) is outside of valid range 1-4096. [%m]", DATA_WIDTH);
     end
   end
   // verilog_format: on

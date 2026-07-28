@@ -112,6 +112,8 @@ module fir_stage #(
       .pout(mac_data_out)
   );
 
+  assign ctrl_coe_dout = {COE_DATA_WIDTH{ctrl_rst & 1'b0}};
+
 endmodule
 
 `default_nettype wire

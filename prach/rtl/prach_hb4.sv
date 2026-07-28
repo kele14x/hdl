@@ -32,8 +32,6 @@ module prach_hb4 #(
   // Parameters
 
   // fi(1, 18, 17)
-  localparam int NumUniqCoe = 4;
-
   localparam logic signed [35:0] Rng = 1 << 16;
 
   localparam int Latency = 10;
@@ -67,7 +65,7 @@ module prach_hb4 #(
 
   logic signed [16:0] asum;
   logic signed [34:0] amult;
-  logic signed [34:0] aresult;
+  logic signed [35:0] aresult;
 
   logic signed [16:0] bsum;
   logic signed [34:0] bmult;
@@ -129,7 +127,7 @@ module prach_hb4 #(
   end
 
   always_ff @(posedge clk) begin
-    aresult <= amult + Rng;
+    aresult <= 36'(amult) + Rng;
   end
 
   // DSP2
@@ -148,7 +146,7 @@ module prach_hb4 #(
   end
 
   always_ff @(posedge clk) begin
-    bresult <= aresult + bmult;
+    bresult <= aresult + 36'(bmult);
   end
 
   // DSP3
@@ -167,7 +165,7 @@ module prach_hb4 #(
   end
 
   always_ff @(posedge clk) begin
-    cresult <= cmult + bresult;
+    cresult <= 37'(cmult) + 37'(bresult);
   end
 
   // DSP4
@@ -186,11 +184,11 @@ module prach_hb4 #(
   end
 
   always_ff @(posedge clk) begin
-    dresult <= cresult + dmult;
+    dresult <= 38'(cresult) + 38'(dmult);
   end
 
   always_ff @(posedge clk) begin
-    dq <= dresult + $signed({xp1[DELAY_BASE*3+7], 16'b0});
+    dq <= 39'(dresult) + $signed({{7{xp1[DELAY_BASE*3+7][15]}}, xp1[DELAY_BASE*3+7], 16'b0});
   end
 
   // TODO: saturate
@@ -213,6 +211,8 @@ module prach_hb4 #(
       .din ({din_last, din_dv, din_chn, din_sy, din_sl, din_sf}),
       .dout({dout_last, dout_dv, dout_chn, dout_sy, dout_sl, dout_sf})
   );
+
+  wire unused_hb4 = &{1'b0, rst, dq[38:33], dq[16:0]};
 
 endmodule
 

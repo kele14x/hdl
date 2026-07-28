@@ -16,7 +16,7 @@ module timer_pps #(
 
   // Parameters
 
-  localparam integer TickPerPps = FREQ_MODE == 0 ? 20000 : 24576;
+  localparam [15:0] TickPerPps = FREQ_MODE == 0 ? 16'd20000 : 16'd24576;
 
   // Signals
 

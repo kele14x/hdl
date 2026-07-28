@@ -48,7 +48,7 @@ module oran_if #(
     output var        s_axi_rvalid,
     input var         s_axi_rready,
     // interrupt pin
-    output var        interrupt,
+    output var        irq,
     // Ethernet I/F
     //-------------
     // Rx Ethernet ports
@@ -224,12 +224,24 @@ module oran_if #(
   logic [ 8:0] stat_earliest_u_pkt;
   logic [ 8:0] stat_latest_u_pkt;
 
+  assign irq = 1'b0;
+
+  wire unused_oran_if_signals = &{
+    1'b0,
+    s_axi_awaddr[31:11],
+    s_axi_araddr[31:11],
+    fram_dest_mac_l_val_out,
+    fram_dest_mac_h_val_out,
+    ctrl_defm_ctrl_en,
+    ctrl_fram_ctrl_en
+  };
+
 
   oran_slave_regs i_regs (
       .s_axi_aclk                       (s_axi_aclk),
       .s_axi_aresetn                    (s_axi_aresetn),
       //
-      .s_axi_awaddr                     (s_axi_awaddr),
+      .s_axi_awaddr                     (s_axi_awaddr[10:0]),
       .s_axi_awprot                     (s_axi_awprot),
       .s_axi_awvalid                    (s_axi_awvalid),
       .s_axi_awready                    (s_axi_awready),
@@ -243,7 +255,7 @@ module oran_if #(
       .s_axi_bvalid                     (s_axi_bvalid),
       .s_axi_bready                     (s_axi_bready),
       //
-      .s_axi_araddr                     (s_axi_araddr),
+      .s_axi_araddr                     (s_axi_araddr[10:0]),
       .s_axi_arprot                     (s_axi_arprot),
       .s_axi_arvalid                    (s_axi_arvalid),
       .s_axi_arready                    (s_axi_arready),
@@ -382,7 +394,7 @@ module oran_if #(
         assign ctrl_fram_ud_comp_meth[a][cc]  = fram_ctrl_udcompmeth_out;
         assign ctrl_fram_ud_iq_width[a][cc]   = fram_ctrl_udiqwidth_out;
 
-        assign ctrl_fram_syml_rd_shift[a][cc] = fram_syml_rd_shift_val_out;
+        assign ctrl_fram_syml_rd_shift[a][cc] = {1'b0, fram_syml_rd_shift_val_out};
 
         for (genvar s = 0; s < DefmBufferSymbol; s++) begin : g_dl_sym
           assign ctrl_buffer_addr_offset[a][cc][s] = defm_buffer_addr_offset_val_out[s];

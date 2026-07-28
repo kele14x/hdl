@@ -40,15 +40,6 @@ module fft_stage #(
   // Log2 FFT size of BF2I
   localparam integer LogFftSizeBf2i = HasBf2ii ? (LOG_FFT_SIZE - 1) : LOG_FFT_SIZE;
 
-  // Latency of Butterfly I
-  localparam integer LatencyBf2i = (1 << (LogFftSizeBf2i - 1)) + 1;
-  // Latency of Butterfly II
-  localparam integer LatencyBf2ii = HasBf2ii ? ((1 << (LOG_FFT_SIZE - 1)) + 2) : 0;
-  // Latency of Twiddle
-  localparam integer LatencyTwiddle = 9;
-  // Total latency
-  localparam integer Latency = LatencyBf2i + LatencyBf2ii + HasTwiddle * LatencyTwiddle;
-
   // Signals
 
   wire signed [DATA_WIDTH-1:0] twiddle_din_dr;
@@ -84,8 +75,8 @@ module fft_stage #(
   wire                         bfii_dout_dv;
 
   wire                         bfi_bypass;
-  wire                         ct_bypass;
-  wire        [           1:0] twiddle_bypass;
+  wire                         unused_ct_bypass;
+  wire        [           1:0] unused_twiddle_bypass;
   wire                         bfii_bypass;
 
   wire                         twiddle_ovf;
@@ -116,7 +107,7 @@ module fft_stage #(
           .dout_dv    (twiddle_dout_dv),
           //
           .ctrl_itlv  (ctrl_itlv),
-          .ctrl_bypass(twiddle_bypass),
+          .ctrl_bypass(unused_twiddle_bypass),
           // Status
           .stat_ovf   (twiddle_ovf)
       );
@@ -179,7 +170,7 @@ module fft_stage #(
           .dout_dv    (ct_dout_dv),
           //
           .ctrl_itlv  (ctrl_itlv),
-          .ctrl_bypass(ct_bypass)
+          .ctrl_bypass(unused_ct_bypass)
       );
 
       (* keep_hierarchy="yes" *)
@@ -215,7 +206,7 @@ module fft_stage #(
       assign bfii_dout_di = bfii_din_di;
       assign bfii_dout_dv = bfii_din_dv;
 
-      assign bfii_ovf = 1'b0;
+      assign bfii_ovf = bfii_bypass & 1'b0;
 
     end
   endgenerate
@@ -245,10 +236,10 @@ module fft_stage #(
       assign dout_di        = bfii_dout_di;
       assign dout_dv        = bfii_dout_dv;
 
-      assign twiddle_bypass = HasBf2ii ? ctrl_bypass : {2{ctrl_bypass[0]}};
+      assign unused_twiddle_bypass = HasBf2ii ? ctrl_bypass : {2{ctrl_bypass[0]}};
 
       assign bfi_bypass     = ctrl_bypass[0];
-      assign ct_bypass      = ctrl_bypass[1];
+      assign unused_ct_bypass      = ctrl_bypass[1];
       assign bfii_bypass    = ctrl_bypass[1];
 
     end else begin : g_dif_fft
@@ -275,10 +266,10 @@ module fft_stage #(
       assign dout_di        = twiddle_dout_di;
       assign dout_dv        = twiddle_dout_dv;
 
-      assign twiddle_bypass = HasBf2ii ? ctrl_bypass : {2{ctrl_bypass[1]}};
+      assign unused_twiddle_bypass = HasBf2ii ? ctrl_bypass : {2{ctrl_bypass[1]}};
 
       assign bfii_bypass    = ctrl_bypass[0];
-      assign ct_bypass      = ctrl_bypass[0];
+      assign unused_ct_bypass      = ctrl_bypass[0];
       assign bfi_bypass     = ctrl_bypass[1];
 
     end

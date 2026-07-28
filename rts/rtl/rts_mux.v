@@ -29,6 +29,7 @@ module rts_mux #(
   // Signals
 
   wire [NUM_CC*6-1:0] ctrl_src_sel_s;
+  wire                 unused_m_axis_tready = m_axis_tready;
   wire [         5:0] ctrl_src_sel_ch[0:NUM_CC-1];
 
   reg                 sync_d;

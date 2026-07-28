@@ -45,6 +45,7 @@ module prach_ddc #(
   logic                 mixer_dout_sl;
   logic                 mixer_dout_sy;
   logic [          7:0] mixer_dout_chn;
+  logic [          3:0] mixer_dout_chn_unused;
   logic                 mixer_dout_dv;
   logic                 mixer_dout_last;
 
@@ -136,7 +137,7 @@ module prach_ddc #(
       .dout_sf  (mixer_dout_sf),
       .dout_sl  (mixer_dout_sl),
       .dout_sy  (mixer_dout_sy),
-      .dout_chn (),
+      .dout_chn (mixer_dout_chn_unused),
       .dout_dv  (mixer_dout_dv),
       .dout_last(mixer_dout_last),
       //
@@ -424,7 +425,7 @@ module prach_ddc #(
 
   // Clear some "rubbish data" caused by HBx
   always_ff @(posedge clk) begin
-    if (conv_dout_chn < NUM_ANT) begin
+    if (conv_dout_chn < 8'(NUM_ANT)) begin
       dout_dr <= conv_dout_dr;
       dout_di <= conv_dout_di;
     end else begin
@@ -435,9 +436,11 @@ module prach_ddc #(
     dout_sl   <= conv_dout_sl;
     dout_sy   <= conv_dout_sy;
     dout_chn  <= conv_dout_chn;
-    dout_dv   <= conv_dout_dv && (conv_dout_chn < NUM_ANT);
+    dout_dv   <= conv_dout_dv && (conv_dout_chn < 8'(NUM_ANT));
     dout_last <= conv_dout_last;
   end
+
+  wire unused_ddc = &{1'b0, mixer_dout_chn_unused};
 
 endmodule
 

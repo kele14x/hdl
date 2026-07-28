@@ -24,10 +24,9 @@ module pdxch_block2stream #(
     input  wire        m_axis_tready[NUM_ANT]
 );
 
-  localparam int Latency = 5;
-
   localparam int AddrWidth = 9;
   localparam int DataWidth = 32;
+  localparam int AntAddrWidth = $clog2(NUM_ANT);
 
   // Signals
   logic [         15:0] din_dr_d;
@@ -37,7 +36,7 @@ module pdxch_block2stream #(
 
   logic [         11:0] wr_cnt_ch   [NUM_ANT];
   logic [         11:0] wr_cnt_next;
-  logic [         11:0] wr_cnt_r;
+  logic [AddrWidth-1:0] wr_cnt_r;
 
   logic [AddrWidth-1:0] wr_addr;
   logic                 wr_en       [NUM_ANT];
@@ -52,6 +51,8 @@ module pdxch_block2stream #(
   logic                 rd_en_dd    [NUM_ANT];
   logic [DataWidth-1:0] rd_data     [NUM_ANT];
 
+  wire unused_inputs = &{1'b0, din_sl, din_last, m_axis_tready};
+
   logic [         31:0] dout        [NUM_ANT];
 
   // Main
@@ -61,8 +62,8 @@ module pdxch_block2stream #(
   always_comb begin
     if (din_sy) begin
       wr_cnt_next = 'd0;
-    end else if (din_dv && (din_chn < NUM_ANT)) begin
-      wr_cnt_next = wr_cnt_ch[din_chn] + 1'b1;
+    end else if (din_dv && (din_chn < 4'(NUM_ANT))) begin
+      wr_cnt_next = wr_cnt_ch[din_chn[AntAddrWidth-1:0]] + 12'd1;
     end else begin
       wr_cnt_next = 'd0;
     end
@@ -83,7 +84,7 @@ module pdxch_block2stream #(
   endgenerate
 
   always_ff @(posedge clk) begin
-    wr_cnt_r <= wr_cnt_next;
+    wr_cnt_r <= wr_cnt_next[AddrWidth-1:0];
   end
 
   assign wr_addr = wr_cnt_r[AddrWidth-1:0];

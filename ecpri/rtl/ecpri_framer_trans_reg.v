@@ -52,6 +52,8 @@ module ecpri_framer_trans_reg (
   reg  [15:0] s_axis_tdata_dd;
   reg  [ 3:0] s_axis_tkeep_dd;
 
+  wire        unused_tkeep_dd = &{1'b0, s_axis_tkeep_dd[1:0]};
+
   // FSM
 
   always @(posedge clk) begin
