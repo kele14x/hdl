@@ -344,6 +344,7 @@ module oran_framer_ul_ss_adaptor #(
   // The RAM is 64-bit write and 32-bit read RAM. Depth is 8192 (32-bit) for
   // ping-pong switch.
 
+`ifdef XILINX
   xpm_memory_tdpram #(
       .ADDR_WIDTH_A           (AddrWidth + 1),
       .ADDR_WIDTH_B           (AddrWidth),
@@ -411,6 +412,40 @@ module oran_framer_ul_ss_adaptor #(
       //
       .sleep         ('0)
   );
+`else
+  ram_tdp_asym #(
+      .ADDR_WIDTH_A(AddrWidth + 1),
+      .DATA_WIDTH_A(32),
+      .OUTPUT_REG_A(1'b0),
+      .WRITE_MODE_A("NO_CHANGE"),
+      .ADDR_WIDTH_B(AddrWidth),
+      .DATA_WIDTH_B(64),
+      .OUTPUT_REG_B(1'b1),
+      .WRITE_MODE_B("READ_FIRST"),
+      .INIT_FILE   (""),
+      .RAM_STYLE   ("BLOCK")
+  ) i_syml_ram (
+      .clka (clk),
+      .rsta (1'b0),
+      .ena  (syml_wr_en),
+      .wea  (syml_wr_en),
+      .addra(syml_wr_addr_f),
+      .dina (syml_wr_data),
+      .douta(ram_douta),
+      .clkb (clk),
+      .rstb ({~syml_rd_en_d, 1'b0}),
+      .enb  ({ syml_rd_en_d, syml_rd_en}),
+      .web  (syml_rd_en),
+      .addrb(syml_rd_addr_f),
+      .dinb ('0),
+      .doutb(syml_rd_data)
+  );
+
+  assign ram_dbiterra = 1'b0;
+  assign ram_sbiterra = 1'b0;
+  assign ram_dbiterrb = 1'b0;
+  assign ram_sbiterrb = 1'b0;
+`endif
 
 endmodule
 

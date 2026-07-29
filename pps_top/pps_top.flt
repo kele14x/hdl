@@ -7,8 +7,6 @@ rtl/pps_resync.sv
 rtl/pps_symbol_timer.sv
 rtl/pps_timer.sv
 rtl/pps_timer_cdc.sv
-rtl/xpm_cdc_pulse.sv
-rtl/xpm_cdc_handshake.sv
 rtl/pps_top.sv
 rtl/pps_top_regs.v
 rtl/pps_ts_checker.sv

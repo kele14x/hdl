@@ -1,5 +1,5 @@
 ../common/common.flt
-../xpm/xpm.flt
+../axis_fifo/axis_fifo.flt
 ../fifo_srl/fifo_srl.flt
 rtl/oran_pkg.sv
 rtl/oran_deframer.sv

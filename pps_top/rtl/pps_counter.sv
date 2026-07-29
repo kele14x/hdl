@@ -71,6 +71,7 @@ module pps_counter (
     end
   end
 
+`ifdef XILINX
   xpm_cdc_handshake #(
       .DEST_EXT_HSK  (0),
       .DEST_SYNC_FF  (2),
@@ -89,6 +90,24 @@ module pps_counter (
       .dest_req(unused_ctrl_freq_req),
       .dest_ack(1'b1)
   );
+`else
+  cdc_handshake_f #(
+      .DEST_EXT_HSK(1'b0),
+      .DEST_SYNC_FF(2),
+      .INIT_SYNC_FF(1'b0),
+      .SRC_SYNC_FF (2),
+      .WIDTH       (32)
+  ) i_cdc_handshake_freq (
+      .src_clk   (ctrl_clk),
+      .src_in    (ctrl_freq),
+      .src_valid (ctrl_freq_send),
+      .src_ready (ctrl_freq_rcv),
+      .dest_clk  (clk),
+      .dest_out  (ctrl_freq_cdc),
+      .dest_valid(unused_ctrl_freq_req),
+      .dest_ready(1'b1)
+  );
+`endif
 
 
   // Sample Counter

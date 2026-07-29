@@ -295,6 +295,7 @@ module pps_top #(
       .stat_pps_offset(stat_pps_offset)
   );
 
+`ifdef XILINX
   xpm_cdc_pulse #(
       .DEST_SYNC_FF  (2),
       .INIT_SYNC_FF  (0),
@@ -310,6 +311,21 @@ module pps_top #(
       .dest_rst  (eth_rst),
       .dest_pulse(pps_out_cdc)
   );
+`else
+  cdc_pulse #(
+      .DEST_SYNC_FF(2),
+      .INIT_SYNC_FF(1'b0),
+      .REG_OUTPUT  (1'b1),
+      .RST_USED    (1'b1)
+  ) i_cdc_pulse_pps (
+      .src_clk   (clk),
+      .src_rst   (rst_int),
+      .src_pulse (pps_out),
+      .dest_clk  (eth_clk),
+      .dest_rst  (eth_rst),
+      .dest_pulse(pps_out_cdc)
+  );
+`endif
 
   pps_ts_checker i_ts_checker (
       .clk           (eth_clk),

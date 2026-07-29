@@ -57,6 +57,7 @@ module oran_framer_ul_ss_buffer #(
     fifo_dbiterr
   };
 
+`ifdef XILINX
   xpm_fifo_axis #(
       .CASCADE_HEIGHT     (0),
       .CDC_SYNC_STAGES    (2),
@@ -114,6 +115,44 @@ module oran_framer_ul_ss_buffer #(
       //
       //
   );
+`else
+  axis_fifo #(
+      .ASYNC_MODE  (1'b0),
+      .PACKET_MODE (1'b1),
+      .FIFO_DEPTH  (FifoDepth),
+      .FIFO_LATENCY(3),
+      .DATA_WIDTH  (64),
+      .USER_WIDTH  (0)
+  ) axis_fifo_inst (
+      .s_axis_aclk   (clk),
+      .s_axis_aresetn(~rst),
+      .s_axis_tdata  (s_axis_tdata),
+      .s_axis_tkeep  (s_axis_tkeep),
+      .s_axis_tlast  (s_axis_tlast),
+      .s_axis_tuser  ('0),
+      .s_axis_tvalid (s_axis_tvalid),
+      .s_axis_tready (fifo_s_axis_tready),
+      .m_axis_aclk   (clk),
+      .m_axis_tdata  (m_axis_tdata),
+      .m_axis_tkeep  (m_axis_tkeep),
+      .m_axis_tlast  (m_axis_tlast),
+      .m_axis_tuser  (fifo_m_axis_tuser),
+      .m_axis_tvalid (m_axis_tvalid),
+      .m_axis_tready (m_axis_tready)
+  );
+
+  assign fifo_wr_data_count = '0;
+  assign fifo_rd_data_count = '0;
+  assign fifo_almost_full   = 1'b0;
+  assign fifo_prog_full     = 1'b0;
+  assign fifo_m_axis_tdest  = 1'b0;
+  assign fifo_m_axis_tid    = 1'b0;
+  assign fifo_m_axis_tstrb  = '0;
+  assign fifo_almost_empty  = 1'b1;
+  assign fifo_prog_empty    = 1'b1;
+  assign fifo_sbiterr       = 1'b0;
+  assign fifo_dbiterr       = 1'b0;
+`endif
 
 endmodule
 

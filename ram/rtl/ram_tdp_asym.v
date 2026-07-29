@@ -6,7 +6,7 @@
  *
  * Read Latency: 1 or 2 (with OUTPUT_REG_A/B) clock cycles
  *
- * Note: rst[0] and en[1] does not work here
+ * Note: rst[0] does not work here
  */
 
 `timescale 1 ns / 1 ps
@@ -78,6 +78,7 @@ module ram_tdp_asym #(
   // Signals
 
   // The Memory
+  /* verilator lint_off MULTIDRIVEN */
   (* RAM_STYLE=RAM_STYLE *)
   reg     [    MinWidth-1:0] mem   [0:MaxSize-1];
 
@@ -237,6 +238,7 @@ module ram_tdp_asym #(
 
     end
   endgenerate
+  /* verilator lint_on MULTIDRIVEN */
 
   // Optional output pipeline registers
 
@@ -250,10 +252,9 @@ module ram_tdp_asym #(
     end else begin : g_reg_a
 
       always @(posedge clka) begin
-        // TODO： ena[1] does not work here
         if (rsta[1]) begin
           douta <= 'd0;
-        end else begin
+        end else if (ena[1]) begin
           douta <= rega;
         end
       end
@@ -271,10 +272,9 @@ module ram_tdp_asym #(
     end else begin : g_reg_b
 
       always @(posedge clkb) begin
-        // TODO: enb[1] does not work here
         if (rstb[1]) begin
           doutb <= 'd0;
-        end else begin
+        end else if (enb[1]) begin
           doutb <= regb;
         end
       end

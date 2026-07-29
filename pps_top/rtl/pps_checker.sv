@@ -83,6 +83,7 @@ module pps_checker (
     end
   end
 
+`ifdef XILINX
   xpm_cdc_handshake #(
       .DEST_EXT_HSK  (0),
       .DEST_SYNC_FF  (2),
@@ -101,6 +102,24 @@ module pps_checker (
       .dest_req(unused_stat_pps_offset_req),
       .dest_ack(1'b0)
   );
+`else
+  cdc_handshake_f #(
+      .DEST_EXT_HSK(1'b0),
+      .DEST_SYNC_FF(2),
+      .INIT_SYNC_FF(1'b0),
+      .SRC_SYNC_FF (2),
+      .WIDTH       (32)
+  ) i_cdc_handshake_pps_diff (
+      .src_clk   (clk),
+      .src_in    (stat_pps_offset_in),
+      .src_valid (stat_pps_offset_send),
+      .src_ready (stat_pps_offset_rcv),
+      .dest_clk  (ctrl_clk),
+      .dest_out  (stat_pps_offset),
+      .dest_valid(unused_stat_pps_offset_req),
+      .dest_ready(1'b0)
+  );
+`endif
 
 endmodule
 

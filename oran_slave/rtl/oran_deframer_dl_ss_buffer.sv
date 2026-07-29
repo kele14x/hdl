@@ -137,6 +137,7 @@ module oran_deframer_dl_ss_buffer #(
   // The read latency (side B) should be 2, so total layency is 3
   // TODO: share buffer between symbols so each symbol could cost less than 2k size
 
+`ifdef XILINX
   xpm_memory_sdpram #(
       .ADDR_WIDTH_A           (AddrWidth),
       .ADDR_WIDTH_B           (AddrWidth),
@@ -186,6 +187,29 @@ module oran_deframer_dl_ss_buffer #(
       //
       .sleep         (1'b0)
   );
+`else
+  ram_sdp #(
+      .ADDR_WIDTH  (AddrWidth),
+      .DATA_WIDTH  (DataWidth),
+      .READ_LATENCY(2),
+      .INIT_WORD   ('0),
+      .INIT_FILE   ("")
+  ) i_data_ram (
+      .clka (clk),
+      .ena  (r1_wr_en),
+      .wea  (r1_wr_en),
+      .addra(r1_wr_addr),
+      .dina (r1_wr_din),
+      .clkb (clk),
+      .rstb ({~r0_rd_en_d, ~r0_rd_en_d}),
+      .enb  ({ r0_rd_en_d,  r0_rd_en}),
+      .addrb(r0_rd_addr),
+      .doutb(r0_rd_dout)
+  );
+
+  assign ram_dbiterrb = 1'b0;
+  assign ram_sbiterrb = 1'b0;
+`endif
 
 endmodule
 

@@ -100,6 +100,7 @@ module pps_ts_checker (
     end
   end
 
+`ifdef XILINX
   xpm_cdc_handshake #(
       .DEST_EXT_HSK  (0),
       .DEST_SYNC_FF  (2),
@@ -118,6 +119,24 @@ module pps_ts_checker (
       .dest_req(unused_ts_cnt_req),
       .dest_ack(1'b0)
   );
+`else
+  cdc_handshake_f #(
+      .DEST_EXT_HSK(1'b0),
+      .DEST_SYNC_FF(2),
+      .INIT_SYNC_FF(1'b0),
+      .SRC_SYNC_FF (2),
+      .WIDTH       (32)
+  ) i_cdc_handshake_ts_cnt (
+      .src_clk   (clk),
+      .src_in    (ts_cnt),
+      .src_valid (ts_cnt_send),
+      .src_ready (ts_cnt_rcv),
+      .dest_clk  (ctrl_clk),
+      .dest_out  (stat_ts_cnt),
+      .dest_valid(unused_ts_cnt_req),
+      .dest_ready(1'b0)
+  );
+`endif
 
   // Phase Error
   //------------
@@ -141,6 +160,7 @@ module pps_ts_checker (
     end
   end
 
+`ifdef XILINX
   xpm_cdc_handshake #(
       .DEST_EXT_HSK  (0),
       .DEST_SYNC_FF  (2),
@@ -159,6 +179,24 @@ module pps_ts_checker (
       .dest_req(unused_offset_acc_req),
       .dest_ack(1'b0)
   );
+`else
+  cdc_handshake_f #(
+      .DEST_EXT_HSK(1'b0),
+      .DEST_SYNC_FF(2),
+      .INIT_SYNC_FF(1'b0),
+      .SRC_SYNC_FF (2),
+      .WIDTH       (48)
+  ) i_cdc_handshake_stat_ts_offset (
+      .src_clk   (clk),
+      .src_in    (offset_acc),
+      .src_valid (offset_acc_send),
+      .src_ready (offset_acc_rcv),
+      .dest_clk  (ctrl_clk),
+      .dest_out  (stat_ts_offset),
+      .dest_valid(unused_offset_acc_req),
+      .dest_ready(1'b0)
+  );
+`endif
 
 endmodule
 

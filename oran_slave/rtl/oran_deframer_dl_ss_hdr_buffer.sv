@@ -97,6 +97,7 @@ module oran_deframer_dl_ss_hdr_buffer #(
   generate
     for (genvar i = 0; i < BUFFER_SYMBOL; i++) begin : g_sym
 
+`ifdef XILINX
       xpm_memory_sdpram #(
           .ADDR_WIDTH_A           (AddrWidth),
           .ADDR_WIDTH_B           (AddrWidth),
@@ -147,6 +148,29 @@ module oran_deframer_dl_ss_hdr_buffer #(
           //
           .sleep         (1'b0)
       );
+`else
+      ram_sdp #(
+          .ADDR_WIDTH  (AddrWidth),
+          .DATA_WIDTH  (DataWidth),
+          .READ_LATENCY(1),
+          .INIT_WORD   ('0),
+          .INIT_FILE   ("")
+      ) i_valid_ram (
+          .clka (clk),
+          .ena  (wr_en[i]),
+          .wea  (wr_en[i]),
+          .addra(wr_addr[i]),
+          .dina (wr_din[i]),
+          .clkb (clk),
+          .rstb (1'b0),
+          .enb  (rd_en[i]),
+          .addrb(rd_addr[i]),
+          .doutb(rd_dout[i])
+      );
+
+      assign ram_dbiterrb[i] = 1'b0;
+      assign ram_sbiterrb[i] = 1'b0;
+`endif
 
       wire unused_ram_status = &{1'b0, ram_dbiterrb[i], ram_sbiterrb[i]};
 

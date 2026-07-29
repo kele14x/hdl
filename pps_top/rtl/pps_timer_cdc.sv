@@ -56,6 +56,7 @@ module pps_timer_cdc (
     end
   end
 
+`ifdef XILINX
   xpm_cdc_handshake #(
       .DEST_EXT_HSK  (0),
       .DEST_SYNC_FF  (2),
@@ -74,6 +75,24 @@ module pps_timer_cdc (
       .dest_ack(1'b1),
       .dest_req(dest_req)
   );
+`else
+  cdc_handshake_f #(
+      .DEST_EXT_HSK(1'b0),
+      .DEST_SYNC_FF(2),
+      .INIT_SYNC_FF(1'b0),
+      .SRC_SYNC_FF (2),
+      .WIDTH       (80)
+  ) i_cdc_handshake_ts (
+      .src_clk   (clk),
+      .src_in    (src_in),
+      .src_valid (src_send),
+      .src_ready (src_rcv),
+      .dest_clk  (eth_clk),
+      .dest_out  (dest_out),
+      .dest_valid(dest_req),
+      .dest_ready(1'b1)
+  );
+`endif
 
   // Split sync 80-bit to ns and s
 

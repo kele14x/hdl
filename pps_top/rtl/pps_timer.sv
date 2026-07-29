@@ -221,6 +221,7 @@ module pps_timer (
   // Get Time
   //---------
 
+`ifdef XILINX
   xpm_cdc_pulse #(
       .DEST_SYNC_FF  (2),
       .INIT_SYNC_FF  (0),
@@ -236,7 +237,23 @@ module pps_timer (
       .dest_rst  (rst),
       .dest_pulse(ctrl_get_snap_cdc)
   );
+`else
+  cdc_pulse #(
+      .DEST_SYNC_FF(2),
+      .INIT_SYNC_FF(1'b0),
+      .REG_OUTPUT  (1'b0),
+      .RST_USED    (1'b1)
+  ) i_cdc_pulse_get (
+      .src_clk   (ctrl_clk),
+      .src_rst   (ctrl_rst),
+      .src_pulse (ctrl_get_snap),
+      .dest_clk  (clk),
+      .dest_rst  (rst),
+      .dest_pulse(ctrl_get_snap_cdc)
+  );
+`endif
 
+`ifdef XILINX
   xpm_cdc_handshake #(
       .DEST_EXT_HSK  (0),
       .DEST_SYNC_FF  (2),
@@ -255,6 +272,24 @@ module pps_timer (
       .dest_req(unused_ctrl_get_req),
       .dest_ack(1'b1)
   );
+`else
+  cdc_handshake_f #(
+      .DEST_EXT_HSK(1'b0),
+      .DEST_SYNC_FF(2),
+      .INIT_SYNC_FF(1'b0),
+      .SRC_SYNC_FF (2),
+      .WIDTH       (80)
+  ) i_cdc_handshake_get (
+      .src_clk   (clk),
+      .src_in    ({sys_timer_s, sys_timer_ns}),
+      .src_valid (ctrl_get_send),
+      .src_ready (ctrl_get_rcv),
+      .dest_clk  (ctrl_clk),
+      .dest_out  ({ctrl_get_s, ctrl_get_ns}),
+      .dest_valid(unused_ctrl_get_req),
+      .dest_ready(1'b1)
+  );
+`endif
 
   always_ff @(posedge clk) begin
     if (rst) begin
@@ -270,6 +305,7 @@ module pps_timer (
   // Set Time
   //---------
 
+`ifdef XILINX
   xpm_cdc_handshake #(
       .DEST_EXT_HSK  (0),
       .DEST_SYNC_FF  (2),
@@ -288,11 +324,30 @@ module pps_timer (
       .dest_req(ctrl_set_valid_cdc),
       .dest_ack(1'b1)
   );
+`else
+  cdc_handshake_f #(
+      .DEST_EXT_HSK(1'b0),
+      .DEST_SYNC_FF(2),
+      .INIT_SYNC_FF(1'b0),
+      .SRC_SYNC_FF (2),
+      .WIDTH       (80)
+  ) i_cdc_handshake_set (
+      .src_clk   (ctrl_clk),
+      .src_in    ({ctrl_set_s, ctrl_set_ns}),
+      .src_valid (ctrl_set_valid),
+      .src_ready (unused_ctrl_set_rcv),
+      .dest_clk  (clk),
+      .dest_out  ({ctrl_set_s_cdc, ctrl_set_ns_cdc}),
+      .dest_valid(ctrl_set_valid_cdc),
+      .dest_ready(1'b1)
+  );
+`endif
 
 
   // Adjust Time
   //------------
 
+`ifdef XILINX
   xpm_cdc_handshake #(
       .DEST_EXT_HSK  (0),
       .DEST_SYNC_FF  (2),
@@ -311,6 +366,24 @@ module pps_timer (
       .dest_req(ctrl_adj_valid_cdc),
       .dest_ack(1'b1)
   );
+`else
+  cdc_handshake_f #(
+      .DEST_EXT_HSK(1'b0),
+      .DEST_SYNC_FF(2),
+      .INIT_SYNC_FF(1'b0),
+      .SRC_SYNC_FF (2),
+      .WIDTH       (32)
+  ) i_cdc_handshake_adj (
+      .src_clk   (ctrl_clk),
+      .src_in    (ctrl_adj_ns),
+      .src_valid (ctrl_adj_valid),
+      .src_ready (unused_ctrl_adj_rcv),
+      .dest_clk  (clk),
+      .dest_out  (ctrl_adj_ns_cdc),
+      .dest_valid(ctrl_adj_valid_cdc),
+      .dest_ready(1'b1)
+  );
+`endif
 
   always_ff @(posedge clk) begin
     if (rst) begin
