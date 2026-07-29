@@ -81,9 +81,11 @@ def test_ch_fir_runner():
         hdl_toplevel=hdl_toplevel,
         hdl_toplevel_lang=hdl_toplevel_lang,
         test_module="test_ch_fir",
+        test_args=["-suppress", "7061"],
         waves=True,
     )
 
 
 if __name__ == "__main__":
+
     raise SystemExit(pytest.main([__file__, "-q"]))

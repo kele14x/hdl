@@ -37,8 +37,10 @@ def model(phase):
         k = int(2**PHASE_WIDTH * 3 / 4)
     else:
         k = 2**PHASE_WIDTH
-    cos = round(a * math.cos(2 * math.pi * phase / k))
-    sin = round(a * math.sin(2 * math.pi * phase / k))
+    # RTL uses $rtoi, which truncates toward zero rather than Python's
+    # banker-rounding behavior.
+    cos = int(a * math.cos(2 * math.pi * phase / k))
+    sin = int(a * math.sin(2 * math.pi * phase / k))
     return (cos, sin)
 
 
