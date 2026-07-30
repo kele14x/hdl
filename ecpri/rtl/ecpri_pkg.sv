@@ -4,9 +4,11 @@
 
 package ecpri_pkg;
 
+  /* verilator lint_off UNUSEDPARAM */
   localparam [15:0] ECPRI_ETHERTYPE_VLAN  = 16'h8100;
   localparam [15:0] ECPRI_ETHERTYPE_PTP   = 16'h88F7;
   localparam [15:0] ECPRI_ETHERTYPE_ECPRI = 16'hAEFE;
+  /* verilator lint_on UNUSEDPARAM */
 
   // Get the TKEEP size based on the pattern.
   function automatic [1:0] tkeep_size(input reg [3:0] tkeep);

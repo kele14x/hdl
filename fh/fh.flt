@@ -6,6 +6,8 @@
 ../fifo_async/fifo_async.flt
 ../fifo_sync/fifo_sync.flt
 ../ram/ram.flt
+../timer_syncer/timer_syncer.flt
+../ptp/ptp.flt
 ../ecpri/rtl/ecpri_pkg.sv
 rtl/fh_pkg.sv
 rtl/fh.sv

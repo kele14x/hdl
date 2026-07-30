@@ -1,3 +1,4 @@
+../cdc/cdc.flt
 rtl/rts2.sv
 rtl/rts2_capture.sv
 rtl/rts2_playback.sv

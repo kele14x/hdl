@@ -1,4 +1,5 @@
 ../common/common.flt
+../cmult/cmult4.flt
 ../dds_lut/dds_lut.flt
 ../pulse_delay/pulse_delay.flt
 ../shift_ram/shift_ram.flt
