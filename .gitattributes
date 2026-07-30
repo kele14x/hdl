@@ -1,0 +1,3 @@
+# Keep repository text files in Linux/Unix LF format.
+# Git's text=auto detection leaves binary files untouched.
+* text=auto eol=lf
