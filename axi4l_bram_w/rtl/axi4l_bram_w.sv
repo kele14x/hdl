@@ -36,44 +36,44 @@ module axi4l_bram_w #(
   // 3'b101: 1 addr slot0 is buffered
   // 3'b011: 2 addr slot0 & slot1 is buffered
   // Note: other states are illegal
-  reg  [                        2:0] aw_state;
-  reg  [                        2:0] aw_state_next;
+  logic  [                        2:0] aw_state;
+  logic  [                        2:0] aw_state_next;
 
-  reg  [             ADDR_WIDTH-1:0] aw_slot0;
-  reg  [             ADDR_WIDTH-1:0] aw_slot1;
-  reg  [             ADDR_WIDTH-1:0] aw_slot0_next;
-  reg  [             ADDR_WIDTH-1:0] aw_slot1_next;
+  logic  [             ADDR_WIDTH-1:0] aw_slot0;
+  logic  [             ADDR_WIDTH-1:0] aw_slot1;
+  logic  [             ADDR_WIDTH-1:0] aw_slot0_next;
+  logic  [             ADDR_WIDTH-1:0] aw_slot1_next;
 
   // 3'b000: under reset
   // 3'b100: no write data is buffered
   // 3'b101: 1 write data slot0 is buffered
   // 3'b011: 2 write data slot0 & slot1 is buffered
   // Note: other states are illegal
-  reg  [                        2:0] w_state;
-  reg  [                        2:0] w_state_next;
+  logic  [                        2:0] w_state;
+  logic  [                        2:0] w_state_next;
 
-  reg  [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot0;
-  reg  [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot1;
-  reg  [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot0_next;
-  reg  [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot1_next;
+  logic  [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot0;
+  logic  [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot1;
+  logic  [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot0_next;
+  logic  [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot1_next;
 
-  reg                                bram_en_r;
+  logic                                bram_en_r;
 
   // 2'b00: no write is outstanding
   // 2'b01: 1 write is outstanding
   // 2'b10: 2 writes are outstanding
-  reg  [                        1:0] b_count;
-  reg  [                        1:0] b_count_next;
+  logic  [                        1:0] b_count;
+  logic  [                        1:0] b_count_next;
 
   // 2'b00: no B response is pending
   // 2'b01: 1 B response is pending
   // 2'b10: 2 B responses are pending
-  reg  [                        1:0] b_pend;
-  reg  [                        1:0] b_pend_next;
-  reg                               b_err_slot0;
-  reg                               b_err_slot1;
-  reg                               b_err_slot0_next;
-  reg                               b_err_slot1_next;
+  logic  [                        1:0] b_pend;
+  logic  [                        1:0] b_pend_next;
+  logic                               b_err_slot0;
+  logic                               b_err_slot1;
+  logic                               b_err_slot0_next;
+  logic                               b_err_slot1_next;
 
   wire                               b_rdy;
   wire                               b_hs;
@@ -83,7 +83,7 @@ module axi4l_bram_w #(
 
   // AW state
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       aw_state <= 3'b000;
     end else begin
@@ -91,7 +91,7 @@ module axi4l_bram_w #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     aw_state_next = aw_state;
     case (aw_state)
       3'b000: begin
@@ -132,7 +132,7 @@ module axi4l_bram_w #(
 
   // aw_slot0
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       aw_slot0 <= {ADDR_WIDTH{1'b0}};
     end else begin
@@ -140,7 +140,7 @@ module axi4l_bram_w #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     aw_slot0_next = aw_slot0;
     case (aw_state)
       3'b100: begin
@@ -169,7 +169,7 @@ module axi4l_bram_w #(
 
   // aw_slot1
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       aw_slot1 <= {ADDR_WIDTH{1'b0}};
     end else begin
@@ -177,7 +177,7 @@ module axi4l_bram_w #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     aw_slot1_next = aw_slot1;
     case (aw_state)
       3'b101: begin
@@ -194,7 +194,7 @@ module axi4l_bram_w #(
 
   // W state
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       w_state <= 3'b000;
     end else begin
@@ -202,7 +202,7 @@ module axi4l_bram_w #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     w_state_next = w_state;
     case (w_state)
       3'b000: begin
@@ -243,7 +243,7 @@ module axi4l_bram_w #(
 
   // w_slot0
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       w_slot0 <= {(DATA_WIDTH + DATA_WIDTH / 8) {1'b0}};
     end else begin
@@ -251,7 +251,7 @@ module axi4l_bram_w #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     w_slot0_next = w_slot0;
     case (w_state)
       3'b100: begin
@@ -280,7 +280,7 @@ module axi4l_bram_w #(
 
   // w_slot1
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       w_slot1 <= {(DATA_WIDTH + DATA_WIDTH / 8) {1'b0}};
     end else begin
@@ -288,7 +288,7 @@ module axi4l_bram_w #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     w_slot1_next = w_slot1;
     case (w_state)
       3'b101: begin
@@ -305,7 +305,7 @@ module axi4l_bram_w #(
 
   // B outstanding writes count
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       b_count <= 2'b00;
     end else begin
@@ -313,7 +313,7 @@ module axi4l_bram_w #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     b_count_next = b_count;
     case (b_count)
       2'b00: begin
@@ -348,7 +348,7 @@ module axi4l_bram_w #(
 
   // B pending responses count
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       b_pend <= 2'b00;
     end else begin
@@ -356,7 +356,7 @@ module axi4l_bram_w #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     b_pend_next = b_pend;
     case (b_pend)
       2'b00: begin
@@ -389,7 +389,7 @@ module axi4l_bram_w #(
 
   // B response errors
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       b_err_slot0 <= 1'b0;
       b_err_slot1 <= 1'b0;
@@ -399,7 +399,7 @@ module axi4l_bram_w #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     b_err_slot0_next = b_err_slot0;
     b_err_slot1_next = b_err_slot1;
     case (b_pend)
@@ -442,7 +442,7 @@ module axi4l_bram_w #(
   assign bram_wdata = w_slot0[DATA_WIDTH+DATA_WIDTH/8-1:DATA_WIDTH/8];
   assign bram_wstrb = w_slot0[DATA_WIDTH/8-1:0];
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       bram_en_r <= 1'b0;
     end else begin

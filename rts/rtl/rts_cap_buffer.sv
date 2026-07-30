@@ -20,18 +20,18 @@ module rts_cap_buffer #(
     output wire [DATA_WIDTH-1:0] doutb
 );
 
-  reg                  cnt;
+  logic                  cnt;
 
-  reg                  ram_wea;
-  reg [ADDR_WIDTH-1:0] ram_addra;
-  reg [DATA_WIDTH-1:0] ram_dina;
+  logic                  ram_wea;
+  logic [ADDR_WIDTH-1:0] ram_addra;
+  logic [DATA_WIDTH-1:0] ram_dina;
 
-  reg                  ram_wea_s;
-  reg [ADDR_WIDTH-1:0] ram_addra_s;
-  reg [DATA_WIDTH-1:0] ram_dina_s;
+  logic                  ram_wea_s;
+  logic [ADDR_WIDTH-1:0] ram_addra_s;
+  logic [DATA_WIDTH-1:0] ram_dina_s;
 
 
-  always @(posedge clka) begin
+  always_ff @(posedge clka) begin
     if (rsta) begin
       ram_wea <= 1'b0;
     end else if (wea) begin
@@ -41,7 +41,7 @@ module rts_cap_buffer #(
     end
   end
 
-  always @(posedge clka) begin
+  always_ff @(posedge clka) begin
     if (rsta) begin
       cnt <= 1'b0;
     end else if (wea) begin
@@ -51,14 +51,14 @@ module rts_cap_buffer #(
     end
   end
 
-  always @(posedge clka) begin
+  always_ff @(posedge clka) begin
     if (wea) begin
       ram_addra <= addra;
       ram_dina  <= dina;
     end
   end
 
-  always @(posedge clka_l) begin
+  always_ff @(posedge clka_l) begin
     ram_wea_s   <= ram_wea;
     ram_addra_s <= ram_addra;
     ram_dina_s  <= ram_dina;

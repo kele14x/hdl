@@ -30,14 +30,14 @@
 module shift_ram #(
     parameter integer WIDTH     = 8,
     parameter integer DEPTH     = 8,
-    parameter reg     INPUT_REG = 1'b0
+    parameter logic     INPUT_REG = 1'b0
 ) (
     input  wire             clk,
     input  wire             rst,
     input  wire             cen,
     //
     input  wire [WIDTH-1:0] din,
-    output reg  [WIDTH-1:0] dout
+    output logic  [WIDTH-1:0] dout
 );
 
   // Local parameters
@@ -63,10 +63,10 @@ module shift_ram #(
 
   // Signals
 
-  reg  [AddrWidth-1:0] addra;
-  reg  [AddrWidth-1:0] addrb;
+  logic  [AddrWidth-1:0] addra;
+  logic  [AddrWidth-1:0] addrb;
 
-  reg  [    WIDTH-1:0] dina;
+  logic  [    WIDTH-1:0] dina;
 
   wire [    WIDTH-1:0] doutb;
 
@@ -76,7 +76,7 @@ module shift_ram #(
 
   // Write & read address
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       addra <= 0;
     end else if (cen) begin
@@ -86,20 +86,20 @@ module shift_ram #(
 
   generate
     if (INPUT_REG) begin : g_ireg
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         if (cen) begin
           dina <= din;
         end
       end
     end else begin : g_no_ireg
-      always @(*) begin
+      always_comb begin
         dina = din;
       end
     end
   endgenerate
 
   // At minimal depth=4, read address is reset to -1, which is bottom of RAM.
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       addrb <= addr_cast(-DEPTH + 3 + (INPUT_REG ? 1 : 0));
     end else if (cen) begin
@@ -128,7 +128,7 @@ module shift_ram #(
       .doutb(doutb)
   );
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       dout <= 0;
     end else if (cen) begin

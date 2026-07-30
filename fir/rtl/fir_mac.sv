@@ -28,7 +28,7 @@ module fir_mac #(
   logic signed [P_WIDTH-1:0] mreg;
   logic signed [P_WIDTH-1:0] preg;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     ar   <= a;
     br   <= b;
     dr   <= d;

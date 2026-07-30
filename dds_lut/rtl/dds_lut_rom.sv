@@ -44,12 +44,12 @@ module dds_lut_rom #(
     input  wire                        rsta,
     input  wire                        ena,
     input  wire       [ADDR_WIDTH-1:0] addra,
-    output reg signed [DATA_WIDTH-1:0] douta,
+    output logic signed [DATA_WIDTH-1:0] douta,
     //
     input  wire                        rstb,
     input  wire                        enb,
     input  wire       [ADDR_WIDTH-1:0] addrb,
-    output reg signed [DATA_WIDTH-1:0] doutb
+    output logic signed [DATA_WIDTH-1:0] doutb
 );
 
   // Local parameters
@@ -63,10 +63,10 @@ module dds_lut_rom #(
   // Signals
 
   // The Memory
-  reg signed [DATA_WIDTH-1:0] mem     [0:K-1];
+  logic signed [DATA_WIDTH-1:0] mem     [0:K-1];
 
-  reg signed [DATA_WIDTH-1:0] douta_s;
-  reg signed [DATA_WIDTH-1:0] doutb_s;
+  logic signed [DATA_WIDTH-1:0] douta_s;
+  logic signed [DATA_WIDTH-1:0] doutb_s;
 
   initial begin : p_init
     integer i;
@@ -77,7 +77,7 @@ module dds_lut_rom #(
 
   // Memory port A
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rsta) begin
       douta_s <= '0;
     end else if (ena) begin
@@ -87,7 +87,7 @@ module dds_lut_rom #(
 
   // Memory port B
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rstb) begin
       doutb_s <= '0;
     end else if (enb) begin
@@ -98,25 +98,25 @@ module dds_lut_rom #(
   generate
     if (OUTPUT_REG == 0) begin : g_no_reg
 
-      always @(*) begin
+      always_comb begin
         douta = douta_s;
       end
 
-      always @(*) begin
+      always_comb begin
         doutb = doutb_s;
       end
 
     end else begin : g_reg
 
-      reg ena_d;
-      reg enb_d;
+      logic ena_d;
+      logic enb_d;
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         ena_d <= ena;
         enb_d <= enb;
       end
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         if (rsta) begin
           douta <= '0;
         end else if (ena_d) begin
@@ -124,7 +124,7 @@ module dds_lut_rom #(
         end
       end
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         if (rstb) begin
           doutb <= '0;
         end else if (enb_d) begin

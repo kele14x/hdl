@@ -31,11 +31,11 @@ module equalizer #(
   // Internal signals
   //=================
 
-  reg signed [INPUT_DATA_WIDTH-1:0] data_i_d [0:NUM_TAPS*2-2];
-  reg signed [INPUT_DATA_WIDTH-1:0] data_q_d [0:NUM_TAPS*2-2];
+  logic signed [INPUT_DATA_WIDTH-1:0] data_i_d [0:NUM_TAPS*2-2];
+  logic signed [INPUT_DATA_WIDTH-1:0] data_q_d [0:NUM_TAPS*2-2];
 
-  reg signed [COE_WIDTH-1:0] coe_i_r [0:NUM_TAPS-1];
-  reg signed [COE_WIDTH-1:0] coe_q_r [0:NUM_TAPS-1];
+  logic signed [COE_WIDTH-1:0] coe_i_r [0:NUM_TAPS-1];
+  logic signed [COE_WIDTH-1:0] coe_q_r [0:NUM_TAPS-1];
 
   wire signed [INPUT_DATA_WIDTH-1:0] ar[NUM_TAPS];
   wire signed [INPUT_DATA_WIDTH-1:0] ai[NUM_TAPS];
@@ -61,7 +61,7 @@ module equalizer #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_coe_valid) begin
       coe_i_r[ctrl_coe_idx] <= ctrl_coe_i_in;
       coe_q_r[ctrl_coe_idx] <= ctrl_coe_q_in;

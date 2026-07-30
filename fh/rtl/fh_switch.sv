@@ -40,27 +40,27 @@ module fh_switch #(
   wire [    NUM_DEST-1:0] s_axis_tdest_s    [ 0:NUM_SRC-1];
   wire [UserWidthInt-1:0] s_axis_tuser_s    [ 0:NUM_SRC-1];
   wire                    s_axis_tvalid_s   [ 0:NUM_SRC-1];
-  reg                     s_axis_tready_s   [ 0:NUM_SRC-1];
+  logic                     s_axis_tready_s   [ 0:NUM_SRC-1];
   //
-  reg  [  DATA_WIDTH-1:0] m_axis_tdata_s    [0:NUM_DEST-1];
-  reg  [DATA_WIDTH/8-1:0] m_axis_tkeep_s    [0:NUM_DEST-1];
-  reg                     m_axis_tlast_s    [0:NUM_DEST-1];
-  reg  [UserWidthInt-1:0] m_axis_tuser_s    [0:NUM_DEST-1];
-  reg                     m_axis_tvalid_s   [0:NUM_DEST-1];
+  logic  [  DATA_WIDTH-1:0] m_axis_tdata_s    [0:NUM_DEST-1];
+  logic  [DATA_WIDTH/8-1:0] m_axis_tkeep_s    [0:NUM_DEST-1];
+  logic                     m_axis_tlast_s    [0:NUM_DEST-1];
+  logic  [UserWidthInt-1:0] m_axis_tuser_s    [0:NUM_DEST-1];
+  logic                     m_axis_tvalid_s   [0:NUM_DEST-1];
   wire                    m_axis_tready_s   [0:NUM_DEST-1];
   //
-  reg  [  DATA_WIDTH-1:0] m_axis_tdata_next [0:NUM_DEST-1];
-  reg  [DATA_WIDTH/8-1:0] m_axis_tkeep_next [0:NUM_DEST-1];
-  reg                     m_axis_tlast_next [0:NUM_DEST-1];
-  reg  [UserWidthInt-1:0] m_axis_tuser_next [0:NUM_DEST-1];
-  reg                     m_axis_tvalid_next[0:NUM_DEST-1];
+  logic  [  DATA_WIDTH-1:0] m_axis_tdata_next [0:NUM_DEST-1];
+  logic  [DATA_WIDTH/8-1:0] m_axis_tkeep_next [0:NUM_DEST-1];
+  logic                     m_axis_tlast_next [0:NUM_DEST-1];
+  logic  [UserWidthInt-1:0] m_axis_tuser_next [0:NUM_DEST-1];
+  logic                     m_axis_tvalid_next[0:NUM_DEST-1];
 
-  reg  [    NUM_DEST-1:0] is_busy           [ 0:NUM_SRC-1];
-  reg  [    NUM_DEST-1:0] is_busy_dest;
-  reg  [     NUM_SRC-1:0] is_busy_src;
+  logic  [    NUM_DEST-1:0] is_busy           [ 0:NUM_SRC-1];
+  logic  [    NUM_DEST-1:0] is_busy_dest;
+  logic  [     NUM_SRC-1:0] is_busy_src;
 
-  reg  [     NUM_SRC-1:0] req;
-  reg  [     NUM_SRC-1:0] req_ack;
+  logic  [     NUM_SRC-1:0] req;
+  logic  [     NUM_SRC-1:0] req_ack;
 
   // Note
 
@@ -84,7 +84,7 @@ module fh_switch #(
   // Main
 
   // Per end point is busy flag
-  always @(*) begin : s_is_busy_dest
+  always_comb begin : s_is_busy_dest
     integer ss;
     is_busy_dest = 0;
     for (ss = 0; ss < NUM_SRC; ss = ss + 1) begin
@@ -93,7 +93,7 @@ module fh_switch #(
   end
 
   // Per source is busy flag
-  always @(*) begin : s_in_busy_src
+  always_comb begin : s_in_busy_src
     integer ss, dd;
     is_busy_src = 0;
     for (dd = 0; dd < NUM_DEST; dd = dd + 1) begin
@@ -107,9 +107,9 @@ module fh_switch #(
   // Since we check from channel 0, fist source channel has highest propriety.
   // If there is conflict between requested end point, we only acknowledge to
   // first source channel
-  always @(*) begin : p_req_ack
+  always_comb begin : p_req_ack
     integer ss;
-    reg [NUM_DEST-1:0] occupy;
+    logic [NUM_DEST-1:0] occupy;
     occupy  = 0;
     req_ack = 0;
 
@@ -138,7 +138,7 @@ module fh_switch #(
       // an end point. This allows 1-to-many broadcast.
       // If all request end points are not busy, this request is valid. Else the
       // request will be blocked until all request end points are free.
-      always @(*) begin
+      always_comb begin
         req[s] = (&(s_axis_tdest_s[s] & ~is_busy_dest | ~s_axis_tdest_s[s]) && s_axis_tvalid_s[s]);
       end
 
@@ -146,7 +146,7 @@ module fh_switch #(
       // whether there is valid data at master AXIS i/f, whether the slave module
       // is ready (TREADY), and if current source point could accept data.
       // TODO: multi end point?
-      always @(*) begin : p_s_axis_tready
+      always_comb begin : p_s_axis_tready
         integer dd;
         s_axis_tready_s[s] = is_busy_src[s];
         for (dd = 0; dd < NUM_DEST; dd = dd + 1) begin
@@ -156,7 +156,7 @@ module fh_switch #(
 
       // Set the busy flag for that source channel and corresponding end points
       // if it wins arbitration (req_ack)
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         if (rst) begin
           is_busy[s] <= 0;
         end else if (req[s] && req_ack[s]) begin
@@ -181,7 +181,7 @@ module fh_switch #(
       //
       assign m_axis_tready_s[d]                               = m_axis_tready[d];
 
-      always @(*) begin : p_m_axis_next
+      always_comb begin : p_m_axis_next
         integer ss;
         m_axis_tdata_next[d] = 0;
         m_axis_tkeep_next[d] = 0;
@@ -213,7 +213,7 @@ module fh_switch #(
       // If it is accepted by slave, we need to de-assert TVALID. But if there
       // is new data from any source, we need to assert TVALID. The arbiter
       // ensures there is only one source at same time.
-      always @(*) begin : p_m_axis_tvalid_next
+      always_comb begin : p_m_axis_tvalid_next
         integer ss;
         m_axis_tvalid_next[d] = m_axis_tvalid_s[d];
         if (m_axis_tready_s[d]) begin
@@ -226,7 +226,7 @@ module fh_switch #(
         end
       end
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         if (rst) begin
           m_axis_tvalid_s[d] <= 1'b0;
         end else begin

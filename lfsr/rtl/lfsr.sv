@@ -102,7 +102,7 @@ module lfsr #(
   generate
     if (STRUCTURE == "FIBONACCI") begin : g_fibonacci
 
-      reg feedback;
+      logic feedback;
 
       // Pick taps defined by polynomial and XOR (XNOR) them together as feedback
       always_comb begin

@@ -15,11 +15,11 @@ module ecpri_framer_odm (
     input  wire [79:0] s_odm_timestamp,
     input  wire [63:0] s_odm_compensation,
     //
-    output reg  [31:0] m_axis_tdata,
-    output reg  [ 3:0] m_axis_tkeep,
-    output reg         m_axis_tlast,
-    output reg  [17:0] m_axis_tuser,
-    output reg         m_axis_tvalid,
+    output logic  [31:0] m_axis_tdata,
+    output logic  [ 3:0] m_axis_tkeep,
+    output logic         m_axis_tlast,
+    output logic  [17:0] m_axis_tuser,
+    output logic         m_axis_tvalid,
     input  wire        m_axis_tready,
     //
     input  wire [47:0] ctrl_dest_mac,
@@ -35,13 +35,13 @@ module ecpri_framer_odm (
   // Parameters
 
   // verilog_format: off
-  localparam reg [ 3:0] Version     = 4'b0001;
-  localparam reg [ 2:0] Reserved    = 3'b000;
-  localparam reg        Concat      = 1'b0;
-  localparam reg [ 7:0] MessageType = 8'd5;
-  localparam reg [15:0] PayloadSize = 16'd20;
+  localparam logic [ 3:0] Version     = 4'b0001;
+  localparam logic [ 2:0] Reserved    = 3'b000;
+  localparam logic        Concat      = 1'b0;
+  localparam logic [ 7:0] MessageType = 8'd5;
+  localparam logic [15:0] PayloadSize = 16'd20;
 
-  localparam reg [31:0] EcpriHeader = {Version, Reserved, Concat, MessageType, PayloadSize};
+  localparam logic [31:0] EcpriHeader = {Version, Reserved, Concat, MessageType, PayloadSize};
 
   localparam integer S_RST         = 0;
   localparam integer S_IDLE        = 1;
@@ -62,7 +62,7 @@ module ecpri_framer_odm (
 
   integer state, state_next;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= S_RST;
     end else begin
@@ -70,7 +70,7 @@ module ecpri_framer_odm (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     state_next = state;
     case (state)
       S_RST: begin
@@ -161,7 +161,7 @@ module ecpri_framer_odm (
 
   // Master AXI
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     case (state)
       S_IDLE: begin
         if (s_axis_tvalid) begin
@@ -279,7 +279,7 @@ module ecpri_framer_odm (
     endcase
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     m_axis_tvalid <= (
       state_next == S_DMACH || state_next == S_DMACL_SMACH ||
       state_next == S_SMACL || state_next == S_VLAN || state_next == S_ETYPE_COMMH ||

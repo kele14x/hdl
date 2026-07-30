@@ -100,7 +100,7 @@ module rts (
 
   // Signals
 
-  reg                      rfs_d;
+  logic                      rfs_d;
 
   wire [             31:0] mux_axis_tdata;
   wire [              7:0] mux_axis_tuser;
@@ -252,7 +252,7 @@ module rts (
 
   assign s_axis_tready = 1'b1;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     rfs_d <= rfs_in;
   end
 

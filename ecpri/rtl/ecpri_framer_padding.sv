@@ -19,22 +19,22 @@ module ecpri_framer_padding (
     input  wire        s_axis_tvalid,
     output wire        s_axis_tready,
     //
-    output reg  [31:0] m_axis_tdata,
-    output reg  [ 3:0] m_axis_tkeep,
-    output reg         m_axis_tlast,
+    output logic  [31:0] m_axis_tdata,
+    output logic  [ 3:0] m_axis_tkeep,
+    output logic         m_axis_tlast,
     output wire        m_axis_tuser,
-    output reg         m_axis_tvalid,
+    output logic         m_axis_tvalid,
     input  wire        m_axis_tready,
     //
-    output reg  [ 1:0] tx_ptp_1588op,
-    output reg  [15:0] tx_ptp_tag_field
+    output logic  [ 1:0] tx_ptp_1588op,
+    output logic  [15:0] tx_ptp_tag_field
 );
 
   // Signals
 
-  reg         sync_n;
-  reg  [ 3:0] data_count;
-  reg         is_padding;
+  logic         sync_n;
+  logic  [ 3:0] data_count;
+  logic         is_padding;
 
   wire [31:0] int_axis_tdata;
   wire [ 3:0] int_axis_tkeep;
@@ -56,7 +56,7 @@ module ecpri_framer_padding (
 
   // TUSER is 1588 op and tag field
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       sync_n <= 1'b0;
     end else if (int_axis_tvalid && int_axis_tready && int_axis_tlast) begin
@@ -66,7 +66,7 @@ module ecpri_framer_padding (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (~sync_n && int_axis_tvalid && int_axis_tready) begin
       tx_ptp_1588op    <= int_axis_tuser[17:16];
       tx_ptp_tag_field <= int_axis_tuser[15:0];
@@ -77,7 +77,7 @@ module ecpri_framer_padding (
   // 0 ~ 13: requires padding with extra words
   // 14: requires padding with TKEEP pattern changed
   // 15: no padding required
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       data_count <= 'd0;
 
@@ -105,7 +105,7 @@ module ecpri_framer_padding (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       is_padding <= 1'b0;
     end else if (int_axis_tvalid && int_axis_tready && int_axis_tlast) begin
@@ -117,7 +117,7 @@ module ecpri_framer_padding (
 
   // AXIS Output
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (~m_axis_tvalid || m_axis_tready) begin
       if (is_padding) begin
         m_axis_tdata <= 32'd0;
@@ -131,7 +131,7 @@ module ecpri_framer_padding (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       m_axis_tvalid <= 1'b0;
     end else if (~m_axis_tvalid || m_axis_tready) begin

@@ -3,13 +3,13 @@
 `default_nettype none
 
 module timer_core_400 #(
-    parameter reg SIM_SPEED_UP = 1'b0
+    parameter logic SIM_SPEED_UP = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst,
     //
     input  wire        pps_in,
-    output reg         pps_out,
+    output logic         pps_out,
     //
     output wire [47:0] tod_sec,
     output wire [31:0] tod_ns,
@@ -46,22 +46,22 @@ module timer_core_400 #(
 
   // Signals
 
-  reg  [32:0] int_timer_ns_frac_reg;  // 32 bit ns, 1 bit frac
+  logic  [32:0] int_timer_ns_frac_reg;  // 32 bit ns, 1 bit frac
   wire        int_timer_ns_frac_wrap;
-  reg  [47:0] int_timer_sec_reg;
+  logic  [47:0] int_timer_sec_reg;
 
   wire [31:0] int_timer_ns;
   wire [47:0] int_timer_sec;
 
-  reg  [31:0] timer_ns_pre;
-  reg  [47:0] timer_sec_pre;
+  logic  [31:0] timer_ns_pre;
+  logic  [47:0] timer_sec_pre;
 
-  reg  [31:0] timer_ns;
+  logic  [31:0] timer_ns;
   wire        timer_ns_carry;
-  reg  [47:0] timer_sec;
+  logic  [47:0] timer_sec;
 
-  reg         timer_ns_wrap;
-  reg         timer_ns_wrap_d;
+  logic         timer_ns_wrap;
+  logic         timer_ns_wrap_d;
 
   // control & status
 
@@ -83,7 +83,7 @@ module timer_core_400 #(
   // Internal second and nanosecond counter
   // Which is free running, predictable counter
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       int_timer_ns_frac_reg <= 'd0;
     end else if (int_timer_ns_frac_wrap) begin
@@ -95,7 +95,7 @@ module timer_core_400 #(
 
   assign int_timer_ns_frac_wrap = (int_timer_ns_frac_reg[32:1] == IntTimerNsWrapConst);
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       int_timer_sec_reg <= 'd0;
     end else if (int_timer_ns_frac_wrap) begin
@@ -110,11 +110,11 @@ module timer_core_400 #(
   // We know that int_timer_ns < NsPerSecond, and rtc_offset_ns < NsPerSecond,
   // so timer_ns_pre < 2 * NsPerSecond. A single wrap check is sufficient.
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     timer_ns_pre <= int_timer_ns + rtc_offset_ns;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     timer_sec_pre <= int_timer_sec + rtc_offset_sec;
   end
 
@@ -122,7 +122,7 @@ module timer_core_400 #(
 
   // Carry ns to sec to get the correct time
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (timer_ns_carry) begin
       timer_ns <= timer_ns_pre - NsPerSecond;
     end else begin
@@ -130,7 +130,7 @@ module timer_core_400 #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (timer_ns_carry) begin
       timer_sec <= timer_sec_pre + 1'd1;
     end else begin
@@ -143,15 +143,15 @@ module timer_core_400 #(
 
   // PPS output
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     timer_ns_wrap <= (timer_ns_pre >= IntTimerNsWrapConst);
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     timer_ns_wrap_d <= timer_ns_wrap;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     // Rising edge of timer_ns_wrap
     pps_out <= timer_ns_wrap && ~timer_ns_wrap_d;
   end

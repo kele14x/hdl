@@ -17,8 +17,8 @@ module prach_stream2block #(
     input  wire               din_dv,
     input  wire               din_last,
     //
-    output reg  [       15:0] dout_dr,
-    output reg  [       15:0] dout_di,
+    output logic  [       15:0] dout_dr,
+    output logic  [       15:0] dout_di,
     output wire               dout_sf,
     output wire               dout_sl,
     output wire               dout_sy,
@@ -27,7 +27,7 @@ module prach_stream2block #(
     output wire               dout_last,
     //
     input  wire [NUM_ANT-1:0] rd_channel_req,
-    output reg  [NUM_ANT-1:0] rd_channel_ack,
+    output logic  [NUM_ANT-1:0] rd_channel_ack,
     // CSR
     //----
     input  wire [        8:0] ctrl_start_symbol0,

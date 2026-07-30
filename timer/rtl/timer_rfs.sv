@@ -10,8 +10,8 @@ module timer_rfs #(
     //
     input  wire        pps_in,
     //
-    output reg         rfs_out,
-    output reg         rfs_pad,
+    output logic         rfs_out,
+    output logic         rfs_pad,
     //
     input  wire [22:0] ctrl_rfs_offset
 );
@@ -26,13 +26,13 @@ module timer_rfs #(
 
   wire [22:0] ctrl_rfs_offset_s;
 
-  reg  [22:0] counter;
+  logic  [22:0] counter;
   wire        counter_wrap;
 
   wire        rfs_pulse;
 
-  reg  [ 3:0] rfs_ext0;
-  reg  [15:0] rfs_ext1;
+  logic  [ 3:0] rfs_ext0;
+  logic  [15:0] rfs_ext1;
 
   // Control CDC
 
@@ -51,7 +51,7 @@ module timer_rfs #(
 
   // Main
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       counter <= 23'd0;
     end else if (pps_in) begin
@@ -68,7 +68,7 @@ module timer_rfs #(
   // Expand pps pulse to 16-clock width, this ensures all clocks could see the
   // pps pulse
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rfs_out) begin
       rfs_ext0 <= rfs_ext0 + 1'd1;
     end else if (&rfs_ext0) begin
@@ -78,7 +78,7 @@ module timer_rfs #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       rfs_out <= 1'b0;
     end else if (rfs_pulse) begin
@@ -91,7 +91,7 @@ module timer_rfs #(
   // Extend pps pulse to make it wide enough, this generate 500us pulse on
   // 491.52 MHz clock
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rfs_pad) begin
       rfs_ext1 <= rfs_ext1 + 1'd1;
     end else if (rfs_ext1 == TickPerPulse - 1) begin
@@ -101,7 +101,7 @@ module timer_rfs #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       rfs_pad <= 1'b0;
     end else if (rfs_pulse) begin

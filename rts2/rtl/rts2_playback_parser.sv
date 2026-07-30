@@ -18,10 +18,10 @@ module rts2_playback_parser (
     input  wire        s_axis_tvalid,
     output wire        s_axis_tready,
     //
-    output reg  [63:0] m_axis_tdata,
-    output reg  [ 7:0] m_axis_tkeep,
-    output reg         m_axis_tlast,
-    output reg         m_axis_tvalid,
+    output logic  [63:0] m_axis_tdata,
+    output logic  [ 7:0] m_axis_tkeep,
+    output logic         m_axis_tlast,
+    output logic         m_axis_tvalid,
     // CSR
     input  wire        ctrl_en
 );
@@ -67,17 +67,17 @@ module rts2_playback_parser (
 
   wire               ctrl_en_s;
 
-  reg                sync_in_d;
-  reg                sync_in_dd;
+  logic                sync_in_d;
+  logic                sync_in_dd;
   wire               sync_in_posedge;
 
   wire        [63:0] s_axis_tdata_rev;
-  reg         [55:0] s_axis_tdata_reg;
-  reg         [63:0] s_axis_tdata_shift;
-  reg         [63:0] s_axis_tdata_shift2;
+  logic         [55:0] s_axis_tdata_reg;
+  logic         [63:0] s_axis_tdata_shift;
+  logic         [63:0] s_axis_tdata_shift2;
 
   // Parser status register
-  reg         [31:0] length_counter;
+  logic         [31:0] length_counter;
 
   wire        [ 2:0] shift;
   wire        [ 2:0] shift_next;
@@ -86,27 +86,27 @@ module rts2_playback_parser (
   wire               tlast_inphase;
   wire               tlast_extra;
 
-  reg         [63:0] extra_tdata;
-  reg         [ 2:0] extra_tkeep;
-  reg                extra_tlast;
+  logic         [63:0] extra_tdata;
+  logic         [ 2:0] extra_tkeep;
+  logic                extra_tlast;
 
   wire        [31:0] record_length;
   wire               record_length_valid;
-  reg         [31:0] record_length_reg;
+  logic         [31:0] record_length_reg;
 
   wire signed [31:0] record_timestamp;
   wire               record_timestamp_valid;
-  reg signed  [31:0] record_timestamp_reg;
-  reg                record_timestamp_odd;
+  logic signed  [31:0] record_timestamp_reg;
+  logic                record_timestamp_odd;
 
-  reg         [13:0] record_timestamp_wrapped;
-  reg                record_timestamp_wrapped_swap;
-  reg                record_timestamp_wrapped_odd;
+  logic         [13:0] record_timestamp_wrapped;
+  logic                record_timestamp_wrapped_swap;
+  logic                record_timestamp_wrapped_odd;
 
-  reg         [ 8:0] timestamp_counter_lsb;
-  reg         [13:0] timestamp_counter;
-  reg                timestamp_counter_odd;
-  reg                timestamp_counter_valid;
+  logic         [ 8:0] timestamp_counter_lsb;
+  logic         [13:0] timestamp_counter;
+  logic                timestamp_counter_odd;
+  logic                timestamp_counter_valid;
 
   wire        [13:0] timestamp_counter_cdc;
   wire               timestamp_counter_cdc_odd;
@@ -139,7 +139,7 @@ module rts2_playback_parser (
 
   // FSM
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if (ddr4_rst) begin
       state <= S_RST;
     end else begin
@@ -147,7 +147,7 @@ module rts2_playback_parser (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     state_next = state;
 
     case (state)
@@ -248,7 +248,7 @@ module rts2_playback_parser (
 
   assign s_axis_tdata_rev = byte_reverse64(s_axis_tdata);
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if (s_axis_tvalid && s_axis_tready) begin
       s_axis_tdata_reg <= s_axis_tdata_rev[55:0];
     end
@@ -259,7 +259,7 @@ module rts2_playback_parser (
   // | s_axis_tdata_reg | s_axis_tdata_rev | < 8 - shift  > |
   //              | s_axis_data_shift | s_axis_tdata_shift2 |
 
-  always @(*) begin
+  always_comb begin
     case (shift)
       3'b000:  s_axis_tdata_shift = s_axis_tdata_rev;
       3'b001:  s_axis_tdata_shift = {s_axis_tdata_reg[7:0], s_axis_tdata_rev[63:8]};
@@ -273,7 +273,7 @@ module rts2_playback_parser (
     endcase
   end
 
-  always @(*) begin
+  always_comb begin
     case (shift)
       3'b000:  s_axis_tdata_shift2 = 'd0;
       3'b001:  s_axis_tdata_shift2 = {s_axis_tdata_rev[7:0], 56'b0};
@@ -298,7 +298,7 @@ module rts2_playback_parser (
 
   assign record_length = byte_reverse32(s_axis_tdata_shift[63:32]);
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if (ddr4_rst) begin
       record_length_reg <= 32'd0;
     end else if (s_axis_tvalid && s_axis_tready && s_axis_tlast) begin
@@ -310,7 +310,7 @@ module rts2_playback_parser (
 
   // Local length counter
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if (ddr4_rst) begin
       length_counter <= 32'd0;
     end else if (s_axis_tvalid && s_axis_tready && s_axis_tlast) begin
@@ -335,7 +335,7 @@ module rts2_playback_parser (
   // This is timestamp (Microseconds) field
   assign record_timestamp       = byte_reverse32(s_axis_tdata_shift[31:0]);
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if (ddr4_rst) begin
       record_timestamp_reg <= 32'd0;
     end else if (record_timestamp_valid) begin
@@ -344,7 +344,7 @@ module rts2_playback_parser (
   end
 
   // We also need an even/odd frame counter
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if (ddr4_rst) begin
       record_timestamp_odd <= 1'b0;
     end else if (s_axis_tvalid && s_axis_tready && s_axis_tlast) begin
@@ -358,7 +358,7 @@ module rts2_playback_parser (
   assign record_timestamp_plus  = record_timestamp_reg + 32'sd10000;
   assign record_timestamp_minus = record_timestamp_reg - 32'sd10000;
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if (record_timestamp_reg < 0) begin
       record_timestamp_wrapped      <= record_timestamp_plus[13:0];
       record_timestamp_wrapped_swap <= 1'b1;
@@ -371,7 +371,7 @@ module rts2_playback_parser (
     end
   end
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     record_timestamp_wrapped_odd <= record_timestamp_odd;
   end
 
@@ -390,14 +390,14 @@ module rts2_playback_parser (
   // Local time counter @ 400 MHz
   // We need a microseconds counter valud and an even/odd indicator
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     sync_in_d  <= sync_in;
     sync_in_dd <= sync_in_d;
   end
 
   assign sync_in_posedge = sync_in_d && !sync_in_dd;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       timestamp_counter_lsb <= 9'd0;
     end else if (sync_in_posedge) begin
@@ -409,7 +409,7 @@ module rts2_playback_parser (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       timestamp_counter     <= 14'd0;
       timestamp_counter_odd <= 1'b0;
@@ -421,7 +421,7 @@ module rts2_playback_parser (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       timestamp_counter_valid <= 1'b0;
     end else if (sync_in_posedge) begin
@@ -454,23 +454,23 @@ module rts2_playback_parser (
 
   // Output
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     extra_tlast <= (state == S_DATA) && s_axis_tvalid && tlast_extra;
   end
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if ((state == S_DATA) && s_axis_tvalid && tlast_extra) begin
       extra_tkeep <= shift - shift_next;
     end
   end
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if ((state == S_DATA) && s_axis_tvalid && tlast_extra) begin
       extra_tdata <= s_axis_tdata_shift2;
     end
   end
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if (((state == S_DATA) && s_axis_tvalid)) begin
       m_axis_tdata <= byte_reverse64(s_axis_tdata_shift);
     end else if (extra_tlast) begin
@@ -478,7 +478,7 @@ module rts2_playback_parser (
     end
   end
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if ((state == S_DATA) && s_axis_tvalid) begin
       if (tlast_inphase) begin
         // In-phase TLAST
@@ -511,7 +511,7 @@ module rts2_playback_parser (
     end
   end
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if ((state == S_DATA) && s_axis_tvalid) begin
       m_axis_tlast <= tlast_inphase || !ctrl_en_s;
     end else if (extra_tlast) begin
@@ -519,7 +519,7 @@ module rts2_playback_parser (
     end
   end
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     m_axis_tvalid <= ((state == S_DATA) && s_axis_tvalid) || extra_tlast;
   end
 

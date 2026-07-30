@@ -18,10 +18,10 @@ module enc_8b10b_logic (
   wire [2:0] b3;
   wire [4:0] b5;
 
-  reg  [3:0] b4;
-  reg  [5:0] b6;
+  logic  [3:0] b4;
+  logic  [5:0] b6;
 
-  reg alt, disp_6b, disp_4b;
+  logic alt, disp_6b, disp_4b;
   wire k28, kok;
 
   function [9:0] bit_reverse(input [9:0] bin);

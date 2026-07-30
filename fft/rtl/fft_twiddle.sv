@@ -7,7 +7,7 @@
 
 module fft_twiddle #(
     parameter integer NUM_ANT      = 4,
-    parameter reg     INV_FFT      = 1'b0,
+    parameter logic     INV_FFT      = 1'b0,
     parameter integer LOG_FFT_SIZE = 4,
     parameter integer DATA_WIDTH   = 18
 ) (
@@ -36,13 +36,13 @@ module fft_twiddle #(
   // Signals
 
   // Counter count from 0 to LOG_FFT_SIZE - 1
-  reg         [             3:0] counter_ch;
+  logic         [             3:0] counter_ch;
   wire        [             3:0] counter_ch_max;
 
-  reg         [LOG_FFT_SIZE-1:0] counter;
+  logic         [LOG_FFT_SIZE-1:0] counter;
   wire        [LOG_FFT_SIZE-1:0] counter_max;
 
-  reg                            state;
+  logic                            state;
 
   wire        [LOG_FFT_SIZE-1:0] twiddle;
 
@@ -59,7 +59,7 @@ module fft_twiddle #(
   assign counter_ch_max = ((ctrl_itlv == 2'b00) ? 4'd15 : (ctrl_itlv == 2'b01) ? 4'd7 : 4'd3) ^ {4{(NUM_ANT != 0) & 1'b0}};
   assign counter_max = (ctrl_bypass == 2'b00) ? ((1 << LOG_FFT_SIZE) - 1) : ((1 << LogFftSize2) - 1);
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       counter_ch <= 'd0;
     end else if (&ctrl_bypass) begin
@@ -71,7 +71,7 @@ module fft_twiddle #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       counter <= 'd0;
     end else if (&ctrl_bypass) begin
@@ -85,7 +85,7 @@ module fft_twiddle #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= 1'b0;
     end else if (&ctrl_bypass) begin

@@ -12,7 +12,7 @@ module coe_framer_data (
     input  wire [  7:0] s_axis_tuser,
     input  wire         s_axis_tlast,
     input  wire         s_axis_tvalid,
-    output reg          s_axis_tready,
+    output logic          s_axis_tready,
     //
     output wire [ 31:0] m_axis_tdata,
     output wire [  3:0] m_axis_tkeep,
@@ -20,11 +20,11 @@ module coe_framer_data (
     output wire         m_axis_tvalid,
     input  wire         m_axis_tready,
     //
-    output reg  [ 18:0] m_app_ts,
+    output logic  [ 18:0] m_app_ts,
     //
     output wire [  7:0] m_trans_messagetype,
     output wire [ 15:0] m_trans_payloadsize,
-    output reg  [ 15:0] m_trans_rtc_pc_id,
+    output logic  [ 15:0] m_trans_rtc_pc_id,
     //
     input  wire         ctrl_en,
     input  wire [ 15:0] ctrl_seq_en,
@@ -57,46 +57,46 @@ module coe_framer_data (
   wire [95:0] ctrl_seq_id_s;
   wire [ 7:0] ctrl_seq_cnt_s;
 
-  reg         sync_d;
+  logic         sync_d;
   wire        sync_posedge;
 
-  reg  [22:0] sample_counter;
+  logic  [22:0] sample_counter;
 
-  reg  [ 3:0] seq_val;
-  reg  [15:0] seq_counter;
+  logic  [ 3:0] seq_val;
+  logic  [15:0] seq_counter;
 
-  reg  [ 5:0] seq_id_reg        [0:15];
+  logic  [ 5:0] seq_id_reg        [0:15];
   wire [ 5:0] seq_id;
-  reg  [ 5:0] seq_sel;
+  logic  [ 5:0] seq_sel;
 
-  reg  [15:0] seq_valid_reg;
+  logic  [15:0] seq_valid_reg;
   wire        seq_valid;
 
-  reg  [ 4:0] seq_n_valid_c;
-  reg  [ 4:0] seq_n_valid;
-  reg  [ 3:0] seq_last_val;
+  logic  [ 4:0] seq_n_valid_c;
+  logic  [ 4:0] seq_n_valid;
+  logic  [ 3:0] seq_last_val;
 
   wire        seq_first;
   wire        seq_last;
 
-  reg         s0_run;
-  reg         s0_valid;
-  reg         s0_seq_sel        [0:23];
-  reg         s0_last;
+  logic         s0_run;
+  logic         s0_valid;
+  logic         s0_seq_sel        [0:23];
+  logic         s0_last;
 
-  reg  [31:0] s_axis_tdata_d    [0:23];
-  reg  [31:0] s_axis_tdata_dd   [0:23];
+  logic  [31:0] s_axis_tdata_d    [0:23];
+  logic  [31:0] s_axis_tdata_dd   [0:23];
 
-  reg  [31:0] s0_axis_tdata_rev;
-  reg  [31:0] s0_axis_tdata;
+  logic  [31:0] s0_axis_tdata_rev;
+  logic  [31:0] s0_axis_tdata;
   wire [ 3:0] s0_axis_tkeep;
   wire        s0_axis_tlast;
   wire        s0_axis_tvalid;
 
-  reg  [18:0] app_ts;
+  logic  [18:0] app_ts;
   (* USE_DSP = "NO" *)
-  reg  [11:0] trans_payloadsize;
-  reg  [ 7:0] trans_seqid;
+  logic  [11:0] trans_payloadsize;
+  logic  [ 7:0] trans_seqid;
 
   genvar gen_i;
 
@@ -107,7 +107,7 @@ module coe_framer_data (
   // Main
 
   // This module is always ready to accept data
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       s_axis_tready <= 1'b0;
     end else begin
@@ -117,13 +117,13 @@ module coe_framer_data (
 
   // Count the TS
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     sync_d <= sync;
   end
 
   assign sync_posedge = sync && ~sync_d;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (sync_posedge) begin
       sample_counter <= 'd0;
     end else begin
@@ -134,7 +134,7 @@ module coe_framer_data (
   // Count how many sequence loop we already send
   // `s_axis_tuser[0]` is used to indicate the start of a new sequence
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (sync_posedge) begin
       seq_val <= 'd0;
     end else begin
@@ -142,7 +142,7 @@ module coe_framer_data (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (sync_posedge) begin
       seq_counter <= 'd0;
     end else if (&seq_val) begin
@@ -161,7 +161,7 @@ module coe_framer_data (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (sync_posedge) begin
       seq_valid_reg <= ctrl_seq_en_s;
     end
@@ -169,7 +169,7 @@ module coe_framer_data (
 
   // Track how many valid sequence we have, and which sequence is the last one
 
-  always @(*) begin : p_seq_n_valid_c
+  always_comb begin : p_seq_n_valid_c
     integer i;
     seq_n_valid_c = 'd0;
     for (i = 0; i < 16; i = i + 1) begin
@@ -179,7 +179,7 @@ module coe_framer_data (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (sync_posedge) begin
       seq_n_valid <= seq_n_valid_c;
     end
@@ -201,7 +201,7 @@ module coe_framer_data (
   // seq_id = {band[5:4], cc[3:2], ant[1:0]}
   // however, the data streams are sorted by A0C0/A0C1/A0C2/A1C0...
   // so there is mapping here
-  always @(*) begin
+  always_comb begin
     case (seq_id)
       // Band0 CC0
       6'b00_00_00: seq_sel = 6'd0;
@@ -254,14 +254,14 @@ module coe_framer_data (
   generate
     for (gen_i = 0; gen_i < 24; gen_i = gen_i + 1) begin : g_seq_sel_ch
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         s0_seq_sel[gen_i] <= (seq_sel == gen_i) && seq_valid;
       end
 
     end
   endgenerate
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (seq_first) begin
       s0_run <= 1'b1;
     end else if (seq_last) begin
@@ -269,7 +269,7 @@ module coe_framer_data (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (seq_first) begin
       s0_valid <= 1'b1;
     end else if (seq_valid && s0_run) begin
@@ -279,7 +279,7 @@ module coe_framer_data (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (seq_valid) begin
       s0_last <= seq_last;
     end
@@ -288,11 +288,11 @@ module coe_framer_data (
   generate
     for (gen_i = 0; gen_i < 24; gen_i = gen_i + 1) begin : g_axis_d
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         s_axis_tdata_d[gen_i] <= s_axis_tdata[gen_i*32+31-:32];
       end
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         if (s0_seq_sel[gen_i]) begin
           s_axis_tdata_dd[gen_i] <= s_axis_tdata_d[gen_i];
         end else begin
@@ -303,7 +303,7 @@ module coe_framer_data (
     end
   endgenerate
 
-  always @(*) begin : p_rev
+  always_comb begin : p_rev
     integer i;
     s0_axis_tdata_rev = 'd0;
     for (i = 0; i < 24; i = i + 1) begin
@@ -311,7 +311,7 @@ module coe_framer_data (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     s0_axis_tdata <= {
       s0_axis_tdata_rev[23:16],  // Q lsb
       s0_axis_tdata_rev[31:24],  // Q msb
@@ -349,19 +349,19 @@ module coe_framer_data (
   // OOB signals
 
   // When the sequence counter is 0, register current TS
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((seq_counter == 0) && (seq_val == 0)) begin
       app_ts <= sample_counter[22:4];
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (seq_valid_reg[seq_val] && seq_last) begin
       m_app_ts <= app_ts;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (seq_valid_reg[seq_val] && seq_last) begin
       trans_payloadsize <= (ctrl_seq_cnt_s * seq_n_valid);
     end
@@ -371,13 +371,13 @@ module coe_framer_data (
 
   assign m_trans_payloadsize = {2'b00, trans_payloadsize, 2'b00};
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (seq_valid_reg[seq_val] && seq_last) begin
       m_trans_rtc_pc_id <= seq_valid_reg;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       trans_seqid <= 'd0;
     end else if (seq_valid_reg[seq_val] && seq_last) begin

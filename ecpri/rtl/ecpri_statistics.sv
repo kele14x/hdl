@@ -81,13 +81,13 @@ module ecpri_statistics (
   wire [ 5:0] unused_stat_src_ready;
   wire [ 5:0] unused_stat_dest_valid;
 
-  reg  [31:0] defm_total_pkt_cnt;
-  reg  [31:0] defm_ecpri_pkt_cnt;
-  reg  [31:0] defm_trans_pkt_cnt;
-  reg  [31:0] defm_odm_pkt_cnt;
+  logic  [31:0] defm_total_pkt_cnt;
+  logic  [31:0] defm_ecpri_pkt_cnt;
+  logic  [31:0] defm_trans_pkt_cnt;
+  logic  [31:0] defm_odm_pkt_cnt;
 
-  reg  [31:0] fram_trans_pkt_cnt;
-  reg  [31:0] fram_odm_pkt_cnt;
+  logic  [31:0] fram_trans_pkt_cnt;
+  logic  [31:0] fram_odm_pkt_cnt;
 
   // Control CDC
 
@@ -123,7 +123,7 @@ module ecpri_statistics (
 
   // Deframer total packet counter
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (tick_clear) begin
       defm_total_pkt_cnt <= 0;
     end else if (m_mac_header_valid) begin
@@ -151,7 +151,7 @@ module ecpri_statistics (
 
   // Deframer eCPRI packet counter
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (tick_clear) begin
       defm_ecpri_pkt_cnt <= 0;
     end else if (m_ecpri_header_valid) begin
@@ -179,7 +179,7 @@ module ecpri_statistics (
 
   // Deframer Trans packet counter
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (tick_clear) begin
       defm_trans_pkt_cnt <= 0;
     end else if (m_trans_header_valid) begin
@@ -207,7 +207,7 @@ module ecpri_statistics (
 
   // Deframer One-Way Delay Measurement packet counter
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (tick_clear) begin
       defm_odm_pkt_cnt <= 0;
     end else if (m_odm_header_valid) begin
@@ -245,7 +245,7 @@ module ecpri_statistics (
 
   // Framer Trans packet counter
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (tick_clear) begin
       fram_trans_pkt_cnt <= 0;
     end else if (s_trans_header_valid) begin
@@ -273,7 +273,7 @@ module ecpri_statistics (
 
   // Framer One-Way Delay Measurement packet counter
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (tick_clear) begin
       fram_odm_pkt_cnt <= 0;
     end else if (s_odm_header_valid) begin

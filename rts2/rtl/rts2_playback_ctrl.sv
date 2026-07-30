@@ -10,7 +10,7 @@ module rts2_playback_ctrl #(
     input  wire        ddr4_clk,
     input  wire        ddr4_rst,
     //
-    output reg  [79:0] m_axis_mm2s_cmd_tdata,
+    output logic  [79:0] m_axis_mm2s_cmd_tdata,
     output wire        m_axis_mm2s_cmd_tvalid,
     input  wire        m_axis_mm2s_cmd_tready,
     //
@@ -44,9 +44,9 @@ module rts2_playback_ctrl #(
   wire [          31:0] ctrl_addr_offset_s;
   wire [          31:0] ctrl_addr_size_s;
 
-  reg  [          31:0] offset_reg;
-  reg  [          31:0] size_reg;
-  reg  [           3:0] tag_reg;
+  logic  [          31:0] offset_reg;
+  logic  [          31:0] size_reg;
+  logic  [           3:0] tag_reg;
 
   wire [           3:0] mm2s_rsvd;
   wire [           3:0] mm2s_tag;
@@ -108,7 +108,7 @@ module rts2_playback_ctrl #(
 
   // FSM
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if (ddr4_rst) begin
       state <= S_RST;
     end else begin
@@ -116,7 +116,7 @@ module rts2_playback_ctrl #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     state_next = state;
 
     case (state)
@@ -159,7 +159,7 @@ module rts2_playback_ctrl #(
 
   // Offset & Size register
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if (ddr4_rst) begin
       offset_reg <= 'b0;
       size_reg   <= 'b0;
@@ -179,7 +179,7 @@ module rts2_playback_ctrl #(
     end
   end
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if (ddr4_rst) begin
       tag_reg <= 'b0;
     end else if (state == S_PRE && size_reg > PageSize) begin
@@ -191,7 +191,7 @@ module rts2_playback_ctrl #(
 
   assign m_axis_mm2s_cmd_tvalid = (state == S_CMD);
 
-  always @(posedge ddr4_clk) begin
+  always_ff @(posedge ddr4_clk) begin
     if ((state == S_PRE) && (size_reg != 0)) begin
       m_axis_mm2s_cmd_tdata <= {
         mm2s_rsvd, mm2s_tag, mm2s_saddr, mm2s_drr, mm2s_eof, mm2s_dsa, mm2s_type, mm2s_btt

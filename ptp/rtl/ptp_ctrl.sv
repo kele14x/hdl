@@ -15,14 +15,14 @@ module ptp_ctrl #(
     input  wire [79:0] s_msg_origin_timestamp,
     input  wire [79:0] s_msg_source_port_identity,
     // Tx framer
-    output reg         ap_valid,
+    output logic         ap_valid,
     input  wire        ap_ready,
-    output reg  [ 3:0] ap_message_type,
-    output reg  [15:0] ap_sequence_id,
-    output reg  [ 7:0] ap_log_message_interval,
-    output reg  [79:0] ap_origin_timestamp,
-    output reg  [79:0] ap_requesting_port_identity,
-    output reg  [15:0] ap_tag_field,
+    output logic  [ 3:0] ap_message_type,
+    output logic  [15:0] ap_sequence_id,
+    output logic  [ 7:0] ap_log_message_interval,
+    output logic  [79:0] ap_origin_timestamp,
+    output logic  [79:0] ap_requesting_port_identity,
+    output logic  [15:0] ap_tag_field,
     // Tx Ethernet
     input  wire [79:0] tx_ptp_timestamp,
     input  wire [15:0] tx_ptp_timestamp_tag,
@@ -53,66 +53,66 @@ module ptp_ctrl #(
   wire [             7:0] ctrl_log_announce_interval_s;
   wire [             7:0] ctrl_log_sync_interval_s;
 
-  reg  [            15:0] tag_field;
+  logic  [            15:0] tag_field;
   wire                    tag_field_fb;
 
   // Sync message
 
   wire [             6:0] sync_counter_shift;
 
-  reg  [CounterWidth-1:0] sync_counter;
-  reg  [CounterWidth-1:0] sync_counter_max;
+  logic  [CounterWidth-1:0] sync_counter;
+  logic  [CounterWidth-1:0] sync_counter_max;
   wire                    sync_counter_wrap;
 
-  reg  [             7:0] sync_counter_s;
-  reg  [             7:0] sync_counter_s_max;
+  logic  [             7:0] sync_counter_s;
+  logic  [             7:0] sync_counter_s_max;
   wire                    sync_counter_s_wrap;
 
-  reg  [            15:0] sync_sequence_id;
+  logic  [            15:0] sync_sequence_id;
 
-  reg                     sync_req;
+  logic                     sync_req;
   wire                    sync_ack;
 
   // Delay Request Message
 
-  reg  [            15:0] delay_req_sequence_id;
+  logic  [            15:0] delay_req_sequence_id;
 
-  reg                     delay_req_req;
+  logic                     delay_req_req;
   wire                    delay_req_ack;
 
   // Follow message
 
-  reg  [            79:0] follow_up_origin_timestamp;
-  reg  [            15:0] follow_up_sequence_id;
-  reg  [            15:0] follow_up_tag_field;
+  logic  [            79:0] follow_up_origin_timestamp;
+  logic  [            15:0] follow_up_sequence_id;
+  logic  [            15:0] follow_up_tag_field;
 
-  reg                     follow_up_req;
+  logic                     follow_up_req;
   wire                    follow_up_ack;
 
   // Delay Response Message
 
-  reg  [            79:0] delay_resp_timestamp;
-  reg  [            79:0] delay_resp_port_identity;
-  reg  [            15:0] delay_resp_sequence_id;
+  logic  [            79:0] delay_resp_timestamp;
+  logic  [            79:0] delay_resp_port_identity;
+  logic  [            15:0] delay_resp_sequence_id;
 
-  reg                     delay_resp_req;
+  logic                     delay_resp_req;
   wire                    delay_resp_ack;
 
   // Announce message
 
   wire [             6:0] announce_counter_shift;
 
-  reg  [CounterWidth-1:0] announce_counter;
-  reg  [CounterWidth-1:0] announce_counter_max;
+  logic  [CounterWidth-1:0] announce_counter;
+  logic  [CounterWidth-1:0] announce_counter_max;
   wire                    announce_counter_wrap;
 
-  reg  [             7:0] announce_counter_s;
-  reg  [             7:0] announce_counter_s_max;
+  logic  [             7:0] announce_counter_s;
+  logic  [             7:0] announce_counter_s_max;
   wire                    announce_counter_s_wrap;
 
-  reg  [            15:0] announce_sequence_id;
+  logic  [            15:0] announce_sequence_id;
 
-  reg                     announce_req;
+  logic                     announce_req;
   wire                    announce_ack;
 
   // Control CDC
@@ -154,7 +154,7 @@ module ptp_ctrl #(
 
   // Main
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       tag_field <= 'd0;
     end else if ((sync_req && sync_ack) || (delay_req_req && delay_req_ack)) begin
@@ -173,7 +173,7 @@ module ptp_ctrl #(
 
   assign sync_counter_shift = (~ctrl_log_sync_interval_s[6:0] + 1);
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_log_sync_interval_s[7]) begin
       // Interval is negative (less than 1s), so we need to count up to 1s / 2^ctrl_log_sync_interval
       sync_counter_max <= (ClkFreq >> sync_counter_shift) - OneCount;
@@ -183,7 +183,7 @@ module ptp_ctrl #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       sync_counter <= 0;
     end else if (sync_counter_wrap) begin
@@ -195,7 +195,7 @@ module ptp_ctrl #(
 
   assign sync_counter_wrap = (sync_counter == sync_counter_max);
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_log_sync_interval_s[7]) begin
       // Interval is negative (less than 1s), so we not need second counter
       sync_counter_s_max <= 0;
@@ -216,7 +216,7 @@ module ptp_ctrl #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       sync_counter_s <= 0;
     end else if (sync_counter_s_wrap) begin
@@ -228,7 +228,7 @@ module ptp_ctrl #(
 
   assign sync_counter_s_wrap = (sync_counter_s == sync_counter_s_max);
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       sync_sequence_id <= 'd0;
     end else if (sync_req && sync_ack) begin
@@ -236,7 +236,7 @@ module ptp_ctrl #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       sync_req <= 1'b0;
     end else if (sync_counter_wrap && sync_counter_s_wrap && ctrl_master_en_s) begin
@@ -248,7 +248,7 @@ module ptp_ctrl #(
 
   // Delay Request Message
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       delay_req_sequence_id <= 'd0;
     end else if (delay_req_req && delay_req_ack) begin
@@ -256,7 +256,7 @@ module ptp_ctrl #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       delay_req_req <= 1'b0;
     end else if (s_msg_valid && (s_msg_message_type == PTP_MESSAGE_TYPE_SYNC)) begin
@@ -268,7 +268,7 @@ module ptp_ctrl #(
 
   // Follow Up Message
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (tx_ptp_timestamp_valid && (tx_ptp_timestamp_tag == follow_up_tag_field)) begin
       follow_up_origin_timestamp <= tx_ptp_timestamp;
     end
@@ -276,7 +276,7 @@ module ptp_ctrl #(
 
   // Register the sequenceID when send sync message, we should use same value
   // for Follow Up message
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (sync_req && sync_ack) begin
       follow_up_sequence_id <= sync_sequence_id;
     end
@@ -284,13 +284,13 @@ module ptp_ctrl #(
 
   // Register the tag field when send sync message, we should check it when
   // got TX timestamp
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (sync_req && sync_ack) begin
       follow_up_tag_field <= tag_field;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       follow_up_req <= 1'b0;
     end else if (tx_ptp_timestamp_valid && (tx_ptp_timestamp_tag == follow_up_tag_field) && ctrl_master_en_s) begin
@@ -302,25 +302,25 @@ module ptp_ctrl #(
 
   // Delay Response Message
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (s_msg_valid && (s_msg_message_type == PTP_MESSAGE_TYPE_DELAY_REQ)) begin
       delay_resp_timestamp <= s_msg_timestamp;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (s_msg_valid && (s_msg_message_type == PTP_MESSAGE_TYPE_DELAY_REQ)) begin
       delay_resp_port_identity <= s_msg_source_port_identity;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (s_msg_valid && (s_msg_message_type == PTP_MESSAGE_TYPE_DELAY_REQ)) begin
       delay_resp_sequence_id <= s_msg_sequence_id;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       delay_resp_req <= 1'b0;
     end else if (s_msg_valid && (s_msg_message_type == PTP_MESSAGE_TYPE_DELAY_REQ) && ctrl_master_en_s) begin
@@ -338,7 +338,7 @@ module ptp_ctrl #(
 
   assign announce_counter_shift = (~ctrl_log_announce_interval_s[6:0] + 1'b1);
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_log_announce_interval_s[7]) begin
       // Interval is negative (less than 1s), so we need to count up to 1s / 2^ctrl_log_announce_interval
       announce_counter_max <= (ClkFreq >> announce_counter_shift) - OneCount;
@@ -348,7 +348,7 @@ module ptp_ctrl #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       announce_counter <= 0;
     end else if (announce_counter_wrap) begin
@@ -360,7 +360,7 @@ module ptp_ctrl #(
 
   assign announce_counter_wrap = (announce_counter == announce_counter_max);
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_log_announce_interval_s[7]) begin
       // Interval is negative (less than 1s), so we not need second counter
       announce_counter_s_max <= 0;
@@ -381,7 +381,7 @@ module ptp_ctrl #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       announce_counter_s <= 0;
     end else if (announce_counter_s_wrap) begin
@@ -393,7 +393,7 @@ module ptp_ctrl #(
 
   assign announce_counter_s_wrap = (announce_counter_s == announce_counter_s_max);
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       announce_sequence_id <= 'd0;
     end else if (announce_req && announce_ack) begin
@@ -401,7 +401,7 @@ module ptp_ctrl #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       announce_req <= 1'b0;
     end else if (announce_counter_wrap && announce_counter_s_wrap && ctrl_master_en_s) begin
@@ -413,7 +413,7 @@ module ptp_ctrl #(
 
   // Output
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       ap_valid <= 1'b0;
     end else if (ap_valid) begin
@@ -429,7 +429,7 @@ module ptp_ctrl #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (sync_req && ~ap_valid) begin
       ap_message_type             <= PTP_MESSAGE_TYPE_SYNC;
       ap_sequence_id              <= sync_sequence_id;

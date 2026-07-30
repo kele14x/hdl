@@ -18,7 +18,7 @@ module prach_hb4 #(
     input  wire        din_dv,
     input  wire        din_last,
     //
-    output reg  [15:0] dout_dq,
+    output logic  [15:0] dout_dq,
     output wire        dout_sf,
     output wire        dout_sl,
     output wire        dout_sy,

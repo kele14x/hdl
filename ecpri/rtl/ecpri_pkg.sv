@@ -11,7 +11,7 @@ package ecpri_pkg;
   /* verilator lint_on UNUSEDPARAM */
 
   // Get the TKEEP size based on the pattern.
-  function automatic [1:0] tkeep_size(input reg [3:0] tkeep);
+  function automatic [1:0] tkeep_size(input logic [3:0] tkeep);
     begin
       if (tkeep[3]) tkeep_size = 2'b11;
       else if (tkeep[2]) tkeep_size = 2'b10;
@@ -22,7 +22,7 @@ package ecpri_pkg;
   endfunction
 
   // Get the TKEEP pattern based on the byte ending position.
-  function automatic [3:0] get_tkeep(input reg [1:0] size);
+  function automatic [3:0] get_tkeep(input logic [1:0] size);
     begin
       case (size)
         2'b00:   get_tkeep = 4'b0001;
@@ -35,7 +35,7 @@ package ecpri_pkg;
   endfunction
 
   // Byte reverse for word.
-  function automatic [31:0] byte_reverse(input reg [31:0] data);
+  function automatic [31:0] byte_reverse(input logic [31:0] data);
     integer i;
     begin
       for (i = 0; i < 4; i = i + 1) begin

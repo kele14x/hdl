@@ -21,10 +21,10 @@ module prach_framer_buffer #(
     //
     input  wire [11:0] rd_section_id,
     //
-    output reg  [63:0] m_axis_tdata,
+    output logic  [63:0] m_axis_tdata,
     output wire [ 7:0] m_axis_tkeep,
     output wire        m_axis_tlast,
-    output reg  [31:0] m_axis_tuser,
+    output logic  [31:0] m_axis_tuser,
     output wire        m_axis_tvalid
 );
 

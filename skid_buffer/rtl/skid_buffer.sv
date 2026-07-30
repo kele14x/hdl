@@ -21,17 +21,17 @@ module skid_buffer #(
   // 2'b01: 1 data is buffered at slot0
   // 2'b11: 2 data is buffered at slot0 & slot1
   // Note: 2'b10 is illegal state
-  reg [           1:0] state;
-  reg [           1:0] state_next;
+  logic [           1:0] state;
+  logic [           1:0] state_next;
 
-  reg [DATA_WIDTH-1:0] slot0;
-  reg [DATA_WIDTH-1:0] slot1;
-  reg [DATA_WIDTH-1:0] slot0_next;
-  reg [DATA_WIDTH-1:0] slot1_next;
+  logic [DATA_WIDTH-1:0] slot0;
+  logic [DATA_WIDTH-1:0] slot1;
+  logic [DATA_WIDTH-1:0] slot0_next;
+  logic [DATA_WIDTH-1:0] slot1_next;
 
   // state
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       state <= 2'b00;
     end else begin
@@ -39,7 +39,7 @@ module skid_buffer #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     state_next = state;
     case (state)
       2'b00: begin
@@ -72,7 +72,7 @@ module skid_buffer #(
 
   // slot0
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       slot0 <= {DATA_WIDTH{1'b0}};
     end else begin
@@ -80,7 +80,7 @@ module skid_buffer #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     slot0_next = slot0;
     case (state)
       2'b00: begin
@@ -109,7 +109,7 @@ module skid_buffer #(
 
   // slot1
 
-  always @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
       slot1 <= {DATA_WIDTH{1'b0}};
     end else begin
@@ -117,7 +117,7 @@ module skid_buffer #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     slot1_next = slot1;
     case (state)
       2'b01: begin

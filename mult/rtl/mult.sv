@@ -61,17 +61,17 @@ module mult #(
 
   localparam signed [FullWidth-1:0] Rng = ((ROUND != 0) && (SHIFT > 0)) ? (1 << (SHIFT - 1)) : 0;
 
-  reg signed  [  A_WIDTH-1:0] a_d;
-  reg signed  [  B_WIDTH-1:0] b_d;
-  reg signed  [FullWidth-1:0] m;
-  reg signed  [FullWidth-1:0] p_full;
+  logic signed  [  A_WIDTH-1:0] a_d;
+  logic signed  [  B_WIDTH-1:0] b_d;
+  logic signed  [FullWidth-1:0] m;
+  logic signed  [FullWidth-1:0] p_full;
 
   wire signed [  P_WIDTH-1:0] p_ext;
   wire signed [  P_WIDTH-1:0] p_sat;
-  reg signed  [  P_WIDTH-1:0] p_reg;
+  logic signed  [  P_WIDTH-1:0] p_reg;
 
   wire                        ovf_s;
-  reg                         ovf_r;
+  logic                         ovf_r;
   wire                        overflow;
   wire                        underflow;
 

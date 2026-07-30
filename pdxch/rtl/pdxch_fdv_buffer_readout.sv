@@ -16,8 +16,8 @@ module pdxch_fdv_buffer_readout #(
     output wire        rd_en          [NUM_ANT],
     input  wire [31:0] rd_data        [NUM_ANT],
     // Block data output
-    output reg  [15:0] dout_dr,
-    output reg  [15:0] dout_di,
+    output logic  [15:0] dout_dr,
+    output logic  [15:0] dout_di,
     output wire        dout_sf,
     output wire        dout_sl,
     output wire        dout_sy,

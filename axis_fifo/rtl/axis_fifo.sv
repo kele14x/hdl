@@ -13,8 +13,8 @@
 `default_nettype none
 
 module axis_fifo #(
-    parameter reg     ASYNC_MODE   = 1'b0,
-    parameter reg     PACKET_MODE  = 1'b0,
+    parameter logic     ASYNC_MODE   = 1'b0,
+    parameter logic     PACKET_MODE  = 1'b0,
     parameter integer FIFO_DEPTH   = 4096,
     parameter integer FIFO_LATENCY = 3,
     parameter integer DATA_WIDTH   = 32,
@@ -32,10 +32,10 @@ module axis_fifo #(
     //
     input  wire                                         m_axis_aclk,
     //
-    output reg  [                       DATA_WIDTH-1:0] m_axis_tdata,
-    output reg  [                     DATA_WIDTH/8-1:0] m_axis_tkeep,
-    output reg                                          m_axis_tlast,
-    output reg  [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] m_axis_tuser,
+    output logic  [                       DATA_WIDTH-1:0] m_axis_tdata,
+    output logic  [                     DATA_WIDTH/8-1:0] m_axis_tkeep,
+    output logic                                          m_axis_tlast,
+    output logic  [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] m_axis_tuser,
     output wire                                         m_axis_tvalid,
     input  wire                                         m_axis_tready
 );
@@ -46,8 +46,8 @@ module axis_fifo #(
   localparam integer DataWidth = DATA_WIDTH + DATA_WIDTH / 8 + UserWidthInt + 1;
   localparam integer AddrWidth = $clog2(FIFO_DEPTH);
 
-  localparam reg OutputReg = (FIFO_LATENCY >= 2);
-  localparam reg FabricReg = (FIFO_LATENCY >= 3);
+  localparam logic OutputReg = (FIFO_LATENCY >= 2);
+  localparam logic FabricReg = (FIFO_LATENCY >= 3);
 
   initial begin
     // Check FIFO depth
@@ -90,13 +90,13 @@ module axis_fifo #(
   // Signals
 
   wire                    wr_clk;
-  reg                     wr_rstn;
+  logic                     wr_rstn;
 
-  reg  [     AddrWidth:0] wr_count;
+  logic  [     AddrWidth:0] wr_count;
   wire [     AddrWidth:0] wr_count_rd;
   wire [     AddrWidth:0] wr_count_next;
-  reg  [     AddrWidth:0] wr_count_reg;
-  reg                     wr_full;
+  logic  [     AddrWidth:0] wr_count_reg;
+  logic                     wr_full;
 
   wire                    wr_en;
   wire [   AddrWidth-1:0] wr_addr;
@@ -105,7 +105,7 @@ module axis_fifo #(
   wire                    rd_clk;
   wire                    rd_rstn;
 
-  reg  [     AddrWidth:0] rd_count;
+  logic  [     AddrWidth:0] rd_count;
   wire [     AddrWidth:0] rd_count_wr;
   wire [     AddrWidth:0] rd_count_next;
 
@@ -113,7 +113,7 @@ module axis_fifo #(
   wire [   AddrWidth-1:0] rd_addr;
   wire [   DataWidth-1:0] rd_dout;
 
-  reg  [  FIFO_LATENCY:0] valid;
+  logic  [  FIFO_LATENCY:0] valid;
 
   genvar i;
 
@@ -121,11 +121,11 @@ module axis_fifo #(
 
   assign wr_clk = s_axis_aclk;
 
-  always @(posedge wr_clk) begin
+  always_ff @(posedge wr_clk) begin
     wr_rstn <= s_axis_aresetn;
   end
 
-  always @(posedge wr_clk) begin
+  always_ff @(posedge wr_clk) begin
     if (!wr_rstn) begin
       wr_count <= 'd0;
     end else begin
@@ -139,7 +139,7 @@ module axis_fifo #(
     if (PACKET_MODE) begin : g_packet_mode
 
       // Commit the write pointer when a packet is accepted
-      always @(posedge wr_clk) begin
+      always_ff @(posedge wr_clk) begin
         if (!wr_rstn) begin
           wr_count_reg <= 'd0;
         end else if (wr_en && s_axis_tlast) begin
@@ -149,7 +149,7 @@ module axis_fifo #(
 
     end else begin : g_no_packet_mode
 
-      always @(*) begin
+      always_comb begin
         wr_count_reg = wr_count;
       end
 
@@ -178,7 +178,7 @@ module axis_fifo #(
   //             (wr_count[AddrWidth] != rd_count_wr[AddrWidth])
   //
   // But we predict the value 1 clock cycle ahead to improve timing.
-  always @(posedge wr_clk) begin
+  always_ff @(posedge wr_clk) begin
     if (!wr_rstn) begin
       wr_full <= 1'b1;
     end else if ((wr_count_next[AddrWidth-1:0] == rd_count_wr[AddrWidth-1:0]) &&
@@ -193,7 +193,7 @@ module axis_fifo #(
 
   assign rd_clk = ASYNC_MODE ? m_axis_aclk : s_axis_aclk;
 
-  always @(posedge rd_clk) begin
+  always_ff @(posedge rd_clk) begin
     if (!rd_rstn) begin
       rd_count <= 'd0;
     end else begin
@@ -223,7 +223,7 @@ module axis_fifo #(
       if (i == 0) begin : g_first
 
         // `Valid[0]` marks there is valid at RAM
-        always @(posedge rd_clk) begin
+        always_ff @(posedge rd_clk) begin
           if (!rd_rstn) begin
             valid[0] <= 1'b0;
           end else if (rd_count_next == wr_count_rd) begin
@@ -236,7 +236,7 @@ module axis_fifo #(
       end else begin : g_left
 
         // Left `valid` marks if the data is valid at pipeline
-        always @(posedge rd_clk) begin
+        always_ff @(posedge rd_clk) begin
           if (!rd_rstn) begin
             valid[i] <= 1'b0;
           end else if (~&valid[FIFO_LATENCY:i] || m_axis_tready) begin
@@ -256,13 +256,13 @@ module axis_fifo #(
     if (USER_WIDTH > 0) begin : g_unpack_user
       if (FabricReg == 0) begin : g_no_reg
 
-        always @(*) begin
+        always_comb begin
           {m_axis_tuser, m_axis_tlast, m_axis_tkeep, m_axis_tdata} = rd_dout;
         end
 
       end else begin : g_reg
 
-        always @(posedge rd_clk) begin
+        always_ff @(posedge rd_clk) begin
           if (!rd_rstn) begin
             {m_axis_tuser, m_axis_tlast, m_axis_tkeep, m_axis_tdata} <= 'd0;
           end else if (rd_en[2]) begin
@@ -274,14 +274,14 @@ module axis_fifo #(
     end else begin : g_unpack_no_user
       if (FabricReg == 0) begin : g_no_reg
 
-        always @(*) begin
+        always_comb begin
           m_axis_tuser = 'd0;
           {m_axis_tlast, m_axis_tkeep, m_axis_tdata} = rd_dout;
         end
 
       end else begin : g_reg
 
-        always @(posedge rd_clk) begin
+        always_ff @(posedge rd_clk) begin
           if (!rd_rstn) begin
             m_axis_tuser <= 'd0;
             {m_axis_tlast, m_axis_tkeep, m_axis_tdata} <= 'd0;

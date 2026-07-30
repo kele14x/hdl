@@ -8,10 +8,10 @@
 
 module fft_stage #(
     parameter integer NUM_ANT            = 4,
-    parameter reg     INV_FFT            = 1'b0,
+    parameter logic     INV_FFT            = 1'b0,
     parameter integer LOG_FFT_SIZE       = 4,
     parameter integer DATA_WIDTH         = 18,
-    parameter reg     BIT_REVERSED_INPUT = 1'b1
+    parameter logic     BIT_REVERSED_INPUT = 1'b1
 ) (
     input  wire                         clk,
     input  wire                         rst,
@@ -33,10 +33,10 @@ module fft_stage #(
   // Local parameter
 
   // For N = 2 or 4 FFT stage, twiddle is not needed
-  localparam reg HasTwiddle = (LOG_FFT_SIZE > 2) ? 1 : 0;
+  localparam logic HasTwiddle = (LOG_FFT_SIZE > 2) ? 1 : 0;
 
   // If LOG_FFT_SIZE is an even number, we have 2 Butterfly operator
-  localparam reg HasBf2ii = (LOG_FFT_SIZE % 2 == 0) ? 1 : 0;
+  localparam logic HasBf2ii = (LOG_FFT_SIZE % 2 == 0) ? 1 : 0;
   // Log2 FFT size of BF2I
   localparam integer LogFftSizeBf2i = HasBf2ii ? (LOG_FFT_SIZE - 1) : LOG_FFT_SIZE;
 

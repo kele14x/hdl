@@ -29,23 +29,23 @@
 `default_nettype none
 
 module symbol_timer #(
-    parameter reg     ASYNC = 1'b1,
-    parameter reg     MODE  = 1'b1,  // 0 for UL, 1 for DL
+    parameter logic     ASYNC = 1'b1,
+    parameter logic     MODE  = 1'b1,  // 0 for UL, 1 for DL
     parameter integer FREQ  = 32,    // 32: 122.88, 64: 245.76, 128: 491.52
-    parameter reg     AUTO  = 1'b0,  // 1: Auto roll over, 0: Manual roll over
-    parameter reg     INIT  = 1'b0
+    parameter logic     AUTO  = 1'b0,  // 1: Auto roll over, 0: Manual roll over
+    parameter logic     INIT  = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst,
     //
     input  wire        sync,
     //
-    output reg         start_of_frame,
-    output reg         start_of_slot,
-    output reg  [ 1:0] start_of_symbol,  // {mu1, mu0}
+    output logic         start_of_frame,
+    output logic         start_of_slot,
+    output logic  [ 1:0] start_of_symbol,  // {mu1, mu0}
     //
     input  wire [22:0] ctrl_delay,
-    output reg         stat_resync
+    output logic         stat_resync
 );
 
   //------------------------------------------------------------------
@@ -84,11 +84,11 @@ module symbol_timer #(
   //------------------------------------------------------------------
 
   wire        sync_s0;
-  reg         sync_s1;
+  logic         sync_s1;
   wire        sync_posedge;
 
-  reg         delay_state;
-  reg  [22:0] delay_counter;
+  logic         delay_state;
+  logic  [22:0] delay_counter;
 
   wire        delayed_pulse;
 
@@ -97,17 +97,17 @@ module symbol_timer #(
   wire        restart_ext;
   wire        restart_auto;
 
-  reg         init_n;
-  reg         state;
+  logic         init_n;
+  logic         state;
 
   wire        symbol_wrap;
-  reg         slot_wrap;
+  logic         slot_wrap;
   wire        frame_wrap;
 
-  reg  [14:0] sample_counter;
-  reg  [14:0] sample_counter_max;
+  logic  [14:0] sample_counter;
+  logic  [14:0] sample_counter_max;
 
-  reg  [ 8:0] symbol_id;
+  logic  [ 8:0] symbol_id;
 
   localparam [31:0] LongSymbolSamplesFull  = (128 + 11) * FREQ - 1;
   localparam [31:0] ShortSymbolSamplesFull = (128 + 9) * FREQ - 1;
@@ -165,7 +165,7 @@ module symbol_timer #(
     end
   endgenerate
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     sync_s1 <= sync_s0;
   end
 
@@ -173,7 +173,7 @@ module symbol_timer #(
 
   // Delay the pulse
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       delay_counter <= 0;
     end else if (delay_counter == ctrl_delay) begin
@@ -183,7 +183,7 @@ module symbol_timer #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       delay_state <= 1'b0;
     end else if (delay_counter == ctrl_delay) begin
@@ -207,9 +207,9 @@ module symbol_timer #(
 
       // Tolerate +-1 clock error caused by CDC
 
-      reg restart_ext_omit;
+      logic restart_ext_omit;
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         if (rst) begin
           restart_ext_omit <= 1'b0;
         end else if (restart_auto) begin
@@ -235,7 +235,7 @@ module symbol_timer #(
 
   // FSM
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       init_n <= 1'b0;
     end else begin
@@ -243,7 +243,7 @@ module symbol_timer #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= 1'b0;
     end else if (restart) begin
@@ -253,7 +253,7 @@ module symbol_timer #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((MODE == 1'b0 && symbol_id % 14 == 13) || (MODE == 1'b1 && symbol_id % 14 == 0)) begin
       sample_counter_max <= LongSymbolSamples;
     end else begin
@@ -263,7 +263,7 @@ module symbol_timer #(
 
   assign symbol_wrap = (sample_counter == sample_counter_max);
 
-  always @(*) begin : p_slot_wrap
+  always_comb begin : p_slot_wrap
     integer s;
     slot_wrap = 1'b0;
     for (s = 0; s < 20; s = s + 1) begin
@@ -276,7 +276,7 @@ module symbol_timer #(
   assign frame_wrap = symbol_wrap && (symbol_id == 279);
 
   // Sample counter
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       sample_counter <= 0;
     end else if (~init_n || restart || symbol_wrap) begin
@@ -287,7 +287,7 @@ module symbol_timer #(
   end
 
   // Symbol counter
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       symbol_id <= 0;
     end else if (~init_n || restart || frame_wrap) begin
@@ -300,7 +300,7 @@ module symbol_timer #(
   // Output
 
   // Symbol start strobe output
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       start_of_symbol <= 2'b00;
     end else if (restart) begin
@@ -317,7 +317,7 @@ module symbol_timer #(
   end
 
   // 500 us strobe output
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       start_of_slot <= 1'b0;
     end else if (restart) begin
@@ -331,7 +331,7 @@ module symbol_timer #(
   end
 
   // 10 ms strobe output
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       start_of_frame <= 1'b0;
     end else if (restart) begin
@@ -343,7 +343,7 @@ module symbol_timer #(
 
   // Status
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     stat_resync <= restart_ext ^ frame_wrap;
   end
 

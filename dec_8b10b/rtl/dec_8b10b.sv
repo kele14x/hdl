@@ -18,12 +18,12 @@ module dec_8b10b #(
     input  wire [9:0] din,
     input  wire       dispin,
     //
-    output reg  [7:0] dout,
-    output reg        charisk,
-    output reg        dispout,
-    output reg        disperr,
-    output reg        notintable,
-    output reg        valid
+    output logic  [7:0] dout,
+    output logic        charisk,
+    output logic        dispout,
+    output logic        disperr,
+    output logic        notintable,
+    output logic        valid
 );
 
   wire [11:0] dec_result;

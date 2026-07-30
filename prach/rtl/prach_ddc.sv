@@ -18,14 +18,14 @@ module prach_ddc #(
     input  wire        din_dv,
     input  wire        din_last,
     //
-    output reg  [15:0] dout_dr,
-    output reg  [15:0] dout_di,
-    output reg         dout_sf,
-    output reg         dout_sl,
-    output reg         dout_sy,
-    output reg  [ 7:0] dout_chn,
-    output reg         dout_dv,
-    output reg         dout_last,
+    output logic  [15:0] dout_dr,
+    output logic  [15:0] dout_di,
+    output logic         dout_sf,
+    output logic         dout_sl,
+    output logic         dout_sy,
+    output logic  [ 7:0] dout_chn,
+    output logic         dout_dv,
+    output logic         dout_last,
     // CSR
     //----
     input  wire [17:0] ctrl_fcw,

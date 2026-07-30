@@ -24,7 +24,7 @@ module fh_deframer_buffer #(
     input  wire        m_axis_tready
 );
 
-  reg         sync_n;
+  logic         sync_n;
 
   wire        axis_fifo_tuser;
   wire        axis_fifo_err_discard;
@@ -32,7 +32,7 @@ module fh_deframer_buffer #(
   wire        tuser_fifo_empty;
   wire        unused_fifo_status = &{1'b0, axis_fifo_tuser, axis_fifo_err_discard, tuser_fifo_full, tuser_fifo_empty};
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       sync_n <= 1'b0;
     end else if (s_axis_tvalid && s_axis_tlast) begin

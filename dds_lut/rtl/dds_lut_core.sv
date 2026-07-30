@@ -18,8 +18,8 @@ module dds_lut_block #(
     //
     input  wire       [PHASE_WIDTH-1:0] phase,
     //
-    output reg signed [ DATA_WIDTH-1:0] cos_out,
-    output reg signed [ DATA_WIDTH-1:0] sin_out
+    output logic signed [ DATA_WIDTH-1:0] cos_out,
+    output logic signed [ DATA_WIDTH-1:0] sin_out
 );
 
   // Local parameters
@@ -114,17 +114,17 @@ module dds_lut_block #(
   // Signals
   //========
 
-  reg [PHASE_WIDTH-1:0] cos_phase;
-  reg [PHASE_WIDTH-1:0] sin_phase;
+  logic [PHASE_WIDTH-1:0] cos_phase;
+  logic [PHASE_WIDTH-1:0] sin_phase;
 
-  reg [PhaseWidthInternal-1:0] cos_addr;
-  reg [PhaseWidthInternal-1:0] sin_addr;
+  logic [PhaseWidthInternal-1:0] cos_addr;
+  logic [PhaseWidthInternal-1:0] sin_addr;
 
-  reg cos_negative, cos_negative_d, cos_negative_dd;
-  reg sin_negative, sin_negative_d, sin_negative_dd;
+  logic cos_negative, cos_negative_d, cos_negative_dd;
+  logic sin_negative, sin_negative_d, sin_negative_dd;
 
-  reg cos_zero, cos_zero_d, cos_zero_dd;
-  reg sin_zero, sin_zero_d, sin_zero_dd;
+  logic cos_zero, cos_zero_d, cos_zero_dd;
+  logic sin_zero, sin_zero_d, sin_zero_dd;
 
   wire signed [DATA_WIDTH-1:0] cos_dout;
   wire signed [DATA_WIDTH-1:0] sin_dout;
@@ -151,29 +151,29 @@ module dds_lut_block #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     cos_addr <= phase_addr_mapping(cos_phase);
     sin_addr <= phase_addr_mapping(sin_phase);
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     cos_negative <= negative_output(cos_phase);
     sin_negative <= negative_output(sin_phase);
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     cos_negative_d  <= cos_negative;
     cos_negative_dd <= cos_negative_d;
     sin_negative_d  <= sin_negative;
     sin_negative_dd <= sin_negative_d;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     cos_zero <= zero_output(cos_phase);
     sin_zero <= zero_output(sin_phase);
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     cos_zero_d  <= cos_zero;
     cos_zero_dd <= cos_zero_d;
     sin_zero_d  <= sin_zero;
@@ -254,7 +254,7 @@ module dds_lut_block #(
     end
   endgenerate
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (cos_zero_dd) begin
       cos_out <= 0;
     end else if (cos_negative_dd) begin
@@ -264,7 +264,7 @@ module dds_lut_block #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (sin_zero_dd) begin
       if (USE_DUAL_PORT == "TRUE") begin
         sin_out <= 0;

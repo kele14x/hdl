@@ -17,8 +17,8 @@ module dec_8b10b_synth (
     output wire       valid
 );
 
-  reg rst_r, cen_r, dispin_r;
-  reg [9:0] din_r;
+  logic rst_r, cen_r, dispin_r;
+  logic [9:0] din_r;
 
   always_ff @(posedge clk) begin
     rst_r    <= rst;

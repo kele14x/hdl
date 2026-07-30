@@ -18,15 +18,15 @@ module coe_framer_hdr (
     input  wire [15:0] s_trans_payloadsize,
     input  wire [15:0] s_trans_rtc_pc_id,
     //
-    output reg  [31:0] m_axis_tdata,
-    output reg  [ 3:0] m_axis_tkeep,
-    output reg         m_axis_tlast,
-    output reg         m_axis_tvalid,
+    output logic  [31:0] m_axis_tdata,
+    output logic  [ 3:0] m_axis_tkeep,
+    output logic         m_axis_tlast,
+    output logic         m_axis_tvalid,
     input  wire        m_axis_tready,
     //
-    output reg  [ 7:0] m_trans_messagetype,
-    output reg  [15:0] m_trans_payloadsize,
-    output reg  [15:0] m_trans_rtc_pc_id
+    output logic  [ 7:0] m_trans_messagetype,
+    output logic  [15:0] m_trans_payloadsize,
+    output logic  [15:0] m_trans_rtc_pc_id
 );
 
   import coe_pkg::*;
@@ -46,7 +46,7 @@ module coe_framer_hdr (
 
   // Master FSM
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= S_RST;
     end else begin
@@ -54,7 +54,7 @@ module coe_framer_hdr (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     // Stay at current state by default
     state_next = state;
 
@@ -89,7 +89,7 @@ module coe_framer_hdr (
 
   // Master AXIS
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     // TDATA/TKEEP/TLAST changes at the "edge" of FSM
     case (state)
       S_IDLE: begin
@@ -121,7 +121,7 @@ module coe_framer_hdr (
     endcase
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     case (state)
       S_RST: begin
         // state_next == S_IDLE
@@ -160,7 +160,7 @@ module coe_framer_hdr (
 
   assign s_axis_tready = (state_next == S_PAYLOAD) && m_axis_tready;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (state == S_IDLE && s_axis_tvalid) begin
       m_trans_messagetype <= s_trans_messagetype;
       m_trans_payloadsize <= s_trans_payloadsize;

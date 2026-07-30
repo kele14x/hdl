@@ -42,11 +42,11 @@ module fifo_async #(
     input  wire                  wr_clk,
     input  wire                  wr_en,
     input  wire [DATA_WIDTH-1:0] wr_din,
-    output reg                   wr_full,
+    output logic                   wr_full,
     // Read interface
     input  wire                  rd_clk,
     input  wire                  rd_en,
-    output reg  [DATA_WIDTH-1:0] rd_dout,
+    output logic  [DATA_WIDTH-1:0] rd_dout,
     output wire                  rd_empty
 );
 
@@ -54,9 +54,9 @@ module fifo_async #(
 
   localparam integer AddrWidth = $clog2(FIFO_DEPTH);
 
-  localparam reg OutputReg = FIFO_LATENCY >= 2 ? 1 : 0;
+  localparam logic OutputReg = FIFO_LATENCY >= 2 ? 1 : 0;
 
-  localparam reg FabricReg = FIFO_LATENCY >= 3 ? 1 : 0;
+  localparam logic FabricReg = FIFO_LATENCY >= 3 ? 1 : 0;
 
   // Check parameters
 
@@ -83,7 +83,7 @@ module fifo_async #(
 
   wire                    wr_rst;
 
-  reg  [     AddrWidth:0] wr_count;
+  logic  [     AddrWidth:0] wr_count;
   wire [     AddrWidth:0] wr_count_rd;
   wire [     AddrWidth:0] wr_count_next;
   wire [   AddrWidth-1:0] wr_addr;
@@ -91,7 +91,7 @@ module fifo_async #(
 
   wire                    rd_rst;
 
-  reg  [     AddrWidth:0] rd_count;
+  logic  [     AddrWidth:0] rd_count;
   wire [     AddrWidth:0] rd_count_wr;
   wire [     AddrWidth:0] rd_count_next;
   wire [   AddrWidth-1:0] rd_addr;
@@ -99,7 +99,7 @@ module fifo_async #(
 
   wire [  DATA_WIDTH-1:0] rd_dout_s;
 
-  reg  [  FIFO_LATENCY:0] valid;
+  logic  [  FIFO_LATENCY:0] valid;
 
   genvar i;
 
@@ -107,7 +107,7 @@ module fifo_async #(
 
   // Write pointer
 
-  always @(posedge wr_clk) begin
+  always_ff @(posedge wr_clk) begin
     if (wr_rst) begin
       wr_count <= 0;
     end else begin
@@ -123,7 +123,7 @@ module fifo_async #(
 
   // Full flag
 
-  always @(posedge wr_clk) begin
+  always_ff @(posedge wr_clk) begin
     if (wr_rst) begin
       wr_full <= 1'b1;
     end else if ((wr_count_next[AddrWidth-1:0] == rd_count_wr[AddrWidth-1:0]) &&
@@ -136,7 +136,7 @@ module fifo_async #(
 
   // Read pointer
 
-  always @(posedge rd_clk) begin
+  always_ff @(posedge rd_clk) begin
     if (rd_rst) begin
       rd_count <= 0;
     end else begin
@@ -168,7 +168,7 @@ module fifo_async #(
       if (i == 0) begin : g_first
 
         // `Valid[0]` marks there is valid at RAM
-        always @(posedge rd_clk) begin
+        always_ff @(posedge rd_clk) begin
           if (rd_rst) begin
             valid[0] <= 1'b0;
           end else if (rd_count_next == wr_count_rd) begin
@@ -181,7 +181,7 @@ module fifo_async #(
       end else begin : g_left
 
         // Left `valid` marks if the data is valid at pipeline
-        always @(posedge rd_clk) begin
+        always_ff @(posedge rd_clk) begin
           if (rd_rst) begin
             valid[i] <= 1'b0;
           end else if (~&valid[FIFO_LATENCY:i] || rd_en) begin
@@ -204,13 +204,13 @@ module fifo_async #(
   generate
     if (FabricReg == 0) begin : g_no_reg
 
-      always @(*) begin
+      always_comb begin
         rd_dout = rd_dout_s;
       end
 
     end else begin : g_reg
 
-      always @(posedge rd_clk) begin
+      always_ff @(posedge rd_clk) begin
         if (rd_rst) begin
           rd_dout <= 0;
         end else if (rd_en_mem[2]) begin

@@ -33,7 +33,7 @@ module ram_tdp_asym #(
     input  wire                    wea,
     input  wire [ADDR_WIDTH_A-1:0] addra,
     input  wire [DATA_WIDTH_A-1:0] dina,
-    output reg  [DATA_WIDTH_A-1:0] douta,
+    output logic  [DATA_WIDTH_A-1:0] douta,
     //
     input  wire                    clkb,
     input  wire [  OUTPUT_REG_B:0] rstb,
@@ -41,7 +41,7 @@ module ram_tdp_asym #(
     input  wire                    web,
     input  wire [ADDR_WIDTH_B-1:0] addrb,
     input  wire [DATA_WIDTH_B-1:0] dinb,
-    output reg  [DATA_WIDTH_B-1:0] doutb
+    output logic  [DATA_WIDTH_B-1:0] doutb
 );
 
   // Check parameters
@@ -80,14 +80,14 @@ module ram_tdp_asym #(
   // The Memory
   /* verilator lint_off MULTIDRIVEN */
   (* RAM_STYLE=RAM_STYLE *)
-  reg     [    MinWidth-1:0] mem   [0:MaxSize-1];
+  logic     [    MinWidth-1:0] mem   [0:MaxSize-1];
 
   wire                       ena_s;
   wire                       enb_s;
   wire                       unused_inputs;
 
-  reg     [DATA_WIDTH_A-1:0] rega;
-  reg     [DATA_WIDTH_B-1:0] regb;
+  logic     [DATA_WIDTH_A-1:0] rega;
+  logic     [DATA_WIDTH_B-1:0] regb;
 
   integer                    init_idx;
 
@@ -113,7 +113,7 @@ module ram_tdp_asym #(
     if (DATA_WIDTH_A <= DATA_WIDTH_B) begin : g_a_aletb
 
       // Port A read
-      always @(posedge clka) begin
+      always_ff @(posedge clka) begin
         // TODO: rsta[0] does not work here
         if (ena_s) begin
           if (wea && (WRITE_MODE_A == "WRITE_FIRST")) begin
@@ -127,7 +127,7 @@ module ram_tdp_asym #(
       end
 
       // Port A write
-      always @(posedge clka) begin
+      always_ff @(posedge clka) begin
         if (ena_s) begin
           if (wea) begin
             mem[addra] <= dina;
@@ -140,7 +140,7 @@ module ram_tdp_asym #(
       // Port A read
       always @(posedge clka) begin : p_rd
         integer a_rd_idx;
-        reg [Log2Ratio-1:0] lsbaddr;
+        logic [Log2Ratio-1:0] lsbaddr;
         for (a_rd_idx = 0; a_rd_idx < Ratio; a_rd_idx = a_rd_idx + 1) begin
           lsbaddr = a_rd_idx[Log2Ratio-1:0];
           // TODO: rsta[0] does not work here
@@ -159,7 +159,7 @@ module ram_tdp_asym #(
       // Port A write
       always @(posedge clka) begin : p_wr
         integer a_wr_idx;
-        reg [Log2Ratio-1:0] lsbaddr;
+        logic [Log2Ratio-1:0] lsbaddr;
         for (a_wr_idx = 0; a_wr_idx < Ratio; a_wr_idx = a_wr_idx + 1) begin
           lsbaddr = a_wr_idx[Log2Ratio-1:0];
           if (ena_s) begin
@@ -181,7 +181,7 @@ module ram_tdp_asym #(
       // Port B read
       always @(posedge clkb) begin : p_rd
         integer b_rd_idx;
-        reg [Log2Ratio-1:0] lsbaddr;
+        logic [Log2Ratio-1:0] lsbaddr;
         for (b_rd_idx = 0; b_rd_idx < Ratio; b_rd_idx = b_rd_idx + 1) begin
           lsbaddr = b_rd_idx[Log2Ratio-1:0];
           // TODO: rstb[0] does not work here
@@ -200,7 +200,7 @@ module ram_tdp_asym #(
       // Port B write
       always @(posedge clkb) begin : p_wr
         integer b_wr_idx;
-        reg [Log2Ratio-1:0] lsbaddr;
+        logic [Log2Ratio-1:0] lsbaddr;
         for (b_wr_idx = 0; b_wr_idx < Ratio; b_wr_idx = b_wr_idx + 1) begin
           lsbaddr = b_wr_idx[Log2Ratio-1:0];
           if (enb_s) begin
@@ -214,7 +214,7 @@ module ram_tdp_asym #(
     end else begin : g_b_agetb
 
       // Port B read
-      always @(posedge clkb) begin
+      always_ff @(posedge clkb) begin
         // TODO: rstb[0] does not work here
         if (enb_s) begin
           if (web && (WRITE_MODE_B == "WRITE_FIRST")) begin
@@ -228,7 +228,7 @@ module ram_tdp_asym #(
       end
 
       // Port B write
-      always @(posedge clkb) begin
+      always_ff @(posedge clkb) begin
         if (enb_s) begin
           if (web) begin
             mem[addrb] <= dinb;
@@ -245,13 +245,13 @@ module ram_tdp_asym #(
   generate
     if (OUTPUT_REG_A == 0) begin : g_no_reg_a
 
-      always @(*) begin
+      always_comb begin
         douta = rega;
       end
 
     end else begin : g_reg_a
 
-      always @(posedge clka) begin
+      always_ff @(posedge clka) begin
         if (rsta[1]) begin
           douta <= 'd0;
         end else if (ena[1]) begin
@@ -265,13 +265,13 @@ module ram_tdp_asym #(
   generate
     if (OUTPUT_REG_B == 0) begin : g_no_reg_b
 
-      always @(*) begin
+      always_comb begin
         doutb = regb;
       end
 
     end else begin : g_reg_b
 
-      always @(posedge clkb) begin
+      always_ff @(posedge clkb) begin
         if (rstb[1]) begin
           doutb <= 'd0;
         end else if (enb[1]) begin

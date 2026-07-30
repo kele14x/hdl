@@ -15,10 +15,10 @@ module rts_mux #(
     input  wire [         31:0] ram1_data,
     input  wire [         31:0] ram2_data,
     //
-    output reg  [NUM_CC*32-1:0] m_axis_tdata,
-    output reg  [          7:0] m_axis_tuser,
+    output logic  [NUM_CC*32-1:0] m_axis_tdata,
+    output logic  [          7:0] m_axis_tuser,
     output wire                 m_axis_tlast,
-    output reg                  m_axis_tvalid,
+    output logic                  m_axis_tvalid,
     input  wire                 m_axis_tready,
     //
     input  wire [ NUM_CC*6-1:0] ctrl_src_sel
@@ -32,7 +32,7 @@ module rts_mux #(
   wire                 unused_m_axis_tready = m_axis_tready;
   wire [         5:0] ctrl_src_sel_ch[0:NUM_CC-1];
 
-  reg                 sync_d;
+  logic                 sync_d;
   wire                sync_posedge;
 
   // Control signals CDC
@@ -55,7 +55,7 @@ module rts_mux #(
 
       assign ctrl_src_sel_ch[i] = ctrl_src_sel_s[i*6+5-:6];
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         case (ctrl_src_sel_ch[i])
           6'b000001: m_axis_tdata[32*i+31-:32] <= cw_data;
           6'b000010: m_axis_tdata[32*i+31-:32] <= ram0_data;
@@ -68,13 +68,13 @@ module rts_mux #(
     end
   endgenerate
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     sync_d <= sync;
   end
 
   assign sync_posedge = sync && !sync_d;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (sync_posedge) begin
       m_axis_tuser <= 8'd1;
     end else begin
@@ -84,7 +84,7 @@ module rts_mux #(
 
   assign m_axis_tlast = 1'b0;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       m_axis_tvalid <= 1'b0;
     end else begin

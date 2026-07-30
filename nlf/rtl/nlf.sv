@@ -195,7 +195,7 @@ module nlf #(
     end
   endgenerate
 
-  always @(posedge ctrl_clk) begin
+  always_ff @(posedge ctrl_clk) begin
     if (ctrl_lut_en) begin
       ctrl_lut_addr_unit_mux <= ctrl_lut_addr_unit;
     end

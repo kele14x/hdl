@@ -7,14 +7,14 @@ module ptp_framer (
     input  wire        rst,
     //
     output wire [31:0] m_axis_tdata,
-    output reg  [ 3:0] m_axis_tkeep,
-    output reg         m_axis_tlast,
-    output reg  [17:0] m_axis_tuser,
-    output reg         m_axis_tvalid,
+    output logic  [ 3:0] m_axis_tkeep,
+    output logic         m_axis_tlast,
+    output logic  [17:0] m_axis_tuser,
+    output logic         m_axis_tvalid,
     input  wire        m_axis_tready,
     //
     input  wire        ap_valid,
-    output reg         ap_ready,
+    output logic         ap_ready,
     input  wire [ 3:0] ap_message_type,
     input  wire [15:0] ap_sequence_id,
     input  wire [ 7:0] ap_log_message_interval,
@@ -91,24 +91,24 @@ module ptp_framer (
 
   integer state, state_next;
 
-  reg  [31:0] m_axis_tdata_rev;
+  logic  [31:0] m_axis_tdata_rev;
 
   wire [ 3:0] transport_specific = 4'd0;
-  reg  [ 3:0] message_type;
+  logic  [ 3:0] message_type;
   wire [ 3:0] reserved0 = 4'd1;  // major_sdo_id
   wire [ 3:0] version_ptp = 4'd2;
-  reg  [15:0] message_length;
+  logic  [15:0] message_length;
   wire [ 7:0] domain_number;
   wire [ 7:0] reserved1 = 8'd0;  // minor_sdo_id
   wire [15:0] flag_field = 16'h0200;
   wire [63:0] correction_field = 64'd0;
   wire [31:0] reserved2 = 32'd0;  // message_type_specific
   wire [79:0] source_port_identity;  // {clock_identity, port_number}
-  reg  [15:0] sequence_id;
-  reg  [ 7:0] control_field;
-  reg  [ 7:0] log_message_interval;
+  logic  [15:0] sequence_id;
+  logic  [ 7:0] control_field;
+  logic  [ 7:0] log_message_interval;
 
-  reg  [79:0] origin_timestamp;
+  logic  [79:0] origin_timestamp;
   wire [15:0] current_utc_offset;
   wire [ 7:0] reserved3 = 8'd0;
   wire [ 7:0] grandmaster_priority1 = 8'h80;
@@ -118,7 +118,7 @@ module ptp_framer (
   wire [15:0] steps_removed = 16'd0;
   wire [ 7:0] time_source = 8'hA0;
 
-  reg  [79:0] requesting_port_identity;
+  logic  [79:0] requesting_port_identity;
 
   // Control CDC
 
@@ -160,7 +160,7 @@ module ptp_framer (
 
   // Main
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= S_RST;
     end else begin
@@ -168,7 +168,7 @@ module ptp_framer (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     state_next = state;
 
     case (state)
@@ -429,7 +429,7 @@ module ptp_framer (
 
   // Input
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       ap_ready <= 1'b0;
     end else begin
@@ -437,13 +437,13 @@ module ptp_framer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ap_ready && ap_valid) begin
       message_type <= ap_message_type;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ap_ready && ap_valid) begin
       if (ap_message_type == PTP_MESSAGE_TYPE_SYNC) begin
         message_length <= 'd44;
@@ -467,13 +467,13 @@ module ptp_framer (
   // portNumber (port_number) is fixed to 0x0001
   assign source_port_identity = {ctrl_src_mac_s[47:24], 16'hFFFE, ctrl_src_mac_s[23:0], 16'h0001};
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ap_ready && ap_valid) begin
       sequence_id <= ap_sequence_id;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ap_ready && ap_valid) begin
       if (ap_message_type == PTP_MESSAGE_TYPE_SYNC) begin
         control_field <= PTP_CONTROL_FIELD_SYNC;  // 0x00
@@ -494,13 +494,13 @@ module ptp_framer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ap_ready && ap_valid) begin
       log_message_interval <= ap_log_message_interval;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ap_ready && ap_valid) begin
       origin_timestamp <= ap_origin_timestamp;
     end
@@ -510,7 +510,7 @@ module ptp_framer (
 
   assign grandmaster_identity = {ctrl_src_mac_s[47:24], 16'hFFFE, ctrl_src_mac_s[23:0]};
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ap_ready && ap_valid) begin
       requesting_port_identity <= ap_requesting_port_identity;
     end
@@ -520,7 +520,7 @@ module ptp_framer (
 
   assign m_axis_tdata = byte_reverse(m_axis_tdata_rev);
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     // Ethernet Header
     if (state_next == S_DMAC0) begin
       m_axis_tdata_rev <= PTP_MULTICAST_MAC[47:16];
@@ -607,7 +607,7 @@ module ptp_framer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (state_next == S_DMAC0) begin
       m_axis_tkeep <= 4'b1111;
     end else if (state_next == S_DMAC1_SMAC0) begin
@@ -691,7 +691,7 @@ module ptp_framer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (state_next == S_DMAC0) begin
       m_axis_tlast <= 1'b0;
     end else if (state_next == S_DMAC1_SMAC0) begin
@@ -775,7 +775,7 @@ module ptp_framer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (state == S_IDLE) begin
       if (ap_valid) begin
         if (ap_message_type == PTP_MESSAGE_TYPE_SYNC) begin
@@ -793,7 +793,7 @@ module ptp_framer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (state_next == S_DMAC0) begin
       m_axis_tvalid <= 1'b1;
     end else if (state_next == S_DMAC1_SMAC0) begin

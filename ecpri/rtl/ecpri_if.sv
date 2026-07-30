@@ -4,8 +4,8 @@
 `default_nettype none
 
 module ecpri_if #(
-    parameter reg HAS_ODM_FUNCTION = 1'b1,
-    parameter reg HAS_STATISTICS   = 1'b1
+    parameter logic HAS_ODM_FUNCTION = 1'b1,
+    parameter logic HAS_STATISTICS   = 1'b1
 ) (
     // Ethernet I/F
     //-------------

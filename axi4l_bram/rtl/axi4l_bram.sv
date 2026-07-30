@@ -49,37 +49,37 @@ module axi4l_bram #(
 
   localparam integer STRB_WIDTH = DATA_WIDTH / 8;
 
-  reg head_valid;
-  reg head_write;
-  reg [ADDR_WIDTH-1:0] head_addr;
-  reg [DATA_WIDTH-1:0] head_wdata;
-  reg [STRB_WIDTH-1:0] head_wstrb;
-  reg ar_back_valid;
-  reg [ADDR_WIDTH-1:0] ar_back_addr;
-  reg aw_back_valid;
-  reg [ADDR_WIDTH-1:0] aw_back_addr;
-  reg w_back_valid;
-  reg [DATA_WIDTH-1:0] w_back_data;
-  reg [STRB_WIDTH-1:0] w_back_strb;
-  reg priority_read;
+  logic head_valid;
+  logic head_write;
+  logic [ADDR_WIDTH-1:0] head_addr;
+  logic [DATA_WIDTH-1:0] head_wdata;
+  logic [STRB_WIDTH-1:0] head_wstrb;
+  logic ar_back_valid;
+  logic [ADDR_WIDTH-1:0] ar_back_addr;
+  logic aw_back_valid;
+  logic [ADDR_WIDTH-1:0] aw_back_addr;
+  logic w_back_valid;
+  logic [DATA_WIDTH-1:0] w_back_data;
+  logic [STRB_WIDTH-1:0] w_back_strb;
+  logic priority_read;
 
-  reg [1:0] b_outstanding;
-  reg [1:0] r_outstanding;
-  reg [1:0] b_wait_ack;
-  reg [1:0] r_wait_ack;
-  reg [1:0] b_pending;
-  reg [1:0] r_pending;
-  reg b_err_slot0;
-  reg b_err_slot1;
-  reg [DATA_WIDTH-1:0] r_slot0;
-  reg [DATA_WIDTH-1:0] r_slot1;
-  reg r_err_slot0;
-  reg r_err_slot1;
-  reg [ADDR_WIDTH-1:0] bram_addr_r;
-  reg [DATA_WIDTH-1:0] bram_wdata_r;
-  reg [STRB_WIDTH-1:0] bram_wstrb_r;
-  reg bram_we_r;
-  reg bram_en_r;
+  logic [1:0] b_outstanding;
+  logic [1:0] r_outstanding;
+  logic [1:0] b_wait_ack;
+  logic [1:0] r_wait_ack;
+  logic [1:0] b_pending;
+  logic [1:0] r_pending;
+  logic b_err_slot0;
+  logic b_err_slot1;
+  logic [DATA_WIDTH-1:0] r_slot0;
+  logic [DATA_WIDTH-1:0] r_slot1;
+  logic r_err_slot0;
+  logic r_err_slot1;
+  logic [ADDR_WIDTH-1:0] bram_addr_r;
+  logic [DATA_WIDTH-1:0] bram_wdata_r;
+  logic [STRB_WIDTH-1:0] bram_wstrb_r;
+  logic bram_we_r;
+  logic bram_en_r;
 
   wire b_hs = bvalid && bready;
   wire r_hs = rvalid && rready;
@@ -123,14 +123,14 @@ module axi4l_bram #(
     else $error("DATA_WIDTH must be a positive multiple of 8");
   end
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) priority_read <= 1'b1;
     else if (grant_read) priority_read <= 1'b0;
     else if (grant_write) priority_read <= 1'b1;
   end
 
   // Keep one head command plus one independent backup for AR, AW and W.
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       head_valid <= 1'b0;
       head_write <= 1'b0;
@@ -185,7 +185,7 @@ module axi4l_bram #(
     end
   end
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       bram_addr_r <= {ADDR_WIDTH{1'b0}};
       bram_wdata_r <= {DATA_WIDTH{1'b0}};
@@ -203,7 +203,7 @@ module axi4l_bram #(
     end
   end
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       b_outstanding <= 2'd0;
       r_outstanding <= 2'd0;

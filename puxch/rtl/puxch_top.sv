@@ -61,7 +61,7 @@ module puxch_top #(
     input  wire        ctrl_phase_comp_we,
     input  wire [31:0] ctrl_phase_comp_din,
     output wire [31:0] ctrl_phase_comp_dout,
-    output reg         ctrl_phase_comp_valid
+    output logic         ctrl_phase_comp_valid
 );
 
   logic [15:0] dout_dr             [ NUM_CC];

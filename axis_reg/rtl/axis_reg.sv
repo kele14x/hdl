@@ -14,13 +14,13 @@ module axis_reg #(
     input  wire                                         s_axis_tlast,
     input  wire [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] s_axis_tuser,
     input  wire                                         s_axis_tvalid,
-    output reg                                          s_axis_tready,
+    output logic                                          s_axis_tready,
     //
-    output reg  [                       DATA_WIDTH-1:0] m_axis_tdata,
-    output reg  [                     DATA_WIDTH/8-1:0] m_axis_tkeep,
-    output reg                                          m_axis_tlast,
-    output reg  [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] m_axis_tuser,
-    output reg                                          m_axis_tvalid,
+    output logic  [                       DATA_WIDTH-1:0] m_axis_tdata,
+    output logic  [                     DATA_WIDTH/8-1:0] m_axis_tkeep,
+    output logic                                          m_axis_tlast,
+    output logic  [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] m_axis_tuser,
+    output logic                                          m_axis_tvalid,
     input  wire                                         m_axis_tready
 );
 
@@ -49,27 +49,27 @@ module axis_reg #(
 
   localparam integer USER_KEEP_WIDTH = USER_WIDTH > 0 ? USER_WIDTH : 1;
 
-  reg [        DATA_WIDTH-1:0] tdata_d;
-  reg [      DATA_WIDTH/8-1:0] tkeep_d;
-  reg [USER_KEEP_WIDTH-1:0] tuser_d;
-  reg                        tlast_d;
+  logic [        DATA_WIDTH-1:0] tdata_d;
+  logic [      DATA_WIDTH/8-1:0] tkeep_d;
+  logic [USER_KEEP_WIDTH-1:0] tuser_d;
+  logic                        tlast_d;
 
-  reg                        tvalid_d;
+  logic                        tvalid_d;
 
-  reg [        DATA_WIDTH-1:0] tdata_s;
-  reg [      DATA_WIDTH/8-1:0] tkeep_s;
-  reg [USER_KEEP_WIDTH-1:0] tuser_s;
-  reg                        tlast_s;
+  logic [        DATA_WIDTH-1:0] tdata_s;
+  logic [      DATA_WIDTH/8-1:0] tkeep_s;
+  logic [USER_KEEP_WIDTH-1:0] tuser_s;
+  logic                        tlast_s;
 
-  reg                    tvalid_d_next;
+  logic                    tvalid_d_next;
 
-  reg                    m_axis_tvalid_next;
+  logic                    m_axis_tvalid_next;
 
   // Main
 
   // S_AXIS
 
-  always @(posedge aclk) begin
+  always_ff @(posedge aclk) begin
     if (!aresetn) begin
       s_axis_tready <= 1'b0;
     end else begin
@@ -77,7 +77,7 @@ module axis_reg #(
     end
   end
 
-  always @(posedge aclk) begin
+  always_ff @(posedge aclk) begin
     if (!aresetn) begin
       tvalid_d <= 1'b0;
     end else begin
@@ -87,7 +87,7 @@ module axis_reg #(
 
   // Buffer
 
-  always @(*) begin
+  always_comb begin
     case (tvalid_d)
       1'b0: begin
         // There is no data in the buffer, we know at this state `s_axis_tready` is 1.
@@ -118,7 +118,7 @@ module axis_reg #(
     endcase
   end
 
-  always @(posedge aclk) begin
+  always_ff @(posedge aclk) begin
     if ((s_axis_tvalid && !tvalid_d && m_axis_tvalid && !m_axis_tready) ||
         (s_axis_tvalid && tvalid_d && !m_axis_tvalid)) begin
       tdata_d <= s_axis_tdata;
@@ -130,7 +130,7 @@ module axis_reg #(
 
   // Output
 
-  always @(*) begin
+  always_comb begin
     if (tvalid_d) begin
       tdata_s = tdata_d;
       tkeep_s = tkeep_d;
@@ -144,7 +144,7 @@ module axis_reg #(
     end
   end
 
-  always @(posedge aclk) begin
+  always_ff @(posedge aclk) begin
     if ((s_axis_tvalid || tvalid_d) && (!m_axis_tvalid || m_axis_tready)) begin
       m_axis_tdata <= tdata_s;
       m_axis_tkeep <= tkeep_s;
@@ -153,7 +153,7 @@ module axis_reg #(
     end
   end
 
-  always @(posedge aclk) begin
+  always_ff @(posedge aclk) begin
     if (!aresetn) begin
       m_axis_tvalid <= 1'b0;
     end else begin
@@ -161,7 +161,7 @@ module axis_reg #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     case (m_axis_tvalid)
       1'b0: begin
         if (s_axis_tvalid || tvalid_d) begin

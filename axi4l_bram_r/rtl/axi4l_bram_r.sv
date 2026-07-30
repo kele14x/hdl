@@ -31,18 +31,18 @@ module axi4l_bram_r #(
   // 3'b101: 1 addr slot0 is buffered
   // 3'b011: 2 addr slot0 & slot1 is buffered
   // Note: other states are illegal
-  reg  [           2:0] ar_state;
-  reg  [           2:0] ar_state_next;
+  logic  [           2:0] ar_state;
+  logic  [           2:0] ar_state_next;
 
-  reg  [ADDR_WIDTH-1:0] ar_slot0;
-  reg  [ADDR_WIDTH-1:0] ar_slot1;
-  reg  [ADDR_WIDTH-1:0] ar_slot0_next;
-  reg  [ADDR_WIDTH-1:0] ar_slot1_next;
+  logic  [ADDR_WIDTH-1:0] ar_slot0;
+  logic  [ADDR_WIDTH-1:0] ar_slot1;
+  logic  [ADDR_WIDTH-1:0] ar_slot0_next;
+  logic  [ADDR_WIDTH-1:0] ar_slot1_next;
 
-  reg                   bram_en_r;
+  logic                   bram_en_r;
 
-  reg  [           1:0] r_count;
-  reg  [           1:0] r_count_next;
+  logic  [           1:0] r_count;
+  logic  [           1:0] r_count_next;
 
   wire                  r_rdy;
 
@@ -50,21 +50,21 @@ module axi4l_bram_r #(
   // 2'b01: 1 read data is buffered at slot0
   // 2'b11: 2 read data is buffered at slot0 & slot1
   // Note: 2'b10 is illegal state
-  reg  [           1:0] r_state;
-  reg  [           1:0] r_state_next;
+  logic  [           1:0] r_state;
+  logic  [           1:0] r_state_next;
 
-  reg  [DATA_WIDTH-1:0] r_slot0;
-  reg  [DATA_WIDTH-1:0] r_slot1;
-  reg  [DATA_WIDTH-1:0] r_slot0_next;
-  reg  [DATA_WIDTH-1:0] r_slot1_next;
-  reg                   r_err_slot0;
-  reg                   r_err_slot1;
-  reg                   r_err_slot0_next;
-  reg                   r_err_slot1_next;
+  logic  [DATA_WIDTH-1:0] r_slot0;
+  logic  [DATA_WIDTH-1:0] r_slot1;
+  logic  [DATA_WIDTH-1:0] r_slot0_next;
+  logic  [DATA_WIDTH-1:0] r_slot1_next;
+  logic                   r_err_slot0;
+  logic                   r_err_slot1;
+  logic                   r_err_slot0_next;
+  logic                   r_err_slot1_next;
 
   // AR state
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       ar_state <= 3'b000;
     end else begin
@@ -72,7 +72,7 @@ module axi4l_bram_r #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     ar_state_next = ar_state;
     case (ar_state)
       3'b000: begin
@@ -113,7 +113,7 @@ module axi4l_bram_r #(
 
   // ar_slot0
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       ar_slot0 <= {ADDR_WIDTH{1'b0}};
     end else begin
@@ -121,7 +121,7 @@ module axi4l_bram_r #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     ar_slot0_next = ar_slot0;
     case (ar_state)
       3'b100: begin
@@ -150,7 +150,7 @@ module axi4l_bram_r #(
 
   // ar_slot1
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       ar_slot1 <= {ADDR_WIDTH{1'b0}};
     end else begin
@@ -158,7 +158,7 @@ module axi4l_bram_r #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     ar_slot1_next = ar_slot1;
     case (ar_state)
       3'b101: begin
@@ -175,7 +175,7 @@ module axi4l_bram_r #(
 
   // R occupied slots count
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       r_count <= 2'b00;
     end else begin
@@ -183,7 +183,7 @@ module axi4l_bram_r #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     r_count_next = r_count;
     case (r_count)
       2'b00: begin
@@ -222,7 +222,7 @@ module axi4l_bram_r #(
 
   // assign bram_en = ar_state[0] && r_rdy;
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       bram_en_r <= 1'b0;
     end else begin
@@ -234,7 +234,7 @@ module axi4l_bram_r #(
 
   // R state
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       r_state <= 2'b00;
     end else begin
@@ -242,7 +242,7 @@ module axi4l_bram_r #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     r_state_next = r_state;
     case (r_state)
       2'b00: begin
@@ -275,7 +275,7 @@ module axi4l_bram_r #(
 
   // r_slot0
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       r_slot0 <= {DATA_WIDTH{1'b0}};
     end else begin
@@ -283,7 +283,7 @@ module axi4l_bram_r #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     r_slot0_next = r_slot0;
     case (r_state)
       2'b00: begin
@@ -312,7 +312,7 @@ module axi4l_bram_r #(
 
   // r_slot1
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       r_slot1 <= {DATA_WIDTH{1'b0}};
     end else begin
@@ -320,7 +320,7 @@ module axi4l_bram_r #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     r_slot1_next = r_slot1;
     case (r_state)
       2'b01: begin
@@ -337,7 +337,7 @@ module axi4l_bram_r #(
 
   // r_err_slot0
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       r_err_slot0 <= 1'b0;
     end else begin
@@ -345,7 +345,7 @@ module axi4l_bram_r #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     r_err_slot0_next = r_err_slot0;
     case (r_state)
       2'b00: begin
@@ -374,7 +374,7 @@ module axi4l_bram_r #(
 
   // r_err_slot1
 
-  always @(posedge aclk or negedge aresetn) begin
+  always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
       r_err_slot1 <= 1'b0;
     end else begin
@@ -382,7 +382,7 @@ module axi4l_bram_r #(
     end
   end
 
-  always @(*) begin
+  always_comb begin
     r_err_slot1_next = r_err_slot1;
     case (r_state)
       2'b01: begin

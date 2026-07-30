@@ -20,10 +20,10 @@ module enc_8b10b #(
     input  wire       charisk,
     input  wire       dispin,
     //
-    output reg  [9:0] dout,
-    output reg        kerr,
-    output reg        dispout,
-    output reg        valid
+    output logic  [9:0] dout,
+    output logic        kerr,
+    output logic        dispout,
+    output logic        valid
 );
 
   wire [11:0] enc_result;

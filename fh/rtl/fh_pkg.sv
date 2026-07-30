@@ -8,7 +8,7 @@ package fh_pkg;
   localparam [15:0] EtherTypePtp   = 16'h88F7;
   localparam [15:0] EtherTypeEcpri = 16'hAEFE;
 
-  function automatic [63:0] byte_reverse64(input reg [63:0] data);
+  function automatic [63:0] byte_reverse64(input logic [63:0] data);
     integer i;
     begin
       for (i = 0; i < 8; i = i + 1) begin

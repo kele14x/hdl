@@ -31,7 +31,7 @@ package ptp_pkg;
   localparam [7:0] PTP_CONTROL_FIELD_MANAGEMENT = 8'h04;
   localparam [7:0] PTP_CONTROL_FIELD_OTHERS     = 8'h05;
 
-  function automatic [31:0] byte_reverse(input reg [31:0] in);
+  function automatic [31:0] byte_reverse(input logic [31:0] in);
     integer i;
     begin
       for (i = 0; i < 4; i = i + 1) begin

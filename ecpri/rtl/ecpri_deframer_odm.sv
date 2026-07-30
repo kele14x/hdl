@@ -13,14 +13,14 @@ module ecpri_deframer_odm (
     input  wire        s_axis_tvalid,
     input  wire [79:0] s_axis_tuser,
     // eCPRI O-RAN Delay Measurement Header
-    output reg         m_odm_header_valid,
-    output reg  [ 7:0] m_odm_measurementid,
-    output reg  [ 7:0] m_odm_actiontype,
-    output reg  [79:0] m_odm_timestamp,
-    output reg  [63:0] m_odm_compensation,
-    output reg  [79:0] m_odm_timestamp2,
+    output logic         m_odm_header_valid,
+    output logic  [ 7:0] m_odm_measurementid,
+    output logic  [ 7:0] m_odm_actiontype,
+    output logic  [79:0] m_odm_timestamp,
+    output logic  [63:0] m_odm_compensation,
+    output logic  [79:0] m_odm_timestamp2,
     //
-    output reg  [15:0] stat_topology_id
+    output logic  [15:0] stat_topology_id
 );
 
   import ecpri_pkg::*;
@@ -68,7 +68,7 @@ module ecpri_deframer_odm (
 
   // FSM
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= S_RST;
     end else begin
@@ -76,7 +76,7 @@ module ecpri_deframer_odm (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     // Stay at current state by default
     state_next = state;
 
@@ -149,11 +149,11 @@ module ecpri_deframer_odm (
 
   // Delay Measurement Message Parser
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     m_odm_header_valid <= (state == S_D4) && s_axis_tvalid;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_D0) && s_axis_tvalid) begin
       m_odm_measurementid    <= odm_measurementid;
       m_odm_actiontype       <= odm_actiontype;
@@ -161,37 +161,37 @@ module ecpri_deframer_odm (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_D1) && s_axis_tvalid) begin
       m_odm_timestamp[63:32] <= odm_timestamp[63:32];
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_D2) && s_axis_tvalid) begin
       m_odm_timestamp[31:0] <= odm_timestamp[31:0];
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_D3) && s_axis_tvalid) begin
       m_odm_compensation[63:32] <= odm_compensation[63:32];
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_D4) && s_axis_tvalid) begin
       m_odm_compensation[31:0] <= odm_compensation[31:0];
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_D5) && s_axis_tvalid) begin
       stat_topology_id <= topology_id;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_D0) && s_axis_tvalid) begin
       m_odm_timestamp2 <= s_axis_tuser;
     end

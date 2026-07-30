@@ -53,18 +53,18 @@ module nco_lut #(
 
   // Memory port A
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     ena_d  <= ena;
     rsta_d <= rsta;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ena) begin
       douta_s <= MEM[addra];
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rsta_d) begin
       douta <= '0;
     end else if (ena_d) begin
@@ -75,18 +75,18 @@ module nco_lut #(
 
   // Memory port B
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     enb_d  <= enb;
     rstb_d <= rstb;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (enb) begin
       doutb_s <= MEM[addrb];
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rstb_d) begin
       doutb <= '0;
     end else if (enb_d) begin

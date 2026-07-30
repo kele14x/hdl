@@ -6,7 +6,7 @@ module delay #(
     parameter integer DATA_WIDTH = 8,
     parameter integer WIDTH = DATA_WIDTH,
     parameter integer DEPTH = 8,
-    parameter reg     INIT  = 1'b0
+    parameter logic     INIT  = 1'b0
 ) (
     input  wire             clk,
     input  wire             rst,
@@ -39,7 +39,7 @@ module delay #(
 
     end else begin : g_regs
 
-      reg [WIDTH-1:0] dregs[0:DEPTH-1];
+      logic [WIDTH-1:0] dregs[0:DEPTH-1];
 
       initial begin : p_init
         integer i;

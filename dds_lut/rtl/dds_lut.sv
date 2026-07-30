@@ -34,19 +34,19 @@
 
 module dds_lut #(
     parameter [8*7-1:0] STRUCTURE    = "AUTO",
-    parameter reg       RASTERIZED   = 1'b0,
+    parameter logic       RASTERIZED   = 1'b0,
     parameter integer   DATA_WIDTH   = 16,
     parameter integer   PHASE_WIDTH  = 12,
-    parameter reg       NEGATIVE_COS = 1'b0,
-    parameter reg       NEGATIVE_SIN = 1'b0
+    parameter logic       NEGATIVE_COS = 1'b0,
+    parameter logic       NEGATIVE_SIN = 1'b0
 ) (
     input  wire                         clk,
     input  wire                         rst,
     //
     input  wire       [PHASE_WIDTH-1:0] phase,
     //
-    output reg signed [ DATA_WIDTH-1:0] cos_out,
-    output reg signed [ DATA_WIDTH-1:0] sin_out
+    output logic signed [ DATA_WIDTH-1:0] cos_out,
+    output logic signed [ DATA_WIDTH-1:0] sin_out
 );
 
   // Notes:
@@ -101,12 +101,12 @@ module dds_lut #(
   // |         pi = 2 ^ (PHASE_WIDTH - 1) | 10_0000... | 0110_0000... |
   // | 3 / 2 * pi = 1 / 2 * pi + pi       | 11_0000... | 1001_0000... |
   // |     2 * pi = 2 ^ PHASE_WIDTH       | 00_0000... | 1100_0000... |
-  localparam reg [PHASE_WIDTH-1:0] PhasePi2 = RASTERIZED ?
+  localparam logic [PHASE_WIDTH-1:0] PhasePi2 = RASTERIZED ?
     ((1 << (PHASE_WIDTH - 3)) + (1 << (PHASE_WIDTH - 4))) : (1 << (PHASE_WIDTH - 2));
-  localparam reg [PHASE_WIDTH-1:0] PhasePi = RASTERIZED ?
+  localparam logic [PHASE_WIDTH-1:0] PhasePi = RASTERIZED ?
     ((1 << (PHASE_WIDTH - 2)) + (1 << (PHASE_WIDTH - 3))) : (1 << (PHASE_WIDTH - 1));
-  localparam reg [PHASE_WIDTH-1:0] Phase3Pi2 = PhasePi + PhasePi2;
-  localparam reg [PHASE_WIDTH-1:0] Phase2Pi = PhasePi << 1;
+  localparam logic [PHASE_WIDTH-1:0] Phase3Pi2 = PhasePi + PhasePi2;
+  localparam logic [PHASE_WIDTH-1:0] Phase2Pi = PhasePi << 1;
 
   // Functions
 
@@ -114,8 +114,8 @@ module dds_lut #(
   //   - When StructureInternal is "FULL", phase could be directly used as address.
   //   - When StructureInternal is "HALF", phase should be reduce to [0, pi)
   //   - When StructureInternal is "QUARTER", phase should be reduce to [0, pi/2)
-  function automatic [AddressWidth-1:0] phase_addr_mapping(input reg [PHASE_WIDTH-1:0] phase_value);
-    reg [PHASE_WIDTH-1:0] mapped;
+  function automatic [AddressWidth-1:0] phase_addr_mapping(input logic [PHASE_WIDTH-1:0] phase_value);
+    logic [PHASE_WIDTH-1:0] mapped;
     begin
       mapped = phase_value;
 
@@ -190,7 +190,7 @@ module dds_lut #(
 
   // This function tells when look-up the phase-cosine table, which output
   // should be sign changed. (Phase in range [1/2*pi, 3/2*pi)).
-  function automatic negative_output(input reg [PHASE_WIDTH-1:0] phase_value, input reg negative);
+  function automatic negative_output(input logic [PHASE_WIDTH-1:0] phase_value, input logic negative);
     begin
       negative_output = 1'b0;
 
@@ -209,7 +209,7 @@ module dds_lut #(
   // This function tells when look-up the phase-cosine table, which output
   // should be zero, since the zero point (cos(1/2*pi) and cos(3/2*pi)) is not
   // in table.
-  function automatic zero_output(input reg [PHASE_WIDTH-1:0] phase_value);
+  function automatic zero_output(input logic [PHASE_WIDTH-1:0] phase_value);
     begin
       zero_output = 1'b0;
 
@@ -223,17 +223,17 @@ module dds_lut #(
 
   // Signals
 
-  reg [ PHASE_WIDTH-1:0] cos_phase;
-  reg [ PHASE_WIDTH-1:0] sin_phase;
+  logic [ PHASE_WIDTH-1:0] cos_phase;
+  logic [ PHASE_WIDTH-1:0] sin_phase;
 
-  reg [AddressWidth-1:0] cos_addr;
-  reg [AddressWidth-1:0] sin_addr;
+  logic [AddressWidth-1:0] cos_addr;
+  logic [AddressWidth-1:0] sin_addr;
 
-  reg cos_negative, cos_negative_d, cos_negative_dd;
-  reg sin_negative, sin_negative_d, sin_negative_dd;
+  logic cos_negative, cos_negative_d, cos_negative_dd;
+  logic sin_negative, sin_negative_d, sin_negative_dd;
 
-  reg cos_zero, cos_zero_d, cos_zero_dd;
-  reg sin_zero, sin_zero_d, sin_zero_dd;
+  logic cos_zero, cos_zero_d, cos_zero_dd;
+  logic sin_zero, sin_zero_d, sin_zero_dd;
 
   wire signed [DATA_WIDTH-1:0] cos_dout;
   wire signed [DATA_WIDTH-1:0] sin_dout;
@@ -242,7 +242,7 @@ module dds_lut #(
 
   // Reduce ROM usage using equation:
   //   sin(x) = cos(x - pi / 2)
-  always @(*) begin
+  always_comb begin
     cos_phase = phase;
     sin_phase = phase;
     if (RASTERIZED) begin
@@ -272,29 +272,29 @@ module dds_lut #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     cos_addr <= phase_addr_mapping(cos_phase);
     sin_addr <= phase_addr_mapping(sin_phase);
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     cos_negative <= negative_output(cos_phase, NEGATIVE_COS);
     sin_negative <= negative_output(sin_phase, NEGATIVE_SIN);
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     cos_negative_d  <= cos_negative;
     cos_negative_dd <= cos_negative_d;
     sin_negative_d  <= sin_negative;
     sin_negative_dd <= sin_negative_d;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     cos_zero <= zero_output(cos_phase);
     sin_zero <= zero_output(sin_phase);
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     cos_zero_d  <= cos_zero;
     cos_zero_dd <= cos_zero_d;
     sin_zero_d  <= sin_zero;
@@ -323,7 +323,7 @@ module dds_lut #(
       .doutb(sin_dout)
   );
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (cos_zero_dd) begin
       cos_out <= 0;
     end else if (cos_negative_dd) begin
@@ -333,7 +333,7 @@ module dds_lut #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (sin_zero_dd) begin
       sin_out <= 0;
     end else if (sin_negative_dd) begin

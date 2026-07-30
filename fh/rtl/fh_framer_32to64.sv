@@ -39,7 +39,7 @@ module fh_framer_32to64 #(
   wire                  axis_fifo_tuser;
   wire                  unused_status = &{1'b0, tx_eth_rst, tuser_fifo_full, tuser_fifo_empty, axis_fifo_tuser};
 
-  reg                   sync_n;
+  logic                   sync_n;
 
   assign s_axis_tready = s0_axis_tready;
   assign s0_axis_tdata = {32'b0, s_axis_tdata};
@@ -47,7 +47,7 @@ module fh_framer_32to64 #(
   assign s0_axis_tlast = s_axis_tlast;
   assign s0_axis_tvalid = s_axis_tvalid;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       sync_n <= 1'b0;
     end else if (s_axis_tvalid && s_axis_tready && s_axis_tlast) begin

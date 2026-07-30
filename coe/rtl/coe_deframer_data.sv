@@ -26,7 +26,7 @@ module coe_deframer_data (
     output wire [767:0] m_axis_rx_tdata,
     output wire [  7:0] m_axis_rx_tuser,
     output wire         m_axis_rx_tlast,
-    output reg          m_axis_rx_tvalid,
+    output logic          m_axis_rx_tvalid,
     input  wire         m_axis_rx_tready,
     // CSR
     //----
@@ -55,7 +55,7 @@ module coe_deframer_data (
   // Helpers
 
   // This function returns how many 1 (valid sequence) are in the seq_en.
-  function automatic [4:0] get_seq_n_valid(input reg [15:0] seq_en);
+  function automatic [4:0] get_seq_n_valid(input logic [15:0] seq_en);
     integer i;
     begin
       get_seq_n_valid = 0;
@@ -68,10 +68,10 @@ module coe_deframer_data (
   endfunction
 
   // This function returns the channel delay for the given sequence ID.
-  function automatic [3:0] get_ch_delay(input reg [5:0] id, input reg [15:0] seq_en,
-                                        input reg [95:0] seq_id);
+  function automatic [3:0] get_ch_delay(input logic [5:0] id, input logic [15:0] seq_en,
+                                        input logic [95:0] seq_id);
     integer i;
-    reg found;
+    logic found;
     begin
       found = 0;
       get_ch_delay = 0;
@@ -85,7 +85,7 @@ module coe_deframer_data (
   endfunction
 
   // This function maps the 6-bit ID to 0~23 channel selection
-  function automatic [5:0] id_sel_map(input reg [5:0] id);
+  function automatic [5:0] id_sel_map(input logic [5:0] id);
     begin
       case (id)
         // Band0 CC0
@@ -136,8 +136,8 @@ module coe_deframer_data (
   wire [         95:0] ctrl_seq_id_s;
   wire [          5:0] ctrl_seq_id_ch      [ 0:MaxSeqLen-1];
 
-  reg  [          4:0] ctrl_seq_n_valid;
-  reg  [          3:0] ctrl_ch_delay       [0:NumChannel-1];
+  logic  [          4:0] ctrl_seq_n_valid;
+  logic  [          3:0] ctrl_ch_delay       [0:NumChannel-1];
 
   wire [          8:0] ctrl_ts_offset_s;
 
@@ -160,37 +160,37 @@ module coe_deframer_data (
 
   wire                 wr_we;
   wire [          3:0] wr_seq_last;
-  reg  [          3:0] wr_seq;
-  reg  [AddrWidth-5:0] wr_cnt;
+  logic  [          3:0] wr_seq;
+  logic  [AddrWidth-5:0] wr_cnt;
   wire [AddrWidth-1:0] wr_addr;
   wire [DataWidth-1:0] wr_din;
 
   // Read side signals
 
-  reg                  sync_d;
+  logic                  sync_d;
   wire                 sync_posedge;
 
-  reg                  rd_en;
+  logic                  rd_en;
   wire                 rd_en_d;
-  reg  [          5:0] rd_id;
+  logic  [          5:0] rd_id;
   wire [          5:0] rd_sel;
   wire [          5:0] rd_sel_d;
 
-  reg  [AddrWidth-5:0] rd_addr_msb;
-  reg  [          3:0] rd_addr_lsb;
+  logic  [AddrWidth-5:0] rd_addr_msb;
+  logic  [          3:0] rd_addr_lsb;
   wire [AddrWidth-1:0] rd_addr;
   wire [DataWidth-1:0] rd_dout;
 
-  reg  [         31:0] dout_reg            [0:NumChannel-1];
+  logic  [         31:0] dout_reg            [0:NumChannel-1];
 
-  reg  [         22:0] sample_counter;
+  logic  [         22:0] sample_counter;
   wire [          3:0] seq_counter;
 
   // Status
 
-  reg                  conflict;
-  reg                  conflict_d;
-  reg  [         31:0] stat_conflict_cnt_r;
+  logic                  conflict;
+  logic                  conflict_d;
+  logic  [         31:0] stat_conflict_cnt_r;
 
   // Control signal CDC & signal mapping
 
@@ -250,7 +250,7 @@ module coe_deframer_data (
     end
   endgenerate
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     ctrl_seq_n_valid <= get_seq_n_valid(ctrl_seq_en_s);
   end
 
@@ -284,7 +284,7 @@ module coe_deframer_data (
 
   // `s_app_valid` is always 1 clock tick ahead of data, so we can safely reset
   // the sequence counter when it's asserted.
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (s_app_valid) begin
       wr_seq <= 'd0;
     end else if (wr_we && (wr_seq == wr_seq_last)) begin
@@ -294,7 +294,7 @@ module coe_deframer_data (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (s_app_valid) begin
       wr_cnt <= s_app_ts[AddrWidth-5:0];
     end else if (wr_we && (wr_seq == wr_seq_last)) begin
@@ -313,13 +313,13 @@ module coe_deframer_data (
 
   // Sample & sequence counter
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     sync_d <= sync;
   end
 
   assign sync_posedge = sync & ~sync_d;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       sample_counter <= 'd0;
     end else if (sync_posedge) begin
@@ -337,7 +337,7 @@ module coe_deframer_data (
   //                 seq_counter    -> rd_en   -> rd_data ->
 
   // The read sequence is controlled by the ctrl_seq_en signal.
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     rd_en <= ctrl_seq_en_s[seq_counter] && ctrl_en_s;
   end
 
@@ -352,7 +352,7 @@ module coe_deframer_data (
       .dout(rd_en_d)
   );
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     rd_id <= ctrl_seq_id_ch[seq_counter];
   end
 
@@ -370,12 +370,12 @@ module coe_deframer_data (
   );
 
   // The MSB part of read address is the Ts counter
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     rd_addr_msb <= sample_counter[12:4] - ctrl_ts_offset_s;
   end
 
   // Read sequentially from the RAM
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (seq_counter == 'd0) begin
       rd_addr_lsb <= 'd0;
     end else if (rd_en) begin
@@ -400,7 +400,7 @@ module coe_deframer_data (
     genvar j;
     for (j = 0; j < NumChannel; j = j + 1) begin : g_ch
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         ctrl_ch_delay[j] <= get_ch_delay(j, ctrl_seq_en_s, ctrl_seq_id_s);
       end
 
@@ -437,7 +437,7 @@ module coe_deframer_data (
 
   assign m_axis_rx_tlast = 1'b0;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       m_axis_rx_tvalid <= 1'b0;
     end else begin
@@ -451,16 +451,16 @@ module coe_deframer_data (
 
   // Read/write conflict detection
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     // Rauh read/write conflict detection by compare address point MSB part
     conflict <= (wr_addr[AddrWidth-1:6] == rd_addr[AddrWidth-1:6]);
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     conflict_d <= conflict;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       stat_conflict_cnt_r <= 'd0;
     end else if (conflict && ~conflict_d) begin

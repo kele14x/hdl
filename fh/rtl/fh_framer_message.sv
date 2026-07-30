@@ -12,10 +12,10 @@ module fh_framer_message (
     input  wire        s_axis_tvalid,
     output wire        s_axis_tready,
     //
-    output reg  [31:0] m_axis_tdata,
-    output reg  [ 3:0] m_axis_tkeep,
-    output reg         m_axis_tlast,
-    output reg         m_axis_tvalid,
+    output logic  [31:0] m_axis_tdata,
+    output logic  [ 3:0] m_axis_tkeep,
+    output logic         m_axis_tlast,
+    output logic         m_axis_tvalid,
     input  wire        m_axis_tready
 );
 
@@ -44,7 +44,7 @@ module fh_framer_message (
 
   // Master FSM
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= S_RST;
     end else begin
@@ -52,7 +52,7 @@ module fh_framer_message (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     // Stay at current state by default
     state_next = state;
 
@@ -87,7 +87,7 @@ module fh_framer_message (
 
   // Master AXIS
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     // TDATA/TKEEP/TLAST changes at the "edge" of FSM
     case (state)
       S_IDLE: begin
@@ -119,7 +119,7 @@ module fh_framer_message (
     endcase
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     case (state)
       S_RST: begin
         // // state_next == S_IDLE

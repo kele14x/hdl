@@ -12,14 +12,14 @@ module prach_ctrl #(
     input  wire               clk,
     input  wire               rst,
     //
-    output reg  [NUM_ANT-1:0] rd_channel_req,
+    output logic  [NUM_ANT-1:0] rd_channel_req,
     input  wire [NUM_ANT-1:0] rd_channel_ack,
-    output reg  [        8:0] rd_start_symbol0,
-    output reg  [        8:0] rd_start_symbol1,
-    output reg  [       18:0] rd_start_sample,
-    output reg  [        3:0] rd_num_symbol,
-    output reg  [       17:0] rd_fcw,
-    output reg  [       11:0] rd_section_id,
+    output logic  [        8:0] rd_start_symbol0,
+    output logic  [        8:0] rd_start_symbol1,
+    output logic  [       18:0] rd_start_sample,
+    output logic  [        3:0] rd_num_symbol,
+    output logic  [       17:0] rd_fcw,
+    output logic  [       11:0] rd_section_id,
     // ORAN C-Plane
     //-------------
     input  wire               clk_eth_xran,

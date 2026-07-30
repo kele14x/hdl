@@ -4,10 +4,10 @@
 
 module fft #(
     parameter integer NUM_ANT            = 4,
-    parameter reg     INV_FFT            = 1'b0,
+    parameter logic     INV_FFT            = 1'b0,
     parameter integer LOG_FFT_SIZE       = 11,
     parameter integer DATA_WIDTH         = 16,
-    parameter reg     BIT_REVERSED_INPUT = 1'b1
+    parameter logic     BIT_REVERSED_INPUT = 1'b1
 ) (
     input  wire                         clk,
     input  wire                         rst,
@@ -21,13 +21,13 @@ module fft #(
     input  wire                         din_dv,
     input  wire                         din_last,
     // Data output
-    output reg signed  [DATA_WIDTH-1:0] dout_dr,
-    output reg signed  [DATA_WIDTH-1:0] dout_di,
+    output logic signed  [DATA_WIDTH-1:0] dout_dr,
+    output logic signed  [DATA_WIDTH-1:0] dout_di,
     output wire                         dout_sf,
     output wire                         dout_sl,
     output wire                         dout_sy,
-    output reg         [           3:0] dout_chn,
-    output reg                          dout_dv,
+    output logic         [           3:0] dout_chn,
+    output logic                          dout_dv,
     output wire                         dout_last,
     //
     // 0: 1k, 1: 2k, 2: 4k
@@ -35,7 +35,7 @@ module fft #(
     // 0: 16 (30.72), 1: 8 (61.44), 2: 4 (122.88)
     input  wire        [           1:0] ctrl_itlv,
     // Status output
-    output reg                          stat_ovf
+    output logic                          stat_ovf
 );
 
   // Local parameters
@@ -86,9 +86,9 @@ module fft #(
   // din_di =>
   // din_dv =>
 
-  reg signed  [  DATA_WIDTH-1:0] data_dr;
-  reg signed  [  DATA_WIDTH-1:0] data_di;
-  reg                            data_dv;
+  logic signed  [  DATA_WIDTH-1:0] data_dr;
+  logic signed  [  DATA_WIDTH-1:0] data_di;
+  logic                            data_dv;
 
   wire signed [DataWidthInt-1:0] data_dr_s       [0:NumStages];
   wire signed [DataWidthInt-1:0] data_di_s       [0:NumStages];
@@ -97,11 +97,11 @@ module fft #(
   wire        [   NumStages-1:0] ovf;
   wire                           ovf_at_saturate;
 
-  reg                            dv_d;
+  logic                            dv_d;
   wire        [             3:0] counter_max;
 
-  reg         [            16:0] latency;
-  reg         [            11:0] bypass;
+  logic         [            16:0] latency;
+  logic         [            11:0] bypass;
 
   genvar i;
 
@@ -126,7 +126,7 @@ module fft #(
   // Main
 
   // Input register
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     data_dr <= din_dr;
     data_di <= din_di;
     data_dv <= din_dv;
@@ -137,7 +137,7 @@ module fft #(
   assign data_di_s[0] = {{(DataWidthInt-DATA_WIDTH){data_di[DATA_WIDTH-1]}}, data_di};
   assign data_dv_s[0] = data_dv;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     dout_dr <= saturate(data_dr_s[NumStages]);
     dout_di <= saturate(data_di_s[NumStages]);
     dout_dv <= data_dv_s[NumStages];
@@ -192,17 +192,17 @@ module fft #(
     end
   endgenerate
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     stat_ovf <= (|ovf) | ovf_at_saturate;
   end
 
   assign counter_max = (ctrl_itlv == 2'b00) ? 4'd15 : (ctrl_itlv == 2'b01) ? 4'd7 : 4'd3;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     dv_d <= data_dv_s[NumStages];
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (data_dv_s[NumStages] && !dv_d) begin  // posedge
       dout_chn <= 'd0;
     end else begin
@@ -215,7 +215,7 @@ module fft #(
   //   - LOG_FFT_SIZE: FFT butterfly
   //   - (NumStages - 1) * 11: FFT twiddler
   //   - 2: Input/output register
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_size == 2'b00) begin  // 1k
       case (ctrl_itlv)
         2'b00:   latency <= 17'(1023 * 16 + NumButterfly + NumCoarseTwiddler + 9 * NumTwiddler);
@@ -237,7 +237,7 @@ module fft #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_size == 2'b00) begin
       bypass <= BIT_REVERSED_INPUT ? 12'b110000000000 : 12'b000000000011;
     end else if (ctrl_size == 2'b01) begin

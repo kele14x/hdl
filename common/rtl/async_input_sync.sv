@@ -20,9 +20,9 @@ module async_input_sync #(
   end
 
   (* ASYNC_REG="TRUE" *)
-  reg [SYNC_STAGES-1:0] sreg;
+  logic [SYNC_STAGES-1:0] sreg;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     sreg <= {sreg[SYNC_STAGES-2:0], async_in};
   end
 
@@ -33,9 +33,9 @@ module async_input_sync #(
 
     end else if (PIPELINE_STAGES == 1) begin : g_one_pipeline
 
-      reg sreg_pipe;
+      logic sreg_pipe;
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         sreg_pipe <= sreg[SYNC_STAGES-1];
       end
 
@@ -44,9 +44,9 @@ module async_input_sync #(
     end else begin : g_multiple_pipeline
 
       (* shreg_extract = "no" *)
-      reg [PIPELINE_STAGES-1:0] sreg_pipe;
+      logic [PIPELINE_STAGES-1:0] sreg_pipe;
 
-      always @(posedge clk) begin
+      always_ff @(posedge clk) begin
         sreg_pipe <= {sreg_pipe[PIPELINE_STAGES-2:0], sreg[SYNC_STAGES-1]};
       end
 

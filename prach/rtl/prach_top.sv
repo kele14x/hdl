@@ -91,15 +91,15 @@ module prach_top #(
     //
     input  wire [15:0] ctrl_sampling_offset   [NUM_CC],
     //
-    output reg  [ 3:0] stat_subframe_id       [NUM_CC],
-    output reg  [ 5:0] stat_slot_id           [NUM_CC],
-    output reg  [ 5:0] stat_symbol_id         [NUM_CC],
+    output logic  [ 3:0] stat_subframe_id       [NUM_CC],
+    output logic  [ 5:0] stat_slot_id           [NUM_CC],
+    output logic  [ 5:0] stat_symbol_id         [NUM_CC],
     //
-    output reg  [15:0] stat_time_offset       [NUM_CC],
-    output reg  [15:0] stat_cp_length         [NUM_CC],
+    output logic  [15:0] stat_time_offset       [NUM_CC],
+    output logic  [15:0] stat_cp_length         [NUM_CC],
     //
-    output reg  [ 3:0] stat_num_symbol        [NUM_CC],
-    output reg  [23:0] stat_freq_offset       [NUM_CC]
+    output logic  [ 3:0] stat_num_symbol        [NUM_CC],
+    output logic  [23:0] stat_freq_offset       [NUM_CC]
 );
 
   logic [63:0] m_axis_tdata [NUM_CC];

@@ -20,10 +20,10 @@ module ecpri_framer_trans (
     input  wire [15:0] s_trans_payloadsize,
     input  wire [15:0] s_trans_rtc_pc_id,
     //
-    output reg  [31:0] m_axis_tdata,
-    output reg  [ 3:0] m_axis_tkeep,
-    output reg         m_axis_tlast,
-    output reg         m_axis_tvalid,
+    output logic  [31:0] m_axis_tdata,
+    output logic  [ 3:0] m_axis_tkeep,
+    output logic         m_axis_tlast,
+    output logic         m_axis_tvalid,
     input  wire        m_axis_tready,
     //
     input  wire [47:0] ctrl_dest_mac,
@@ -37,9 +37,9 @@ module ecpri_framer_trans (
   // State
 
   // verilog_format: off
-  localparam reg [ 3:0] Version     = 4'b0001;
-  localparam reg [ 2:0] Reserved    = 3'b000;
-  localparam reg        Concat      = 1'b0;
+  localparam logic [ 3:0] Version     = 4'b0001;
+  localparam logic [ 2:0] Reserved    = 3'b000;
+  localparam logic        Concat      = 1'b0;
 
   localparam integer S_RST             = 0;
   localparam integer S_IDLE            = 1;
@@ -58,7 +58,7 @@ module ecpri_framer_trans (
 
   integer state, state_next;
 
-  reg         extra_last;
+  logic         extra_last;
 
   wire [31:0] int_tdata;
   wire [ 3:0] int_tkeep;
@@ -84,7 +84,7 @@ module ecpri_framer_trans (
   // Transport Heder (4)
   wire [31:0] trans_header;
 
-  reg  [ 7:0] seqid_reg [0:15];
+  logic  [ 7:0] seqid_reg [0:15];
 
   // Main
 
@@ -109,7 +109,7 @@ module ecpri_framer_trans (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (int_tvalid && int_tready) begin
       seqid_reg[int_trans_rtc_pc_id[3:0]] <= int_trans_seqid + 1'b1;
     end
@@ -117,7 +117,7 @@ module ecpri_framer_trans (
 
   // FSM
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= S_RST;
     end else begin
@@ -125,7 +125,7 @@ module ecpri_framer_trans (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     // By default, state at current state
     state_next = state;
 
@@ -214,7 +214,7 @@ module ecpri_framer_trans (
 
   // TDATA/TKEEP/TLAST/EXTRA_LAST changes their value at the "edge" of state
   // transfer
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       m_axis_tdata <= '0;
       m_axis_tkeep <= '0;
@@ -335,7 +335,7 @@ module ecpri_framer_trans (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       m_axis_tvalid <= 1'b0;
     end else begin

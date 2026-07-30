@@ -24,7 +24,7 @@ module fh_deframer_64to32 #(
     input  wire        m_axis_tready
 );
 
-  reg         sync_n;
+  logic         sync_n;
 
   wire        axis_fifo_tuser;
   wire        axis_fifo_err_discard;
@@ -38,7 +38,7 @@ module fh_deframer_64to32 #(
   wire        s0_axis_tvalid;
   wire        s0_axis_tready;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       sync_n <= 1'b0;
     end else if (s_axis_tvalid && s_axis_tlast) begin

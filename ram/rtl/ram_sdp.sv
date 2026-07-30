@@ -55,7 +55,7 @@ module ram_sdp #(
 
   // Memory write
 
-  always @(posedge clka) begin
+  always_ff @(posedge clka) begin
     if (ena && wea) begin
       MEM[addra] <= dina;
     end

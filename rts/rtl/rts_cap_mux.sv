@@ -20,10 +20,10 @@ module rts_cap_mux #(
     input  wire                      s1_axis_tvalid,
     input  wire                      s1_axis_tready,
     //
-    output reg  [              31:0] m_axis_tdata,
-    output reg  [               7:0] m_axis_tuser,
-    output reg                       m_axis_tlast,
-    output reg                       m_axis_tvalid,
+    output logic  [              31:0] m_axis_tdata,
+    output logic  [               7:0] m_axis_tuser,
+    output logic                       m_axis_tlast,
+    output logic                       m_axis_tvalid,
     //
     input  wire                      ctrl_pos_sel,
     input  wire [$clog2(NUM_CC)-1:0] ctrl_cc_sel
@@ -31,10 +31,10 @@ module rts_cap_mux #(
 
   // Signals
 
-  reg  [     NUM_CC*32-1:0] tdata_d;
-  reg  [               7:0] tuser_d;
-  reg                       tlast_d;
-  reg                       tvalid_d;
+  logic  [     NUM_CC*32-1:0] tdata_d;
+  logic  [               7:0] tuser_d;
+  logic                       tlast_d;
+  logic                       tvalid_d;
   wire                      unused_rst = rst;
 
   wire                      ctrl_pos_sel_s;
@@ -70,7 +70,7 @@ module rts_cap_mux #(
 
   // 2:1 sel
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_pos_sel_s == 1'b0) begin
       tdata_d <= s0_axis_tdata;
     end else begin
@@ -78,7 +78,7 @@ module rts_cap_mux #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_pos_sel_s == 1'b0) begin
       tuser_d <= s0_axis_tuser;
     end else begin
@@ -86,7 +86,7 @@ module rts_cap_mux #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_pos_sel_s == 1'b0) begin
       tlast_d <= s0_axis_tlast;
     end else begin
@@ -94,7 +94,7 @@ module rts_cap_mux #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_pos_sel_s == 1'b0) begin
       tvalid_d <= s0_axis_tvalid && s0_axis_tready;
     end else begin
@@ -104,19 +104,19 @@ module rts_cap_mux #(
 
   // 12:1 sel
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     m_axis_tdata <= tdata_d[32*ctrl_cc_sel_s+31-:32];
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     m_axis_tuser <= tuser_d;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     m_axis_tlast <= tlast_d;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     m_axis_tvalid <= tvalid_d;
   end
 

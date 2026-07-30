@@ -24,18 +24,18 @@ module ecpri_deframer_eth (
     input  wire        s_axis_tvalid,
     input  wire [79:0] s_axis_tuser,
     //
-    output reg  [31:0] m_axis_tdata,
-    output reg  [ 3:0] m_axis_tkeep,
-    output reg         m_axis_tlast,
-    output reg         m_axis_tvalid,
-    output reg  [79:0] m_axis_tuser,
+    output logic  [31:0] m_axis_tdata,
+    output logic  [ 3:0] m_axis_tkeep,
+    output logic         m_axis_tlast,
+    output logic         m_axis_tvalid,
+    output logic  [79:0] m_axis_tuser,
     //
-    output reg         m_mac_header_valid,
-    output reg  [47:0] m_mac_dest_mac,
-    output reg  [47:0] m_mac_source_mac,
-    output reg         m_mac_with_vlan,
-    output reg  [15:0] m_mac_vlan_tag,
-    output reg  [15:0] m_mac_ethertype
+    output logic         m_mac_header_valid,
+    output logic  [47:0] m_mac_dest_mac,
+    output logic  [47:0] m_mac_source_mac,
+    output logic         m_mac_with_vlan,
+    output logic  [15:0] m_mac_vlan_tag,
+    output logic  [15:0] m_mac_ethertype
 );
 
   import ecpri_pkg::*;
@@ -60,9 +60,9 @@ module ecpri_deframer_eth (
   // Signals
 
   wire [31:0] s_axis_tdata_reversed;
-  reg  [15:0] s_axis_tdata_d;  // also byte reversed
+  logic  [15:0] s_axis_tdata_d;  // also byte reversed
 
-  reg  [ 3:0] s_axis_tkeep_d;
+  logic  [ 3:0] s_axis_tkeep_d;
 
   wire        unused_tkeep_d = &{1'b0, s_axis_tkeep_d[1:0]};
 
@@ -72,7 +72,7 @@ module ecpri_deframer_eth (
   wire [15:0] mac_vlan_tag;
   wire [15:0] mac_ethertype;
 
-  reg         additional_tlast;
+  logic         additional_tlast;
 
   integer state, state_next;
 
@@ -83,13 +83,13 @@ module ecpri_deframer_eth (
 
   // Register TDATA & TKEEP for later use
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (s_axis_tvalid) begin
       s_axis_tdata_d <= s_axis_tdata_reversed[15:0];
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (s_axis_tvalid) begin
       s_axis_tkeep_d <= s_axis_tkeep;
     end
@@ -113,7 +113,7 @@ module ecpri_deframer_eth (
   // Ethernet packets are filtered by Ethertype field. If it's Ethertype field
   // is VLAN, we need to skip the 32-bit VLAN type & tag and check again.
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= S_RST;
     end else begin
@@ -121,7 +121,7 @@ module ecpri_deframer_eth (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     // Stay at current state by default
     state_next = state;
 
@@ -193,7 +193,7 @@ module ecpri_deframer_eth (
   // to know if we still need an additional tick to write remained data
   // This happens at:
   //    We received 3 or more bytes when TLAST is assert
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     additional_tlast <= 1'b0;
     if (state == S_PAYLOAD && s_axis_tvalid && s_axis_tlast) begin
       if (s_axis_tkeep[2]) begin
@@ -204,7 +204,7 @@ module ecpri_deframer_eth (
 
   // Parse ports
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (state == S_ETYPE && s_axis_tvalid && ~mac_with_vlan) begin
       m_mac_header_valid <= 1'b1;
     end else begin
@@ -212,7 +212,7 @@ module ecpri_deframer_eth (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_DMACH) && s_axis_tvalid) begin
       m_mac_dest_mac[47:16] <= mac_dest_mac[47:16];
     end
@@ -221,7 +221,7 @@ module ecpri_deframer_eth (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_DMACL_SMACH) && s_axis_tvalid) begin
       m_mac_source_mac[47:32] <= mac_source_mac[47:32];
     end
@@ -230,19 +230,19 @@ module ecpri_deframer_eth (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_ETYPE) && s_axis_tvalid) begin
       m_mac_with_vlan <= mac_with_vlan;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_ETYPE) && s_axis_tvalid && mac_with_vlan) begin
       m_mac_vlan_tag <= mac_vlan_tag;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_ETYPE) && s_axis_tvalid && ~mac_with_vlan) begin
       m_mac_ethertype <= mac_ethertype;
     end
@@ -253,13 +253,13 @@ module ecpri_deframer_eth (
   // If `m_mac_with_vlan`, 6 bytes from previous TDATA and 2 bytes from current TDATA
   // if not, 2 bytes from previous TDATA and 6 bytes from current TDATA
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (((state == S_PAYLOAD) && s_axis_tvalid) || additional_tlast) begin
       m_axis_tdata <= byte_reverse({s_axis_tdata_d, s_axis_tdata_reversed[31:16]});
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (additional_tlast) begin
       m_axis_tkeep <= {2'b00, s_axis_tkeep_d[3:2]};
     end else if ((state == S_PAYLOAD) && s_axis_tvalid) begin
@@ -267,7 +267,7 @@ module ecpri_deframer_eth (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (((state == S_PAYLOAD) && s_axis_tvalid) || additional_tlast) begin
       m_axis_tlast <= 1'b0;
       if (additional_tlast) begin
@@ -281,13 +281,13 @@ module ecpri_deframer_eth (
   end
 
   // Assume the timestamp is valid at first clock tick of the packet
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_DMACH) && s_axis_tvalid) begin
       m_axis_tuser <= s_axis_tuser;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     m_axis_tvalid <= ((state == S_PAYLOAD) && s_axis_tvalid) || additional_tlast;
   end
 

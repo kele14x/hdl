@@ -21,41 +21,41 @@ module rts_ram_buffer (
 
   parameter NumBlocks = 16;
 
-  reg  [         14:0] mem_addra;
-  reg                  mem_addra_lsb_d;
-  reg                  mem_addra_lsb_dd;
-  reg                  mem_addra_lsb_ddd;
-  reg  [NumBlocks-1:0] mem_ena;
-  reg  [NumBlocks-1:0] mem_ena_d;
-  reg  [NumBlocks-1:0] mem_ena_dd;
-  reg  [NumBlocks-1:0] mem_ena_ddd;
-  reg  [          7:0] mem_wea           [0:NumBlocks-1];
-  reg  [         63:0] mem_dina;
+  logic  [         14:0] mem_addra;
+  logic                  mem_addra_lsb_d;
+  logic                  mem_addra_lsb_dd;
+  logic                  mem_addra_lsb_ddd;
+  logic  [NumBlocks-1:0] mem_ena;
+  logic  [NumBlocks-1:0] mem_ena_d;
+  logic  [NumBlocks-1:0] mem_ena_dd;
+  logic  [NumBlocks-1:0] mem_ena_ddd;
+  logic  [          7:0] mem_wea           [0:NumBlocks-1];
+  logic  [         63:0] mem_dina;
   wire [         63:0] mem_douta         [0:NumBlocks-1];
-  reg  [         63:0] mem_douta_c;
-  reg  [         31:0] mem_douta_d;
+  logic  [         63:0] mem_douta_c;
+  logic  [         31:0] mem_douta_d;
 
-  reg  [         14:0] mem_addrb;
-  reg                  mem_addrb_lsb_d;
-  reg                  mem_addrb_lsb_dd;
-  reg                  mem_addrb_lsb_ddd;
-  reg  [NumBlocks-1:0] mem_enb;
-  reg  [NumBlocks-1:0] mem_enb_d;
-  reg  [NumBlocks-1:0] mem_enb_dd;
-  reg  [NumBlocks-1:0] mem_enb_ddd;
-  reg  [          7:0] mem_web           [0:NumBlocks-1];
-  reg  [         63:0] mem_dinb;
+  logic  [         14:0] mem_addrb;
+  logic                  mem_addrb_lsb_d;
+  logic                  mem_addrb_lsb_dd;
+  logic                  mem_addrb_lsb_ddd;
+  logic  [NumBlocks-1:0] mem_enb;
+  logic  [NumBlocks-1:0] mem_enb_d;
+  logic  [NumBlocks-1:0] mem_enb_dd;
+  logic  [NumBlocks-1:0] mem_enb_ddd;
+  logic  [          7:0] mem_web           [0:NumBlocks-1];
+  logic  [         63:0] mem_dinb;
   wire [         63:0] mem_doutb         [0:NumBlocks-1];
-  reg  [         63:0] mem_doutb_c;
-  reg  [         31:0] mem_doutb_d;
+  logic  [         63:0] mem_doutb_c;
+  logic  [         31:0] mem_doutb_d;
 
   // Port A
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     mem_addra <= addra[15:1];
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     mem_addra_lsb_d   <= addra[0];
     mem_addra_lsb_dd  <= mem_addra_lsb_d;
     mem_addra_lsb_ddd <= mem_addra_lsb_dd;
@@ -68,7 +68,7 @@ module rts_ram_buffer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     mem_ena_d   <= mem_ena;
     mem_ena_dd  <= mem_ena_d;
     mem_ena_ddd <= mem_ena_dd;
@@ -81,11 +81,11 @@ module rts_ram_buffer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     mem_dina <= {dina, dina};
   end
 
-  always @(*) begin : p_douta_c
+  always_comb begin : p_douta_c
     integer i;
     mem_douta_c = 'b0;
     for (i = 0; i < NumBlocks; i = i + 1) begin
@@ -95,7 +95,7 @@ module rts_ram_buffer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (|mem_ena_ddd) begin
       mem_douta_d <= mem_addra_lsb_ddd ? mem_douta_c[63:32] : mem_douta_c[31:0];
     end
@@ -105,11 +105,11 @@ module rts_ram_buffer (
 
   // Port B
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     mem_addrb <= addrb[15:1];
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     mem_addrb_lsb_d   <= addrb[0];
     mem_addrb_lsb_dd  <= mem_addrb_lsb_d;
     mem_addrb_lsb_ddd <= mem_addrb_lsb_dd;
@@ -122,7 +122,7 @@ module rts_ram_buffer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     mem_enb_d   <= mem_enb;
     mem_enb_dd  <= mem_enb_d;
     mem_enb_ddd <= mem_enb_dd;
@@ -135,11 +135,11 @@ module rts_ram_buffer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     mem_dinb <= {dinb, dinb};
   end
 
-  always @(*) begin : p_doutb_c
+  always_comb begin : p_doutb_c
     integer i;
     mem_doutb_c = 'b0;
     for (i = 0; i < NumBlocks; i = i + 1) begin
@@ -149,7 +149,7 @@ module rts_ram_buffer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (|mem_enb_ddd) begin
       mem_doutb_d <= mem_addrb_lsb_ddd ? mem_doutb_c[63:32] : mem_doutb_c[31:0];
     end

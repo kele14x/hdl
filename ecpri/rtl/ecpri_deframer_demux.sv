@@ -84,9 +84,9 @@ module ecpri_deframer_demux (
   wire [             31:0] s_axis_tdata_reversed;
 
   wire [             15:0] mac_ethertype;
-  reg                      rx_eth_rst_sync;
+  logic                      rx_eth_rst_sync;
 
-  always @(posedge rx_eth_clk) begin
+  always_ff @(posedge rx_eth_clk) begin
     rx_eth_rst_sync <= rx_eth_rst;
   end
 
@@ -95,22 +95,22 @@ module ecpri_deframer_demux (
   assign unused_inputs = &{1'b0, rx_ptp_timestamp_valid, s_axis_tdata_reversed[15:0]};
 
   wire                     wr_en;
-  reg  [    AddrWidth-1:0] wr_addr;
-  reg  [    AddrWidth-1:0] wr_addr_last;
-  reg  [    AddrWidth-1:0] wr_addr_next;
+  logic  [    AddrWidth-1:0] wr_addr;
+  logic  [    AddrWidth-1:0] wr_addr_last;
+  logic  [    AddrWidth-1:0] wr_addr_next;
   wire [    DataWidth-1:0] wr_data;
 
   wire                     rd_en;
-  reg                      rd_en_d;
-  reg                      rd_en_dd;
-  reg  [    AddrWidth-1:0] rd_addr;
+  logic                      rd_en_d;
+  logic                      rd_en_dd;
+  logic  [    AddrWidth-1:0] rd_addr;
   wire [    AddrWidth-1:0] rd_addr_next;
   wire [    DataWidth-1:0] rd_data;
-  reg  [    DataWidth-1:0] rd_data_r;
+  logic  [    DataWidth-1:0] rd_data_r;
 
-  reg                      packet_valid;
-  reg  [             15:0] packet_ethertype;
-  reg  [             79:0] packet_timestamp;
+  logic                      packet_valid;
+  logic  [             15:0] packet_ethertype;
+  logic  [             79:0] packet_timestamp;
 
   wire                     fifo_wr_en;
   wire [FiFoDataWidth-1:0] fifo_wr_din;
@@ -124,7 +124,7 @@ module ecpri_deframer_demux (
   wire [             15:0] packet_ethertype_s;
   wire [             79:0] packet_timestamp_s;
 
-  reg                      corrupt_pkt_pulse;
+  logic                      corrupt_pkt_pulse;
 
   integer state, state_next;
 
@@ -139,7 +139,7 @@ module ecpri_deframer_demux (
   // The state is sync with input data stream and parse to get the EtherType
   // field
 
-  always @(posedge rx_eth_clk) begin
+  always_ff @(posedge rx_eth_clk) begin
     if (rx_eth_rst_sync) begin
       state <= S_RST;
     end else begin
@@ -147,7 +147,7 @@ module ecpri_deframer_demux (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     // Stay at current state by default
     state_next = state;
 
@@ -226,7 +226,7 @@ module ecpri_deframer_demux (
 
   assign wr_en = s_axis_tvalid;
 
-  always @(posedge rx_eth_clk) begin
+  always_ff @(posedge rx_eth_clk) begin
     if (rx_eth_rst_sync) begin
       wr_addr <= 0;
     end else if ((state == S_DMACH) && s_axis_tvalid && s_axis_tuser) begin
@@ -245,7 +245,7 @@ module ecpri_deframer_demux (
 
   // Register the address at the first tick of the packet, in the case of we need to
   // discard the packet
-  always @(posedge rx_eth_clk) begin
+  always_ff @(posedge rx_eth_clk) begin
     if (rx_eth_rst_sync) begin
       wr_addr_last <= 0;
     end else if ((state == S_DMACH) && s_axis_tvalid) begin
@@ -253,7 +253,7 @@ module ecpri_deframer_demux (
     end
   end
 
-  always @(posedge rx_eth_clk) begin
+  always_ff @(posedge rx_eth_clk) begin
     if ((state == S_PAYLOAD) && s_axis_tvalid && s_axis_tlast && ~s_axis_tuser) begin
       wr_addr_next <= wr_addr;
     end
@@ -265,19 +265,19 @@ module ecpri_deframer_demux (
 
   // We successfully received the last byte of the packet, so we can use the current
   // address as the next address
-  always @(posedge rx_eth_clk) begin
+  always_ff @(posedge rx_eth_clk) begin
     packet_valid <= ((state == S_PAYLOAD) && s_axis_tvalid && s_axis_tlast && ~s_axis_tuser);
   end
 
   // Assume the timestamp is valid at first clock tick of the packet, so we
   // can ignore the `rx_ptp_timestamp_valid` signal
-  always @(posedge rx_eth_clk) begin
+  always_ff @(posedge rx_eth_clk) begin
     if ((state == S_DMACH) && s_axis_tvalid) begin
       packet_timestamp <= rx_ptp_timestamp;
     end
   end
 
-  always @(posedge rx_eth_clk) begin
+  always_ff @(posedge rx_eth_clk) begin
     if ((state == S_ETYPE) && (mac_ethertype != ECPRI_ETHERTYPE_VLAN) && s_axis_tvalid) begin
       packet_ethertype <= mac_ethertype;
     end
@@ -285,7 +285,7 @@ module ecpri_deframer_demux (
 
   // Status output
 
-  always @(posedge rx_eth_clk) begin
+  always_ff @(posedge rx_eth_clk) begin
     corrupt_pkt_pulse <= ((state == S_DMACH) || (state == S_DMACL_SMACH) ||
       (state == S_SMACL) || (state == S_ETYPE) || (state == S_PAYLOAD)) &&
       s_axis_tvalid && s_axis_tuser;
@@ -304,12 +304,12 @@ module ecpri_deframer_demux (
 
   assign rd_en = packet_valid_s;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     rd_en_d  <= rd_en;
     rd_en_dd <= rd_en_d;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       rd_addr <= 0;
     end else if (rd_en) begin
@@ -317,7 +317,7 @@ module ecpri_deframer_demux (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rd_en_dd) begin
       rd_data_r <= rd_data;
     end

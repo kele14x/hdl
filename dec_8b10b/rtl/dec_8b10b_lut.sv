@@ -17,7 +17,7 @@ module dec_8b10b_lut #(
 );
 
   // Data: {disperr_1, dispout_1, disperr_0, dispout_0, notintable, charisk, dout}
-  reg [13:0] dec_table[0:1023];
+  logic [13:0] dec_table[0:1023];
   wire [13:0] dec_table_data;
 
   initial begin : p_load_dec_table

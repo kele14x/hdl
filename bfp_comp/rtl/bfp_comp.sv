@@ -15,11 +15,11 @@ module bfp_comp #(
     input  wire                  s_axis_tlast,
     input  wire [USER_WIDTH-1:0] s_axis_tuser,
     //
-    output reg  [          63:0] m_axis_tdata,
-    output reg  [           7:0] m_axis_tkeep,
-    output reg                   m_axis_tvalid,
-    output reg                   m_axis_tlast,
-    output reg  [USER_WIDTH-1:0] m_axis_tuser,
+    output logic  [          63:0] m_axis_tdata,
+    output logic  [           7:0] m_axis_tkeep,
+    output logic                   m_axis_tvalid,
+    output logic                   m_axis_tlast,
+    output logic  [USER_WIDTH-1:0] m_axis_tuser,
     // Control
     //--------
     input  wire [           3:0] ctrl_ud_comp_meth,

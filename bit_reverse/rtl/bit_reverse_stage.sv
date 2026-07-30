@@ -17,11 +17,11 @@ module bit_reverse_stage #(
     input  wire                                              din_valid,
     input  wire                                              din_last,
     // Data output
-    output reg  [                            DATA_WIDTH-1:0] dout_dr,
-    output reg  [                            DATA_WIDTH-1:0] dout_di,
-    output reg  [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] dout_id,
-    output reg                                               dout_valid,
-    output reg                                               dout_last
+    output logic  [                            DATA_WIDTH-1:0] dout_dr,
+    output logic  [                            DATA_WIDTH-1:0] dout_di,
+    output logic  [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] dout_id,
+    output logic                                               dout_valid,
+    output logic                                               dout_last
 );
 
   // Swap x_j and x_k, where:
@@ -35,7 +35,7 @@ module bit_reverse_stage #(
 
   // Each stage has a local counter, which counts from 0 to FFT_SIZE-1. Counter
   // synchronize with `din_dr`.
-  reg  [        LOG_FFT_SIZE-1:0] counter;
+  logic  [        LOG_FFT_SIZE-1:0] counter;
 
   wire                            switch;
 
@@ -51,7 +51,7 @@ module bit_reverse_stage #(
 
   // Main
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       counter <= 'd0;
     end else if (din_valid && din_last && din_id == LastId) begin
@@ -86,7 +86,7 @@ module bit_reverse_stage #(
 
   // Data output
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (data_valid_s) begin
       dout_dr   <= data_dr_s;
       dout_di   <= data_di_s;
@@ -94,7 +94,7 @@ module bit_reverse_stage #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     dout_id    <= data_id_s;
     dout_valid <= data_valid_s;
   end

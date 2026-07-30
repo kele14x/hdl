@@ -20,28 +20,28 @@ module rts_ram_block #(
     input  wire                    ena,
     input  wire [DATA_WIDTH/8-1:0] wea,
     input  wire [  DATA_WIDTH-1:0] dina,
-    output reg  [  DATA_WIDTH-1:0] douta,
+    output logic  [  DATA_WIDTH-1:0] douta,
     // Port B
     input  wire                    rstb,
     input  wire [  ADDR_WIDTH-1:0] addrb,
     input  wire                    enb,
     input  wire [DATA_WIDTH/8-1:0] web,
     input  wire [  DATA_WIDTH-1:0] dinb,
-    output reg  [  DATA_WIDTH-1:0] doutb
+    output logic  [  DATA_WIDTH-1:0] doutb
 );
 
   (* RAM_STYLE="ultra" *)
-  reg [DATA_WIDTH-1:0] mem    [0:2**ADDR_WIDTH-1];
+  logic [DATA_WIDTH-1:0] mem    [0:2**ADDR_WIDTH-1];
 
-  reg                  ena_d;
-  reg                  ena_dd;
-  reg [DATA_WIDTH-1:0] prega;
-  reg [DATA_WIDTH-1:0] orega;
+  logic                  ena_d;
+  logic                  ena_dd;
+  logic [DATA_WIDTH-1:0] prega;
+  logic [DATA_WIDTH-1:0] orega;
 
-  reg                  enb_d;
-  reg                  enb_dd;
-  reg [DATA_WIDTH-1:0] pregb;
-  reg [DATA_WIDTH-1:0] oregb;
+  logic                  enb_d;
+  logic                  enb_dd;
+  logic [DATA_WIDTH-1:0] pregb;
+  logic [DATA_WIDTH-1:0] oregb;
 
   // Port A
 
@@ -58,7 +58,7 @@ module rts_ram_block #(
   end
 
   // Memory read
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ena) begin
       if (~|wea) begin
         prega <= mem[addra];
@@ -66,7 +66,7 @@ module rts_ram_block #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rsta) begin
       ena_d  <= 1'b0;
       ena_dd <= 1'b0;
@@ -76,13 +76,13 @@ module rts_ram_block #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ena_d) begin
       orega <= prega;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ena_dd) begin
       douta <= orega;
     end else begin
@@ -105,7 +105,7 @@ module rts_ram_block #(
   end
 
   // Memory read
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (enb) begin
       if (~|web) begin
         pregb <= mem[addrb];
@@ -113,7 +113,7 @@ module rts_ram_block #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rstb) begin
       enb_d  <= 1'b0;
       enb_dd <= 1'b0;
@@ -123,13 +123,13 @@ module rts_ram_block #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (enb_d) begin
       oregb <= pregb;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (enb_dd) begin
       doutb <= oregb;
     end else begin

@@ -9,21 +9,21 @@ module pulse_delay #(
     input  wire             rst,
     //
     input  wire             pulse_in,
-    output reg              pulse_out,
+    output logic              pulse_out,
     //
     input  wire [WIDTH-1:0] delay
 );
 
   localparam [WIDTH-1:0] DelayOffset = 2;
 
-  reg  [WIDTH-1:0] counter;
-  reg  [WIDTH-1:0] counter_in;
+  logic  [WIDTH-1:0] counter;
+  logic  [WIDTH-1:0] counter_in;
   wire [WIDTH-1:0] counter_out;
   wire             counter_empty;
   wire             pulse_v;
   wire             fifo_full;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       counter <= 'b0;
     end else begin
@@ -31,7 +31,7 @@ module pulse_delay #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     counter_in <= counter + delay + DelayOffset;
   end
 
@@ -54,13 +54,13 @@ module pulse_delay #(
 
   assign pulse_v = ~counter_empty && (counter == counter_out);
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (!rst && pulse_in && fifo_full) begin
       $error("[%m]: pulse delay FIFO overflow.");
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       pulse_out <= 1'b0;
     end else begin

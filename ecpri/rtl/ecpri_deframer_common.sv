@@ -24,16 +24,16 @@ module ecpri_deframer_common (
     input  wire [79:0] s_axis_tuser,
     input  wire        s_axis_tvalid,
     //
-    output reg  [31:0] m_axis_tdata,
-    output reg  [ 3:0] m_axis_tkeep,
-    output reg         m_axis_tlast,
-    output reg  [79:0] m_axis_tuser,
-    output reg         m_axis_tvalid,
+    output logic  [31:0] m_axis_tdata,
+    output logic  [ 3:0] m_axis_tkeep,
+    output logic         m_axis_tlast,
+    output logic  [79:0] m_axis_tuser,
+    output logic         m_axis_tvalid,
     // Transport header (eCPRI header)
-    output reg         m_ecpri_header_valid,
-    output reg         m_ecpri_concat,
-    output reg  [ 7:0] m_ecpri_messagetype,
-    output reg  [15:0] m_ecpri_payloadsize
+    output logic         m_ecpri_header_valid,
+    output logic         m_ecpri_concat,
+    output logic  [ 7:0] m_ecpri_messagetype,
+    output logic  [15:0] m_ecpri_payloadsize
 );
 
   import ecpri_pkg::*;
@@ -56,7 +56,7 @@ module ecpri_deframer_common (
   wire [ 7:0] ecpri_messagetype;  // 0 = IQ, 2 = IQC, 5 = Delay measure
   wire [15:0] ecpri_payloadsize;
 
-  reg  [15:0] payload_counter;  // Received message bytes counter
+  logic  [15:0] payload_counter;  // Received message bytes counter
 
   wire        payload_end;
   wire        unused_header_fields;
@@ -67,7 +67,7 @@ module ecpri_deframer_common (
 
   // Main
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= S_RST;
     end else begin
@@ -75,7 +75,7 @@ module ecpri_deframer_common (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     // Stay at current state by default
     state_next = state;
 
@@ -124,7 +124,7 @@ module ecpri_deframer_common (
   } = s_axis_tdata_reversed;
 
   // Total received bytes, not including current bytes
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       payload_counter <= 0;
     end else if (s_axis_tvalid && s_axis_tlast) begin
@@ -140,11 +140,11 @@ module ecpri_deframer_common (
 
   // eCPRI common header parse ports output
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     m_ecpri_header_valid <= (state == S_COMM) && s_axis_tvalid;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_COMM) && s_axis_tvalid) begin
       m_ecpri_concat      <= ecpri_concat;
       m_ecpri_messagetype <= ecpri_messagetype;
@@ -154,32 +154,32 @@ module ecpri_deframer_common (
 
   // Master AXIS
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_PAYLOAD) && s_axis_tvalid) begin
       m_axis_tdata <= s_axis_tdata;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_PAYLOAD) && s_axis_tvalid) begin
       m_axis_tkeep <= s_axis_tkeep;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (s_axis_tvalid) begin
       m_axis_tlast <= s_axis_tlast || payload_end;
     end
   end
 
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_COMM) && s_axis_tvalid) begin
       m_axis_tuser <= s_axis_tuser;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     m_axis_tvalid <= (state == S_PAYLOAD) && s_axis_tvalid;
   end
 

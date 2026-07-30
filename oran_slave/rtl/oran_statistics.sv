@@ -158,7 +158,7 @@ module oran_statistics #(
 
   generate
     for (genvar e = 0; e < NUM_ETHERNET_PORT; e++) begin : g_total_pkt_cnt
-      always @(posedge rx_eth_clk[e]) begin
+      always_ff @(posedge rx_eth_clk[e]) begin
         if (clear_int) begin
           total_pkt_cnt_per[e] <= '0;
         end else if (m_mac_header_valid[e]) begin
@@ -183,7 +183,7 @@ module oran_statistics #(
 
   generate
     for (genvar e = 0; e < NUM_ETHERNET_PORT; e++) begin : g_oran_pkt_cnt
-      always @(posedge rx_eth_clk[e]) begin
+      always_ff @(posedge rx_eth_clk[e]) begin
         if (clear_int) begin
           oran_pkt_cnt_per[e] <= '0;
         end else if (m_trans_header_valid[e]) begin
@@ -209,7 +209,7 @@ module oran_statistics #(
   generate
     for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin : g_ontime_ant
       for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin : g_ontime_eth
-        always @(posedge clk) begin
+        always_ff @(posedge clk) begin
           if (clear_int) begin
             ontime_pkt_cnt_per[i][cc] <= '0;
           end else if (m_app_header_valid[i][cc] && m_app_packet_in_window[i][cc]) begin
@@ -238,7 +238,7 @@ module oran_statistics #(
   generate
     for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin : g_early_ant
       for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin : g_early_eth
-        always @(posedge clk) begin
+        always_ff @(posedge clk) begin
           if (clear_int) begin
             early_pkt_cnt_per[i][cc] <= '0;
           end else if (m_app_header_valid[i][cc] && !m_app_packet_in_window[i][cc] && m_app_offset_in_symbol[i][cc] < 140) begin
@@ -267,7 +267,7 @@ module oran_statistics #(
   generate
     for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin : g_late_ant
       for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin : g_late_eth
-        always @(posedge clk) begin
+        always_ff @(posedge clk) begin
           if (clear_int) begin
             late_pkt_cnt_per[i][cc] <= '0;
           end else if (m_app_header_valid[i][cc] && !m_app_packet_in_window[i][cc] && m_app_offset_in_symbol[i][cc] >= 140) begin
@@ -296,7 +296,7 @@ module oran_statistics #(
   generate
     for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin : g_earliest_ant
       for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin : g_earliest_eth
-        always @(posedge clk) begin
+        always_ff @(posedge clk) begin
           if (clear_int) begin
             earliest_u_pkt_per[i][cc] <= '0;
           end else if (m_app_header_valid[i][cc] &&
@@ -329,7 +329,7 @@ module oran_statistics #(
   generate
     for (genvar i = 0; i < NUM_ANTENNA_PORT; i++) begin : g_latest_ant
       for (genvar cc = 0; cc < NUM_ETHERNET_PORT; cc++) begin : g_latest_eth
-        always @(posedge clk) begin
+        always_ff @(posedge clk) begin
           if (clear_int) begin
             latest_u_pkt_per[i][cc] <= '1;
           end else if (m_app_header_valid[i][cc] &&

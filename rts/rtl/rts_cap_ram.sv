@@ -23,7 +23,7 @@ module rts_cap_ram (
     input  wire [18:0] ctrl_cap_offset,
     input  wire [ 4:0] ctrl_cap_len,
     //
-    output reg         stat_cap_status,
+    output logic         stat_cap_status,
     //
     input  wire [ 3:0] ctrl_ram_addr_msb,
     //
@@ -32,7 +32,7 @@ module rts_cap_ram (
     input  wire        ctrl_ram_we,
     input  wire [31:0] ctrl_ram_din,
     output wire [31:0] ctrl_ram_dout,
-    output reg         ctrl_ram_valid
+    output logic         ctrl_ram_valid
 );
 
   // Parameters
@@ -55,28 +55,28 @@ module rts_cap_ram (
   wire [         18:0] ctrl_cap_offset_s;
   wire [          4:0] ctrl_cap_len_s;
 
-  reg                  state_is_idle;
+  logic                  state_is_idle;
   wire                 state_is_idle_s;
 
-  reg                  sync_d;
+  logic                  sync_d;
   wire                 sync_posedge;
-  reg                  sync_req;
+  logic                  sync_req;
 
-  reg  [          3:0] seq_counter;
-  reg  [          3:0] seq_counter_d;
-  reg  [         18:0] offset_counter;
-  reg  [         18:0] offset_counter_next;
-  reg                  offset_start;
+  logic  [          3:0] seq_counter;
+  logic  [          3:0] seq_counter_d;
+  logic  [         18:0] offset_counter;
+  logic  [         18:0] offset_counter_next;
+  logic                  offset_start;
 
-  reg  [         31:0] s_axis_tdata_d;
+  logic  [         31:0] s_axis_tdata_d;
 
-  reg                  ram_wea;
-  reg  [AddrWidth-1:0] ram_addra;
-  reg  [DataWidth-1:0] ram_dina;
+  logic                  ram_wea;
+  logic  [AddrWidth-1:0] ram_addra;
+  logic  [DataWidth-1:0] ram_dina;
 
-  reg                  ram_addr_done;
+  logic                  ram_addr_done;
 
-  reg                  ctrl_ram_en_d;
+  logic                  ctrl_ram_en_d;
 
   wire                 unused_s_axis_meta = |{s_axis_tuser[7:1], s_axis_tlast};
   wire                 unused_ctrl_ram_write = |{ctrl_ram_we, ctrl_ram_din};
@@ -151,7 +151,7 @@ module rts_cap_ram (
 
   // Status signal CDC
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     state_is_idle <= (state == S_IDLE);
   end
 
@@ -184,7 +184,7 @@ module rts_cap_ram (
 
   // Main
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     sync_d <= sync;
   end
 
@@ -192,7 +192,7 @@ module rts_cap_ram (
 
   // s_axis_tuser[0] marks the next tick is the start of a new sequence,
   // `seq_counter` counter from 0 to 15 and loops
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       seq_counter <= 'd0;
     end else if (s_axis_tuser[0]) begin
@@ -203,7 +203,7 @@ module rts_cap_ram (
   end
 
   // Sync with the posedge of the `sync` signal
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       sync_req <= 1'b0;
     end else if (sync_posedge && &seq_counter) begin
@@ -216,7 +216,7 @@ module rts_cap_ram (
   end
 
   // `offset_counter` is the MSB of the counter
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       offset_counter <= 'd0;
     end else begin
@@ -224,7 +224,7 @@ module rts_cap_ram (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     offset_counter_next = offset_counter;
     if ((sync_posedge || sync_req) && &seq_counter) begin
       offset_counter_next = 'd0;
@@ -233,13 +233,13 @@ module rts_cap_ram (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     offset_start <= offset_counter_next == ctrl_cap_offset_s;
   end
 
   // Capture FSM
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= S_RST;
     end else begin
@@ -247,7 +247,7 @@ module rts_cap_ram (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     // Default state
     state_next = state;
 
@@ -290,19 +290,19 @@ module rts_cap_ram (
   // offset_counter
   // offset_start
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     s_axis_tdata_d <= s_axis_tdata;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     ram_dina <= s_axis_tdata_d;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     seq_counter_d <= seq_counter;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     case (ctrl_cap_mode_s)
       2'b00: begin
         // 30.72 Msps, 1/16 tick
@@ -322,7 +322,7 @@ module rts_cap_ram (
     endcase
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (((state == S_WAIT) && offset_start) || ((state == S_IDLE) && ctrl_cap_force_s)) begin
       ram_addra <= 'd0;
     end else if (ram_wea) begin
@@ -330,7 +330,7 @@ module rts_cap_ram (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     case (ctrl_cap_len_s)
       5'd0:    ram_addr_done = (ram_addra == 'h00000);
       5'd1:    ram_addr_done = (ram_addra == 'h00001);
@@ -376,7 +376,7 @@ module rts_cap_ram (
 
   // Port B
 
-  always @(posedge ctrl_clk) begin
+  always_ff @(posedge ctrl_clk) begin
     ctrl_ram_en_d  <= ctrl_ram_en;
     ctrl_ram_valid <= ctrl_ram_en_d;
   end

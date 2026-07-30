@@ -3,7 +3,7 @@
 `default_nettype none
 
 module timer_syncer_156p25 #(
-    parameter reg SIM_SPEEDUP = 1'b0
+    parameter logic SIM_SPEEDUP = 1'b0
 ) (
     input  wire        clk,
     input  wire        rst,
@@ -30,9 +30,9 @@ module timer_syncer_156p25 #(
 
   // Signals
 
-  reg  [47:0] second_counter;  // 48-bit second counter
-  reg  [31:0] nanosecond_counter;  // 32-bit nanosecond counter
-  reg  [ 2:0] nanosecond_frac;  // 3-bit nanosecond fraction
+  logic  [47:0] second_counter;  // 48-bit second counter
+  logic  [31:0] nanosecond_counter;  // 32-bit nanosecond counter
+  logic  [ 2:0] nanosecond_frac;  // 3-bit nanosecond fraction
 
   wire [47:0] second_counter_next;
   wire [31:0] nanosecond_counter_next;
@@ -48,7 +48,7 @@ module timer_syncer_156p25 #(
   wire [47:0] tod_sec_eth;
   wire [31:0] tod_ns_eth;
 
-  reg  [31:0] stat_resync_cnt_r;
+  logic  [31:0] stat_resync_cnt_r;
 
   wire cdc_pps_sync_rx_src_ready;
   wire unused_inputs = &{1'b0, rst, ctrl_rst, cdc_pps_sync_rx_src_ready, 1'b0};
@@ -59,7 +59,7 @@ module timer_syncer_156p25 #(
 
   // Timer for eth_clk
 
-  always @(posedge eth_clk) begin
+  always_ff @(posedge eth_clk) begin
     if (eth_rst) begin
       second_counter     <= 48'd0;
       nanosecond_counter <= 32'd0;
@@ -100,7 +100,7 @@ module timer_syncer_156p25 #(
   assign nanosecond_counter_inc = nanosecond_counter_wrap ? nanosecond_counter :
     nanosecond_counter + ((nanosecond_frac == 3'd2 || nanosecond_frac == 3'd4) ? 32'd7 : 32'd6);
 
-  always @(posedge eth_clk) begin
+  always_ff @(posedge eth_clk) begin
     if (eth_rst) begin
       stat_resync_cnt_r <= 32'd0;
     end else if (pps_sync_eth && !nanosecond_counter_wrap) begin

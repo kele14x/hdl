@@ -10,7 +10,7 @@ module ecpri_framer_trans_reg (
     input  wire [ 3:0] s_axis_tkeep,
     input  wire        s_axis_tvalid,
     input  wire        s_axis_tlast,
-    output reg         s_axis_tready,
+    output logic         s_axis_tready,
     //
     input  wire [ 7:0] s_trans_messagetype,
     input  wire [15:0] s_trans_payloadsize,
@@ -23,9 +23,9 @@ module ecpri_framer_trans_reg (
     output wire        m_axis_tlast_extra,
     input  wire        m_axis_tready,
     //
-    output reg  [ 7:0] m_trans_messagetype,
-    output reg  [15:0] m_trans_payloadsize,
-    output reg  [15:0] m_trans_rtc_pc_id
+    output logic  [ 7:0] m_trans_messagetype,
+    output logic  [15:0] m_trans_payloadsize,
+    output logic  [15:0] m_trans_rtc_pc_id
 );
 
   import ecpri_pkg::*;
@@ -41,22 +41,22 @@ module ecpri_framer_trans_reg (
 
   integer state, state_next;
 
-  reg         sync_n;
+  logic         sync_n;
 
   wire [31:0] s_axis_tdata_reversed;
 
-  reg  [31:0] s_axis_tdata_d;
-  reg  [ 3:0] s_axis_tkeep_d;
-  reg         s_axis_tlast_d;
+  logic  [31:0] s_axis_tdata_d;
+  logic  [ 3:0] s_axis_tkeep_d;
+  logic         s_axis_tlast_d;
 
-  reg  [15:0] s_axis_tdata_dd;
-  reg  [ 3:0] s_axis_tkeep_dd;
+  logic  [15:0] s_axis_tdata_dd;
+  logic  [ 3:0] s_axis_tkeep_dd;
 
   wire        unused_tkeep_dd = &{1'b0, s_axis_tkeep_dd[1:0]};
 
   // FSM
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= S_RST;
     end else begin
@@ -64,7 +64,7 @@ module ecpri_framer_trans_reg (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     // Stay at current m_state by default
     state_next = state;
 
@@ -107,7 +107,7 @@ module ecpri_framer_trans_reg (
 
   assign s_axis_tdata_reversed = byte_reverse(s_axis_tdata);
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       s_axis_tdata_d  <= '0;
       s_axis_tdata_dd <= '0;
@@ -117,7 +117,7 @@ module ecpri_framer_trans_reg (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       s_axis_tkeep_d  <= '0;
       s_axis_tkeep_dd <= '0;
@@ -127,7 +127,7 @@ module ecpri_framer_trans_reg (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       s_axis_tlast_d <= 1'b0;
     end else if (s_axis_tvalid && s_axis_tready) begin
@@ -137,7 +137,7 @@ module ecpri_framer_trans_reg (
 
   // AXIS Slave
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       s_axis_tready <= 1'b0;
     end else begin

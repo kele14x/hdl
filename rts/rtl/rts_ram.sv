@@ -9,9 +9,9 @@ module rts_ram (
     //
     input  wire        sync,
     //
-    output reg  [31:0] dout0,
-    output reg  [31:0] dout1,
-    output reg  [31:0] dout2,
+    output logic  [31:0] dout0,
+    output logic  [31:0] dout1,
+    output logic  [31:0] dout2,
     //
     input  wire        ctrl_clk,
     input  wire        ctrl_rst,
@@ -56,16 +56,16 @@ module rts_ram (
 
   wire                 ctrl_ram_valid_n;
 
-  reg                  init_n;
+  logic                  init_n;
   wire                 init_n_d;
-  reg                  sync_d;
-  reg                  sync_posedge;
+  logic                  sync_d;
+  logic                  sync_posedge;
 
-  reg  [          2:0] count;
+  logic  [          2:0] count;
   wire [          2:0] count_d;
-  reg  [         19:0] count_ch            [0:NumChannel-1];
+  logic  [         19:0] count_ch            [0:NumChannel-1];
 
-  reg  [         31:0] dout_reg            [0:NumChannel-1];
+  logic  [         31:0] dout_reg            [0:NumChannel-1];
 
   wire [AddrWdith-1:0] addra;
   wire                 ena;
@@ -73,14 +73,14 @@ module rts_ram (
   wire [DataWidth-1:0] dina;
   wire [DataWidth-1:0] douta;
 
-  reg  [AddrWdith-1:0] addrb;
-  reg                  enb;
+  logic  [AddrWdith-1:0] addrb;
+  logic                  enb;
   wire                 web;
   wire [DataWidth-1:0] dinb;
   wire [DataWidth-1:0] doutb;
 
-  reg                  sync_f;
-  reg  [          3:0] seq;
+  logic                  sync_f;
+  logic  [          3:0] seq;
 
   // Main
 
@@ -199,16 +199,16 @@ module rts_ram (
 
   // Sample counter
 
-  always @(posedge clk_l) begin
+  always_ff @(posedge clk_l) begin
     sync_d <= sync;
   end
 
-  always @(posedge clk_l) begin
+  always_ff @(posedge clk_l) begin
     sync_posedge <= sync && ~sync_d;
   end
 
   // keep at reset (init_n == 0) state until reset is released
-  always @(posedge clk_l) begin
+  always_ff @(posedge clk_l) begin
     if (rst) begin
       init_n <= 1'b0;
     end else begin
@@ -220,7 +220,7 @@ module rts_ram (
   // Read one data every 8 clock cycles
 
   // 8:1 clock cycle counter
-  always @(posedge clk_l) begin
+  always_ff @(posedge clk_l) begin
     if (rst) begin
       count <= 'd0;
     end else if (sync_posedge || ~init_n) begin
@@ -235,7 +235,7 @@ module rts_ram (
 
     for (i = 0; i < NumChannel; i = i + 1) begin : g_ch
 
-      always @(posedge clk_l) begin
+      always_ff @(posedge clk_l) begin
         if (rst) begin
           count_ch[i] <= 'd0;
         end else if (sync_posedge || ~init_n) begin
@@ -245,7 +245,7 @@ module rts_ram (
         end
       end
 
-      always @(posedge clk_l) begin
+      always_ff @(posedge clk_l) begin
         if (init_n_d && (count_d == i)) begin
           dout_reg[i] <= doutb;
         end
@@ -256,7 +256,7 @@ module rts_ram (
 
   // Port B
 
-  always @(posedge clk_l) begin
+  always_ff @(posedge clk_l) begin
     if (count == 0) begin
       addrb <= count_ch[0];
     end else if (count == 1) begin
@@ -266,7 +266,7 @@ module rts_ram (
     end
   end
 
-  always @(posedge clk_l) begin
+  always_ff @(posedge clk_l) begin
     enb <= (count == 0 || count == 1 || count == 2) && init_n;
   end
 
@@ -315,11 +315,11 @@ module rts_ram (
 
   // Output
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     sync_f <= sync;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       seq <= 'd0;
     end else if (sync && ~sync_f) begin
@@ -329,7 +329,7 @@ module rts_ram (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (seq == 4'd7) begin
       dout0 <= dout_reg[0];
       dout1 <= dout_reg[1];

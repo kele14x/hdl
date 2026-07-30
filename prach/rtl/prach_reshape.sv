@@ -17,8 +17,8 @@ module prach_reshape #(
     input  wire        din_dv,
     input  wire        din_last,
     //
-    output reg  [15:0] dout_dq1,
-    output reg  [15:0] dout_dq2,
+    output logic  [15:0] dout_dq1,
+    output logic  [15:0] dout_dq2,
     output wire        dout_sf,
     output wire        dout_sl,
     output wire        dout_sy,

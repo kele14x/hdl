@@ -19,10 +19,10 @@ module dec_8b10b_logic (
   wire [5:0] b6;  // abcdei
   wire [3:0] b4;  // fghj
 
-  reg  [4:0] b5;  // EDCBA
-  reg  [2:0] b3;  // HGF
+  logic  [4:0] b5;  // EDCBA
+  logic  [2:0] b3;  // HGF
 
-  reg b6_notintable, b4_notintable;
+  logic b6_notintable, b4_notintable;
 
   wire k28;
 

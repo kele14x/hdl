@@ -19,7 +19,7 @@ module enc_8b10b_lut #(
 
   // Address: {charisk, dispin, din}
   // Data:    {kerr, dispout, dout}
-  reg [11:0] enc_table[0:1023];
+  logic [11:0] enc_table[0:1023];
 
   initial begin : p_load_enc_table
     $readmemb(C_LUT_FILE, enc_table, 0, 1023);

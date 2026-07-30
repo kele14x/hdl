@@ -8,8 +8,8 @@ module rts_cw (
     //
     input  wire        sync,
     //
-    output reg  [15:0] cw_cos,
-    output reg  [15:0] cw_sin,
+    output logic  [15:0] cw_cos,
+    output logic  [15:0] cw_sin,
     //
     input  wire [19:0] ctrl_cw0_freq,
     input  wire [15:0] ctrl_cw0_pow,
@@ -190,7 +190,7 @@ module rts_cw (
   );
 
   // Add two tones together
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     cw_cos <= cw0_cos_gain + cw1_cos_gain;
     cw_sin <= cw0_sin_gain + cw1_sin_gain;
   end

@@ -18,16 +18,16 @@ module prach_fft #(
     input  wire                         din_dv,
     input  wire                         din_last,
     //
-    output reg signed  [DATA_WIDTH-1:0] dout_dr,
-    output reg signed  [DATA_WIDTH-1:0] dout_di,
+    output logic signed  [DATA_WIDTH-1:0] dout_dr,
+    output logic signed  [DATA_WIDTH-1:0] dout_di,
     output wire                         dout_sf,
     output wire                         dout_sl,
     output wire                         dout_sy,
     output wire        [           1:0] dout_chn,
-    output reg                          dout_dv,
-    output reg                          dout_last,
+    output logic                          dout_dv,
+    output logic                          dout_last,
     //
-    output reg                          ovf
+    output logic                          ovf
 );
 
   // Parameters

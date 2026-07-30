@@ -34,33 +34,33 @@ module fft_bf2 #(
   // Signals
 
   // Counter count from 0 to LOG_FFT_SIZE - 1
-  reg         [             3:0] counter_ch;
+  logic         [             3:0] counter_ch;
   wire        [             3:0] counter_ch_max;
-  reg         [LOG_FFT_SIZE-1:0] counter;
-  reg                            state;
+  logic         [LOG_FFT_SIZE-1:0] counter;
+  logic                            state;
 
   wire                           first_half_last;
 
-  reg         [             3:0] counter_ch2;
-  reg         [LOG_FFT_SIZE-1:0] counter2;
-  reg                            state2;
+  logic         [             3:0] counter_ch2;
+  logic         [LOG_FFT_SIZE-1:0] counter2;
+  logic                            state2;
 
   wire                           sel;
   wire                           shift;
-  reg                            dv;
-  reg                            ovf_r;
+  logic                            dv;
+  logic                            ovf_r;
 
-  reg signed  [    DATA_WIDTH:0] x1r_s;
-  reg signed  [    DATA_WIDTH:0] x1i_s;
+  logic signed  [    DATA_WIDTH:0] x1r_s;
+  logic signed  [    DATA_WIDTH:0] x1i_s;
 
   wire signed [  DATA_WIDTH-1:0] x1r;
   wire signed [  DATA_WIDTH-1:0] x1i;
 
-  reg signed  [    DATA_WIDTH:0] x2r_s;
-  reg signed  [    DATA_WIDTH:0] x2i_s;
+  logic signed  [    DATA_WIDTH:0] x2r_s;
+  logic signed  [    DATA_WIDTH:0] x2i_s;
 
-  reg signed  [  DATA_WIDTH-1:0] x2r;
-  reg signed  [  DATA_WIDTH-1:0] x2i;
+  logic signed  [  DATA_WIDTH-1:0] x2r;
+  logic signed  [  DATA_WIDTH-1:0] x2i;
 
   wire        [  DelayWidth-1:0] delay_in;
   wire        [  DelayWidth-1:0] delay_out;
@@ -71,7 +71,7 @@ module fft_bf2 #(
 
   assign counter_ch_max = (ctrl_itlv == 2'b00) ? 4'd15 : (ctrl_itlv == 2'b01) ? 4'd7 : 4'd3;
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       counter_ch <= 'd0;
     end else if (ctrl_bypass) begin
@@ -83,7 +83,7 @@ module fft_bf2 #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       counter <= 'd0;
     end else if (ctrl_bypass) begin
@@ -95,7 +95,7 @@ module fft_bf2 #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= 1'b0;
     end else if (ctrl_bypass) begin
@@ -109,7 +109,7 @@ module fft_bf2 #(
 
   assign first_half_last = (counter_ch == 'd0) && (counter == LOG_FFT_SIZE'(1 << (LOG_FFT_SIZE - 1)));
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       counter_ch2 <= 'd0;
     end else if (first_half_last || state2) begin
@@ -119,7 +119,7 @@ module fft_bf2 #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       counter2 <= 'd0;
     end else if (state2) begin
@@ -129,7 +129,7 @@ module fft_bf2 #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state2 <= 1'b0;
     end else if (first_half_last) begin
@@ -142,7 +142,7 @@ module fft_bf2 #(
   // Indicate first half and second half
   assign sel = counter[LOG_FFT_SIZE-1];
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_bypass) begin
       dv <= din_dv;
     end else begin
@@ -153,7 +153,7 @@ module fft_bf2 #(
   // Butterfly Operation
 
   // Output to delay path
-  always @(*) begin
+  always_comb begin
     if (sel) begin
       // Second half
       x1r_s = {x1r[DATA_WIDTH-1], x1r} - {din_dr[DATA_WIDTH-1], din_dr};
@@ -165,7 +165,7 @@ module fft_bf2 #(
   end
 
   // To (next) BF or output
-  always @(*) begin
+  always_comb begin
     if (sel) begin
       // First half
       x2r_s = {x1r[DATA_WIDTH-1], x1r} + {din_dr[DATA_WIDTH-1], din_dr};
@@ -176,7 +176,7 @@ module fft_bf2 #(
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (ctrl_bypass) begin
       if (din_dv) begin
         x2r <= din_dr;
@@ -230,7 +230,7 @@ module fft_bf2 #(
 
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     ovf_r <= ~(x1r_s[DATA_WIDTH-:2] == 2'b00 || x1r_s[DATA_WIDTH-:2] == 2'b11) ||
              ~(x1i_s[DATA_WIDTH-:2] == 2'b00 || x1i_s[DATA_WIDTH-:2] == 2'b11) ||
              ~(x2r_s[DATA_WIDTH-:2] == 2'b00 || x2r_s[DATA_WIDTH-:2] == 2'b11) ||

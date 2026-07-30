@@ -17,16 +17,16 @@ module ecpri_deframer_iq (
     input  wire        s_axis_tlast,
     input  wire        s_axis_tvalid,
     //
-    output reg  [31:0] m_axis_tdata,
-    output reg  [ 3:0] m_axis_tkeep,
-    output reg         m_axis_tlast,
-    output reg         m_axis_tvalid,
+    output logic  [31:0] m_axis_tdata,
+    output logic  [ 3:0] m_axis_tkeep,
+    output logic         m_axis_tlast,
+    output logic         m_axis_tvalid,
     // eCPRI IQ Header
-    output reg         m_trans_header_valid,
-    output reg  [15:0] m_trans_rtc_pc_id,
-    output reg  [ 7:0] m_trans_seqid,
-    output reg         m_trans_ebit,
-    output reg  [ 6:0] m_trans_subseqid
+    output logic         m_trans_header_valid,
+    output logic  [15:0] m_trans_rtc_pc_id,
+    output logic  [ 7:0] m_trans_seqid,
+    output logic         m_trans_ebit,
+    output logic  [ 6:0] m_trans_subseqid
 );
 
   import ecpri_pkg::*;
@@ -62,7 +62,7 @@ module ecpri_deframer_iq (
 
   // FSM
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= S_RST;
     end else begin
@@ -70,7 +70,7 @@ module ecpri_deframer_iq (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     // Stay at current state by default
     state_next = state;
 
@@ -99,7 +99,7 @@ module ecpri_deframer_iq (
     endcase
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_TRANS) && s_axis_tvalid) begin
       m_trans_rtc_pc_id <= trans_rtc_pc_id;
       m_trans_seqid     <= trans_seqid;
@@ -108,29 +108,29 @@ module ecpri_deframer_iq (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     m_trans_header_valid <= ((state == S_TRANS) && s_axis_tvalid);
   end
 
   // Output
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_PAYLOAD) && s_axis_tvalid) begin
       m_axis_tdata <= s_axis_tdata;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_PAYLOAD) && s_axis_tvalid) begin
       m_axis_tkeep <= s_axis_tkeep;
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     m_axis_tvalid <= (state == S_PAYLOAD) && s_axis_tvalid;
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if ((state == S_PAYLOAD) && s_axis_tvalid) begin
       m_axis_tlast <= s_axis_tlast;
     end

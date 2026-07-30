@@ -11,9 +11,9 @@ module ptp_deframer (
     input  wire        s_axis_tlast,
     input  wire [79:0] s_axis_tuser,
     input  wire        s_axis_tvalid,
-    output reg         s_axis_tready,
+    output logic         s_axis_tready,
     //
-    output reg         m_msg_valid,
+    output logic         m_msg_valid,
     output wire [ 3:0] m_msg_message_type,
     output wire [15:0] m_msg_sequence_id,
     output wire [79:0] m_msg_timestamp,
@@ -90,18 +90,18 @@ module ptp_deframer (
   wire [31:0] s_axis_tdata_rev;
   wire        s_axis_word_valid;
 
-  reg  [79:0] timestamp;
+  logic  [79:0] timestamp;
 
-  reg  [ 3:0] message_type;
-  reg  [79:0] source_port_identity;  // {clock_identity, port_number}
-  reg  [15:0] sequence_id;
+  logic  [ 3:0] message_type;
+  logic  [79:0] source_port_identity;  // {clock_identity, port_number}
+  logic  [15:0] sequence_id;
 
-  reg  [79:0] origin_timestamp;
+  logic  [79:0] origin_timestamp;
 
 
   // Main
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       state <= S_RST;
     end else begin
@@ -109,7 +109,7 @@ module ptp_deframer (
     end
   end
 
-  always @(*) begin
+  always_comb begin
     state_next = state;
 
     case (state)
@@ -430,7 +430,7 @@ module ptp_deframer (
   assign s_axis_tdata_rev = byte_reverse(s_axis_tdata);
   assign s_axis_word_valid = s_axis_tvalid && (|s_axis_tkeep);
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     // PTP Common Header
     if (s_axis_word_valid && state == S_ETHERTYPE_HEADER0) begin
       message_type <= s_axis_tdata_rev[11:8];
@@ -518,7 +518,7 @@ module ptp_deframer (
     end
   end
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (s_axis_word_valid && state == S_DMAC0) begin
       timestamp <= s_axis_tuser;
     end
@@ -526,7 +526,7 @@ module ptp_deframer (
 
   // Input
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       s_axis_tready <= 1'b0;
     end else begin
@@ -536,7 +536,7 @@ module ptp_deframer (
 
   // Output
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     m_msg_valid <= (s_axis_word_valid && ((state == S_SYNC2) || (state == S_DELAY_REQ2) ||
       (state == S_FOLLOW_UP2) || (state == S_DELAY_RESP4) || (state == S_ANNOUNCE7)));
   end
