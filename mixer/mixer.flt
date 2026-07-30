@@ -1,4 +1,4 @@
-../cmult/cmult.flt
+../cmult/cmult3.flt
 ../common/common.flt
 ../nco/nco.flt
 rtl/mixer.sv

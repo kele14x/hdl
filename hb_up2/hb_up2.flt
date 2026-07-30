@@ -1,2 +1,3 @@
 ../fir/fir.flt
 rtl/hb_up2.sv
+rtl/hb_up2_int2.sv

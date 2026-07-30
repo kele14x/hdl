@@ -1,3 +1,6 @@
 ../cdc/cdc.flt
 ../common/common.flt
+../adder/adder.flt
+../cordic_cart2pol/cordic_cart2pol.flt
+../cordic_pol2cart/cordic_pol2cart.flt
 rtl/cfr_hardclipping.sv
