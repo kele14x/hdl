@@ -105,8 +105,9 @@ def test_eth_injector_runner():
                 *resolve_flt(prj_path / "eth_injector.flt"),
                 prj_path / "tests" / "eth_injector_tb.sv",
             ],
-            parameters={"PCAP_FILE": pcap_file.as_posix()},
+            parameters={"PCAP_FILE": f'"{pcap_file.as_posix()}"'},
             always=True,
+            build_args=["--timing", "-Wno-ZERODLY", "-Wno-MULTIDRIVEN"],
             waves=True,
         )
         runner.test(
