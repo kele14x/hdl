@@ -89,8 +89,7 @@ def test_cfr_branch_cpw_runner():
             "Questa rejects cfr_pc_upx's 5-element COE_NUMS literal for its "
             "NUM_UNIQUE_COE=3 instantiations (vopt-13173/vopt-121)."
         )
-    sources = [repo_path / "hb_up2" / "rtl" / "hb_up2_int2.sv"]
-    sources += resolve_flt(prj_path / "cfr.flt")
+    sources = resolve_flt(prj_path / "cfr.flt")
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel="cfr_branch",
