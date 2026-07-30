@@ -11,7 +11,6 @@ from tools.flt_tool import resolve_flt
 
 
 prj_path = Path(__file__).resolve().parent.parent
-repo_path = prj_path.parent
 SIM = os.environ.get("SIM", "verilator")
 
 
@@ -81,11 +80,7 @@ async def test_cfr_pc_softclipper_cpg_stage_busy_forwarding_and_reset(dut):
 
 
 def sources():
-    return (
-        resolve_flt(prj_path / "cfr_pc.flt")
-        + resolve_flt(repo_path / "cmult" / "cmult.flt")
-        + resolve_flt(repo_path / "adder" / "adder.flt")
-    )
+    return resolve_flt(prj_path / "cfr_pc.flt")
 
 
 def run(top, testcase, extra_parameters=None):
