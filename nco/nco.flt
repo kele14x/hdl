@@ -1,4 +1,4 @@
-rtl/nco.v
+rtl/nco.sv
 
 ../dds_lut/dds_lut.flt
 ../lfsr/lfsr.flt

@@ -1,3 +1,3 @@
 ../cdc/cdc.flt
 ../ram/ram.flt
-rtl/axis_fifo_alt.v
+rtl/axis_fifo_alt.sv

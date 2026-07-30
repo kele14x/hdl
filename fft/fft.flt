@@ -2,8 +2,8 @@
 ../dds_lut/dds_lut.flt
 ../pulse_delay/pulse_delay.flt
 ../shift_ram/shift_ram.flt
-rtl/fft_bf2.v
-rtl/fft_ct.v
-rtl/fft_stage.v
-rtl/fft_twiddle.v
-rtl/fft.v
+rtl/fft_bf2.sv
+rtl/fft_ct.sv
+rtl/fft_stage.sv
+rtl/fft_twiddle.sv
+rtl/fft.sv

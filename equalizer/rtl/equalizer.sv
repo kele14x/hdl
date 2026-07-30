@@ -1,4 +1,4 @@
-// File: equalizer.v
+// File: equalizer.sv
 // Brief: Equalizer implemented using a complex FIR.
 `timescale 1 ns / 1 ps
 //

@@ -1,2 +1,2 @@
 ../fifo_srl/fifo_srl.flt
-rtl/pulse_delay.v
+rtl/pulse_delay.sv

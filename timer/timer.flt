@@ -1,9 +1,9 @@
 ../cdc/cdc.flt
 ../common/common.flt
-rtl/timer.v
-rtl/timer_core_400.v
-rtl/timer_core_491p52.v
-rtl/timer_pps.v
+rtl/timer.sv
+rtl/timer_core_400.sv
+rtl/timer_core_491p52.sv
+rtl/timer_pps.sv
 rtl/timer_regs.v
-rtl/timer_rfs.v
+rtl/timer_rfs.sv
 rtl/timer_wrapper.v

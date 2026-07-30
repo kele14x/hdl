@@ -1,5 +1,5 @@
 ../ram/ram.flt
 ../shift_ram/shift_ram.flt
 ../common/common.flt
-rtl/bit_reverse_stage.v
-rtl/bit_reverse.v
+rtl/bit_reverse_stage.sv
+rtl/bit_reverse.sv

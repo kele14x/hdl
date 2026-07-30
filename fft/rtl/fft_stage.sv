@@ -1,4 +1,4 @@
-// File: fft_stage.v
+// File: fft_stage.sv
 // Brief: FFT process stage. Each stage includes:
 //          - 1 Twiddler (twidder factor ROM and complex multiplier)
 //          - 1 or 2 Butterfly operator
