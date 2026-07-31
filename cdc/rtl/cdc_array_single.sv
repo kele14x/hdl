@@ -1,19 +1,17 @@
 `timescale 1 ns / 1 ps
 //
-`default_nettype none
-
-(* KEEP_HIERARCHY = "yes" *)
+`default_nettype none (* KEEP_HIERARCHY = "yes" *)
 module cdc_array_single #(
-    parameter int DEST_SYNC_FF = 4,
-    parameter bit INIT_SYNC_FF = 1'b0,
+    parameter int DEST_SYNC_FF  = 4,
+    parameter bit INIT_SYNC_FF  = 1'b0,
     parameter bit SRC_INPUT_REG = 1'b1,
-    parameter int WIDTH        = 2
+    parameter int WIDTH         = 2
 ) (
-    input  wire              src_clk,
-    input  wire [WIDTH-1:0]  src_in,
+    input  wire             src_clk,
+    input  wire [WIDTH-1:0] src_in,
     //
-    input  wire              dest_clk,
-    output wire [WIDTH-1:0]  dest_out
+    input  wire             dest_clk,
+    output wire [WIDTH-1:0] dest_out
 );
 
   initial begin : drc_check
@@ -42,7 +40,7 @@ module cdc_array_single #(
   logic [WIDTH-1:0] async_path_bit;
 
   (* ASYNC_REG = "true" *)
-  logic [WIDTH-1:0] syncstages_ff[DEST_SYNC_FF];
+  logic [WIDTH-1:0] syncstages_ff  [DEST_SYNC_FF];
 
   initial begin : p_init
     if (INIT_SYNC_FF) begin

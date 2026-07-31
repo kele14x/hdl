@@ -81,50 +81,50 @@ module ecpri_deframer_demux (
 
   // Signals
 
-  wire [             31:0] s_axis_tdata_reversed;
+  wire  [31:0] s_axis_tdata_reversed;
 
-  wire [             15:0] mac_ethertype;
-  logic                      rx_eth_rst_sync;
+  wire  [15:0] mac_ethertype;
+  logic        rx_eth_rst_sync;
 
   always_ff @(posedge rx_eth_clk) begin
     rx_eth_rst_sync <= rx_eth_rst;
   end
 
-  wire                     unused_inputs;
+  wire unused_inputs;
 
   assign unused_inputs = &{1'b0, rx_ptp_timestamp_valid, s_axis_tdata_reversed[15:0]};
 
-  wire                     wr_en;
-  logic  [    AddrWidth-1:0] wr_addr;
-  logic  [    AddrWidth-1:0] wr_addr_last;
-  logic  [    AddrWidth-1:0] wr_addr_next;
-  wire [    DataWidth-1:0] wr_data;
+  wire                      wr_en;
+  logic [    AddrWidth-1:0] wr_addr;
+  logic [    AddrWidth-1:0] wr_addr_last;
+  logic [    AddrWidth-1:0] wr_addr_next;
+  wire  [    DataWidth-1:0] wr_data;
 
-  wire                     rd_en;
-  logic                      rd_en_d;
-  logic                      rd_en_dd;
-  logic  [    AddrWidth-1:0] rd_addr;
-  wire [    AddrWidth-1:0] rd_addr_next;
-  wire [    DataWidth-1:0] rd_data;
-  logic  [    DataWidth-1:0] rd_data_r;
+  wire                      rd_en;
+  logic                     rd_en_d;
+  logic                     rd_en_dd;
+  logic [    AddrWidth-1:0] rd_addr;
+  wire  [    AddrWidth-1:0] rd_addr_next;
+  wire  [    DataWidth-1:0] rd_data;
+  logic [    DataWidth-1:0] rd_data_r;
 
-  logic                      packet_valid;
-  logic  [             15:0] packet_ethertype;
-  logic  [             79:0] packet_timestamp;
+  logic                     packet_valid;
+  logic [             15:0] packet_ethertype;
+  logic [             79:0] packet_timestamp;
 
-  wire                     fifo_wr_en;
-  wire [FiFoDataWidth-1:0] fifo_wr_din;
+  wire                      fifo_wr_en;
+  wire  [FiFoDataWidth-1:0] fifo_wr_din;
 
-  wire                     fifo_rd_en;
-  wire [FiFoDataWidth-1:0] fifo_rd_dout;
-  wire                     fifo_rd_empty;
-  wire                     unused_fifo_wr_full;
+  wire                      fifo_rd_en;
+  wire  [FiFoDataWidth-1:0] fifo_rd_dout;
+  wire                      fifo_rd_empty;
+  wire                      unused_fifo_wr_full;
 
-  wire                     packet_valid_s;
-  wire [             15:0] packet_ethertype_s;
-  wire [             79:0] packet_timestamp_s;
+  wire                      packet_valid_s;
+  wire  [             15:0] packet_ethertype_s;
+  wire  [             79:0] packet_timestamp_s;
 
-  logic                      corrupt_pkt_pulse;
+  logic                     corrupt_pkt_pulse;
 
   integer state, state_next;
 
@@ -401,9 +401,9 @@ module ecpri_deframer_demux (
       .WIDTH(1),
       .DEPTH(3)
   ) i_delay_message_tvalid (
-      .clk (clk),
-      .rst (1'b0),
-      .cen (1'b1),
+      .clk(clk),
+      .rst(1'b0),
+      .cen(1'b1),
       //
       .din (packet_valid_s && (packet_ethertype_s != ECPRI_ETHERTYPE_ECPRI) &&
         (packet_ethertype_s != ECPRI_ETHERTYPE_PTP)),

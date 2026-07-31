@@ -304,7 +304,7 @@ module lowphy_band #(
   logic [ 3:0] ctrl_dl_fs_offset;
 
   logic [16:0] ctrl_dl_gain                   [NUM_CC] [NUM_ANT];
-  logic [16:0] ctrl_dl_gain_reg               [NUM_CC] [4];
+  logic [16:0] ctrl_dl_gain_reg               [NUM_CC] [      4];
 
   // UL control signals
 
@@ -320,7 +320,7 @@ module lowphy_band #(
   logic [ 3:0] ctrl_ul_fs_offset;
 
   logic [16:0] ctrl_ul_gain                   [NUM_CC] [NUM_ANT];
-  logic [16:0] ctrl_ul_gain_reg               [NUM_CC] [4];
+  logic [16:0] ctrl_ul_gain_reg               [NUM_CC] [      4];
 
   // PRACH control signals
 
@@ -560,9 +560,9 @@ module lowphy_band #(
   assign s_defm_bid_ready = '{NUM_ANT{1'b1}};
 
   cdc_single #(
-      .DEST_SYNC_FF  (2),
-      .INIT_SYNC_FF  (1'b0),
-      .SRC_INPUT_REG (1'b0)
+      .DEST_SYNC_FF (2),
+      .INIT_SYNC_FF (1'b0),
+      .SRC_INPUT_REG(1'b0)
   ) defm_reset_cdc (
       .src_clk (1'b0),
       .src_in  (defm_reset),
@@ -571,9 +571,9 @@ module lowphy_band #(
   );
 
   cdc_single #(
-      .DEST_SYNC_FF  (2),
-      .INIT_SYNC_FF  (1'b0),
-      .SRC_INPUT_REG (1'b0)
+      .DEST_SYNC_FF (2),
+      .INIT_SYNC_FF (1'b0),
+      .SRC_INPUT_REG(1'b0)
   ) fram_reset_cdc (
       .src_clk (1'b0),
       .src_in  (fram_reset),

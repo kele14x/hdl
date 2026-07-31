@@ -9,13 +9,13 @@ module cdc_pulse #(
     parameter bit REG_OUTPUT   = 1'b0,
     parameter bit RST_USED     = 1'b1
 ) (
-    input  wire  src_clk,
-    input  wire  src_rst,
-    input  wire  src_pulse,
+    input  wire src_clk,
+    input  wire src_rst,
+    input  wire src_pulse,
     //
-    input  wire  dest_clk,
-    input  wire  dest_rst,
-    output wire  dest_pulse
+    input  wire dest_clk,
+    input  wire dest_rst,
+    output wire dest_pulse
 );
 
   logic src_in_ff;

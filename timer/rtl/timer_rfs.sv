@@ -5,15 +5,15 @@
 module timer_rfs #(
     parameter integer FREQ_MODE = 0
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire        pps_in,
+    input  wire         pps_in,
     //
-    output logic         rfs_out,
-    output logic         rfs_pad,
+    output logic        rfs_out,
+    output logic        rfs_pad,
     //
-    input  wire [22:0] ctrl_rfs_offset
+    input  wire  [22:0] ctrl_rfs_offset
 );
 
   // Parameters
@@ -24,15 +24,15 @@ module timer_rfs #(
 
   // Signals
 
-  wire [22:0] ctrl_rfs_offset_s;
+  wire  [22:0] ctrl_rfs_offset_s;
 
-  logic  [22:0] counter;
-  wire        counter_wrap;
+  logic [22:0] counter;
+  wire         counter_wrap;
 
-  wire        rfs_pulse;
+  wire         rfs_pulse;
 
-  logic  [ 3:0] rfs_ext0;
-  logic  [15:0] rfs_ext1;
+  logic [ 3:0] rfs_ext0;
+  logic [15:0] rfs_ext1;
 
   // Control CDC
 

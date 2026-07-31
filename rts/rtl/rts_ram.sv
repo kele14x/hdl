@@ -3,33 +3,33 @@
 `default_nettype none
 
 module rts_ram (
-    input  wire        clk,
-    input  wire        clk_l,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         clk_l,
+    input  wire         rst,
     //
-    input  wire        sync,
+    input  wire         sync,
     //
-    output logic  [31:0] dout0,
-    output logic  [31:0] dout1,
-    output logic  [31:0] dout2,
+    output logic [31:0] dout0,
+    output logic [31:0] dout1,
+    output logic [31:0] dout2,
     //
-    input  wire        ctrl_clk,
-    input  wire        ctrl_rst,
+    input  wire         ctrl_clk,
+    input  wire         ctrl_rst,
     //
-    input  wire [ 2:0] ctrl_ram_mode,
+    input  wire  [ 2:0] ctrl_ram_mode,
     //
-    input  wire [19:0] ctrl_ram0_offset,
-    input  wire [19:0] ctrl_ram1_offset,
-    input  wire [19:0] ctrl_ram2_offset,
+    input  wire  [19:0] ctrl_ram0_offset,
+    input  wire  [19:0] ctrl_ram1_offset,
+    input  wire  [19:0] ctrl_ram2_offset,
     //
-    input  wire [ 6:0] ctrl_ram_addr_msb,
+    input  wire  [ 6:0] ctrl_ram_addr_msb,
     //
-    input  wire [12:0] ctrl_ram_addr,
-    input  wire        ctrl_ram_en,
-    input  wire        ctrl_ram_we,
-    input  wire [31:0] ctrl_ram_din,
-    output wire [31:0] ctrl_ram_dout,
-    output wire        ctrl_ram_valid
+    input  wire  [12:0] ctrl_ram_addr,
+    input  wire         ctrl_ram_en,
+    input  wire         ctrl_ram_we,
+    input  wire  [31:0] ctrl_ram_din,
+    output wire  [31:0] ctrl_ram_dout,
+    output wire         ctrl_ram_valid
 );
 
   // Parameters
@@ -41,46 +41,46 @@ module rts_ram (
 
   // Signals
 
-  wire [         19:0] ctrl_ram_offset_s   [0:NumChannel-1];
-  wire                 unused_ctrl_ram_mode = |ctrl_ram_mode;
-  wire                 unused_ctrl2ram_full;
-  wire                 unused_ram2ctrl_full;
+  wire  [         19:0] ctrl_ram_offset_s                     [0:NumChannel-1];
+  wire                  unused_ctrl_ram_mode = |ctrl_ram_mode;
+  wire                  unused_ctrl2ram_full;
+  wire                  unused_ram2ctrl_full;
 
-  wire [          6:0] ctrl_ram_addr_msb_s;
-  wire [         12:0] ctrl_ram_addr_s;
-  wire                 ctrl_ram_en_s;
-  wire                 ctrl_ram_en_s_n;
-  wire                 ctrl_ram_en_d;
-  wire                 ctrl_ram_we_s;
-  wire [         31:0] ctrl_ram_din_s;
+  wire  [          6:0] ctrl_ram_addr_msb_s;
+  wire  [         12:0] ctrl_ram_addr_s;
+  wire                  ctrl_ram_en_s;
+  wire                  ctrl_ram_en_s_n;
+  wire                  ctrl_ram_en_d;
+  wire                  ctrl_ram_we_s;
+  wire  [         31:0] ctrl_ram_din_s;
 
-  wire                 ctrl_ram_valid_n;
+  wire                  ctrl_ram_valid_n;
 
-  logic                  init_n;
-  wire                 init_n_d;
-  logic                  sync_d;
-  logic                  sync_posedge;
+  logic                 init_n;
+  wire                  init_n_d;
+  logic                 sync_d;
+  logic                 sync_posedge;
 
-  logic  [          2:0] count;
-  wire [          2:0] count_d;
-  logic  [         19:0] count_ch            [0:NumChannel-1];
+  logic [          2:0] count;
+  wire  [          2:0] count_d;
+  logic [         19:0] count_ch                              [0:NumChannel-1];
 
-  logic  [         31:0] dout_reg            [0:NumChannel-1];
+  logic [         31:0] dout_reg                              [0:NumChannel-1];
 
-  wire [AddrWdith-1:0] addra;
-  wire                 ena;
-  wire                 wea;
-  wire [DataWidth-1:0] dina;
-  wire [DataWidth-1:0] douta;
+  wire  [AddrWdith-1:0] addra;
+  wire                  ena;
+  wire                  wea;
+  wire  [DataWidth-1:0] dina;
+  wire  [DataWidth-1:0] douta;
 
-  logic  [AddrWdith-1:0] addrb;
-  logic                  enb;
-  wire                 web;
-  wire [DataWidth-1:0] dinb;
-  wire [DataWidth-1:0] doutb;
+  logic [AddrWdith-1:0] addrb;
+  logic                 enb;
+  wire                  web;
+  wire  [DataWidth-1:0] dinb;
+  wire  [DataWidth-1:0] doutb;
 
-  logic                  sync_f;
-  logic  [          3:0] seq;
+  logic                 sync_f;
+  logic [          3:0] seq;
 
   // Main
 

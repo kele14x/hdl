@@ -6,25 +6,25 @@ module bfp_comp #(
     parameter bit BYTE_REVERSE = 1'b1,
     parameter int USER_WIDTH   = 32
 ) (
-    input  wire                  clk,
-    input  wire                  rst,
+    input  wire                   clk,
+    input  wire                   rst,
     //
-    input  wire [          63:0] s_axis_tdata,
-    input  wire [           7:0] s_axis_tkeep,
-    input  wire                  s_axis_tvalid,
-    input  wire                  s_axis_tlast,
-    input  wire [USER_WIDTH-1:0] s_axis_tuser,
+    input  wire  [          63:0] s_axis_tdata,
+    input  wire  [           7:0] s_axis_tkeep,
+    input  wire                   s_axis_tvalid,
+    input  wire                   s_axis_tlast,
+    input  wire  [USER_WIDTH-1:0] s_axis_tuser,
     //
-    output logic  [          63:0] m_axis_tdata,
-    output logic  [           7:0] m_axis_tkeep,
-    output logic                   m_axis_tvalid,
-    output logic                   m_axis_tlast,
-    output logic  [USER_WIDTH-1:0] m_axis_tuser,
+    output logic [          63:0] m_axis_tdata,
+    output logic [           7:0] m_axis_tkeep,
+    output logic                  m_axis_tvalid,
+    output logic                  m_axis_tlast,
+    output logic [USER_WIDTH-1:0] m_axis_tuser,
     // Control
     //--------
-    input  wire [           3:0] ctrl_ud_comp_meth,
-    input  wire [           3:0] ctrl_ud_iq_width,
-    input  wire [           3:0] ctrl_fs_offset
+    input  wire  [           3:0] ctrl_ud_comp_meth,
+    input  wire  [           3:0] ctrl_ud_iq_width,
+    input  wire  [           3:0] ctrl_fs_offset
 );
 
   // Parameters
@@ -242,7 +242,9 @@ module bfp_comp #(
   //----
   // Input register, and counter for 1 RB (6 tick input)
 
-  assign s_axis_tdata_rev = (BYTE_REVERSE ? byte_reverse(s_axis_tdata) : s_axis_tdata) ^ {64{|s_axis_tkeep & 1'b0}};
+  assign s_axis_tdata_rev = (BYTE_REVERSE ? byte_reverse(
+      s_axis_tdata
+  ) : s_axis_tdata) ^ {64{|s_axis_tkeep & 1'b0}};
 
   always_ff @(posedge clk) begin
     for (int i = 0; i < NumIq; i++) begin
@@ -574,7 +576,7 @@ module bfp_comp #(
   // Byte reversed output?
   always_ff @(posedge clk) begin
     if (rst) begin
-      m_axis_tuser <= '0;
+      m_axis_tuser  <= '0;
       m_axis_tvalid <= 1'b0;
     end else if (t6_eop_ext_out) begin
       // Emit the final half word of an odd-PRB packet directly. This leaves
@@ -585,10 +587,10 @@ module bfp_comp #(
       m_axis_tuser  <= t6_eop_user;
       m_axis_tvalid <= 1'b1;
     end else if (t6_valid) begin
-      m_axis_tdata <= BYTE_REVERSE ? byte_reverse(t6_data) : t6_data;
-      m_axis_tkeep <= t6_keep;
-      m_axis_tlast <= t6_eop;
-      m_axis_tuser <= t6_user;
+      m_axis_tdata  <= BYTE_REVERSE ? byte_reverse(t6_data) : t6_data;
+      m_axis_tkeep  <= t6_keep;
+      m_axis_tlast  <= t6_eop;
+      m_axis_tuser  <= t6_user;
       m_axis_tvalid <= 1'b1;
     end else begin
       m_axis_tvalid <= 1'b0;

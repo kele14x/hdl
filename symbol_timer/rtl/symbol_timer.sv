@@ -29,23 +29,23 @@
 `default_nettype none
 
 module symbol_timer #(
-    parameter logic     ASYNC = 1'b1,
-    parameter logic     MODE  = 1'b1,  // 0 for UL, 1 for DL
+    parameter logic   ASYNC = 1'b1,
+    parameter logic   MODE  = 1'b1,  // 0 for UL, 1 for DL
     parameter integer FREQ  = 32,    // 32: 122.88, 64: 245.76, 128: 491.52
-    parameter logic     AUTO  = 1'b0,  // 1: Auto roll over, 0: Manual roll over
-    parameter logic     INIT  = 1'b0
+    parameter logic   AUTO  = 1'b0,  // 1: Auto roll over, 0: Manual roll over
+    parameter logic   INIT  = 1'b0
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire        sync,
+    input  wire         sync,
     //
-    output logic         start_of_frame,
-    output logic         start_of_slot,
-    output logic  [ 1:0] start_of_symbol,  // {mu1, mu0}
+    output logic        start_of_frame,
+    output logic        start_of_slot,
+    output logic [ 1:0] start_of_symbol,  // {mu1, mu0}
     //
-    input  wire [22:0] ctrl_delay,
-    output logic         stat_resync
+    input  wire  [22:0] ctrl_delay,
+    output logic        stat_resync
 );
 
   //------------------------------------------------------------------
@@ -83,36 +83,36 @@ module symbol_timer #(
   // Clock ticks of left symbol:               |      274 |      137 |
   //------------------------------------------------------------------
 
-  wire        sync_s0;
-  logic         sync_s1;
-  wire        sync_posedge;
+  wire         sync_s0;
+  logic        sync_s1;
+  wire         sync_posedge;
 
-  logic         delay_state;
-  logic  [22:0] delay_counter;
+  logic        delay_state;
+  logic [22:0] delay_counter;
 
-  wire        delayed_pulse;
+  wire         delayed_pulse;
 
-  wire        restart;
-  wire        restart_init;
-  wire        restart_ext;
-  wire        restart_auto;
+  wire         restart;
+  wire         restart_init;
+  wire         restart_ext;
+  wire         restart_auto;
 
-  logic         init_n;
-  logic         state;
+  logic        init_n;
+  logic        state;
 
-  wire        symbol_wrap;
-  logic         slot_wrap;
-  wire        frame_wrap;
+  wire         symbol_wrap;
+  logic        slot_wrap;
+  wire         frame_wrap;
 
-  logic  [14:0] sample_counter;
-  logic  [14:0] sample_counter_max;
+  logic [14:0] sample_counter;
+  logic [14:0] sample_counter_max;
 
-  logic  [ 8:0] symbol_id;
+  logic [ 8:0] symbol_id;
 
-  localparam [31:0] LongSymbolSamplesFull  = (128 + 11) * FREQ - 1;
+  localparam [31:0] LongSymbolSamplesFull = (128 + 11) * FREQ - 1;
   localparam [31:0] ShortSymbolSamplesFull = (128 + 9) * FREQ - 1;
-  localparam [14:0] LongSymbolSamples      = LongSymbolSamplesFull[14:0];
-  localparam [14:0] ShortSymbolSamples     = ShortSymbolSamplesFull[14:0];
+  localparam [14:0] LongSymbolSamples = LongSymbolSamplesFull[14:0];
+  localparam [14:0] ShortSymbolSamples = ShortSymbolSamplesFull[14:0];
 
   function [8:0] slot_last_symbol;
     input integer slot;

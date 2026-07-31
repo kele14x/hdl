@@ -46,7 +46,7 @@ module nco_lut #(
   initial begin
     for (int i = 0; i < PHASE_ENTRIES; i++) begin
       MEM[i] = (2 ** (DATA_WIDTH - 1) - 2) *
-        $cos(2 * PI * (i + $itor(INDEX_PARALLEL) / NUM_PARALLEL) / PHASE_ENTRIES);
+          $cos(2 * PI * (i + $itor(INDEX_PARALLEL) / NUM_PARALLEL) / PHASE_ENTRIES);
     end
   end
 

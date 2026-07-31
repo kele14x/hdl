@@ -5,32 +5,32 @@
 module ptp_ctrl #(
     parameter integer CLK_FREQ = 49152000
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     // Rx de-framer
-    input  wire        s_msg_valid,
-    input  wire [ 3:0] s_msg_message_type,
-    input  wire [15:0] s_msg_sequence_id,
-    input  wire [79:0] s_msg_timestamp,
-    input  wire [79:0] s_msg_origin_timestamp,
-    input  wire [79:0] s_msg_source_port_identity,
+    input  wire         s_msg_valid,
+    input  wire  [ 3:0] s_msg_message_type,
+    input  wire  [15:0] s_msg_sequence_id,
+    input  wire  [79:0] s_msg_timestamp,
+    input  wire  [79:0] s_msg_origin_timestamp,
+    input  wire  [79:0] s_msg_source_port_identity,
     // Tx framer
-    output logic         ap_valid,
-    input  wire        ap_ready,
-    output logic  [ 3:0] ap_message_type,
-    output logic  [15:0] ap_sequence_id,
-    output logic  [ 7:0] ap_log_message_interval,
-    output logic  [79:0] ap_origin_timestamp,
-    output logic  [79:0] ap_requesting_port_identity,
-    output logic  [15:0] ap_tag_field,
+    output logic        ap_valid,
+    input  wire         ap_ready,
+    output logic [ 3:0] ap_message_type,
+    output logic [15:0] ap_sequence_id,
+    output logic [ 7:0] ap_log_message_interval,
+    output logic [79:0] ap_origin_timestamp,
+    output logic [79:0] ap_requesting_port_identity,
+    output logic [15:0] ap_tag_field,
     // Tx Ethernet
-    input  wire [79:0] tx_ptp_timestamp,
-    input  wire [15:0] tx_ptp_timestamp_tag,
-    input  wire        tx_ptp_timestamp_valid,
+    input  wire  [79:0] tx_ptp_timestamp,
+    input  wire  [15:0] tx_ptp_timestamp_tag,
+    input  wire         tx_ptp_timestamp_valid,
     // CSR
-    input  wire        ctrl_master_en,
-    input  wire [ 7:0] ctrl_log_announce_interval,
-    input  wire [ 7:0] ctrl_log_sync_interval
+    input  wire         ctrl_master_en,
+    input  wire  [ 7:0] ctrl_log_announce_interval,
+    input  wire  [ 7:0] ctrl_log_sync_interval
 );
 
   // Parameters
@@ -43,77 +43,77 @@ module ptp_ctrl #(
 
   localparam integer CounterWidth = $clog2(CLK_FREQ);
   localparam [CounterWidth-1:0] ClkFreq = CLK_FREQ[CounterWidth-1:0];
-  localparam [CounterWidth-1:0] OneCount = {{(CounterWidth-1){1'b0}}, 1'b1};
+  localparam [CounterWidth-1:0] OneCount = {{(CounterWidth - 1) {1'b0}}, 1'b1};
 
-  wire unused_origin_timestamp = |s_msg_origin_timestamp;
+  wire                     unused_origin_timestamp = |s_msg_origin_timestamp;
 
   // Signals
 
-  wire                    ctrl_master_en_s;
-  wire [             7:0] ctrl_log_announce_interval_s;
-  wire [             7:0] ctrl_log_sync_interval_s;
+  wire                     ctrl_master_en_s;
+  wire  [             7:0] ctrl_log_announce_interval_s;
+  wire  [             7:0] ctrl_log_sync_interval_s;
 
-  logic  [            15:0] tag_field;
-  wire                    tag_field_fb;
+  logic [            15:0] tag_field;
+  wire                     tag_field_fb;
 
   // Sync message
 
-  wire [             6:0] sync_counter_shift;
+  wire  [             6:0] sync_counter_shift;
 
-  logic  [CounterWidth-1:0] sync_counter;
-  logic  [CounterWidth-1:0] sync_counter_max;
-  wire                    sync_counter_wrap;
+  logic [CounterWidth-1:0] sync_counter;
+  logic [CounterWidth-1:0] sync_counter_max;
+  wire                     sync_counter_wrap;
 
-  logic  [             7:0] sync_counter_s;
-  logic  [             7:0] sync_counter_s_max;
-  wire                    sync_counter_s_wrap;
+  logic [             7:0] sync_counter_s;
+  logic [             7:0] sync_counter_s_max;
+  wire                     sync_counter_s_wrap;
 
-  logic  [            15:0] sync_sequence_id;
+  logic [            15:0] sync_sequence_id;
 
-  logic                     sync_req;
-  wire                    sync_ack;
+  logic                    sync_req;
+  wire                     sync_ack;
 
   // Delay Request Message
 
-  logic  [            15:0] delay_req_sequence_id;
+  logic [            15:0] delay_req_sequence_id;
 
-  logic                     delay_req_req;
-  wire                    delay_req_ack;
+  logic                    delay_req_req;
+  wire                     delay_req_ack;
 
   // Follow message
 
-  logic  [            79:0] follow_up_origin_timestamp;
-  logic  [            15:0] follow_up_sequence_id;
-  logic  [            15:0] follow_up_tag_field;
+  logic [            79:0] follow_up_origin_timestamp;
+  logic [            15:0] follow_up_sequence_id;
+  logic [            15:0] follow_up_tag_field;
 
-  logic                     follow_up_req;
-  wire                    follow_up_ack;
+  logic                    follow_up_req;
+  wire                     follow_up_ack;
 
   // Delay Response Message
 
-  logic  [            79:0] delay_resp_timestamp;
-  logic  [            79:0] delay_resp_port_identity;
-  logic  [            15:0] delay_resp_sequence_id;
+  logic [            79:0] delay_resp_timestamp;
+  logic [            79:0] delay_resp_port_identity;
+  logic [            15:0] delay_resp_sequence_id;
 
-  logic                     delay_resp_req;
-  wire                    delay_resp_ack;
+  logic                    delay_resp_req;
+  wire                     delay_resp_ack;
 
   // Announce message
 
-  wire [             6:0] announce_counter_shift;
+  wire  [             6:0] announce_counter_shift;
 
-  logic  [CounterWidth-1:0] announce_counter;
-  logic  [CounterWidth-1:0] announce_counter_max;
-  wire                    announce_counter_wrap;
+  logic [CounterWidth-1:0] announce_counter;
+  logic [CounterWidth-1:0] announce_counter_max;
+  wire                     announce_counter_wrap;
 
-  logic  [             7:0] announce_counter_s;
-  logic  [             7:0] announce_counter_s_max;
-  wire                    announce_counter_s_wrap;
+  logic [             7:0] announce_counter_s;
+  logic [             7:0] announce_counter_s_max;
+  wire                     announce_counter_s_wrap;
 
-  logic  [            15:0] announce_sequence_id;
+  logic [            15:0] announce_sequence_id;
 
-  logic                     announce_req;
-  wire                    announce_ack;
+  logic                    announce_req;
+  wire                     announce_ack;
 
   // Control CDC
 

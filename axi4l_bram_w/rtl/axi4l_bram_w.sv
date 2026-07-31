@@ -36,50 +36,50 @@ module axi4l_bram_w #(
   // 3'b101: 1 addr slot0 is buffered
   // 3'b011: 2 addr slot0 & slot1 is buffered
   // Note: other states are illegal
-  logic  [                        2:0] aw_state;
-  logic  [                        2:0] aw_state_next;
+  logic [                        2:0] aw_state;
+  logic [                        2:0] aw_state_next;
 
-  logic  [             ADDR_WIDTH-1:0] aw_slot0;
-  logic  [             ADDR_WIDTH-1:0] aw_slot1;
-  logic  [             ADDR_WIDTH-1:0] aw_slot0_next;
-  logic  [             ADDR_WIDTH-1:0] aw_slot1_next;
+  logic [             ADDR_WIDTH-1:0] aw_slot0;
+  logic [             ADDR_WIDTH-1:0] aw_slot1;
+  logic [             ADDR_WIDTH-1:0] aw_slot0_next;
+  logic [             ADDR_WIDTH-1:0] aw_slot1_next;
 
   // 3'b000: under reset
   // 3'b100: no write data is buffered
   // 3'b101: 1 write data slot0 is buffered
   // 3'b011: 2 write data slot0 & slot1 is buffered
   // Note: other states are illegal
-  logic  [                        2:0] w_state;
-  logic  [                        2:0] w_state_next;
+  logic [                        2:0] w_state;
+  logic [                        2:0] w_state_next;
 
-  logic  [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot0;
-  logic  [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot1;
-  logic  [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot0_next;
-  logic  [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot1_next;
+  logic [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot0;
+  logic [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot1;
+  logic [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot0_next;
+  logic [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot1_next;
 
-  logic                                bram_en_r;
+  logic                               bram_en_r;
 
   // 2'b00: no write is outstanding
   // 2'b01: 1 write is outstanding
   // 2'b10: 2 writes are outstanding
-  logic  [                        1:0] b_count;
-  logic  [                        1:0] b_count_next;
+  logic [                        1:0] b_count;
+  logic [                        1:0] b_count_next;
 
   // 2'b00: no B response is pending
   // 2'b01: 1 B response is pending
   // 2'b10: 2 B responses are pending
-  logic  [                        1:0] b_pend;
-  logic  [                        1:0] b_pend_next;
+  logic [                        1:0] b_pend;
+  logic [                        1:0] b_pend_next;
   logic                               b_err_slot0;
   logic                               b_err_slot1;
   logic                               b_err_slot0_next;
   logic                               b_err_slot1_next;
 
-  wire                               b_rdy;
-  wire                               b_hs;
-  wire                               wr_issue;
-  wire                               aw_go;
-  wire                               w_go;
+  wire                                b_rdy;
+  wire                                b_hs;
+  wire                                wr_issue;
+  wire                                aw_go;
+  wire                                w_go;
 
   // AW state
 

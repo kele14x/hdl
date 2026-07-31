@@ -170,16 +170,16 @@ module ecpri_if #(
 
   wire [79:0] tx_ptp_timestamp_s;
   wire [15:0] tx_ptp_timestamp_tag_s;
-  wire        tx_ptp_timestamp_valid_s;
-  wire        unused_tx_ptp_timestamp_ready;
+  wire tx_ptp_timestamp_valid_s;
+  wire unused_tx_ptp_timestamp_ready;
 
   wire [15:0] stat_topology_id_s;
 
-  wire        s0_axis_odm_tvalid;
-  wire        s0_axis_odm_tready;
+  wire s0_axis_odm_tvalid;
+  wire s0_axis_odm_tready;
 
-  wire [ 7:0] s0_odm_measurementid;
-  wire [ 7:0] s0_odm_actiontype;
+  wire [7:0] s0_odm_measurementid;
+  wire [7:0] s0_odm_actiontype;
   wire [79:0] s0_odm_timestamp;
   wire [63:0] s0_odm_compensation;
 

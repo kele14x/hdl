@@ -31,36 +31,36 @@ module axi4l_bram_r #(
   // 3'b101: 1 addr slot0 is buffered
   // 3'b011: 2 addr slot0 & slot1 is buffered
   // Note: other states are illegal
-  logic  [           2:0] ar_state;
-  logic  [           2:0] ar_state_next;
+  logic [           2:0] ar_state;
+  logic [           2:0] ar_state_next;
 
-  logic  [ADDR_WIDTH-1:0] ar_slot0;
-  logic  [ADDR_WIDTH-1:0] ar_slot1;
-  logic  [ADDR_WIDTH-1:0] ar_slot0_next;
-  logic  [ADDR_WIDTH-1:0] ar_slot1_next;
+  logic [ADDR_WIDTH-1:0] ar_slot0;
+  logic [ADDR_WIDTH-1:0] ar_slot1;
+  logic [ADDR_WIDTH-1:0] ar_slot0_next;
+  logic [ADDR_WIDTH-1:0] ar_slot1_next;
 
-  logic                   bram_en_r;
+  logic                  bram_en_r;
 
-  logic  [           1:0] r_count;
-  logic  [           1:0] r_count_next;
+  logic [           1:0] r_count;
+  logic [           1:0] r_count_next;
 
-  wire                  r_rdy;
+  wire                   r_rdy;
 
   // 2'b00: no read data is buffered
   // 2'b01: 1 read data is buffered at slot0
   // 2'b11: 2 read data is buffered at slot0 & slot1
   // Note: 2'b10 is illegal state
-  logic  [           1:0] r_state;
-  logic  [           1:0] r_state_next;
+  logic [           1:0] r_state;
+  logic [           1:0] r_state_next;
 
-  logic  [DATA_WIDTH-1:0] r_slot0;
-  logic  [DATA_WIDTH-1:0] r_slot1;
-  logic  [DATA_WIDTH-1:0] r_slot0_next;
-  logic  [DATA_WIDTH-1:0] r_slot1_next;
-  logic                   r_err_slot0;
-  logic                   r_err_slot1;
-  logic                   r_err_slot0_next;
-  logic                   r_err_slot1_next;
+  logic [DATA_WIDTH-1:0] r_slot0;
+  logic [DATA_WIDTH-1:0] r_slot1;
+  logic [DATA_WIDTH-1:0] r_slot0_next;
+  logic [DATA_WIDTH-1:0] r_slot1_next;
+  logic                  r_err_slot0;
+  logic                  r_err_slot1;
+  logic                  r_err_slot0_next;
+  logic                  r_err_slot1_next;
 
   // AR state
 

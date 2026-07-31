@@ -56,22 +56,22 @@ module puxch_conv #(
 
   // Signals
 
-  logic        [ 1:0] ctrl_rat_s;
-  logic        [ 3:0] ctrl_bw_s;
-  logic        [ 8:0] ctrl_nprb_s;
+  logic [ 1:0] ctrl_rat_s;
+  logic [ 3:0] ctrl_bw_s;
+  logic [ 8:0] ctrl_nprb_s;
 
-  logic        [ 3:0] fft_size;
+  logic [ 3:0] fft_size;
 
-  logic        [11:0] index      [NUM_ANT];
-  logic        [11:0] index_next;
-  logic        [11:0] index_r;
-  logic        [11:0] index_mask;
+  logic [11:0] index       [NUM_ANT];
+  logic [11:0] index_next;
+  logic [11:0] index_r;
+  logic [11:0] index_mask;
 
-  logic               valid      [NUM_ANT];
-  logic               valid_next;
-  logic               valid_r;
+  logic        valid       [NUM_ANT];
+  logic        valid_next;
+  logic        valid_r;
 
-  logic               last;
+  logic        last;
 
   localparam int AntIndexWidth = (NUM_ANT <= 1) ? 1 : $clog2(NUM_ANT);
 
@@ -110,8 +110,8 @@ module puxch_conv #(
   // Main
 
   always_comb begin
-    if (ctrl_rat_s == 0) begin // LTE
-      fft_size = 4'd2; // 2k
+    if (ctrl_rat_s == 0) begin  // LTE
+      fft_size = 4'd2;  // 2k
     end else if (ctrl_rat_s == 1) begin  // 15 kHz SCS NR
       case (ctrl_bw_s)
         4'b0000: fft_size = 4'd2;  // 7.68 (30.72), 2k
@@ -133,8 +133,8 @@ module puxch_conv #(
   // Index counter
 
   always_comb begin
-    if (ctrl_rat_s == 0) begin // LTE
-      index_mask = 12'hFFE; // 2k
+    if (ctrl_rat_s == 0) begin  // LTE
+      index_mask = 12'hFFE;  // 2k
     end else if (ctrl_rat_s == 1) begin  // 15 kHz SCS NR
       case (ctrl_bw_s)
         4'b0000: index_mask = 12'hFFE;  // 7.68 (30.72), 2k
@@ -219,7 +219,7 @@ module puxch_conv #(
   // PINC is the FCW for NCW, unit one half SC
 
   always_ff @(posedge clk) begin
-    if (ctrl_rat_s == 0) begin // LTE, half SCS shift
+    if (ctrl_rat_s == 0) begin  // LTE, half SCS shift
       pinc_r <= (ctrl_nprb_s * 12) - 1;
     end else begin
       pinc_r <= (ctrl_nprb_s * 12);

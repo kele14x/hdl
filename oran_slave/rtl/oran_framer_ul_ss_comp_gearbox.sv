@@ -59,7 +59,7 @@ module oran_framer_ul_ss_comp_gearbox (
   end
 
   always_comb begin
-    if (ud_iq_width == 0) begin // uncompressed
+    if (ud_iq_width == 0) begin  // uncompressed
       cnt_next = 16;
     end else if (din_state == 0) begin
       cnt_next = (cnt & 5'h0F) + 2 + ud_iq_width;

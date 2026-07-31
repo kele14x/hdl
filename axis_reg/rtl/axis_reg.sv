@@ -6,22 +6,22 @@ module axis_reg #(
     parameter integer DATA_WIDTH = 32,
     parameter integer USER_WIDTH = 1
 ) (
-    input  wire                                         aclk,
-    input  wire                                         aresetn,
+    input  wire                                          aclk,
+    input  wire                                          aresetn,
     //
-    input  wire [                       DATA_WIDTH-1:0] s_axis_tdata,
-    input  wire [                     DATA_WIDTH/8-1:0] s_axis_tkeep,
-    input  wire                                         s_axis_tlast,
-    input  wire [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] s_axis_tuser,
-    input  wire                                         s_axis_tvalid,
-    output logic                                          s_axis_tready,
+    input  wire  [                       DATA_WIDTH-1:0] s_axis_tdata,
+    input  wire  [                     DATA_WIDTH/8-1:0] s_axis_tkeep,
+    input  wire                                          s_axis_tlast,
+    input  wire  [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] s_axis_tuser,
+    input  wire                                          s_axis_tvalid,
+    output logic                                         s_axis_tready,
     //
-    output logic  [                       DATA_WIDTH-1:0] m_axis_tdata,
-    output logic  [                     DATA_WIDTH/8-1:0] m_axis_tkeep,
-    output logic                                          m_axis_tlast,
-    output logic  [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] m_axis_tuser,
-    output logic                                          m_axis_tvalid,
-    input  wire                                         m_axis_tready
+    output logic [                       DATA_WIDTH-1:0] m_axis_tdata,
+    output logic [                     DATA_WIDTH/8-1:0] m_axis_tkeep,
+    output logic                                         m_axis_tlast,
+    output logic [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] m_axis_tuser,
+    output logic                                         m_axis_tvalid,
+    input  wire                                          m_axis_tready
 );
 
   // Notes
@@ -49,21 +49,21 @@ module axis_reg #(
 
   localparam integer USER_KEEP_WIDTH = USER_WIDTH > 0 ? USER_WIDTH : 1;
 
-  logic [        DATA_WIDTH-1:0] tdata_d;
-  logic [      DATA_WIDTH/8-1:0] tkeep_d;
+  logic [     DATA_WIDTH-1:0] tdata_d;
+  logic [   DATA_WIDTH/8-1:0] tkeep_d;
   logic [USER_KEEP_WIDTH-1:0] tuser_d;
-  logic                        tlast_d;
+  logic                       tlast_d;
 
-  logic                        tvalid_d;
+  logic                       tvalid_d;
 
-  logic [        DATA_WIDTH-1:0] tdata_s;
-  logic [      DATA_WIDTH/8-1:0] tkeep_s;
+  logic [     DATA_WIDTH-1:0] tdata_s;
+  logic [   DATA_WIDTH/8-1:0] tkeep_s;
   logic [USER_KEEP_WIDTH-1:0] tuser_s;
-  logic                        tlast_s;
+  logic                       tlast_s;
 
-  logic                    tvalid_d_next;
+  logic                       tvalid_d_next;
 
-  logic                    m_axis_tvalid_next;
+  logic                       m_axis_tvalid_next;
 
   // Main
 

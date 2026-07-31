@@ -8,10 +8,10 @@
 
 module fft_stage #(
     parameter integer NUM_ANT            = 4,
-    parameter logic     INV_FFT            = 1'b0,
+    parameter logic   INV_FFT            = 1'b0,
     parameter integer LOG_FFT_SIZE       = 4,
     parameter integer DATA_WIDTH         = 18,
-    parameter logic     BIT_REVERSED_INPUT = 1'b1
+    parameter logic   BIT_REVERSED_INPUT = 1'b1
 ) (
     input  wire                         clk,
     input  wire                         rst,
@@ -225,61 +225,61 @@ module fft_stage #(
 
       // Twiddle -> BFi -> [CT -> BFii]
 
-      assign twiddle_din_dr = din_dr;
-      assign twiddle_din_di = din_di;
-      assign twiddle_din_dv = din_dv;
+      assign twiddle_din_dr        = din_dr;
+      assign twiddle_din_di        = din_di;
+      assign twiddle_din_dv        = din_dv;
 
-      assign bfi_din_dr     = twiddle_dout_dr;
-      assign bfi_din_di     = twiddle_dout_di;
-      assign bfi_din_dv     = twiddle_dout_dv;
+      assign bfi_din_dr            = twiddle_dout_dr;
+      assign bfi_din_di            = twiddle_dout_di;
+      assign bfi_din_dv            = twiddle_dout_dv;
 
-      assign ct_din_dr      = bfi_dout_dr;
-      assign ct_din_di      = bfi_dout_di;
-      assign ct_din_dv      = bfi_dout_dv;
+      assign ct_din_dr             = bfi_dout_dr;
+      assign ct_din_di             = bfi_dout_di;
+      assign ct_din_dv             = bfi_dout_dv;
 
-      assign bfii_din_dr    = ct_dout_dr;
-      assign bfii_din_di    = ct_dout_di;
-      assign bfii_din_dv    = ct_dout_dv;
+      assign bfii_din_dr           = ct_dout_dr;
+      assign bfii_din_di           = ct_dout_di;
+      assign bfii_din_dv           = ct_dout_dv;
 
-      assign dout_dr        = bfii_dout_dr;
-      assign dout_di        = bfii_dout_di;
-      assign dout_dv        = bfii_dout_dv;
+      assign dout_dr               = bfii_dout_dr;
+      assign dout_di               = bfii_dout_di;
+      assign dout_dv               = bfii_dout_dv;
 
       assign unused_twiddle_bypass = HasBf2ii ? ctrl_bypass : {2{ctrl_bypass[0]}};
 
-      assign bfi_bypass     = ctrl_bypass[0];
+      assign bfi_bypass            = ctrl_bypass[0];
       assign unused_ct_bypass      = ctrl_bypass[1];
-      assign bfii_bypass    = ctrl_bypass[1];
+      assign bfii_bypass           = ctrl_bypass[1];
 
     end else begin : g_dif_fft
 
       // [BFII -> CT] -> BFI -> Twiddle
 
-      assign bfii_din_dr    = din_dr;
-      assign bfii_din_di    = din_di;
-      assign bfii_din_dv    = din_dv;
+      assign bfii_din_dr           = din_dr;
+      assign bfii_din_di           = din_di;
+      assign bfii_din_dv           = din_dv;
 
-      assign ct_din_dr      = bfii_dout_dr;
-      assign ct_din_di      = bfii_dout_di;
-      assign ct_din_dv      = bfii_dout_dv;
+      assign ct_din_dr             = bfii_dout_dr;
+      assign ct_din_di             = bfii_dout_di;
+      assign ct_din_dv             = bfii_dout_dv;
 
-      assign bfi_din_dr     = ct_dout_dr;
-      assign bfi_din_di     = ct_dout_di;
-      assign bfi_din_dv     = ct_dout_dv;
+      assign bfi_din_dr            = ct_dout_dr;
+      assign bfi_din_di            = ct_dout_di;
+      assign bfi_din_dv            = ct_dout_dv;
 
-      assign twiddle_din_dr = bfi_dout_dr;
-      assign twiddle_din_di = bfi_dout_di;
-      assign twiddle_din_dv = bfi_dout_dv;
+      assign twiddle_din_dr        = bfi_dout_dr;
+      assign twiddle_din_di        = bfi_dout_di;
+      assign twiddle_din_dv        = bfi_dout_dv;
 
-      assign dout_dr        = twiddle_dout_dr;
-      assign dout_di        = twiddle_dout_di;
-      assign dout_dv        = twiddle_dout_dv;
+      assign dout_dr               = twiddle_dout_dr;
+      assign dout_di               = twiddle_dout_di;
+      assign dout_dv               = twiddle_dout_dv;
 
       assign unused_twiddle_bypass = HasBf2ii ? ctrl_bypass : {2{ctrl_bypass[1]}};
 
-      assign bfii_bypass    = ctrl_bypass[0];
+      assign bfii_bypass           = ctrl_bypass[0];
       assign unused_ct_bypass      = ctrl_bypass[0];
-      assign bfi_bypass     = ctrl_bypass[1];
+      assign bfi_bypass            = ctrl_bypass[1];
 
     end
   endgenerate

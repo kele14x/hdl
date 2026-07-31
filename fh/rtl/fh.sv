@@ -103,34 +103,34 @@ module fh (
     output wire        s_message_tready
 );
 
-  wire        ctrl_ptp_master_en;
+  wire ctrl_ptp_master_en;
   wire [47:0] ctrl_ptp_src_mac;
-  wire [ 7:0] ctrl_ptp_domain_number;
+  wire [7:0] ctrl_ptp_domain_number;
   wire [15:0] ctrl_ptp_utc_offset;
-  wire [ 7:0] ctrl_ptp_log_announce_interval;
-  wire [ 7:0] ctrl_ptp_log_sync_interval;
+  wire [7:0] ctrl_ptp_log_announce_interval;
+  wire [7:0] ctrl_ptp_log_sync_interval;
 
   wire [79:0] tx_ptp_timestamp_s;
   wire [15:0] tx_ptp_timestamp_tag_s;
-  wire        tx_ptp_timestamp_valid_s;
+  wire tx_ptp_timestamp_valid_s;
 
   wire [31:0] rx_ptp_tdata;
-  wire [ 3:0] rx_ptp_tkeep;
-  wire        rx_ptp_tlast;
+  wire [3:0] rx_ptp_tkeep;
+  wire rx_ptp_tlast;
   wire [79:0] rx_ptp_tuser;
-  wire        rx_ptp_tvalid;
-  wire        rx_ptp_tready;
+  wire rx_ptp_tvalid;
+  wire rx_ptp_tready;
 
   wire [31:0] tx_ptp_tdata;
-  wire [ 3:0] tx_ptp_tkeep;
-  wire        tx_ptp_tlast;
+  wire [3:0] tx_ptp_tkeep;
+  wire tx_ptp_tlast;
   wire [17:0] tx_ptp_tuser;
-  wire        tx_ptp_tvalid;
-  wire        tx_ptp_tready;
+  wire tx_ptp_tvalid;
+  wire tx_ptp_tready;
 
   wire [31:0] stat_rx_resync_cnt;
   wire [31:0] stat_tx_resync_cnt;
-  wire        tx_ptp_timestamp_ready;
+  wire tx_ptp_timestamp_ready;
   wire unused_axi_addr = &{1'b0, s_axi_awaddr[31:10], s_axi_araddr[31:10]};
   wire unused_status = &{1'b0, stat_rx_resync_cnt, stat_tx_resync_cnt, tx_ptp_timestamp_ready};
 

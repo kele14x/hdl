@@ -113,67 +113,67 @@ module oran_top #(
   logic        unused_fram_ready;
   logic        unused_defm_ready;
 
-  logic        rx_eth_clk          [ NumEth];
-  logic        rx_eth_rst          [ NumEth];
+  logic        rx_eth_clk                   [ NumEth];
+  logic        rx_eth_rst                   [ NumEth];
 
-  logic        tx_eth_clk          [ NumEth];
-  logic        tx_eth_rst          [ NumEth];
+  logic        tx_eth_clk                   [ NumEth];
+  logic        tx_eth_rst                   [ NumEth];
 
-  logic [ 7:0] timer_frame_s       [  NumCc];
-  logic        timer_sof_s         [  NumCc];
-  logic        timer_sos_s         [  NumCc];
-  logic [32:0] timer_frac_s        [  NumCc];
+  logic [ 7:0] timer_frame_s                [  NumCc];
+  logic        timer_sof_s                  [  NumCc];
+  logic        timer_sos_s                  [  NumCc];
+  logic [32:0] timer_frac_s                 [  NumCc];
 
-  logic [ 7:0] dl_syml_frame_s     [ANT_NUM] [NumCc];
-  logic        dl_syml_sof_s       [ANT_NUM] [NumCc];
-  logic        dl_syml_sos_s       [ANT_NUM] [NumCc];
-  logic [32:0] dl_syml_frac_s      [ANT_NUM] [NumCc];
-  logic [31:0] dl_syml_data_s      [ANT_NUM] [NumCc];
-  logic        dl_syml_valid_s     [ANT_NUM] [NumCc];
+  logic [ 7:0] dl_syml_frame_s              [ANT_NUM] [NumCc];
+  logic        dl_syml_sof_s                [ANT_NUM] [NumCc];
+  logic        dl_syml_sos_s                [ANT_NUM] [NumCc];
+  logic [32:0] dl_syml_frac_s               [ANT_NUM] [NumCc];
+  logic [31:0] dl_syml_data_s               [ANT_NUM] [NumCc];
+  logic        dl_syml_valid_s              [ANT_NUM] [NumCc];
 
-  logic [ 7:0] ul_syml_frame_s     [ANT_NUM] [NumCc];
-  logic        ul_syml_sof_s       [ANT_NUM] [NumCc];
-  logic        ul_syml_sos_s       [ANT_NUM] [NumCc];
-  logic [31:0] ul_syml_data_s      [ANT_NUM] [NumCc];
-  logic        ul_syml_valid_s     [ANT_NUM] [NumCc];
+  logic [ 7:0] ul_syml_frame_s              [ANT_NUM] [NumCc];
+  logic        ul_syml_sof_s                [ANT_NUM] [NumCc];
+  logic        ul_syml_sos_s                [ANT_NUM] [NumCc];
+  logic [31:0] ul_syml_data_s               [ANT_NUM] [NumCc];
+  logic        ul_syml_valid_s              [ANT_NUM] [NumCc];
 
   // RX
-  logic [63:0] rx_axis_tdata_s     [ NumEth];
-  logic [ 7:0] rx_axis_tkeep_s     [ NumEth];
-  logic        rx_axis_tvalid_s    [ NumEth];
-  logic        rx_axis_tlast_s     [ NumEth];
-  logic [79:0] rx_axis_tuser_s     [ NumEth];
+  logic [63:0] rx_axis_tdata_s              [ NumEth];
+  logic [ 7:0] rx_axis_tkeep_s              [ NumEth];
+  logic        rx_axis_tvalid_s             [ NumEth];
+  logic        rx_axis_tlast_s              [ NumEth];
+  logic [79:0] rx_axis_tuser_s              [ NumEth];
   // TX
-  logic [63:0] tx_axis_tdata_s     [ NumEth];
-  logic [ 7:0] tx_axis_tkeep_s     [ NumEth];
-  logic        tx_axis_tlast_s     [ NumEth];
-  logic        tx_axis_tvalid_s    [ NumEth];
-  logic        tx_axis_tready_s    [ NumEth];
+  logic [63:0] tx_axis_tdata_s              [ NumEth];
+  logic [ 7:0] tx_axis_tkeep_s              [ NumEth];
+  logic        tx_axis_tlast_s              [ NumEth];
+  logic        tx_axis_tvalid_s             [ NumEth];
+  logic        tx_axis_tready_s             [ NumEth];
 
-  logic        m_odm_header_valid_s[ NumEth];
-  logic [79:0] m_odm_timestamp_s   [ NumEth];
-  logic [79:0] m_odm_timestamp2_s  [ NumEth];
+  logic        m_odm_header_valid_s         [ NumEth];
+  logic [79:0] m_odm_timestamp_s            [ NumEth];
+  logic [79:0] m_odm_timestamp2_s           [ NumEth];
 
-  logic [ 7:0] m_app_frameid_s     [ANT_NUM] [NumCc];
+  logic [ 7:0] m_app_frameid_s              [ANT_NUM] [NumCc];
 
-  logic        unused_m_mac_header_valid    [NumEth];
-  logic [47:0] unused_m_mac_dest_mac        [NumEth];
-  logic [47:0] unused_m_mac_source_mac      [NumEth];
-  logic        unused_m_mac_with_vlan       [NumEth];
-  logic [15:0] unused_m_mac_vlan_tag        [NumEth];
-  logic [15:0] unused_m_mac_ethertype       [NumEth];
-  logic        unused_m_ecpri_header_valid  [NumEth];
-  logic        unused_m_ecpri_concat        [NumEth];
-  logic [ 7:0] unused_m_ecpri_messagetype   [NumEth];
-  logic [15:0] unused_m_ecpri_payloadsize   [NumEth];
-  logic [ 7:0] unused_m_odm_measurementid   [NumEth];
-  logic [ 7:0] unused_m_odm_actiontype      [NumEth];
-  logic [63:0] unused_m_odm_compensation    [NumEth];
-  logic        unused_m_trans_header_valid  [NumEth];
-  logic [15:0] unused_m_trans_rtc_pc_id     [NumEth];
-  logic [ 7:0] unused_m_trans_seqid         [NumEth];
-  logic        unused_m_trans_ebit          [NumEth];
-  logic [ 6:0] unused_m_trans_subseqid      [NumEth];
+  logic        unused_m_mac_header_valid    [ NumEth];
+  logic [47:0] unused_m_mac_dest_mac        [ NumEth];
+  logic [47:0] unused_m_mac_source_mac      [ NumEth];
+  logic        unused_m_mac_with_vlan       [ NumEth];
+  logic [15:0] unused_m_mac_vlan_tag        [ NumEth];
+  logic [15:0] unused_m_mac_ethertype       [ NumEth];
+  logic        unused_m_ecpri_header_valid  [ NumEth];
+  logic        unused_m_ecpri_concat        [ NumEth];
+  logic [ 7:0] unused_m_ecpri_messagetype   [ NumEth];
+  logic [15:0] unused_m_ecpri_payloadsize   [ NumEth];
+  logic [ 7:0] unused_m_odm_measurementid   [ NumEth];
+  logic [ 7:0] unused_m_odm_actiontype      [ NumEth];
+  logic [63:0] unused_m_odm_compensation    [ NumEth];
+  logic        unused_m_trans_header_valid  [ NumEth];
+  logic [15:0] unused_m_trans_rtc_pc_id     [ NumEth];
+  logic [ 7:0] unused_m_trans_seqid         [ NumEth];
+  logic        unused_m_trans_ebit          [ NumEth];
+  logic [ 6:0] unused_m_trans_subseqid      [ NumEth];
   logic        unused_m_app_header_valid    [ANT_NUM] [NumCc];
   logic        unused_m_app_datadirection   [ANT_NUM] [NumCc];
   logic [ 3:0] unused_m_app_filterindex     [ANT_NUM] [NumCc];

@@ -92,11 +92,11 @@ module prach_conv_nco (
       .DEPTH(Latency),
       .INIT (0)
   ) u_delay_sync (
-      .clk  (clk),
-      .cen  (1'b1),
-      .rst  (1'b0),
-      .din  (sync_in),
-      .dout (sync_out)
+      .clk (clk),
+      .cen (1'b1),
+      .rst (1'b0),
+      .din (sync_in),
+      .dout(sync_out)
   );
 
   delay #(
@@ -104,11 +104,11 @@ module prach_conv_nco (
       .DEPTH(Latency - 1),
       .INIT (0)
   ) u_delay_chn (
-      .clk  (clk),
-      .cen  (1'b1),
-      .rst  (1'b0),
-      .din  (chn),
-      .dout (dout_chn)
+      .clk (clk),
+      .cen (1'b1),
+      .rst (1'b0),
+      .din (chn),
+      .dout(dout_chn)
   );
 
 endmodule

@@ -329,7 +329,8 @@ module bfp_decomp #(
   // Byte reversed inputs?
 
   always_comb begin
-    s_axis_tdata_s = (BYTE_REVERSE ? byte_reverse64(s_axis_tdata) : s_axis_tdata) ^ {64{|s_axis_tkeep & 1'b0}};
+    s_axis_tdata_s = (BYTE_REVERSE ? byte_reverse64(s_axis_tdata) : s_axis_tdata) ^
+        {64{|s_axis_tkeep & 1'b0}};
   end
 
   // Report error is EOP is present at wrong position

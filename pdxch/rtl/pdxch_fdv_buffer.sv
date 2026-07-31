@@ -165,11 +165,11 @@ module pdxch_fdv_buffer #(
 
       if (HALF_BLOCK) begin : g_half
 
-        logic [ 9:0] wr_addr_s;
-        logic        wr_en_s;
+        logic [  9:0] wr_addr_s;
+        logic         wr_en_s;
 
-        logic [11:0] rd_addr_s;
-        logic        rd_en_s;
+        logic [ 11:0] rd_addr_s;
+        logic         rd_en_s;
         logic [127:0] unused_ram_douta;
 
         assign wr_addr_s = {wr_addr[ant][10], wr_addr[ant][8:0]};

@@ -3,28 +3,28 @@
 `default_nettype none
 
 module ptp_framer (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    output wire [31:0] m_axis_tdata,
-    output logic  [ 3:0] m_axis_tkeep,
-    output logic         m_axis_tlast,
-    output logic  [17:0] m_axis_tuser,
-    output logic         m_axis_tvalid,
-    input  wire        m_axis_tready,
+    output wire  [31:0] m_axis_tdata,
+    output logic [ 3:0] m_axis_tkeep,
+    output logic        m_axis_tlast,
+    output logic [17:0] m_axis_tuser,
+    output logic        m_axis_tvalid,
+    input  wire         m_axis_tready,
     //
-    input  wire        ap_valid,
-    output logic         ap_ready,
-    input  wire [ 3:0] ap_message_type,
-    input  wire [15:0] ap_sequence_id,
-    input  wire [ 7:0] ap_log_message_interval,
-    input  wire [79:0] ap_origin_timestamp,
-    input  wire [79:0] ap_requesting_port_identity,
-    input  wire [15:0] ap_tag_field,
+    input  wire         ap_valid,
+    output logic        ap_ready,
+    input  wire  [ 3:0] ap_message_type,
+    input  wire  [15:0] ap_sequence_id,
+    input  wire  [ 7:0] ap_log_message_interval,
+    input  wire  [79:0] ap_origin_timestamp,
+    input  wire  [79:0] ap_requesting_port_identity,
+    input  wire  [15:0] ap_tag_field,
     // CSR
-    input  wire [47:0] ctrl_src_mac,
-    input  wire [ 7:0] ctrl_domain_number,
-    input  wire [15:0] ctrl_utc_offset
+    input  wire  [47:0] ctrl_src_mac,
+    input  wire  [ 7:0] ctrl_domain_number,
+    input  wire  [15:0] ctrl_utc_offset
 );
 
   // Parameters
@@ -91,34 +91,34 @@ module ptp_framer (
 
   integer state, state_next;
 
-  logic  [31:0] m_axis_tdata_rev;
+  logic [31:0] m_axis_tdata_rev;
 
-  wire [ 3:0] transport_specific = 4'd0;
-  logic  [ 3:0] message_type;
-  wire [ 3:0] reserved0 = 4'd1;  // major_sdo_id
-  wire [ 3:0] version_ptp = 4'd2;
-  logic  [15:0] message_length;
-  wire [ 7:0] domain_number;
-  wire [ 7:0] reserved1 = 8'd0;  // minor_sdo_id
-  wire [15:0] flag_field = 16'h0200;
-  wire [63:0] correction_field = 64'd0;
-  wire [31:0] reserved2 = 32'd0;  // message_type_specific
-  wire [79:0] source_port_identity;  // {clock_identity, port_number}
-  logic  [15:0] sequence_id;
-  logic  [ 7:0] control_field;
-  logic  [ 7:0] log_message_interval;
+  wire  [ 3:0] transport_specific = 4'd0;
+  logic [ 3:0] message_type;
+  wire  [ 3:0] reserved0 = 4'd1;  // major_sdo_id
+  wire  [ 3:0] version_ptp = 4'd2;
+  logic [15:0] message_length;
+  wire  [ 7:0] domain_number;
+  wire  [ 7:0] reserved1 = 8'd0;  // minor_sdo_id
+  wire  [15:0] flag_field = 16'h0200;
+  wire  [63:0] correction_field = 64'd0;
+  wire  [31:0] reserved2 = 32'd0;  // message_type_specific
+  wire  [79:0] source_port_identity;  // {clock_identity, port_number}
+  logic [15:0] sequence_id;
+  logic [ 7:0] control_field;
+  logic [ 7:0] log_message_interval;
 
-  logic  [79:0] origin_timestamp;
-  wire [15:0] current_utc_offset;
-  wire [ 7:0] reserved3 = 8'd0;
-  wire [ 7:0] grandmaster_priority1 = 8'h80;
-  wire [31:0] grandmaster_clock_quality = 32'h06FEFFFF;
-  wire [ 7:0] grandmaster_priority2 = 8'h80;
-  wire [63:0] grandmaster_identity;
-  wire [15:0] steps_removed = 16'd0;
-  wire [ 7:0] time_source = 8'hA0;
+  logic [79:0] origin_timestamp;
+  wire  [15:0] current_utc_offset;
+  wire  [ 7:0] reserved3 = 8'd0;
+  wire  [ 7:0] grandmaster_priority1 = 8'h80;
+  wire  [31:0] grandmaster_clock_quality = 32'h06FEFFFF;
+  wire  [ 7:0] grandmaster_priority2 = 8'h80;
+  wire  [63:0] grandmaster_identity;
+  wire  [15:0] steps_removed = 16'd0;
+  wire  [ 7:0] time_source = 8'hA0;
 
-  logic  [79:0] requesting_port_identity;
+  logic [79:0] requesting_port_identity;
 
   // Control CDC
 

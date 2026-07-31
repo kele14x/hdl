@@ -6,14 +6,14 @@
 `default_nettype none
 
 module ram_tdp_pipe #(
-    parameter int                     ADDR_WIDTH     = 10,
-    parameter int                     DATA_WIDTH     = 32,
-    parameter string                  WRITE_MODE_A   = "READ_FIRST", // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
-    parameter string                  WRITE_MODE_B   = "READ_FIRST", // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
-    parameter int                     READ_LATENCY_A = 2,
-    parameter int                     READ_LATENCY_B = 2,
-    parameter bit    [DATA_WIDTH-1:0] INIT_WORD      = '0,
-    parameter string                  INIT_FILE      = ""
+    parameter int ADDR_WIDTH = 10,
+    parameter int DATA_WIDTH = 32,
+    parameter string WRITE_MODE_A = "READ_FIRST",  // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
+    parameter string WRITE_MODE_B = "READ_FIRST",  // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
+    parameter int READ_LATENCY_A = 2,
+    parameter int READ_LATENCY_B = 2,
+    parameter bit [DATA_WIDTH-1:0] INIT_WORD = '0,
+    parameter string INIT_FILE = ""
 ) (
     // Port A
     input var                   clka,

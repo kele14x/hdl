@@ -55,17 +55,17 @@ package pcap_pkg;
   //   orig_len: the length of the packet it appeared on the network.
   //
   typedef struct {
-    int ts_sec;  // timestamp seconds
-    int ts_usec;  // timestamp microseconds
+    int ts_sec;    // timestamp seconds
+    int ts_usec;   // timestamp microseconds
     int incl_len;  // number of octets of packet saved in file
     int orig_len;  // actual length of packet
   } pcap_rec_header_t;
 
   // Packet data buffer
   typedef struct {
-    longint ts; // 64-bit signed, nanosecond
-    logic [7:0] buffer[16384]; // data blob
-    int len; // buffer length
+    longint ts;  // 64-bit signed, nanosecond
+    logic [7:0] buffer[16384];  // data blob
+    int len;  // buffer length
   } pkt_buffer_t;
 
   typedef struct {
@@ -158,8 +158,8 @@ package pcap_pkg;
     read_mode = h.read_mode;
 
     // Assume the next 16 bytes is packet header
-    pkt_header.ts_sec   = read_4bytes(file, (read_mode & 1) != 0);
-    pkt_header.ts_usec  = read_4bytes(file, (read_mode & 1) != 0);
+    pkt_header.ts_sec = read_4bytes(file, (read_mode & 1) != 0);
+    pkt_header.ts_usec = read_4bytes(file, (read_mode & 1) != 0);
     pkt_header.incl_len = read_4bytes(file, (read_mode & 1) != 0);
     pkt_header.orig_len = read_4bytes(file, (read_mode & 1) != 0);
 
@@ -238,7 +238,7 @@ package pcap_pkg;
       'hD4C3B2A1: begin
 `ifdef DEBUG
         $display("Magic number format is Big Endian");
- `endif
+`endif
         return 'h100;
       end
       'h4D3CB2A1: begin

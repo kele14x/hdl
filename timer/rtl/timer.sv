@@ -3,8 +3,8 @@
 `default_nettype none
 
 module timer #(
-    parameter integer FREQ_MODE    = 0,  // 0: 400 MHz, 1: 491.52 MHz
-    parameter logic     SIM_SPEED_UP = 1'b0
+    parameter integer FREQ_MODE    = 0,    // 0: 400 MHz, 1: 491.52 MHz
+    parameter logic   SIM_SPEED_UP = 1'b0
 ) (
     input  wire        s_axi_aclk,
     input  wire        s_axi_aresetn,
@@ -65,7 +65,7 @@ module timer #(
   wire [47:0] tod_sec_s;
   wire [31:0] tod_ns_s;
 
-  wire unused_axi_addr_msb = &{1'b0, s_axi_awaddr[15:9], s_axi_araddr[15:9], 1'b0};
+  wire        unused_axi_addr_msb = &{1'b0, s_axi_awaddr[15:9], s_axi_araddr[15:9], 1'b0};
 
   timer_regs i_regs (
       .s_axi_aclk              (s_axi_aclk),

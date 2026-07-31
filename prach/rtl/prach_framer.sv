@@ -61,25 +61,25 @@ module prach_framer #(
       .ANT_ID (ANT_ID),
       .NUM_ANT(NUM_ANT)
   ) u_buffer (
-      .clk            (clk),
-      .rst            (rst),
+      .clk          (clk),
+      .rst          (rst),
       //
-      .din_dr         (din_dr),
-      .din_di         (din_di),
-      .din_sf         (din_sf),
-      .din_sl         (din_sl),
-      .din_sy         (din_sy),
-      .din_chn        (din_chn),
-      .din_dv         (din_dv),
-      .din_last       (din_last),
+      .din_dr       (din_dr),
+      .din_di       (din_di),
+      .din_sf       (din_sf),
+      .din_sl       (din_sl),
+      .din_sy       (din_sy),
+      .din_chn      (din_chn),
+      .din_dv       (din_dv),
+      .din_last     (din_last),
       //
-      .rd_section_id  (rd_section_id),
+      .rd_section_id(rd_section_id),
       //
-      .m_axis_tdata   (s0_axis_tdata),
-      .m_axis_tkeep   (s0_axis_tkeep),
-      .m_axis_tlast   (s0_axis_tlast),
-      .m_axis_tuser   (s0_axis_tuser),
-      .m_axis_tvalid  (s0_axis_tvalid)
+      .m_axis_tdata (s0_axis_tdata),
+      .m_axis_tkeep (s0_axis_tkeep),
+      .m_axis_tlast (s0_axis_tlast),
+      .m_axis_tuser (s0_axis_tuser),
+      .m_axis_tvalid(s0_axis_tvalid)
   );
 
   generate

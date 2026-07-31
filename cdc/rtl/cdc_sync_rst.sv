@@ -8,9 +8,9 @@ module cdc_sync_rst #(
     parameter int INIT         = 1,
     parameter int INIT_SYNC_FF = 0
 ) (
-    input  wire  src_rst,
-    input  wire  dest_clk,
-    output wire  dest_rst
+    input  wire src_rst,
+    input  wire dest_clk,
+    output wire dest_rst
 );
 
   initial begin : drc_check

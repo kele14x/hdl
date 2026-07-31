@@ -4,23 +4,23 @@
 
 module coe_deframer_hdr (
     // Ethernet
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire        sync,
+    input  wire         sync,
     //
-    input  wire [31:0] s_axis_tdata,
-    input  wire [ 3:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
-    input  wire        s_axis_tvalid,
+    input  wire  [31:0] s_axis_tdata,
+    input  wire  [ 3:0] s_axis_tkeep,
+    input  wire         s_axis_tlast,
+    input  wire         s_axis_tvalid,
     // Radio I/F
-    output logic  [31:0] m_axis_tdata,
-    output logic  [ 3:0] m_axis_tkeep,
-    output logic         m_axis_tlast,
-    output logic         m_axis_tvalid,
+    output logic [31:0] m_axis_tdata,
+    output logic [ 3:0] m_axis_tkeep,
+    output logic        m_axis_tlast,
+    output logic        m_axis_tvalid,
     //
-    output logic         m_app_valid,
-    output logic  [18:0] m_app_ts
+    output logic        m_app_valid,
+    output logic [18:0] m_app_ts
 );
 
   import coe_pkg::*;
@@ -31,10 +31,10 @@ module coe_deframer_hdr (
 
   // Write side signals
 
-  logic         init_n;
+  logic        init_n;
 
-  wire [31:0] s_axis_tdata_reversed;
-  wire        unused_inputs = &{1'b0, sync, s_axis_tdata_reversed[31:19]};
+  wire  [31:0] s_axis_tdata_reversed;
+  wire         unused_inputs = &{1'b0, sync, s_axis_tdata_reversed[31:19]};
 
   assign s_axis_tdata_reversed = byte_reverse(s_axis_tdata);
 

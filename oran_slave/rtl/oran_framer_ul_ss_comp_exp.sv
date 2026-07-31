@@ -346,11 +346,11 @@ module oran_framer_ul_ss_comp_exp (
   logic       data_fifo_full;
   logic       data_fifo_empty;
 
-  wire unused_fifo_status = &{1'b0, exp_fifo_full, data_fifo_full, data_fifo_empty};
+  wire        unused_fifo_status = &{1'b0, exp_fifo_full, data_fifo_full, data_fifo_empty};
 
   assign exp_fifo_din = {shift2, exp2};
-  assign exp_fifo_wr  = valid2 && (state2 == 5 || last2);
-  assign exp_fifo_rd  = (state3 == 0);
+  assign exp_fifo_wr = valid2 && (state2 == 5 || last2);
+  assign exp_fifo_rd = (state3 == 0);
 
   assign {shift3, exp3} = exp_fifo_dout;
 
@@ -361,12 +361,12 @@ module oran_framer_ul_ss_comp_exp (
       .rst  (rst),
       //
       .din  (exp_fifo_din),
-      .wren(exp_fifo_wr),
+      .wren (exp_fifo_wr),
       .full (exp_fifo_full),
       //
       .dout (exp_fifo_dout),
       .empty(empty3),
-      .rden(exp_fifo_rd)
+      .rden (exp_fifo_rd)
   );
 
   fifo_srl #(
@@ -376,12 +376,12 @@ module oran_framer_ul_ss_comp_exp (
       .rst  (rst),
       //
       .din  ({din_last, din_data}),
-      .wren(din_valid),
+      .wren (din_valid),
       .full (data_fifo_full),
       //
       .dout (fifo3),
       .empty(data_fifo_empty),
-      .rden(valid3)
+      .rden (valid3)
   );
 
 endmodule

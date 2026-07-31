@@ -89,7 +89,7 @@ module rts2 (
 
   localparam integer AddrWidth = 40;
 
-  wire [ 0:0] ctrl_en;
+  wire [0:0] ctrl_en;
 
   wire [31:0] ctrl_ram0_offset;
   wire [31:0] ctrl_ram1_offset;

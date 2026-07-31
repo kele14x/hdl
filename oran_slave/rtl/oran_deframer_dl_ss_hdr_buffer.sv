@@ -30,22 +30,22 @@ module oran_deframer_dl_ss_hdr_buffer #(
 
   // Buffer write signal
 
-  logic [AddrWidth-1:0] wr_addr   [BUFFER_SYMBOL];
-  logic                 wr_en     [BUFFER_SYMBOL];
-  logic [DataWidth-1:0] wr_din    [BUFFER_SYMBOL];
+  logic [AddrWidth-1:0] wr_addr     [BUFFER_SYMBOL];
+  logic                 wr_en       [BUFFER_SYMBOL];
+  logic [DataWidth-1:0] wr_din      [BUFFER_SYMBOL];
 
   // Buffer read signal
 
-  logic [AddrWidth-1:0] rd_addr   [BUFFER_SYMBOL];
-  logic                 rd_en     [BUFFER_SYMBOL];
-  logic [DataWidth-1:0] rd_dout   [BUFFER_SYMBOL];
+  logic [AddrWidth-1:0] rd_addr     [BUFFER_SYMBOL];
+  logic                 rd_en       [BUFFER_SYMBOL];
+  logic [DataWidth-1:0] rd_dout     [BUFFER_SYMBOL];
 
-  logic                 rd_dv     [BUFFER_SYMBOL];
+  logic                 rd_dv       [BUFFER_SYMBOL];
 
   logic                 ram_dbiterrb[BUFFER_SYMBOL];
   logic                 ram_sbiterrb[BUFFER_SYMBOL];
 
-  logic                 valid_flag[BUFFER_SYMBOL] [2**AddrWidth];
+  logic                 valid_flag  [BUFFER_SYMBOL] [2**AddrWidth];
 
 
   // Write side

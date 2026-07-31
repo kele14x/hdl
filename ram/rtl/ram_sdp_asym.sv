@@ -44,11 +44,12 @@ module ram_sdp_asym #(
 
     assert (MaxWidth % MinWidth == 0)
     else begin
-      $fatal(1, "The wider RAM port width should be an integer multiple of the narrower port width.");
+      $fatal(1,
+             "The wider RAM port width should be an integer multiple of the narrower port width.");
     end
   end
 
-  logic [MinWidth-1:0] MEM [MaxSize];
+  logic [MinWidth-1:0] MEM[MaxSize];
   logic [DATA_WIDTH_B-1:0] regb[READ_LATENCY_B];
 
   initial begin

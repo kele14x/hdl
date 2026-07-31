@@ -266,7 +266,7 @@ module puxch_buffer #(
             .doutb(rd_dout[cc])
         );
 
-     end else begin : g_full
+      end else begin : g_full
 
         // The ping-pong buffer, write side is 8192 x 32-bit
         // The read side is 4096 x 64-bit
@@ -290,7 +290,7 @@ module puxch_buffer #(
             .doutb(rd_dout[cc])
         );
 
-     end
+      end
     end
   endgenerate
 

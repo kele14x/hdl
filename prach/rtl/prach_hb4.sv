@@ -6,27 +6,27 @@ module prach_hb4 #(
     parameter int           DELAY_BASE    = 128,
     parameter signed [17:0] UNIQ_COE  [4] = '{-18'sd669, 18'sd3099, -18'sd9939, 18'sd40231}
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire [15:0] din_dp1,
-    input  wire [15:0] din_dp2,
-    input  wire        din_sf,
-    input  wire        din_sl,
-    input  wire        din_sy,
-    input  wire [ 7:0] din_chn,
-    input  wire        din_dv,
-    input  wire        din_last,
+    input  wire  [15:0] din_dp1,
+    input  wire  [15:0] din_dp2,
+    input  wire         din_sf,
+    input  wire         din_sl,
+    input  wire         din_sy,
+    input  wire  [ 7:0] din_chn,
+    input  wire         din_dv,
+    input  wire         din_last,
     //
-    output logic  [15:0] dout_dq,
-    output wire        dout_sf,
-    output wire        dout_sl,
-    output wire        dout_sy,
-    output wire [ 7:0] dout_chn,
-    output wire        dout_dv,
-    output wire        dout_last,
+    output logic [15:0] dout_dq,
+    output wire         dout_sf,
+    output wire         dout_sl,
+    output wire         dout_sy,
+    output wire  [ 7:0] dout_chn,
+    output wire         dout_dv,
+    output wire         dout_last,
     //
-    input  wire        ctrl_bypass
+    input  wire         ctrl_bypass
 );
 
   // Parameters

@@ -39,16 +39,16 @@ module dds_lut_rom #(
     parameter           DATA_WIDTH = 16,
     parameter           OUTPUT_REG = 1'b1
 ) (
-    input  wire                        clk,
+    input  wire                          clk,
     //
-    input  wire                        rsta,
-    input  wire                        ena,
-    input  wire       [ADDR_WIDTH-1:0] addra,
+    input  wire                          rsta,
+    input  wire                          ena,
+    input  wire         [ADDR_WIDTH-1:0] addra,
     output logic signed [DATA_WIDTH-1:0] douta,
     //
-    input  wire                        rstb,
-    input  wire                        enb,
-    input  wire       [ADDR_WIDTH-1:0] addrb,
+    input  wire                          rstb,
+    input  wire                          enb,
+    input  wire         [ADDR_WIDTH-1:0] addrb,
     output logic signed [DATA_WIDTH-1:0] doutb
 );
 
@@ -71,7 +71,8 @@ module dds_lut_rom #(
   initial begin : p_init
     integer i;
     for (i = 0; i < K; i = i + 1) begin
-      mem[i] = DATA_WIDTH'($rtoi((2 ** (DATA_WIDTH - 1) - 2) * $cos(3.141592653589793 * 2 * i / Factor / K)));
+      mem[i] = DATA_WIDTH
+          '($rtoi((2 ** (DATA_WIDTH - 1) - 2) * $cos(3.141592653589793 * 2 * i / Factor / K)));
     end
   end
 

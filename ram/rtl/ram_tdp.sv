@@ -9,14 +9,14 @@
 `default_nettype none
 
 module ram_tdp #(
-    parameter int                     ADDR_WIDTH     = 10,
-    parameter int                     DATA_WIDTH     = 32,
-    parameter string                  WRITE_MODE_A   = "READ_FIRST", // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
-    parameter string                  WRITE_MODE_B   = "READ_FIRST", // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
-    parameter int                     READ_LATENCY_A = 3,
-    parameter int                     READ_LATENCY_B = 3,
-    parameter bit    [DATA_WIDTH-1:0] INIT_WORD      = '0,
-    parameter string                  INIT_FILE      = ""
+    parameter int ADDR_WIDTH = 10,
+    parameter int DATA_WIDTH = 32,
+    parameter string WRITE_MODE_A = "READ_FIRST",  // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
+    parameter string WRITE_MODE_B = "READ_FIRST",  // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
+    parameter int READ_LATENCY_A = 3,
+    parameter int READ_LATENCY_B = 3,
+    parameter bit [DATA_WIDTH-1:0] INIT_WORD = '0,
+    parameter string INIT_FILE = ""
 ) (
     // Port A
     input var                       clka,
@@ -92,7 +92,7 @@ module ram_tdp #(
         rega[0] <= dina;
       end else if ((wea == 1'b1) && (WRITE_MODE_A == "NO_CHANGE")) begin
         rega[0] <= rega[0];
-      end else begin // no wea, or write mode is "READ_FIRST"
+      end else begin  // no wea, or write mode is "READ_FIRST"
         rega[0] <= MEM[addra];
       end
     end
@@ -108,7 +108,7 @@ module ram_tdp #(
         regb[0] <= dinb;
       end else if ((web == 1'b1) && (WRITE_MODE_B == "NO_CHANGE")) begin
         regb[0] <= regb[0];
-      end else begin // no web, or write mode is "READ_FIRST"
+      end else begin  // no web, or write mode is "READ_FIRST"
         regb[0] <= MEM[addrb];
       end
     end

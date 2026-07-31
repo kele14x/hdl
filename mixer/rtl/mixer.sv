@@ -54,7 +54,7 @@ module mixer #(
 
   function automatic logic [11:0] phase_correct;
     input logic [19:0] phase;
-    input logic [ 7:0] lfsr_round;
+    input logic [7:0] lfsr_round;
     begin
       logic        carry;
       logic [12:0] temp;
@@ -69,25 +69,25 @@ module mixer #(
 
   // Signals
 
-  logic [19:0] ctrl_pinc_s[NUM_ANT];
-  logic [19:0] ctrl_poff_s[NUM_ANT];
+  logic [           19:0] ctrl_pinc_s      [NUM_ANT];
+  logic [           19:0] ctrl_poff_s      [NUM_ANT];
 
-  logic [15:0] din_dr_d;
-  logic [15:0] din_di_d;
+  logic [           15:0] din_dr_d;
+  logic [           15:0] din_di_d;
 
-  logic [15:0] nco_dr;
-  logic [15:0] nco_di;
+  logic [           15:0] nco_dr;
+  logic [           15:0] nco_di;
 
-  logic [19:0] phase      [NUM_ANT];
-  logic [19:0] phase_next;
-  logic [19:0] phase_r;
+  logic [           19:0] phase            [NUM_ANT];
+  logic [           19:0] phase_next;
+  logic [           19:0] phase_r;
   logic [AntSelWidth-1:0] din_chn_sel;
 
-  logic [ 7:0] lfsr_round;
-  logic [11:0] unused_lfsr_tail;
+  logic [            7:0] lfsr_round;
+  logic [           11:0] unused_lfsr_tail;
 
-  logic [11:0] phase_lut;
-  logic        unused_cmult_ovf;
+  logic [           11:0] phase_lut;
+  logic                   unused_cmult_ovf;
 
   // Main
 

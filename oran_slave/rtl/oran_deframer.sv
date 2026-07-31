@@ -117,21 +117,21 @@ module oran_deframer #(
 
   assign defm_ready = 1'b1;
 
-  wire unused_frequency = &{1'b0, 32'(FREQUENCY)};
+  wire                unused_frequency = &{1'b0, 32'(FREQUENCY)};
 
   // AXIS signal
 
-  logic [       63:0] s0_axis_tdata        [NUM_ETHERNET_PORT];
-  logic [        7:0] s0_axis_tkeep        [NUM_ETHERNET_PORT];
-  logic               s0_axis_tvalid       [NUM_ETHERNET_PORT];
-  logic               s0_axis_tlast        [NUM_ETHERNET_PORT];
-  logic               s0_axis_tready       [NUM_ETHERNET_PORT];
-  logic [NumDest-1:0] s0_axis_tuser        [NUM_ETHERNET_PORT];
+  logic [       63:0] s0_axis_tdata                              [NUM_ETHERNET_PORT];
+  logic [        7:0] s0_axis_tkeep                              [NUM_ETHERNET_PORT];
+  logic               s0_axis_tvalid                             [NUM_ETHERNET_PORT];
+  logic               s0_axis_tlast                              [NUM_ETHERNET_PORT];
+  logic               s0_axis_tready                             [NUM_ETHERNET_PORT];
+  logic [NumDest-1:0] s0_axis_tuser                              [NUM_ETHERNET_PORT];
 
-  logic [       63:0] s1_axis_tdata        [ NUM_ANTENNA_PORT] [NUM_CC];
-  logic [        7:0] s1_axis_tkeep        [ NUM_ANTENNA_PORT] [NUM_CC];
-  logic               s1_axis_tvalid       [ NUM_ANTENNA_PORT] [NUM_CC];
-  logic               s1_axis_tlast        [ NUM_ANTENNA_PORT] [NUM_CC];
+  logic [       63:0] s1_axis_tdata                              [ NUM_ANTENNA_PORT] [NUM_CC];
+  logic [        7:0] s1_axis_tkeep                              [ NUM_ANTENNA_PORT] [NUM_CC];
+  logic               s1_axis_tvalid                             [ NUM_ANTENNA_PORT] [NUM_CC];
+  logic               s1_axis_tlast                              [ NUM_ANTENNA_PORT] [NUM_CC];
 
 
   // Per Ethernet channel

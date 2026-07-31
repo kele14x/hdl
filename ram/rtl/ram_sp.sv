@@ -5,12 +5,12 @@
 `default_nettype none
 
 module ram_sp #(
-    parameter int                     ADDR_WIDTH   = 10,
-    parameter int                     DATA_WIDTH   = 32,
-    parameter string                  WRITE_MODE   = "READ_FIRST", // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
-    parameter int                     READ_LATENCY = 2,   // 1 ~ 3
-    parameter bit    [DATA_WIDTH-1:0] INIT_WORD    = '0,
-    parameter string                  INIT_FILE    = ""
+    parameter int ADDR_WIDTH = 10,
+    parameter int DATA_WIDTH = 32,
+    parameter string WRITE_MODE = "READ_FIRST",  // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
+    parameter int READ_LATENCY = 2,  // 1 ~ 3
+    parameter bit [DATA_WIDTH-1:0] INIT_WORD = '0,
+    parameter string INIT_FILE = ""
 ) (
     input var                     clk,
     input var  [READ_LATENCY-1:0] rst,
@@ -25,12 +25,16 @@ module ram_sp #(
   initial begin
     assert (1 <= READ_LATENCY && READ_LATENCY <= 3)
     else begin
-      $fatal(1, "[%m]: Read layency (READ_LATENCY) should be within range 1 to 3, got %d", READ_LATENCY);
+      $fatal(1, "[%m]: Read layency (READ_LATENCY) should be within range 1 to 3, got %d",
+             READ_LATENCY);
     end
 
     assert (WRITE_MODE == "WRITE_FIRST" || WRITE_MODE == "READ_FIRST" || WRITE_MODE == "NO_CHANGE")
     else begin
-      $fatal(1, "[%m]: Write mode (WRITE_MODE) should be one of \"WRITE_FIRST\", \"READ_FIRST\" and \"NO_CHANGE\", got %s", WRITE_MODE);
+      $fatal(
+          1,
+          "[%m]: Write mode (WRITE_MODE) should be one of \"WRITE_FIRST\", \"READ_FIRST\" and \"NO_CHANGE\", got %s",
+          WRITE_MODE);
     end
   end
 
@@ -70,7 +74,7 @@ module ram_sp #(
         rega[0] <= din;
       end else if ((we == 1'b1) && (WRITE_MODE == "NO_CHANGE")) begin
         rega[0] <= rega[0];
-      end else begin // no we, or write mode is "READ_FIRST"
+      end else begin  // no we, or write mode is "READ_FIRST"
         rega[0] <= MEM[addr];
       end
     end

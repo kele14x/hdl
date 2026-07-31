@@ -5,35 +5,35 @@
 module rts_mux #(
     parameter NUM_CC = 12
 ) (
-    input  wire                 clk,
-    input  wire                 rst,
+    input  wire                  clk,
+    input  wire                  rst,
     //
-    input  wire                 sync,
+    input  wire                  sync,
     //
-    input  wire [         31:0] cw_data,
-    input  wire [         31:0] ram0_data,
-    input  wire [         31:0] ram1_data,
-    input  wire [         31:0] ram2_data,
+    input  wire  [         31:0] cw_data,
+    input  wire  [         31:0] ram0_data,
+    input  wire  [         31:0] ram1_data,
+    input  wire  [         31:0] ram2_data,
     //
-    output logic  [NUM_CC*32-1:0] m_axis_tdata,
-    output logic  [          7:0] m_axis_tuser,
-    output wire                 m_axis_tlast,
-    output logic                  m_axis_tvalid,
-    input  wire                 m_axis_tready,
+    output logic [NUM_CC*32-1:0] m_axis_tdata,
+    output logic [          7:0] m_axis_tuser,
+    output wire                  m_axis_tlast,
+    output logic                 m_axis_tvalid,
+    input  wire                  m_axis_tready,
     //
-    input  wire [ NUM_CC*6-1:0] ctrl_src_sel
+    input  wire  [ NUM_CC*6-1:0] ctrl_src_sel
 );
 
   // Parameters
 
   // Signals
 
-  wire [NUM_CC*6-1:0] ctrl_src_sel_s;
+  wire  [NUM_CC*6-1:0] ctrl_src_sel_s;
   wire                 unused_m_axis_tready = m_axis_tready;
-  wire [         5:0] ctrl_src_sel_ch[0:NUM_CC-1];
+  wire  [         5:0] ctrl_src_sel_ch                      [0:NUM_CC-1];
 
-  logic                 sync_d;
-  wire                sync_posedge;
+  logic                sync_d;
+  wire                 sync_posedge;
 
   // Control signals CDC
 

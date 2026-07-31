@@ -21,33 +21,33 @@ module rts_ram_buffer (
 
   parameter NumBlocks = 16;
 
-  logic  [         14:0] mem_addra;
-  logic                  mem_addra_lsb_d;
-  logic                  mem_addra_lsb_dd;
-  logic                  mem_addra_lsb_ddd;
-  logic  [NumBlocks-1:0] mem_ena;
-  logic  [NumBlocks-1:0] mem_ena_d;
-  logic  [NumBlocks-1:0] mem_ena_dd;
-  logic  [NumBlocks-1:0] mem_ena_ddd;
-  logic  [          7:0] mem_wea           [0:NumBlocks-1];
-  logic  [         63:0] mem_dina;
-  wire [         63:0] mem_douta         [0:NumBlocks-1];
-  logic  [         63:0] mem_douta_c;
-  logic  [         31:0] mem_douta_d;
+  logic [         14:0] mem_addra;
+  logic                 mem_addra_lsb_d;
+  logic                 mem_addra_lsb_dd;
+  logic                 mem_addra_lsb_ddd;
+  logic [NumBlocks-1:0] mem_ena;
+  logic [NumBlocks-1:0] mem_ena_d;
+  logic [NumBlocks-1:0] mem_ena_dd;
+  logic [NumBlocks-1:0] mem_ena_ddd;
+  logic [          7:0] mem_wea           [0:NumBlocks-1];
+  logic [         63:0] mem_dina;
+  wire  [         63:0] mem_douta         [0:NumBlocks-1];
+  logic [         63:0] mem_douta_c;
+  logic [         31:0] mem_douta_d;
 
-  logic  [         14:0] mem_addrb;
-  logic                  mem_addrb_lsb_d;
-  logic                  mem_addrb_lsb_dd;
-  logic                  mem_addrb_lsb_ddd;
-  logic  [NumBlocks-1:0] mem_enb;
-  logic  [NumBlocks-1:0] mem_enb_d;
-  logic  [NumBlocks-1:0] mem_enb_dd;
-  logic  [NumBlocks-1:0] mem_enb_ddd;
-  logic  [          7:0] mem_web           [0:NumBlocks-1];
-  logic  [         63:0] mem_dinb;
-  wire [         63:0] mem_doutb         [0:NumBlocks-1];
-  logic  [         63:0] mem_doutb_c;
-  logic  [         31:0] mem_doutb_d;
+  logic [         14:0] mem_addrb;
+  logic                 mem_addrb_lsb_d;
+  logic                 mem_addrb_lsb_dd;
+  logic                 mem_addrb_lsb_ddd;
+  logic [NumBlocks-1:0] mem_enb;
+  logic [NumBlocks-1:0] mem_enb_d;
+  logic [NumBlocks-1:0] mem_enb_dd;
+  logic [NumBlocks-1:0] mem_enb_ddd;
+  logic [          7:0] mem_web           [0:NumBlocks-1];
+  logic [         63:0] mem_dinb;
+  wire  [         63:0] mem_doutb         [0:NumBlocks-1];
+  logic [         63:0] mem_doutb_c;
+  logic [         31:0] mem_doutb_d;
 
   // Port A
 

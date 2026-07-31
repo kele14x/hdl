@@ -25,7 +25,7 @@ module oran_framer_ul_ss_comp (
 
   import oran_pkg::*;
 
-  wire unused_s_axis_tkeep = &{1'b0, s_axis_tkeep};
+  wire         unused_s_axis_tkeep = &{1'b0, s_axis_tkeep};
 
   logic [63:0] s_axis_tdata_reversed;
 
@@ -51,7 +51,7 @@ module oran_framer_ul_ss_comp (
   logic        user_fifo_full;
   logic        user_fifo_empty;
 
-  wire unused_fifo_status = &{1'b0, user_fifo_full, user_fifo_empty};
+  wire         unused_fifo_status = &{1'b0, user_fifo_full, user_fifo_empty};
 
 
   // Register input
@@ -144,12 +144,12 @@ module oran_framer_ul_ss_comp (
       .rst  (rst),
       //
       .din  (fifo_din),
-      .wren(fifo_wr),
+      .wren (fifo_wr),
       .full (user_fifo_full),
       //
       .dout (fifo_dout),
       .empty(user_fifo_empty),
-      .rden(fifo_rd)
+      .rden (fifo_rd)
   );
 
 endmodule

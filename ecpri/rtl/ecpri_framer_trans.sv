@@ -7,29 +7,29 @@
 `default_nettype none
 
 module ecpri_framer_trans (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire [31:0] s_axis_tdata,
-    input  wire [ 3:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
-    input  wire        s_axis_tvalid,
-    output wire        s_axis_tready,
+    input  wire  [31:0] s_axis_tdata,
+    input  wire  [ 3:0] s_axis_tkeep,
+    input  wire         s_axis_tlast,
+    input  wire         s_axis_tvalid,
+    output wire         s_axis_tready,
     //
-    input  wire [ 7:0] s_trans_messagetype,
-    input  wire [15:0] s_trans_payloadsize,
-    input  wire [15:0] s_trans_rtc_pc_id,
+    input  wire  [ 7:0] s_trans_messagetype,
+    input  wire  [15:0] s_trans_payloadsize,
+    input  wire  [15:0] s_trans_rtc_pc_id,
     //
-    output logic  [31:0] m_axis_tdata,
-    output logic  [ 3:0] m_axis_tkeep,
-    output logic         m_axis_tlast,
-    output logic         m_axis_tvalid,
-    input  wire        m_axis_tready,
+    output logic [31:0] m_axis_tdata,
+    output logic [ 3:0] m_axis_tkeep,
+    output logic        m_axis_tlast,
+    output logic        m_axis_tvalid,
+    input  wire         m_axis_tready,
     //
-    input  wire [47:0] ctrl_dest_mac,
-    input  wire [47:0] ctrl_src_mac,
-    input  wire        ctrl_has_vlan,
-    input  wire [15:0] ctrl_vlan_tag
+    input  wire  [47:0] ctrl_dest_mac,
+    input  wire  [47:0] ctrl_src_mac,
+    input  wire         ctrl_has_vlan,
+    input  wire  [15:0] ctrl_vlan_tag
 );
 
   import ecpri_pkg::*;
@@ -58,33 +58,33 @@ module ecpri_framer_trans (
 
   integer state, state_next;
 
-  logic         extra_last;
+  logic        extra_last;
 
-  wire [31:0] int_tdata;
-  wire [ 3:0] int_tkeep;
-  wire        int_tlast;
-  wire        int_tlast_extra;
-  wire        int_tvalid;
-  wire        int_tready;
+  wire  [31:0] int_tdata;
+  wire  [ 3:0] int_tkeep;
+  wire         int_tlast;
+  wire         int_tlast_extra;
+  wire         int_tvalid;
+  wire         int_tready;
 
-  wire [ 7:0] int_trans_messagetype;
-  wire [15:0] int_trans_payloadsize;
-  wire [15:0] int_trans_rtc_pc_id;
+  wire  [ 7:0] int_trans_messagetype;
+  wire  [15:0] int_trans_payloadsize;
+  wire  [15:0] int_trans_rtc_pc_id;
 
-  wire [ 7:0] int_trans_seqid;
-  wire        int_trans_ebit;
-  wire [ 6:0] int_trans_subseqid;
+  wire  [ 7:0] int_trans_seqid;
+  wire         int_trans_ebit;
+  wire  [ 6:0] int_trans_subseqid;
 
-  wire [ 7:0] int_ecpri_messagetype;
-  wire [15:0] int_ecpri_payloadsize;
+  wire  [ 7:0] int_ecpri_messagetype;
+  wire  [15:0] int_ecpri_payloadsize;
 
   // Common Header (4)
-  wire [31:0] common_header;
+  wire  [31:0] common_header;
 
   // Transport Heder (4)
-  wire [31:0] trans_header;
+  wire  [31:0] trans_header;
 
-  logic  [ 7:0] seqid_reg [0:15];
+  logic [ 7:0] seqid_reg             [0:15];
 
   // Main
 
@@ -104,7 +104,7 @@ module ecpri_framer_trans (
 
   initial begin : p_init
     integer i;
-    for(i = 0; i < 16; i = i + 1) begin
+    for (i = 0; i < 16; i = i + 1) begin
       seqid_reg[i] = 8'b0;
     end
   end
@@ -222,45 +222,56 @@ module ecpri_framer_trans (
       extra_last   <= 1'b0;
     end else begin
       case (state)
-      S_IDLE: begin
-        if (int_tvalid) begin
-          // state_next == S_DMACH
-          m_axis_tdata <= byte_reverse(ctrl_dest_mac[47:16]);
-          m_axis_tkeep <= 4'b1111;
-          m_axis_tlast <= 1'b0;
-          extra_last   <= 1'b0;
-        end
-      end
-
-      S_DMACH: begin
-        if (m_axis_tready) begin
-          // state_next == S_DMACL_SMACH
-          m_axis_tdata <= byte_reverse({ctrl_dest_mac[15:0], ctrl_src_mac[47:32]});
-          m_axis_tkeep <= 4'b1111;
-          m_axis_tlast <= 1'b0;
-          extra_last   <= 1'b0;
-        end
-      end
-
-      S_DMACL_SMACH: begin
-        if (m_axis_tready) begin
-          // state_next == S_SMACL
-          m_axis_tdata <= byte_reverse({ctrl_src_mac[31:0]});
-          m_axis_tkeep <= 4'b1111;
-          m_axis_tlast <= 1'b0;
-          extra_last   <= 1'b0;
-        end
-      end
-
-      S_SMACL: begin
-        if (m_axis_tready) begin
-          if (ctrl_has_vlan) begin
-            // state_next == S_VLAN
-            m_axis_tdata <= byte_reverse({ECPRI_ETHERTYPE_VLAN, ctrl_vlan_tag});
+        S_IDLE: begin
+          if (int_tvalid) begin
+            // state_next == S_DMACH
+            m_axis_tdata <= byte_reverse(ctrl_dest_mac[47:16]);
             m_axis_tkeep <= 4'b1111;
             m_axis_tlast <= 1'b0;
             extra_last   <= 1'b0;
-          end else begin
+          end
+        end
+
+        S_DMACH: begin
+          if (m_axis_tready) begin
+            // state_next == S_DMACL_SMACH
+            m_axis_tdata <= byte_reverse({ctrl_dest_mac[15:0], ctrl_src_mac[47:32]});
+            m_axis_tkeep <= 4'b1111;
+            m_axis_tlast <= 1'b0;
+            extra_last   <= 1'b0;
+          end
+        end
+
+        S_DMACL_SMACH: begin
+          if (m_axis_tready) begin
+            // state_next == S_SMACL
+            m_axis_tdata <= byte_reverse({ctrl_src_mac[31:0]});
+            m_axis_tkeep <= 4'b1111;
+            m_axis_tlast <= 1'b0;
+            extra_last   <= 1'b0;
+          end
+        end
+
+        S_SMACL: begin
+          if (m_axis_tready) begin
+            if (ctrl_has_vlan) begin
+              // state_next == S_VLAN
+              m_axis_tdata <= byte_reverse({ECPRI_ETHERTYPE_VLAN, ctrl_vlan_tag});
+              m_axis_tkeep <= 4'b1111;
+              m_axis_tlast <= 1'b0;
+              extra_last   <= 1'b0;
+            end else begin
+              // state_next == S_ETYPE_COMMH
+              m_axis_tdata <= byte_reverse({ECPRI_ETHERTYPE_ECPRI, common_header[31:16]});
+              m_axis_tkeep <= 4'b1111;
+              m_axis_tlast <= 1'b0;
+              extra_last   <= 1'b0;
+            end
+          end
+        end
+
+        S_VLAN: begin
+          if (m_axis_tready) begin
             // state_next == S_ETYPE_COMMH
             m_axis_tdata <= byte_reverse({ECPRI_ETHERTYPE_ECPRI, common_header[31:16]});
             m_axis_tkeep <= 4'b1111;
@@ -268,69 +279,58 @@ module ecpri_framer_trans (
             extra_last   <= 1'b0;
           end
         end
-      end
 
-      S_VLAN: begin
-        if (m_axis_tready) begin
-          // state_next == S_ETYPE_COMMH
-          m_axis_tdata <= byte_reverse({ECPRI_ETHERTYPE_ECPRI, common_header[31:16]});
-          m_axis_tkeep <= 4'b1111;
-          m_axis_tlast <= 1'b0;
-          extra_last   <= 1'b0;
+        S_ETYPE_COMMH: begin
+          if (m_axis_tready) begin
+            // state_next == S_COMML_TRANH
+            m_axis_tdata <= byte_reverse({common_header[15:0], trans_header[31:16]});
+            m_axis_tkeep <= 4'b1111;
+            m_axis_tlast <= 1'b0;
+            extra_last   <= 1'b0;
+          end
         end
-      end
 
-      S_ETYPE_COMMH: begin
-        if (m_axis_tready) begin
-          // state_next == S_COMML_TRANH
-          m_axis_tdata <= byte_reverse({common_header[15:0], trans_header[31:16]});
-          m_axis_tkeep <= 4'b1111;
-          m_axis_tlast <= 1'b0;
-          extra_last   <= 1'b0;
+        S_COMML_TRANH: begin
+          if (m_axis_tready) begin
+            // state_next == S_TRANSL_PAYLOAD0
+            m_axis_tdata <= byte_reverse({trans_header[15:0], int_tdata[15:0]});
+            m_axis_tkeep <= {int_tkeep[3:2], 2'b11};
+            m_axis_tlast <= int_tlast;
+            extra_last   <= int_tlast_extra;
+          end
         end
-      end
 
-      S_COMML_TRANH: begin
-        if (m_axis_tready) begin
-          // state_next == S_TRANSL_PAYLOAD0
-          m_axis_tdata <= byte_reverse({trans_header[15:0], int_tdata[15:0]});
-          m_axis_tkeep <= {int_tkeep[3:2], 2'b11};
-          m_axis_tlast <= int_tlast;
-          extra_last   <= int_tlast_extra;
+        S_TRANSL_PAYLOAD0: begin
+          if (m_axis_tready && extra_last) begin
+            // state_next == S_LAST
+            m_axis_tdata <= byte_reverse(int_tdata);
+            m_axis_tkeep <= {2'b00, int_tkeep[1:0]};
+            m_axis_tlast <= 1'b1;
+            extra_last   <= 1'b0;
+          end else if (m_axis_tready) begin
+            // state_next == S_PAYLOAD
+            m_axis_tdata <= byte_reverse(int_tdata);
+            m_axis_tkeep <= int_tkeep;
+            m_axis_tlast <= int_tlast;
+            extra_last   <= int_tlast_extra;
+          end
         end
-      end
 
-      S_TRANSL_PAYLOAD0: begin
-        if (m_axis_tready && extra_last) begin
-          // state_next == S_LAST
-          m_axis_tdata <= byte_reverse(int_tdata);
-          m_axis_tkeep <= {2'b00, int_tkeep[1:0]};
-          m_axis_tlast <= 1'b1;
-          extra_last   <= 1'b0;
-        end else if (m_axis_tready) begin
-          // state_next == S_PAYLOAD
-          m_axis_tdata <= byte_reverse(int_tdata);
-          m_axis_tkeep <= int_tkeep;
-          m_axis_tlast <= int_tlast;
-          extra_last   <= int_tlast_extra;
+        S_PAYLOAD: begin
+          if (m_axis_tready && extra_last) begin
+            // state_next == S_LAST
+            m_axis_tdata <= byte_reverse(int_tdata);
+            m_axis_tkeep <= {2'b00, int_tkeep[1:0]};
+            m_axis_tlast <= 1'b1;
+            extra_last   <= 1'b0;
+          end else if (m_axis_tready) begin
+            // state_next == S_PAYLOAD
+            m_axis_tdata <= byte_reverse(int_tdata);
+            m_axis_tkeep <= int_tkeep;
+            m_axis_tlast <= int_tlast;
+            extra_last   <= int_tlast_extra;
+          end
         end
-      end
-
-      S_PAYLOAD: begin
-        if (m_axis_tready && extra_last) begin
-          // state_next == S_LAST
-          m_axis_tdata <= byte_reverse(int_tdata);
-          m_axis_tkeep <= {2'b00, int_tkeep[1:0]};
-          m_axis_tlast <= 1'b1;
-          extra_last   <= 1'b0;
-        end else if (m_axis_tready) begin
-          // state_next == S_PAYLOAD
-          m_axis_tdata <= byte_reverse(int_tdata);
-          m_axis_tkeep <= int_tkeep;
-          m_axis_tlast <= int_tlast;
-          extra_last   <= int_tlast_extra;
-        end
-      end
       endcase
     end
   end
@@ -340,96 +340,96 @@ module ecpri_framer_trans (
       m_axis_tvalid <= 1'b0;
     end else begin
       case (state)
-      S_RST: begin
-        // state_next == S_IDLE
-        m_axis_tvalid <= 1'b0;
-      end
-
-      S_IDLE: begin
-        if (int_tvalid) begin
-          // state_next == S_DMACH
-          m_axis_tvalid <= 1'b1;
-        end
-      end
-
-      S_DMACH: begin
-        if (m_axis_tready) begin
-          // state_next == S_DMACL_SMACH
-          m_axis_tvalid <= 1'b1;
-        end
-      end
-
-      S_DMACL_SMACH: begin
-        if (m_axis_tready) begin
-          // state_next == S_SMACL
-          m_axis_tvalid <= 1'b1;
-        end
-      end
-
-      S_SMACL: begin
-        if (m_axis_tready) begin
-          // state_next == S_VLAN/S_ETYPE_COMMH
-          m_axis_tvalid <= 1'b1;
-        end
-      end
-
-      S_VLAN: begin
-        if (m_axis_tready) begin
-          // state_next == S_ETYPE_COMMH
-          m_axis_tvalid <= 1'b1;
-        end
-      end
-
-      S_ETYPE_COMMH: begin
-        if (m_axis_tready) begin
-          // state_next == S_COMML_TRANH
-          m_axis_tvalid <= 1'b1;
-        end
-      end
-
-      S_COMML_TRANH: begin
-        if (m_axis_tready) begin
-          // state_next == S_TRANSL_PAYLOAD0
-          m_axis_tvalid <= 1'b1;
-        end
-      end
-
-      S_TRANSL_PAYLOAD0: begin
-        if (m_axis_tready && extra_last) begin
-          // state_next == S_LAST
-          m_axis_tvalid <= 1'b1;
-        end else if (m_axis_tready && m_axis_tlast) begin
-          // state_next == S_IDLE
-          m_axis_tvalid <= 1'b0;
-        end else if (m_axis_tready) begin
-          // state_next == S_PAYLOAD
-          m_axis_tvalid <= int_tvalid;
-        end
-      end
-
-      S_PAYLOAD: begin
-        if (m_axis_tready && extra_last) begin
-          // state_next == S_LAST
-          m_axis_tvalid <= 1'b1;
-        end else if (m_axis_tready && m_axis_tlast) begin
-          // state_next == S_IDLE
-          m_axis_tvalid <= 1'b0;
-        end else if (m_axis_tready) begin
-          // state_next == S_PAYLOAD
-          m_axis_tvalid <= int_tvalid;
-        end
-      end
-
-      S_LAST: begin
-        if (m_axis_tready) begin
+        S_RST: begin
           // state_next == S_IDLE
           m_axis_tvalid <= 1'b0;
         end
-      end
 
-      default: begin
-        m_axis_tvalid <= 1'b0;
-      end
+        S_IDLE: begin
+          if (int_tvalid) begin
+            // state_next == S_DMACH
+            m_axis_tvalid <= 1'b1;
+          end
+        end
+
+        S_DMACH: begin
+          if (m_axis_tready) begin
+            // state_next == S_DMACL_SMACH
+            m_axis_tvalid <= 1'b1;
+          end
+        end
+
+        S_DMACL_SMACH: begin
+          if (m_axis_tready) begin
+            // state_next == S_SMACL
+            m_axis_tvalid <= 1'b1;
+          end
+        end
+
+        S_SMACL: begin
+          if (m_axis_tready) begin
+            // state_next == S_VLAN/S_ETYPE_COMMH
+            m_axis_tvalid <= 1'b1;
+          end
+        end
+
+        S_VLAN: begin
+          if (m_axis_tready) begin
+            // state_next == S_ETYPE_COMMH
+            m_axis_tvalid <= 1'b1;
+          end
+        end
+
+        S_ETYPE_COMMH: begin
+          if (m_axis_tready) begin
+            // state_next == S_COMML_TRANH
+            m_axis_tvalid <= 1'b1;
+          end
+        end
+
+        S_COMML_TRANH: begin
+          if (m_axis_tready) begin
+            // state_next == S_TRANSL_PAYLOAD0
+            m_axis_tvalid <= 1'b1;
+          end
+        end
+
+        S_TRANSL_PAYLOAD0: begin
+          if (m_axis_tready && extra_last) begin
+            // state_next == S_LAST
+            m_axis_tvalid <= 1'b1;
+          end else if (m_axis_tready && m_axis_tlast) begin
+            // state_next == S_IDLE
+            m_axis_tvalid <= 1'b0;
+          end else if (m_axis_tready) begin
+            // state_next == S_PAYLOAD
+            m_axis_tvalid <= int_tvalid;
+          end
+        end
+
+        S_PAYLOAD: begin
+          if (m_axis_tready && extra_last) begin
+            // state_next == S_LAST
+            m_axis_tvalid <= 1'b1;
+          end else if (m_axis_tready && m_axis_tlast) begin
+            // state_next == S_IDLE
+            m_axis_tvalid <= 1'b0;
+          end else if (m_axis_tready) begin
+            // state_next == S_PAYLOAD
+            m_axis_tvalid <= int_tvalid;
+          end
+        end
+
+        S_LAST: begin
+          if (m_axis_tready) begin
+            // state_next == S_IDLE
+            m_axis_tvalid <= 1'b0;
+          end
+        end
+
+        default: begin
+          m_axis_tvalid <= 1'b0;
+        end
       endcase
     end
   end

@@ -30,28 +30,28 @@ module timer_syncer_390p625 #(
 
   // Signals
 
-  logic  [47:0] second_counter;  // 48-bit second counter
-  logic  [31:0] nanosecond_counter;  // 32-bit nanosecond counter
-  logic  [ 4:0] nanosecond_frac;  // 5-bit nanosecond fraction
+  logic [47:0] second_counter;  // 48-bit second counter
+  logic [31:0] nanosecond_counter;  // 32-bit nanosecond counter
+  logic [ 4:0] nanosecond_frac;  // 5-bit nanosecond fraction
 
-  wire [47:0] second_counter_next;
-  wire [31:0] nanosecond_counter_next;
-  wire [ 4:0] nanosecond_frac_next;
+  wire  [47:0] second_counter_next;
+  wire  [31:0] nanosecond_counter_next;
+  wire  [ 4:0] nanosecond_frac_next;
 
-  wire        nanosecond_counter_wrap;
-  wire [31:0] nanosecond_counter_inc;
-  wire [ 4:0] nanosecond_frac_inc;
+  wire         nanosecond_counter_wrap;
+  wire  [31:0] nanosecond_counter_inc;
+  wire  [ 4:0] nanosecond_frac_inc;
 
-  wire        sync_pulse;
+  wire         sync_pulse;
 
-  wire        pps_sync_eth;
-  wire [47:0] tod_sec_eth;
-  wire [31:0] tod_ns_eth;
+  wire         pps_sync_eth;
+  wire  [47:0] tod_sec_eth;
+  wire  [31:0] tod_ns_eth;
 
-  logic  [31:0] stat_resync_cnt_r;
+  logic [31:0] stat_resync_cnt_r;
 
-  wire cdc_pps_sync_rx_src_ready;
-  wire unused_inputs = &{1'b0, rst, ctrl_rst, cdc_pps_sync_rx_src_ready, 1'b0};
+  wire         cdc_pps_sync_rx_src_ready;
+  wire         unused_inputs = &{1'b0, rst, ctrl_rst, cdc_pps_sync_rx_src_ready, 1'b0};
 
   // Main
 

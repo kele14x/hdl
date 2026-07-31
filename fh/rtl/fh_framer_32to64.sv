@@ -28,23 +28,23 @@ module fh_framer_32to64 #(
     input  wire                  m_axis_tready
 );
 
-  wire [          63:0] s0_axis_tdata;
-  wire [           7:0] s0_axis_tkeep;
-  wire                  s0_axis_tlast;
-  wire                  s0_axis_tvalid;
-  wire                  s0_axis_tready;
+  wire [63:0] s0_axis_tdata;
+  wire [7:0] s0_axis_tkeep;
+  wire s0_axis_tlast;
+  wire s0_axis_tvalid;
+  wire s0_axis_tready;
 
-  wire                  tuser_fifo_full;
-  wire                  tuser_fifo_empty;
-  wire                  axis_fifo_tuser;
-  wire                  unused_status = &{1'b0, tx_eth_rst, tuser_fifo_full, tuser_fifo_empty, axis_fifo_tuser};
+  wire tuser_fifo_full;
+  wire tuser_fifo_empty;
+  wire axis_fifo_tuser;
+  wire unused_status = &{1'b0, tx_eth_rst, tuser_fifo_full, tuser_fifo_empty, axis_fifo_tuser};
 
-  logic                   sync_n;
+  logic sync_n;
 
-  assign s_axis_tready = s0_axis_tready;
-  assign s0_axis_tdata = {32'b0, s_axis_tdata};
-  assign s0_axis_tkeep = {4'b0, s_axis_tkeep};
-  assign s0_axis_tlast = s_axis_tlast;
+  assign s_axis_tready  = s0_axis_tready;
+  assign s0_axis_tdata  = {32'b0, s_axis_tdata};
+  assign s0_axis_tkeep  = {4'b0, s_axis_tkeep};
+  assign s0_axis_tlast  = s_axis_tlast;
   assign s0_axis_tvalid = s_axis_tvalid;
 
   always_ff @(posedge clk) begin

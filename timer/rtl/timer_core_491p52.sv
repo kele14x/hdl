@@ -5,26 +5,26 @@
 module timer_core_491p52 #(
     parameter logic SIM_SPEED_UP = 1'b0
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire        pps_in,
-    output logic         pps_out,
+    input  wire         pps_in,
+    output logic        pps_out,
     //
-    output wire [47:0] tod_sec,
-    output wire [31:0] tod_ns,
+    output wire  [47:0] tod_sec,
+    output wire  [31:0] tod_ns,
     //
-    input  wire        ctrl_clk,
-    input  wire        ctrl_rst,
+    input  wire         ctrl_clk,
+    input  wire         ctrl_rst,
     //
-    input  wire        ctrl_rtc_offset_valid,
-    input  wire [31:0] ctrl_rtc_offset_ns,
-    input  wire [47:0] ctrl_rtc_offset_sec,
+    input  wire         ctrl_rtc_offset_valid,
+    input  wire  [31:0] ctrl_rtc_offset_ns,
+    input  wire  [47:0] ctrl_rtc_offset_sec,
     //
-    input  wire        ctrl_rtc_current_snap,
+    input  wire         ctrl_rtc_current_snap,
     //
-    output wire [31:0] stat_rtc_current_ns,
-    output wire [47:0] stat_rtc_current_sec
+    output wire  [31:0] stat_rtc_current_ns,
+    output wire  [47:0] stat_rtc_current_sec
 );
 
   // Note:
@@ -51,27 +51,27 @@ module timer_core_491p52 #(
 
   // Signals
 
-  logic  [ 1:0] int_timer_state_reg;  // 0, 1, 2
-  logic  [40:0] int_timer_ns_frac_reg;  // 32 bit ns + 9 bit frac
-  wire        int_timer_ns_frac_wrap;
-  logic  [47:0] int_timer_sec_reg;
+  logic [1:0] int_timer_state_reg;  // 0, 1, 2
+  logic [40:0] int_timer_ns_frac_reg;  // 32 bit ns + 9 bit frac
+  wire int_timer_ns_frac_wrap;
+  logic [47:0] int_timer_sec_reg;
 
   wire [31:0] int_timer_ns;
   wire [47:0] int_timer_sec;
 
-  logic  [31:0] timer_ns_pre;
-  logic  [47:0] timer_sec_pre;
+  logic [31:0] timer_ns_pre;
+  logic [47:0] timer_sec_pre;
 
-  logic  [31:0] timer_ns;
-  wire        timer_ns_carry;
-  logic  [47:0] timer_sec;
+  logic [31:0] timer_ns;
+  wire timer_ns_carry;
+  logic [47:0] timer_sec;
 
-  logic         timer_ns_wrap;
-  logic         timer_ns_wrap_d;
+  logic timer_ns_wrap;
+  logic timer_ns_wrap_d;
 
   // control & status
 
-  wire        rtc_current_snap;
+  wire rtc_current_snap;
 
   wire [31:0] rtc_offset_ns;
   wire [47:0] rtc_offset_sec;

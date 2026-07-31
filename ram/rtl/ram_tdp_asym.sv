@@ -27,21 +27,21 @@ module ram_tdp_asym #(
     parameter string  INIT_FILE    = "",
     parameter string  RAM_STYLE    = "AUTO"
 ) (
-    input  wire                    clka,
-    input  wire [  OUTPUT_REG_A:0] rsta,
-    input  wire [  OUTPUT_REG_A:0] ena,
-    input  wire                    wea,
-    input  wire [ADDR_WIDTH_A-1:0] addra,
-    input  wire [DATA_WIDTH_A-1:0] dina,
-    output logic  [DATA_WIDTH_A-1:0] douta,
+    input  wire                     clka,
+    input  wire  [  OUTPUT_REG_A:0] rsta,
+    input  wire  [  OUTPUT_REG_A:0] ena,
+    input  wire                     wea,
+    input  wire  [ADDR_WIDTH_A-1:0] addra,
+    input  wire  [DATA_WIDTH_A-1:0] dina,
+    output logic [DATA_WIDTH_A-1:0] douta,
     //
-    input  wire                    clkb,
-    input  wire [  OUTPUT_REG_B:0] rstb,
-    input  wire [  OUTPUT_REG_B:0] enb,
-    input  wire                    web,
-    input  wire [ADDR_WIDTH_B-1:0] addrb,
-    input  wire [DATA_WIDTH_B-1:0] dinb,
-    output logic  [DATA_WIDTH_B-1:0] doutb
+    input  wire                     clkb,
+    input  wire  [  OUTPUT_REG_B:0] rstb,
+    input  wire  [  OUTPUT_REG_B:0] enb,
+    input  wire                     web,
+    input  wire  [ADDR_WIDTH_B-1:0] addrb,
+    input  wire  [DATA_WIDTH_B-1:0] dinb,
+    output logic [DATA_WIDTH_B-1:0] doutb
 );
 
   // Check parameters
@@ -80,14 +80,14 @@ module ram_tdp_asym #(
   // The Memory
   /* verilator lint_off MULTIDRIVEN */
   (* RAM_STYLE=RAM_STYLE *)
-  logic     [    MinWidth-1:0] mem   [0:MaxSize-1];
+  logic   [    MinWidth-1:0] mem           [0:MaxSize-1];
 
   wire                       ena_s;
   wire                       enb_s;
   wire                       unused_inputs;
 
-  logic     [DATA_WIDTH_A-1:0] rega;
-  logic     [DATA_WIDTH_B-1:0] regb;
+  logic   [DATA_WIDTH_A-1:0] rega;
+  logic   [DATA_WIDTH_B-1:0] regb;
 
   integer                    init_idx;
 

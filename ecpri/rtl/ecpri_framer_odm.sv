@@ -4,30 +4,30 @@
 `default_nettype none
 
 module ecpri_framer_odm (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire        s_axis_tvalid,
-    output wire        s_axis_tready,
+    input  wire         s_axis_tvalid,
+    output wire         s_axis_tready,
     //
-    input  wire [ 7:0] s_odm_measurementid,
-    input  wire [ 7:0] s_odm_actiontype,
-    input  wire [79:0] s_odm_timestamp,
-    input  wire [63:0] s_odm_compensation,
+    input  wire  [ 7:0] s_odm_measurementid,
+    input  wire  [ 7:0] s_odm_actiontype,
+    input  wire  [79:0] s_odm_timestamp,
+    input  wire  [63:0] s_odm_compensation,
     //
-    output logic  [31:0] m_axis_tdata,
-    output logic  [ 3:0] m_axis_tkeep,
-    output logic         m_axis_tlast,
-    output logic  [17:0] m_axis_tuser,
-    output logic         m_axis_tvalid,
-    input  wire        m_axis_tready,
+    output logic [31:0] m_axis_tdata,
+    output logic [ 3:0] m_axis_tkeep,
+    output logic        m_axis_tlast,
+    output logic [17:0] m_axis_tuser,
+    output logic        m_axis_tvalid,
+    input  wire         m_axis_tready,
     //
-    input  wire [47:0] ctrl_dest_mac,
-    input  wire [47:0] ctrl_src_mac,
-    input  wire        ctrl_has_vlan,
-    input  wire [15:0] ctrl_vlan_tag,
+    input  wire  [47:0] ctrl_dest_mac,
+    input  wire  [47:0] ctrl_src_mac,
+    input  wire         ctrl_has_vlan,
+    input  wire  [15:0] ctrl_vlan_tag,
     //
-    input  wire [15:0] ctrl_topology_id
+    input  wire  [15:0] ctrl_topology_id
 );
 
   import ecpri_pkg::*;

@@ -159,7 +159,7 @@ module pps_timer (
   end
 
   // 1e9 = 32'h3B9ACA00
- assign ns_wrap =
+  assign ns_wrap =
    (counter_ns_pre[39:8] == 32'h3B9ACA00) || (counter_ns_pre[39:8] == 32'h3B9ACA01) ||
    (counter_ns_pre[39:8] == 32'h3B9ACA02) || (counter_ns_pre[39:8] == 32'h3B9ACA03) ||
    (counter_ns_pre[39:8] == 32'h3B9ACA04) || (counter_ns_pre[39:8] == 32'h3B9ACA05) ||

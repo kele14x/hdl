@@ -8,20 +8,20 @@ module bit_reverse_stage #(
     parameter LOG_FFT_SIZE = 12,
     parameter DATA_WIDTH   = 16
 ) (
-    input  wire                                              clk,
-    input  wire                                              rst,
+    input  wire                                               clk,
+    input  wire                                               rst,
     // Data input
-    input  wire [                            DATA_WIDTH-1:0] din_dr,
-    input  wire [                            DATA_WIDTH-1:0] din_di,
-    input  wire [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] din_id,
-    input  wire                                              din_valid,
-    input  wire                                              din_last,
+    input  wire  [                            DATA_WIDTH-1:0] din_dr,
+    input  wire  [                            DATA_WIDTH-1:0] din_di,
+    input  wire  [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] din_id,
+    input  wire                                               din_valid,
+    input  wire                                               din_last,
     // Data output
-    output logic  [                            DATA_WIDTH-1:0] dout_dr,
-    output logic  [                            DATA_WIDTH-1:0] dout_di,
-    output logic  [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] dout_id,
-    output logic                                               dout_valid,
-    output logic                                               dout_last
+    output logic [                            DATA_WIDTH-1:0] dout_dr,
+    output logic [                            DATA_WIDTH-1:0] dout_di,
+    output logic [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] dout_id,
+    output logic                                              dout_valid,
+    output logic                                              dout_last
 );
 
   // Swap x_j and x_k, where:
@@ -35,19 +35,19 @@ module bit_reverse_stage #(
 
   // Each stage has a local counter, which counts from 0 to FFT_SIZE-1. Counter
   // synchronize with `din_dr`.
-  logic  [        LOG_FFT_SIZE-1:0] counter;
+  logic [        LOG_FFT_SIZE-1:0] counter;
 
-  wire                            switch;
+  wire                             switch;
 
-  wire [2*DATA_WIDTH+IdWidth+1:0] data_m0;
-  wire [2*DATA_WIDTH+IdWidth+1:0] data_m1;
-  wire [2*DATA_WIDTH+IdWidth+1:0] data_delayed;
+  wire  [2*DATA_WIDTH+IdWidth+1:0] data_m0;
+  wire  [2*DATA_WIDTH+IdWidth+1:0] data_m1;
+  wire  [2*DATA_WIDTH+IdWidth+1:0] data_delayed;
 
-  wire [          DATA_WIDTH-1:0] data_dr_s;
-  wire [          DATA_WIDTH-1:0] data_di_s;
-  wire [             IdWidth-1:0] data_id_s;
-  wire                            data_valid_s;
-  wire                            data_last_s;
+  wire  [          DATA_WIDTH-1:0] data_dr_s;
+  wire  [          DATA_WIDTH-1:0] data_di_s;
+  wire  [             IdWidth-1:0] data_id_s;
+  wire                             data_valid_s;
+  wire                             data_last_s;
 
   // Main
 

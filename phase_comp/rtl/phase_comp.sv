@@ -46,24 +46,24 @@ module phase_comp #(
 
   // Signals
 
-  logic        [          1:0] ctrl_rat_s;
+  logic        [            1:0] ctrl_rat_s;
   logic        [AntSelWidth-1:0] din_chn_sel;
-  wire                          unused_ctrl_rst = ctrl_rst;
+  wire                           unused_ctrl_rst = ctrl_rst;
 
-  logic        [AddrWidth-1:0] din_sym       [NUM_ANT];
-  logic        [AddrWidth-1:0] din_sym_next;
-  logic        [AddrWidth-1:0] din_sym_r;
+  logic        [  AddrWidth-1:0] din_sym                    [NUM_ANT];
+  logic        [  AddrWidth-1:0] din_sym_next;
+  logic        [  AddrWidth-1:0] din_sym_r;
 
-  logic        [AddrWidth-1:0] addrb;
-  logic        [         31:0] doutb;
+  logic        [  AddrWidth-1:0] addrb;
+  logic        [           31:0] doutb;
 
-  logic signed [         15:0] phase_comp_dr;
-  logic signed [         15:0] phase_comp_di;
+  logic signed [           15:0] phase_comp_dr;
+  logic signed [           15:0] phase_comp_di;
 
-  logic signed [         15:0] din_dr_d;
-  logic signed [         15:0] din_di_d;
+  logic signed [           15:0] din_dr_d;
+  logic signed [           15:0] din_di_d;
 
-  logic                        unused_cmult_ovf;
+  logic                          unused_cmult_ovf;
 
   // Main
 

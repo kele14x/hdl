@@ -5,12 +5,12 @@ module util_gpio_gw #(
     parameter integer WIDTH = 4
 ) (
     // Connect to 3-state style GPIO
-    output wire [WIDTH-1:0] gpio_io_i,
-    input  wire [WIDTH-1:0] gpio_io_o,
-    input  wire [WIDTH-1:0] gpio_io_t,
+    output wire  [WIDTH-1:0] gpio_io_i,
+    input  wire  [WIDTH-1:0] gpio_io_o,
+    input  wire  [WIDTH-1:0] gpio_io_t,
     // Bridged signals
-    input  wire [WIDTH-1:0] gpio_in,
-    output logic  [WIDTH-1:0] gpio_out
+    input  wire  [WIDTH-1:0] gpio_in,
+    output logic [WIDTH-1:0] gpio_out
 );
 
   genvar i;

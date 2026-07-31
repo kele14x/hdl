@@ -24,16 +24,16 @@ module pdxch_fdv_buffer_write #(
   logic [127:0] s_axis_tdata_rev;
   logic [127:0] s_axis_tdata_r2;
 
-  logic         addr_msb;
-  logic [  9:0] addr_lsb;
+  logic addr_msb;
+  logic [9:0] addr_lsb;
 
-  logic [  9:0] rx_u_startPrb;
-  logic [  7:0] rx_u_numPrb;
-  logic [  3:0] rx_u_cc;
-  logic         rx_u_sos;
+  logic [9:0] rx_u_startPrb;
+  logic [7:0] rx_u_numPrb;
+  logic [3:0] rx_u_cc;
+  logic rx_u_sos;
 
-  logic         wr_cc_r;
-  logic         wr_en_r;
+  logic wr_cc_r;
+  logic wr_en_r;
   logic [127:0] wr_data_r;
 
   wire unused_inputs = &{1'b0, rst, s_dl_sym_num[11:1], s_axis_tkeep, s_axis_tlast, s_axis_tuser[89:31], s_axis_tuser[26:18], rx_u_numPrb};

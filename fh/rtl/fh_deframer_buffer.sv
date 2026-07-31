@@ -7,29 +7,29 @@ module fh_deframer_buffer #(
     parameter integer FIFO_LATENCY = 3,
     parameter integer USER_WIDTH   = 80
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire                  clk,
+    input  wire                  rst,
     //
-    input  wire [63:0] s_axis_tdata,
-    input  wire [ 7:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
+    input  wire [          63:0] s_axis_tdata,
+    input  wire [           7:0] s_axis_tkeep,
+    input  wire                  s_axis_tlast,
     input  wire [USER_WIDTH-1:0] s_axis_tuser,
-    input  wire        s_axis_tvalid,
+    input  wire                  s_axis_tvalid,
     //
-    output wire [63:0] m_axis_tdata,
-    output wire [ 7:0] m_axis_tkeep,
-    output wire        m_axis_tlast,
+    output wire [          63:0] m_axis_tdata,
+    output wire [           7:0] m_axis_tkeep,
+    output wire                  m_axis_tlast,
     output wire [USER_WIDTH-1:0] m_axis_tuser,
-    output wire        m_axis_tvalid,
-    input  wire        m_axis_tready
+    output wire                  m_axis_tvalid,
+    input  wire                  m_axis_tready
 );
 
-  logic         sync_n;
+  logic sync_n;
 
-  wire        axis_fifo_tuser;
-  wire        axis_fifo_err_discard;
-  wire        tuser_fifo_full;
-  wire        tuser_fifo_empty;
+  wire axis_fifo_tuser;
+  wire axis_fifo_err_discard;
+  wire tuser_fifo_full;
+  wire tuser_fifo_empty;
   wire        unused_fifo_status = &{1'b0, axis_fifo_tuser, axis_fifo_err_discard, tuser_fifo_full, tuser_fifo_empty};
 
   always_ff @(posedge clk) begin

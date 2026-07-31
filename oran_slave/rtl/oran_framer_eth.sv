@@ -44,7 +44,7 @@ module oran_framer_eth #(
   logic [63:0] s_axis_tdata_reversed;
 
   logic [63:0] s_axis_tdata_d;
-  logic [ 7:0] s_axis_tkeep_d;
+  logic [7:0] s_axis_tkeep_d;
 
   wire unused_framer_eth_inputs = &{1'b0, tx_eth_rst, s_axis_tdata_d[63:48], s_axis_tkeep_d[1:0]};
 
@@ -65,23 +65,23 @@ module oran_framer_eth #(
   state_t state, state_next;
 
   logic [63:0] m0_axis_tdata;
-  logic [ 7:0] m0_axis_tkeep;
-  logic        m0_axis_tvalid;
-  logic        m0_axis_tlast;
-  logic        m0_axis_tready;
+  logic [7:0] m0_axis_tkeep;
+  logic m0_axis_tvalid;
+  logic m0_axis_tlast;
+  logic m0_axis_tready;
 
   logic [$clog2(FIFO_DEPTH):0] fifo_wr_data_count;
   logic [$clog2(FIFO_DEPTH):0] fifo_rd_data_count;
-  logic                        fifo_almost_full;
-  logic                        fifo_prog_full;
-  logic                        fifo_m_axis_tdest;
-  logic                        fifo_m_axis_tid;
-  logic [                 7:0] fifo_m_axis_tstrb;
-  logic                        fifo_m_axis_tuser;
-  logic                        fifo_almost_empty;
-  logic                        fifo_prog_empty;
-  logic                        fifo_sbiterr;
-  logic                        fifo_dbiterr;
+  logic fifo_almost_full;
+  logic fifo_prog_full;
+  logic fifo_m_axis_tdest;
+  logic fifo_m_axis_tid;
+  logic [7:0] fifo_m_axis_tstrb;
+  logic fifo_m_axis_tuser;
+  logic fifo_almost_empty;
+  logic fifo_prog_empty;
+  logic fifo_sbiterr;
+  logic fifo_dbiterr;
 
   wire unused_fifo_outputs = &{
     1'b0,
@@ -207,7 +207,8 @@ module oran_framer_eth #(
     end else if (state == S_SMAC1_VLAN) begin
       m0_axis_tdata <= byte_reverse({ctrl_src_mac[31:0], mac_vlan_type, ctrl_vlan_tag});
     end else if (state == S_SMAC1_ETYPE) begin
-      m0_axis_tdata <= byte_reverse({ctrl_src_mac[31:0], mac_ethertype, s_axis_tdata_reversed[63:48]});
+      m0_axis_tdata <=
+          byte_reverse({ctrl_src_mac[31:0], mac_ethertype, s_axis_tdata_reversed[63:48]});
     end else if (state == S_ETYPE) begin
       m0_axis_tdata <= byte_reverse({mac_ethertype, s_axis_tdata_reversed[63:16]});
     end else if (state == S_PAYLOAD6) begin

@@ -42,43 +42,43 @@ module oran_deframer_eth_common (
 
   // Input data
 
-  logic        [ 63:0] s_axis_tdata_reversed;
-  logic        [ 63:0] s_axis_tdata_d;
-  logic        [127:0] s_axis_tdata_c;
+  logic [ 63:0] s_axis_tdata_reversed;
+  logic [ 63:0] s_axis_tdata_d;
+  logic [127:0] s_axis_tdata_c;
 
-  logic        [  7:0] s_axis_tkeep_d;
+  logic [  7:0] s_axis_tkeep_d;
 
   // eCPRI Common Header & Payload
 
-  logic        [  3:0] ecpri_version;  // !no output
-  logic        [  2:0] ecpri_reserved;  // !no output
-  logic                ecpri_concat;  // eCPRI concatenation indicator
-  logic        [  7:0] ecpri_messagetype;  // 0 = IQ, 2 = IQC, 5 = Delay measure
-  logic        [ 15:0] ecpri_payloadsize;
+  logic [  3:0] ecpri_version;  // !no output
+  logic [  2:0] ecpri_reserved;  // !no output
+  logic         ecpri_concat;  // eCPRI concatenation indicator
+  logic [  7:0] ecpri_messagetype;  // 0 = IQ, 2 = IQC, 5 = Delay measure
+  logic [ 15:0] ecpri_payloadsize;
 
-  logic        [ 31:0] ecpri_header;
-  logic                ecpri_header_valid;
+  logic [ 31:0] ecpri_header;
+  logic         ecpri_header_valid;
 
-  logic        [ 63:0] ecpri_payload;
-  logic                ecpri_payload_valid;
+  logic [ 63:0] ecpri_payload;
+  logic         ecpri_payload_valid;
 
-  logic        [  1:0] tdest;
-  logic        [ 79:0] tuser;
+  logic [  1:0] tdest;
+  logic [ 79:0] tuser;
 
   // Parse FSM
 
-  logic        [ 15:0] stat_counter;      // Received message bytes counter
-  logic        [ 15:0] stat_counter_next; // Message
-  logic        [ 15:0] stat_counter_c;    // Message end position
-  logic        [ 15:0] stat_counter_h;    // Message start postion
+  logic [ 15:0] stat_counter;  // Received message bytes counter
+  logic [ 15:0] stat_counter_next;  // Message
+  logic [ 15:0] stat_counter_c;  // Message end position
+  logic [ 15:0] stat_counter_h;  // Message start postion
 
-  logic        [  2:0] stat_payload_shift;
-  logic        [  2:0] stat_header_shift;
+  logic [  2:0] stat_payload_shift;
+  logic [  2:0] stat_header_shift;
 
-  logic                stat_last;  // in-phase last word
-  logic                extra_last;
+  logic         stat_last;  // in-phase last word
+  logic         extra_last;
 
-  wire unused_common_fields = &{1'b0, s_axis_tkeep_d, ecpri_version, ecpri_reserved};
+  wire          unused_common_fields = &{1'b0, s_axis_tkeep_d, ecpri_version, ecpri_reserved};
 
 
   // Get the TKEEP pattern based on the byte ending position
@@ -202,9 +202,9 @@ module oran_deframer_eth_common (
   always_comb begin
     if (s_axis_tvalid && s_axis_tlast) begin
       stat_last = 1'b1;
-    // `stat_counter_c` indicates the end position of the section
-    // This tick is last tick in section when we receive more bytes than `stat_counter_c`
-    // but it should be only 0~7 bytes more. 8+ indicate the last is already generated
+      // `stat_counter_c` indicates the end position of the section
+      // This tick is last tick in section when we receive more bytes than `stat_counter_c`
+      // but it should be only 0~7 bytes more. 8+ indicate the last is already generated
     end else if (s_axis_tvalid && (stat_counter_next >= stat_counter_c) &&
       (stat_counter_next - stat_counter_c < 16'd8)) begin
       stat_last = 1'b1;

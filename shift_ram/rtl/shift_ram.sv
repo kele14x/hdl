@@ -30,14 +30,14 @@
 module shift_ram #(
     parameter integer WIDTH     = 8,
     parameter integer DEPTH     = 8,
-    parameter logic     INPUT_REG = 1'b0
+    parameter logic   INPUT_REG = 1'b0
 ) (
-    input  wire             clk,
-    input  wire             rst,
-    input  wire             cen,
+    input  wire              clk,
+    input  wire              rst,
+    input  wire              cen,
     //
-    input  wire [WIDTH-1:0] din,
-    output logic  [WIDTH-1:0] dout
+    input  wire  [WIDTH-1:0] din,
+    output logic [WIDTH-1:0] dout
 );
 
   // Local parameters
@@ -63,12 +63,12 @@ module shift_ram #(
 
   // Signals
 
-  logic  [AddrWidth-1:0] addra;
-  logic  [AddrWidth-1:0] addrb;
+  logic [AddrWidth-1:0] addra;
+  logic [AddrWidth-1:0] addrb;
 
-  logic  [    WIDTH-1:0] dina;
+  logic [    WIDTH-1:0] dina;
 
-  wire [    WIDTH-1:0] doutb;
+  wire  [    WIDTH-1:0] doutb;
 
   function automatic [AddrWidth-1:0] addr_cast(input integer value);
     addr_cast = value[AddrWidth-1:0] ^ {AddrWidth{|value[31:AddrWidth] & 1'b0}};

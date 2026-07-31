@@ -4,9 +4,9 @@
 
 module delay #(
     parameter integer DATA_WIDTH = 8,
-    parameter integer WIDTH = DATA_WIDTH,
-    parameter integer DEPTH = 8,
-    parameter logic     INIT  = 1'b0
+    parameter integer WIDTH      = DATA_WIDTH,
+    parameter integer DEPTH      = 8,
+    parameter logic   INIT       = 1'b0
 ) (
     input  wire             clk,
     input  wire             rst,

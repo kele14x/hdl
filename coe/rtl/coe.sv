@@ -105,30 +105,30 @@ module coe (
 
   // Signals
 
-  wire        stat_rx_status_cdc;
+  wire stat_rx_status_cdc;
 
-  wire        ctrl_tick_snap;
-  wire        ctrl_tick_clear;
+  wire ctrl_tick_snap;
+  wire ctrl_tick_clear;
 
   // Deframer signals
 
-  wire        ctrl_defm_en;
-  wire        ctrl_defm_reset;
+  wire ctrl_defm_en;
+  wire ctrl_defm_reset;
 
   wire [15:0] ctrl_defm_seq_en;
   wire [95:0] ctrl_defm_seq_id;
 
-  wire [ 8:0] ctrl_defm_ts_offset;
+  wire [8:0] ctrl_defm_ts_offset;
 
   wire [47:0] ctrl_defm_dest_mac;
   wire [47:0] ctrl_defm_src_mac;
-  wire        ctrl_defm_has_vlan;
+  wire ctrl_defm_has_vlan;
   wire [15:0] ctrl_defm_vlan_tag;
 
-  wire        ctrl_defm_src_mac_flt_en;
-  wire        ctrl_defm_dest_mac_flt_en;
+  wire ctrl_defm_src_mac_flt_en;
+  wire ctrl_defm_dest_mac_flt_en;
   wire [47:0] ctrl_defm_src_mac_flt_mask;
-  wire        ctrl_defm_vlan_flt_en;
+  wire ctrl_defm_vlan_flt_en;
   wire [15:0] ctrl_defm_vlan_flt_mask;
 
   wire [31:0] stat_defm_total_pkt_cnt;
@@ -140,16 +140,16 @@ module coe (
 
   // Framer signals
 
-  wire        ctrl_fram_en;
-  wire        ctrl_fram_reset;
+  wire ctrl_fram_en;
+  wire ctrl_fram_reset;
 
   wire [15:0] ctrl_fram_seq_en;
   wire [95:0] ctrl_fram_seq_id;
-  wire [ 7:0] ctrl_fram_seq_cnt;
+  wire [7:0] ctrl_fram_seq_cnt;
 
   wire [47:0] ctrl_fram_dest_mac;
   wire [47:0] ctrl_fram_src_mac;
-  wire        ctrl_fram_has_vlan;
+  wire ctrl_fram_has_vlan;
   wire [15:0] ctrl_fram_vlan_tag;
 
   wire [31:0] stat_fram_total_pkt_cnt;
@@ -159,7 +159,7 @@ module coe (
 
   // ODM signals
 
-  wire        ctrl_odm_en;
+  wire ctrl_odm_en;
   wire [31:0] ctrl_odm_meas_interval;
 
   wire [31:0] stat_ts_diff_ingress_ns;
@@ -177,42 +177,42 @@ module coe (
   // Transaction signals
 
   wire [31:0] m0_axis_tdata;
-  wire [ 3:0] m0_axis_tkeep;
-  wire        m0_axis_tlast;
-  wire        m0_axis_tvalid;
+  wire [3:0] m0_axis_tkeep;
+  wire m0_axis_tlast;
+  wire m0_axis_tvalid;
   //
-  wire        m0_mac_header_valid;
+  wire m0_mac_header_valid;
   wire [47:0] m0_mac_dest_mac;
   wire [47:0] m0_mac_source_mac;
-  wire        m0_mac_with_vlan;
+  wire m0_mac_with_vlan;
   wire [15:0] m0_mac_vlan_tag;
   wire [15:0] m0_mac_ethertype;
 
-  wire        m0_ecpri_header_valid;
-  wire        m0_ecpri_concat;
-  wire [ 7:0] m0_ecpri_messagetype;
+  wire m0_ecpri_header_valid;
+  wire m0_ecpri_concat;
+  wire [7:0] m0_ecpri_messagetype;
   wire [15:0] m0_ecpri_payloadsize;
   //
-  wire        m0_trans_header_valid;
+  wire m0_trans_header_valid;
   wire [15:0] m0_trans_rtc_pc_id;
-  wire [ 7:0] m0_trans_seqid;
-  wire        m0_trans_ebit;
-  wire [ 6:0] m0_trans_subseqid;
+  wire [7:0] m0_trans_seqid;
+  wire m0_trans_ebit;
+  wire [6:0] m0_trans_subseqid;
   //
-  wire        m0_odm_header_valid;
-  wire [ 7:0] m0_odm_measurementid;
-  wire [ 7:0] m0_odm_actiontype;
+  wire m0_odm_header_valid;
+  wire [7:0] m0_odm_measurementid;
+  wire [7:0] m0_odm_actiontype;
   wire [79:0] m0_odm_timestamp;
   wire [63:0] m0_odm_compensation;
   wire [79:0] m0_odm_timestamp2;
 
   wire [31:0] s0_axis_tdata;
-  wire [ 3:0] s0_axis_tkeep;
-  wire        s0_axis_tlast;
-  wire        s0_axis_tvalid;
-  wire        s0_axis_tready;
+  wire [3:0] s0_axis_tkeep;
+  wire s0_axis_tlast;
+  wire s0_axis_tvalid;
+  wire s0_axis_tready;
   //
-  wire [ 7:0] s0_trans_messagetype;
+  wire [7:0] s0_trans_messagetype;
   wire [15:0] s0_trans_payloadsize;
   wire [15:0] s0_trans_rtc_pc_id;
 

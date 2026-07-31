@@ -36,46 +36,45 @@ module fft_bf2 #(
   // Signals
 
   // Counter count from 0 to LOG_FFT_SIZE - 1
-  logic         [             3:0] counter_ch;
-  wire        [             3:0] counter_ch_max;
-  logic         [LOG_FFT_SIZE-1:0] counter;
-  logic                            state;
+  logic        [             3:0] counter_ch;
+  wire         [             3:0] counter_ch_max;
+  logic        [LOG_FFT_SIZE-1:0] counter;
+  logic                           state;
 
-  wire                           first_half_last;
+  wire                            first_half_last;
 
-  logic         [             3:0] counter_ch2;
-  logic         [LOG_FFT_SIZE-1:0] counter2;
-  logic                            state2;
+  logic        [             3:0] counter_ch2;
+  logic        [LOG_FFT_SIZE-1:0] counter2;
+  logic                           state2;
 
-  wire                           sel;
-  wire                           shift;
-  logic                            dv;
-  logic                            ovf_r;
+  wire                            sel;
+  wire                            shift;
+  logic                           dv;
+  logic                           ovf_r;
 
-  logic signed  [    DATA_WIDTH:0] x1r_s;
-  logic signed  [    DATA_WIDTH:0] x1i_s;
+  logic signed [    DATA_WIDTH:0] x1r_s;
+  logic signed [    DATA_WIDTH:0] x1i_s;
 
-  wire signed [  DATA_WIDTH-1:0] x1r;
-  wire signed [  DATA_WIDTH-1:0] x1i;
+  wire signed  [  DATA_WIDTH-1:0] x1r;
+  wire signed  [  DATA_WIDTH-1:0] x1i;
 
-  wire signed [  DATA_WIDTH-1:0] x1r_store;
-  wire signed [  DATA_WIDTH-1:0] x1i_store;
+  wire signed  [  DATA_WIDTH-1:0] x1r_store;
+  wire signed  [  DATA_WIDTH-1:0] x1i_store;
 
-  logic signed  [    DATA_WIDTH:0] x2r_s;
-  logic signed  [    DATA_WIDTH:0] x2i_s;
+  logic signed [    DATA_WIDTH:0] x2r_s;
+  logic signed [    DATA_WIDTH:0] x2i_s;
 
-  logic signed  [  DATA_WIDTH-1:0] x2r;
-  logic signed  [  DATA_WIDTH-1:0] x2i;
+  logic signed [  DATA_WIDTH-1:0] x2r;
+  logic signed [  DATA_WIDTH-1:0] x2i;
 
-  wire signed [  DATA_WIDTH-1:0] x2r_store;
-  wire signed [  DATA_WIDTH-1:0] x2i_store;
+  wire signed  [  DATA_WIDTH-1:0] x2r_store;
+  wire signed  [  DATA_WIDTH-1:0] x2i_store;
 
-  wire        [  DelayWidth-1:0] delay_in;
-  wire        [  DelayWidth-1:0] delay_out;
+  wire         [  DelayWidth-1:0] delay_in;
+  wire         [  DelayWidth-1:0] delay_out;
 
   function automatic signed [DATA_WIDTH-1:0] round_convergent_shift1(
-      input logic signed [DATA_WIDTH:0] value
-  );
+      input logic signed [DATA_WIDTH:0] value);
     logic signed [DATA_WIDTH:0] shifted;
     begin
       shifted = value >>> 1;
@@ -197,15 +196,19 @@ module fft_bf2 #(
     end
   end
 
-  assign x1r_store = (SCALE && ctrl_scale && sel) ?
-      round_convergent_shift1(x1r_s) : x1r_s[DATA_WIDTH-1:0];
-  assign x1i_store = (SCALE && ctrl_scale && sel) ?
-      round_convergent_shift1(x1i_s) : x1i_s[DATA_WIDTH-1:0];
+  assign x1r_store = (SCALE && ctrl_scale && sel) ? round_convergent_shift1(
+      x1r_s
+  ) : x1r_s[DATA_WIDTH-1:0];
+  assign x1i_store = (SCALE && ctrl_scale && sel) ? round_convergent_shift1(
+      x1i_s
+  ) : x1i_s[DATA_WIDTH-1:0];
 
-  assign x2r_store = (SCALE && ctrl_scale && sel) ?
-      round_convergent_shift1(x2r_s) : x2r_s[DATA_WIDTH-1:0];
-  assign x2i_store = (SCALE && ctrl_scale && sel) ?
-      round_convergent_shift1(x2i_s) : x2i_s[DATA_WIDTH-1:0];
+  assign x2r_store = (SCALE && ctrl_scale && sel) ? round_convergent_shift1(
+      x2r_s
+  ) : x2r_s[DATA_WIDTH-1:0];
+  assign x2i_store = (SCALE && ctrl_scale && sel) ? round_convergent_shift1(
+      x2i_s
+  ) : x2i_s[DATA_WIDTH-1:0];
 
   always_ff @(posedge clk) begin
     if (ctrl_bypass) begin

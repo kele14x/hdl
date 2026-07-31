@@ -37,7 +37,7 @@ module rts2_capture #(
     input  wire        s_rx_axis_tvalid
 );
 
-  assign m_axis_s2mm_cmd_tdata  = {{(80-ADDR_WIDTH){1'b0}}, {ADDR_WIDTH{1'b0}}};
+  assign m_axis_s2mm_cmd_tdata  = {{(80 - ADDR_WIDTH) {1'b0}}, {ADDR_WIDTH{1'b0}}};
   assign m_axis_s2mm_cmd_tvalid = 1'b0;
   assign s_axis_s2mm_sts_tready = 1'b1;
   assign m_axis_tdata           = 64'd0;

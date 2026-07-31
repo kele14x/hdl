@@ -3,22 +3,22 @@
 `default_nettype none
 
 module ptp_deframer (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire [31:0] s_axis_tdata,
-    input  wire [ 3:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
-    input  wire [79:0] s_axis_tuser,
-    input  wire        s_axis_tvalid,
-    output logic         s_axis_tready,
+    input  wire  [31:0] s_axis_tdata,
+    input  wire  [ 3:0] s_axis_tkeep,
+    input  wire         s_axis_tlast,
+    input  wire  [79:0] s_axis_tuser,
+    input  wire         s_axis_tvalid,
+    output logic        s_axis_tready,
     //
-    output logic         m_msg_valid,
-    output wire [ 3:0] m_msg_message_type,
-    output wire [15:0] m_msg_sequence_id,
-    output wire [79:0] m_msg_timestamp,
-    output wire [79:0] m_msg_origin_timestamp,
-    output wire [79:0] m_msg_source_port_identity
+    output logic        m_msg_valid,
+    output wire  [ 3:0] m_msg_message_type,
+    output wire  [15:0] m_msg_sequence_id,
+    output wire  [79:0] m_msg_timestamp,
+    output wire  [79:0] m_msg_origin_timestamp,
+    output wire  [79:0] m_msg_source_port_identity
 );
 
   // Parameters
@@ -87,16 +87,16 @@ module ptp_deframer (
 
   integer state, state_next;
 
-  wire [31:0] s_axis_tdata_rev;
-  wire        s_axis_word_valid;
+  wire  [31:0] s_axis_tdata_rev;
+  wire         s_axis_word_valid;
 
-  logic  [79:0] timestamp;
+  logic [79:0] timestamp;
 
-  logic  [ 3:0] message_type;
-  logic  [79:0] source_port_identity;  // {clock_identity, port_number}
-  logic  [15:0] sequence_id;
+  logic [ 3:0] message_type;
+  logic [79:0] source_port_identity;  // {clock_identity, port_number}
+  logic [15:0] sequence_id;
 
-  logic  [79:0] origin_timestamp;
+  logic [79:0] origin_timestamp;
 
 
   // Main
@@ -427,7 +427,7 @@ module ptp_deframer (
 
   // Parser
 
-  assign s_axis_tdata_rev = byte_reverse(s_axis_tdata);
+  assign s_axis_tdata_rev  = byte_reverse(s_axis_tdata);
   assign s_axis_word_valid = s_axis_tvalid && (|s_axis_tkeep);
 
   always_ff @(posedge clk) begin

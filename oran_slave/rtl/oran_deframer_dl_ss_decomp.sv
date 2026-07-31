@@ -24,25 +24,25 @@ module oran_deframer_dl_ss_decomp (
     input var  [ 3:0] ctrl_fs_offset
 );
 
-  logic [ 3:0] ud_iq_width;
+  logic [3:0] ud_iq_width;
 
-  logic        sync;
+  logic sync;
 
   logic [63:0] d0_data;
-  logic [ 3:0] d0_state;
-  logic        d0_valid;
-  logic        d0_sync;
-  logic        d0_last;
+  logic [3:0] d0_state;
+  logic d0_valid;
+  logic d0_sync;
+  logic d0_last;
 
   logic [31:0] fifo_din;
-  logic        fifo_wr;
+  logic fifo_wr;
   logic [31:0] fifo_dout;
-  logic        fifo_rd_pre;
-  logic        fifo_rd;
+  logic fifo_rd_pre;
+  logic fifo_rd;
 
-  logic        gearbox_err_unexpected_tlast;
-  logic        user_fifo_full;
-  logic        user_fifo_empty;
+  logic gearbox_err_unexpected_tlast;
+  logic user_fifo_full;
+  logic user_fifo_empty;
 
   wire unused_decomp_outputs = &{
     1'b0,
@@ -136,12 +136,12 @@ module oran_deframer_dl_ss_decomp (
       .rst  (rst),
       //
       .din  (fifo_din),
-      .wren(fifo_wr),
+      .wren (fifo_wr),
       .full (user_fifo_full),
       //
       .dout (fifo_dout),
       .empty(user_fifo_empty),
-      .rden(fifo_rd)
+      .rden (fifo_rd)
   );
 
 endmodule

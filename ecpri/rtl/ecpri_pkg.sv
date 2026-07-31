@@ -5,8 +5,8 @@
 package ecpri_pkg;
 
   /* verilator lint_off UNUSEDPARAM */
-  localparam [15:0] ECPRI_ETHERTYPE_VLAN  = 16'h8100;
-  localparam [15:0] ECPRI_ETHERTYPE_PTP   = 16'h88F7;
+  localparam [15:0] ECPRI_ETHERTYPE_VLAN = 16'h8100;
+  localparam [15:0] ECPRI_ETHERTYPE_PTP = 16'h88F7;
   localparam [15:0] ECPRI_ETHERTYPE_ECPRI = 16'hAEFE;
   /* verilator lint_on UNUSEDPARAM */
 

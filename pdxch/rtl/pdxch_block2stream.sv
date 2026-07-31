@@ -34,26 +34,26 @@ module pdxch_block2stream #(
   logic [          3:0] din_chn_d;
   logic                 din_dv_d;
 
-  logic [         11:0] wr_cnt_ch   [NUM_ANT];
+  logic [         11:0] wr_cnt_ch                                                [NUM_ANT];
   logic [         11:0] wr_cnt_next;
   logic [AddrWidth-1:0] wr_cnt_r;
 
   logic [AddrWidth-1:0] wr_addr;
-  logic                 wr_en       [NUM_ANT];
+  logic                 wr_en                                                    [NUM_ANT];
   logic [DataWidth-1:0] wr_data;
 
-  logic                 sync        [NUM_ANT];
+  logic                 sync                                                     [NUM_ANT];
 
-  logic                 rd_run      [NUM_ANT];
-  logic [AddrWidth-1:0] rd_addr     [NUM_ANT];
-  logic                 rd_en       [NUM_ANT];
-  logic                 rd_en_d     [NUM_ANT];
-  logic                 rd_en_dd    [NUM_ANT];
-  logic [DataWidth-1:0] rd_data     [NUM_ANT];
+  logic                 rd_run                                                   [NUM_ANT];
+  logic [AddrWidth-1:0] rd_addr                                                  [NUM_ANT];
+  logic                 rd_en                                                    [NUM_ANT];
+  logic                 rd_en_d                                                  [NUM_ANT];
+  logic                 rd_en_dd                                                 [NUM_ANT];
+  logic [DataWidth-1:0] rd_data                                                  [NUM_ANT];
 
-  wire unused_inputs = &{1'b0, din_sl, din_last, m_axis_tready};
+  wire                  unused_inputs = &{1'b0, din_sl, din_last, m_axis_tready};
 
-  logic [         31:0] dout        [NUM_ANT];
+  logic [         31:0] dout                                                     [NUM_ANT];
 
   // Main
 

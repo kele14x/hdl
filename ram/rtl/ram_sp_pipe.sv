@@ -6,12 +6,12 @@
 `default_nettype none
 
 module ram_sp_pipe #(
-    parameter int                     ADDR_WIDTH   = 10,
-    parameter int                     DATA_WIDTH   = 32,
-    parameter string                  WRITE_MODE   = "READ_FIRST", // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
-    parameter int                     READ_LATENCY = 2,
-    parameter bit    [DATA_WIDTH-1:0] INIT_WORD    = '0,
-    parameter string                  INIT_FILE    = ""
+    parameter int ADDR_WIDTH = 10,
+    parameter int DATA_WIDTH = 32,
+    parameter string WRITE_MODE = "READ_FIRST",  // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
+    parameter int READ_LATENCY = 2,
+    parameter bit [DATA_WIDTH-1:0] INIT_WORD = '0,
+    parameter string INIT_FILE = ""
 ) (
     // Port A
     input var                   clk,

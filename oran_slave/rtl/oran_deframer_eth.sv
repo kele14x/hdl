@@ -68,36 +68,36 @@ module oran_deframer_eth #(
   //--------
 
   logic [63:0] s0_axis_tdata;
-  logic [ 7:0] s0_axis_tkeep;
-  logic        s0_axis_tvalid;
-  logic        s0_axis_tlast;
+  logic [7:0] s0_axis_tkeep;
+  logic s0_axis_tvalid;
+  logic s0_axis_tlast;
   logic [79:0] s0_axis_tuser;
 
   logic [63:0] s1_axis_tdata;
-  logic [ 7:0] s1_axis_tkeep;
-  logic        s1_axis_tvalid;
-  logic        s1_axis_tlast;
+  logic [7:0] s1_axis_tkeep;
+  logic s1_axis_tvalid;
+  logic s1_axis_tlast;
   logic [79:0] s1_axis_tuser;
-  logic [ 1:0] s1_axis_tdest;
+  logic [1:0] s1_axis_tdest;
 
   logic [63:0] s2_axis_tdata;
-  logic [ 7:0] s2_axis_tkeep;
-  logic        s2_axis_tvalid;
-  logic        s2_axis_tlast;
-  logic [ 1:0] s2_axis_tdest;
+  logic [7:0] s2_axis_tkeep;
+  logic s2_axis_tvalid;
+  logic s2_axis_tlast;
+  logic [1:0] s2_axis_tdest;
 
   logic [$clog2(FIFO_DEPTH):0] fifo_wr_data_count;
   logic [$clog2(FIFO_DEPTH):0] fifo_rd_data_count;
-  logic                        fifo_s_axis_tready;
-  logic                        fifo_almost_full;
-  logic                        fifo_prog_full;
-  logic                        fifo_m_axis_tid;
-  logic [                 7:0] fifo_m_axis_tstrb;
-  logic                        fifo_m_axis_tuser;
-  logic                        fifo_almost_empty;
-  logic                        fifo_prog_empty;
-  logic                        fifo_sbiterr;
-  logic                        fifo_dbiterr;
+  logic fifo_s_axis_tready;
+  logic fifo_almost_full;
+  logic fifo_prog_full;
+  logic fifo_m_axis_tid;
+  logic [7:0] fifo_m_axis_tstrb;
+  logic fifo_m_axis_tuser;
+  logic fifo_almost_empty;
+  logic fifo_prog_empty;
+  logic fifo_sbiterr;
+  logic fifo_dbiterr;
 
   wire unused_fifo_outputs = &{
     1'b0,
@@ -261,7 +261,7 @@ module oran_deframer_eth #(
       .m_aclk            (internal_bus_clk),
       //
       .m_axis_tdata      (m_axis_tdata),
-      .m_axis_tdest      (m_axis_tuser),      // !rename to TUSER after output
+      .m_axis_tdest      (m_axis_tuser),        // !rename to TUSER after output
       .m_axis_tid        (fifo_m_axis_tid),
       .m_axis_tkeep      (m_axis_tkeep),
       .m_axis_tlast      (m_axis_tlast),

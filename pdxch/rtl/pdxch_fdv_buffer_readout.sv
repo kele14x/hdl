@@ -5,31 +5,31 @@
 module pdxch_fdv_buffer_readout #(
     parameter int NUM_ANT = 4
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     // Timer
-    input  wire        start_of_frame,
-    input  wire        start_of_slot,
-    input  wire [ 1:0] start_of_symbol,
+    input  wire         start_of_frame,
+    input  wire         start_of_slot,
+    input  wire  [ 1:0] start_of_symbol,
     //
-    output wire [12:0] rd_addr        [NUM_ANT],
-    output wire        rd_en          [NUM_ANT],
-    input  wire [31:0] rd_data        [NUM_ANT],
+    output wire  [12:0] rd_addr        [NUM_ANT],
+    output wire         rd_en          [NUM_ANT],
+    input  wire  [31:0] rd_data        [NUM_ANT],
     // Block data output
-    output logic  [15:0] dout_dr,
-    output logic  [15:0] dout_di,
-    output wire        dout_sf,
-    output wire        dout_sl,
-    output wire        dout_sy,
-    output wire [ 3:0] dout_chn,
-    output wire        dout_dv,
-    output wire        dout_last,
+    output logic [15:0] dout_dr,
+    output logic [15:0] dout_di,
+    output wire         dout_sf,
+    output wire         dout_sl,
+    output wire         dout_sy,
+    output wire  [ 3:0] dout_chn,
+    output wire         dout_dv,
+    output wire         dout_last,
     //
-    input  wire [ 3:0] ctrl_en,
-    input  wire [ 1:0] ctrl_rat,
-    input  wire [ 3:0] ctrl_bist,
-    input  wire [ 3:0] ctrl_bw,
-    input  wire [ 8:0] ctrl_nprb
+    input  wire  [ 3:0] ctrl_en,
+    input  wire  [ 1:0] ctrl_rat,
+    input  wire  [ 3:0] ctrl_bist,
+    input  wire  [ 3:0] ctrl_bw,
+    input  wire  [ 8:0] ctrl_nprb
 );
 
   // Control signals
@@ -68,10 +68,10 @@ module pdxch_fdv_buffer_readout #(
   // BIST data
 
   logic [23:0] lfsr;
-  wire unused_lfsr = &{1'b0, lfsr[23:2]};
+  wire         unused_lfsr = &{1'b0, lfsr[23:2]};
 
-  logic        bist_en_c           [NUM_ANT];
-  logic        bist_en_r           [NUM_ANT];
+  logic        bist_en_c                                    [NUM_ANT];
+  logic        bist_en_r                                    [NUM_ANT];
   logic        bist_en_any;
   logic        bist_en_any_d;
 
@@ -81,10 +81,10 @@ module pdxch_fdv_buffer_readout #(
   logic        rd_dv;
 
   logic [12:0] rd_addr_r;
-  logic        rd_en_c             [NUM_ANT];
-  logic        rd_en_r             [NUM_ANT];
-  logic        rd_en_d             [NUM_ANT];
-  logic        rd_en_dd            [NUM_ANT];
+  logic        rd_en_c                                      [NUM_ANT];
+  logic        rd_en_r                                      [NUM_ANT];
+  logic        rd_en_d                                      [NUM_ANT];
+  logic        rd_en_dd                                     [NUM_ANT];
 
   logic [31:0] rd_data_c;
   logic [31:0] rd_data_r;

@@ -15,25 +15,25 @@
 `default_nettype none
 
 module ecpri_deframer_common (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire [31:0] s_axis_tdata,
-    input  wire [ 3:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
-    input  wire [79:0] s_axis_tuser,
-    input  wire        s_axis_tvalid,
+    input  wire  [31:0] s_axis_tdata,
+    input  wire  [ 3:0] s_axis_tkeep,
+    input  wire         s_axis_tlast,
+    input  wire  [79:0] s_axis_tuser,
+    input  wire         s_axis_tvalid,
     //
-    output logic  [31:0] m_axis_tdata,
-    output logic  [ 3:0] m_axis_tkeep,
-    output logic         m_axis_tlast,
-    output logic  [79:0] m_axis_tuser,
-    output logic         m_axis_tvalid,
+    output logic [31:0] m_axis_tdata,
+    output logic [ 3:0] m_axis_tkeep,
+    output logic        m_axis_tlast,
+    output logic [79:0] m_axis_tuser,
+    output logic        m_axis_tvalid,
     // Transport header (eCPRI header)
-    output logic         m_ecpri_header_valid,
-    output logic         m_ecpri_concat,
-    output logic  [ 7:0] m_ecpri_messagetype,
-    output logic  [15:0] m_ecpri_payloadsize
+    output logic        m_ecpri_header_valid,
+    output logic        m_ecpri_concat,
+    output logic [ 7:0] m_ecpri_messagetype,
+    output logic [15:0] m_ecpri_payloadsize
 );
 
   import ecpri_pkg::*;
@@ -46,20 +46,20 @@ module ecpri_deframer_common (
 
   // Input data
 
-  wire [31:0] s_axis_tdata_reversed;
+  wire  [31:0] s_axis_tdata_reversed;
 
   // eCPRI Common Header & Payload
 
-  wire [ 3:0] ecpri_version;  // !no output
-  wire [ 2:0] ecpri_reserved;  // !no output
-  wire        ecpri_concat;  // eCPRI concatenation indicator
-  wire [ 7:0] ecpri_messagetype;  // 0 = IQ, 2 = IQC, 5 = Delay measure
-  wire [15:0] ecpri_payloadsize;
+  wire  [ 3:0] ecpri_version;  // !no output
+  wire  [ 2:0] ecpri_reserved;  // !no output
+  wire         ecpri_concat;  // eCPRI concatenation indicator
+  wire  [ 7:0] ecpri_messagetype;  // 0 = IQ, 2 = IQC, 5 = Delay measure
+  wire  [15:0] ecpri_payloadsize;
 
-  logic  [15:0] payload_counter;  // Received message bytes counter
+  logic [15:0] payload_counter;  // Received message bytes counter
 
-  wire        payload_end;
-  wire        unused_header_fields;
+  wire         payload_end;
+  wire         unused_header_fields;
 
   assign unused_header_fields = &{1'b0, ecpri_version, ecpri_reserved};
 

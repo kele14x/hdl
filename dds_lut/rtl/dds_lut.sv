@@ -33,17 +33,17 @@
 `default_nettype none
 
 module dds_lut #(
-    parameter [8*7-1:0] STRUCTURE    = "AUTO",
-    parameter logic       RASTERIZED   = 1'b0,
-    parameter integer   DATA_WIDTH   = 16,
-    parameter integer   PHASE_WIDTH  = 12,
-    parameter logic       NEGATIVE_COS = 1'b0,
-    parameter logic       NEGATIVE_SIN = 1'b0
+    parameter         [8*7-1:0] STRUCTURE    = "AUTO",
+    parameter logic             RASTERIZED   = 1'b0,
+    parameter integer           DATA_WIDTH   = 16,
+    parameter integer           PHASE_WIDTH  = 12,
+    parameter logic             NEGATIVE_COS = 1'b0,
+    parameter logic             NEGATIVE_SIN = 1'b0
 ) (
-    input  wire                         clk,
-    input  wire                         rst,
+    input  wire                           clk,
+    input  wire                           rst,
     //
-    input  wire       [PHASE_WIDTH-1:0] phase,
+    input  wire         [PHASE_WIDTH-1:0] phase,
     //
     output logic signed [ DATA_WIDTH-1:0] cos_out,
     output logic signed [ DATA_WIDTH-1:0] sin_out
@@ -114,7 +114,8 @@ module dds_lut #(
   //   - When StructureInternal is "FULL", phase could be directly used as address.
   //   - When StructureInternal is "HALF", phase should be reduce to [0, pi)
   //   - When StructureInternal is "QUARTER", phase should be reduce to [0, pi/2)
-  function automatic [AddressWidth-1:0] phase_addr_mapping(input logic [PHASE_WIDTH-1:0] phase_value);
+  function automatic [AddressWidth-1:0] phase_addr_mapping(
+      input logic [PHASE_WIDTH-1:0] phase_value);
     logic [PHASE_WIDTH-1:0] mapped;
     begin
       mapped = phase_value;
@@ -190,7 +191,8 @@ module dds_lut #(
 
   // This function tells when look-up the phase-cosine table, which output
   // should be sign changed. (Phase in range [1/2*pi, 3/2*pi)).
-  function automatic negative_output(input logic [PHASE_WIDTH-1:0] phase_value, input logic negative);
+  function automatic negative_output(input logic [PHASE_WIDTH-1:0] phase_value,
+                                     input logic negative);
     begin
       negative_output = 1'b0;
 

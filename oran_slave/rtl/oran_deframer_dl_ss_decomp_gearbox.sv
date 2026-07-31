@@ -28,7 +28,7 @@ module oran_deframer_dl_ss_decomp_gearbox (
 
   import oran_pkg::*;
 
-  wire unused_s_axis_tkeep = &{1'b0, s_axis_tkeep};
+  wire          unused_s_axis_tkeep = &{1'b0, s_axis_tkeep};
 
   logic         init_n;
   logic         sync_n;

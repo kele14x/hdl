@@ -3,25 +3,25 @@
 `default_nettype none
 
 module fh_framer_padding (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire [63:0] s_axis_tdata,
-    input  wire [ 7:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
-    input  wire [17:0] s_axis_tuser,
-    input  wire        s_axis_tvalid,
-    output wire        s_axis_tready,
+    input  wire  [63:0] s_axis_tdata,
+    input  wire  [ 7:0] s_axis_tkeep,
+    input  wire         s_axis_tlast,
+    input  wire  [17:0] s_axis_tuser,
+    input  wire         s_axis_tvalid,
+    output wire         s_axis_tready,
     //
-    output logic  [63:0] m_axis_tdata,
-    output logic  [ 7:0] m_axis_tkeep,
-    output logic         m_axis_tlast,
-    output wire        m_axis_tuser,
-    output logic         m_axis_tvalid,
-    input  wire        m_axis_tready,
+    output logic [63:0] m_axis_tdata,
+    output logic [ 7:0] m_axis_tkeep,
+    output logic        m_axis_tlast,
+    output wire         m_axis_tuser,
+    output logic        m_axis_tvalid,
+    input  wire         m_axis_tready,
     //
-    output logic  [ 1:0] tx_ptp_1588op,
-    output logic  [15:0] tx_ptp_tag_field
+    output logic [ 1:0] tx_ptp_1588op,
+    output logic [15:0] tx_ptp_tag_field
 );
 
   // Notes:
@@ -32,16 +32,16 @@ module fh_framer_padding (
 
   // Signals
 
-  logic         sync_n;
-  logic  [ 3:0] data_count;
-  logic         is_padding;
+  logic        sync_n;
+  logic [ 3:0] data_count;
+  logic        is_padding;
 
-  wire [63:0] int_axis_tdata;
-  wire [ 7:0] int_axis_tkeep;
-  wire        int_axis_tlast;
-  wire [17:0] int_axis_tuser;
-  wire        int_axis_tvalid;
-  wire        int_axis_tready;
+  wire  [63:0] int_axis_tdata;
+  wire  [ 7:0] int_axis_tkeep;
+  wire         int_axis_tlast;
+  wire  [17:0] int_axis_tuser;
+  wire         int_axis_tvalid;
+  wire         int_axis_tready;
 
   function [63:0] tkeep_null(input [63:0] tdata, input [7:0] tkeep);
     integer i;

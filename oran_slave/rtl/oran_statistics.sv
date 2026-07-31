@@ -78,18 +78,18 @@ module oran_statistics #(
     output var [ 8:0] stat_latest_u_pkt
 );
 
-  logic [ 7:0] frame_cnt;
-  logic        clear_int;
+  logic [7:0] frame_cnt;
+  logic clear_int;
 
-  logic [47:0] total_pkt_cnt_per [NUM_ETHERNET_PORT];
-  logic [47:0] oran_pkt_cnt_per  [NUM_ETHERNET_PORT];
+  logic [47:0] total_pkt_cnt_per[NUM_ETHERNET_PORT];
+  logic [47:0] oran_pkt_cnt_per[NUM_ETHERNET_PORT];
 
-  logic [47:0] ontime_pkt_cnt_per[ NUM_ANTENNA_PORT] [NUM_CC];
-  logic [47:0] early_pkt_cnt_per [ NUM_ANTENNA_PORT] [NUM_CC];
-  logic [47:0] late_pkt_cnt_per  [ NUM_ANTENNA_PORT] [NUM_CC];
+  logic [47:0] ontime_pkt_cnt_per[NUM_ANTENNA_PORT][NUM_CC];
+  logic [47:0] early_pkt_cnt_per[NUM_ANTENNA_PORT][NUM_CC];
+  logic [47:0] late_pkt_cnt_per[NUM_ANTENNA_PORT][NUM_CC];
 
-  logic [ 8:0] earliest_u_pkt_per[ NUM_ANTENNA_PORT] [NUM_CC];
-  logic [ 8:0] latest_u_pkt_per  [ NUM_ANTENNA_PORT] [NUM_CC];
+  logic [8:0] earliest_u_pkt_per[NUM_ANTENNA_PORT][NUM_CC];
+  logic [8:0] latest_u_pkt_per[NUM_ANTENNA_PORT][NUM_CC];
 
   wire unused_statistics_inputs = &{
     1'b0,

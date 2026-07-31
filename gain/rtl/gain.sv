@@ -46,9 +46,9 @@ module gain #(
   logic [GAIN_WIDTH-1:0] ctrl_gain_dr_ch;
   logic [GAIN_WIDTH-1:0] ctrl_gain_di_ch;
 
-  logic unused_cmult_ovf;
-  logic unused_mult_dr_ovf;
-  logic unused_mult_di_ovf;
+  logic                  unused_cmult_ovf;
+  logic                  unused_mult_dr_ovf;
+  logic                  unused_mult_di_ovf;
 
   generate
     if (!COMPLEX) begin : g_unused_real_gain_di

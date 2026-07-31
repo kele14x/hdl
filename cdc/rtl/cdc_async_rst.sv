@@ -1,15 +1,14 @@
 `timescale 1 ns / 1 ps
 //
-`default_nettype none
-(* KEEP_HIERARCHY = "yes" *)
+`default_nettype none (* KEEP_HIERARCHY = "yes" *)
 module cdc_async_rst #(
     parameter int DEST_SYNC_FF    = 4,
     parameter int INIT_SYNC_FF    = 0,
     parameter int RST_ACTIVE_HIGH = 0
 ) (
-    input  wire  src_arst,
-    input  wire  dest_clk,
-    output wire  dest_arst
+    input  wire src_arst,
+    input  wire dest_clk,
+    output wire dest_arst
 );
 
   initial begin : drc_check

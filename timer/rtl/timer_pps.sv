@@ -5,13 +5,13 @@
 module timer_pps #(
     parameter integer FREQ_MODE = 0
 ) (
-    input  wire clk,
-    input  wire rst,
+    input  wire  clk,
+    input  wire  rst,
     //
-    input  wire pps_in,
+    input  wire  pps_in,
     //
-    output logic  pps_out,
-    output logic  pps_pad
+    output logic pps_out,
+    output logic pps_pad
 );
 
   // Parameters

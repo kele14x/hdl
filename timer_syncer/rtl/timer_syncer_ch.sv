@@ -3,9 +3,9 @@
 `default_nettype none
 
 module timer_syncer_ch #(
-    parameter integer FREQ_MODE   = 0, // 0: 156.25 MHz, 1: 312.5 MHz, 2: 390.625 MHz
+    parameter integer FREQ_MODE   = 0,  // 0: 156.25 MHz, 1: 312.5 MHz, 2: 390.625 MHz
     parameter integer SIM_SPEEDUP = 0
-)(
+) (
     input  wire        clk,
     input  wire        rst,
     //

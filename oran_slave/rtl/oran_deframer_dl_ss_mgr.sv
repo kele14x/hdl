@@ -76,18 +76,18 @@ module oran_deframer_dl_ss_mgr #(
 
   // Symbol counter
 
-  logic [8:0] current_symbol;  // 0 ~ 279
+  logic [                      8:0] current_symbol;  // 0 ~ 279
 
   // Misc
 
-  logic [63:0] s_axis_tdata_reversed;
-  logic [63:0] s_axis_tdata_d1;  // also byte reversed
-  logic [63:0] s_axis_tdata_d2;  // also byte reversed
+  logic [                     63:0] s_axis_tdata_reversed;
+  logic [                     63:0] s_axis_tdata_d1;  // also byte reversed
+  logic [                     63:0] s_axis_tdata_d2;  // also byte reversed
 
-  logic        s_axis_tvalid_d;
+  logic                             s_axis_tvalid_d;
 
-  logic [127:0] s_axis_tdata_h;
-  logic [127:0] s_axis_tdata_c;
+  logic [                    127:0] s_axis_tdata_h;
+  logic [                    127:0] s_axis_tdata_c;
 
   logic [$clog2(BUFFER_SYMBOL)-1:0] buffer_rd_bank_d;
 
@@ -137,7 +137,7 @@ module oran_deframer_dl_ss_mgr #(
 
   logic [ 2:0] section_hdr_size;
 
-  logic [ 5:0] iq_bytes; // Bytes per PRB
+  logic [ 5:0] iq_bytes;  // Bytes per PRB
 
   logic [15:0] packet_c_size;  // current section size (including header) in bytes
   logic [15:0] packet_cnt;  // already received number of data in bytes
@@ -155,20 +155,20 @@ module oran_deframer_dl_ss_mgr #(
   logic        section_extra_last;
   logic        section_extra_last_d;
 
-  wire unused_mgr_inputs = &{1'b0, s_axis_tkeep, app_payloadversion, section_reserved};
+  wire         unused_mgr_inputs = &{1'b0, s_axis_tkeep, app_payloadversion, section_reserved};
 
   always_comb begin
-    m_app_numsections     = '0;
-    m_app_sectiontype     = '0;
-    m_app_udcomphdr       = '0;
-    m_app_timeoffset      = '0;
-    m_app_framestructure  = '0;
-    m_app_cplength        = '0;
-    m_section_remask      = '0;
-    m_section_numsymbol   = '0;
-    m_section_ef          = 1'b0;
-    m_section_beamid      = '0;
-    m_section_freqoffset  = '0;
+    m_app_numsections    = '0;
+    m_app_sectiontype    = '0;
+    m_app_udcomphdr      = '0;
+    m_app_timeoffset     = '0;
+    m_app_framestructure = '0;
+    m_app_cplength       = '0;
+    m_section_remask     = '0;
+    m_section_numsymbol  = '0;
+    m_section_ef         = 1'b0;
+    m_section_beamid     = '0;
+    m_section_freqoffset = '0;
   end
 
 
@@ -375,7 +375,7 @@ module oran_deframer_dl_ss_mgr #(
   // Section data
 
   function static [5:0] iq_bytes_lut(input logic [3:0] iq_width);
-    logic [5:0] the_lut [16];
+    logic [5:0] the_lut[16];
     the_lut[0] = 48;
     for (int i = 1; i < 15; i++) begin
       the_lut[i] = 6'(3 * i + 1);
@@ -529,7 +529,12 @@ module oran_deframer_dl_ss_mgr #(
 
   always_ff @(posedge clk) begin
     m_axis_header_tdata <= {
-      m_section_udcomphdr, m_section_sectionid, m_section_rb, m_section_syminc, m_section_startprb, m_section_numprb
+      m_section_udcomphdr,
+      m_section_sectionid,
+      m_section_rb,
+      m_section_syminc,
+      m_section_startprb,
+      m_section_numprb
     };
   end
 

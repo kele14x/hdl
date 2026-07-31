@@ -37,17 +37,17 @@ module fifo_async #(
     parameter integer DATA_WIDTH   = 16
 ) (
     // Common to write and read domain
-    input  wire                  rst,
+    input  wire                   rst,
     // Write interface
-    input  wire                  wr_clk,
-    input  wire                  wr_en,
-    input  wire [DATA_WIDTH-1:0] wr_din,
-    output logic                   wr_full,
+    input  wire                   wr_clk,
+    input  wire                   wr_en,
+    input  wire  [DATA_WIDTH-1:0] wr_din,
+    output logic                  wr_full,
     // Read interface
-    input  wire                  rd_clk,
-    input  wire                  rd_en,
-    output logic  [DATA_WIDTH-1:0] rd_dout,
-    output wire                  rd_empty
+    input  wire                   rd_clk,
+    input  wire                   rd_en,
+    output logic [DATA_WIDTH-1:0] rd_dout,
+    output wire                   rd_empty
 );
 
   // Local parameters
@@ -81,25 +81,25 @@ module fifo_async #(
 
   // Signals
 
-  wire                    wr_rst;
+  wire                     wr_rst;
 
-  logic  [     AddrWidth:0] wr_count;
-  wire [     AddrWidth:0] wr_count_rd;
-  wire [     AddrWidth:0] wr_count_next;
-  wire [   AddrWidth-1:0] wr_addr;
-  wire                    wr_en_mem;
+  logic [     AddrWidth:0] wr_count;
+  wire  [     AddrWidth:0] wr_count_rd;
+  wire  [     AddrWidth:0] wr_count_next;
+  wire  [   AddrWidth-1:0] wr_addr;
+  wire                     wr_en_mem;
 
-  wire                    rd_rst;
+  wire                     rd_rst;
 
-  logic  [     AddrWidth:0] rd_count;
-  wire [     AddrWidth:0] rd_count_wr;
-  wire [     AddrWidth:0] rd_count_next;
-  wire [   AddrWidth-1:0] rd_addr;
-  wire [FIFO_LATENCY-1:0] rd_en_mem;
+  logic [     AddrWidth:0] rd_count;
+  wire  [     AddrWidth:0] rd_count_wr;
+  wire  [     AddrWidth:0] rd_count_next;
+  wire  [   AddrWidth-1:0] rd_addr;
+  wire  [FIFO_LATENCY-1:0] rd_en_mem;
 
-  wire [  DATA_WIDTH-1:0] rd_dout_s;
+  wire  [  DATA_WIDTH-1:0] rd_dout_s;
 
-  logic  [  FIFO_LATENCY:0] valid;
+  logic [  FIFO_LATENCY:0] valid;
 
   genvar i;
 

@@ -3,33 +3,33 @@
 `default_nettype none
 
 module coe_framer_data (
-    input  wire         clk,
-    input  wire         rst,
+    input  wire          clk,
+    input  wire          rst,
     //
-    input  wire         sync,
+    input  wire          sync,
     //
-    input  wire [767:0] s_axis_tdata,
-    input  wire [  7:0] s_axis_tuser,
-    input  wire         s_axis_tlast,
-    input  wire         s_axis_tvalid,
-    output logic          s_axis_tready,
+    input  wire  [767:0] s_axis_tdata,
+    input  wire  [  7:0] s_axis_tuser,
+    input  wire          s_axis_tlast,
+    input  wire          s_axis_tvalid,
+    output logic         s_axis_tready,
     //
-    output wire [ 31:0] m_axis_tdata,
-    output wire [  3:0] m_axis_tkeep,
-    output wire         m_axis_tlast,
-    output wire         m_axis_tvalid,
-    input  wire         m_axis_tready,
+    output wire  [ 31:0] m_axis_tdata,
+    output wire  [  3:0] m_axis_tkeep,
+    output wire          m_axis_tlast,
+    output wire          m_axis_tvalid,
+    input  wire          m_axis_tready,
     //
-    output logic  [ 18:0] m_app_ts,
+    output logic [ 18:0] m_app_ts,
     //
-    output wire [  7:0] m_trans_messagetype,
-    output wire [ 15:0] m_trans_payloadsize,
-    output logic  [ 15:0] m_trans_rtc_pc_id,
+    output wire  [  7:0] m_trans_messagetype,
+    output wire  [ 15:0] m_trans_payloadsize,
+    output logic [ 15:0] m_trans_rtc_pc_id,
     //
-    input  wire         ctrl_en,
-    input  wire [ 15:0] ctrl_seq_en,
-    input  wire [ 95:0] ctrl_seq_id,
-    input  wire [  7:0] ctrl_seq_cnt
+    input  wire          ctrl_en,
+    input  wire  [ 15:0] ctrl_seq_en,
+    input  wire  [ 95:0] ctrl_seq_id,
+    input  wire  [  7:0] ctrl_seq_cnt
 );
 
   // Notes:
@@ -52,51 +52,51 @@ module coe_framer_data (
 
   // Signals
 
-  wire        ctrl_en_s;
-  wire [15:0] ctrl_seq_en_s;
-  wire [95:0] ctrl_seq_id_s;
-  wire [ 7:0] ctrl_seq_cnt_s;
+  wire         ctrl_en_s;
+  wire  [15:0] ctrl_seq_en_s;
+  wire  [95:0] ctrl_seq_id_s;
+  wire  [ 7:0] ctrl_seq_cnt_s;
 
-  logic         sync_d;
-  wire        sync_posedge;
+  logic        sync_d;
+  wire         sync_posedge;
 
-  logic  [22:0] sample_counter;
+  logic [22:0] sample_counter;
 
-  logic  [ 3:0] seq_val;
-  logic  [15:0] seq_counter;
+  logic [ 3:0] seq_val;
+  logic [15:0] seq_counter;
 
-  logic  [ 5:0] seq_id_reg        [0:15];
-  wire [ 5:0] seq_id;
-  logic  [ 5:0] seq_sel;
+  logic [ 5:0] seq_id_reg        [0:15];
+  wire  [ 5:0] seq_id;
+  logic [ 5:0] seq_sel;
 
-  logic  [15:0] seq_valid_reg;
-  wire        seq_valid;
+  logic [15:0] seq_valid_reg;
+  wire         seq_valid;
 
-  logic  [ 4:0] seq_n_valid_c;
-  logic  [ 4:0] seq_n_valid;
-  logic  [ 3:0] seq_last_val;
+  logic [ 4:0] seq_n_valid_c;
+  logic [ 4:0] seq_n_valid;
+  logic [ 3:0] seq_last_val;
 
-  wire        seq_first;
-  wire        seq_last;
+  wire         seq_first;
+  wire         seq_last;
 
-  logic         s0_run;
-  logic         s0_valid;
-  logic         s0_seq_sel        [0:23];
-  logic         s0_last;
+  logic        s0_run;
+  logic        s0_valid;
+  logic        s0_seq_sel        [0:23];
+  logic        s0_last;
 
-  logic  [31:0] s_axis_tdata_d    [0:23];
-  logic  [31:0] s_axis_tdata_dd   [0:23];
+  logic [31:0] s_axis_tdata_d    [0:23];
+  logic [31:0] s_axis_tdata_dd   [0:23];
 
-  logic  [31:0] s0_axis_tdata_rev;
-  logic  [31:0] s0_axis_tdata;
-  wire [ 3:0] s0_axis_tkeep;
-  wire        s0_axis_tlast;
-  wire        s0_axis_tvalid;
+  logic [31:0] s0_axis_tdata_rev;
+  logic [31:0] s0_axis_tdata;
+  wire  [ 3:0] s0_axis_tkeep;
+  wire         s0_axis_tlast;
+  wire         s0_axis_tvalid;
 
-  logic  [18:0] app_ts;
+  logic [18:0] app_ts;
   (* USE_DSP = "NO" *)
-  logic  [11:0] trans_payloadsize;
-  logic  [ 7:0] trans_seqid;
+  logic [11:0] trans_payloadsize;
+  logic [ 7:0] trans_seqid;
 
   genvar gen_i;
 

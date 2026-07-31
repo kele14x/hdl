@@ -6,30 +6,30 @@ module prach_ddc #(
     parameter integer NUM_ANT   = 4,
     parameter integer NUM_STAGE = 6
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire [15:0] din_dr,
-    input  wire [15:0] din_di,
-    input  wire        din_sf,
-    input  wire        din_sl,
-    input  wire        din_sy,
-    input  wire [ 7:0] din_chn,
-    input  wire        din_dv,
-    input  wire        din_last,
+    input  wire  [15:0] din_dr,
+    input  wire  [15:0] din_di,
+    input  wire         din_sf,
+    input  wire         din_sl,
+    input  wire         din_sy,
+    input  wire  [ 7:0] din_chn,
+    input  wire         din_dv,
+    input  wire         din_last,
     //
-    output logic  [15:0] dout_dr,
-    output logic  [15:0] dout_di,
-    output logic         dout_sf,
-    output logic         dout_sl,
-    output logic         dout_sy,
-    output logic  [ 7:0] dout_chn,
-    output logic         dout_dv,
-    output logic         dout_last,
+    output logic [15:0] dout_dr,
+    output logic [15:0] dout_di,
+    output logic        dout_sf,
+    output logic        dout_sl,
+    output logic        dout_sy,
+    output logic [ 7:0] dout_chn,
+    output logic        dout_dv,
+    output logic        dout_last,
     // CSR
     //----
-    input  wire [17:0] ctrl_fcw,
-    input  wire [ 3:0] ctrl_bw
+    input  wire  [17:0] ctrl_fcw,
+    input  wire  [ 3:0] ctrl_bw
 );
 
   // Signals
@@ -50,23 +50,23 @@ module prach_ddc #(
   logic                 mixer_dout_last;
 
   // 8/16/32/64/128/256
-  logic [         15:0] s0_dp1          [NUM_STAGE+1];
-  logic [         15:0] s0_dp2          [NUM_STAGE+1];
-  logic                 s0_sf           [NUM_STAGE+1];
-  logic                 s0_sl           [NUM_STAGE+1];
-  logic                 s0_sy           [NUM_STAGE+1];
-  logic [          7:0] s0_chn          [NUM_STAGE+1];
-  logic                 s0_dv           [NUM_STAGE+1];
-  logic                 s0_last         [NUM_STAGE+1];
+  logic [         15:0] s0_dp1                [NUM_STAGE+1];
+  logic [         15:0] s0_dp2                [NUM_STAGE+1];
+  logic                 s0_sf                 [NUM_STAGE+1];
+  logic                 s0_sl                 [NUM_STAGE+1];
+  logic                 s0_sy                 [NUM_STAGE+1];
+  logic [          7:0] s0_chn                [NUM_STAGE+1];
+  logic                 s0_dv                 [NUM_STAGE+1];
+  logic                 s0_last               [NUM_STAGE+1];
 
-  logic [         15:0] s1_dp1          [  NUM_STAGE];
-  logic [         15:0] s1_dp2          [  NUM_STAGE];
-  logic                 s1_sf           [  NUM_STAGE];
-  logic                 s1_sl           [  NUM_STAGE];
-  logic                 s1_sy           [  NUM_STAGE];
-  logic [          7:0] s1_chn          [  NUM_STAGE];
-  logic                 s1_dv           [  NUM_STAGE];
-  logic                 s1_last         [  NUM_STAGE];
+  logic [         15:0] s1_dp1                [  NUM_STAGE];
+  logic [         15:0] s1_dp2                [  NUM_STAGE];
+  logic                 s1_sf                 [  NUM_STAGE];
+  logic                 s1_sl                 [  NUM_STAGE];
+  logic                 s1_sy                 [  NUM_STAGE];
+  logic [          7:0] s1_chn                [  NUM_STAGE];
+  logic                 s1_dv                 [  NUM_STAGE];
+  logic                 s1_last               [  NUM_STAGE];
 
   logic [         15:0] conv_din_dr;
   logic [         15:0] conv_din_di;
@@ -232,25 +232,25 @@ module prach_ddc #(
             .DELAY_BASE(16),
             .UNIQ_COE  ('{-18'sd4134, 18'sd36901})
         ) u_hb1 (
-            .clk      (clk),
-            .rst      (rst),
+            .clk        (clk),
+            .rst        (rst),
             //
-            .din_dp1  (s1_dp1[i]),
-            .din_dp2  (s1_dp2[i]),
-            .din_sf   (s1_sf[i]),
-            .din_sl   (s1_sl[i]),
-            .din_sy   (s1_sy[i]),
-            .din_chn  (s1_chn[i]),
-            .din_dv   (s1_dv[i]),
-            .din_last (s1_last[i]),
+            .din_dp1    (s1_dp1[i]),
+            .din_dp2    (s1_dp2[i]),
+            .din_sf     (s1_sf[i]),
+            .din_sl     (s1_sl[i]),
+            .din_sy     (s1_sy[i]),
+            .din_chn    (s1_chn[i]),
+            .din_dv     (s1_dv[i]),
+            .din_last   (s1_last[i]),
             //
-            .dout_dq  (s0_dp1[i+1]),
-            .dout_sf  (s0_sf[i+1]),
-            .dout_sl  (s0_sl[i+1]),
-            .dout_sy  (s0_sy[i+1]),
-            .dout_chn (s0_chn[i+1]),
-            .dout_dv  (s0_dv[i+1]),
-            .dout_last(s0_last[i+1]),
+            .dout_dq    (s0_dp1[i+1]),
+            .dout_sf    (s0_sf[i+1]),
+            .dout_sl    (s0_sl[i+1]),
+            .dout_sy    (s0_sy[i+1]),
+            .dout_chn   (s0_chn[i+1]),
+            .dout_dv    (s0_dv[i+1]),
+            .dout_last  (s0_last[i+1]),
             //
             .ctrl_bypass(ctrl_bypass[i])
         );

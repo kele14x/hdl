@@ -6,28 +6,28 @@ module prach_fft #(
     parameter int FFT_SIZE   = 1536,
     parameter int DATA_WIDTH = 16
 ) (
-    input  wire                         clk,
-    input  wire                         rst,
+    input  wire                          clk,
+    input  wire                          rst,
     //
-    input  wire signed [DATA_WIDTH-1:0] din_dr,
-    input  wire signed [DATA_WIDTH-1:0] din_di,
-    input  wire                         din_sf,
-    input  wire                         din_sl,
-    input  wire                         din_sy,
-    input  wire        [           1:0] din_chn,
-    input  wire                         din_dv,
-    input  wire                         din_last,
+    input  wire signed  [DATA_WIDTH-1:0] din_dr,
+    input  wire signed  [DATA_WIDTH-1:0] din_di,
+    input  wire                          din_sf,
+    input  wire                          din_sl,
+    input  wire                          din_sy,
+    input  wire         [           1:0] din_chn,
+    input  wire                          din_dv,
+    input  wire                          din_last,
     //
-    output logic signed  [DATA_WIDTH-1:0] dout_dr,
-    output logic signed  [DATA_WIDTH-1:0] dout_di,
-    output wire                         dout_sf,
-    output wire                         dout_sl,
-    output wire                         dout_sy,
-    output wire        [           1:0] dout_chn,
-    output logic                          dout_dv,
-    output logic                          dout_last,
+    output logic signed [DATA_WIDTH-1:0] dout_dr,
+    output logic signed [DATA_WIDTH-1:0] dout_di,
+    output wire                          dout_sf,
+    output wire                          dout_sl,
+    output wire                          dout_sy,
+    output wire         [           1:0] dout_chn,
+    output logic                         dout_dv,
+    output logic                         dout_last,
     //
-    output logic                          ovf
+    output logic                         ovf
 );
 
   // Parameters
@@ -54,9 +54,9 @@ module prach_fft #(
   logic signed [  DATA_WIDTH-1:0] din_di_r;
   logic                           din_dv_r;
 
-  logic signed [DataWidthInt-1:0] s0_dr      [NumFftStage+1];
-  logic signed [DataWidthInt-1:0] s0_di      [NumFftStage+1];
-  logic                           s0_dv      [NumFftStage+1];
+  logic signed [DataWidthInt-1:0] s0_dr    [NumFftStage+1];
+  logic signed [DataWidthInt-1:0] s0_di    [NumFftStage+1];
+  logic                           s0_dv    [NumFftStage+1];
 
   logic        [ NumFftStage-1:0] s0_ovf;
 
@@ -64,15 +64,15 @@ module prach_fft #(
 
   // Input register
   always_ff @(posedge clk) begin
-    din_dr_r   <= $signed(din_dr);
-    din_di_r   <= $signed(din_di);
-    din_dv_r   <= din_dv;
+    din_dr_r <= $signed(din_dr);
+    din_di_r <= $signed(din_di);
+    din_dv_r <= din_dv;
   end
 
   // Connect input
-  assign s0_dr[0]   = {{(DataWidthInt-DATA_WIDTH){din_dr_r[DATA_WIDTH-1]}}, din_dr_r};
-  assign s0_di[0]   = {{(DataWidthInt-DATA_WIDTH){din_di_r[DATA_WIDTH-1]}}, din_di_r};
-  assign s0_dv[0]   = din_dv_r;
+  assign s0_dr[0] = {{(DataWidthInt - DATA_WIDTH) {din_dr_r[DATA_WIDTH-1]}}, din_dr_r};
+  assign s0_di[0] = {{(DataWidthInt - DATA_WIDTH) {din_di_r[DATA_WIDTH-1]}}, din_di_r};
+  assign s0_dv[0] = din_dv_r;
 
   generate
     for (genvar i = 0; i < NumFftStage; i++) begin : g_left_dit2
@@ -82,18 +82,18 @@ module prach_fft #(
         prach_fft_ditfft3 #(
             .DATA_WIDTH(DataWidthInt)
         ) u_ditfft3 (
-            .clk      (clk),
-            .rst      (rst),
+            .clk    (clk),
+            .rst    (rst),
             //
-            .din_dr   (s0_dr[i]),
-            .din_di   (s0_di[i]),
-            .din_dv   (s0_dv[i]),
+            .din_dr (s0_dr[i]),
+            .din_di (s0_di[i]),
+            .din_dv (s0_dv[i]),
             //
-            .dout_dr  (s0_dr[i+1]),
-            .dout_di  (s0_di[i+1]),
-            .dout_dv  (s0_dv[i+1]),
+            .dout_dr(s0_dr[i+1]),
+            .dout_di(s0_di[i+1]),
+            .dout_dv(s0_dv[i+1]),
             //
-            .ovf      (s0_ovf[i])
+            .ovf    (s0_ovf[i])
         );
 
       end else begin : g_left
@@ -103,18 +103,18 @@ module prach_fft #(
             .DATA_WIDTH(DataWidthInt),
             .SCALE     (i % 2 == 1)
         ) u_ditfft2 (
-            .clk      (clk),
-            .rst      (rst),
+            .clk    (clk),
+            .rst    (rst),
             //
-            .din_dr   (s0_dr[i]),
-            .din_di   (s0_di[i]),
-            .din_dv   (s0_dv[i]),
+            .din_dr (s0_dr[i]),
+            .din_di (s0_di[i]),
+            .din_dv (s0_dv[i]),
             //
-            .dout_dr  (s0_dr[i+1]),
-            .dout_di  (s0_di[i+1]),
-            .dout_dv  (s0_dv[i+1]),
+            .dout_dr(s0_dr[i+1]),
+            .dout_di(s0_di[i+1]),
+            .dout_dv(s0_dv[i+1]),
             //
-            .ovf      (s0_ovf[i])
+            .ovf    (s0_ovf[i])
         );
 
       end
@@ -122,9 +122,9 @@ module prach_fft #(
   endgenerate
 
   always_ff @(posedge clk) begin
-    dout_dr   <= saturate(s0_dr[NumFftStage]);
-    dout_di   <= saturate(s0_di[NumFftStage]);
-    dout_dv   <= s0_dv[NumFftStage];
+    dout_dr <= saturate(s0_dr[NumFftStage]);
+    dout_di <= saturate(s0_di[NumFftStage]);
+    dout_dv <= s0_dv[NumFftStage];
   end
 
   always_ff @(posedge clk) begin

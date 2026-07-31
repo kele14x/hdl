@@ -3,18 +3,18 @@
 `default_nettype none
 
 module rts_cw (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire        sync,
+    input  wire         sync,
     //
-    output logic  [15:0] cw_cos,
-    output logic  [15:0] cw_sin,
+    output logic [15:0] cw_cos,
+    output logic [15:0] cw_sin,
     //
-    input  wire [19:0] ctrl_cw0_freq,
-    input  wire [15:0] ctrl_cw0_pow,
-    input  wire [19:0] ctrl_cw1_freq,
-    input  wire [15:0] ctrl_cw1_pow
+    input  wire  [19:0] ctrl_cw0_freq,
+    input  wire  [15:0] ctrl_cw0_pow,
+    input  wire  [19:0] ctrl_cw1_freq,
+    input  wire  [15:0] ctrl_cw1_pow
 );
 
   wire        [19:0] ctrl_cw0_freq_s;
@@ -34,10 +34,10 @@ module rts_cw (
   wire signed [15:0] cw1_cos_gain;
   wire signed [15:0] cw1_sin_gain;
 
-  wire unused_gain0_cos_ovf;
-  wire unused_gain0_sin_ovf;
-  wire unused_gain1_cos_ovf;
-  wire unused_gain1_sin_ovf;
+  wire               unused_gain0_cos_ovf;
+  wire               unused_gain0_sin_ovf;
+  wire               unused_gain1_cos_ovf;
+  wire               unused_gain1_sin_ovf;
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),

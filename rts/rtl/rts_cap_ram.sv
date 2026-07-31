@@ -3,36 +3,36 @@
 `default_nettype none
 
 module rts_cap_ram (
-    input  wire        clk,
-    input  wire        clk_l,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         clk_l,
+    input  wire         rst,
     //
-    input  wire        sync,
+    input  wire         sync,
     //
-    input  wire [31:0] s_axis_tdata,
-    input  wire [ 7:0] s_axis_tuser,
-    input  wire        s_axis_tlast,
-    input  wire        s_axis_tvalid,
+    input  wire  [31:0] s_axis_tdata,
+    input  wire  [ 7:0] s_axis_tuser,
+    input  wire         s_axis_tlast,
+    input  wire         s_axis_tvalid,
     //
-    input  wire        ctrl_clk,
-    input  wire        ctrl_rst,
+    input  wire         ctrl_clk,
+    input  wire         ctrl_rst,
     //
-    input  wire        ctrl_cap_trigger,
-    input  wire        ctrl_cap_force,
-    input  wire [ 1:0] ctrl_cap_mode,
-    input  wire [18:0] ctrl_cap_offset,
-    input  wire [ 4:0] ctrl_cap_len,
+    input  wire         ctrl_cap_trigger,
+    input  wire         ctrl_cap_force,
+    input  wire  [ 1:0] ctrl_cap_mode,
+    input  wire  [18:0] ctrl_cap_offset,
+    input  wire  [ 4:0] ctrl_cap_len,
     //
-    output logic         stat_cap_status,
+    output logic        stat_cap_status,
     //
-    input  wire [ 3:0] ctrl_ram_addr_msb,
+    input  wire  [ 3:0] ctrl_ram_addr_msb,
     //
-    input  wire [12:0] ctrl_ram_addr,
-    input  wire        ctrl_ram_en,
-    input  wire        ctrl_ram_we,
-    input  wire [31:0] ctrl_ram_din,
-    output wire [31:0] ctrl_ram_dout,
-    output logic         ctrl_ram_valid
+    input  wire  [12:0] ctrl_ram_addr,
+    input  wire         ctrl_ram_en,
+    input  wire         ctrl_ram_we,
+    input  wire  [31:0] ctrl_ram_din,
+    output wire  [31:0] ctrl_ram_dout,
+    output logic        ctrl_ram_valid
 );
 
   // Parameters
@@ -49,37 +49,37 @@ module rts_cap_ram (
 
   integer state, state_next;
 
-  wire                 ctrl_cap_trigger_s;
-  wire                 ctrl_cap_force_s;
-  wire [          1:0] ctrl_cap_mode_s;
-  wire [         18:0] ctrl_cap_offset_s;
-  wire [          4:0] ctrl_cap_len_s;
+  wire                  ctrl_cap_trigger_s;
+  wire                  ctrl_cap_force_s;
+  wire  [          1:0] ctrl_cap_mode_s;
+  wire  [         18:0] ctrl_cap_offset_s;
+  wire  [          4:0] ctrl_cap_len_s;
 
-  logic                  state_is_idle;
-  wire                 state_is_idle_s;
+  logic                 state_is_idle;
+  wire                  state_is_idle_s;
 
-  logic                  sync_d;
-  wire                 sync_posedge;
-  logic                  sync_req;
+  logic                 sync_d;
+  wire                  sync_posedge;
+  logic                 sync_req;
 
-  logic  [          3:0] seq_counter;
-  logic  [          3:0] seq_counter_d;
-  logic  [         18:0] offset_counter;
-  logic  [         18:0] offset_counter_next;
-  logic                  offset_start;
+  logic [          3:0] seq_counter;
+  logic [          3:0] seq_counter_d;
+  logic [         18:0] offset_counter;
+  logic [         18:0] offset_counter_next;
+  logic                 offset_start;
 
-  logic  [         31:0] s_axis_tdata_d;
+  logic [         31:0] s_axis_tdata_d;
 
-  logic                  ram_wea;
-  logic  [AddrWidth-1:0] ram_addra;
-  logic  [DataWidth-1:0] ram_dina;
+  logic                 ram_wea;
+  logic [AddrWidth-1:0] ram_addra;
+  logic [DataWidth-1:0] ram_dina;
 
-  logic                  ram_addr_done;
+  logic                 ram_addr_done;
 
-  logic                  ctrl_ram_en_d;
+  logic                 ctrl_ram_en_d;
 
-  wire                 unused_s_axis_meta = |{s_axis_tuser[7:1], s_axis_tlast};
-  wire                 unused_ctrl_ram_write = |{ctrl_ram_we, ctrl_ram_din};
+  wire                  unused_s_axis_meta = |{s_axis_tuser[7:1], s_axis_tlast};
+  wire                  unused_ctrl_ram_write = |{ctrl_ram_we, ctrl_ram_din};
 
   // Control signals CDC
 

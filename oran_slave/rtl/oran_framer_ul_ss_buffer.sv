@@ -28,17 +28,17 @@ module oran_framer_ul_ss_buffer #(
 
   logic [$clog2(FifoDepth):0] fifo_wr_data_count;
   logic [$clog2(FifoDepth):0] fifo_rd_data_count;
-  logic                       fifo_s_axis_tready;
-  logic                       fifo_almost_full;
-  logic                       fifo_prog_full;
-  logic                       fifo_m_axis_tdest;
-  logic                       fifo_m_axis_tid;
-  logic [                7:0] fifo_m_axis_tstrb;
-  logic                       fifo_m_axis_tuser;
-  logic                       fifo_almost_empty;
-  logic                       fifo_prog_empty;
-  logic                       fifo_sbiterr;
-  logic                       fifo_dbiterr;
+  logic fifo_s_axis_tready;
+  logic fifo_almost_full;
+  logic fifo_prog_full;
+  logic fifo_m_axis_tdest;
+  logic fifo_m_axis_tid;
+  logic [7:0] fifo_m_axis_tstrb;
+  logic fifo_m_axis_tuser;
+  logic fifo_almost_empty;
+  logic fifo_prog_empty;
+  logic fifo_sbiterr;
+  logic fifo_dbiterr;
 
   wire unused_fifo_outputs = &{
     1'b0,

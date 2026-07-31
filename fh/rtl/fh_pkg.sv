@@ -4,8 +4,8 @@
 
 package fh_pkg;
 
-  localparam [15:0] EtherTypeVlan  = 16'h8100;
-  localparam [15:0] EtherTypePtp   = 16'h88F7;
+  localparam [15:0] EtherTypeVlan = 16'h8100;
+  localparam [15:0] EtherTypePtp = 16'h88F7;
   localparam [15:0] EtherTypeEcpri = 16'hAEFE;
 
   function automatic [63:0] byte_reverse64(input logic [63:0] data);

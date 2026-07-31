@@ -43,7 +43,7 @@ module oran_deframer_dl_ss_readout (
 
   logic m_axis_tvalid_s;
 
-  wire unused_m_axis_tready = &{1'b0, m_axis_tready};
+  wire  unused_m_axis_tready = &{1'b0, m_axis_tready};
 
   typedef enum int {
     S_RST,     // Under reset
@@ -254,7 +254,12 @@ module oran_deframer_dl_ss_readout (
   always_ff @(posedge clk) begin
     if (state == S_CHK_HDR && section_valid) begin
       m_axis_tuser <= {
-        section_udcomphdr, section_sectionid, section_rb, section_syminc, section_startprbu, section_numprbu
+        section_udcomphdr,
+        section_sectionid,
+        section_rb,
+        section_syminc,
+        section_startprbu,
+        section_numprbu
       };
     end
   end

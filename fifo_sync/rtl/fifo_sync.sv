@@ -38,7 +38,8 @@ module fifo_sync #(
   initial begin : drc_check
     assert (4 <= FIFO_DEPTH && FIFO_DEPTH <= 32768 && (FIFO_DEPTH & (FIFO_DEPTH - 1)) == 0)
     else begin
-      $fatal(1, "FIFO_DEPTH must be a power of two within the range 4 to 32768, got %0d.", FIFO_DEPTH);
+      $fatal(1, "FIFO_DEPTH must be a power of two within the range 4 to 32768, got %0d.",
+             FIFO_DEPTH);
     end
 
     assert (1 <= FIFO_LATENCY && FIFO_LATENCY <= 3)

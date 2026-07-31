@@ -790,42 +790,42 @@ module lowphy1 (
 
   // Signals
 
-  logic [31:0] m0_axis_tdata        [NumCc][4];
-  logic [ 7:0] m0_axis_tuser        [NumCc][4];
-  logic        m0_axis_tlast        [NumCc][4];
-  logic        m0_axis_tvalid       [NumCc][4];
-  logic        m0_axis_tready       [NumCc][4];
+  logic [31:0] m0_axis_tdata [NumCc][4];
+  logic [ 7:0] m0_axis_tuser [NumCc][4];
+  logic        m0_axis_tlast [NumCc][4];
+  logic        m0_axis_tvalid[NumCc][4];
+  logic        m0_axis_tready[NumCc][4];
 
-  logic [31:0] s0_axis_tdata        [NumCc][4];
-  logic [ 7:0] s0_axis_tuser        [NumCc][4];
-  logic        s0_axis_tlast        [NumCc][4];
-  logic        s0_axis_tvalid       [NumCc][4];
-  logic        s0_axis_tready       [NumCc][4];
+  logic [31:0] s0_axis_tdata [NumCc][4];
+  logic [ 7:0] s0_axis_tuser [NumCc][4];
+  logic        s0_axis_tlast [NumCc][4];
+  logic        s0_axis_tvalid[NumCc][4];
+  logic        s0_axis_tready[NumCc][4];
 
 
-  logic [31:0] m1_axis_tdata        [NumCc][2];
-  logic [ 7:0] m1_axis_tuser        [NumCc][2];
-  logic        m1_axis_tlast        [NumCc][2];
-  logic        m1_axis_tvalid       [NumCc][2];
-  logic        m1_axis_tready       [NumCc][2];
+  logic [31:0] m1_axis_tdata [NumCc][2];
+  logic [ 7:0] m1_axis_tuser [NumCc][2];
+  logic        m1_axis_tlast [NumCc][2];
+  logic        m1_axis_tvalid[NumCc][2];
+  logic        m1_axis_tready[NumCc][2];
 
-  logic [31:0] s1_axis_tdata        [NumCc][2];
-  logic [ 7:0] s1_axis_tuser        [NumCc][2];
-  logic        s1_axis_tlast        [NumCc][2];
-  logic        s1_axis_tvalid       [NumCc][2];
-  logic        s1_axis_tready       [NumCc][2];
+  logic [31:0] s1_axis_tdata [NumCc][2];
+  logic [ 7:0] s1_axis_tuser [NumCc][2];
+  logic        s1_axis_tlast [NumCc][2];
+  logic        s1_axis_tvalid[NumCc][2];
+  logic        s1_axis_tready[NumCc][2];
 
-  logic [31:0] m2_axis_tdata        [NumCc][2];
-  logic [ 7:0] m2_axis_tuser        [NumCc][2];
-  logic        m2_axis_tlast        [NumCc][2];
-  logic        m2_axis_tvalid       [NumCc][2];
-  logic        m2_axis_tready       [NumCc][2];
+  logic [31:0] m2_axis_tdata [NumCc][2];
+  logic [ 7:0] m2_axis_tuser [NumCc][2];
+  logic        m2_axis_tlast [NumCc][2];
+  logic        m2_axis_tvalid[NumCc][2];
+  logic        m2_axis_tready[NumCc][2];
 
-  logic [31:0] s2_axis_tdata        [NumCc][2];
-  logic [ 7:0] s2_axis_tuser        [NumCc][2];
-  logic        s2_axis_tlast        [NumCc][2];
-  logic        s2_axis_tvalid       [NumCc][2];
-  logic        s2_axis_tready       [NumCc][2];
+  logic [31:0] s2_axis_tdata [NumCc][2];
+  logic [ 7:0] s2_axis_tuser [NumCc][2];
+  logic        s2_axis_tlast [NumCc][2];
+  logic        s2_axis_tvalid[NumCc][2];
+  logic        s2_axis_tready[NumCc][2];
 
   generate
     for (genvar unused_cc = 0; unused_cc < NumCc; unused_cc++) begin : gen_unused_cc
@@ -855,49 +855,49 @@ module lowphy1 (
 
   // Unsol
 
-  wire  [63:0] s0_fram_unsol_tdata;
-  wire  [ 7:0] s0_fram_unsol_tkeep;
-  wire         s0_fram_unsol_tvalid;
-  wire         s0_fram_unsol_tlast;
-  wire         s0_fram_unsol_tready;
-  wire  [31:0] s0_fram_unsol_tuser;
+  wire [63:0] s0_fram_unsol_tdata;
+  wire [ 7:0] s0_fram_unsol_tkeep;
+  wire        s0_fram_unsol_tvalid;
+  wire        s0_fram_unsol_tlast;
+  wire        s0_fram_unsol_tready;
+  wire [31:0] s0_fram_unsol_tuser;
 
-  wire  [63:0] s1_fram_unsol_tdata;
-  wire  [ 7:0] s1_fram_unsol_tkeep;
-  wire         s1_fram_unsol_tvalid;
-  wire         s1_fram_unsol_tlast;
-  wire         s1_fram_unsol_tready;
-  wire  [31:0] s1_fram_unsol_tuser;
+  wire [63:0] s1_fram_unsol_tdata;
+  wire [ 7:0] s1_fram_unsol_tkeep;
+  wire        s1_fram_unsol_tvalid;
+  wire        s1_fram_unsol_tlast;
+  wire        s1_fram_unsol_tready;
+  wire [31:0] s1_fram_unsol_tuser;
 
-  wire  [63:0] s2_fram_unsol_tdata;
-  wire  [ 7:0] s2_fram_unsol_tkeep;
-  wire         s2_fram_unsol_tvalid;
-  wire         s2_fram_unsol_tlast;
-  wire         s2_fram_unsol_tready;
-  wire  [31:0] s2_fram_unsol_tuser;
+  wire [63:0] s2_fram_unsol_tdata;
+  wire [ 7:0] s2_fram_unsol_tkeep;
+  wire        s2_fram_unsol_tvalid;
+  wire        s2_fram_unsol_tlast;
+  wire        s2_fram_unsol_tready;
+  wire [31:0] s2_fram_unsol_tuser;
 
   // PRACH
 
-  wire  [63:0] s0_fram_prach_tdata;
-  wire  [ 7:0] s0_fram_prach_tkeep;
-  wire         s0_fram_prach_tvalid;
-  wire         s0_fram_prach_tlast;
-  wire         s0_fram_prach_tready;
-  wire  [31:0] s0_fram_prach_tuser;
+  wire [63:0] s0_fram_prach_tdata;
+  wire [ 7:0] s0_fram_prach_tkeep;
+  wire        s0_fram_prach_tvalid;
+  wire        s0_fram_prach_tlast;
+  wire        s0_fram_prach_tready;
+  wire [31:0] s0_fram_prach_tuser;
 
-  wire  [63:0] s1_fram_prach_tdata;
-  wire  [ 7:0] s1_fram_prach_tkeep;
-  wire         s1_fram_prach_tvalid;
-  wire         s1_fram_prach_tlast;
-  wire         s1_fram_prach_tready;
-  wire  [31:0] s1_fram_prach_tuser;
+  wire [63:0] s1_fram_prach_tdata;
+  wire [ 7:0] s1_fram_prach_tkeep;
+  wire        s1_fram_prach_tvalid;
+  wire        s1_fram_prach_tlast;
+  wire        s1_fram_prach_tready;
+  wire [31:0] s1_fram_prach_tuser;
 
-  wire  [63:0] s2_fram_prach_tdata;
-  wire  [ 7:0] s2_fram_prach_tkeep;
-  wire         s2_fram_prach_tvalid;
-  wire         s2_fram_prach_tlast;
-  wire         s2_fram_prach_tready;
-  wire  [31:0] s2_fram_prach_tuser;
+  wire [63:0] s2_fram_prach_tdata;
+  wire [ 7:0] s2_fram_prach_tkeep;
+  wire        s2_fram_prach_tvalid;
+  wire        s2_fram_prach_tlast;
+  wire        s2_fram_prach_tready;
+  wire [31:0] s2_fram_prach_tuser;
 
   // Main
 

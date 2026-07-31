@@ -56,66 +56,66 @@ module rts (
 
   // CSR signals
 
-  wire [      NumCc*6-1:0] ctrl_src_sel;
+  wire  [NumCc*6-1:0] ctrl_src_sel;
 
-  wire [              2:0] ctrl_ram_mode;
+  wire  [        2:0] ctrl_ram_mode;
 
-  wire [             19:0] ctrl_cw0_freq;
-  wire [             15:0] ctrl_cw0_pow;
-  wire [             19:0] ctrl_cw1_freq;
-  wire [             15:0] ctrl_cw1_pow;
+  wire  [       19:0] ctrl_cw0_freq;
+  wire  [       15:0] ctrl_cw0_pow;
+  wire  [       19:0] ctrl_cw1_freq;
+  wire  [       15:0] ctrl_cw1_pow;
 
-  wire [             19:0] ctrl_ram0_offset;
-  wire [             19:0] ctrl_ram1_offset;
-  wire [             19:0] ctrl_ram2_offset;
+  wire  [       19:0] ctrl_ram0_offset;
+  wire  [       19:0] ctrl_ram1_offset;
+  wire  [       19:0] ctrl_ram2_offset;
 
-  wire [              6:0] ctrl_injt_ram_addr_msb;
+  wire  [        6:0] ctrl_injt_ram_addr_msb;
 
-  wire [             12:0] ctrl_injt_ram_addr;
-  wire                     ctrl_injt_ram_en;
-  wire                     ctrl_injt_ram_we;
-  wire [             31:0] ctrl_injt_ram_din;
-  wire [             31:0] ctrl_injt_ram_dout;
-  wire                     ctrl_injt_ram_valid;
+  wire  [       12:0] ctrl_injt_ram_addr;
+  wire                ctrl_injt_ram_en;
+  wire                ctrl_injt_ram_we;
+  wire  [       31:0] ctrl_injt_ram_din;
+  wire  [       31:0] ctrl_injt_ram_dout;
+  wire                ctrl_injt_ram_valid;
 
-  wire [              5:0] ctrl_cap_cc_sel;
-  wire                     unused_ctrl_cap_cc_sel_msb = ctrl_cap_cc_sel[5];
-  wire                     ctrl_cap_pos_sel;
-  wire [              1:0] ctrl_cap_mode;
-  wire [             18:0] ctrl_cap_offset;
-  wire [              4:0] ctrl_cap_len;
-  wire                     ctrl_cap_trigger;
-  wire                     ctrl_cap_force;
+  wire  [        5:0] ctrl_cap_cc_sel;
+  wire                unused_ctrl_cap_cc_sel_msb = ctrl_cap_cc_sel[5];
+  wire                ctrl_cap_pos_sel;
+  wire  [        1:0] ctrl_cap_mode;
+  wire  [       18:0] ctrl_cap_offset;
+  wire  [        4:0] ctrl_cap_len;
+  wire                ctrl_cap_trigger;
+  wire                ctrl_cap_force;
 
-  wire                     stat_cap_status;
+  wire                stat_cap_status;
 
-  wire [              3:0] ctrl_cap_ram_addr_msb;
+  wire  [        3:0] ctrl_cap_ram_addr_msb;
 
-  wire [             12:0] ctrl_cap_ram_addr;
-  wire                     ctrl_cap_ram_en;
-  wire                     ctrl_cap_ram_we;
-  wire [             31:0] ctrl_cap_ram_din;
-  wire [             31:0] ctrl_cap_ram_dout;
-  wire                     ctrl_cap_ram_valid;
+  wire  [       12:0] ctrl_cap_ram_addr;
+  wire                ctrl_cap_ram_en;
+  wire                ctrl_cap_ram_we;
+  wire  [       31:0] ctrl_cap_ram_din;
+  wire  [       31:0] ctrl_cap_ram_dout;
+  wire                ctrl_cap_ram_valid;
 
   // Signals
 
-  logic                      rfs_d;
+  logic               rfs_d;
 
-  wire [             31:0] mux_axis_tdata;
-  wire [              7:0] mux_axis_tuser;
-  wire                     mux_axis_tlast;
-  wire                     mux_axis_tvalid;
+  wire  [       31:0] mux_axis_tdata;
+  wire  [        7:0] mux_axis_tuser;
+  wire                mux_axis_tlast;
+  wire                mux_axis_tvalid;
 
   //
 
-  wire [             15:0] cw_cos;
-  wire [             15:0] cw_sin;
+  wire  [       15:0] cw_cos;
+  wire  [       15:0] cw_sin;
 
-  wire [             31:0] cw_data;
-  wire [             31:0] ram0_data;
-  wire [             31:0] ram1_data;
-  wire [             31:0] ram2_data;
+  wire  [       31:0] cw_data;
+  wire  [       31:0] ram0_data;
+  wire  [       31:0] ram1_data;
+  wire  [       31:0] ram2_data;
 
   // Main
 

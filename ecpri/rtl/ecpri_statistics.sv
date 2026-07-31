@@ -76,18 +76,18 @@ module ecpri_statistics (
 
   // Signals
 
-  wire        tick_snap;
-  wire        tick_clear;
-  wire [ 5:0] unused_stat_src_ready;
-  wire [ 5:0] unused_stat_dest_valid;
+  wire tick_snap;
+  wire tick_clear;
+  wire [5:0] unused_stat_src_ready;
+  wire [5:0] unused_stat_dest_valid;
 
-  logic  [31:0] defm_total_pkt_cnt;
-  logic  [31:0] defm_ecpri_pkt_cnt;
-  logic  [31:0] defm_trans_pkt_cnt;
-  logic  [31:0] defm_odm_pkt_cnt;
+  logic [31:0] defm_total_pkt_cnt;
+  logic [31:0] defm_ecpri_pkt_cnt;
+  logic [31:0] defm_trans_pkt_cnt;
+  logic [31:0] defm_odm_pkt_cnt;
 
-  logic  [31:0] fram_trans_pkt_cnt;
-  logic  [31:0] fram_odm_pkt_cnt;
+  logic [31:0] fram_trans_pkt_cnt;
+  logic [31:0] fram_odm_pkt_cnt;
 
   // Control CDC
 

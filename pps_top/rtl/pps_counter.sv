@@ -136,7 +136,7 @@ module pps_counter (
   assign sample_carry1 = |sample_cnt_next[33:32];
   assign sample_carry2 = sample_cnt_next[33:32] == 2'b10;
 
-  assign sample_frac = {sample_inc[1], sample_cnt};
+  assign sample_frac   = {sample_inc[1], sample_cnt};
 
   // inc = 0 (2'b00), 1 (2'b01) or 2 (2'b11)
   always_ff @(posedge clk) begin

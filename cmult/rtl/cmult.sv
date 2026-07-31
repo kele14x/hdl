@@ -11,19 +11,19 @@ module cmult #(
     parameter bit SATURATE   = 1'b0,
     parameter bit USE_3_MULT = 1'b0
 ) (
-    input  wire                       clk,
-    input  wire                       rst,
+    input  wire                      clk,
+    input  wire                      rst,
     //
-    input  wire signed [A_WIDTH-1:0]  ar,
-    input  wire signed [A_WIDTH-1:0]  ai,
+    input  wire signed [A_WIDTH-1:0] ar,
+    input  wire signed [A_WIDTH-1:0] ai,
     //
-    input  wire signed [B_WIDTH-1:0]  br,
-    input  wire signed [B_WIDTH-1:0]  bi,
+    input  wire signed [B_WIDTH-1:0] br,
+    input  wire signed [B_WIDTH-1:0] bi,
     //
-    output wire signed [P_WIDTH-1:0]  pr,
-    output wire signed [P_WIDTH-1:0]  pi,
+    output wire signed [P_WIDTH-1:0] pr,
+    output wire signed [P_WIDTH-1:0] pi,
     //
-    output wire                       ovf
+    output wire                      ovf
 );
 
   /* verilator lint_off UNUSEDPARAM */
@@ -151,16 +151,16 @@ module cmult #(
       assign pr_int = pr_int_3;
       assign pi_int = pi_int_3;
     end else begin : g_4_mult
-      logic signed [A_WIDTH-1:0] ar_d;
-      logic signed [A_WIDTH-1:0] ar_dd;
+      logic signed [  A_WIDTH-1:0] ar_d;
+      logic signed [  A_WIDTH-1:0] ar_dd;
 
-      logic signed [A_WIDTH-1:0] ai_d;
-      logic signed [A_WIDTH-1:0] ai_dd;
+      logic signed [  A_WIDTH-1:0] ai_d;
+      logic signed [  A_WIDTH-1:0] ai_dd;
 
-      logic signed [B_WIDTH-1:0] br_d;
-      logic signed [B_WIDTH-1:0] br_dd;
+      logic signed [  B_WIDTH-1:0] br_d;
+      logic signed [  B_WIDTH-1:0] br_dd;
 
-      logic signed [B_WIDTH-1:0] bi_d;
+      logic signed [  B_WIDTH-1:0] bi_d;
 
       logic signed [FullWidth-1:0] m_rr;
       logic signed [FullWidth-1:0] p_rr;

@@ -70,43 +70,43 @@ module fh_deframer_demux (
 
   // Signals
 
-  wire [             63:0] s_axis_tdata_reversed;
-  wire                     fifo_wr_full;
-  wire                     unused_inputs;
+  wire  [             63:0] s_axis_tdata_reversed;
+  wire                      fifo_wr_full;
+  wire                      unused_inputs;
 
-  wire [             15:0] mac_ethertype0;
-  wire [             15:0] mac_ethertype1;
+  wire  [             15:0] mac_ethertype0;
+  wire  [             15:0] mac_ethertype1;
 
-  wire                     wr_en;
-  logic  [    AddrWidth-1:0] wr_addr;
-  logic  [    AddrWidth-1:0] wr_addr_last;
-  logic  [    AddrWidth-1:0] wr_addr_next;
-  wire [    DataWidth-1:0] wr_data;
+  wire                      wr_en;
+  logic [    AddrWidth-1:0] wr_addr;
+  logic [    AddrWidth-1:0] wr_addr_last;
+  logic [    AddrWidth-1:0] wr_addr_next;
+  wire  [    DataWidth-1:0] wr_data;
 
-  wire                     rd_en;
-  logic                      rd_en_d;
-  logic                      rd_en_dd;
-  logic  [    AddrWidth-1:0] rd_addr;
-  wire [    AddrWidth-1:0] rd_addr_next;
-  wire [    DataWidth-1:0] rd_data;
-  logic  [    DataWidth-1:0] rd_data_r;
+  wire                      rd_en;
+  logic                     rd_en_d;
+  logic                     rd_en_dd;
+  logic [    AddrWidth-1:0] rd_addr;
+  wire  [    AddrWidth-1:0] rd_addr_next;
+  wire  [    DataWidth-1:0] rd_data;
+  logic [    DataWidth-1:0] rd_data_r;
 
-  logic                      packet_valid;
-  logic  [             15:0] packet_ethertype;
-  logic  [             79:0] packet_timestamp;
+  logic                     packet_valid;
+  logic [             15:0] packet_ethertype;
+  logic [             79:0] packet_timestamp;
 
-  wire                     fifo_wr_en;
-  wire [FiFoDataWidth-1:0] fifo_wr_din;
+  wire                      fifo_wr_en;
+  wire  [FiFoDataWidth-1:0] fifo_wr_din;
 
-  wire                     fifo_rd_en;
-  wire [FiFoDataWidth-1:0] fifo_rd_dout;
-  wire                     fifo_rd_empty;
+  wire                      fifo_rd_en;
+  wire  [FiFoDataWidth-1:0] fifo_rd_dout;
+  wire                      fifo_rd_empty;
 
-  wire                     packet_valid_s;
-  wire [             15:0] packet_ethertype_s;
-  wire [             79:0] packet_timestamp_s;
+  wire                      packet_valid_s;
+  wire  [             15:0] packet_ethertype_s;
+  wire  [             79:0] packet_timestamp_s;
 
-  logic                      corrupt_pkt_pulse;
+  logic                     corrupt_pkt_pulse;
 
   integer state, state_next;
 

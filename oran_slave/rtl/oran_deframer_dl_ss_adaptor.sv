@@ -39,36 +39,36 @@ module oran_deframer_dl_ss_adaptor #(
   // Signals
   //--------
 
-  logic [         11:0] section_sectionid;
-  logic                 section_rb;
-  logic                 section_syminc;
-  logic [          9:0] section_startprbu;
-  logic [          7:0] section_numprbu;
+  logic [11:0] section_sectionid;
+  logic section_rb;
+  logic section_syminc;
+  logic [9:0] section_startprbu;
+  logic [7:0] section_numprbu;
 
-  logic [          7:0] current_frame;
-  logic [         32:0] current_frac;
-  logic [         14:0] current_sample;
-  logic                 current_is_sof;
+  logic [7:0] current_frame;
+  logic [32:0] current_frac;
+  logic [14:0] current_sample;
+  logic current_is_sof;
 
   // Write 2 REs at each clock tick
   logic [AddrWidth-2:0] syml_wr_addr;
-  logic                 syml_wr_en;
-  logic [         63:0] syml_wr_data;
+  logic syml_wr_en;
+  logic [63:0] syml_wr_data;
 
   // Read 1 REs at each clock tick
   logic [AddrWidth-1:0] syml_rd_cnt;
-  logic                 syml_rd_run;
+  logic syml_rd_run;
 
   logic [AddrWidth-1:0] syml_rd_addr;
-  logic                 syml_rd_en;
-  logic                 syml_rd_en_d;
-  logic [         31:0] syml_rd_data;
+  logic syml_rd_en;
+  logic syml_rd_en_d;
+  logic [31:0] syml_rd_data;
 
-  logic [         63:0] ram_douta;
-  logic                 ram_dbiterra;
-  logic                 ram_sbiterra;
-  logic                 ram_dbiterrb;
-  logic                 ram_sbiterrb;
+  logic [63:0] ram_douta;
+  logic ram_dbiterra;
+  logic ram_sbiterra;
+  logic ram_dbiterrb;
+  logic ram_sbiterrb;
 
   wire unused_ram_outputs = &{
     1'b0,
@@ -79,7 +79,7 @@ module oran_deframer_dl_ss_adaptor #(
     ram_sbiterrb
   };
 
-  logic                 synced;
+  logic synced;
 
   wire unused_section_fields = &{
     1'b0,
@@ -123,7 +123,7 @@ module oran_deframer_dl_ss_adaptor #(
     if (s_axis_tvalid && !synced) begin
       syml_wr_addr <= (AddrWidth - 1)'({1'b0, section_startprbu} * 6);
     end else if (s_axis_tvalid) begin
-      syml_wr_addr <= syml_wr_addr + {{(AddrWidth - 2){1'b0}}, 1'b1};
+      syml_wr_addr <= syml_wr_addr + {{(AddrWidth - 2) {1'b0}}, 1'b1};
     end
   end
 
@@ -196,7 +196,7 @@ module oran_deframer_dl_ss_adaptor #(
     if (current_sample == 1000) begin
       syml_rd_cnt <= '0;
     end else if (syml_rd_run) begin
-      syml_rd_cnt <= syml_rd_cnt + {{(AddrWidth - 1){1'b0}}, 1'b1};
+      syml_rd_cnt <= syml_rd_cnt + {{(AddrWidth - 1) {1'b0}}, 1'b1};
     end
   end
 

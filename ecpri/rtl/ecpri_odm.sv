@@ -4,39 +4,39 @@
 `default_nettype none
 
 module ecpri_odm (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire [79:0] tx_ptp_timestamp,
-    input  wire [15:0] tx_ptp_timestamp_tag,
-    input  wire        tx_ptp_timestamp_valid,
+    input  wire  [79:0] tx_ptp_timestamp,
+    input  wire  [15:0] tx_ptp_timestamp_tag,
+    input  wire         tx_ptp_timestamp_valid,
     // Receive I/F
-    input  wire        s_odm_header_valid,
-    input  wire [ 7:0] s_odm_measurementid,
-    input  wire [ 7:0] s_odm_actiontype,
-    input  wire [79:0] s_odm_timestamp,
-    input  wire [63:0] s_odm_compensation,
-    input  wire [79:0] s_odm_timestamp2,
+    input  wire         s_odm_header_valid,
+    input  wire  [ 7:0] s_odm_measurementid,
+    input  wire  [ 7:0] s_odm_actiontype,
+    input  wire  [79:0] s_odm_timestamp,
+    input  wire  [63:0] s_odm_compensation,
+    input  wire  [79:0] s_odm_timestamp2,
     // Transmit I/F
-    output logic         m_axis_tvalid,
-    input  wire        m_axis_tready,
+    output logic        m_axis_tvalid,
+    input  wire         m_axis_tready,
     //
-    output logic  [ 7:0] m_odm_measurementid,
-    output logic  [ 7:0] m_odm_actiontype,
-    output logic  [79:0] m_odm_timestamp,
-    output logic  [63:0] m_odm_compensation,
+    output logic [ 7:0] m_odm_measurementid,
+    output logic [ 7:0] m_odm_actiontype,
+    output logic [79:0] m_odm_timestamp,
+    output logic [63:0] m_odm_compensation,
     //
-    input  wire        ctrl_clk,
-    input  wire        ctrl_rst,
+    input  wire         ctrl_clk,
+    input  wire         ctrl_rst,
     //
-    input  wire        ctrl_en,
-    input  wire [31:0] ctrl_meas_interval,
+    input  wire         ctrl_en,
+    input  wire  [31:0] ctrl_meas_interval,
     //
-    output wire [31:0] stat_ts_diff_ingress_ns,
-    output wire [47:0] stat_ts_diff_ingress_sec,
+    output wire  [31:0] stat_ts_diff_ingress_ns,
+    output wire  [47:0] stat_ts_diff_ingress_sec,
     //
-    output wire [31:0] stat_ts_diff_egress_ns,
-    output wire [47:0] stat_ts_diff_egress_sec
+    output wire  [31:0] stat_ts_diff_egress_ns,
+    output wire  [47:0] stat_ts_diff_egress_sec
 );
 
   wire unused_inputs = &{1'b0, s_odm_compensation, ctrl_rst};
@@ -86,29 +86,29 @@ module ecpri_odm (
 
   // Signals
 
-  wire        ctrl_en_s;
-  wire [31:0] ctrl_meas_interval_s;
-  wire [ 1:0] unused_stat_src_ready;
-  wire [ 1:0] unused_stat_dest_valid;
+  wire         ctrl_en_s;
+  wire  [31:0] ctrl_meas_interval_s;
+  wire  [ 1:0] unused_stat_src_ready;
+  wire  [ 1:0] unused_stat_dest_valid;
 
-  logic  [31:0] timer;
-  logic         timer_tick;
+  logic [31:0] timer;
+  logic        timer_tick;
 
-  logic  [ 7:0] id_int;
+  logic [ 7:0] id_int;
 
-  logic  [79:0] ts_ingress;
-  logic  [ 7:0] ts_ingress_measurementid;
-  logic  [79:0] ts_diff_ingress;
-  logic  [79:0] ts_diff_ingress_wrap;
-  logic         ts_diff_ingress_valid;
-  logic         ts_diff_ingress_wrap_valid;
+  logic [79:0] ts_ingress;
+  logic [ 7:0] ts_ingress_measurementid;
+  logic [79:0] ts_diff_ingress;
+  logic [79:0] ts_diff_ingress_wrap;
+  logic        ts_diff_ingress_valid;
+  logic        ts_diff_ingress_wrap_valid;
 
-  logic  [79:0] ts_egress;
-  logic  [ 7:0] ts_egress_measurementid;
-  logic  [79:0] ts_diff_egress;
-  logic  [79:0] ts_diff_egress_wrap;
-  logic         ts_diff_egress_valid;
-  logic         ts_diff_egress_wrap_valid;
+  logic [79:0] ts_egress;
+  logic [ 7:0] ts_egress_measurementid;
+  logic [79:0] ts_diff_egress;
+  logic [79:0] ts_diff_egress_wrap;
+  logic        ts_diff_egress_valid;
+  logic        ts_diff_egress_wrap_valid;
 
   // Main
 
@@ -159,7 +159,7 @@ module ecpri_odm (
       m_axis_tvalid <= 1'b1;
     end else if (m_axis_tready) begin
       m_axis_tvalid <= 1'b0;
-    end // else keep at current state
+    end  // else keep at current state
   end
 
   always_ff @(posedge clk) begin

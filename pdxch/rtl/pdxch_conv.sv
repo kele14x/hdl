@@ -60,7 +60,7 @@ module pdxch_conv #(
   logic        [ 1:0] ctrl_rat_s;
   logic        [ 3:0] ctrl_bw_s;
 
-  logic        [11:0] index      [NUM_ANT];
+  logic        [11:0] index            [NUM_ANT];
   logic        [11:0] index_next;
   logic        [11:0] index_r;
 
@@ -68,7 +68,7 @@ module pdxch_conv #(
 
   logic        [11:0] index_rev;
 
-  logic        [ 6:0] pinc       [NUM_ANT];
+  logic        [ 6:0] pinc             [NUM_ANT];
   logic        [ 6:0] pinc_next;
   logic        [ 6:0] pinc_r;
 
@@ -79,8 +79,8 @@ module pdxch_conv #(
 
   logic signed [15:0] din_dr_d;
   logic signed [15:0] din_di_d;
-  logic        unused_mult_ovf;
-  logic        unused_cmult_ovf;
+  logic               unused_mult_ovf;
+  logic               unused_cmult_ovf;
 
   // Main
 
@@ -243,7 +243,7 @@ module pdxch_conv #(
       .A_WIDTH(16),
       .B_WIDTH(16),
       .P_WIDTH(16),
-      .SHIFT  (14)
+      .SHIFT(14)
   ) u_cmult (
       .clk(clk),
       .rst(rst),

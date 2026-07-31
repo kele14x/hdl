@@ -15,27 +15,27 @@
 `default_nettype none
 
 module ecpri_deframer_eth (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire [31:0] s_axis_tdata,
-    input  wire [ 3:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
-    input  wire        s_axis_tvalid,
-    input  wire [79:0] s_axis_tuser,
+    input  wire  [31:0] s_axis_tdata,
+    input  wire  [ 3:0] s_axis_tkeep,
+    input  wire         s_axis_tlast,
+    input  wire         s_axis_tvalid,
+    input  wire  [79:0] s_axis_tuser,
     //
-    output logic  [31:0] m_axis_tdata,
-    output logic  [ 3:0] m_axis_tkeep,
-    output logic         m_axis_tlast,
-    output logic         m_axis_tvalid,
-    output logic  [79:0] m_axis_tuser,
+    output logic [31:0] m_axis_tdata,
+    output logic [ 3:0] m_axis_tkeep,
+    output logic        m_axis_tlast,
+    output logic        m_axis_tvalid,
+    output logic [79:0] m_axis_tuser,
     //
-    output logic         m_mac_header_valid,
-    output logic  [47:0] m_mac_dest_mac,
-    output logic  [47:0] m_mac_source_mac,
-    output logic         m_mac_with_vlan,
-    output logic  [15:0] m_mac_vlan_tag,
-    output logic  [15:0] m_mac_ethertype
+    output logic        m_mac_header_valid,
+    output logic [47:0] m_mac_dest_mac,
+    output logic [47:0] m_mac_source_mac,
+    output logic        m_mac_with_vlan,
+    output logic [15:0] m_mac_vlan_tag,
+    output logic [15:0] m_mac_ethertype
 );
 
   import ecpri_pkg::*;
@@ -59,20 +59,20 @@ module ecpri_deframer_eth (
 
   // Signals
 
-  wire [31:0] s_axis_tdata_reversed;
-  logic  [15:0] s_axis_tdata_d;  // also byte reversed
+  wire  [31:0] s_axis_tdata_reversed;
+  logic [15:0] s_axis_tdata_d;  // also byte reversed
 
-  logic  [ 3:0] s_axis_tkeep_d;
+  logic [ 3:0] s_axis_tkeep_d;
 
-  wire        unused_tkeep_d = &{1'b0, s_axis_tkeep_d[1:0]};
+  wire         unused_tkeep_d = &{1'b0, s_axis_tkeep_d[1:0]};
 
-  wire [47:0] mac_dest_mac;
-  wire [47:0] mac_source_mac;
-  wire        mac_with_vlan;
-  wire [15:0] mac_vlan_tag;
-  wire [15:0] mac_ethertype;
+  wire  [47:0] mac_dest_mac;
+  wire  [47:0] mac_source_mac;
+  wire         mac_with_vlan;
+  wire  [15:0] mac_vlan_tag;
+  wire  [15:0] mac_ethertype;
 
-  logic         additional_tlast;
+  logic        additional_tlast;
 
   integer state, state_next;
 

@@ -12,31 +12,31 @@
 `default_nettype none
 
 module axis_fifo_alt #(
-    parameter logic     ASYNC_MODE   = 1'b0,
+    parameter logic   ASYNC_MODE   = 1'b0,
     parameter integer FIFO_DEPTH   = 4096,
     parameter integer FIFO_LATENCY = 3,
     parameter integer DATA_WIDTH   = 32,
     parameter integer USER_WIDTH   = 1
 ) (
-    input  wire                                         s_axis_aclk,
-    input  wire                                         s_axis_aresetn,
+    input  wire                                          s_axis_aclk,
+    input  wire                                          s_axis_aresetn,
     //
-    input  wire [                       DATA_WIDTH-1:0] s_axis_tdata,
-    input  wire [                     DATA_WIDTH/8-1:0] s_axis_tkeep,
-    input  wire                                         s_axis_tlast,
-    input  wire [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] s_axis_tuser,
-    input  wire                                         s_axis_tvalid,
+    input  wire  [                       DATA_WIDTH-1:0] s_axis_tdata,
+    input  wire  [                     DATA_WIDTH/8-1:0] s_axis_tkeep,
+    input  wire                                          s_axis_tlast,
+    input  wire  [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] s_axis_tuser,
+    input  wire                                          s_axis_tvalid,
     //
-    input  wire                                         m_axis_aclk,
+    input  wire                                          m_axis_aclk,
     //
-    output logic  [                       DATA_WIDTH-1:0] m_axis_tdata,
-    output logic  [                     DATA_WIDTH/8-1:0] m_axis_tkeep,
-    output logic                                          m_axis_tlast,
-    output logic  [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] m_axis_tuser,
-    output wire                                         m_axis_tvalid,
-    input  wire                                         m_axis_tready,
+    output logic [                       DATA_WIDTH-1:0] m_axis_tdata,
+    output logic [                     DATA_WIDTH/8-1:0] m_axis_tkeep,
+    output logic                                         m_axis_tlast,
+    output logic [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] m_axis_tuser,
+    output wire                                          m_axis_tvalid,
+    input  wire                                          m_axis_tready,
     //
-    output wire                                         err_discard
+    output wire                                          err_discard
 );
 
   // Parameters
@@ -89,34 +89,34 @@ module axis_fifo_alt #(
 
   // Signals
 
-  wire                    wr_clk;
-  logic                     wr_rstn;
+  wire                     wr_clk;
+  logic                    wr_rstn;
 
-  logic                     wr_sync_n;
-  logic  [     AddrWidth:0] wr_count;
-  wire [     AddrWidth:0] wr_count_rd;
-  logic  [     AddrWidth:0] wr_count_next;
-  logic  [     AddrWidth:0] wr_count_reg;
-  logic  [     AddrWidth:0] wr_count_last;
-  logic                     wr_discard;
-  logic                     wr_full;
+  logic                    wr_sync_n;
+  logic [     AddrWidth:0] wr_count;
+  wire  [     AddrWidth:0] wr_count_rd;
+  logic [     AddrWidth:0] wr_count_next;
+  logic [     AddrWidth:0] wr_count_reg;
+  logic [     AddrWidth:0] wr_count_last;
+  logic                    wr_discard;
+  logic                    wr_full;
 
-  wire                    wr_en;
-  wire [   AddrWidth-1:0] wr_addr;
-  wire [   DataWidth-1:0] wr_din;
+  wire                     wr_en;
+  wire  [   AddrWidth-1:0] wr_addr;
+  wire  [   DataWidth-1:0] wr_din;
 
-  wire                    rd_clk;
-  wire                    rd_rstn;
+  wire                     rd_clk;
+  wire                     rd_rstn;
 
-  logic  [     AddrWidth:0] rd_count;
-  wire [     AddrWidth:0] rd_count_wr;
-  wire [     AddrWidth:0] rd_count_next;
+  logic [     AddrWidth:0] rd_count;
+  wire  [     AddrWidth:0] rd_count_wr;
+  wire  [     AddrWidth:0] rd_count_next;
 
-  wire [FIFO_LATENCY-1:0] rd_en;
-  wire [   AddrWidth-1:0] rd_addr;
-  wire [   DataWidth-1:0] rd_dout;
+  wire  [FIFO_LATENCY-1:0] rd_en;
+  wire  [   AddrWidth-1:0] rd_addr;
+  wire  [   DataWidth-1:0] rd_dout;
 
-  logic  [  FIFO_LATENCY:0] valid;
+  logic [  FIFO_LATENCY:0] valid;
 
   genvar i;
 
@@ -197,10 +197,10 @@ module axis_fifo_alt #(
 
   generate
     if (USER_WIDTH > 0) begin : g_wr_din_user
-      assign wr_din  = {s_axis_tuser, s_axis_tlast, s_axis_tkeep, s_axis_tdata};
+      assign wr_din = {s_axis_tuser, s_axis_tlast, s_axis_tkeep, s_axis_tdata};
     end else begin : g_wr_din_no_user
       wire unused_s_axis_tuser = &{1'b0, s_axis_tuser};
-      assign wr_din  = {s_axis_tlast, s_axis_tkeep, s_axis_tdata};
+      assign wr_din = {s_axis_tlast, s_axis_tkeep, s_axis_tdata};
     end
   endgenerate
 

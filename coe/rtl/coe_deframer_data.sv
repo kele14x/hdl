@@ -4,42 +4,42 @@
 
 module coe_deframer_data (
     // Ethernet
-    input  wire         clk,
-    input  wire         rst,
+    input  wire          clk,
+    input  wire          rst,
     //
-    input  wire         sync,
+    input  wire          sync,
     //
-    input  wire [ 31:0] s_axis_tdata,
-    input  wire [  3:0] s_axis_tkeep,
-    input  wire         s_axis_tlast,
-    input  wire         s_axis_tvalid,
+    input  wire  [ 31:0] s_axis_tdata,
+    input  wire  [  3:0] s_axis_tkeep,
+    input  wire          s_axis_tlast,
+    input  wire          s_axis_tvalid,
     //
-    input  wire         s_trans_header_valid,
-    input  wire [ 15:0] s_trans_rtc_pc_id,
-    input  wire [  7:0] s_trans_seqid,
-    input  wire         s_trans_ebit,
-    input  wire [  6:0] s_trans_subseqid,
+    input  wire          s_trans_header_valid,
+    input  wire  [ 15:0] s_trans_rtc_pc_id,
+    input  wire  [  7:0] s_trans_seqid,
+    input  wire          s_trans_ebit,
+    input  wire  [  6:0] s_trans_subseqid,
     //
-    input  wire         s_app_valid,
-    input  wire [ 18:0] s_app_ts,
+    input  wire          s_app_valid,
+    input  wire  [ 18:0] s_app_ts,
     // Radio I/F
-    output wire [767:0] m_axis_rx_tdata,
-    output wire [  7:0] m_axis_rx_tuser,
-    output wire         m_axis_rx_tlast,
-    output logic          m_axis_rx_tvalid,
-    input  wire         m_axis_rx_tready,
+    output wire  [767:0] m_axis_rx_tdata,
+    output wire  [  7:0] m_axis_rx_tuser,
+    output wire          m_axis_rx_tlast,
+    output logic         m_axis_rx_tvalid,
+    input  wire          m_axis_rx_tready,
     // CSR
     //----
-    input  wire         ctrl_clk,
-    input  wire         ctrl_rst,
+    input  wire          ctrl_clk,
+    input  wire          ctrl_rst,
     //
-    input  wire         ctrl_en,
-    input  wire [ 15:0] ctrl_seq_en,
-    input  wire [ 95:0] ctrl_seq_id,
+    input  wire          ctrl_en,
+    input  wire  [ 15:0] ctrl_seq_en,
+    input  wire  [ 95:0] ctrl_seq_id,
     //
-    input  wire [  8:0] ctrl_ts_offset,
+    input  wire  [  8:0] ctrl_ts_offset,
     //
-    output wire [ 31:0] stat_conflict_cnt
+    output wire  [ 31:0] stat_conflict_cnt
 );
 
   // Parameters
@@ -71,7 +71,7 @@ module coe_deframer_data (
   function automatic [3:0] get_ch_delay(input logic [5:0] id, input logic [15:0] seq_en,
                                         input logic [95:0] seq_id);
     integer i;
-    logic found;
+    logic   found;
     begin
       found = 0;
       get_ch_delay = 0;
@@ -131,15 +131,15 @@ module coe_deframer_data (
 
   // Signals
 
-  wire                 ctrl_en_s;
-  wire [         15:0] ctrl_seq_en_s;
-  wire [         95:0] ctrl_seq_id_s;
-  wire [          5:0] ctrl_seq_id_ch      [ 0:MaxSeqLen-1];
+  wire ctrl_en_s;
+  wire [15:0] ctrl_seq_en_s;
+  wire [95:0] ctrl_seq_id_s;
+  wire [5:0] ctrl_seq_id_ch[0:MaxSeqLen-1];
 
-  logic  [          4:0] ctrl_seq_n_valid;
-  logic  [          3:0] ctrl_ch_delay       [0:NumChannel-1];
+  logic [4:0] ctrl_seq_n_valid;
+  logic [3:0] ctrl_ch_delay[0:NumChannel-1];
 
-  wire [          8:0] ctrl_ts_offset_s;
+  wire [8:0] ctrl_ts_offset_s;
 
   wire                 unused_inputs = &{
     1'b0,
@@ -158,39 +158,39 @@ module coe_deframer_data (
 
   // Write side signals
 
-  wire                 wr_we;
-  wire [          3:0] wr_seq_last;
-  logic  [          3:0] wr_seq;
-  logic  [AddrWidth-5:0] wr_cnt;
+  wire wr_we;
+  wire [3:0] wr_seq_last;
+  logic [3:0] wr_seq;
+  logic [AddrWidth-5:0] wr_cnt;
   wire [AddrWidth-1:0] wr_addr;
   wire [DataWidth-1:0] wr_din;
 
   // Read side signals
 
-  logic                  sync_d;
-  wire                 sync_posedge;
+  logic sync_d;
+  wire sync_posedge;
 
-  logic                  rd_en;
-  wire                 rd_en_d;
-  logic  [          5:0] rd_id;
-  wire [          5:0] rd_sel;
-  wire [          5:0] rd_sel_d;
+  logic rd_en;
+  wire rd_en_d;
+  logic [5:0] rd_id;
+  wire [5:0] rd_sel;
+  wire [5:0] rd_sel_d;
 
-  logic  [AddrWidth-5:0] rd_addr_msb;
-  logic  [          3:0] rd_addr_lsb;
+  logic [AddrWidth-5:0] rd_addr_msb;
+  logic [3:0] rd_addr_lsb;
   wire [AddrWidth-1:0] rd_addr;
   wire [DataWidth-1:0] rd_dout;
 
-  logic  [         31:0] dout_reg            [0:NumChannel-1];
+  logic [31:0] dout_reg[0:NumChannel-1];
 
-  logic  [         22:0] sample_counter;
-  wire [          3:0] seq_counter;
+  logic [22:0] sample_counter;
+  wire [3:0] seq_counter;
 
   // Status
 
-  logic                  conflict;
-  logic                  conflict_d;
-  logic  [         31:0] stat_conflict_cnt_r;
+  logic conflict;
+  logic conflict_d;
+  logic [31:0] stat_conflict_cnt_r;
 
   // Control signal CDC & signal mapping
 

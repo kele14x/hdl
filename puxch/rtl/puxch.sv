@@ -84,7 +84,7 @@ module puxch #(
   logic [31:0] ctrl_phase_comp_din;
   logic [31:0] ctrl_phase_comp_dout;
   logic        ctrl_phase_comp_valid;
-  logic [11:0] s_ul_sym_num[NUM_CC];
+  logic [11:0] s_ul_sym_num          [NUM_CC];
 
   puxch_regs i_regs (
       .s_axi_aclk             (s_axi_aclk),

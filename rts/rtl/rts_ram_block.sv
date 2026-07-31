@@ -13,21 +13,21 @@ module rts_ram_block #(
     parameter ADDR_WIDTH = 15,
     parameter DATA_WIDTH = 64
 ) (
-    input  wire                    clk,
+    input  wire                     clk,
     // Port A
-    input  wire                    rsta,
-    input  wire [  ADDR_WIDTH-1:0] addra,
-    input  wire                    ena,
-    input  wire [DATA_WIDTH/8-1:0] wea,
-    input  wire [  DATA_WIDTH-1:0] dina,
-    output logic  [  DATA_WIDTH-1:0] douta,
+    input  wire                     rsta,
+    input  wire  [  ADDR_WIDTH-1:0] addra,
+    input  wire                     ena,
+    input  wire  [DATA_WIDTH/8-1:0] wea,
+    input  wire  [  DATA_WIDTH-1:0] dina,
+    output logic [  DATA_WIDTH-1:0] douta,
     // Port B
-    input  wire                    rstb,
-    input  wire [  ADDR_WIDTH-1:0] addrb,
-    input  wire                    enb,
-    input  wire [DATA_WIDTH/8-1:0] web,
-    input  wire [  DATA_WIDTH-1:0] dinb,
-    output logic  [  DATA_WIDTH-1:0] doutb
+    input  wire                     rstb,
+    input  wire  [  ADDR_WIDTH-1:0] addrb,
+    input  wire                     enb,
+    input  wire  [DATA_WIDTH/8-1:0] web,
+    input  wire  [  DATA_WIDTH-1:0] dinb,
+    output logic [  DATA_WIDTH-1:0] doutb
 );
 
   (* RAM_STYLE="ultra" *)

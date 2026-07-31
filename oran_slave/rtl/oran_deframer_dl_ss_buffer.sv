@@ -39,23 +39,23 @@ module oran_deframer_dl_ss_buffer #(
   // Buffer write signal
 
   logic [$clog2(BUFFER_SYMBOL)-1:0] r0_wr_bank;
-  logic [                     10:0] r0_wr_addr [BUFFER_SYMBOL];
-  logic                             r0_wr_en;
-  logic [            DataWidth-1:0] r0_wr_din;
+  logic [10:0] r0_wr_addr[BUFFER_SYMBOL];
+  logic r0_wr_en;
+  logic [DataWidth-1:0] r0_wr_din;
 
-  logic [            AddrWidth-1:0] r1_wr_addr;
-  logic                             r1_wr_en;
-  logic [            DataWidth-1:0] r1_wr_din;
+  logic [AddrWidth-1:0] r1_wr_addr;
+  logic r1_wr_en;
+  logic [DataWidth-1:0] r1_wr_din;
 
   // Buffer read signal
 
-  logic [            AddrWidth-1:0] r0_rd_addr;
-  logic                             r0_rd_en;
-  logic                             r0_rd_en_d;
-  logic [            DataWidth-1:0] r0_rd_dout;
+  logic [AddrWidth-1:0] r0_rd_addr;
+  logic r0_rd_en;
+  logic r0_rd_en_d;
+  logic [DataWidth-1:0] r0_rd_dout;
 
-  logic                             ram_dbiterrb;
-  logic                             ram_sbiterrb;
+  logic ram_dbiterrb;
+  logic ram_sbiterrb;
 
   wire unused_ram_status = &{1'b0, ram_dbiterrb, ram_sbiterrb};
 
@@ -202,7 +202,7 @@ module oran_deframer_dl_ss_buffer #(
       .dina (r1_wr_din),
       .clkb (clk),
       .rstb ({~r0_rd_en_d, ~r0_rd_en_d}),
-      .enb  ({ r0_rd_en_d,  r0_rd_en}),
+      .enb  ({r0_rd_en_d, r0_rd_en}),
       .addrb(r0_rd_addr),
       .doutb(r0_rd_dout)
   );

@@ -44,7 +44,7 @@ module oran_deframer_eth_filter (
 
   logic [ 7:0] s_axis_tkeep_d;
 
-  wire unused_delayed_axis = &{1'b0, s_axis_tdata_d[63:48], s_axis_tkeep_d[1:0]};
+  wire         unused_delayed_axis = &{1'b0, s_axis_tdata_d[63:48], s_axis_tkeep_d[1:0]};
 
   logic [47:0] mac_dest_mac;
   logic [47:0] mac_source_mac;

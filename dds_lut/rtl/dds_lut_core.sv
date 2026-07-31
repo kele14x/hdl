@@ -12,11 +12,11 @@ module dds_lut_block #(
     parameter bit    NEGATIVE_COS  = 0,
     parameter bit    NEGATIVE_SIN  = 0
 ) (
-    input  wire                         clk,
-    input  wire                         rst,
-    input  wire                         en,
+    input  wire                           clk,
+    input  wire                           rst,
+    input  wire                           en,
     //
-    input  wire       [PHASE_WIDTH-1:0] phase,
+    input  wire         [PHASE_WIDTH-1:0] phase,
     //
     output logic signed [ DATA_WIDTH-1:0] cos_out,
     output logic signed [ DATA_WIDTH-1:0] sin_out
@@ -52,7 +52,8 @@ module dds_lut_block #(
   // phase-cosine look-up table only contains 1/4 of the waveform. Phase in
   // range [1/2*pi, pi) and [3/2*pi, 2*pi) should be sign changed to reflect
   // the trigonometric function.
-  function automatic [PhaseWidthInternal-1:0] phase_addr_mapping(input logic [PHASE_WIDTH-1:0] phase);
+  function automatic [PhaseWidthInternal-1:0] phase_addr_mapping(
+      input logic [PHASE_WIDTH-1:0] phase);
     logic [PHASE_WIDTH-1:0] mapped;
     begin
       mapped = phase;
@@ -147,7 +148,7 @@ module dds_lut_block #(
         sin_phase = phase - PhasePi2;
       end
     end else begin
-        sin_phase = phase;
+      sin_phase = phase;
     end
   end
 
@@ -216,7 +217,7 @@ module dds_lut_block #(
           .ADDR_WIDTH (PhaseWidthInternal),
           .DATA_WIDTH (DATA_WIDTH),
           .NEGATIVE   (NEGATIVE_COS)
-        ) i_cos_rom (
+      ) i_cos_rom (
           .clk  (clk),
           //
           .rsta (1'b0),
@@ -237,7 +238,7 @@ module dds_lut_block #(
           .ADDR_WIDTH (PhaseWidthInternal),
           .DATA_WIDTH (DATA_WIDTH),
           .NEGATIVE   (NEGATIVE_SIN)
-        ) i_sin_rom (
+      ) i_sin_rom (
           .clk  (clk),
           //
           .rsta (1'b0),
@@ -269,7 +270,7 @@ module dds_lut_block #(
       if (USE_DUAL_PORT == "TRUE") begin
         sin_out <= 0;
       end else begin
-        sin_out <= (2 ** (DATA_WIDTH  - 1 ) - 2);
+        sin_out <= (2 ** (DATA_WIDTH - 1) - 2);
       end
     end else if (sin_negative_dd) begin
       sin_out <= -sin_dout;

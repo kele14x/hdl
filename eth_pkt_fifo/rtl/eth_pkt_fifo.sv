@@ -214,11 +214,11 @@ module eth_pkt_fifo #(
   //           -> rd_data[0] -> rd_data[1] -> rd_data[2] (m_axis_tdata)
   //                                          m_axis_tready
 
-  assign rd_empty = (rd_addr == tail_addr);
+  assign rd_empty  = (rd_addr == tail_addr);
 
-  assign rd_en[0] = !rd_empty && rd_rdy[0];
-  assign rd_en[1] = rd_vld[0] && rd_rdy[1];
-  assign rd_en[2] = rd_vld[1] && rd_rdy[2];
+  assign rd_en[0]  = !rd_empty && rd_rdy[0];
+  assign rd_en[1]  = rd_vld[0] && rd_rdy[1];
+  assign rd_en[2]  = rd_vld[1] && rd_rdy[2];
 
   assign rd_rdy[0] = (!rd_vld[0] || !rd_vld[1] || !rd_vld[2] || m_axis_tready);
   assign rd_rdy[1] = (!rd_vld[1] || !rd_vld[2] || m_axis_tready);

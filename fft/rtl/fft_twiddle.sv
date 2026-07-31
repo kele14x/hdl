@@ -7,7 +7,7 @@
 
 module fft_twiddle #(
     parameter integer NUM_ANT      = 4,
-    parameter logic     INV_FFT      = 1'b0,
+    parameter logic   INV_FFT      = 1'b0,
     parameter integer LOG_FFT_SIZE = 4,
     parameter integer DATA_WIDTH   = 18
 ) (
@@ -32,17 +32,17 @@ module fft_twiddle #(
 
   localparam integer Latency = 9;
   localparam integer LogFftSize2 = LOG_FFT_SIZE + integer'(LOG_FFT_SIZE & 1) - 1;
-  
+
   // Signals
 
   // Counter count from 0 to LOG_FFT_SIZE - 1
-  logic         [             3:0] counter_ch;
+  logic       [             3:0] counter_ch;
   wire        [             3:0] counter_ch_max;
 
-  logic         [LOG_FFT_SIZE-1:0] counter;
+  logic       [LOG_FFT_SIZE-1:0] counter;
   wire        [LOG_FFT_SIZE-1:0] counter_max;
 
-  logic                            state;
+  logic                          state;
 
   wire        [LOG_FFT_SIZE-1:0] twiddle;
 

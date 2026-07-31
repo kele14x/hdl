@@ -94,7 +94,7 @@ module pps_top #(
   logic [22:0] ctrl_dl_offset;
   logic [22:0] ctrl_ul_offset;
 
-  wire unused_axi_addr = |{s_axi_awaddr[31:7], s_axi_araddr[31:7]};
+  wire         unused_axi_addr = |{s_axi_awaddr[31:7], s_axi_araddr[31:7]};
 
   logic [31:0] stat_pps_offset;
 
@@ -345,8 +345,8 @@ module pps_top #(
   );
 
   assign raw_10ms_strobe = start_of_frame;
-  assign ctrl_dl_offset = 23'd0;
-  assign ctrl_ul_offset = 23'd0;
+  assign ctrl_dl_offset  = 23'd0;
+  assign ctrl_ul_offset  = 23'd0;
 
   pps_delay i_dl (
       .clk        (clk),

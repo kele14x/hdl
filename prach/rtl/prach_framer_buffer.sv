@@ -7,25 +7,25 @@ module prach_framer_buffer #(
     parameter int ANT_ID  = 0,
     parameter int NUM_ANT = 4
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire [15:0] din_dr,
-    input  wire [15:0] din_di,
-    input  wire        din_sf,
-    input  wire        din_sl,
-    input  wire        din_sy,
-    input  wire [ 1:0] din_chn,
-    input  wire        din_dv,
-    input  wire        din_last,
+    input  wire  [15:0] din_dr,
+    input  wire  [15:0] din_di,
+    input  wire         din_sf,
+    input  wire         din_sl,
+    input  wire         din_sy,
+    input  wire  [ 1:0] din_chn,
+    input  wire         din_dv,
+    input  wire         din_last,
     //
-    input  wire [11:0] rd_section_id,
+    input  wire  [11:0] rd_section_id,
     //
-    output logic  [63:0] m_axis_tdata,
-    output wire [ 7:0] m_axis_tkeep,
-    output wire        m_axis_tlast,
-    output logic  [31:0] m_axis_tuser,
-    output wire        m_axis_tvalid
+    output logic [63:0] m_axis_tdata,
+    output wire  [ 7:0] m_axis_tkeep,
+    output wire         m_axis_tlast,
+    output logic [31:0] m_axis_tuser,
+    output wire         m_axis_tvalid
 );
 
   // Parameters
@@ -57,7 +57,7 @@ module prach_framer_buffer #(
   logic [   NUM_ANT-1:0] rd_en_d;
   logic [   NUM_ANT-1:0] rd_en_dd;
   logic                  rd_en_any;
-  logic [DataWidthB-1:0] rd_data           [NUM_ANT];
+  logic [DataWidthB-1:0] rd_data    [NUM_ANT];
   logic [DataWidthB-1:0] rd_data_c;
   logic                  rd_done;
 
@@ -153,10 +153,10 @@ module prach_framer_buffer #(
     for (genvar ant = 0; ant < NUM_ANT; ant++) begin : g_ram
 
       ram_sdp_asym #(
-          .ADDR_WIDTH_A (AddrWidthA),
-          .DATA_WIDTH_A (DataWidthA),
-          .ADDR_WIDTH_B (AddrWidthB),
-          .DATA_WIDTH_B (DataWidthB),
+          .ADDR_WIDTH_A  (AddrWidthA),
+          .DATA_WIDTH_A  (DataWidthA),
+          .ADDR_WIDTH_B  (AddrWidthB),
+          .DATA_WIDTH_B  (DataWidthB),
           .READ_LATENCY_B(2)
       ) u_ram_sdp (
           .clka (clk),

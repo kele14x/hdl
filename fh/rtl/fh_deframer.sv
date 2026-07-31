@@ -108,21 +108,21 @@ module fh_deframer (
       .FIFO_LATENCY(3),
       .USER_WIDTH  (80)
   ) i_fh_fifo (
-      .clk           (clk),
-      .rst           (rst),
+      .clk          (clk),
+      .rst          (rst),
       //
-      .s_axis_tdata  (s0_axis_tdata),
-      .s_axis_tkeep  (s0_axis_tkeep),
-      .s_axis_tlast  (s0_axis_tlast),
-      .s_axis_tuser  (s0_axis_tuser),
-      .s_axis_tvalid (s0_axis_tvalid),
+      .s_axis_tdata (s0_axis_tdata),
+      .s_axis_tkeep (s0_axis_tkeep),
+      .s_axis_tlast (s0_axis_tlast),
+      .s_axis_tuser (s0_axis_tuser),
+      .s_axis_tvalid(s0_axis_tvalid),
       //
-      .m_axis_tdata  (m_axis_tdata),
-      .m_axis_tkeep  (m_axis_tkeep),
-      .m_axis_tlast  (m_axis_tlast),
-      .m_axis_tuser  (m_axis_tuser),
-      .m_axis_tvalid (m_axis_tvalid),
-      .m_axis_tready (1'b1)
+      .m_axis_tdata (m_axis_tdata),
+      .m_axis_tkeep (m_axis_tkeep),
+      .m_axis_tlast (m_axis_tlast),
+      .m_axis_tuser (m_axis_tuser),
+      .m_axis_tvalid(m_axis_tvalid),
+      .m_axis_tready(1'b1)
   );
 
   fh_deframer_64to32 #(
@@ -130,21 +130,21 @@ module fh_deframer (
       .FIFO_LATENCY(3),
       .USER_WIDTH  (80)
   ) i_ptp_fifo (
-      .clk           (clk),
-      .rst           (rst),
+      .clk          (clk),
+      .rst          (rst),
       //
-      .s_axis_tdata  (s0_ptp_tdata),
-      .s_axis_tkeep  (s0_ptp_tkeep),
-      .s_axis_tlast  (s0_ptp_tlast),
-      .s_axis_tuser  (s0_ptp_tuser),
-      .s_axis_tvalid (s0_ptp_tvalid),
+      .s_axis_tdata (s0_ptp_tdata),
+      .s_axis_tkeep (s0_ptp_tkeep),
+      .s_axis_tlast (s0_ptp_tlast),
+      .s_axis_tuser (s0_ptp_tuser),
+      .s_axis_tvalid(s0_ptp_tvalid),
       //
-      .m_axis_tdata  (m_ptp_tdata),
-      .m_axis_tkeep  (m_ptp_tkeep),
-      .m_axis_tlast  (m_ptp_tlast),
-      .m_axis_tuser  (m_ptp_tuser),
-      .m_axis_tvalid (m_ptp_tvalid),
-      .m_axis_tready (m_ptp_tready)
+      .m_axis_tdata (m_ptp_tdata),
+      .m_axis_tkeep (m_ptp_tkeep),
+      .m_axis_tlast (m_ptp_tlast),
+      .m_axis_tuser (m_ptp_tuser),
+      .m_axis_tvalid(m_ptp_tvalid),
+      .m_axis_tready(m_ptp_tready)
   );
 
   fh_deframer_64to32 #(
@@ -152,21 +152,21 @@ module fh_deframer (
       .FIFO_LATENCY(3),
       .USER_WIDTH  (1)
   ) i_message_fifo (
-      .clk           (clk),
-      .rst           (rst),
+      .clk          (clk),
+      .rst          (rst),
       //
-      .s_axis_tdata  (s0_message_tdata),
-      .s_axis_tkeep  (s0_message_tkeep),
-      .s_axis_tlast  (s0_message_tlast),
-      .s_axis_tuser  ('b0),
-      .s_axis_tvalid (s0_message_tvalid),
+      .s_axis_tdata (s0_message_tdata),
+      .s_axis_tkeep (s0_message_tkeep),
+      .s_axis_tlast (s0_message_tlast),
+      .s_axis_tuser ('b0),
+      .s_axis_tvalid(s0_message_tvalid),
       //
-      .m_axis_tdata  (m_message_tdata),
-      .m_axis_tkeep  (m_message_tkeep),
-      .m_axis_tlast  (m_message_tlast),
-      .m_axis_tuser  (message_tuser_unused),
-      .m_axis_tvalid (m_message_tvalid),
-      .m_axis_tready (m_message_tready)
+      .m_axis_tdata (m_message_tdata),
+      .m_axis_tkeep (m_message_tkeep),
+      .m_axis_tlast (m_message_tlast),
+      .m_axis_tuser (message_tuser_unused),
+      .m_axis_tvalid(m_message_tvalid),
+      .m_axis_tready(m_message_tready)
   );
 
 endmodule

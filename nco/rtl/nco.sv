@@ -86,13 +86,13 @@ module nco #(
 
   // Signals
 
-  logic         [          PhaseWidth-1:0] phase_accumulator;
+  logic       [          PhaseWidth-1:0] phase_accumulator;
   wire        [          PhaseWidth-1:0] phase_wrapped;
   wire        [            PhaseWidth:0] phase_pre_round   [0:NUM_PARALLEL-1];
 
   wire        [PHASE_FRACTION_WIDTH-1:0] lfsr;
 
-  logic         [ PHASE_INTEGER_WIDTH-1:0] phase_int         [0:NUM_PARALLEL-1];
+  logic       [ PHASE_INTEGER_WIDTH-1:0] phase_int         [0:NUM_PARALLEL-1];
 
   wire signed [                    15:0] cos_s             [0:NUM_PARALLEL-1];
   wire signed [                    15:0] sin_s             [0:NUM_PARALLEL-1];
@@ -101,7 +101,7 @@ module nco #(
 
   function [PhaseWidth-1:0] wrap_2pi;
     input [PhaseWidth:0] phase;
-    logic   [PhaseWidth:0] phase_mod;
+    logic [PhaseWidth:0] phase_mod;
     begin
       // equals to wrap_2pi = phase % Phase2Pi;
       phase_mod = phase;

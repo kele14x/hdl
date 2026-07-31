@@ -86,30 +86,30 @@ module oran_framer_ul_ss_adaptor #(
 
   // Write 1 REs at each clock tick
 
-  logic                 syml_wr_run;
-  logic                 syml_wr_is_sof;
+  logic syml_wr_run;
+  logic syml_wr_is_sof;
 
-  logic                 syml_wr_bank;
+  logic syml_wr_bank;
   logic [AddrWidth-1:0] syml_wr_addr;
-  logic [  AddrWidth:0] syml_wr_addr_f;
-  logic                 syml_wr_en;
-  logic [         31:0] syml_wr_data;
+  logic [AddrWidth:0] syml_wr_addr_f;
+  logic syml_wr_en;
+  logic [31:0] syml_wr_data;
 
   // Read 2 REs at each clock tick
-  logic                 syml_rd_bank;
+  logic syml_rd_bank;
   logic [AddrWidth-2:0] syml_rd_addr;
   logic [AddrWidth-1:0] syml_rd_addr_f;
-  logic                 syml_rd_en;
-  logic                 syml_rd_en_d;
-  logic [         63:0] syml_rd_data;
+  logic syml_rd_en;
+  logic syml_rd_en_d;
+  logic [63:0] syml_rd_data;
 
   logic [AddrWidth-2:0] syml_rd_addr_max;
 
-  logic [         31:0] ram_douta;
-  logic                 ram_dbiterra;
-  logic                 ram_sbiterra;
-  logic                 ram_dbiterrb;
-  logic                 ram_sbiterrb;
+  logic [31:0] ram_douta;
+  logic ram_dbiterra;
+  logic ram_sbiterra;
+  logic ram_dbiterrb;
+  logic ram_sbiterrb;
 
   wire unused_ram_outputs = &{
     1'b0,
@@ -120,7 +120,7 @@ module oran_framer_ul_ss_adaptor #(
     ram_sbiterrb
   };
 
-  logic                 m_axis_tlast_pre;
+  logic m_axis_tlast_pre;
 
 
   // Main
@@ -300,7 +300,7 @@ module oran_framer_ul_ss_adaptor #(
     if (state == S_IDLE && req_valid) begin
       syml_rd_addr <= (AddrWidth - 1)'({1'b0, req_startprb} * 6 + ctrl_syml_rd_shift);
     end else if (state == S_WR) begin
-      syml_rd_addr <= syml_rd_addr + {{(AddrWidth - 2){1'b0}}, 1'b1};
+      syml_rd_addr <= syml_rd_addr + {{(AddrWidth - 2) {1'b0}}, 1'b1};
     end
   end
 
@@ -434,7 +434,7 @@ module oran_framer_ul_ss_adaptor #(
       .douta(ram_douta),
       .clkb (clk),
       .rstb ({~syml_rd_en_d, 1'b0}),
-      .enb  ({ syml_rd_en_d, syml_rd_en}),
+      .enb  ({syml_rd_en_d, syml_rd_en}),
       .web  (syml_rd_en),
       .addrb(syml_rd_addr_f),
       .dinb ('0),

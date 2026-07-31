@@ -8,7 +8,7 @@ module pps_delay (
     input var         clk,
     input var         rst,
     //
-    input var         sync_in,       // required 10ms strobe
+    input var         sync_in,      // required 10ms strobe
     //
     output var        strobe_10ms,
     //

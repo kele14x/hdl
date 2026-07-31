@@ -4,38 +4,38 @@
 
 module fft #(
     parameter integer NUM_ANT            = 4,
-    parameter logic     INV_FFT            = 1'b0,
+    parameter logic   INV_FFT            = 1'b0,
     parameter integer LOG_FFT_SIZE       = 11,
     parameter integer DATA_WIDTH         = 16,
-    parameter logic     BIT_REVERSED_INPUT = 1'b1
+    parameter logic   BIT_REVERSED_INPUT = 1'b1
 ) (
-    input  wire                         clk,
-    input  wire                         rst,
+    input  wire                          clk,
+    input  wire                          rst,
     // Data input
-    input  wire signed [DATA_WIDTH-1:0] din_dr,
-    input  wire signed [DATA_WIDTH-1:0] din_di,
-    input  wire                         din_sf,
-    input  wire                         din_sl,
-    input  wire                         din_sy,
-    input  wire        [           3:0] din_chn,
-    input  wire                         din_dv,
-    input  wire                         din_last,
+    input  wire signed  [DATA_WIDTH-1:0] din_dr,
+    input  wire signed  [DATA_WIDTH-1:0] din_di,
+    input  wire                          din_sf,
+    input  wire                          din_sl,
+    input  wire                          din_sy,
+    input  wire         [           3:0] din_chn,
+    input  wire                          din_dv,
+    input  wire                          din_last,
     // Data output
-    output logic signed  [DATA_WIDTH-1:0] dout_dr,
-    output logic signed  [DATA_WIDTH-1:0] dout_di,
-    output wire                         dout_sf,
-    output wire                         dout_sl,
-    output wire                         dout_sy,
-    output logic         [           3:0] dout_chn,
-    output logic                          dout_dv,
-    output wire                         dout_last,
+    output logic signed [DATA_WIDTH-1:0] dout_dr,
+    output logic signed [DATA_WIDTH-1:0] dout_di,
+    output wire                          dout_sf,
+    output wire                          dout_sl,
+    output wire                          dout_sy,
+    output logic        [           3:0] dout_chn,
+    output logic                         dout_dv,
+    output wire                          dout_last,
     //
     // 0: 1k, 1: 2k, 2: 4k
-    input  wire        [           1:0] ctrl_size,
+    input  wire         [           1:0] ctrl_size,
     // 0: 16 (30.72), 1: 8 (61.44), 2: 4 (122.88)
-    input  wire        [           1:0] ctrl_itlv,
+    input  wire         [           1:0] ctrl_itlv,
     // Status output
-    output logic                          stat_ovf
+    output logic                         stat_ovf
 );
 
   // Local parameters
@@ -86,22 +86,22 @@ module fft #(
   // din_di =>
   // din_dv =>
 
-  logic signed  [  DATA_WIDTH-1:0] data_dr;
-  logic signed  [  DATA_WIDTH-1:0] data_di;
-  logic                            data_dv;
+  logic signed [  DATA_WIDTH-1:0] data_dr;
+  logic signed [  DATA_WIDTH-1:0] data_di;
+  logic                           data_dv;
 
-  wire signed [DataWidthInt-1:0] data_dr_s       [0:NumStages];
-  wire signed [DataWidthInt-1:0] data_di_s       [0:NumStages];
-  wire                           data_dv_s       [0:NumStages];
+  wire signed  [DataWidthInt-1:0] data_dr_s       [0:NumStages];
+  wire signed  [DataWidthInt-1:0] data_di_s       [0:NumStages];
+  wire                            data_dv_s       [0:NumStages];
 
-  wire        [   NumStages-1:0] ovf;
-  wire                           ovf_at_saturate;
+  wire         [   NumStages-1:0] ovf;
+  wire                            ovf_at_saturate;
 
-  logic                            dv_d;
-  wire        [             3:0] counter_max;
+  logic                           dv_d;
+  wire         [             3:0] counter_max;
 
-  logic         [            16:0] latency;
-  logic         [            11:0] bypass;
+  logic        [            16:0] latency;
+  logic        [            11:0] bypass;
 
   genvar i;
 
@@ -133,8 +133,8 @@ module fft #(
   end
 
   // Connect input
-  assign data_dr_s[0] = {{(DataWidthInt-DATA_WIDTH){data_dr[DATA_WIDTH-1]}}, data_dr};
-  assign data_di_s[0] = {{(DataWidthInt-DATA_WIDTH){data_di[DATA_WIDTH-1]}}, data_di};
+  assign data_dr_s[0] = {{(DataWidthInt - DATA_WIDTH) {data_dr[DATA_WIDTH-1]}}, data_dr};
+  assign data_di_s[0] = {{(DataWidthInt - DATA_WIDTH) {data_di[DATA_WIDTH-1]}}, data_di};
   assign data_dv_s[0] = data_dv;
 
   always_ff @(posedge clk) begin

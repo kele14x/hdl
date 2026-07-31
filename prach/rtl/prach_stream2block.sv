@@ -5,35 +5,35 @@
 module prach_stream2block #(
     parameter int NUM_ANT = 4
 ) (
-    input  wire               clk,
-    input  wire               rst,
+    input  wire                clk,
+    input  wire                rst,
     //
-    input  wire [       15:0] din_dr,
-    input  wire [       15:0] din_di,
-    input  wire               din_sf,
-    input  wire               din_sl,
-    input  wire               din_sy,
-    input  wire [        7:0] din_chn,
-    input  wire               din_dv,
-    input  wire               din_last,
+    input  wire  [       15:0] din_dr,
+    input  wire  [       15:0] din_di,
+    input  wire                din_sf,
+    input  wire                din_sl,
+    input  wire                din_sy,
+    input  wire  [        7:0] din_chn,
+    input  wire                din_dv,
+    input  wire                din_last,
     //
-    output logic  [       15:0] dout_dr,
-    output logic  [       15:0] dout_di,
-    output wire               dout_sf,
-    output wire               dout_sl,
-    output wire               dout_sy,
-    output wire [        1:0] dout_chn,
-    output wire               dout_dv,
-    output wire               dout_last,
+    output logic [       15:0] dout_dr,
+    output logic [       15:0] dout_di,
+    output wire                dout_sf,
+    output wire                dout_sl,
+    output wire                dout_sy,
+    output wire  [        1:0] dout_chn,
+    output wire                dout_dv,
+    output wire                dout_last,
     //
-    input  wire [NUM_ANT-1:0] rd_channel_req,
-    output logic  [NUM_ANT-1:0] rd_channel_ack,
+    input  wire  [NUM_ANT-1:0] rd_channel_req,
+    output logic [NUM_ANT-1:0] rd_channel_ack,
     // CSR
     //----
-    input  wire [        8:0] ctrl_start_symbol0,
-    input  wire [        8:0] ctrl_start_symbol1,
-    input  wire [       18:0] ctrl_start_sample,
-    input  wire [        3:0] ctrl_num_symbol
+    input  wire  [        8:0] ctrl_start_symbol0,
+    input  wire  [        8:0] ctrl_start_symbol1,
+    input  wire  [       18:0] ctrl_start_sample,
+    input  wire  [        3:0] ctrl_num_symbol
 );
 
   // Notes

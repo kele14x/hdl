@@ -56,7 +56,7 @@ module prach_fft_ditfft3_bf2 #(
   function automatic logic signed [DATA_WIDTH:0] op1(input logic signed [DATA_WIDTH-1:0] a,
                                                      input logic signed [DATA_WIDTH-1:0] b);
     logic signed [DATA_WIDTH+1:0] t;
-    t = {a[DATA_WIDTH-1], a, 1'b0} - {{2{b[DATA_WIDTH-1]}}, b} + {{(DATA_WIDTH+1){1'b0}}, 1'b1};
+    t = {a[DATA_WIDTH-1], a, 1'b0} - {{2{b[DATA_WIDTH-1]}}, b} + {{(DATA_WIDTH + 1) {1'b0}}, 1'b1};
     t[0] = t[0] & 1'b0;
     return $signed(t[DATA_WIDTH+1:1]);
   endfunction
@@ -159,9 +159,9 @@ module prach_fft_ditfft3_bf2 #(
              ~(x2i_s[DATA_WIDTH-:2] == 2'b00 || x2i_s[DATA_WIDTH-:2] == 2'b11);
   end
 
-  assign dout_dr   = x2r;
-  assign dout_di   = x2i;
-  assign ovf       = ovf_r;
+  assign dout_dr = x2r;
+  assign dout_di = x2i;
+  assign ovf     = ovf_r;
 
   delay #(
       .WIDTH(DATA_WIDTH * 2 + 1),

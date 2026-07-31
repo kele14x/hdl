@@ -24,23 +24,23 @@ module oran_framer_ul_ss_app (
 
   import oran_pkg::*;
 
-  logic        insert_app_hdr_n;
-  logic        extra_last;
+  logic insert_app_hdr_n;
+  logic extra_last;
 
   // Application Header (32-bit)
-  logic        app_datadirection;  // 0 for UL, 1 for DL
-  logic [ 2:0] app_payloadversion;
-  logic [ 3:0] app_filterindex;
-  logic [ 7:0] app_frameid;
-  logic [ 3:0] app_subframeid;
-  logic [ 5:0] app_slotid;
-  logic [ 5:0] app_symbolid;
+  logic app_datadirection;  // 0 for UL, 1 for DL
+  logic [2:0] app_payloadversion;
+  logic [3:0] app_filterindex;
+  logic [7:0] app_frameid;
+  logic [3:0] app_subframeid;
+  logic [5:0] app_slotid;
+  logic [5:0] app_symbolid;
 
   logic [31:0] app_header;
 
   logic [63:0] s_axis_tdata_rev;
   logic [63:0] s_axis_tdata_d;
-  logic [ 7:0] s_axis_tkeep_d;
+  logic [7:0] s_axis_tkeep_d;
 
   wire unused_app_header_fields = &{
     1'b0,

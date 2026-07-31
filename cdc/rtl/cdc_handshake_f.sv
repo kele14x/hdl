@@ -10,15 +10,15 @@ module cdc_handshake_f #(
     parameter int SRC_SYNC_FF  = 32'd4,
     parameter int WIDTH        = 32'd1
 ) (
-    input  wire              src_clk,
-    input  wire [WIDTH-1:0]  src_in,
-    input  wire              src_valid,
-    output wire              src_ready,
+    input  wire             src_clk,
+    input  wire [WIDTH-1:0] src_in,
+    input  wire             src_valid,
+    output wire             src_ready,
     //
-    input  wire              dest_clk,
-    output wire [WIDTH-1:0]  dest_out,
-    output wire              dest_valid,
-    input  wire              dest_ready
+    input  wire             dest_clk,
+    output wire [WIDTH-1:0] dest_out,
+    output wire             dest_valid,
+    input  wire             dest_ready
 );
 
   initial begin : drc_check
@@ -93,7 +93,7 @@ module cdc_handshake_f #(
     end
   end
 
-  assign src_count_eq  = (src_count_ff == dest_count_sync_ff);
+  assign src_count_eq = (src_count_ff == dest_count_sync_ff);
 
   always @(posedge src_clk) begin
     if (src_count_eq) begin

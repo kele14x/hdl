@@ -40,7 +40,7 @@ module pps_ts_checker (
   wire                unused_offset_acc_req;
 
 
-  
+
   always_ff @(posedge clk) begin
     pps_in_d <= pps_in;
   end

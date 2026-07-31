@@ -7,30 +7,30 @@ module rts2_playback_ctrl #(
 ) (
     // DataMover I/F
     //--------------
-    input  wire        ddr4_clk,
-    input  wire        ddr4_rst,
+    input  wire         ddr4_clk,
+    input  wire         ddr4_rst,
     //
-    output logic  [79:0] m_axis_mm2s_cmd_tdata,
-    output wire        m_axis_mm2s_cmd_tvalid,
-    input  wire        m_axis_mm2s_cmd_tready,
+    output logic [79:0] m_axis_mm2s_cmd_tdata,
+    output wire         m_axis_mm2s_cmd_tvalid,
+    input  wire         m_axis_mm2s_cmd_tready,
     //
-    input  wire [ 7:0] s_axis_mm2s_sts_tdata,
-    input  wire [ 0:0] s_axis_mm2s_sts_tkeep,
-    input  wire        s_axis_mm2s_sts_tlast,
-    input  wire        s_axis_mm2s_sts_tvalid,
-    output wire        s_axis_mm2s_sts_tready,
+    input  wire  [ 7:0] s_axis_mm2s_sts_tdata,
+    input  wire  [ 0:0] s_axis_mm2s_sts_tkeep,
+    input  wire         s_axis_mm2s_sts_tlast,
+    input  wire         s_axis_mm2s_sts_tvalid,
+    output wire         s_axis_mm2s_sts_tready,
     //
-    input  wire        mm2s_err,
+    input  wire         mm2s_err,
     //
-    input  wire        ctrl_en,
-    input  wire [31:0] ctrl_addr_offset,
-    input  wire [31:0] ctrl_addr_size
+    input  wire         ctrl_en,
+    input  wire  [31:0] ctrl_addr_offset,
+    input  wire  [31:0] ctrl_addr_size
 );
 
   // Parameters
 
   localparam [ADDR_WIDTH-1:0] AddrBase = 40'h04_0000_0000;
-  localparam [          31:0] PageSize = 32'd4096;
+  localparam [31:0] PageSize = 32'd4096;
 
   localparam integer S_RST = 0;
   localparam integer S_IDLE = 1;
@@ -40,22 +40,22 @@ module rts2_playback_ctrl #(
 
   // Signals
 
-  wire                  ctrl_en_s;
-  wire [          31:0] ctrl_addr_offset_s;
-  wire [          31:0] ctrl_addr_size_s;
+  wire                   ctrl_en_s;
+  wire  [          31:0] ctrl_addr_offset_s;
+  wire  [          31:0] ctrl_addr_size_s;
 
-  logic  [          31:0] offset_reg;
-  logic  [          31:0] size_reg;
-  logic  [           3:0] tag_reg;
+  logic [          31:0] offset_reg;
+  logic [          31:0] size_reg;
+  logic [           3:0] tag_reg;
 
-  wire [           3:0] mm2s_rsvd;
-  wire [           3:0] mm2s_tag;
-  wire [ADDR_WIDTH-1:0] mm2s_saddr;
-  wire                  mm2s_drr;
-  wire                  mm2s_eof;
-  wire [           5:0] mm2s_dsa;
-  wire                  mm2s_type;
-  wire [          22:0] mm2s_btt;
+  wire  [           3:0] mm2s_rsvd;
+  wire  [           3:0] mm2s_tag;
+  wire  [ADDR_WIDTH-1:0] mm2s_saddr;
+  wire                   mm2s_drr;
+  wire                   mm2s_eof;
+  wire  [           5:0] mm2s_dsa;
+  wire                   mm2s_type;
+  wire  [          22:0] mm2s_btt;
 
   integer state, state_next;
 
@@ -201,7 +201,7 @@ module rts2_playback_ctrl #(
 
   assign mm2s_rsvd  = 4'h0;
   assign mm2s_tag   = tag_reg;
-  assign mm2s_saddr = AddrBase + {{(ADDR_WIDTH-32){1'b0}}, offset_reg};
+  assign mm2s_saddr = AddrBase + {{(ADDR_WIDTH - 32) {1'b0}}, offset_reg};
   assign mm2s_drr   = 1'b0;
   assign mm2s_eof   = size_reg > PageSize ? 1'b0 : 1'b1;
   assign mm2s_dsa   = 6'h0;

@@ -154,11 +154,11 @@ module fh_framer (
       .clk          (tx_eth_clk),
       .rst          (tx_eth_rst),
       //
-      .s_axis_tdata ({s2_axis_tdata,  s1_axis_tdata,  s0_axis_tdata}),
-      .s_axis_tkeep ({s2_axis_tkeep,  s1_axis_tkeep,  s0_axis_tkeep}),
-      .s_axis_tlast ({s2_axis_tlast,  s1_axis_tlast,  s0_axis_tlast}),
-      .s_axis_tuser ({18'b0,          s1_axis_tuser,  18'b0}),
-      .s_axis_tdest ({1'b1,           1'b1,           1'b1}),
+      .s_axis_tdata ({s2_axis_tdata, s1_axis_tdata, s0_axis_tdata}),
+      .s_axis_tkeep ({s2_axis_tkeep, s1_axis_tkeep, s0_axis_tkeep}),
+      .s_axis_tlast ({s2_axis_tlast, s1_axis_tlast, s0_axis_tlast}),
+      .s_axis_tuser ({18'b0, s1_axis_tuser, 18'b0}),
+      .s_axis_tdest ({1'b1, 1'b1, 1'b1}),
       .s_axis_tvalid({s2_axis_tvalid, s1_axis_tvalid, s0_axis_tvalid}),
       .s_axis_tready({s2_axis_tready, s1_axis_tready, s0_axis_tready}),
       //

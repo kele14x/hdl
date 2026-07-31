@@ -4,23 +4,23 @@
 `default_nettype none
 
 module ecpri_deframer_odm (
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire [31:0] s_axis_tdata,
-    input  wire [ 3:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
-    input  wire        s_axis_tvalid,
-    input  wire [79:0] s_axis_tuser,
+    input  wire  [31:0] s_axis_tdata,
+    input  wire  [ 3:0] s_axis_tkeep,
+    input  wire         s_axis_tlast,
+    input  wire         s_axis_tvalid,
+    input  wire  [79:0] s_axis_tuser,
     // eCPRI O-RAN Delay Measurement Header
-    output logic         m_odm_header_valid,
-    output logic  [ 7:0] m_odm_measurementid,
-    output logic  [ 7:0] m_odm_actiontype,
-    output logic  [79:0] m_odm_timestamp,
-    output logic  [63:0] m_odm_compensation,
-    output logic  [79:0] m_odm_timestamp2,
+    output logic        m_odm_header_valid,
+    output logic [ 7:0] m_odm_measurementid,
+    output logic [ 7:0] m_odm_actiontype,
+    output logic [79:0] m_odm_timestamp,
+    output logic [63:0] m_odm_compensation,
+    output logic [79:0] m_odm_timestamp2,
     //
-    output logic  [15:0] stat_topology_id
+    output logic [15:0] stat_topology_id
 );
 
   import ecpri_pkg::*;

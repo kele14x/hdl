@@ -21,15 +21,15 @@ module eth_injector #(
 
   // synthesis translate_off
 
-  pcap_handler_t pcap;
-  pkt_buffer_t   pkt;
+  pcap_handler_t                     pcap;
+  pkt_buffer_t                       pkt;
 
-  logic [TDATA_WIDTH-1:0]   buf_tdata [2000];
-  logic [TDATA_WIDTH/8-1:0] buf_tkeep [2000];
-  int     buf_bytes;
-  int     buf_len;
-  longint wait_time;
-  longint ts_shift;
+  logic          [  TDATA_WIDTH-1:0] buf_tdata [2000];
+  logic          [TDATA_WIDTH/8-1:0] buf_tkeep [2000];
+  int                                buf_bytes;
+  int                                buf_len;
+  longint                            wait_time;
+  longint                            ts_shift;
 
   // Open and play a .pcap file.
   task automatic play_pcap(string fn);
@@ -46,14 +46,15 @@ module eth_injector #(
 `endif
 
     // Loop send each packet, assume packet is placed in order with timestamp.
-    while(pkt.len != 0) begin
+    while (pkt.len != 0) begin
       wait_time = pkt.ts - $time() - ts_shift;
       wait_time = (wait_time > 0) ? wait_time : 0;
 `ifdef DEBUG
-      $display("Packet TS: %d ns, sim time: %d (%d) ns, wait: %d ns.", pkt.ts, $time(), $signed(ts_shift + $time()), wait_time);
+      $display("Packet TS: %d ns, sim time: %d (%d) ns, wait: %d ns.", pkt.ts, $time(),
+               $signed(ts_shift + $time()), wait_time);
 `endif
       #(wait_time);
-  
+
       copy_pkg();
       send_buffer();
 
@@ -84,15 +85,15 @@ module eth_injector #(
     buf_bytes = pkt.len == 64 ? 60 : pkt.len; // !! Bug workaround for packet less than 64-byte (C-Plane message)
     buf_len = buf_bytes % 8 == 0 ? buf_bytes / 8 : buf_bytes / 8 + 1;
     for (int i = 0; i < buf_len; i++) begin
-        for (int j = 0; j < 8; j++) begin
-            if (i*8+j < buf_bytes) begin
-                buf_tdata[i][j*8+7-:8] = pkt.buffer[i*8+j];
-                buf_tkeep[i][j] = 1'b1;
-            end else begin
-                buf_tdata[i][j*8+7-:8] = '0;
-                buf_tkeep[i][j] = 1'b0;
-            end
+      for (int j = 0; j < 8; j++) begin
+        if (i * 8 + j < buf_bytes) begin
+          buf_tdata[i][j*8+7-:8] = pkt.buffer[i*8+j];
+          buf_tkeep[i][j] = 1'b1;
+        end else begin
+          buf_tdata[i][j*8+7-:8] = '0;
+          buf_tkeep[i][j] = 1'b0;
         end
+      end
     end
   endfunction
 

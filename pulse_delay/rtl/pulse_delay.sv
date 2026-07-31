@@ -5,23 +5,23 @@
 module pulse_delay #(
     parameter integer WIDTH = 8
 ) (
-    input  wire             clk,
-    input  wire             rst,
+    input  wire              clk,
+    input  wire              rst,
     //
-    input  wire             pulse_in,
-    output logic              pulse_out,
+    input  wire              pulse_in,
+    output logic             pulse_out,
     //
-    input  wire [WIDTH-1:0] delay
+    input  wire  [WIDTH-1:0] delay
 );
 
   localparam [WIDTH-1:0] DelayOffset = 2;
 
-  logic  [WIDTH-1:0] counter;
-  logic  [WIDTH-1:0] counter_in;
-  wire [WIDTH-1:0] counter_out;
-  wire             counter_empty;
-  wire             pulse_v;
-  wire             fifo_full;
+  logic [WIDTH-1:0] counter;
+  logic [WIDTH-1:0] counter_in;
+  wire  [WIDTH-1:0] counter_out;
+  wire              counter_empty;
+  wire              pulse_v;
+  wire              fifo_full;
 
   always_ff @(posedge clk) begin
     if (rst) begin

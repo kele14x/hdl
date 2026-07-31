@@ -20,21 +20,21 @@ module oran_deframer_dl_ss_symnum (
     output var [ 8:0] m_axis_tuser
 );
 
-  logic        wait_app_header_n;
+  logic wait_app_header_n;
 
   logic [63:0] s_axis_tdata_reversed;
 
   // Application common header (32-bit)
 
-  logic        app_datadirection;
-  logic [ 2:0] app_payloadversion;
-  logic [ 3:0] app_filterindex;
-  logic [ 7:0] app_frameid;
-  logic [ 3:0] app_subframeid;
-  logic [ 5:0] app_slotid;
-  logic [ 5:0] app_symbolid;
+  logic app_datadirection;
+  logic [2:0] app_payloadversion;
+  logic [3:0] app_filterindex;
+  logic [7:0] app_frameid;
+  logic [3:0] app_subframeid;
+  logic [5:0] app_slotid;
+  logic [5:0] app_symbolid;
 
-  logic [ 8:0] app_symbol_num;
+  logic [8:0] app_symbol_num;
 
   logic [31:0] app_header;
 

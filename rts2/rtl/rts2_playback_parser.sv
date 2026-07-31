@@ -4,26 +4,26 @@
 
 module rts2_playback_parser (
     // Timer
-    input  wire        clk,
-    input  wire        rst,
+    input  wire         clk,
+    input  wire         rst,
     //
-    input  wire        sync_in,
+    input  wire         sync_in,
     // DDR DataMover
-    input  wire        ddr4_clk,
-    input  wire        ddr4_rst,
+    input  wire         ddr4_clk,
+    input  wire         ddr4_rst,
     //
-    input  wire [63:0] s_axis_tdata,
-    input  wire [ 7:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
-    input  wire        s_axis_tvalid,
-    output wire        s_axis_tready,
+    input  wire  [63:0] s_axis_tdata,
+    input  wire  [ 7:0] s_axis_tkeep,
+    input  wire         s_axis_tlast,
+    input  wire         s_axis_tvalid,
+    output wire         s_axis_tready,
     //
-    output logic  [63:0] m_axis_tdata,
-    output logic  [ 7:0] m_axis_tkeep,
-    output logic         m_axis_tlast,
-    output logic         m_axis_tvalid,
+    output logic [63:0] m_axis_tdata,
+    output logic [ 7:0] m_axis_tkeep,
+    output logic        m_axis_tlast,
+    output logic        m_axis_tvalid,
     // CSR
-    input  wire        ctrl_en
+    input  wire         ctrl_en
 );
 
   // Parameters
@@ -65,52 +65,52 @@ module rts2_playback_parser (
 
   // Signals
 
-  wire               ctrl_en_s;
+  wire ctrl_en_s;
 
-  logic                sync_in_d;
-  logic                sync_in_dd;
-  wire               sync_in_posedge;
+  logic sync_in_d;
+  logic sync_in_dd;
+  wire sync_in_posedge;
 
-  wire        [63:0] s_axis_tdata_rev;
-  logic         [55:0] s_axis_tdata_reg;
-  logic         [63:0] s_axis_tdata_shift;
-  logic         [63:0] s_axis_tdata_shift2;
+  wire [63:0] s_axis_tdata_rev;
+  logic [55:0] s_axis_tdata_reg;
+  logic [63:0] s_axis_tdata_shift;
+  logic [63:0] s_axis_tdata_shift2;
 
   // Parser status register
-  logic         [31:0] length_counter;
+  logic [31:0] length_counter;
 
-  wire        [ 2:0] shift;
-  wire        [ 2:0] shift_next;
+  wire [2:0] shift;
+  wire [2:0] shift_next;
 
-  wire               tlast_pre;
-  wire               tlast_inphase;
-  wire               tlast_extra;
+  wire tlast_pre;
+  wire tlast_inphase;
+  wire tlast_extra;
 
-  logic         [63:0] extra_tdata;
-  logic         [ 2:0] extra_tkeep;
-  logic                extra_tlast;
+  logic [63:0] extra_tdata;
+  logic [2:0] extra_tkeep;
+  logic extra_tlast;
 
-  wire        [31:0] record_length;
-  wire               record_length_valid;
-  logic         [31:0] record_length_reg;
+  wire [31:0] record_length;
+  wire record_length_valid;
+  logic [31:0] record_length_reg;
 
   wire signed [31:0] record_timestamp;
-  wire               record_timestamp_valid;
-  logic signed  [31:0] record_timestamp_reg;
-  logic                record_timestamp_odd;
+  wire record_timestamp_valid;
+  logic signed [31:0] record_timestamp_reg;
+  logic record_timestamp_odd;
 
-  logic         [13:0] record_timestamp_wrapped;
-  logic                record_timestamp_wrapped_swap;
-  logic                record_timestamp_wrapped_odd;
+  logic [13:0] record_timestamp_wrapped;
+  logic record_timestamp_wrapped_swap;
+  logic record_timestamp_wrapped_odd;
 
-  logic         [ 8:0] timestamp_counter_lsb;
-  logic         [13:0] timestamp_counter;
-  logic                timestamp_counter_odd;
-  logic                timestamp_counter_valid;
+  logic [8:0] timestamp_counter_lsb;
+  logic [13:0] timestamp_counter;
+  logic timestamp_counter_odd;
+  logic timestamp_counter_valid;
 
-  wire        [13:0] timestamp_counter_cdc;
-  wire               timestamp_counter_cdc_odd;
-  wire               timestamp_counter_cdc_valid;
+  wire [13:0] timestamp_counter_cdc;
+  wire timestamp_counter_cdc_odd;
+  wire timestamp_counter_cdc_valid;
 
   wire [31:0] shift_next_full;
   wire signed [31:0] record_timestamp_plus;

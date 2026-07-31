@@ -50,7 +50,7 @@ module oran_deframer_eth_parser #(
   logic [63:0] s_axis_tdata_d;
   logic [ 7:0] s_axis_tkeep_d;
 
-  wire unused_parser_delayed_axis = &{1'b0, s_axis_tdata_d[63:32], s_axis_tkeep_d[3:0]};
+  wire         unused_parser_delayed_axis = &{1'b0, s_axis_tdata_d[63:32], s_axis_tkeep_d[3:0]};
 
   logic        extra_last;
 
@@ -79,12 +79,7 @@ module oran_deframer_eth_parser #(
     end
   end
 
-  assign {
-    ecpri_rtc_pc_id,
-    ecpri_seqid,
-    ecpri_ebit,
-    ecpri_subseqid
-  } = ecpri_header;
+  assign {ecpri_rtc_pc_id, ecpri_seqid, ecpri_ebit, ecpri_subseqid} = ecpri_header;
 
   assign ecpri_header = s_axis_tdata_reversed[63:32];
 
@@ -140,10 +135,10 @@ module oran_deframer_eth_parser #(
 
   always_ff @(posedge clk) begin
     if (state == S_TRANS && s_axis_tvalid) begin
-      m_trans_rtc_pc_id   <= ecpri_rtc_pc_id;
-      m_trans_seqid       <= ecpri_seqid;
-      m_trans_ebit        <= ecpri_ebit;
-      m_trans_subseqid    <= ecpri_subseqid;
+      m_trans_rtc_pc_id <= ecpri_rtc_pc_id;
+      m_trans_seqid     <= ecpri_seqid;
+      m_trans_ebit      <= ecpri_ebit;
+      m_trans_subseqid  <= ecpri_subseqid;
     end
   end
 
@@ -159,8 +154,8 @@ module oran_deframer_eth_parser #(
     end else begin
       extra_last <= 1'b0;
     end
-  end 
-    
+  end
+
 
   always_ff @(posedge clk) begin
     if (extra_last) begin

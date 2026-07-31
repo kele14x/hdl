@@ -13,13 +13,13 @@ module oran_framer_ul_ss_section (
     output var [ 7:0] m_axis_tkeep,
     output var        m_axis_tvalid,
     output var        m_axis_tlast,
-    output var [47:0] m_axis_tuser,      // {Payload size, Application Header}
+    output var [47:0] m_axis_tuser,        // {Payload size, Application Header}
     //
     input var  [63:0] s_axis_tdata,
     input var  [ 7:0] s_axis_tkeep,
     input var         s_axis_tvalid,
     input var         s_axis_tlast,
-    input var  [63:0] s_axis_tuser,      // Application header
+    input var  [63:0] s_axis_tuser,        // Application header
     //
     input var         ctrl_has_udcomphdr,
     input var  [ 3:0] ctrl_ud_comp_meth,
@@ -28,21 +28,21 @@ module oran_framer_ul_ss_section (
 
   import oran_pkg::*;
 
-  logic        insert_sec_hdr_n;
-  logic        extra_last;
+  logic insert_sec_hdr_n;
+  logic extra_last;
 
   // Section Header (32-bit)
   logic [11:0] section_sectionid;
-  logic        section_rb;
-  logic        section_syminc;
-  logic [ 9:0] section_startprbu;
-  logic [ 7:0] section_numprbu;
+  logic section_rb;
+  logic section_syminc;
+  logic [9:0] section_startprbu;
+  logic [7:0] section_numprbu;
 
   logic [31:0] section_header;
 
   logic [63:0] s_axis_tdata_rev;
   logic [63:0] s_axis_tdata_d;
-  logic [ 7:0] s_axis_tkeep_d;
+  logic [7:0] s_axis_tkeep_d;
 
   wire unused_section_header_fields = &{
     1'b0,
@@ -180,9 +180,15 @@ module oran_framer_ul_ss_section (
   always_ff @(posedge clk) begin
     if (!insert_sec_hdr_n && s_axis_tvalid) begin
       if (ctrl_ud_comp_meth == 0) begin
-        m_axis_tuser <= {16'((32'(section_numprbu) * 32'd48) + 32'd8 + (ctrl_has_udcomphdr ? 32'd2 : 32'd0)), s_axis_tuser[63:32]};
+        m_axis_tuser <= {
+          16'((32'(section_numprbu) * 32'd48) + 32'd8 + (ctrl_has_udcomphdr ? 32'd2 : 32'd0)),
+          s_axis_tuser[63:32]
+        };
       end else begin
-        m_axis_tuser <= {16'((32'(section_numprbu) * 32'd28) + 32'd8 + (ctrl_has_udcomphdr ? 32'd2 : 32'd0)), s_axis_tuser[63:32]};
+        m_axis_tuser <= {
+          16'((32'(section_numprbu) * 32'd28) + 32'd8 + (ctrl_has_udcomphdr ? 32'd2 : 32'd0)),
+          s_axis_tuser[63:32]
+        };
       end
     end
   end

@@ -70,7 +70,7 @@ module power_meter #(
 
   logic signed [63:0] data_sum;
 
-  logic        [31:0] stat_power_r    [20];
+  logic        [31:0] stat_power_r     [20];
 
   always_ff @(posedge clk_csr) begin
     if (~rst_csr_n) begin
