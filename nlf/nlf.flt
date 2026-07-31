@@ -1,8 +1,0 @@
-../cdc/cdc.flt
-../cmult_chain/cmult_chain.flt
-../ram/ram.flt
-../common/common.flt
-rtl/nlf.sv
-rtl/nlf_core.sv
-rtl/nlf_delay_line.sv
-rtl/nlf_lut.sv

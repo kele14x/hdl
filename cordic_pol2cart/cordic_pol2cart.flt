@@ -1,3 +1,0 @@
-../cordic_rotate/cordic_rotate.flt
-../common/common.flt
-rtl/cordic_pol2cart.sv

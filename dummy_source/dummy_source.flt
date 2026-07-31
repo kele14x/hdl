@@ -1,4 +1,0 @@
-../lfsr/lfsr.flt
-../mult/mult.flt
-../common/common.flt
-rtl/dummy_source.sv

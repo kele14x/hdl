@@ -1,5 +1,0 @@
-../ram/ram.flt
-../common/common.flt
-rtl/fir2.sv
-rtl/fir2_mac.sv
-rtl/fir2_stage.sv
