@@ -21,6 +21,7 @@ transcript
 .agents/
 .codex/
 .claude/
+.hermes/
 .qoder/
 .vscode/
 *.swp
