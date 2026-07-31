@@ -185,6 +185,7 @@ module fft #(
           //
           .ctrl_itlv  (ctrl_itlv),
           .ctrl_bypass(bypass[2*i+1-:2]),
+          .ctrl_scale (ctrl_size == 2'b10),
           //
           .stat_ovf   (ovf[i])
       );

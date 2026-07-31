@@ -16,11 +16,13 @@ SIM = os.environ.get("SIM", "verilator")
 NUM_ANT = 4
 
 
-@pytest.mark.parametrize("fft_size", [1024, 2048, 4096])
-def test_current_width_and_scale_contract(fft_size):
+@pytest.mark.parametrize(
+    ("fft_size", "scale_factor"), [(1024, 32), (2048, 32), (4096, 64)]
+)
+def test_current_width_and_scale_contract(fft_size, scale_factor):
     config = FftConfig(fft_size=fft_size)
     assert config.internal_width == 18
-    assert config.scale_factor == 32
+    assert config.scale_factor == scale_factor
 
 
 @pytest.mark.parametrize(
@@ -108,7 +110,11 @@ async def test_fft_rtl_matches_fixed_model(dut):
         inputs.append((stream_r, stream_i))
         expected_r, expected_i, stats = fft_fixed(stream_r, stream_i, config)
         if vector_mode == "stress":
-            assert stats.butterfly_wraps > 0
+            # With all six stages scaled, this seeded full-input-range vector
+            # remains inside the signed 18-bit internal datapath.
+            assert stats.butterfly_wraps == 0
+            assert stats.twiddle_wraps == 0
+            assert stats.coarse_twiddle_wraps == 0
         else:
             assert stats.butterfly_wraps == 0
             assert stats.twiddle_wraps == 0
@@ -172,7 +178,7 @@ async def test_fft_rtl_matches_fixed_model(dut):
         (4096, 0, 1, "low-level"),
         (4096, 0, 0, "low-level"),
         (1024, 1, 1, "low-level"),
-        (1024, 0, 1, "stress"),
+        (4096, 0, 1, "stress"),
     ],
     ids=[
         "1k-forward-dit",
@@ -180,7 +186,7 @@ async def test_fft_rtl_matches_fixed_model(dut):
         "4k-forward-dit",
         "4k-forward-dif",
         "1k-inverse-dit",
-        "1k-forward-wrap-stress",
+        "4k-forward-dynamic-range-stress",
     ],
 )
 def test_fft_rtl_runner(

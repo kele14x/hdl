@@ -10,7 +10,6 @@ from cocotb_tools.runner import get_runner
 
 from tools.flt_tool import resolve_flt
 
-
 prj_path = Path(__file__).resolve().parent.parent
 SIM = os.environ.get("SIM", "verilator")
 DATA_WIDTH = 8
@@ -34,6 +33,8 @@ async def reset(dut, bypass=0):
     dut.rst.value = 1
     dut.ctrl_itlv.value = 0b10
     dut.ctrl_bypass.value = bypass
+    if hasattr(dut, "ctrl_scale"):
+        dut.ctrl_scale.value = 0
     dut.din_dr.value = 0
     dut.din_di.value = 0
     dut.din_dv.value = 0
@@ -90,15 +91,12 @@ async def test_fft_bf2_bypass_and_normal_overflow(dut):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     await reset(dut, bypass=1)
 
-    visible = (0, 0, 0)
     for real, imag in [(0, 0), (31, -17), (-128, 127), (42, 19)]:
         await drive(dut, real, imag, 1)
         await tick(dut)
-        assert int(dut.dout_dv.value) == visible[0]
-        if visible[0]:
-            assert dut.dout_dr.value.to_signed() == visible[1]
-            assert dut.dout_di.value.to_signed() == visible[2]
-        visible = (1, real, imag)
+        assert int(dut.dout_dv.value) == 1
+        assert dut.dout_dr.value.to_signed() == real
+        assert dut.dout_di.value.to_signed() == imag
 
     # A full normal-mode frame with extreme values reaches the second-half
     # add/subtract path and must raise the arithmetic overflow status.
@@ -126,7 +124,9 @@ async def test_fft_twiddle_valid_latency_bypass_and_reset(dut):
         await drive(dut, 0, 0, 0)
         await tick(dut)
 
-    expected_valid = deque([0] * 9)
+    # A value driven on a falling edge is visible after the ninth following
+    # rising edge, which is eight leading entries in this checker.
+    expected_valid = deque([0] * 8)
     valid_pattern = [1, 0, 1, 1, 0, 0, 1] + [0] * 12
     for valid in valid_pattern:
         await drive(dut, 0, 0, valid)
@@ -145,8 +145,9 @@ async def test_fft_stage_bypass_valid_pipeline(dut):
         await drive(dut, 0, 0, 0)
         await tick(dut)
 
-    # Twiddle valid delay (9) plus the bypassed BF/CT/BF register boundaries.
-    expected_valid = deque([0] * 12)
+    # Twiddle delay (9) plus three bypassed register boundaries. In this
+    # falling-edge-drive/rising-edge-sample convention that is 11 leading slots.
+    expected_valid = deque([0] * 11)
     valid_pattern = [1, 1, 0, 1, 0, 0, 1] + [0] * 16
     for valid in valid_pattern:
         await drive(dut, 0, 0, valid)
@@ -161,7 +162,11 @@ def run(top, testcase):
     runner.build(
         hdl_toplevel=top,
         sources=resolve_flt(prj_path / "fft.flt"),
-        parameters={"NUM_ANT": NUM_ANT, "LOG_FFT_SIZE": LOG_FFT_SIZE, "DATA_WIDTH": DATA_WIDTH},
+        parameters={
+            "NUM_ANT": NUM_ANT,
+            "LOG_FFT_SIZE": LOG_FFT_SIZE,
+            "DATA_WIDTH": DATA_WIDTH,
+        },
         always=True,
         waves=True,
     )

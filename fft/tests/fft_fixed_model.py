@@ -28,10 +28,11 @@ class FftConfig:
 
     @property
     def scale_shift(self) -> int:
-        # Every stage except the first has a twiddle multiplier. The RTL uses
-        # Q1.15 coefficients with SHIFT=16, so each multiplier contributes an
-        # intentional factor of approximately one half.
-        return self.num_stages - 1
+        # The five twiddle multipliers always contribute /32. At the maximum
+        # run-time size, the otherwise unscaled sixth stage gets an explicit
+        # divide-by-two for /64. Smaller sizes retain their existing /32 gain.
+        full_size_shift = int(self.fft_size == (1 << self.log_fft_size))
+        return self.num_stages - 1 + full_size_shift
 
     @property
     def scale_factor(self) -> int:
@@ -95,6 +96,15 @@ def saturate_signed(
             np.count_nonzero((values < minimum) | (values > maximum))
         )
     return np.clip(values, minimum, maximum).astype(np.int64)
+
+
+def round_convergent_shift1(values: np.ndarray | list[int] | int) -> np.ndarray:
+    """Divide signed integers by two with ties rounded to an even integer."""
+
+    values = _as_int64(values)
+    quotient = values >> 1
+    increment = (values & 1) & (quotient & 1)
+    return quotient + increment
 
 
 def bit_reverse_indices(size: int) -> np.ndarray:
@@ -177,6 +187,7 @@ def _butterfly_stream(
     imag: np.ndarray,
     log_fft_size: int,
     width: int,
+    scale: bool,
     stats: QuantizationStats,
 ) -> tuple[np.ndarray, np.ndarray]:
     block_size = 1 << log_fft_size
@@ -191,6 +202,9 @@ def _butterfly_stream(
 
     out_r = np.concatenate((first_r + second_r, first_r - second_r), axis=1)
     out_i = np.concatenate((first_i + second_i, first_i - second_i), axis=1)
+    if scale:
+        out_r = round_convergent_shift1(out_r)
+        out_i = round_convergent_shift1(out_i)
     return (
         wrap_signed(out_r.reshape(-1), width, stats, "butterfly_wraps"),
         wrap_signed(out_i.reshape(-1), width, stats, "butterfly_wraps"),
@@ -264,26 +278,35 @@ def fft_fixed(
         bypass = _stage_bypass(stage, config)
         has_second_butterfly = log_size % 2 == 0
         first_log_size = log_size - 1 if has_second_butterfly else log_size
+        scale_stage = log_size <= 2 and config.fft_size == (1 << config.log_fft_size)
 
         if config.bit_reversed_input:
             real, imag = _twiddle_stream(
                 real, imag, log_size, bypass, config.inverse, width, stats
             )
             if not (bypass & 0b01):
-                real, imag = _butterfly_stream(real, imag, first_log_size, width, stats)
+                real, imag = _butterfly_stream(
+                    real, imag, first_log_size, width, False, stats
+                )
             if has_second_butterfly and not (bypass & 0b10):
                 real, imag = _coarse_twiddle_stream(
                     real, imag, log_size, config.inverse, width, stats
                 )
-                real, imag = _butterfly_stream(real, imag, log_size, width, stats)
+                real, imag = _butterfly_stream(
+                    real, imag, log_size, width, scale_stage, stats
+                )
         else:
             if has_second_butterfly and not (bypass & 0b01):
-                real, imag = _butterfly_stream(real, imag, log_size, width, stats)
+                real, imag = _butterfly_stream(
+                    real, imag, log_size, width, False, stats
+                )
                 real, imag = _coarse_twiddle_stream(
                     real, imag, log_size, config.inverse, width, stats
                 )
             if not (bypass & 0b10):
-                real, imag = _butterfly_stream(real, imag, first_log_size, width, stats)
+                real, imag = _butterfly_stream(
+                    real, imag, first_log_size, width, scale_stage, stats
+                )
             real, imag = _twiddle_stream(
                 real, imag, log_size, bypass, config.inverse, width, stats
             )

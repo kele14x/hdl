@@ -26,6 +26,7 @@ module fft_stage #(
     //
     input  wire        [           1:0] ctrl_itlv,
     input  wire        [           1:0] ctrl_bypass,
+    input  wire                         ctrl_scale,
     //
     output wire                         stat_ovf
 );
@@ -39,6 +40,10 @@ module fft_stage #(
   localparam logic HasBf2ii = (LOG_FFT_SIZE % 2 == 0) ? 1 : 0;
   // Log2 FFT size of BF2I
   localparam integer LogFftSizeBf2i = HasBf2ii ? (LOG_FFT_SIZE - 1) : LOG_FFT_SIZE;
+  // The LOG_FFT_SIZE=2 stage has no twiddle multiplier to provide the /2
+  // scaling used by the other stages. Scale its last butterfly explicitly.
+  localparam logic ScaleBfi = !HasTwiddle && !BIT_REVERSED_INPUT;
+  localparam logic ScaleBfii = !HasTwiddle && BIT_REVERSED_INPUT;
 
   // Signals
 
@@ -129,7 +134,8 @@ module fft_stage #(
   fft_bf2 #(
       .NUM_ANT     (NUM_ANT),
       .LOG_FFT_SIZE(LogFftSizeBf2i),
-      .DATA_WIDTH  (DATA_WIDTH)
+      .DATA_WIDTH  (DATA_WIDTH),
+      .SCALE       (ScaleBfi)
   ) i_bf2i (
       .clk        (clk),
       .rst        (rst),
@@ -144,6 +150,7 @@ module fft_stage #(
       //
       .ctrl_itlv  (ctrl_itlv),
       .ctrl_bypass(bfi_bypass),
+      .ctrl_scale (ctrl_scale),
       //
       .stat_ovf   (bfi_ovf)
   );
@@ -177,7 +184,8 @@ module fft_stage #(
       fft_bf2 #(
           .NUM_ANT     (NUM_ANT),
           .LOG_FFT_SIZE(LOG_FFT_SIZE),
-          .DATA_WIDTH  (DATA_WIDTH)
+          .DATA_WIDTH  (DATA_WIDTH),
+          .SCALE       (ScaleBfii)
       ) i_bf2ii (
           .clk        (clk),
           .rst        (rst),
@@ -192,6 +200,7 @@ module fft_stage #(
           //
           .ctrl_itlv  (ctrl_itlv),
           .ctrl_bypass(bfii_bypass),
+          .ctrl_scale (ctrl_scale),
           //
           .stat_ovf   (bfii_ovf)
       );

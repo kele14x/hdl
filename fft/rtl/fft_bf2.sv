@@ -7,7 +7,8 @@
 module fft_bf2 #(
     parameter integer NUM_ANT      = 4,
     parameter integer LOG_FFT_SIZE = 4,
-    parameter integer DATA_WIDTH   = 18
+    parameter integer DATA_WIDTH   = 18,
+    parameter logic   SCALE        = 1'b0
 ) (
     input  wire                         clk,
     input  wire                         rst,
@@ -22,6 +23,7 @@ module fft_bf2 #(
     //
     input  wire        [           1:0] ctrl_itlv,
     input  wire                         ctrl_bypass,
+    input  wire                         ctrl_scale,
     //
     output wire                         stat_ovf
 );
@@ -56,14 +58,33 @@ module fft_bf2 #(
   wire signed [  DATA_WIDTH-1:0] x1r;
   wire signed [  DATA_WIDTH-1:0] x1i;
 
+  wire signed [  DATA_WIDTH-1:0] x1r_store;
+  wire signed [  DATA_WIDTH-1:0] x1i_store;
+
   logic signed  [    DATA_WIDTH:0] x2r_s;
   logic signed  [    DATA_WIDTH:0] x2i_s;
 
   logic signed  [  DATA_WIDTH-1:0] x2r;
   logic signed  [  DATA_WIDTH-1:0] x2i;
 
+  wire signed [  DATA_WIDTH-1:0] x2r_store;
+  wire signed [  DATA_WIDTH-1:0] x2i_store;
+
   wire        [  DelayWidth-1:0] delay_in;
   wire        [  DelayWidth-1:0] delay_out;
+
+  function automatic signed [DATA_WIDTH-1:0] round_convergent_shift1(
+      input logic signed [DATA_WIDTH:0] value
+  );
+    logic signed [DATA_WIDTH:0] shifted;
+    begin
+      shifted = value >>> 1;
+      if (value[0] && shifted[0]) begin
+        shifted = shifted + 1'b1;
+      end
+      round_convergent_shift1 = shifted[DATA_WIDTH-1:0];
+    end
+  endfunction
 
   // Main
 
@@ -176,6 +197,16 @@ module fft_bf2 #(
     end
   end
 
+  assign x1r_store = (SCALE && ctrl_scale && sel) ?
+      round_convergent_shift1(x1r_s) : x1r_s[DATA_WIDTH-1:0];
+  assign x1i_store = (SCALE && ctrl_scale && sel) ?
+      round_convergent_shift1(x1i_s) : x1i_s[DATA_WIDTH-1:0];
+
+  assign x2r_store = (SCALE && ctrl_scale && sel) ?
+      round_convergent_shift1(x2r_s) : x2r_s[DATA_WIDTH-1:0];
+  assign x2i_store = (SCALE && ctrl_scale && sel) ?
+      round_convergent_shift1(x2i_s) : x2i_s[DATA_WIDTH-1:0];
+
   always_ff @(posedge clk) begin
     if (ctrl_bypass) begin
       if (din_dv) begin
@@ -184,15 +215,15 @@ module fft_bf2 #(
       end
     end else begin
       if ((first_half_last || state2) && (counter_ch2 < 4'(NUM_ANT))) begin
-        x2r <= x2r_s[DATA_WIDTH-1:0];
-        x2i <= x2i_s[DATA_WIDTH-1:0];
+        x2r <= x2r_store;
+        x2i <= x2i_store;
       end
     end
   end
 
   // Delay
 
-  assign delay_in = {x1i_s[DATA_WIDTH-1:0], x1r_s[DATA_WIDTH-1:0]};
+  assign delay_in = {x1i_store, x1r_store};
   assign {x1i, x1r} = delay_out;
 
   // For smaller FFT size, choose register based delay for optimized resource
@@ -231,10 +262,14 @@ module fft_bf2 #(
   end
 
   always_ff @(posedge clk) begin
-    ovf_r <= ~(x1r_s[DATA_WIDTH-:2] == 2'b00 || x1r_s[DATA_WIDTH-:2] == 2'b11) ||
-             ~(x1i_s[DATA_WIDTH-:2] == 2'b00 || x1i_s[DATA_WIDTH-:2] == 2'b11) ||
-             ~(x2r_s[DATA_WIDTH-:2] == 2'b00 || x2r_s[DATA_WIDTH-:2] == 2'b11) ||
-             ~(x2i_s[DATA_WIDTH-:2] == 2'b00 || x2i_s[DATA_WIDTH-:2] == 2'b11);
+    if (SCALE && ctrl_scale && sel) begin
+      ovf_r <= 1'b0;
+    end else begin
+      ovf_r <= ~(x1r_s[DATA_WIDTH-:2] == 2'b00 || x1r_s[DATA_WIDTH-:2] == 2'b11) ||
+               ~(x1i_s[DATA_WIDTH-:2] == 2'b00 || x1i_s[DATA_WIDTH-:2] == 2'b11) ||
+               ~(x2r_s[DATA_WIDTH-:2] == 2'b00 || x2r_s[DATA_WIDTH-:2] == 2'b11) ||
+               ~(x2i_s[DATA_WIDTH-:2] == 2'b00 || x2i_s[DATA_WIDTH-:2] == 2'b11);
+    end
   end
 
   // Output register
