@@ -18,10 +18,12 @@ prj_path = Path(__file__).resolve().parent.parent
 rng = np.random.default_rng(12345)
 
 PARAM_SETS_FILE = Path(__file__).resolve().parent / "param_sets.json"
-
-LATENCY = 5
 GUI = os.environ.get("GUI", "False").lower() == "true"
 SIM = os.environ.get("SIM", "verilator")
+
+
+def get_latency(dut):
+    return 7 if int(dut.USE_3_MULT.value) else 5
 
 
 def truncate(x, w):
@@ -109,7 +111,7 @@ async def input_monitor(dut, input_queue):
 
 
 async def output_monitor(dut, output_queue):
-    await ClockCycles(dut.clk, LATENCY)
+    await ClockCycles(dut.clk, get_latency(dut))
     while True:
         await RisingEdge(dut.clk)
         output_queue.put_nowait(
@@ -131,7 +133,7 @@ async def checker(input_queue, output_queue, cfg, n=1000):
 
 
 @cocotb.test()
-async def test_cmult4_basic(dut):
+async def test_cmult_basic(dut):
     cfg = {
         "A_WIDTH": int(dut.A_WIDTH.value),
         "B_WIDTH": int(dut.B_WIDTH.value),
@@ -162,7 +164,7 @@ async def test_cmult4_basic(dut):
     dut.br.value = 16384
     dut.bi.value = 16384
 
-    await ClockCycles(dut.clk, LATENCY + 2)
+    await ClockCycles(dut.clk, get_latency(dut) + 2)
     (pr_ref, pi_ref, ovf_ref) = model(16384, 16384, 16384, 16384, cfg)
     assert dut.pr.value.to_signed() == pr_ref, f"pr should be {pr_ref}"
     assert dut.pi.value.to_signed() == pi_ref, f"pi should be {pi_ref}"
@@ -173,7 +175,7 @@ async def test_cmult4_basic(dut):
 
 
 @cocotb.test()
-async def test_cmult4_random(dut):
+async def test_cmult_random(dut):
     cfg = {
         "A_WIDTH": int(dut.A_WIDTH.value),
         "B_WIDTH": int(dut.B_WIDTH.value),
@@ -215,6 +217,7 @@ def _normalize_param_sets(data):
         "SHIFT",
         "ROUND",
         "SATURATE",
+        "USE_3_MULT",
     }
     sets = []
     for i, item in enumerate(data, start=1):
@@ -233,6 +236,7 @@ def _normalize_param_sets(data):
             "SHIFT": int(item["SHIFT"]),
             "ROUND": int(item["ROUND"]),
             "SATURATE": int(item["SATURATE"]),
+            "USE_3_MULT": int(item["USE_3_MULT"]),
         }
         sets.append(merged)
     return sets
@@ -247,14 +251,14 @@ def _param_sets_for_pytest():
 
 
 @pytest.mark.parametrize("params", _param_sets_for_pytest())
-def test_cmult4_runner(params):
+def test_cmult_runner(params):
     runner = get_runner(SIM)
-    hdl_toplevel = "cmult4"
+    hdl_toplevel = "cmult"
 
-    with tempfile.TemporaryDirectory(prefix="cmult4_param_") as run_dir:
+    with tempfile.TemporaryDirectory(prefix="cmult_param_") as run_dir:
         runner.build(
             hdl_toplevel=hdl_toplevel,
-            sources=resolve_flt(prj_path / "cmult4.flt"),
+            sources=resolve_flt(prj_path / "cmult.flt"),
             parameters=params,
             always=True,
             waves=True,
@@ -263,7 +267,7 @@ def test_cmult4_runner(params):
         runner.test(
             hdl_toplevel=hdl_toplevel,
             hdl_toplevel_lang="verilog",
-            test_module="test_cmult4",
+            test_module="test_cmult",
             gui=GUI,
             test_dir=run_dir,
         )

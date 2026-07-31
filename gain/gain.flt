@@ -1,5 +1,5 @@
 ../cdc/cdc.flt
-../cmult/cmult4.flt
+../cmult/cmult.flt
 ../common/common.flt
 ../mult/mult.flt
 rtl/gain.sv

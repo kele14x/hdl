@@ -1,4 +1,4 @@
-../cmult/cmult_base.flt
+../cmult/cmult.flt
 ../mult/mult.flt
 ../cdc/cdc.flt
 ../common/common.flt

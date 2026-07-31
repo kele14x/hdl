@@ -110,7 +110,8 @@ module prach_fft_ditfft2_twiddler #(
       .dout({din_di_d, din_dr_d})
   );
 
-  cmult4 #(
+  cmult #(
+      .USE_3_MULT(1'b0),
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (PhaseWidth),
       .P_WIDTH (DATA_WIDTH),

@@ -111,7 +111,8 @@ module fft_radix2_twiddle #(
       .twiddle_q_out(twiddle_q_s)
   );
 
-  cmult3 #(
+  cmult #(
+      .USE_3_MULT(1'b1),
       .A_WIDTH(DATA_WIDTH),
       .B_WIDTH(PHASE_WIDTH),
       .P_WIDTH(DATA_WIDTH),

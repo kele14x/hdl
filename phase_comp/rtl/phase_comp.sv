@@ -167,7 +167,8 @@ module phase_comp #(
       .dout({din_di_d, din_dr_d})
   );
 
-  cmult4 #(
+  cmult #(
+      .USE_3_MULT(1'b0),
       .A_WIDTH (16),
       .B_WIDTH (16),
       .P_WIDTH (16),

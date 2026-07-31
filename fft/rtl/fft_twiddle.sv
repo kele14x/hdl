@@ -150,7 +150,8 @@ module fft_twiddle #(
       .sin_out(twiddle_q_s)
   );
 
-  cmult4 #(
+  cmult #(
+      .USE_3_MULT(1'b0),
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (16),
       .P_WIDTH (DATA_WIDTH),
