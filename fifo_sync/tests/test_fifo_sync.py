@@ -3,31 +3,25 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
-import sys
 import tempfile
+from pathlib import Path
 
 import cocotb
 import pytest
 from cocotb_tools.runner import get_runner
-from tools.flt_tool import resolve_flt
 
-
-prj_path = Path(__file__).resolve().parent.parent
-repo_path = prj_path.parent
-sys.path.insert(0, str(repo_path / "common" / "tests"))
-
-from libfifo import (  # noqa: E402
+from common.tb.fifo import (
     FifoReadBus,
     FifoTestbench,
     FifoWriteBus,
     directed_sequences,
     random_sequences,
 )
+from tools.flt_tool import resolve_flt
 
-
+prj_path = Path(__file__).resolve().parent.parent
 PARAM_SETS_FILE = Path(__file__).resolve().parent / "param_sets.json"
-RANDOM_TRANSFER_COUNT = int(os.getenv("RANDOM_TRANSFER_COUNT", 256))
+RANDOM_TRANSFER_COUNT = int(os.getenv("RANDOM_TRANSFER_COUNT", "256"))
 
 GUI = os.getenv("GUI", "False").lower() == "true"
 SIM = os.environ.get("SIM", "verilator").lower()
@@ -46,7 +40,9 @@ async def test_fifo_sync(dut):
     write_sequence, read_sequence = directed_sequences(tb.data_width)
     await tb.run(write_sequence, read_sequence)
 
-    write_sequence, read_sequence = random_sequences(tb.data_width, RANDOM_TRANSFER_COUNT)
+    write_sequence, read_sequence = random_sequences(
+        tb.data_width, RANDOM_TRANSFER_COUNT
+    )
     await tb.run(write_sequence, read_sequence)
 
     assert tb.write_agent.aborted_cycles > 0
@@ -60,7 +56,7 @@ def _normalize_param_sets(data):
     sets = []
     for i, item in enumerate(data, start=1):
         if not isinstance(item, dict):
-            raise ValueError(f"Parameter set #{i} must be a JSON object")
+            raise TypeError(f"Parameter set #{i} must be a JSON object")
         unknown = set(item.keys()) - required
         if unknown:
             raise ValueError(f"Parameter set #{i} has unknown keys: {sorted(unknown)}")

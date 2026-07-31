@@ -1,34 +1,40 @@
 import os
 from pathlib import Path
 
-import pytest
 import cocotb
 import numpy as np
+import pytest
 from cocotb.clock import Clock
-from cocotb.queue import Queue
+from cocotb.triggers import ClockCycles
 from cocotb_tools.runner import get_runner
+
+from common.tb import AgentMode
+from common.tb.dsp import (
+    DspSample,
+    DspSampleAgent,
+    DspSampleAgentConfig,
+    DspSampleSignals,
+)
 from tools.flt_tool import resolve_flt
-from cocotb.triggers import ClockCycles, RisingEdge
 
 prj_path = Path(__file__).resolve().parent.parent
 rng = np.random.default_rng(12345)
 
-HAS_CDC = int(os.environ.get("HAS_CDC", 0))
-NUM_ANT = int(os.environ.get("NUM_ANT", 4))
-COMPLEX = int(os.environ.get("COMPLEX", 1))
-GAIN_WIDTH = int(os.environ.get("GAIN_WIDTH", 16))
-
-LATENCY = 6 if COMPLEX else 5
+HAS_CDC = int(os.environ.get("HAS_CDC", "0"))
+NUM_ANT = int(os.environ.get("NUM_ANT", "4"))
+COMPLEX = int(os.environ.get("COMPLEX", "1"))
+GAIN_WIDTH = int(os.environ.get("GAIN_WIDTH", "16"))
 
 GUI = os.environ.get("GUI", "False").lower() == "true"
 
 SIM = os.environ.get("SIM", "verilator")
 
-CTRL_GAIN_DR = rng.integers(-(2 ** (GAIN_WIDTH - 1)), 2 ** (GAIN_WIDTH - 1), size=NUM_ANT)
-CTRL_GAIN_DI = rng.integers(-(2 ** (GAIN_WIDTH - 1)), 2 ** (GAIN_WIDTH - 1), size=NUM_ANT)
-
-input_queue = Queue()
-output_queue = Queue()
+CTRL_GAIN_DR = rng.integers(
+    -(2 ** (GAIN_WIDTH - 1)), 2 ** (GAIN_WIDTH - 1), size=NUM_ANT
+)
+CTRL_GAIN_DI = rng.integers(
+    -(2 ** (GAIN_WIDTH - 1)), 2 ** (GAIN_WIDTH - 1), size=NUM_ANT
+)
 
 
 def truncate(x, w):
@@ -82,103 +88,65 @@ async def reset(dut):
     await ClockCycles(dut.clk, 10)
 
 
-async def drive(dut):
-    """Drive the DUT."""
-    for _ in range(10000):
-        await RisingEdge(dut.clk)
-        dut.din_dr.value = int(rng.integers(-(2**15), 2**15))
-        dut.din_di.value = int(rng.integers(-(2**15), 2**15))
-        dut.din_sf.value = int(rng.choice([0, 1]))
-        dut.din_sl.value = int(rng.choice([0, 1]))
-        dut.din_sy.value = int(rng.choice([0, 1]))
-        dut.din_chn.value = int(rng.integers(0, NUM_ANT))
-        dut.din_dv.value = int(rng.choice([0, 1]))
-
-
-async def input_monitor(dut):
-    """Monitor the input."""
-    while True:
-        await RisingEdge(dut.clk)
-        input_queue.put_nowait(
-            (
-                dut.din_dr.value,
-                dut.din_di.value,
-                int(dut.din_sf.value),
-                int(dut.din_sl.value),
-                int(dut.din_sy.value),
-                int(dut.din_chn.value),
-                int(dut.din_dv.value),
-            )
+def make_samples(count=10000):
+    """Create a reproducible cycle-level IQ sequence, including invalid gaps."""
+    return [
+        DspSample(
+            i=int(rng.integers(-(2**15), 2**15)),
+            q=int(rng.integers(-(2**15), 2**15)),
+            start_frame=bool(rng.integers(0, 2)),
+            start_slot=bool(rng.integers(0, 2)),
+            start_symbol=bool(rng.integers(0, 2)),
+            channel=int(rng.integers(0, NUM_ANT)),
+            valid=bool(rng.integers(0, 2)),
         )
-
-
-async def output_monitor(dut):
-    """Monitor the output."""
-    await ClockCycles(dut.clk, LATENCY)
-    while True:
-        await RisingEdge(dut.clk)
-        output_queue.put_nowait(
-            (
-                dut.dout_dr.value,
-                dut.dout_di.value,
-                int(dut.dout_sf.value),
-                int(dut.dout_sl.value),
-                int(dut.dout_sy.value),
-                int(dut.dout_chn.value),
-                int(dut.dout_dv.value),
-            )
-        )
-
-
-async def checker():
-    """Checker."""
-    n = 0
-    while True:
-        input = await input_queue.get()
-        output = await output_queue.get()
-        n += 1
-        if n % 100 == 0:
-            cocotb.log.info("%d / 10000", n)
-        (din_dr, din_di, din_sf, din_sl, din_sy, din_chn, din_dv) = input
-        (dout_dr, dout_di, dout_sf, dout_sl, dout_sy, dout_chn, dout_dv) = output
-
-        assert (dout_sf, dout_sl, dout_sy, dout_chn, dout_dv) == (din_sf, din_sl, din_sy, din_chn, din_dv)
-
-        if din_dv and din_chn < NUM_ANT:
-            din_dr = din_dr.signed_integer
-            din_di = din_di.signed_integer
-            dout_dr = dout_dr.signed_integer
-            dout_di = dout_di.signed_integer
-            gr = int(CTRL_GAIN_DR[din_chn])
-            gi = int(CTRL_GAIN_DI[din_chn]) if COMPLEX else 0
-
-            (dout_dr_ref, dout_di_ref) = model(din_dr, din_di, gr, gi)
-
-            assert (dout_dr, dout_di) == (dout_dr_ref, dout_di_ref), (
-                f"Result mismatch! "
-                f"Input: din_dr = {din_dr}, din_di = {din_di}; "
-                f"Output: dout_dr = {dout_dr}, dout_di = {dout_di}; "
-                f"Reference: dout_dr_ref = {dout_dr_ref}, dout_di_ref = {dout_di_ref}"
-            )
+        for _ in range(count)
+    ]
 
 
 @cocotb.test()
-async def test_adder(dut):
-    """Test the adder."""
+async def test_gain(dut):
+    """Check gain data and metadata with reusable DSP sample agents."""
     cocotb.log.info("Simulation started")
-    # Create clock and start it
-    cocotb.start_soon(Clock(dut.clk, 10).start())
-
-    # Reset the DUT
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     await reset(dut)
 
-    # Start monitor and checker
-    cocotb.start_soon(input_monitor(dut))
-    cocotb.start_soon(output_monitor(dut))
-    cocotb.start_soon(checker())
+    source = DspSampleAgent(
+        dut,
+        DspSampleAgentConfig(
+            signals=DspSampleSignals.from_prefix("din"),
+            reset="rst",
+        ),
+    )
+    sink = DspSampleAgent(
+        dut,
+        DspSampleAgentConfig(
+            signals=DspSampleSignals.from_prefix("dout"),
+            reset="rst",
+            mode=AgentMode.PASSIVE,
+            timeout_cycles=100,
+        ),
+    )
+    await source.start()
+    await sink.start()
 
-    # Run test multiple times
-    await drive(dut)
+    samples = make_samples()
+    expected = [sample for sample in samples if sample.valid]
+    await source.send(samples)
+
+    for index, sample in enumerate(expected):
+        actual = await sink.receive()
+        gr = int(CTRL_GAIN_DR[sample.channel])
+        gi = int(CTRL_GAIN_DI[sample.channel]) if COMPLEX else 0
+        expected_i, expected_q = model(sample.i, sample.q, gr, gi)
+        assert actual == DspSample(
+            i=expected_i,
+            q=expected_q,
+            start_frame=sample.start_frame,
+            start_slot=sample.start_slot,
+            start_symbol=sample.start_symbol,
+            channel=sample.channel,
+        ), f"sample {index} mismatch: input={sample}, output={actual}"
 
     await ClockCycles(dut.clk, 10)
     cocotb.log.info("Simulation finished")
@@ -200,7 +168,7 @@ def test_gain_runner():
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel=hdl_toplevel,
-        verilog_sources=verilog_sources,
+        sources=verilog_sources,
         parameters=parameters,
         build_args=[],
         waves=True,
