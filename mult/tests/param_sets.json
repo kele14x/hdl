@@ -14,5 +14,13 @@
     "SHIFT": 9,
     "ROUND": 0,
     "SATURATE": 0
+  },
+  {
+    "A_WIDTH": 8,
+    "B_WIDTH": 8,
+    "P_WIDTH": 8,
+    "SHIFT": 4,
+    "ROUND": 1,
+    "SATURATE": 0
   }
 ]

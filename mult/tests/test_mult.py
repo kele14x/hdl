@@ -47,11 +47,11 @@ def model(a, b, cfg):
     saturate_en = cfg["SATURATE"]
 
     p = a * b
-    if rnd and shift > 0:
-        p = (p + 2 ** (shift - 1)) / 2**shift
-    else:
-        p = p / 2**shift if shift > 0 else p
-    p = int(np.floor(p))
+    if shift > 0:
+        if rnd:
+            half_lsb = 2 ** (shift - 1)
+            p += half_lsb if p >= 0 else half_lsb - 1
+        p >>= shift
 
     ovf = p > 2 ** (p_width - 1) - 1 or p < -(2 ** (p_width - 1))
     p = saturation(p, p_width) if saturate_en else truncate(p, p_width)
@@ -70,6 +70,16 @@ async def reset(dut):
 async def drive(dut, cfg):
     a_width = cfg["A_WIDTH"]
     b_width = cfg["B_WIDTH"]
+
+    # Exercise both sides of zero and exact half-LSB ties before random data.
+    directed = [(0, 0), (1, 1), (-1, 1), (1, -1), (-1, -1)]
+    if a_width >= 2 and b_width >= 4:
+        directed += [(1, 7), (-1, 7), (1, 8), (-1, 8)]
+    for a, b in directed:
+        await RisingEdge(dut.clk)
+        dut.a.value = a
+        dut.b.value = b
+
     for _ in range(1000):
         await RisingEdge(dut.clk)
         dut.a.value = int(rng.integers(-(2 ** (a_width - 1)), 2 ** (a_width - 1)))
