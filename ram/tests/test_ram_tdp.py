@@ -135,9 +135,6 @@ def test_ram_tdp_runner():
             hdl_toplevel="ram_tdp",
             hdl_toplevel_lang="verilog",
             test_module="test_ram_tdp",
-            test_args=["-suppress", "7061"]
-            if SIM.lower() in {"questa", "modelsim"}
-            else [],
             waves=True,
             gui=GUI,
             test_dir=run_dir,

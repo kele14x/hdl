@@ -233,7 +233,6 @@ def test_ram_sp_runner(case):
         hdl_toplevel="ram_sp",
         hdl_toplevel_lang="verilog",
         test_module="test_ram_sp",
-        test_args=["-suppress", "7061"] if SIM.lower() in {"questa", "modelsim"} else [],
         extra_env={
             "RAM_SP_WRITE_MODE": case["write_mode"],
             "RAM_SP_READ_LATENCY": str(case["read_latency"]),

@@ -191,13 +191,13 @@ module ram_sdp_asym #(
 
   generate
     if (DATA_WIDTH_A <= DATA_WIDTH_B) begin : g_n_wr
-      always_ff @(posedge clka) begin
+      always @(posedge clka) begin
         if (wea) begin
           MEM[addra] <= dina;
         end
       end
     end else begin : g_s_wr
-      always_ff @(posedge clka) begin
+      always @(posedge clka) begin
         if (wea) begin
           for (int i = 0; i < Ratio; i++) begin
             MEM[{addra, Log2Ratio'(i)}] <= dina[(i+1)*MinWidth-1-:MinWidth];

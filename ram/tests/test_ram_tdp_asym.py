@@ -123,9 +123,6 @@ def test_ram_tdp_asym_runner():
         hdl_toplevel="ram_tdp_asym",
         hdl_toplevel_lang="verilog",
         test_module="test_ram_tdp_asym",
-        test_args=["-suppress", "7061"]
-        if SIM.lower() in {"questa", "modelsim"}
-        else [],
         waves=True,
         gui=GUI,
     )

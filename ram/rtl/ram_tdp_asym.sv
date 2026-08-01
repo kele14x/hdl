@@ -272,7 +272,7 @@ module ram_tdp_asym #(
       end
 
       // Port A write
-      always_ff @(posedge clka) begin
+      always @(posedge clka) begin
         if (ena_s) begin
           if (wea) begin
             mem[addra] <= dina;
@@ -388,7 +388,7 @@ module ram_tdp_asym #(
       end
 
       // Port B write
-      always_ff @(posedge clkb) begin
+      always @(posedge clkb) begin
         if (enb_s) begin
           if (web) begin
             mem[addrb] <= dinb;

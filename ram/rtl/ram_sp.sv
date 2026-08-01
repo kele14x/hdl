@@ -146,7 +146,7 @@ module ram_sp #(
 
   // Memory write
 
-  always_ff @(posedge clk) begin : memory_write
+  always @(posedge clk) begin : memory_write
     if (en[0] && we) begin
       MEM[addr] <= din;
     end

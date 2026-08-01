@@ -220,13 +220,13 @@ module ram_tdp #(
 
   // Memory write
 
-  always_ff @(posedge clka) begin
+  always @(posedge clka) begin
     if (ena[0] && wea) begin
       MEM[addra] <= dina;
     end
   end
 
-  always_ff @(posedge clkb) begin
+  always @(posedge clkb) begin
     if (enb[0] && web) begin
       MEM[addrb] <= dinb;
     end
