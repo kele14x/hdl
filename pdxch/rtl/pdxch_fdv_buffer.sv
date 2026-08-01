@@ -184,12 +184,12 @@ module pdxch_fdv_buffer #(
         ram_tdp_asym #(
             .ADDR_WIDTH_A(10),
             .DATA_WIDTH_A(128),
-            .OUTPUT_REG_A(1'b1),
+            .READ_LATENCY_A(2),
             .WRITE_MODE_A("READ_FIRST"),
             //
             .ADDR_WIDTH_B(12),
             .DATA_WIDTH_B(32),
-            .OUTPUT_REG_B(1'b1),
+            .READ_LATENCY_B(2),
             .WRITE_MODE_B("READ_FIRST"),
             //
             .INIT_FILE   ("NONE"),
@@ -219,12 +219,12 @@ module pdxch_fdv_buffer #(
         ram_tdp_asym #(
             .ADDR_WIDTH_A(11),
             .DATA_WIDTH_A(128),
-            .OUTPUT_REG_A(1'b1),
+            .READ_LATENCY_A(2),
             .WRITE_MODE_A("READ_FIRST"),
             //
             .ADDR_WIDTH_B(13),
             .DATA_WIDTH_B(32),
-            .OUTPUT_REG_B(1'b1),
+            .READ_LATENCY_B(2),
             .WRITE_MODE_B("READ_FIRST"),
             //
             .INIT_FILE   ("NONE"),

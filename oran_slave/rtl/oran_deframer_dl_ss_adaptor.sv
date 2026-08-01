@@ -331,11 +331,11 @@ module oran_deframer_dl_ss_adaptor #(
   ram_tdp_asym #(
       .ADDR_WIDTH_A(AddrWidth - 1),
       .DATA_WIDTH_A(64),
-      .OUTPUT_REG_A(1'b0),
+      .READ_LATENCY_A(1),
       .WRITE_MODE_A("NO_CHANGE"),
       .ADDR_WIDTH_B(AddrWidth),
       .DATA_WIDTH_B(32),
-      .OUTPUT_REG_B(1'b1),
+      .READ_LATENCY_B(2),
       .WRITE_MODE_B("READ_FIRST"),
       .INIT_FILE   ("NONE"),
       .RAM_STYLE   ("BLOCK")

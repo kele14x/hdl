@@ -103,6 +103,10 @@ module ram_sdp_asym #(
 
   localparam integer XpmMemorySize = MaxSize * MinWidth;
 
+  // UltraRAM requires a common clock; the two clock ports may be tied
+  // together by the caller even though the interface exposes both ports.
+  localparam XpmClockingMode = RAM_STYLE == "ULTRA" ? "common_clock" : "independent_clock";
+
   // XPM exposes independent enables for its first read stage and its final
   // output stage. Keep the third stage in RTL so enb[2] remains independent.
   localparam integer XpmReadLatency = READ_LATENCY_B < 3 ? READ_LATENCY_B : 2;
@@ -118,7 +122,7 @@ module ram_sdp_asym #(
       // Common module parameters
       .MEMORY_SIZE            (XpmMemorySize),
       .MEMORY_PRIMITIVE       (RAM_STYLE),
-      .CLOCKING_MODE          ("independent_clock"),
+      .CLOCKING_MODE          (XpmClockingMode),
       .ECC_MODE               ("no_ecc"),
       .ECC_TYPE               ("none"),
       .ECC_BIT_RANGE          ("[7:0]"),
