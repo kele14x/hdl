@@ -6,6 +6,7 @@
  * Parameters:
  * - WIDTH: Width of input and output data (default: 8 bits)
  * - DEPTH: Number of delay stages (default: 8)
+ * - RAM_STYLE: RAM implementation style passed to the underlying RAM (default: AUTO)
  *
  * Ports:
  * - clk: Clock input
@@ -30,7 +31,8 @@
 module shift_ram #(
     parameter integer WIDTH     = 8,
     parameter integer DEPTH     = 8,
-    parameter logic   INPUT_REG = 1'b0
+    parameter logic   INPUT_REG = 1'b0,
+    parameter logic [8*7-1:0] RAM_STYLE = "AUTO"
 ) (
     input  wire              clk,
     input  wire              rst,
@@ -111,7 +113,8 @@ module shift_ram #(
       .ADDR_WIDTH  (AddrWidth),
       .DATA_WIDTH  (WIDTH),
       .READ_LATENCY(2),
-      .INIT_FILE   ("NONE")
+      .INIT_FILE   ("NONE"),
+      .RAM_STYLE   (RAM_STYLE)
   ) i_ram_sdp (
       // Port A, write port
       .clka (clk),

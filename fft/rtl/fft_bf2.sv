@@ -253,7 +253,8 @@ module fft_bf2 #(
     shift_ram #(
         .WIDTH    (DelayWidth),
         .DEPTH    (DelayDepth),
-        .INPUT_REG(1)
+        .INPUT_REG(1),
+        .RAM_STYLE(DelayDepth >= 1024 ? "BLOCK" : "AUTO")
     ) i_delay (
         .clk (clk),
         .rst (1'b0),
