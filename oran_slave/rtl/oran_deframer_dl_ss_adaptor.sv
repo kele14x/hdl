@@ -337,7 +337,7 @@ module oran_deframer_dl_ss_adaptor #(
       .DATA_WIDTH_B(32),
       .OUTPUT_REG_B(1'b1),
       .WRITE_MODE_B("READ_FIRST"),
-      .INIT_FILE   (""),
+      .INIT_FILE   ("NONE"),
       .RAM_STYLE   ("BLOCK")
   ) i_syml_ram (
       .clka (clk),

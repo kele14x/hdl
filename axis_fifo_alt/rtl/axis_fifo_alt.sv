@@ -338,8 +338,7 @@ module axis_fifo_alt #(
       .ADDR_WIDTH  (AddrWidth),
       .DATA_WIDTH  (DataWidth),
       .READ_LATENCY(OutputReg + 1),
-      .INIT_WORD   (0),
-      .INIT_FILE   ("")
+      .INIT_FILE   ("NONE")
   ) i_ram (
       .clka (wr_clk),
       .ena  (wr_en),

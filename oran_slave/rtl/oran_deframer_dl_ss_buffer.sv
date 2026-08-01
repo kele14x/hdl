@@ -192,8 +192,7 @@ module oran_deframer_dl_ss_buffer #(
       .ADDR_WIDTH  (AddrWidth),
       .DATA_WIDTH  (DataWidth),
       .READ_LATENCY(2),
-      .INIT_WORD   ('0),
-      .INIT_FILE   ("")
+      .INIT_FILE   ("NONE")
   ) i_data_ram (
       .clka (clk),
       .ena  (r1_wr_en),

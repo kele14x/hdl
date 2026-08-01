@@ -192,7 +192,7 @@ module pdxch_fdv_buffer #(
             .OUTPUT_REG_B(1'b1),
             .WRITE_MODE_B("READ_FIRST"),
             //
-            .INIT_FILE   (""),
+            .INIT_FILE   ("NONE"),
             .RAM_STYLE   ("BLOCK")
         ) u_ram (
             .clka (clk_eth_xran),
@@ -227,7 +227,7 @@ module pdxch_fdv_buffer #(
             .OUTPUT_REG_B(1'b1),
             .WRITE_MODE_B("READ_FIRST"),
             //
-            .INIT_FILE   (""),
+            .INIT_FILE   ("NONE"),
             .RAM_STYLE   ("BLOCK")
         ) u_ram (
             .clka (clk_eth_xran),

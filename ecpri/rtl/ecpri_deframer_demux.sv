@@ -339,8 +339,7 @@ module ecpri_deframer_demux (
       .ADDR_WIDTH  (AddrWidth),
       .DATA_WIDTH  (DataWidth),
       .READ_LATENCY(2),
-      .INIT_WORD   (0),
-      .INIT_FILE   ("")
+      .INIT_FILE   ("NONE")
   ) i_ram (
       .clka (rx_eth_clk),
       .ena  (wr_en),

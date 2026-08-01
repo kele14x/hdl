@@ -16,7 +16,7 @@ module ram_tdp #(
     parameter int READ_LATENCY_A = 3,
     parameter int READ_LATENCY_B = 3,
     parameter bit [DATA_WIDTH-1:0] INIT_WORD = '0,
-    parameter string INIT_FILE = ""
+    parameter string INIT_FILE = "NONE"
 ) (
     // Port A
     input var                       clka,
@@ -46,6 +46,10 @@ module ram_tdp #(
     else begin
       $fatal(1, "READ_LATENCY_B should be within range 1 to 3.");
     end
+    assert (INIT_FILE != "")
+    else begin
+      $fatal(1, "INIT_FILE must be NONE or a legal initialization file name.");
+    end
   end
 
   // The Memory
@@ -63,7 +67,7 @@ module ram_tdp #(
     for (int i = 0; i < 2 ** ADDR_WIDTH; i++) begin
       MEM[i] = INIT_WORD;
     end
-    if (INIT_FILE != "") begin : g_file_init
+    if (INIT_FILE != "NONE") begin : g_file_init
       $readmemh(INIT_FILE, MEM, 0, 2 ** ADDR_WIDTH - 1);
     end
   end

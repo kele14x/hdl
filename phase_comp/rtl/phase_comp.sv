@@ -131,8 +131,7 @@ module phase_comp #(
       .ADDR_WIDTH  (4),
       .DATA_WIDTH  (32),
       .READ_LATENCY(1),
-      .INIT_WORD   (32'h00004000),
-      .INIT_FILE   ("")
+      .INIT_FILE   ("NONE")
   ) i_ram (
       .clka (ctrl_clk),
       .ena  (1'b1),

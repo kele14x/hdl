@@ -272,8 +272,7 @@ module eth_pkt_fifo #(
       .ADDR_WIDTH  (ADDR_WIDTH),
       .DATA_WIDTH  (DATA_WIDTH),
       .READ_LATENCY(3),
-      .INIT_WORD   ('0),
-      .INIT_FILE   ("")
+      .INIT_FILE   ("NONE")
   ) i_buffer (
       // Port A
       .clka (aclk),

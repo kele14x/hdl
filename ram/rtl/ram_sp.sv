@@ -29,6 +29,11 @@ module ram_sp #(
              READ_LATENCY);
     end
 
+    assert (INIT_FILE != "")
+    else begin
+      $fatal(1, "[%m]: INIT_FILE must be NONE or a legal initialization file name");
+    end
+
     /* verilator lint_off WIDTHEXPAND */
     assert (WRITE_MODE == "WRITE_FIRST" || WRITE_MODE == "READ_FIRST" || WRITE_MODE == "NO_CHANGE")
     /* verilator lint_on WIDTHEXPAND */
@@ -104,19 +109,19 @@ module ram_sp #(
       .WRITE_MODE_A       (WRITE_MODE),
       .RST_MODE_A         ("sync")
   ) xpm_memory_spram_i (
-      .addra         (addr),
+      .sleep         (1'b0),
       .clka          (clk),
-      .dbiterra      (xpm_dbiterra),
+      .rsta          (rst[XpmReadLatency-1]),
+      .ena           (en[0]),
+      .regcea        (en[XpmReadLatency-1]),
+      .wea           (we),
+      .addra         (addr),
       .dina          (din),
       .douta         (rega[XpmReadLatency-1]),
-      .ena           (en[0]),
-      .injectdbiterra(1'b0),
       .injectsbiterra(1'b0),
-      .regcea        (en[XpmReadLatency-1]),
-      .rsta          (rst[XpmReadLatency-1]),
+      .injectdbiterra(1'b0),
       .sbiterra      (xpm_sbiterra),
-      .sleep         (1'b0),
-      .wea           (we)
+      .dbiterra      (xpm_dbiterra)
   );
 
 `else

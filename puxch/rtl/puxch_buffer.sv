@@ -252,7 +252,7 @@ module puxch_buffer #(
             .ADDR_WIDTH_B  (11),
             .DATA_WIDTH_B  (64),
             .READ_LATENCY_B(2),
-            .INIT_FILE     ("")
+            .INIT_FILE     ("NONE")
         ) u_ram (
             .clka (clk),
             .wea  (wr_we_s),
@@ -276,7 +276,7 @@ module puxch_buffer #(
             .ADDR_WIDTH_B  (12),
             .DATA_WIDTH_B  (64),
             .READ_LATENCY_B(2),
-            .INIT_FILE     ("")
+            .INIT_FILE     ("NONE")
         ) u_ram (
             .clka (clk),
             .wea  (wr_we[cc]),

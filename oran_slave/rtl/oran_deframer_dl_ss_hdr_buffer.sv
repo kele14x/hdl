@@ -153,8 +153,7 @@ module oran_deframer_dl_ss_hdr_buffer #(
           .ADDR_WIDTH  (AddrWidth),
           .DATA_WIDTH  (DataWidth),
           .READ_LATENCY(1),
-          .INIT_WORD   ('0),
-          .INIT_FILE   ("")
+          .INIT_FILE   ("NONE")
       ) i_valid_ram (
           .clka (clk),
           .ena  (wr_en[i]),

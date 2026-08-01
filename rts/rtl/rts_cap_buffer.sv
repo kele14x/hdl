@@ -70,8 +70,7 @@ module rts_cap_buffer #(
       .ADDR_WIDTH  (ADDR_WIDTH),
       .DATA_WIDTH  (DATA_WIDTH),
       .READ_LATENCY(2),
-      .INIT_WORD   (0),
-      .INIT_FILE   ("")
+      .INIT_FILE   ("NONE")
   ) i_cap_ram (
       // Port A
       .clka (clka_l),

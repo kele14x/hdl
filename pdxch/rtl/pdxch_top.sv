@@ -254,8 +254,7 @@ module pdxch_top #(
       .DATA_WIDTH  (32),
       .WRITE_MODE  ("READ_FIRST"),
       .READ_LATENCY(1),
-      .INIT_WORD   (32'h4000),
-      .INIT_FILE   ("")
+      .INIT_FILE   ("NONE")
   ) u_ram_sp (
       .clk (ctrl_clk),
       .rst (ctrl_rst),

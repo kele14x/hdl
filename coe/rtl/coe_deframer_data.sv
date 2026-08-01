@@ -260,8 +260,7 @@ module coe_deframer_data (
       .ADDR_WIDTH  (AddrWidth),
       .DATA_WIDTH  (DataWidth),
       .READ_LATENCY(2),
-      .INIT_WORD   (0),
-      .INIT_FILE   ("")
+      .INIT_FILE   ("NONE")
   ) i_ram_sdp (
       // Port A
       .clka (clk),

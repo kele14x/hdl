@@ -219,8 +219,7 @@ module puxch_top #(
       .DATA_WIDTH  (32),
       .WRITE_MODE  ("READ_FIRST"),
       .READ_LATENCY(1),
-      .INIT_WORD   (32'h4000),
-      .INIT_FILE   ("")
+      .INIT_FILE   ("NONE")
   ) u_phase_comp_ram (
       .clk (ctrl_clk),
       .rst (ctrl_rst),

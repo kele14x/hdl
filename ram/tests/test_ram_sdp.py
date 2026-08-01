@@ -1,4 +1,5 @@
 import os
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -16,8 +17,35 @@ prj_path = Path(__file__).resolve().parent.parent
 ADDR_WIDTH = 3
 DATA_WIDTH = 8
 READ_LATENCY = 3
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
+
+_simulator_binaries = {
+    "questa": "vsim",
+    "modelsim": "vsim",
+    "verilator": "verilator",
+    "icarus": "iverilog",
+}
+simulator_binary = _simulator_binaries.get(SIM.lower())
+if simulator_binary and shutil.which(simulator_binary) is None:
+    raise RuntimeError(
+        f"SIM={SIM!r} was selected, but the required executable "
+        f"{simulator_binary!r} is not available on PATH"
+    )
+
 GUI = os.environ.get("GUI", "false").lower() == "true"
+USE_XPM = os.environ.get("RAM_SDP_USE_XPM", "").lower() in {"1", "true", "yes"}
+XPM_MEMORY_SV = os.environ.get("XPM_MEMORY_SV")
+
+if USE_XPM:
+    if not XPM_MEMORY_SV:
+        raise RuntimeError(
+            "RAM_SDP_USE_XPM is enabled, but XPM_MEMORY_SV was not set to "
+            "Vivado's installed xpm_memory.sv"
+        )
+    if not Path(XPM_MEMORY_SV).is_file():
+        raise RuntimeError(f"XPM_MEMORY_SV does not name a file: {XPM_MEMORY_SV}")
 
 
 @cocotb.test()
@@ -76,14 +104,20 @@ async def test_ram_sdp_write_read_latency_and_read_enable_hold(dut):
 def test_ram_sdp_runner():
     runner = get_runner(SIM)
     with tempfile.TemporaryDirectory(prefix="ram_sdp_") as run_dir:
+        sources = list(resolve_flt(prj_path / "ram.flt"))
+        defines = {}
+        if USE_XPM:
+            sources.insert(0, Path(XPM_MEMORY_SV))
+            defines["RAM_USE_XPM"] = 1
+
         runner.build(
             hdl_toplevel="ram_sdp",
-            sources=resolve_flt(prj_path / "ram.flt"),
+            sources=sources,
+            defines=defines,
             parameters={
                 "ADDR_WIDTH": ADDR_WIDTH,
                 "DATA_WIDTH": DATA_WIDTH,
                 "READ_LATENCY": READ_LATENCY,
-                "INIT_WORD": 0,
             },
             always=True,
             waves=True,
@@ -93,6 +127,9 @@ def test_ram_sdp_runner():
             hdl_toplevel="ram_sdp",
             hdl_toplevel_lang="verilog",
             test_module="test_ram_sdp",
+            test_args=["-suppress", "7061"]
+            if SIM.lower() in {"questa", "modelsim"}
+            else [],
             waves=True,
             gui=GUI,
             test_dir=run_dir,

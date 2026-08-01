@@ -111,8 +111,7 @@ module shift_ram #(
       .ADDR_WIDTH  (AddrWidth),
       .DATA_WIDTH  (WIDTH),
       .READ_LATENCY(2),
-      .INIT_WORD   ({WIDTH{1'b0}}),
-      .INIT_FILE   ("")
+      .INIT_FILE   ("NONE")
   ) i_ram_sdp (
       // Port A, write port
       .clka (clk),

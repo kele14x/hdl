@@ -13,7 +13,7 @@ module ram_tdp_pipe #(
     parameter int READ_LATENCY_A = 2,
     parameter int READ_LATENCY_B = 2,
     parameter bit [DATA_WIDTH-1:0] INIT_WORD = '0,
-    parameter string INIT_FILE = ""
+    parameter string INIT_FILE = "NONE"
 ) (
     // Port A
     input var                   clka,

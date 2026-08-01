@@ -215,8 +215,7 @@ module pdxch_block2stream #(
           .ADDR_WIDTH  (AddrWidth),
           .DATA_WIDTH  (DataWidth),
           .READ_LATENCY(2),
-          .INIT_WORD   ('b0),
-          .INIT_FILE   ("")
+          .INIT_FILE   ("NONE")
       ) u_ram (
           .clka (clk),
           .ena  (wr_en[i]),

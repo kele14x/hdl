@@ -1,4 +1,5 @@
 import os
+import shutil
 from pathlib import Path
 
 import cocotb
@@ -17,8 +18,35 @@ DATA_WIDTH_A = 8
 ADDR_WIDTH_B = 3
 DATA_WIDTH_B = 16
 READ_LATENCY_B = 2
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
+
+_simulator_binaries = {
+    "questa": "vsim",
+    "modelsim": "vsim",
+    "verilator": "verilator",
+    "icarus": "iverilog",
+}
+simulator_binary = _simulator_binaries.get(SIM.lower())
+if simulator_binary and shutil.which(simulator_binary) is None:
+    raise RuntimeError(
+        f"SIM={SIM!r} was selected, but the required executable "
+        f"{simulator_binary!r} is not available on PATH"
+    )
+
 GUI = os.environ.get("GUI", "false").lower() == "true"
+USE_XPM = os.environ.get("RAM_SDP_ASYM_USE_XPM", "").lower() in {"1", "true", "yes"}
+XPM_MEMORY_SV = os.environ.get("XPM_MEMORY_SV")
+
+if USE_XPM:
+    if not XPM_MEMORY_SV:
+        raise RuntimeError(
+            "RAM_SDP_ASYM_USE_XPM is enabled, but XPM_MEMORY_SV was not set to "
+            "Vivado's installed xpm_memory.sv"
+        )
+    if not Path(XPM_MEMORY_SV).is_file():
+        raise RuntimeError(f"XPM_MEMORY_SV does not name a file: {XPM_MEMORY_SV}")
 
 
 @cocotb.test()
@@ -63,9 +91,16 @@ async def test_ram_sdp_asym_packs_narrow_writes_in_little_endian_word_order(dut)
 
 def test_ram_sdp_asym_runner():
     runner = get_runner(SIM)
+    sources = list(resolve_flt(prj_path / "ram.flt"))
+    defines = {}
+    if USE_XPM:
+        sources.insert(0, Path(XPM_MEMORY_SV))
+        defines["RAM_USE_XPM"] = 1
+
     runner.build(
         hdl_toplevel="ram_sdp_asym",
-        verilog_sources=resolve_flt(prj_path / "ram.flt"),
+        sources=sources,
+        defines=defines,
         parameters={
             "ADDR_WIDTH_A": ADDR_WIDTH_A,
             "DATA_WIDTH_A": DATA_WIDTH_A,
@@ -80,7 +115,9 @@ def test_ram_sdp_asym_runner():
         hdl_toplevel="ram_sdp_asym",
         hdl_toplevel_lang="verilog",
         test_module="test_ram_sdp_asym",
-        test_args=["-suppress", "7061"],
+        test_args=["-suppress", "7061"]
+        if SIM.lower() in {"questa", "modelsim"}
+        else [],
         waves=True,
         gui=GUI,
     )

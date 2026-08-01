@@ -394,8 +394,7 @@ module prach_stream2block #(
           .ADDR_WIDTH  (AddrWidth),
           .DATA_WIDTH  (32),
           .READ_LATENCY(2),
-          .INIT_WORD   ('0),
-          .INIT_FILE   ("")
+          .INIT_FILE   ("NONE")
       ) u_ram (
           // Port A
           .clka (clk),

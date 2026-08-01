@@ -24,7 +24,7 @@ module ram_tdp_asym #(
     parameter bit     OUTPUT_REG_B = 1'b1,
     parameter string  WRITE_MODE_B = "READ_FIRST",
     //
-    parameter string  INIT_FILE    = "",
+    parameter string  INIT_FILE    = "NONE",
     parameter string  RAM_STYLE    = "AUTO"
 ) (
     input  wire                     clka,
@@ -58,6 +58,10 @@ module ram_tdp_asym #(
     end
     if  (RAM_STYLE != "AUTO" && RAM_STYLE != "BLOCK" && RAM_STYLE != "DISTRIBUTED" && RAM_STYLE != "REGISTER" && RAM_STYLE != "ULTRA") begin
       $display("RAM_STYLE should be one of \"AUTO\", \"BLOCK\", \"DISTRIBUTED\", \"REGISTER\", or \"ULTRA\", got \"%s\". [%m]", RAM_STYLE);
+      $finish();
+    end
+    if  (INIT_FILE == "") begin
+      $display("INIT_FILE must be NONE or a legal initialization file name. [%m]");
       $finish();
     end
   end
@@ -102,7 +106,7 @@ module ram_tdp_asym #(
     for (init_idx = 0; init_idx < MaxSize; init_idx = init_idx + 1) begin
       mem[init_idx] = 'b0;
     end
-    if (INIT_FILE != "") begin
+    if (INIT_FILE != "NONE") begin
       $readmemh(INIT_FILE, mem);
     end
   end

@@ -183,8 +183,7 @@ module fifo_sync #(
       .ADDR_WIDTH  (AddrWidth),
       .DATA_WIDTH  (DATA_WIDTH),
       .READ_LATENCY(RamLatency),
-      .INIT_WORD   ('0),
-      .INIT_FILE   ("")
+      .INIT_FILE   ("NONE")
   ) i_ram (
       .clka (clk),
       .ena  (wr_en_mem),
