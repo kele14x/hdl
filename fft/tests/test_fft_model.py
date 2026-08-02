@@ -5,7 +5,7 @@ import cocotb
 import numpy as np
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import FallingEdge, ReadOnly, RisingEdge
+from cocotb.triggers import ReadOnly, ReadWrite, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from fft.tests.fft_fixed_model import FftConfig, bit_reverse_indices, fft_fixed
@@ -81,6 +81,25 @@ async def _sample_output(dut, outputs, last_events):
         )
 
 
+async def _drive_input_stream(dut, inputs, fft_size):
+    for sample in range(fft_size):
+        for antenna in range(NUM_ANT):
+            await RisingEdge(dut.clk)
+            await ReadWrite()
+            dut.din_dr.value = int(inputs[antenna][0][sample])
+            dut.din_di.value = int(inputs[antenna][1][sample])
+            dut.din_chn.value = antenna
+            dut.din_dv.value = 1
+            dut.din_last.value = sample == fft_size - 1 and antenna == NUM_ANT - 1
+
+    await RisingEdge(dut.clk)
+    await ReadWrite()
+    dut.din_dv.value = 0
+    dut.din_last.value = 0
+    dut.din_dr.value = 0
+    dut.din_di.value = 0
+
+
 @cocotb.test()
 async def test_fft_rtl_matches_fixed_model(dut):
     fft_size = int(os.environ.get("FFT_RUNTIME_SIZE", "4096"))
@@ -140,28 +159,18 @@ async def test_fft_rtl_matches_fixed_model(dut):
 
     for _ in range(10):
         await _sample_output(dut, outputs, last_events)
-    await FallingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await ReadWrite()
     dut.rst.value = 0
 
-    for sample in range(fft_size):
-        for antenna in range(NUM_ANT):
-            await FallingEdge(dut.clk)
-            dut.din_dr.value = int(inputs[antenna][0][sample])
-            dut.din_di.value = int(inputs[antenna][1][sample])
-            dut.din_chn.value = antenna
-            dut.din_dv.value = 1
-            dut.din_last.value = sample == fft_size - 1 and antenna == NUM_ANT - 1
-            await _sample_output(dut, outputs, last_events)
+    # Drive and sample in parallel.  Each input is written after one rising
+    # edge and is therefore sampled by the DUT on the next rising edge; the
+    # sampler observes the DUT after that same edge without halving throughput.
+    cocotb.start_soon(_drive_input_stream(dut, inputs, fft_size))
 
-    await FallingEdge(dut.clk)
-    dut.din_dv.value = 0
-    dut.din_last.value = 0
-    dut.din_dr.value = 0
-    dut.din_di.value = 0
-
-    for _ in range(fft_size * NUM_ANT + 1024):
+    for _ in range(2 * fft_size * NUM_ANT + 2048):
         await _sample_output(dut, outputs, last_events)
-        if all(len(channel) == fft_size for channel in outputs):
+        if all(len(channel) >= fft_size for channel in outputs):
             break
 
     assert [len(channel) for channel in outputs] == [fft_size] * NUM_ANT
@@ -208,6 +217,9 @@ def test_fft_rtl_runner(
             "BIT_REVERSED_INPUT": bit_reversed_input,
         },
         always=True,
+        build_dir=PRJ_PATH
+        / "sim_build"
+        / f"questa_fft_{fft_size}_{inverse}_{bit_reversed_input}_{vector_mode}",
         waves=False,
     )
     runner.test(

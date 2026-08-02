@@ -242,7 +242,7 @@ module fft_bf2 #(
         .INIT (1'b0)
     ) i_delay (
         .clk (clk),
-        .rst (1'b0),
+        .rst (rst),
         .cen (shift),
         .din (delay_in),
         .dout(delay_out)
@@ -257,7 +257,7 @@ module fft_bf2 #(
         .RAM_STYLE(DelayDepth >= 1024 ? "BLOCK" : "AUTO")
     ) i_delay (
         .clk (clk),
-        .rst (1'b0),
+        .rst (rst),
         .cen (shift),
         .din (delay_in),
         .dout(delay_out)
