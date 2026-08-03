@@ -455,8 +455,6 @@ module puxch_buffer #(
       .m_axis_tready(m_axis_tready)
   );
 
-  wire unused_buffer = &{1'b0, rst, din_sl, m_fram_data_req[32:25], m_fram_data_req[6:4], fifo_full, fifo_err_discard, fifo_m_axis_tuser, reg_m_axis_tuser};
-
 endmodule
 
 `default_nettype wire

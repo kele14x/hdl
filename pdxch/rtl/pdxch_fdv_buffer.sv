@@ -217,18 +217,18 @@ module pdxch_fdv_buffer #(
         logic [127:0] unused_ram_douta;
 
         ram_tdp_asym #(
-            .ADDR_WIDTH_A(11),
-            .DATA_WIDTH_A(128),
+            .ADDR_WIDTH_A  (11),
+            .DATA_WIDTH_A  (128),
             .READ_LATENCY_A(2),
-            .WRITE_MODE_A("READ_FIRST"),
+            .WRITE_MODE_A  ("READ_FIRST"),
             //
-            .ADDR_WIDTH_B(13),
-            .DATA_WIDTH_B(32),
+            .ADDR_WIDTH_B  (13),
+            .DATA_WIDTH_B  (32),
             .READ_LATENCY_B(2),
-            .WRITE_MODE_B("READ_FIRST"),
+            .WRITE_MODE_B  ("READ_FIRST"),
             //
-            .INIT_FILE   ("NONE"),
-            .RAM_STYLE   ("BLOCK")
+            .INIT_FILE     ("NONE"),
+            .RAM_STYLE     ("BLOCK")
         ) u_ram (
             .clka (clk_eth_xran),
             .rsta (2'b00),

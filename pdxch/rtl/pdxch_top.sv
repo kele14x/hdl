@@ -71,7 +71,6 @@ module pdxch_top #(
   logic         ctrl_phase_comp_en_d;
 
   logic         unused_bfp_err_unexpected_tlast                [NUM_ANT];
-  wire          unused_defm_tdest = &{1'b0, s_defm_data_tdest};
 
   logic [127:0] s0_axis_tdata                                  [NUM_ANT];
   logic [ 15:0] s0_axis_tkeep                                  [NUM_ANT];

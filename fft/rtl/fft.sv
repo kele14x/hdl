@@ -5,7 +5,7 @@
 module fft #(
     parameter integer NUM_ANT            = 4,
     parameter logic   INV_FFT            = 1'b0,
-    parameter integer LOG_FFT_SIZE       = 11,
+    parameter integer LOG_FFT_SIZE       = 12,
     parameter integer DATA_WIDTH         = 16,
     parameter logic   BIT_REVERSED_INPUT = 1'b1
 ) (

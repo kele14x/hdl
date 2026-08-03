@@ -190,8 +190,6 @@ module puxch_resync #(
       .stat_resync    (stat_resync)
   );
 
-  wire unused_resync = &{1'b0, s_axis_tuser, s_axis_tlast, s_axis_tvalid, ctrl_bist_s, stat_resync};
-
 endmodule
 
 `default_nettype wire

@@ -235,8 +235,6 @@ module puxch_top #(
     ctrl_phase_comp_valid <= ctrl_phase_comp_en;
   end
 
-  wire unused_top = &{1'b0, dout_last, bfp_m_axis_tuser};
-
 endmodule
 
 `default_nettype wire

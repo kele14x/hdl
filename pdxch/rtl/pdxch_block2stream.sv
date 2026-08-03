@@ -51,8 +51,6 @@ module pdxch_block2stream #(
   logic                 rd_en_dd                                                 [NUM_ANT];
   logic [DataWidth-1:0] rd_data                                                  [NUM_ANT];
 
-  wire                  unused_inputs = &{1'b0, din_sl, din_last, m_axis_tready};
-
   logic [         31:0] dout                                                     [NUM_ANT];
 
   // Main
