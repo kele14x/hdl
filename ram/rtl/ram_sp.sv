@@ -7,11 +7,12 @@
 module ram_sp #(
     parameter int ADDR_WIDTH   = 10,
     parameter int DATA_WIDTH   = 32,
-    parameter     WRITE_MODE   = "READ_FIRST",    // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
-    parameter int READ_LATENCY = 2,               // 1 ~ 3
+    parameter     WRITE_MODE   = "READ_FIRST",     // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
+    parameter int READ_LATENCY = 2,                // 1 ~ 3
+    //
+    parameter int DEPTH        = 1 << ADDR_WIDTH,
     parameter     INIT_FILE    = "NONE",
-    parameter     RAM_STYLE    = "AUTO",
-    parameter int DEPTH        = 1 << ADDR_WIDTH
+    parameter     RAM_STYLE    = "AUTO"
 ) (
     input var                     clk,
     input var                     rst,
@@ -126,6 +127,7 @@ module ram_sp #(
       .RST_MODE_A         ("sync")
   ) xpm_memory_spram_i (
       .sleep         (1'b0),
+      //
       .clka          (clk),
       .rsta          (xpm_rsta),
       .ena           (en[0]),
@@ -161,12 +163,12 @@ module ram_sp #(
 
 `else
 
-  // Port A output pipeline
-  logic [DATA_WIDTH-1:0] rega[READ_LATENCY];
-
   // The portable behavioral memory.
   (* RAM_STYLE = RAM_STYLE *)
   logic [DATA_WIDTH-1:0] MEM[DEPTH];
+
+  // Port A output pipeline
+  logic [DATA_WIDTH-1:0] rega[READ_LATENCY];
 
   // Initializes the memory values to a specified file or to all zeros to match
   // hardware

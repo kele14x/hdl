@@ -6,7 +6,7 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles
+from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from common.tb.memory import MemoryAgent, MemoryAgentConfig, MemoryPortBus
@@ -16,6 +16,7 @@ prj_path = Path(__file__).resolve().parent.parent
 
 ADDR_WIDTH = 3
 DATA_WIDTH = 8
+DEPTH = 5
 READ_LATENCY = 3
 SIM = os.environ.get("SIM")
 if not SIM:
@@ -56,7 +57,7 @@ async def test_ram_sdp_write_read_latency_and_read_enable_hold(dut):
     dut.wea.value = 0
     dut.addra.value = 0
     dut.dina.value = 0
-    dut.rstb.value = (1 << READ_LATENCY) - 1
+    dut.rstb.value = 1
     dut.enb.value = 0
     dut.addrb.value = 0
     await ClockCycles(dut.clka, 3)
@@ -83,10 +84,10 @@ async def test_ram_sdp_write_read_latency_and_read_enable_hold(dut):
     await writer.start()
     await reader.start()
 
-    memory = {0: 0x26, 2: 0x7D, 5: 0xA4, 7: 0x11}
+    memory = {0: 0x26, 2: 0x7D, 4: 0xA4}
     await writer.write_burst(memory.items())
 
-    addresses = [0, 5, 2, 7, 0, 5, 2, 7]
+    addresses = [0, 4, 2, 0, 4, 2]
     actual = await reader.read_burst(addresses)
     assert actual == [memory[address] for address in addresses]
     assert [transaction.address for transaction in writer.monitor.observed] == list(
@@ -99,6 +100,28 @@ async def test_ram_sdp_write_read_latency_and_read_enable_hold(dut):
     held = int(dut.doutb.value)
     await ClockCycles(dut.clkb, 3)
     assert int(dut.doutb.value) == held
+
+    reader.stop()
+    writer.stop()
+
+    # Out-of-range accesses are undefined: writes have no effect and reads
+    # propagate X through the read pipeline in the behavioral model/XPM.
+    dut.enb.value = 1
+    dut.addrb.value = DEPTH
+    await ClockCycles(dut.clkb, 1)
+    dut.enb.value = (1 << READ_LATENCY) - 1
+    for _ in range(READ_LATENCY):
+        await ClockCycles(dut.clkb, 1)
+    await ReadOnly()
+    assert not dut.doutb.value.is_resolvable
+
+    # The scalar reset always clears the externally visible stage.
+    await FallingEdge(dut.clkb)
+    dut.enb.value = 0
+    dut.rstb.value = 1
+    await RisingEdge(dut.clkb)
+    await ReadOnly()
+    assert int(dut.doutb.value) == 0
 
 
 def test_ram_sdp_runner():
@@ -117,6 +140,7 @@ def test_ram_sdp_runner():
             parameters={
                 "ADDR_WIDTH": ADDR_WIDTH,
                 "DATA_WIDTH": DATA_WIDTH,
+                "DEPTH": DEPTH,
                 "READ_LATENCY": READ_LATENCY,
             },
             always=True,

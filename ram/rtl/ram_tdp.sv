@@ -13,14 +13,16 @@ module ram_tdp #(
     parameter int DATA_WIDTH     = 32,
     parameter     WRITE_MODE_A   = "READ_FIRST",  // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
     parameter     WRITE_MODE_B   = "READ_FIRST",  // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
-    parameter int READ_LATENCY_A = 3,
-    parameter int READ_LATENCY_B = 3,
+    parameter int READ_LATENCY_A = 2,
+    parameter int READ_LATENCY_B = 2,
+    //
+    parameter int DEPTH          = 1 << ADDR_WIDTH,
     parameter     INIT_FILE      = "NONE",
     parameter     RAM_STYLE      = "AUTO"
 ) (
     // Port A
     input var                       clka,
-    input var  [READ_LATENCY_A-1:0] rsta,
+    input var                       rsta,
     input var  [READ_LATENCY_A-1:0] ena,
     input var                       wea,
     input var  [    ADDR_WIDTH-1:0] addra,
@@ -28,7 +30,7 @@ module ram_tdp #(
     output var [    DATA_WIDTH-1:0] douta,
     // Port B
     input var                       clkb,
-    input var  [READ_LATENCY_B-1:0] rstb,
+    input var                       rstb,
     input var  [READ_LATENCY_B-1:0] enb,
     input var                       web,
     input var  [    ADDR_WIDTH-1:0] addrb,
@@ -51,6 +53,21 @@ module ram_tdp #(
     assert (INIT_FILE != "")
     else begin
       $fatal(1, "[%m]: INIT_FILE must be NONE or a legal initialization file name");
+    end
+
+    assert (ADDR_WIDTH > 0)
+    else begin
+      $fatal(1, "[%m]: ADDR_WIDTH must be positive, got %d", ADDR_WIDTH);
+    end
+
+    assert (DEPTH > 0)
+    else begin
+      $fatal(1, "[%m]: DEPTH must be positive, got %d", DEPTH);
+    end
+
+    assert (ADDR_WIDTH >= $clog2(DEPTH))
+    else begin
+      $fatal(1, "[%m]: ADDR_WIDTH %d is too small for DEPTH %d", ADDR_WIDTH, DEPTH);
     end
 
     /* verilator lint_off WIDTHEXPAND */
@@ -97,14 +114,9 @@ module ram_tdp #(
 `endif
   end
 
-  // Port A output pipeline
-  logic [DATA_WIDTH-1:0] rega[READ_LATENCY_A];
-  // Port B output pipeline
-  logic [DATA_WIDTH-1:0] regb[READ_LATENCY_B];
-
 `ifdef RAM_USE_XPM
 
-  localparam integer XpmMemorySize = DATA_WIDTH * (1 << ADDR_WIDTH);
+  localparam int XpmMemorySize = DATA_WIDTH * DEPTH;
 
   // UltraRAM requires a common clock; the two clock ports may be tied
   // together by the caller even though the interface exposes both ports.
@@ -113,18 +125,23 @@ module ram_tdp #(
   // XPM exposes independent enables for its first read stage and its final
   // output stage. Keep the third stage in RTL so each port's final enable
   // remains independent.
-  localparam integer XpmReadLatencyA = READ_LATENCY_A < 3 ? READ_LATENCY_A : 2;
-  localparam integer XpmReadLatencyB = READ_LATENCY_B < 3 ? READ_LATENCY_B : 2;
-
-  localparam integer RtlPipelineStartA = XpmReadLatencyA;
-  localparam integer RtlPipelineStartB = XpmReadLatencyB;
+  localparam int XpmReadLatencyA = READ_LATENCY_A < 3 ? READ_LATENCY_A : 2;
+  localparam int XpmReadLatencyB = READ_LATENCY_B < 3 ? READ_LATENCY_B : 2;
 
   localparam XpmInitParam = INIT_FILE == "NONE" ? "0" : "";
 
-  logic xpm_sbiterra;
-  logic xpm_dbiterra;
-  logic xpm_sbiterrb;
-  logic xpm_dbiterrb;
+  logic [DATA_WIDTH-1:0] xpm_douta;
+  logic [DATA_WIDTH-1:0] xpm_doutb;
+  logic [DATA_WIDTH-1:0] output_reg_a;
+  logic [DATA_WIDTH-1:0] output_reg_b;
+
+  logic                  xpm_rsta;
+  logic                  xpm_rstb;
+
+  logic                  xpm_sbiterra;
+  logic                  xpm_dbiterra;
+  logic                  xpm_sbiterrb;
+  logic                  xpm_dbiterrb;
 
   xpm_memory_tdpram #(
       // Common module parameters
@@ -167,11 +184,10 @@ module ram_tdp #(
       .WRITE_MODE_B           (WRITE_MODE_B),
       .RST_MODE_B             ("sync")
   ) xpm_memory_tdpram_i (
-      // Common module ports
       .sleep         (1'b0),
-      // Port A module ports
+      //
       .clka          (clka),
-      .rsta          (rsta[XpmReadLatencyA-1]),
+      .rsta          (xpm_rsta),
       .ena           (ena[0]),
       .regcea        (ena[XpmReadLatencyA-1]),
       .wea           (wea),
@@ -179,12 +195,12 @@ module ram_tdp #(
       .dina          (dina),
       .injectsbiterra(1'b0),
       .injectdbiterra(1'b0),
-      .douta         (rega[XpmReadLatencyA-1]),
+      .douta         (xpm_douta),
       .sbiterra      (xpm_sbiterra),
       .dbiterra      (xpm_dbiterra),
-      // Port B module ports
+      //
       .clkb          (clkb),
-      .rstb          (rstb[XpmReadLatencyB-1]),
+      .rstb          (xpm_rstb),
       .enb           (enb[0]),
       .regceb        (enb[XpmReadLatencyB-1]),
       .web           (web),
@@ -192,29 +208,66 @@ module ram_tdp #(
       .dinb          (dinb),
       .injectsbiterrb(1'b0),
       .injectdbiterrb(1'b0),
-      .doutb         (regb[XpmReadLatencyB-1]),
+      .doutb         (xpm_doutb),
       .sbiterrb      (xpm_sbiterrb),
       .dbiterrb      (xpm_dbiterrb)
   );
 
-`else
+  // XPM's reset is connected only when its output is also the core output.
+  assign xpm_rsta = rsta && (READ_LATENCY_A == XpmReadLatencyA);
+  assign xpm_rstb = rstb && (READ_LATENCY_B == XpmReadLatencyB);
 
-  localparam integer RtlPipelineStartA = 1;
-  localparam integer RtlPipelineStartB = 1;
+  generate
+    if (READ_LATENCY_A > XpmReadLatencyA) begin : g_output_reg_a
+      always_ff @(posedge clka) begin
+        if (rsta) begin
+          output_reg_a <= {DATA_WIDTH{1'b0}};
+        end else if (ena[READ_LATENCY_A-1]) begin
+          output_reg_a <= xpm_douta;
+        end
+      end
+
+      assign douta = output_reg_a;
+    end else begin : g_xpm_output_a
+      assign douta = xpm_douta;
+    end
+
+    if (READ_LATENCY_B > XpmReadLatencyB) begin : g_output_reg_b
+      always_ff @(posedge clkb) begin
+        if (rstb) begin
+          output_reg_b <= {DATA_WIDTH{1'b0}};
+        end else if (enb[READ_LATENCY_B-1]) begin
+          output_reg_b <= xpm_doutb;
+        end
+      end
+
+      assign doutb = output_reg_b;
+    end else begin : g_xpm_output_b
+      assign doutb = xpm_doutb;
+    end
+  endgenerate
+
+`else
 
   // The portable behavioral memory.
   /* verilator lint_off MULTIDRIVEN */
   (* RAM_STYLE = RAM_STYLE *)
-  logic [DATA_WIDTH-1:0] MEM[2**ADDR_WIDTH];
+  logic [DATA_WIDTH-1:0] MEM[DEPTH];
+
+  // Port A output pipeline
+  logic [DATA_WIDTH-1:0] rega[READ_LATENCY_A];
+  // Port B output pipeline
+  logic [DATA_WIDTH-1:0] regb[READ_LATENCY_B];
 
   // Initializes the memory values to a specified file or to all zeros to match
   // hardware
   initial begin : memory_init
-    for (int i = 0; i < 2 ** ADDR_WIDTH; i++) begin
-      MEM[i] = '0;
-    end
     if (INIT_FILE != "NONE") begin : file_init
-      $readmemh(INIT_FILE, MEM, 0, 2 ** ADDR_WIDTH - 1);
+      $readmemh(INIT_FILE, MEM, 0, DEPTH - 1);
+    end else begin : zero_init
+      for (int i = 0; i < DEPTH; i++) begin
+        MEM[i] = {DATA_WIDTH{1'b0}};
+      end
     end
   end
 
@@ -235,8 +288,8 @@ module ram_tdp #(
   // Port A read
 
   always_ff @(posedge clka) begin
-    if (rsta[0]) begin
-      rega[0] <= '0;
+    if (rsta && (READ_LATENCY_A == 1)) begin
+      rega[0] <= {DATA_WIDTH{1'b0}};
     end else if (ena[0]) begin
       /* verilator lint_off WIDTHEXPAND */
       if ((wea == 1'b1) && (WRITE_MODE_A == "WRITE_FIRST")) begin
@@ -255,8 +308,8 @@ module ram_tdp #(
   // Read B read
 
   always_ff @(posedge clkb) begin
-    if (rstb[0]) begin
-      regb[0] <= '0;
+    if (rstb && (READ_LATENCY_B == 1)) begin
+      regb[0] <= {DATA_WIDTH{1'b0}};
     end else if (enb[0]) begin
       /* verilator lint_off WIDTHEXPAND */
       if ((web == 1'b1) && (WRITE_MODE_B == "WRITE_FIRST")) begin
@@ -274,24 +327,22 @@ module ram_tdp #(
 
   /* verilator lint_on MULTIDRIVEN */
 
-`endif
-
   // Additional clock cycle read latency improves clock-to-out timing
   generate
-    for (genvar i = RtlPipelineStartA; i < READ_LATENCY_A; i++) begin : g_pipeline_a
+    for (genvar i = 1; i < READ_LATENCY_A; i++) begin : g_output_reg_a
       always_ff @(posedge clka) begin
-        if (rsta[i]) begin
-          rega[i] <= '0;
+        if (rsta && (i == READ_LATENCY_A - 1)) begin
+          rega[i] <= {DATA_WIDTH{1'b0}};
         end else if (ena[i]) begin
           rega[i] <= rega[i-1];
         end
       end
     end
 
-    for (genvar i = RtlPipelineStartB; i < READ_LATENCY_B; i++) begin : g_pipeline_b
+    for (genvar i = 1; i < READ_LATENCY_B; i++) begin : g_output_reg_b
       always_ff @(posedge clkb) begin
-        if (rstb[i]) begin
-          regb[i] <= '0;
+        if (rstb && (i == READ_LATENCY_B - 1)) begin
+          regb[i] <= {DATA_WIDTH{1'b0}};
         end else if (enb[i]) begin
           regb[i] <= regb[i-1];
         end
@@ -301,6 +352,8 @@ module ram_tdp #(
 
   assign douta = rega[READ_LATENCY_A-1];
   assign doutb = regb[READ_LATENCY_B-1];
+
+`endif
 
 endmodule
 

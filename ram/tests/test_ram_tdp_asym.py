@@ -17,6 +17,7 @@ ADDR_WIDTH_A = 4
 DATA_WIDTH_A = 8
 ADDR_WIDTH_B = 3
 DATA_WIDTH_B = 16
+DEPTH = 10
 READ_LATENCY_A = 1
 READ_LATENCY_B = 2
 SIM = os.environ.get("SIM")
@@ -54,8 +55,8 @@ if USE_XPM:
 async def test_ram_tdp_asym_packs_narrow_writes_in_little_endian_word_order(dut):
     cocotb.start_soon(Clock(dut.clka, 10, unit="ns").start())
     cocotb.start_soon(Clock(dut.clkb, 14, unit="ns").start())
-    dut.rsta.value = 0
-    dut.rstb.value = (1 << READ_LATENCY_B) - 1
+    dut.rsta.value = 1
+    dut.rstb.value = 1
     dut.ena.value = 0
     dut.enb.value = 0
     dut.wea.value = 0
@@ -67,7 +68,7 @@ async def test_ram_tdp_asym_packs_narrow_writes_in_little_endian_word_order(dut)
     await ClockCycles(dut.clkb, 2)
     dut.rstb.value = 0
 
-    for address in range(1 << ADDR_WIDTH_A):
+    for address in range(DEPTH):
         await FallingEdge(dut.clka)
         dut.ena.value = 1
         dut.wea.value = 1
@@ -77,8 +78,14 @@ async def test_ram_tdp_asym_packs_narrow_writes_in_little_endian_word_order(dut)
     dut.ena.value = 0
     dut.wea.value = 0
 
-    expected_pipeline = [0] * READ_LATENCY_B
-    for address in (0, 3, 7, 1):
+    # Reset only clears the final stage, so establish a known value in the
+    # preceding stage before checking the pipelined output.
+    dut.enb.value = 1
+    dut.addrb.value = 0
+    await ClockCycles(dut.clkb, 1)
+
+    expected_pipeline = [1 << 8, 0]
+    for address in (0, 3, 4, 1):
         expected_word = (2 * address + 1) << 8 | (2 * address)
         await FallingEdge(dut.clkb)
         dut.enb.value = (1 << READ_LATENCY_B) - 1
@@ -94,6 +101,24 @@ async def test_ram_tdp_asym_packs_narrow_writes_in_little_endian_word_order(dut)
     held = int(dut.doutb.value)
     await ClockCycles(dut.clkb, 3)
     assert int(dut.doutb.value) == held
+
+    await FallingEdge(dut.clkb)
+    dut.enb.value = 1
+    dut.web.value = 0
+    dut.addrb.value = DEPTH // 2
+    await RisingEdge(dut.clkb)
+    await ReadOnly()
+    await FallingEdge(dut.clkb)
+    dut.enb.value = (1 << READ_LATENCY_B) - 1
+    await RisingEdge(dut.clkb)
+    await ReadOnly()
+    assert not dut.doutb.value.is_resolvable
+    await FallingEdge(dut.clkb)
+    dut.enb.value = 0
+    dut.rstb.value = 1
+    await RisingEdge(dut.clkb)
+    await ReadOnly()
+    assert int(dut.doutb.value) == 0
 
 
 def test_ram_tdp_asym_runner():
@@ -115,6 +140,7 @@ def test_ram_tdp_asym_runner():
             "DATA_WIDTH_B": DATA_WIDTH_B,
             "READ_LATENCY_A": READ_LATENCY_A,
             "READ_LATENCY_B": READ_LATENCY_B,
+            "DEPTH": DEPTH,
         },
         always=True,
         waves=True,

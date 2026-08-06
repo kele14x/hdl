@@ -1,12 +1,5 @@
-/*
- * True Dual Port Asymmetric Memory
- *
- * This module implements a true dual port memory with configurable address and data widths.
- * It supports different write modes and independent read latency for both ports.
- *
- * Read Latency: 1 to 3 clock cycles
- */
-
+// File: ram_tdp_asym.sv
+// Brief: True Dual Port (TDP) memory with asymmetric port widths.
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
@@ -22,27 +15,38 @@ module ram_tdp_asym #(
     parameter int READ_LATENCY_B = 2,
     parameter     WRITE_MODE_B   = "READ_FIRST",
     //
+    parameter int DEPTH          = 1 << ((ADDR_WIDTH_A > ADDR_WIDTH_B) ? ADDR_WIDTH_A : ADDR_WIDTH_B),
     parameter     INIT_FILE      = "NONE",
     parameter     RAM_STYLE      = "AUTO"
 ) (
-    input  wire                       clka,
-    input  wire  [READ_LATENCY_A-1:0] rsta,
-    input  wire  [READ_LATENCY_A-1:0] ena,
-    input  wire                       wea,
-    input  wire  [  ADDR_WIDTH_A-1:0] addra,
-    input  wire  [  DATA_WIDTH_A-1:0] dina,
-    output logic [  DATA_WIDTH_A-1:0] douta,
-    //
-    input  wire                       clkb,
-    input  wire  [READ_LATENCY_B-1:0] rstb,
-    input  wire  [READ_LATENCY_B-1:0] enb,
-    input  wire                       web,
-    input  wire  [  ADDR_WIDTH_B-1:0] addrb,
-    input  wire  [  DATA_WIDTH_B-1:0] dinb,
-    output logic [  DATA_WIDTH_B-1:0] doutb
+    // Port A
+    input var                       clka,
+    input var                       rsta,
+    input var  [READ_LATENCY_A-1:0] ena,
+    input var                       wea,
+    input var  [  ADDR_WIDTH_A-1:0] addra,
+    input var  [  DATA_WIDTH_A-1:0] dina,
+    output var [  DATA_WIDTH_A-1:0] douta,
+    // Port B
+    input var                       clkb,
+    input var                       rstb,
+    input var  [READ_LATENCY_B-1:0] enb,
+    input var                       web,
+    input var  [  ADDR_WIDTH_B-1:0] addrb,
+    input var  [  DATA_WIDTH_B-1:0] dinb,
+    output var [  DATA_WIDTH_B-1:0] doutb
 );
 
-  // Check parameters
+  localparam int MaxWidth = (DATA_WIDTH_A > DATA_WIDTH_B) ? DATA_WIDTH_A : DATA_WIDTH_B;
+  localparam int MinWidth = (DATA_WIDTH_A < DATA_WIDTH_B) ? DATA_WIDTH_A : DATA_WIDTH_B;
+
+  // DEPTH is expressed in words of the narrower memory port. The port word
+  // counts are derived from the total memory size and may be non-powers of two.
+  localparam int SizeA = (DEPTH * MinWidth) / DATA_WIDTH_A;
+  localparam int SizeB = (DEPTH * MinWidth) / DATA_WIDTH_B;
+
+  localparam int Ratio = MaxWidth / MinWidth;
+  localparam int Log2Ratio = $clog2(Ratio);
 
   initial begin : drc_check
     assert (1 <= READ_LATENCY_A && READ_LATENCY_A <= 3)
@@ -76,6 +80,31 @@ module ram_tdp_asym #(
       $fatal(1, "[%m]: INIT_FILE must be NONE or a legal initialization file name");
     end
 
+    assert (ADDR_WIDTH_A > 0 && ADDR_WIDTH_B > 0)
+    else begin
+      $fatal(1, "[%m]: ADDR_WIDTH_A and ADDR_WIDTH_B should be greater than zero");
+    end
+
+    assert (DATA_WIDTH_A > 0 && DATA_WIDTH_B > 0)
+    else begin
+      $fatal(1, "[%m]: DATA_WIDTH_A and DATA_WIDTH_B should be greater than zero");
+    end
+
+    assert (DEPTH > 0)
+    else begin
+      $fatal(1, "[%m]: DEPTH must be positive, got %d", DEPTH);
+    end
+
+    assert (DEPTH * MinWidth % DATA_WIDTH_A == 0 && DEPTH * MinWidth % DATA_WIDTH_B == 0)
+    else begin
+      $fatal(1, "[%m]: DEPTH * narrower port width must be divisible by both port widths");
+    end
+
+    assert (ADDR_WIDTH_A >= $clog2(SizeA) && ADDR_WIDTH_B >= $clog2(SizeB))
+    else begin
+      $fatal(1, "[%m]: address width is too small for DEPTH %d", DEPTH);
+    end
+
     /* verilator lint_off WIDTHEXPAND */
     assert (RAM_STYLE == "AUTO" || RAM_STYLE == "BLOCK" || RAM_STYLE == "DISTRIBUTED" ||
             RAM_STYLE == "REGISTER" || RAM_STYLE == "ULTRA")
@@ -104,36 +133,8 @@ module ram_tdp_asym #(
 `endif
   end
 
-  // Parameters
-
-  localparam integer SizeA = 2 ** ADDR_WIDTH_A;
-  localparam integer SizeB = 2 ** ADDR_WIDTH_B;
-  localparam integer MaxSize = (SizeA > SizeB) ? SizeA : SizeB;
-
-  localparam integer MaxWidth = (DATA_WIDTH_A > DATA_WIDTH_B) ? DATA_WIDTH_A : DATA_WIDTH_B;
-  localparam integer MinWidth = (DATA_WIDTH_A < DATA_WIDTH_B) ? DATA_WIDTH_A : DATA_WIDTH_B;
-
-  localparam integer Ratio = MaxWidth / MinWidth;
-  localparam integer Log2Ratio = $clog2(Ratio);
-
-  // Signals
-
-  // The Memory
-  /* verilator lint_off MULTIDRIVEN */
-`ifndef RAM_USE_XPM
-  (* RAM_STYLE=RAM_STYLE *)
-  logic [MinWidth-1:0] mem[0:MaxSize-1];
-`endif
-
   wire                     ena_s;
   wire                     enb_s;
-
-  logic [DATA_WIDTH_A-1:0] rega  [READ_LATENCY_A];
-  logic [DATA_WIDTH_B-1:0] regb  [READ_LATENCY_B];
-
-`ifndef RAM_USE_XPM
-  integer init_idx;
-`endif
 
   // This makes Vivado recognize correct EN pin
   assign ena_s = ena[0];
@@ -141,24 +142,29 @@ module ram_tdp_asym #(
 
 `ifdef RAM_USE_XPM
 
-  localparam integer XpmMemorySize = MaxSize * MinWidth;
+  localparam int XpmMemorySize = DEPTH * MinWidth;
 
   // UltraRAM requires a common clock; the two clock ports may be tied
   // together by the caller even though the interface exposes both ports.
   localparam XpmClockingMode = RAM_STYLE == "ULTRA" ? "common_clock" : "independent_clock";
 
-  localparam integer XpmReadLatencyA = READ_LATENCY_A < 3 ? READ_LATENCY_A : 2;
-  localparam integer XpmReadLatencyB = READ_LATENCY_B < 3 ? READ_LATENCY_B : 2;
-
-  localparam integer RtlPipelineStartA = XpmReadLatencyA;
-  localparam integer RtlPipelineStartB = XpmReadLatencyB;
+  localparam int XpmReadLatencyA = READ_LATENCY_A < 3 ? READ_LATENCY_A : 2;
+  localparam int XpmReadLatencyB = READ_LATENCY_B < 3 ? READ_LATENCY_B : 2;
 
   localparam XpmInitParam = INIT_FILE == "NONE" ? "0" : "";
 
-  logic xpm_sbiterra;
-  logic xpm_dbiterra;
-  logic xpm_sbiterrb;
-  logic xpm_dbiterrb;
+  logic [DATA_WIDTH_A-1:0] xpm_douta;
+  logic [DATA_WIDTH_B-1:0] xpm_doutb;
+  logic [DATA_WIDTH_A-1:0] output_reg_a;
+  logic [DATA_WIDTH_B-1:0] output_reg_b;
+
+  logic                    xpm_rsta;
+  logic                    xpm_rstb;
+
+  logic                    xpm_sbiterra;
+  logic                    xpm_dbiterra;
+  logic                    xpm_sbiterrb;
+  logic                    xpm_dbiterrb;
 
   xpm_memory_tdpram #(
       // Common module parameters
@@ -201,11 +207,10 @@ module ram_tdp_asym #(
       .WRITE_MODE_B           (WRITE_MODE_B),
       .RST_MODE_B             ("sync")
   ) xpm_memory_tdpram_i (
-      // Common module ports
       .sleep         (1'b0),
-      // Port A module ports
+      //
       .clka          (clka),
-      .rsta          (rsta[XpmReadLatencyA-1]),
+      .rsta          (xpm_rsta),
       .ena           (ena_s),
       .regcea        (ena[XpmReadLatencyA-1]),
       .wea           (wea),
@@ -213,12 +218,12 @@ module ram_tdp_asym #(
       .dina          (dina),
       .injectsbiterra(1'b0),
       .injectdbiterra(1'b0),
-      .douta         (rega[XpmReadLatencyA-1]),
+      .douta         (xpm_douta),
       .sbiterra      (xpm_sbiterra),
       .dbiterra      (xpm_dbiterra),
-      // Port B module ports
+      //
       .clkb          (clkb),
-      .rstb          (rstb[XpmReadLatencyB-1]),
+      .rstb          (xpm_rstb),
       .enb           (enb_s),
       .regceb        (enb[XpmReadLatencyB-1]),
       .web           (web),
@@ -226,24 +231,66 @@ module ram_tdp_asym #(
       .dinb          (dinb),
       .injectsbiterrb(1'b0),
       .injectdbiterrb(1'b0),
-      .doutb         (regb[XpmReadLatencyB-1]),
+      .doutb         (xpm_doutb),
       .sbiterrb      (xpm_sbiterrb),
       .dbiterrb      (xpm_dbiterrb)
   );
 
+  // XPM's reset is connected only when its output is also the core output.
+  assign xpm_rsta = rsta && (READ_LATENCY_A == XpmReadLatencyA);
+  assign xpm_rstb = rstb && (READ_LATENCY_B == XpmReadLatencyB);
+
+  generate
+    if (READ_LATENCY_A > XpmReadLatencyA) begin : g_output_reg_a
+      always_ff @(posedge clka) begin
+        if (rsta) begin
+          output_reg_a <= {DATA_WIDTH_A{1'b0}};
+        end else if (ena[READ_LATENCY_A-1]) begin
+          output_reg_a <= xpm_douta;
+        end
+      end
+
+      assign douta = output_reg_a;
+    end else begin : g_xpm_output_a
+      assign douta = xpm_douta;
+    end
+
+    if (READ_LATENCY_B > XpmReadLatencyB) begin : g_output_reg_b
+      always_ff @(posedge clkb) begin
+        if (rstb) begin
+          output_reg_b <= {DATA_WIDTH_B{1'b0}};
+        end else if (enb[READ_LATENCY_B-1]) begin
+          output_reg_b <= xpm_doutb;
+        end
+      end
+
+      assign doutb = output_reg_b;
+    end else begin : g_xpm_output_b
+      assign doutb = xpm_doutb;
+    end
+  endgenerate
+
 `else
 
-  localparam integer RtlPipelineStartA = 1;
-  localparam integer RtlPipelineStartB = 1;
+  // The portable behavioral memory.
+  /* verilator lint_off MULTIDRIVEN */
+  (* RAM_STYLE = RAM_STYLE *)
+  logic [MinWidth-1:0] MEM[DEPTH];
 
-  // Initialize memory
+  // Port A output pipeline
+  logic [DATA_WIDTH_A-1:0] rega[READ_LATENCY_A];
+  // Port B output pipeline
+  logic [DATA_WIDTH_B-1:0] regb[READ_LATENCY_B];
 
-  initial begin
-    for (init_idx = 0; init_idx < MaxSize; init_idx = init_idx + 1) begin
-      mem[init_idx] = 'b0;
-    end
+  // Initializes the memory values to a specified file or to all zeros to match
+  // hardware
+  initial begin : memory_init
     if (INIT_FILE != "NONE") begin
-      $readmemh(INIT_FILE, mem);
+      $readmemh(INIT_FILE, MEM, 0, DEPTH - 1);
+    end else begin
+      for (int i = 0; i < DEPTH; i++) begin
+        MEM[i] = {MinWidth{1'b0}};
+      end
     end
   end
 
@@ -254,8 +301,8 @@ module ram_tdp_asym #(
 
       // Port A read
       always_ff @(posedge clka) begin
-        if (rsta[0]) begin
-          rega[0] <= '0;
+        if (rsta && (READ_LATENCY_A == 1)) begin
+          rega[0] <= {DATA_WIDTH_A{1'b0}};
         end else if (ena_s) begin
           /* verilator lint_off WIDTHEXPAND */
           if (wea && (WRITE_MODE_A == "WRITE_FIRST")) begin
@@ -266,7 +313,7 @@ module ram_tdp_asym #(
             /* verilator lint_on WIDTHEXPAND */
             rega[0] <= rega[0];
           end else begin  // no wea, or write mode is "READ_FIRST"
-            rega[0] <= mem[addra];
+            rega[0] <= MEM[addra];
           end
         end
       end
@@ -275,7 +322,7 @@ module ram_tdp_asym #(
       always @(posedge clka) begin
         if (ena_s) begin
           if (wea) begin
-            mem[addra] <= dina;
+            MEM[addra] <= dina;
           end
         end
       end
@@ -288,8 +335,8 @@ module ram_tdp_asym #(
         logic [Log2Ratio-1:0] lsbaddr;
         for (a_rd_idx = 0; a_rd_idx < Ratio; a_rd_idx = a_rd_idx + 1) begin
           lsbaddr = a_rd_idx[Log2Ratio-1:0];
-          if (rsta[0]) begin
-            rega[0] <= '0;
+          if (rsta && (READ_LATENCY_A == 1)) begin
+            rega[0] <= {DATA_WIDTH_A{1'b0}};
           end else if (ena_s) begin
             /* verilator lint_off WIDTHEXPAND */
             if (wea && (WRITE_MODE_A == "WRITE_FIRST")) begin
@@ -300,7 +347,7 @@ module ram_tdp_asym #(
               /* verilator lint_on WIDTHEXPAND */
               rega[0][(a_rd_idx+1)*MinWidth-1-:MinWidth] <= rega[0][(a_rd_idx+1)*MinWidth-1-:MinWidth];
             end else begin  // no wea, or write mode is "READ_FIRST"
-              rega[0][(a_rd_idx+1)*MinWidth-1-:MinWidth] <= mem[{addra, lsbaddr}];
+              rega[0][(a_rd_idx+1)*MinWidth-1-:MinWidth] <= MEM[{addra, lsbaddr}];
             end
           end
         end
@@ -314,7 +361,7 @@ module ram_tdp_asym #(
           lsbaddr = a_wr_idx[Log2Ratio-1:0];
           if (ena_s) begin
             if (wea) begin
-              mem[{addra, lsbaddr}] <= dina[(a_wr_idx+1)*MinWidth-1-:MinWidth];
+              MEM[{addra, lsbaddr}] <= dina[(a_wr_idx+1)*MinWidth-1-:MinWidth];
             end
           end
         end
@@ -334,8 +381,8 @@ module ram_tdp_asym #(
         logic [Log2Ratio-1:0] lsbaddr;
         for (b_rd_idx = 0; b_rd_idx < Ratio; b_rd_idx = b_rd_idx + 1) begin
           lsbaddr = b_rd_idx[Log2Ratio-1:0];
-          if (rstb[0]) begin
-            regb[0] <= '0;
+          if (rstb && (READ_LATENCY_B == 1)) begin
+            regb[0] <= {DATA_WIDTH_B{1'b0}};
           end else if (enb_s) begin
             /* verilator lint_off WIDTHEXPAND */
             if (web && (WRITE_MODE_B == "WRITE_FIRST")) begin
@@ -346,7 +393,7 @@ module ram_tdp_asym #(
               /* verilator lint_on WIDTHEXPAND */
               regb[0][(b_rd_idx+1)*MinWidth-1-:MinWidth] <= regb[0][(b_rd_idx+1)*MinWidth-1-:MinWidth];
             end else begin  // no web, or write mode is "READ_FIRST"
-              regb[0][(b_rd_idx+1)*MinWidth-1-:MinWidth] <= mem[{addrb, lsbaddr}];
+              regb[0][(b_rd_idx+1)*MinWidth-1-:MinWidth] <= MEM[{addrb, lsbaddr}];
             end
           end
         end
@@ -360,7 +407,7 @@ module ram_tdp_asym #(
           lsbaddr = b_wr_idx[Log2Ratio-1:0];
           if (enb_s) begin
             if (web) begin
-              mem[{addrb, lsbaddr}] <= dinb[(b_wr_idx+1)*MinWidth-1-:MinWidth];
+              MEM[{addrb, lsbaddr}] <= dinb[(b_wr_idx+1)*MinWidth-1-:MinWidth];
             end
           end
         end
@@ -370,8 +417,8 @@ module ram_tdp_asym #(
 
       // Port B read
       always_ff @(posedge clkb) begin
-        if (rstb[0]) begin
-          regb[0] <= '0;
+        if (rstb && (READ_LATENCY_B == 1)) begin
+          regb[0] <= {DATA_WIDTH_B{1'b0}};
         end else if (enb_s) begin
           /* verilator lint_off WIDTHEXPAND */
           if (web && (WRITE_MODE_B == "WRITE_FIRST")) begin
@@ -382,7 +429,7 @@ module ram_tdp_asym #(
             /* verilator lint_on WIDTHEXPAND */
             regb[0] <= regb[0];
           end else begin  // no web, or write mode is "READ_FIRST"
-            regb[0] <= mem[addrb];
+            regb[0] <= MEM[addrb];
           end
         end
       end
@@ -391,7 +438,7 @@ module ram_tdp_asym #(
       always @(posedge clkb) begin
         if (enb_s) begin
           if (web) begin
-            mem[addrb] <= dinb;
+            MEM[addrb] <= dinb;
           end
         end
       end
@@ -400,24 +447,22 @@ module ram_tdp_asym #(
   endgenerate
   /* verilator lint_on MULTIDRIVEN */
 
-`endif
-
   // Additional clock cycle read latency improves clock-to-out timing
   generate
-    for (genvar i = RtlPipelineStartA; i < READ_LATENCY_A; i++) begin : g_pipeline_a
+    for (genvar i = 1; i < READ_LATENCY_A; i++) begin : g_output_reg_a
       always_ff @(posedge clka) begin
-        if (rsta[i]) begin
-          rega[i] <= '0;
+        if (rsta && (i == READ_LATENCY_A - 1)) begin
+          rega[i] <= {DATA_WIDTH_A{1'b0}};
         end else if (ena[i]) begin
           rega[i] <= rega[i-1];
         end
       end
     end
 
-    for (genvar i = RtlPipelineStartB; i < READ_LATENCY_B; i++) begin : g_pipeline_b
+    for (genvar i = 1; i < READ_LATENCY_B; i++) begin : g_output_reg_b
       always_ff @(posedge clkb) begin
-        if (rstb[i]) begin
-          regb[i] <= '0;
+        if (rstb && (i == READ_LATENCY_B - 1)) begin
+          regb[i] <= {DATA_WIDTH_B{1'b0}};
         end else if (enb[i]) begin
           regb[i] <= regb[i-1];
         end
@@ -427,6 +472,8 @@ module ram_tdp_asym #(
 
   assign douta = rega[READ_LATENCY_A-1];
   assign doutb = regb[READ_LATENCY_B-1];
+
+`endif
 
 endmodule
 

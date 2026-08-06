@@ -9,8 +9,9 @@
 module ram_sdp #(
     parameter int ADDR_WIDTH   = 10,
     parameter int DATA_WIDTH   = 32,
-    parameter int DEPTH        = 2 ** ADDR_WIDTH,
-    parameter int READ_LATENCY = 3,       // 1 ~ 3
+    parameter int READ_LATENCY = 2,                // 1 ~ 3
+    //
+    parameter int DEPTH        = 1 << ADDR_WIDTH,
     parameter     INIT_FILE    = "NONE",
     parameter     RAM_STYLE    = "AUTO"
 ) (
@@ -22,7 +23,7 @@ module ram_sdp #(
     input var  [  DATA_WIDTH-1:0] dina,
     // Port B, read port
     input var                     clkb,
-    input var  [READ_LATENCY-1:0] rstb,
+    input var                     rstb,
     input var  [READ_LATENCY-1:0] enb,
     input var  [  ADDR_WIDTH-1:0] addrb,
     output var [  DATA_WIDTH-1:0] doutb
@@ -41,9 +42,19 @@ module ram_sdp #(
       $fatal(1, "[%m]: INIT_FILE must be NONE or a legal initialization file name");
     end
 
-    assert (1 <= DEPTH && DEPTH <= 2 ** ADDR_WIDTH)
+    assert (ADDR_WIDTH > 0)
     else begin
-      $fatal(1, "[%m]: DEPTH must be within 1 to 2**ADDR_WIDTH, got %d", DEPTH);
+      $fatal(1, "[%m]: ADDR_WIDTH must be positive, got %d", ADDR_WIDTH);
+    end
+
+    assert (DEPTH > 0)
+    else begin
+      $fatal(1, "[%m]: DEPTH must be positive, got %d", DEPTH);
+    end
+
+    assert (ADDR_WIDTH >= $clog2(DEPTH))
+    else begin
+      $fatal(1, "[%m]: ADDR_WIDTH %d is too small for DEPTH %d", ADDR_WIDTH, DEPTH);
     end
 
     /* verilator lint_off WIDTHEXPAND */
@@ -65,9 +76,6 @@ module ram_sdp #(
 `endif
   end
 
-  // Port B output pipeline
-  logic [DATA_WIDTH-1:0] regb[READ_LATENCY];
-
 `ifdef RAM_USE_XPM
 
   localparam integer XpmMemorySize = DATA_WIDTH * DEPTH;
@@ -78,14 +86,17 @@ module ram_sdp #(
 
   // XPM exposes independent enables for its first read stage and its final
   // output stage. Keep the third stage in RTL so enb[2] remains independent.
-  localparam integer XpmReadLatency = READ_LATENCY < 3 ? READ_LATENCY : 2;
-
-  localparam integer RtlPipelineStart = XpmReadLatency;
+  localparam int XpmReadLatency = READ_LATENCY < 3 ? READ_LATENCY : 2;
 
   localparam XpmInitParam = INIT_FILE == "NONE" ? "0" : "";
 
-  logic xpm_sbiterrb;
-  logic xpm_dbiterrb;
+  logic [DATA_WIDTH-1:0] xpm_dout;
+  logic [DATA_WIDTH-1:0] output_reg;
+
+  logic                  xpm_rstb;
+
+  logic                  xpm_sbiterrb;
+  logic                  xpm_dbiterrb;
 
   xpm_memory_sdpram #(
       // Common module parameters
@@ -123,6 +134,7 @@ module ram_sdp #(
       .RST_MODE_B             ("sync")
   ) xpm_memory_sdpram_i (
       .sleep         (1'b0),
+      //
       .clka          (clka),
       .ena           (ena),
       .wea           (wea),
@@ -130,23 +142,44 @@ module ram_sdp #(
       .dina          (dina),
       .injectsbiterra(1'b0),
       .injectdbiterra(1'b0),
+      //
       .clkb          (clkb),
-      .rstb          (rstb[XpmReadLatency-1]),
+      .rstb          (xpm_rstb),
       .enb           (enb[0]),
       .regceb        (enb[XpmReadLatency-1]),
       .addrb         (addrb),
-      .doutb         (regb[XpmReadLatency-1]),
+      .doutb         (xpm_dout),
       .sbiterrb      (xpm_sbiterrb),
       .dbiterrb      (xpm_dbiterrb)
   );
 
-`else
+  // XPM's reset is connected only when its output is also the core output.
+  assign xpm_rstb = rstb && (READ_LATENCY == XpmReadLatency);
 
-  localparam integer RtlPipelineStart = 1;
+  generate
+    if (READ_LATENCY > XpmReadLatency) begin : g_output_reg
+      always_ff @(posedge clkb) begin
+        if (rstb) begin
+          output_reg <= {DATA_WIDTH{1'b0}};
+        end else if (enb[READ_LATENCY-1]) begin
+          output_reg <= xpm_dout;
+        end
+      end
+
+      assign doutb = output_reg;
+    end else begin : g_xpm_output
+      assign doutb = xpm_dout;
+    end
+  endgenerate
+
+`else
 
   // The portable behavioral memory.
   (* RAM_STYLE = RAM_STYLE *)
   logic [DATA_WIDTH-1:0] MEM[DEPTH];
+
+  // Port B output pipeline
+  logic [DATA_WIDTH-1:0] regb[READ_LATENCY];
 
   // Initializes the memory values to a specified file or to all zeros to match
   // hardware
@@ -161,7 +194,6 @@ module ram_sdp #(
   end
 
   // Memory write
-
   always @(posedge clka) begin
     if (ena && wea) begin
       MEM[addra] <= dina;
@@ -169,23 +201,20 @@ module ram_sdp #(
   end
 
   // Memory read
-
   always_ff @(posedge clkb) begin
-    if (rstb[0]) begin
-      regb[0] <= '0;
+    if (rstb && (READ_LATENCY == 1)) begin
+      regb[0] <= {DATA_WIDTH{1'b0}};
     end else if (enb[0]) begin
       regb[0] <= MEM[addrb];
     end
   end
 
-`endif
-
   // Additional clock cycle read latency improves clock-to-out timing
   generate
-    for (genvar i = RtlPipelineStart; i < READ_LATENCY; i++) begin : g_output_reg
+    for (genvar i = 1; i < READ_LATENCY; i++) begin : g_output_reg
       always_ff @(posedge clkb) begin
-        if (rstb[i]) begin
-          regb[i] <= '0;
+        if (rstb && (i == READ_LATENCY - 1)) begin
+          regb[i] <= {DATA_WIDTH{1'b0}};
         end else if (enb[i]) begin
           regb[i] <= regb[i-1];
         end
@@ -194,6 +223,8 @@ module ram_sdp #(
   endgenerate
 
   assign doutb = regb[READ_LATENCY-1];
+
+`endif
 
 endmodule
 

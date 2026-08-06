@@ -12,6 +12,8 @@ module ram_tdp_pipe #(
     parameter     WRITE_MODE_B   = "READ_FIRST",  // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
     parameter int READ_LATENCY_A = 2,
     parameter int READ_LATENCY_B = 2,
+    //
+    parameter int DEPTH          = 1 << ADDR_WIDTH,
     parameter     INIT_FILE      = "NONE",
     parameter     RAM_STYLE      = "AUTO"
 ) (
@@ -71,12 +73,14 @@ module ram_tdp_pipe #(
       .WRITE_MODE_B  (WRITE_MODE_B),
       .READ_LATENCY_A(READ_LATENCY_A),
       .READ_LATENCY_B(READ_LATENCY_B),
+      //
+      .DEPTH         (DEPTH),
       .INIT_FILE     (INIT_FILE),
       .RAM_STYLE     (RAM_STYLE)
   ) i_ram_tdp (
       // Port A
       .clka (clka),
-      .rsta (rsta_d),
+      .rsta (rsta_d[READ_LATENCY_A-1]),
       .ena  (ena_d),
       .wea  (wea),
       .addra(addra),
@@ -84,7 +88,7 @@ module ram_tdp_pipe #(
       .douta(douta),
       // Port B
       .clkb (clkb),
-      .rstb (rstb_d),
+      .rstb (rstb_d[READ_LATENCY_B-1]),
       .enb  (enb_d),
       .web  (web),
       .addrb(addrb),

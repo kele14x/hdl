@@ -9,6 +9,8 @@ module ram_sdp_pipe #(
     parameter int ADDR_WIDTH   = 10,
     parameter int DATA_WIDTH   = 32,
     parameter int READ_LATENCY = 2,
+    //
+    parameter int DEPTH        = 1 << ADDR_WIDTH,
     parameter     INIT_FILE    = "NONE",
     parameter     RAM_STYLE    = "AUTO"
 ) (
@@ -48,6 +50,8 @@ module ram_sdp_pipe #(
       .ADDR_WIDTH  (ADDR_WIDTH),
       .DATA_WIDTH  (DATA_WIDTH),
       .READ_LATENCY(READ_LATENCY),
+      //
+      .DEPTH       (DEPTH),
       .INIT_FILE   (INIT_FILE),
       .RAM_STYLE   (RAM_STYLE)
   ) i_ram_sdp (
@@ -59,7 +63,7 @@ module ram_sdp_pipe #(
       .dina (dina),
       // Port B
       .clkb (clkb),
-      .rstb (rstb_d),
+      .rstb (rstb_d[READ_LATENCY-1]),
       .enb  (enb_d),
       .addrb(addrb),
       .doutb(doutb)

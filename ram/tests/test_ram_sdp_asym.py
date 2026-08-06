@@ -17,6 +17,7 @@ ADDR_WIDTH_A = 4
 DATA_WIDTH_A = 8
 ADDR_WIDTH_B = 3
 DATA_WIDTH_B = 16
+DEPTH = 10
 READ_LATENCY_B = 2
 SIM = os.environ.get("SIM")
 if not SIM:
@@ -56,13 +57,13 @@ async def test_ram_sdp_asym_packs_narrow_writes_in_little_endian_word_order(dut)
     dut.wea.value = 0
     dut.addra.value = 0
     dut.dina.value = 0
-    dut.rstb.value = (1 << READ_LATENCY_B) - 1
+    dut.rstb.value = 1
     dut.enb.value = 0
     dut.addrb.value = 0
     await ClockCycles(dut.clkb, 2)
     dut.rstb.value = 0
 
-    for address in range(1 << ADDR_WIDTH_A):
+    for address in range(DEPTH):
         await FallingEdge(dut.clka)
         dut.wea.value = 1
         dut.addra.value = address
@@ -70,8 +71,15 @@ async def test_ram_sdp_asym_packs_narrow_writes_in_little_endian_word_order(dut)
         await RisingEdge(dut.clka)
     dut.wea.value = 0
 
-    expected_pipeline = [0] * READ_LATENCY_B
-    for address in (0, 3, 7, 1):
+    # Reset only clears the final stage, so establish a known value in the
+    # preceding stage before checking the pipelined output.
+    dut.enb.value = 1
+    dut.addrb.value = 0
+    await ClockCycles(dut.clkb, 1)
+
+    expected_pipeline = [0, 0]
+    expected_pipeline[0] = 1 << 8
+    for address in (0, 3, 4, 1):
         expected_word = (2 * address + 1) << 8 | (2 * address)
         await FallingEdge(dut.clkb)
         dut.enb.value = (1 << READ_LATENCY_B) - 1
@@ -87,6 +95,25 @@ async def test_ram_sdp_asym_packs_narrow_writes_in_little_endian_word_order(dut)
     held = int(dut.doutb.value)
     await ClockCycles(dut.clkb, 3)
     assert int(dut.doutb.value) == held
+
+    # The first unused wide-port address is out of range and reads as X.
+    await FallingEdge(dut.clkb)
+    dut.enb.value = 1
+    dut.addrb.value = DEPTH // 2
+    await RisingEdge(dut.clkb)
+    await ReadOnly()
+    await FallingEdge(dut.clkb)
+    dut.enb.value = (1 << READ_LATENCY_B) - 1
+    await RisingEdge(dut.clkb)
+    await ReadOnly()
+    assert not dut.doutb.value.is_resolvable
+
+    await FallingEdge(dut.clkb)
+    dut.rstb.value = 1
+    dut.enb.value = 0
+    await RisingEdge(dut.clkb)
+    await ReadOnly()
+    assert int(dut.doutb.value) == 0
 
 
 def test_ram_sdp_asym_runner():
@@ -106,6 +133,7 @@ def test_ram_sdp_asym_runner():
             "DATA_WIDTH_A": DATA_WIDTH_A,
             "ADDR_WIDTH_B": ADDR_WIDTH_B,
             "DATA_WIDTH_B": DATA_WIDTH_B,
+            "DEPTH": DEPTH,
             "READ_LATENCY_B": READ_LATENCY_B,
         },
         always=True,

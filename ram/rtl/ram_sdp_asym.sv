@@ -5,13 +5,15 @@
 `default_nettype none
 
 module ram_sdp_asym #(
-    parameter int ADDR_WIDTH_A   = 11,
-    parameter int DATA_WIDTH_A   = 16,
-    parameter int ADDR_WIDTH_B   = 9,
-    parameter int DATA_WIDTH_B   = 64,
+    parameter int ADDR_WIDTH_A = 11,
+    parameter int DATA_WIDTH_A = 16,
+    parameter int ADDR_WIDTH_B = 9,
+    parameter int DATA_WIDTH_B = 64,
     parameter int READ_LATENCY_B = 2,
-    parameter     INIT_FILE      = "NONE",
-    parameter     RAM_STYLE      = "AUTO"
+    //
+    parameter int DEPTH = 1 << ((ADDR_WIDTH_A > ADDR_WIDTH_B) ? ADDR_WIDTH_A : ADDR_WIDTH_B),
+    parameter INIT_FILE = "NONE",
+    parameter RAM_STYLE = "AUTO"
 ) (
     // Port A, write port
     input var                       clka,
@@ -20,19 +22,19 @@ module ram_sdp_asym #(
     input var  [  DATA_WIDTH_A-1:0] dina,
     // Port B, read port
     input var                       clkb,
-    input var  [READ_LATENCY_B-1:0] rstb,
+    input var                       rstb,
     input var  [READ_LATENCY_B-1:0] enb,
     input var  [  ADDR_WIDTH_B-1:0] addrb,
     output var [  DATA_WIDTH_B-1:0] doutb
 );
 
-  localparam int SizeA = 2 ** ADDR_WIDTH_A;
-  localparam int SizeB = 2 ** ADDR_WIDTH_B;
-
-  localparam int MaxSize = (SizeA > SizeB) ? SizeA : SizeB;
-
   localparam int MaxWidth = (DATA_WIDTH_A > DATA_WIDTH_B) ? DATA_WIDTH_A : DATA_WIDTH_B;
   localparam int MinWidth = (DATA_WIDTH_A < DATA_WIDTH_B) ? DATA_WIDTH_A : DATA_WIDTH_B;
+
+  // DEPTH is expressed in words of the narrower memory port. The port word
+  // counts are derived from the total memory size and may be non-powers of two.
+  localparam int SizeA = (DEPTH * MinWidth) / DATA_WIDTH_A;
+  localparam int SizeB = (DEPTH * MinWidth) / DATA_WIDTH_B;
 
   localparam int Ratio = MaxWidth / MinWidth;
   localparam int Log2Ratio = $clog2(Ratio);
@@ -54,6 +56,16 @@ module ram_sdp_asym #(
       $fatal(1, "[%m]: DATA_WIDTH_A and DATA_WIDTH_B should be greater than zero");
     end
 
+    assert (ADDR_WIDTH_A > 0 && ADDR_WIDTH_B > 0)
+    else begin
+      $fatal(1, "[%m]: ADDR_WIDTH_A and ADDR_WIDTH_B should be greater than zero");
+    end
+
+    assert (DEPTH > 0)
+    else begin
+      $fatal(1, "[%m]: DEPTH must be positive, got %d", DEPTH);
+    end
+
     assert (MaxWidth % MinWidth == 0)
     else begin
       $fatal(1,
@@ -68,9 +80,14 @@ module ram_sdp_asym #(
           Ratio);
     end
 
-    assert (SizeA * DATA_WIDTH_A == SizeB * DATA_WIDTH_B)
+    assert (DEPTH * MinWidth % DATA_WIDTH_A == 0 && DEPTH * MinWidth % DATA_WIDTH_B == 0)
     else begin
-      $fatal(1, "[%m]: The two RAM ports should address the same total memory size");
+      $fatal(1, "[%m]: DEPTH * narrower port width must be divisible by both port widths");
+    end
+
+    assert (ADDR_WIDTH_A >= $clog2(SizeA) && ADDR_WIDTH_B >= $clog2(SizeB))
+    else begin
+      $fatal(1, "[%m]: address width is too small for DEPTH %d", DEPTH);
     end
 
     /* verilator lint_off WIDTHEXPAND */
@@ -97,11 +114,9 @@ module ram_sdp_asym #(
 `endif
   end
 
-  logic [DATA_WIDTH_B-1:0] regb[READ_LATENCY_B];
-
 `ifdef RAM_USE_XPM
 
-  localparam integer XpmMemorySize = MaxSize * MinWidth;
+  localparam integer XpmMemorySize = DEPTH * MinWidth;
 
   // UltraRAM requires a common clock; the two clock ports may be tied
   // together by the caller even though the interface exposes both ports.
@@ -115,8 +130,13 @@ module ram_sdp_asym #(
 
   localparam XpmInitParam = INIT_FILE == "NONE" ? "0" : "";
 
-  logic xpm_sbiterrb;
-  logic xpm_dbiterrb;
+  logic [DATA_WIDTH-1:0] xpm_dout;
+  logic [DATA_WIDTH-1:0] output_reg;
+
+  logic                  xpm_rstb;
+
+  logic                  xpm_sbiterrb;
+  logic                  xpm_dbiterrb;
 
   xpm_memory_sdpram #(
       // Common module parameters
@@ -154,6 +174,7 @@ module ram_sdp_asym #(
       .RST_MODE_B             ("sync")
   ) xpm_memory_sdpram_i (
       .sleep         (1'b0),
+      //
       .clka          (clka),
       .ena           (1'b1),
       .wea           (wea),
@@ -161,34 +182,56 @@ module ram_sdp_asym #(
       .dina          (dina),
       .injectsbiterra(1'b0),
       .injectdbiterra(1'b0),
+      //
       .clkb          (clkb),
-      .rstb          (rstb[XpmReadLatency-1]),
+      .rstb          (xpm_rstb),
       .enb           (enb[0]),
       .regceb        (enb[XpmReadLatency-1]),
       .addrb         (addrb),
-      .doutb         (regb[XpmReadLatency-1]),
+      .doutb         (xpm_dout),
       .sbiterrb      (xpm_sbiterrb),
       .dbiterrb      (xpm_dbiterrb)
   );
 
-`else
+  // XPM's reset is connected only when its output is also the core output.
+  assign xpm_rstb = rstb && (READ_LATENCY == XpmReadLatency);
 
-  localparam integer RtlPipelineStart = 1;
+  generate
+    if (READ_LATENCY > XpmReadLatency) begin : g_output_reg
+      always_ff @(posedge clkb) begin
+        if (rstb) begin
+          output_reg <= {DATA_WIDTH{1'b0}};
+        end else if (en[READ_LATENCY-1]) begin
+          output_reg <= xpm_dout;
+        end
+      end
+
+      assign dout = output_reg;
+    end else begin : g_xpm_output
+      assign dout = xpm_dout;
+    end
+  endgenerate
+
+`else
 
   // The portable behavioral memory.
   (* RAM_STYLE = RAM_STYLE *)
-  logic [MinWidth-1:0] MEM[MaxSize];
+  logic [MinWidth-1:0] MEM[DEPTH];
+
+  // Port B output pipeline
+  logic [DATA_WIDTH_B-1:0] regb[READ_LATENCY_B];
 
   initial begin : memory_init
     if (INIT_FILE != "NONE") begin : file_init
-      $readmemh(INIT_FILE, MEM, 0, MaxSize - 1);
+      $readmemh(INIT_FILE, MEM, 0, DEPTH - 1);
     end else begin : zero_init
-      for (int i = 0; i < MaxSize; i++) begin
-        MEM[i] = '0;
+      for (int i = 0; i < DEPTH; i++) begin
+        MEM[i] = {MinWidth{1'b0}};
       end
     end
   end
 
+  // Memory write
   generate
     if (DATA_WIDTH_A <= DATA_WIDTH_B) begin : g_n_wr
       always @(posedge clka) begin
@@ -207,19 +250,20 @@ module ram_sdp_asym #(
     end
   endgenerate
 
+  // Memory read
   generate
     if (DATA_WIDTH_B <= DATA_WIDTH_A) begin : g_n_rd
       always_ff @(posedge clkb) begin
-        if (rstb[0]) begin
-          regb[0] <= '0;
+        if (rstb && (READ_LATENCY_B == 1)) begin
+          regb[0] <= {DATA_WIDTH_B{1'b0}};
         end else if (enb[0]) begin
           regb[0] <= MEM[addrb];
         end
       end
     end else begin : g_s_rd
       always_ff @(posedge clkb) begin
-        if (rstb[0]) begin
-          regb[0] <= '0;
+        if (rstb && (READ_LATENCY_B == 1)) begin
+          regb[0] <= {DATA_WIDTH_B{1'b0}};
         end else if (enb[0]) begin
           for (int i = 0; i < Ratio; i++) begin
             regb[0][(i+1)*MinWidth-1-:MinWidth] <= MEM[{addrb, Log2Ratio'(i)}];
@@ -227,17 +271,14 @@ module ram_sdp_asym #(
         end
       end
     end
-
   endgenerate
-
-`endif
 
   // Additional clock cycle read latency improves clock-to-out timing
   generate
-    for (genvar i = RtlPipelineStart; i < READ_LATENCY_B; i++) begin : g_output_reg
+    for (genvar i = 1; i < READ_LATENCY_B; i++) begin : g_output_reg
       always_ff @(posedge clkb) begin
-        if (rstb[i]) begin
-          regb[i] <= '0;
+        if (rstb && (i == READ_LATENCY_B - 1)) begin
+          regb[i] <= {DATA_WIDTH_B{1'b0}};
         end else if (enb[i]) begin
           regb[i] <= regb[i-1];
         end
@@ -246,6 +287,8 @@ module ram_sdp_asym #(
   endgenerate
 
   assign doutb = regb[READ_LATENCY_B-1];
+
+`endif
 
 endmodule
 
