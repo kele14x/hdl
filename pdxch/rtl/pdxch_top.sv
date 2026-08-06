@@ -5,7 +5,6 @@
 module pdxch_top #(
     parameter int NUM_CC     = 3,
     parameter int NUM_ANT    = 4,
-    parameter bit HAS_BFP    = 1'b1,
     parameter bit HALF_BLOCK = 1'b0
 ) (
     // Radio I/F
@@ -69,11 +68,10 @@ module pdxch_top #(
 
   logic         ctrl_phase_comp_we_s                           [ NUM_CC];
   logic         ctrl_phase_comp_en_d;
+  wire          unused_ctrl_ud = &{1'b0, ctrl_ud_comp_meth, ctrl_ud_iq_width};
 
-  logic         unused_bfp_err_unexpected_tlast                [NUM_ANT];
-
-  logic [127:0] s0_axis_tdata                                  [NUM_ANT];
-  logic [ 15:0] s0_axis_tkeep                                  [NUM_ANT];
+  logic [ 35:0] s0_axis_tdata                                  [NUM_ANT];
+  logic [  3:0] s0_axis_exp                                    [NUM_ANT];
   logic         s0_axis_tvalid                                 [NUM_ANT];
   logic         s0_axis_tlast                                  [NUM_ANT];
   logic [ 90:0] s0_axis_tuser                                  [NUM_ANT];
@@ -91,76 +89,28 @@ module pdxch_top #(
 
   generate
     for (genvar ant = 0; ant < NUM_ANT; ant++) begin : g_ant
-      if (HAS_BFP) begin : g_bfp
-
-        // BFP Decompress, with 128-bit output
-        bfp_decomp #(
-            .BYTE_REVERSE(1),
-            .USER_WIDTH  (91)
-        ) u_bfp_decomp (
-            .clk                 (clk_eth_xran),
-            .rst                 (rst_eth_xran),
-            //
-            .s_axis_tdata        (s_defm_data_tdata[ant]),
-            .s_axis_tkeep        (s_defm_data_tkeep[ant]),
-            .s_axis_tvalid       (s_defm_data_tvalid[ant]),
-            .s_axis_tlast        (s_defm_data_tlast[ant]),
-            .s_axis_tready       (s_defm_data_tready[ant]),
-            .s_axis_tuser        (s_defm_data_tuser[ant]),
-            //
-            .m_axis_tdata        (s0_axis_tdata[ant]),
-            .m_axis_tkeep        (s0_axis_tkeep[ant]),
-            .m_axis_tvalid       (s0_axis_tvalid[ant]),
-            .m_axis_tlast        (s0_axis_tlast[ant]),
-            .m_axis_tuser        (s0_axis_tuser[ant]),
-            // CSR
-            .ctrl_ud_comp_meth   (ctrl_ud_comp_meth),
-            .ctrl_ud_iq_width    (ctrl_ud_iq_width),
-            .ctrl_fs_offset      (ctrl_fs_offset),
-            //
-            .err_unexpected_tlast(unused_bfp_err_unexpected_tlast[ant])
-        );
-
-      end else begin : g_no_bfp
-
-        logic s0_cnt;
-
-        // We need to combine two 64-bit into one 128-bit and send to next module
-
-        always_ff @(posedge clk_eth_xran) begin
-          if (rst_eth_xran) begin
-            s0_cnt <= 1'b0;
-          end else if (s_defm_data_tvalid[ant] && s_defm_data_tlast[ant]) begin
-            s0_cnt <= 1'b0;
-          end else if (s_defm_data_tvalid[ant]) begin
-            s0_cnt <= ~s0_cnt;
-          end
-        end
-
-        always_ff @(posedge clk_eth_xran) begin
-          if (s_defm_data_tvalid[ant] && ~s0_cnt) begin
-            s0_axis_tdata[ant][63:0] <= s_defm_data_tdata[ant];
-            s0_axis_tkeep[ant][7:0]  <= s_defm_data_tkeep[ant];
-          end else if (s_defm_data_tvalid[ant]) begin
-            s0_axis_tdata[ant][127:64] <= s_defm_data_tdata[ant];
-            s0_axis_tkeep[ant][15:8]   <= s_defm_data_tkeep[ant];
-          end
-        end
-
-        always_ff @(posedge clk_eth_xran) begin
-          if (s_defm_data_tvalid[ant]) begin
-            s0_axis_tlast[ant] <= s_defm_data_tlast[ant];
-            s0_axis_tuser[ant] <= s_defm_data_tuser[ant];
-          end
-        end
-
-        always_ff @(posedge clk_eth_xran) begin
-          s0_axis_tvalid[ant] <= s_defm_data_tvalid[ant] && s0_cnt;
-        end
-
-        assign s_defm_data_tready[ant] = 1'b1;
-
-      end
+      // BFP9 is mandatory for PDXCH. Keep it compressed in the FDV buffer;
+      // decompression is performed in the readout clock domain after BRAM.
+      bfp_gearbox #(
+          .BYTE_REVERSE(1'b1),
+          .USER_WIDTH  (91)
+      ) u_bfp_gearbox (
+          .clk          (clk_eth_xran),
+          .rst          (rst_eth_xran),
+          //
+          .s_axis_tdata (s_defm_data_tdata[ant]),
+          .s_axis_tkeep (s_defm_data_tkeep[ant]),
+          .s_axis_tlast (s_defm_data_tlast[ant]),
+          .s_axis_tuser (s_defm_data_tuser[ant]),
+          .s_axis_tvalid(s_defm_data_tvalid[ant]),
+          .s_axis_tready(s_defm_data_tready[ant]),
+          //
+          .m_axis_tdata (s0_axis_tdata[ant]),
+          .m_axis_exp   (s0_axis_exp[ant]),
+          .m_axis_tlast (s0_axis_tlast[ant]),
+          .m_axis_tuser (s0_axis_tuser[ant]),
+          .m_axis_tvalid(s0_axis_tvalid[ant])
+      );
     end
   endgenerate
 
@@ -182,7 +132,7 @@ module pdxch_top #(
           .s_dl_sym_num         (s_dl_sym_num[cc]),
           //
           .s_axis_tdata         (s0_axis_tdata),
-          .s_axis_tkeep         (s0_axis_tkeep),
+          .s_axis_exp           (s0_axis_exp),
           .s_axis_tvalid        (s0_axis_tvalid),
           .s_axis_tlast         (s0_axis_tlast),
           .s_axis_tuser         (s0_axis_tuser),
@@ -204,7 +154,8 @@ module pdxch_top #(
           .ctrl_bist            (ctrl_bist[cc]),
           .ctrl_bw              (ctrl_bw[cc]),
           .ctrl_nprb            (ctrl_nprb[cc]),
-          .ctrl_rfs_offset      (ctrl_rfs_offset[cc])
+          .ctrl_rfs_offset      (ctrl_rfs_offset[cc]),
+          .ctrl_fs_offset       (ctrl_fs_offset)
       );
 
       pdxch_channel #(

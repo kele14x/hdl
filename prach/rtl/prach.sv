@@ -403,7 +403,7 @@ module prach #(
       .stat_freq_offset       (stat_freq_offset)
   );
 
-  wire unused_prach = &{1'b0, ctrl_format};
+  wire unused_prach = &{1'b0, ctrl_format[0], ctrl_format[1], ctrl_format[2]};
 
 endmodule
 

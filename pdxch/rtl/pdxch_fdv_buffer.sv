@@ -15,8 +15,8 @@ module pdxch_fdv_buffer #(
     output wire         defm_radio_start_10ms,
     input  wire [ 11:0] s_dl_sym_num,
     // U-Plane
-    input  wire [127:0] s_axis_tdata         [NUM_ANT],
-    input  wire [ 15:0] s_axis_tkeep         [NUM_ANT],
+    input  wire [ 35:0] s_axis_tdata         [NUM_ANT],
+    input  wire [  3:0] s_axis_exp           [NUM_ANT],
     input  wire         s_axis_tvalid        [NUM_ANT],
     input  wire         s_axis_tlast         [NUM_ANT],
     input  wire [ 90:0] s_axis_tuser         [NUM_ANT],
@@ -39,7 +39,8 @@ module pdxch_fdv_buffer #(
     input  wire [  3:0] ctrl_bist,
     input  wire [  3:0] ctrl_bw,
     input  wire [  8:0] ctrl_nprb,
-    input  wire [ 22:0] ctrl_rfs_offset
+    input  wire [ 22:0] ctrl_rfs_offset,
+    input  wire [  3:0] ctrl_fs_offset
 );
 
   // Signals
@@ -53,13 +54,18 @@ module pdxch_fdv_buffer #(
   logic         start_of_slot;
   logic [  1:0] start_of_symbol;
 
-  logic [ 10:0] wr_addr                   [NUM_ANT];
-  logic         wr_en                     [NUM_ANT];
-  logic [127:0] wr_data                   [NUM_ANT];
+  logic [ 11:0] wr_iq_addr                [NUM_ANT];
+  logic         wr_iq_en                  [NUM_ANT];
+  logic [ 35:0] wr_iq_data                [NUM_ANT];
+  logic [ 11:0] wr_exp_addr               [NUM_ANT];
+  logic         wr_exp_en                 [NUM_ANT];
+  logic [  3:0] wr_exp_data               [NUM_ANT];
 
-  logic [ 12:0] rd_addr                   [NUM_ANT];
+  logic [ 11:0] rd_iq_addr                [NUM_ANT];
+  logic [ 11:0] rd_exp_addr               [NUM_ANT];
   logic         rd_en                     [NUM_ANT];
-  logic [ 31:0] rd_data                   [NUM_ANT];
+  logic [ 35:0] rd_iq_data                [NUM_ANT];
+  logic [  3:0] rd_exp_data               [NUM_ANT];
   logic         unused_stat_resync;
 
   // Main
@@ -145,7 +151,8 @@ module pdxch_fdv_buffer #(
     for (genvar ant = 0; ant < NUM_ANT; ant++) begin : g_ant
 
       pdxch_fdv_buffer_write #(
-          .CC_ID(CC_ID)
+          .CC_ID     (CC_ID),
+          .HALF_BLOCK(HALF_BLOCK)
       ) u_write (
           .clk          (clk_eth_xran),
           .rst          (rst_eth_xran),
@@ -153,106 +160,69 @@ module pdxch_fdv_buffer #(
           .s_dl_sym_num (s_dl_sym_num),
           //
           .s_axis_tdata (s_axis_tdata[ant]),
-          .s_axis_tkeep (s_axis_tkeep[ant]),
+          .s_axis_exp   (s_axis_exp[ant]),
           .s_axis_tvalid(s_axis_tvalid[ant]),
           .s_axis_tlast (s_axis_tlast[ant]),
           .s_axis_tuser (s_axis_tuser[ant]),
           //
-          .wr_addr      (wr_addr[ant]),
-          .wr_en        (wr_en[ant]),
-          .wr_data      (wr_data[ant])
+          .wr_iq_addr   (wr_iq_addr[ant]),
+          .wr_iq_en     (wr_iq_en[ant]),
+          .wr_iq_data   (wr_iq_data[ant]),
+          .wr_exp_addr  (wr_exp_addr[ant]),
+          .wr_exp_en    (wr_exp_en[ant]),
+          .wr_exp_data  (wr_exp_data[ant])
       );
 
-      if (HALF_BLOCK) begin : g_half
+      localparam int IQ_DEPTH  = HALF_BLOCK ? 2048 : 3584;
+      localparam int EXP_DEPTH = HALF_BLOCK ? 960 : 1650;
 
-        logic [  9:0] wr_addr_s;
-        logic         wr_en_s;
+      ram_sdp #(
+          .ADDR_WIDTH  (12),
+          .DATA_WIDTH  (36),
+          .DEPTH       (IQ_DEPTH),
+          .READ_LATENCY(2),
+          .INIT_FILE   ("NONE"),
+          .RAM_STYLE   ("BLOCK")
+      ) u_iq_ram (
+          .clka (clk_eth_xran),
+          .ena  (wr_iq_en[ant]),
+          .wea  (wr_iq_en[ant]),
+          .addra(wr_iq_addr[ant]),
+          .dina (wr_iq_data[ant]),
+          //
+          .clkb (clk),
+          .rstb (2'b00),
+          .enb  ({2{rd_en[ant]}}),
+          .addrb(rd_iq_addr[ant]),
+          .doutb(rd_iq_data[ant])
+      );
 
-        logic [ 11:0] rd_addr_s;
-        logic         rd_en_s;
-        logic [127:0] unused_ram_douta;
-
-        assign wr_addr_s = {wr_addr[ant][10], wr_addr[ant][8:0]};
-        assign wr_en_s   = wr_en[ant] && ~wr_addr[ant][9];
-
-        assign rd_addr_s = {rd_addr[ant][12], rd_addr[ant][10:0]};
-        assign rd_en_s   = rd_en[ant] && ~rd_addr[ant][11];
-
-        // wr_addr: [10]: bank, [9]: null, [8:0]: address
-        // rd_addr: [12]: bank, [11]: null, [10:0]: address
-
-        ram_tdp_asym #(
-            .ADDR_WIDTH_A(10),
-            .DATA_WIDTH_A(128),
-            .READ_LATENCY_A(2),
-            .WRITE_MODE_A("READ_FIRST"),
-            //
-            .ADDR_WIDTH_B(12),
-            .DATA_WIDTH_B(32),
-            .READ_LATENCY_B(2),
-            .WRITE_MODE_B("READ_FIRST"),
-            //
-            .INIT_FILE   ("NONE"),
-            .RAM_STYLE   ("BLOCK")
-        ) u_ram (
-            .clka (clk_eth_xran),
-            .rsta (2'b00),
-            .ena  ({1'b1, wr_en_s}),
-            .wea  (wr_en_s),
-            .addra(wr_addr_s),
-            .dina (wr_data[ant]),
-            .douta(unused_ram_douta),
-            //
-            .clkb (clk),
-            .rstb (2'b00),
-            .enb  ({1'b1, rd_en_s}),
-            .web  (1'b0),
-            .addrb(rd_addr_s),
-            .dinb ('d0),
-            .doutb(rd_data[ant])
-        );
-
-      end else begin : g_full
-
-        logic [127:0] unused_ram_douta;
-
-        ram_tdp_asym #(
-            .ADDR_WIDTH_A  (11),
-            .DATA_WIDTH_A  (128),
-            .READ_LATENCY_A(2),
-            .WRITE_MODE_A  ("READ_FIRST"),
-            //
-            .ADDR_WIDTH_B  (13),
-            .DATA_WIDTH_B  (32),
-            .READ_LATENCY_B(2),
-            .WRITE_MODE_B  ("READ_FIRST"),
-            //
-            .INIT_FILE     ("NONE"),
-            .RAM_STYLE     ("BLOCK")
-        ) u_ram (
-            .clka (clk_eth_xran),
-            .rsta (2'b00),
-            .ena  ({1'b1, wr_en[ant]}),
-            .wea  (wr_en[ant]),
-            .addra(wr_addr[ant]),
-            .dina (wr_data[ant]),
-            .douta(unused_ram_douta),
-            //
-            .clkb (clk),
-            .rstb (2'b00),
-            .enb  ({1'b1, rd_en[ant]}),
-            .web  (1'b0),
-            .addrb(rd_addr[ant]),
-            .dinb ('d0),
-            .doutb(rd_data[ant])
-        );
-
-      end
+      ram_sdp #(
+          .ADDR_WIDTH  (12),
+          .DATA_WIDTH  (4),
+          .DEPTH       (EXP_DEPTH),
+          .READ_LATENCY(2),
+          .INIT_FILE   ("NONE"),
+          .RAM_STYLE   ("BLOCK")
+      ) u_exp_ram (
+          .clka (clk_eth_xran),
+          .ena  (wr_exp_en[ant]),
+          .wea  (wr_exp_en[ant]),
+          .addra(wr_exp_addr[ant]),
+          .dina (wr_exp_data[ant]),
+          //
+          .clkb (clk),
+          .rstb (2'b00),
+          .enb  ({2{rd_en[ant]}}),
+          .addrb(rd_exp_addr[ant]),
+          .doutb(rd_exp_data[ant])
+      );
     end
   endgenerate
 
   pdxch_fdv_buffer_readout #(
-      .NUM_ANT(NUM_ANT)
+      .NUM_ANT   (NUM_ANT),
+      .HALF_BLOCK(HALF_BLOCK)
   ) u_readout (
       .clk            (clk),
       .rst            (rst),
@@ -261,9 +231,11 @@ module pdxch_fdv_buffer #(
       .start_of_slot  (start_of_slot),
       .start_of_symbol(start_of_symbol),
       //
-      .rd_addr        (rd_addr),
+      .rd_iq_addr     (rd_iq_addr),
+      .rd_exp_addr    (rd_exp_addr),
       .rd_en          (rd_en),
-      .rd_data        (rd_data),
+      .rd_iq_data     (rd_iq_data),
+      .rd_exp_data    (rd_exp_data),
       //
       .dout_dr        (dout_dr),
       .dout_di        (dout_di),
@@ -278,7 +250,8 @@ module pdxch_fdv_buffer #(
       .ctrl_rat       (ctrl_rat),
       .ctrl_bist      (ctrl_bist),
       .ctrl_bw        (ctrl_bw),
-      .ctrl_nprb      (ctrl_nprb)
+      .ctrl_nprb      (ctrl_nprb),
+      .ctrl_fs_offset (ctrl_fs_offset)
   );
 
 endmodule

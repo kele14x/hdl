@@ -3,7 +3,8 @@
 `default_nettype none
 
 module pdxch_fdv_buffer_readout #(
-    parameter int NUM_ANT = 4
+    parameter int NUM_ANT    = 4,
+    parameter bit HALF_BLOCK = 1'b0
 ) (
     input  wire         clk,
     input  wire         rst,
@@ -12,9 +13,11 @@ module pdxch_fdv_buffer_readout #(
     input  wire         start_of_slot,
     input  wire  [ 1:0] start_of_symbol,
     //
-    output wire  [12:0] rd_addr        [NUM_ANT],
+    output wire  [11:0] rd_iq_addr     [NUM_ANT],
+    output wire  [11:0] rd_exp_addr    [NUM_ANT],
     output wire         rd_en          [NUM_ANT],
-    input  wire  [31:0] rd_data        [NUM_ANT],
+    input  wire  [35:0] rd_iq_data     [NUM_ANT],
+    input  wire  [ 3:0] rd_exp_data    [NUM_ANT],
     // Block data output
     output logic [15:0] dout_dr,
     output logic [15:0] dout_di,
@@ -29,7 +32,8 @@ module pdxch_fdv_buffer_readout #(
     input  wire  [ 1:0] ctrl_rat,
     input  wire  [ 3:0] ctrl_bist,
     input  wire  [ 3:0] ctrl_bw,
-    input  wire  [ 8:0] ctrl_nprb
+    input  wire  [ 8:0] ctrl_nprb,
+    input  wire  [ 3:0] ctrl_fs_offset
 );
 
   // Control signals
@@ -40,6 +44,7 @@ module pdxch_fdv_buffer_readout #(
   wire  [ 3:0] ctrl_bw_s;
   wire  [ 8:0] ctrl_nprb_s;
 
+  wire  [  3:0] ctrl_fs_offset_s;
   wire         unused_ctrl_bist = &{1'b0, ctrl_bist_s[3:2]};
 
   // Internal signals
@@ -80,14 +85,26 @@ module pdxch_fdv_buffer_readout #(
 
   logic        rd_dv;
 
-  logic [12:0] rd_addr_r;
+  logic [11:0] rd_iq_addr_r;
+  logic [11:0] rd_exp_addr_r;
+  logic        rd_half_r;
+  logic        rd_half_d;
+  logic        rd_half_dd;
   logic        rd_en_c                                      [NUM_ANT];
   logic        rd_en_r                                      [NUM_ANT];
   logic        rd_en_d                                      [NUM_ANT];
   logic        rd_en_dd                                     [NUM_ANT];
 
-  logic [31:0] rd_data_c;
+  logic [35:0] rd_iq_data_c;
+  logic [ 3:0] rd_exp_data_c;
+  logic [17:0] rd_pair_c;
+  logic [15:0] rd_decoded_dr_c;
+  logic [15:0] rd_decoded_di_c;
   logic [31:0] rd_data_r;
+
+  logic [11:0] iq_addr_mapped;
+  logic [11:0] exp_addr_mapped;
+  logic        iq_half_mapped;
 
   logic        start_of_symbol_sel;
 
@@ -164,6 +181,54 @@ module pdxch_fdv_buffer_readout #(
       //
       .dest_clk(clk),
       .dest_out(ctrl_nprb_s)
+  );
+
+  cdc_array_single #(
+      .DEST_SYNC_FF (2),
+      .INIT_SYNC_FF (1'b0),
+      .SRC_INPUT_REG(1'b0),
+      .WIDTH        (4)
+  ) i_cdc_ctrl_fs_offset (
+      .src_clk (1'b1),
+      .src_in  (ctrl_fs_offset),
+      //
+      .dest_clk(clk),
+      .dest_out(ctrl_fs_offset_s)
+  );
+
+  function automatic logic [15:0] bfp9_decompress(
+      input logic [8:0] data,
+      input logic [3:0] exp,
+      input logic [3:0] fs_offset
+  );
+    logic signed [30:0] expanded;
+    logic               sign;
+    logic [16:0]        temp;
+
+    expanded = $signed({data, 22'b0});
+    expanded = expanded >>> (15 - int'(exp));
+
+    // Full-scale alignment and saturation are the same as the former
+    // bfp_decomp implementation, but only the BFP9 path remains here.
+    temp = expanded[30-fs_offset-:17];
+    sign = expanded[30];
+    for (int i = 0; i < 15; i++) begin
+      if (i < fs_offset && (sign ^ expanded[29-fs_offset])) begin
+        temp = sign ? 17'h10000 : 17'h0FFFF;
+      end
+    end
+    temp = temp == 17'h0FFFF ? temp : temp + 1'b1;
+    bfp9_decompress = temp[16:1];
+  endfunction
+
+  pdxch_fdv_buffer_map #(
+      .HALF_BLOCK(HALF_BLOCK)
+  ) u_fdv_buffer_map (
+      .bank      (bank),
+      .logical_re(index_mapped),
+      .iq_addr   (iq_addr_mapped),
+      .exp_addr  (exp_addr_mapped),
+      .iq_half   (iq_half_mapped)
   );
 
   // Main
@@ -374,13 +439,32 @@ module pdxch_fdv_buffer_readout #(
   end
 
   always_ff @(posedge clk) begin
-    rd_addr_r <= {bank, index_mapped};
+    if (rst) begin
+      rd_iq_addr_r  <= '0;
+      rd_exp_addr_r <= '0;
+      rd_half_r     <= 1'b0;
+    end else begin
+      rd_iq_addr_r  <= iq_addr_mapped;
+      rd_exp_addr_r <= exp_addr_mapped;
+      rd_half_r     <= iq_half_mapped;
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      rd_half_d  <= 1'b0;
+      rd_half_dd <= 1'b0;
+    end else begin
+      rd_half_d  <= rd_half_r;
+      rd_half_dd <= rd_half_d;
+    end
   end
 
   generate
     for (genvar ant = 0; ant < NUM_ANT; ant = ant + 1) begin : g_ant
 
-      assign rd_addr[ant] = rd_addr_r;
+      assign rd_iq_addr[ant]  = rd_iq_addr_r;
+      assign rd_exp_addr[ant] = rd_exp_addr_r;
 
       always_ff @(posedge clk) begin
         rd_en_c[ant] <= run && ctrl_en_s[ant] && ~ctrl_bist_s[ant] && (phase == 4'(ant))
@@ -405,14 +489,24 @@ module pdxch_fdv_buffer_readout #(
 
   // OR them together to get data from correct channel
   always_comb begin
-    rd_data_c = '0;
+    rd_iq_data_c  = '0;
+    rd_exp_data_c = '0;
     for (int ant = 0; ant < NUM_ANT; ant++) begin
-      rd_data_c = rd_data_c | (rd_en_dd[ant] ? rd_data[ant] : 32'b0);
+      rd_iq_data_c  = rd_iq_data_c |
+          (rd_en_dd[ant] ? rd_iq_data[ant] : 36'b0);
+      rd_exp_data_c = rd_exp_data_c |
+          (rd_en_dd[ant] ? rd_exp_data[ant] : 4'b0);
     end
   end
 
+  always_comb begin
+    rd_pair_c = rd_half_dd ? rd_iq_data_c[17:0] : rd_iq_data_c[35:18];
+    rd_decoded_dr_c = bfp9_decompress(rd_pair_c[17:9], rd_exp_data_c, ctrl_fs_offset_s);
+    rd_decoded_di_c = bfp9_decompress(rd_pair_c[8:0], rd_exp_data_c, ctrl_fs_offset_s);
+  end
+
   always_ff @(posedge clk) begin
-    rd_data_r <= rd_data_c | {bist_data_di, bist_data_dr};
+    rd_data_r <= {rd_decoded_di_c, rd_decoded_dr_c} | {bist_data_di, bist_data_dr};
   end
 
   //! Vivado simulator has strange bug here that display 'X'

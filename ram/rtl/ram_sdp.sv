@@ -9,6 +9,7 @@
 module ram_sdp #(
     parameter int ADDR_WIDTH   = 10,
     parameter int DATA_WIDTH   = 32,
+    parameter int DEPTH        = 2 ** ADDR_WIDTH,
     parameter int READ_LATENCY = 3,       // 1 ~ 3
     parameter     INIT_FILE    = "NONE",
     parameter     RAM_STYLE    = "AUTO"
@@ -40,6 +41,11 @@ module ram_sdp #(
       $fatal(1, "[%m]: INIT_FILE must be NONE or a legal initialization file name");
     end
 
+    assert (1 <= DEPTH && DEPTH <= 2 ** ADDR_WIDTH)
+    else begin
+      $fatal(1, "[%m]: DEPTH must be within 1 to 2**ADDR_WIDTH, got %d", DEPTH);
+    end
+
     /* verilator lint_off WIDTHEXPAND */
     assert (RAM_STYLE == "AUTO" || RAM_STYLE == "BLOCK" || RAM_STYLE == "DISTRIBUTED" ||
             RAM_STYLE == "REGISTER" || RAM_STYLE == "ULTRA")
@@ -64,7 +70,7 @@ module ram_sdp #(
 
 `ifdef RAM_USE_XPM
 
-  localparam integer XpmMemorySize = DATA_WIDTH * (1 << ADDR_WIDTH);
+  localparam integer XpmMemorySize = DATA_WIDTH * DEPTH;
 
   // UltraRAM requires a common clock; the two clock ports may be tied
   // together by the caller even though the interface exposes both ports.
@@ -140,15 +146,15 @@ module ram_sdp #(
 
   // The portable behavioral memory.
   (* RAM_STYLE = RAM_STYLE *)
-  logic [DATA_WIDTH-1:0] MEM[2**ADDR_WIDTH];
+  logic [DATA_WIDTH-1:0] MEM[DEPTH];
 
   // Initializes the memory values to a specified file or to all zeros to match
   // hardware
   initial begin : memory_init
     if (INIT_FILE != "NONE") begin : file_init
-      $readmemh(INIT_FILE, MEM, 0, 2 ** ADDR_WIDTH - 1);
+      $readmemh(INIT_FILE, MEM, 0, DEPTH - 1);
     end else begin : zero_init
-      for (int i = 0; i < 2 ** ADDR_WIDTH; i++) begin
+      for (int i = 0; i < DEPTH; i++) begin
         MEM[i] = {DATA_WIDTH{1'b0}};
       end
     end

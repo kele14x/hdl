@@ -2,102 +2,93 @@
 //
 `default_nettype none
 
+// Write-side address generator for the compressed FDV buffer.
+//
+// The gearbox emits one 36-bit word for two complex REs. Six words form one
+// PRB, while the exponent RAM stores the PRB exponent at three addresses;
+// each exponent address therefore covers two consecutive IQ RAM words (four
+// complex REs).
 module pdxch_fdv_buffer_write #(
-    parameter int CC_ID = 0
+    parameter int CC_ID      = 0,
+    parameter bit HALF_BLOCK = 1'b0
 ) (
-    input  wire         clk,
-    input  wire         rst,
+    input wire         clk,
+    input wire         rst,
     //
-    input  wire [ 11:0] s_dl_sym_num,
-    //
-    input  wire [127:0] s_axis_tdata,
-    input  wire [ 15:0] s_axis_tkeep,
-    input  wire         s_axis_tvalid,
-    input  wire         s_axis_tlast,
-    input  wire [ 90:0] s_axis_tuser,
-    //
-    output wire [ 10:0] wr_addr,
-    output wire         wr_en,
-    output wire [127:0] wr_data
+    input wire [ 11:0] s_dl_sym_num,
+    // Compressed BFP9 stream
+    input wire [ 35:0] s_axis_tdata,
+    input wire [  3:0] s_axis_exp,
+    input wire         s_axis_tvalid,
+    input wire         s_axis_tlast,
+    input wire [ 90:0] s_axis_tuser,
+    // IQ RAM write port
+    output wire [ 11:0] wr_iq_addr,
+    output wire         wr_iq_en,
+    output wire [ 35:0] wr_iq_data,
+    // Exponent RAM write port
+    output wire [ 11:0] wr_exp_addr,
+    output wire         wr_exp_en,
+    output wire [  3:0] wr_exp_data
 );
 
-  logic [127:0] s_axis_tdata_rev;
-  logic [127:0] s_axis_tdata_r2;
+  localparam int IQ_BANK_DEPTH  = HALF_BLOCK ? 1024 : 1792;
+  localparam int EXP_BANK_DEPTH = HALF_BLOCK ? 480 : 825;
 
-  logic addr_msb;
-  logic [9:0] addr_lsb;
+  logic        packet_active;
+  logic        packet_match_r;
+  // The bank is folded into the address at packet start; no separate state is needed.
+  logic [11:0] iq_addr_r;
+  logic [11:0] exp_addr_r;
+  logic [11:0] word_count_r;
 
-  logic [9:0] rx_u_startPrb;
-  logic [7:0] rx_u_numPrb;
-  logic [3:0] rx_u_cc;
-  logic rx_u_sos;
+  wire         packet_first = ~packet_active;
+  wire [ 3:0]  rx_u_cc      = s_axis_tuser[30:27];
+  wire [ 9:0]  rx_u_startPrb = s_axis_tuser[9:0];
+  wire         packet_match = packet_first ? (rx_u_cc == 4'(CC_ID)) : packet_match_r;
 
-  logic wr_cc_r;
-  logic wr_en_r;
-  logic [127:0] wr_data_r;
+  wire [11:0] iq_start_addr =
+      (s_dl_sym_num[0] ? IQ_BANK_DEPTH : 0) + (rx_u_startPrb * 12'd6);
+  wire [11:0] exp_start_addr =
+      (s_dl_sym_num[0] ? EXP_BANK_DEPTH : 0) + (rx_u_startPrb * 12'd3);
 
-  wire unused_inputs = &{1'b0, rst, s_dl_sym_num[11:1], s_axis_tkeep, s_axis_tlast, s_axis_tuser[89:31], s_axis_tuser[26:18], rx_u_numPrb};
+  assign wr_iq_addr = packet_first ? iq_start_addr : iq_addr_r;
+  assign wr_iq_en   = s_axis_tvalid && packet_match;
+  assign wr_iq_data = s_axis_tdata;
 
-  assign rx_u_sos      = s_axis_tuser[90];
-  assign rx_u_cc       = s_axis_tuser[30:27];
-  assign rx_u_numPrb   = s_axis_tuser[17:10];
-  assign rx_u_startPrb = s_axis_tuser[9:0];
+  assign wr_exp_addr = packet_first ? exp_start_addr : exp_addr_r;
+  assign wr_exp_en   = wr_iq_en && (packet_first || ~word_count_r[0]);
+  assign wr_exp_data = s_axis_exp;
 
-  function automatic logic [127:0] byte_reverse(input logic [127:0] data);
-    for (int i = 0; i < 16; i++) begin
-      byte_reverse[8*i+7-:8] = data[127-8*i-:8];
-    end
-  endfunction
+  initial begin : drc_check
+    assert (0 <= CC_ID && CC_ID < 16)
+    else $error("[%m]: CC_ID (%0d) must fit in the 4-bit TUSER field.", CC_ID);
+  end
 
-  function automatic logic [127:0] word_reverse(input logic [127:0] data);
-    for (int i = 0; i < 8; i++) begin
-      word_reverse[16*i+15-:16] = data[127-16*i-:16];
-    end
-  endfunction
-
-  assign s_axis_tdata_rev = byte_reverse(s_axis_tdata);
-  // 4 IQ pairs, every 16-bit is reversed since RAM puts first I0 at lowest address
-  assign s_axis_tdata_r2  = word_reverse(s_axis_tdata_rev);
-
-  // There are types of input: 64-bit (2 IQ pairs) / 128-bit (4 IQ pairs)
   always_ff @(posedge clk) begin
-    if (rx_u_sos) begin
-      wr_data_r <= s_axis_tdata_r2;
+    if (rst) begin
+      packet_active <= 1'b0;
+      packet_match_r <= 1'b0;
+      iq_addr_r     <= '0;
+      exp_addr_r    <= '0;
+      word_count_r  <= '0;
     end else if (s_axis_tvalid) begin
-      wr_data_r <= s_axis_tdata_r2;
+      packet_active <= ~s_axis_tlast;
+
+      if (packet_first) begin
+        packet_match_r <= (rx_u_cc == 4'(CC_ID));
+        iq_addr_r      <= iq_start_addr + 1'b1;
+        exp_addr_r     <= exp_start_addr;
+        word_count_r   <= 12'd1;
+      end else begin
+        iq_addr_r     <= iq_addr_r + 1'b1;
+        word_count_r  <= word_count_r + 1'b1;
+        if (word_count_r[0]) begin
+          exp_addr_r <= exp_addr_r + 1'b1;
+        end
+      end
     end
   end
-
-  // wr_data = {Q1, I1, Q0, I0}
-  assign wr_data = wr_data_r;
-
-  always_ff @(posedge clk) begin
-    if (rx_u_sos) begin
-      addr_msb <= s_dl_sym_num[0];
-    end
-  end
-
-  always_ff @(posedge clk) begin
-    if (rx_u_sos) begin
-      addr_lsb <= rx_u_startPrb * 3;
-    end else if (wr_en_r) begin
-      addr_lsb <= addr_lsb + 1'b1;
-    end
-  end
-
-  assign wr_addr = {addr_msb, addr_lsb};
-
-  always_ff @(posedge clk) begin
-    if (rx_u_sos) begin
-      wr_cc_r <= (rx_u_cc == 4'(CC_ID));
-    end
-  end
-
-  always_ff @(posedge clk) begin
-    wr_en_r <= s_axis_tvalid && (wr_cc_r || (rx_u_sos && (rx_u_cc == 4'(CC_ID))));
-  end
-
-  assign wr_en = wr_en_r;
 
 endmodule
 
