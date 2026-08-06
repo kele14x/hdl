@@ -8,10 +8,11 @@
 module ram_sp_pipe #(
     parameter int ADDR_WIDTH   = 10,
     parameter int DATA_WIDTH   = 32,
-    parameter     WRITE_MODE   = "READ_FIRST",  // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
+    parameter     WRITE_MODE   = "READ_FIRST",    // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
     parameter int READ_LATENCY = 2,
     parameter     INIT_FILE    = "NONE",
-    parameter     RAM_STYLE    = "AUTO"
+    parameter     RAM_STYLE    = "AUTO",
+    parameter int DEPTH        = 1 << ADDR_WIDTH
 ) (
     // Port A
     input var                   clk,
@@ -46,11 +47,12 @@ module ram_sp_pipe #(
       .WRITE_MODE  (WRITE_MODE),
       .READ_LATENCY(READ_LATENCY),
       .INIT_FILE   (INIT_FILE),
-      .RAM_STYLE   (RAM_STYLE)
+      .RAM_STYLE   (RAM_STYLE),
+      .DEPTH       (DEPTH)
   ) i_ram_sdp (
       // Port A
       .clk (clk),
-      .rst (rst_d),
+      .rst (rst_d[READ_LATENCY-1]),
       .en  (en_d),
       .we  (we),
       .addr(addr),
