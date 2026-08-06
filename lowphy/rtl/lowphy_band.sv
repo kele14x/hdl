@@ -642,7 +642,8 @@ module lowphy_band #(
   puxch_top #(
       .NUM_CC (NUM_CC),
       .NUM_ANT(NUM_ANT),
-      .HAS_BFP(HAS_BFP)
+      .HAS_BFP(HAS_BFP),
+      .HALF_BLOCK(HALF_BLOCK)
   ) u_puxch (
       // Clock & Reset
       //--------------
