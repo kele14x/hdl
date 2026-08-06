@@ -47,6 +47,9 @@ module prach_stream2block #(
 
   localparam int NumPrb = 1536;
   localparam int AddrWidth = $clog2(NumPrb) + 1;  // 12
+  localparam int NumRamBank = 3;
+  localparam int RamDepth = 1024;
+  localparam int RamAddrWidth = $clog2(RamDepth);
 
   // Signals
 
@@ -95,10 +98,13 @@ module prach_stream2block #(
   logic [         10:0] rd_cnt_rev;
 
   logic [AddrWidth-1:0] rd_addr;
+  // Keep the bank selector aligned with the two-cycle RAM read pipeline.
+  logic [          1:0] rd_addr_bank_d;
+  logic [          1:0] rd_addr_bank_dd;
   logic [  NUM_ANT-1:0] rd_en;
   logic [  NUM_ANT-1:0] rd_en_d;
   logic [  NUM_ANT-1:0] rd_en_dd;
-  logic [         31:0] rd_data          [NUM_ANT];
+  logic [         31:0] rd_data          [NUM_ANT][NumRamBank];
   logic [         31:0] rd_data_c;
 
   logic [          1:0] chn;
@@ -297,6 +303,8 @@ module prach_stream2block #(
   always_ff @(posedge clk) begin
     rd_en_d  <= rd_en;
     rd_en_dd <= rd_en_d;
+    rd_addr_bank_d  <= rd_addr[11:10];
+    rd_addr_bank_dd <= rd_addr_bank_d;
   end
 
   assign ap_req_any = |ap_req;
@@ -354,7 +362,11 @@ module prach_stream2block #(
     rd_data_c = '0;
     for (int i = 0; i < 4; i++) begin
       if (rd_en_dd[i]) begin
-        rd_data_c = rd_data[i];
+        for (int j = 0; j < NumRamBank; j++) begin
+          if (rd_addr_bank_dd == 2'(j)) begin
+            rd_data_c = rd_data[i][j];
+          end
+        end
       end
     end
   end
@@ -390,26 +402,33 @@ module prach_stream2block #(
   generate
     for (genvar i = 0; i < NUM_ANT; i++) begin : g_ant
 
-      ram_sdp #(
-          .ADDR_WIDTH  (AddrWidth),
-          .DATA_WIDTH  (32),
-          .READ_LATENCY(2),
-          .INIT_FILE   ("NONE"),
-          .RAM_STYLE   ("BLOCK")
-      ) u_ram (
-          // Port A
-          .clka (clk),
-          .ena  (wr_we[i]),
-          .wea  (wr_we[i]),
-          .addra(wr_addr),
-          .dina (wr_data),
-          // Port B
-          .clkb (clk),
-          .rstb ({2{~rd_en_d[i]}}),
-          .enb  ({rd_en_d[i], rd_en[i]}),
-          .addrb(rd_addr),
-          .doutb(rd_data[i])
-      );
+      for (genvar j = 0; j < NumRamBank; j++) begin : g_bank
+
+        ram_sdp #(
+            .ADDR_WIDTH  (RamAddrWidth),
+            .DATA_WIDTH  (32),
+            .DEPTH       (RamDepth),
+            .READ_LATENCY(2),
+            .INIT_FILE   ("NONE"),
+            .RAM_STYLE   ("BLOCK")
+        ) u_ram (
+            // Port A
+            .clka (clk),
+            .ena  (wr_we[i] && (wr_addr[11:10] == 2'(j))),
+            .wea  (wr_we[i] && (wr_addr[11:10] == 2'(j))),
+            .addra(wr_addr[RamAddrWidth-1:0]),
+            .dina (wr_data),
+            // Port B
+            .clkb (clk),
+            .rstb ({~(rd_en_d[i] && (rd_addr_bank_d == 2'(j))),
+                    ~(rd_en[i] && (rd_addr[11:10] == 2'(j)))}),
+            .enb  ({rd_en_d[i] && (rd_addr_bank_d == 2'(j)),
+                    rd_en[i] && (rd_addr[11:10] == 2'(j))}),
+            .addrb(rd_addr[RamAddrWidth-1:0]),
+            .doutb(rd_data[i][j])
+        );
+
+      end
 
     end
   endgenerate
