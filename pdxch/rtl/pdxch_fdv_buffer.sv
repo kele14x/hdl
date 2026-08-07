@@ -191,7 +191,7 @@ module pdxch_fdv_buffer #(
           .dina (wr_iq_data[ant]),
           //
           .clkb (clk),
-          .rstb (2'b00),
+          .rstb (1'b0),
           .enb  ({2{rd_en[ant]}}),
           .addrb(rd_iq_addr[ant]),
           .doutb(rd_iq_data[ant])
@@ -212,7 +212,7 @@ module pdxch_fdv_buffer #(
           .dina (wr_exp_data[ant]),
           //
           .clkb (clk),
-          .rstb (2'b00),
+          .rstb (1'b0),
           .enb  ({2{rd_en[ant]}}),
           .addrb(rd_exp_addr[ant]),
           .doutb(rd_exp_data[ant])

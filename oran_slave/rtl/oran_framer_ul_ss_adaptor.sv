@@ -433,7 +433,7 @@ module oran_framer_ul_ss_adaptor #(
       .dina (syml_wr_data),
       .douta(ram_douta),
       .clkb (clk),
-      .rstb ({~syml_rd_en_d, 1'b0}),
+      .rstb (~syml_rd_en_d),
       .enb  ({syml_rd_en_d, syml_rd_en}),
       .web  (syml_rd_en),
       .addrb(syml_rd_addr_f),

@@ -222,7 +222,7 @@ module pdxch_block2stream #(
           .dina (wr_data),
           //
           .clkb (clk),
-          .rstb (2'b0),
+          .rstb (1'b0),
           .enb  ({rd_en_d[i], rd_en[i]}),
           .addrb(rd_addr[i]),
           .doutb(rd_data[i])

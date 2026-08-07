@@ -192,7 +192,7 @@ module fifo_sync #(
       .dina (din),
       //
       .clkb (clk),
-      .rstb ({RamLatency{rst}}),
+      .rstb (rst),
       .enb  (rd_en_mem[RamLatency-1:0]),
       .addrb(rd_addr),
       .doutb(rd_data)

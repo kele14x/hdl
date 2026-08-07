@@ -200,7 +200,7 @@ module oran_deframer_dl_ss_buffer #(
       .addra(r1_wr_addr),
       .dina (r1_wr_din),
       .clkb (clk),
-      .rstb ({~r0_rd_en_d, ~r0_rd_en_d}),
+      .rstb (~r0_rd_en_d),
       .enb  ({r0_rd_en_d, r0_rd_en}),
       .addrb(r0_rd_addr),
       .doutb(r0_rd_dout)

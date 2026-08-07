@@ -310,7 +310,7 @@ module axis_fifo #(
       .dina (wr_din),
       //
       .clkb (rd_clk),
-      .rstb ({(OutputReg + 1) {!rd_rstn}}),
+      .rstb (!rd_rstn),
       .enb  (rd_en[OutputReg:0]),
       .addrb(rd_addr),
       .doutb(rd_dout)

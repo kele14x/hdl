@@ -348,7 +348,7 @@ module ecpri_deframer_demux (
       .dina (wr_data),
       //
       .clkb (clk),
-      .rstb ({rst, rst}),
+      .rstb (rst),
       .enb  ({rd_en_d, rd_en}),
       .addrb(rd_addr),
       .doutb(rd_data)

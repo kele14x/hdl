@@ -236,7 +236,7 @@ module fifo_async #(
       .dina (wr_din),
       //
       .clkb (rd_clk),
-      .rstb ({(OutputReg + 1) {rd_rst}}),
+      .rstb (rd_rst),
       .enb  (rd_en_mem[OutputReg:0]),
       .addrb(rd_addr),
       .doutb(rd_dout_s)

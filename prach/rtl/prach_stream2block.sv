@@ -420,8 +420,7 @@ module prach_stream2block #(
             .dina (wr_data),
             // Port B
             .clkb (clk),
-            .rstb ({~(rd_en_d[i] && (rd_addr_bank_d == 2'(j))),
-                    ~(rd_en[i] && (rd_addr[11:10] == 2'(j)))}),
+            .rstb (~(rd_en_d[i] && (rd_addr_bank_d == 2'(j)))),
             .enb  ({rd_en_d[i] && (rd_addr_bank_d == 2'(j)),
                     rd_en[i] && (rd_addr[11:10] == 2'(j))}),
             .addrb(rd_addr[RamAddrWidth-1:0]),

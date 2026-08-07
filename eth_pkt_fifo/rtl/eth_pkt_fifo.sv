@@ -282,7 +282,7 @@ module eth_pkt_fifo #(
       .dina (wr_data),
       // Port B
       .clkb (aclk),
-      .rstb (3'b0),
+      .rstb (1'b0),
       .enb  (rd_en),
       .addrb(rd_addr),
       .doutb(rd_data)

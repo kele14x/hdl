@@ -348,7 +348,7 @@ module oran_deframer_dl_ss_adaptor #(
       .dina (syml_wr_data),
       .douta(ram_douta),
       .clkb (clk),
-      .rstb (2'b00),
+      .rstb (1'b0),
       .enb  ({syml_rd_en_d, syml_rd_en}),
       .web  (syml_rd_en),
       .addrb(syml_rd_addr),

@@ -260,7 +260,7 @@ module puxch_buffer #(
             .dina (wr_din[cc]),
             //
             .clkb (clk_eth_xran),
-            .rstb (2'b00),
+            .rstb (1'b0),
             .enb  ({rd_en_s_d, rd_en_s}),
             .addrb(rd_addr_s),
             .doutb(rd_dout[cc])
@@ -284,7 +284,7 @@ module puxch_buffer #(
             .dina (wr_din[cc]),
             //
             .clkb (clk_eth_xran),
-            .rstb (2'b00),
+            .rstb (1'b0),
             .enb  ({rd_en_d[cc], rd_en[cc]}),
             .addrb(rd_addr),
             .doutb(rd_dout[cc])

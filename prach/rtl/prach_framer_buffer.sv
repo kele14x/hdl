@@ -165,7 +165,7 @@ module prach_framer_buffer #(
           .dina (wr_data),
           //
           .clkb (clk),
-          .rstb ({2'b0}),
+          .rstb (1'b0),
           .enb  ({rd_en_d[ant], rd_en[ant]}),
           .addrb(rd_addr),
           .doutb(rd_data[ant])
