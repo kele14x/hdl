@@ -106,7 +106,9 @@ module mult #(
   end
 
   always_ff @(posedge clk) begin
+    /* verilator lint_off WIDTHEXPAND */
     p_full <= m + RoundBias + (((ROUND != 0) && (SHIFT > 0)) ? product_nonnegative_d : 1'b0);
+    /* verilator lint_on WIDTHEXPAND */
   end
 
   generate
