@@ -1,8 +1,6 @@
 #! /usr/bin/env python3
-import json
 import math
 import os
-import tempfile
 from pathlib import Path
 
 import cocotb
@@ -12,12 +10,12 @@ from cocotb.clock import Clock
 from cocotb.queue import Queue
 from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
+
 from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 rng = np.random.default_rng(12345)
 
-PARAM_SETS_FILE = Path(__file__).resolve().parent / "param_sets.json"
 GUI = os.environ.get("GUI", "False").lower() == "true"
 SIM = os.environ.get("SIM", "verilator")
 
@@ -207,70 +205,68 @@ async def test_cmult_random(dut):
     cocotb.log.info("Random simulation finished")
 
 
-def _normalize_param_sets(data):
-    if not isinstance(data, list) or len(data) == 0:
-        raise ValueError("param_sets.json must be a non-empty JSON list")
-    required = {
-        "A_WIDTH",
-        "B_WIDTH",
-        "P_WIDTH",
-        "SHIFT",
-        "ROUND",
-        "SATURATE",
-        "USE_3_MULT",
-    }
-    sets = []
-    for i, item in enumerate(data, start=1):
-        if not isinstance(item, dict):
-            raise ValueError(f"Parameter set #{i} must be a JSON object")
-        unknown = set(item.keys()) - required
-        if unknown:
-            raise ValueError(f"Parameter set #{i} has unknown keys: {sorted(unknown)}")
-        missing = required - set(item.keys())
-        if missing:
-            raise ValueError(f"Parameter set #{i} is missing keys: {sorted(missing)}")
-        merged = {
-            "A_WIDTH": int(item["A_WIDTH"]),
-            "B_WIDTH": int(item["B_WIDTH"]),
-            "P_WIDTH": int(item["P_WIDTH"]),
-            "SHIFT": int(item["SHIFT"]),
-            "ROUND": int(item["ROUND"]),
-            "SATURATE": int(item["SATURATE"]),
-            "USE_3_MULT": int(item["USE_3_MULT"]),
-        }
-        sets.append(merged)
-    return sets
+CASES = [
+    {
+        "A_WIDTH": 16,
+        "B_WIDTH": 16,
+        "P_WIDTH": 16,
+        "SHIFT": 15,
+        "ROUND": 1,
+        "SATURATE": 1,
+        "USE_3_MULT": 0,
+    },
+    {
+        "A_WIDTH": 16,
+        "B_WIDTH": 16,
+        "P_WIDTH": 16,
+        "SHIFT": 15,
+        "ROUND": 0,
+        "SATURATE": 0,
+        "USE_3_MULT": 0,
+    },
+    {
+        "A_WIDTH": 16,
+        "B_WIDTH": 16,
+        "P_WIDTH": 16,
+        "SHIFT": 15,
+        "ROUND": 1,
+        "SATURATE": 1,
+        "USE_3_MULT": 1,
+    },
+    {
+        "A_WIDTH": 16,
+        "B_WIDTH": 16,
+        "P_WIDTH": 16,
+        "SHIFT": 15,
+        "ROUND": 0,
+        "SATURATE": 0,
+        "USE_3_MULT": 1,
+    },
+]
 
 
-def _param_sets_for_pytest():
-    if not PARAM_SETS_FILE.exists():
-        raise FileNotFoundError(f"Parameter set file not found: {PARAM_SETS_FILE}")
-    with PARAM_SETS_FILE.open("r", encoding="utf-8") as f:
-        data = json.load(f)
-    return _normalize_param_sets(data)
-
-
-@pytest.mark.parametrize("params", _param_sets_for_pytest())
+@pytest.mark.parametrize("params", CASES)
 def test_cmult_runner(params):
     runner = get_runner(SIM)
     hdl_toplevel = "cmult"
 
-    with tempfile.TemporaryDirectory(prefix="cmult_param_") as run_dir:
-        runner.build(
-            hdl_toplevel=hdl_toplevel,
-            sources=resolve_flt(prj_path / "cmult.flt"),
-            parameters=params,
-            always=True,
-            waves=True,
-            build_dir=run_dir,
-        )
-        runner.test(
-            hdl_toplevel=hdl_toplevel,
-            hdl_toplevel_lang="verilog",
-            test_module="test_cmult",
-            gui=GUI,
-            test_dir=run_dir,
-        )
+    case_name = "_".join(f"{key}{value}" for key, value in sorted(params.items()))
+    run_dir = prj_path / "sim_build" / case_name
+    runner.build(
+        hdl_toplevel=hdl_toplevel,
+        sources=resolve_flt(prj_path / "cmult.flt"),
+        parameters=params,
+        always=True,
+        waves=True,
+        build_dir=run_dir,
+    )
+    runner.test(
+        hdl_toplevel=hdl_toplevel,
+        hdl_toplevel_lang="verilog",
+        test_module="test_cmult",
+        gui=GUI,
+        test_dir=run_dir,
+    )
 
 
 if __name__ == "__main__":

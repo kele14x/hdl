@@ -1,5 +1,4 @@
 import os
-import tempfile
 from pathlib import Path
 
 import cocotb
@@ -92,25 +91,25 @@ def test_symbol_timer_runner():
     }
 
     runner = get_runner(SIM)
-    with tempfile.TemporaryDirectory(prefix="symbol_timer_") as run_dir:
-        runner.build(
-            hdl_toplevel=hdl_toplevel,
-            sources=resolve_flt(prj_path / "symbol_timer.flt"),
-            parameters=parameters,
-            build_args=[],
-            waves=True,
-            always=True,
-            build_dir=run_dir,
-        )
+    run_dir = prj_path / "sim_build" / "symbol_timer"
+    runner.build(
+        hdl_toplevel=hdl_toplevel,
+        sources=resolve_flt(prj_path / "symbol_timer.flt"),
+        parameters=parameters,
+        build_args=[],
+        waves=True,
+        always=True,
+        build_dir=run_dir,
+    )
 
-        runner.test(
-            hdl_toplevel=hdl_toplevel,
-            hdl_toplevel_lang=hdl_toplevel_lang,
-            test_module="test_symbol_timer",
-            waves=True,
-            gui=GUI,
-            test_dir=run_dir,
-        )
+    runner.test(
+        hdl_toplevel=hdl_toplevel,
+        hdl_toplevel_lang=hdl_toplevel_lang,
+        test_module="test_symbol_timer",
+        waves=True,
+        gui=GUI,
+        test_dir=run_dir,
+    )
 
 
 if __name__ == "__main__":

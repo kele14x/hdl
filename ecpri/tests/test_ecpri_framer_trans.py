@@ -1,6 +1,5 @@
 import os
 import random
-import tempfile
 from pathlib import Path
 
 import cocotb
@@ -128,22 +127,22 @@ async def test_ecpri_framer_trans(dut):
 
 def test_ecpri_framer_trans_runner():
     runner = get_runner(SIM)
-    with tempfile.TemporaryDirectory(prefix="ecpri_framer_trans_") as run_dir:
-        runner.build(
-            hdl_toplevel="ecpri_framer_trans",
-            sources=resolve_flt(PRJ_PATH / "ecpri.flt"),
-            always=True,
-            waves=True,
-            build_dir=run_dir,
-        )
-        runner.test(
-            hdl_toplevel="ecpri_framer_trans",
-            hdl_toplevel_lang="verilog",
-            test_module="test_ecpri_framer_trans",
-            waves=True,
-            gui=GUI,
-            test_dir=run_dir,
-        )
+    run_dir = PRJ_PATH / "sim_build" / "ecpri_framer_trans"
+    runner.build(
+        hdl_toplevel="ecpri_framer_trans",
+        sources=resolve_flt(PRJ_PATH / "ecpri.flt"),
+        always=True,
+        waves=True,
+        build_dir=run_dir,
+    )
+    runner.test(
+        hdl_toplevel="ecpri_framer_trans",
+        hdl_toplevel_lang="verilog",
+        test_module="test_ecpri_framer_trans",
+        waves=True,
+        gui=GUI,
+        test_dir=run_dir,
+    )
 
 
 if __name__ == "__main__":

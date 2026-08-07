@@ -1,6 +1,5 @@
 import os
 import struct
-import tempfile
 from pathlib import Path
 
 import cocotb
@@ -11,7 +10,6 @@ from cocotb.triggers import ClockCycles, RisingEdge, with_timeout
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
-
 
 prj_path = Path(__file__).resolve().parent.parent
 SIM = os.environ.get("SIM", "verilator")
@@ -92,30 +90,33 @@ async def test_eth_injector_replays_pcap_with_backpressure(dut):
 
 
 def test_eth_injector_runner():
-    with tempfile.TemporaryDirectory(prefix="eth_injector_pcap_") as temporary_dir:
-        pcap_file = Path(temporary_dir) / "packets.pcap"
-        write_pcap(
-            pcap_file,
-            [(0, bytes(range(1, 11))), (1, bytes(range(0xA0, 0xA8)))],
-        )
-        runner = get_runner(SIM)
-        runner.build(
-            hdl_toplevel="eth_injector_tb",
-            sources=[
-                *resolve_flt(prj_path / "eth_injector.flt"),
-                prj_path / "tests" / "eth_injector_tb.sv",
-            ],
-            parameters={"PCAP_FILE": f'"{pcap_file.as_posix()}"'},
-            always=True,
-            build_args=["--timing", "-Wno-ZERODLY", "-Wno-MULTIDRIVEN"],
-            waves=True,
-        )
-        runner.test(
-            hdl_toplevel="eth_injector_tb",
-            hdl_toplevel_lang="verilog",
-            test_module="test_eth_injector",
-            gui=GUI,
-        )
+    run_dir = prj_path / "sim_build" / "eth_injector"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    pcap_file = run_dir / "packets.pcap"
+    write_pcap(
+        pcap_file,
+        [(0, bytes(range(1, 11))), (1, bytes(range(0xA0, 0xA8)))],
+    )
+    runner = get_runner(SIM)
+    runner.build(
+        hdl_toplevel="eth_injector_tb",
+        sources=[
+            *resolve_flt(prj_path / "eth_injector.flt"),
+            prj_path / "tests" / "eth_injector_tb.sv",
+        ],
+        parameters={"PCAP_FILE": f'"{pcap_file.as_posix()}"'},
+        always=True,
+        build_args=["--timing", "-Wno-ZERODLY", "-Wno-MULTIDRIVEN"],
+        waves=True,
+        build_dir=run_dir,
+    )
+    runner.test(
+        hdl_toplevel="eth_injector_tb",
+        hdl_toplevel_lang="verilog",
+        test_module="test_eth_injector",
+        gui=GUI,
+        test_dir=run_dir,
+    )
 
 
 if __name__ == "__main__":
