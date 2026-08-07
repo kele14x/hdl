@@ -11,7 +11,9 @@ from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 USER_WIDTH = 17
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 
 def make_packet(num_prb, seed):
@@ -23,16 +25,15 @@ def make_packet(num_prb, seed):
         exponent = (seed + prb + 3) & 0xF
         stream_bits += "0000" + f"{exponent:04b}"
         for word in range(6):
-            values = [
-                (seed + 37 * prb + 11 * word + lane) & 0x1FF
-                for lane in range(4)
-            ]
+            values = [(seed + 37 * prb + 11 * word + lane) & 0x1FF for lane in range(4)]
             iq_word = int("".join(f"{value:09b}" for value in values), 2)
             stream_bits += f"{iq_word:036b}"
             expected.append((iq_word, exponent, prb == num_prb - 1 and word == 5))
 
     assert len(stream_bits) % 8 == 0
-    stream_bytes = [int(stream_bits[i : i + 8], 2) for i in range(0, len(stream_bits), 8)]
+    stream_bytes = [
+        int(stream_bits[i : i + 8], 2) for i in range(0, len(stream_bits), 8)
+    ]
 
     words = []
     for offset in range(0, len(stream_bytes), 8):
@@ -97,7 +98,9 @@ async def test_bfp_gearbox(dut):
 
         input_fire = bool(dut.s_axis_tvalid.value and dut.s_axis_tready.value)
         output_valid = bool(dut.m_axis_tvalid.value)
-        saw_input_backpressure |= bool(dut.s_axis_tvalid.value and not dut.s_axis_tready.value)
+        saw_input_backpressure |= bool(
+            dut.s_axis_tvalid.value and not dut.s_axis_tready.value
+        )
 
         if output_valid:
             received.append(

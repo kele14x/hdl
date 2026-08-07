@@ -26,7 +26,9 @@ CONTINUOUS_INPUT = os.environ.get("CONTINUOUS_INPUT", "false").lower() == "true"
 
 
 GUI = os.environ.get("GUI", "false").lower() == "true"
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 input_queue = Queue()
 output_queue = Queue()
@@ -186,9 +188,7 @@ def test_bfp_comp_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
-        build_args=["-suppress", "2892"]
-        if SIM == "questa"
-        else [],
+        build_args=["-suppress", "2892"] if SIM == "questa" else [],
         waves=True,
         always=True,
     )

@@ -17,7 +17,9 @@ rng = np.random.default_rng(12345)
 
 LATENCY = 4
 GUI = os.environ.get("GUI", "False").lower() == "true"
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 input_queue = Queue()
 output_queue = Queue()

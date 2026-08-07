@@ -17,7 +17,10 @@ from lowphy_tb import LowphyTB
 from hdl_tools.flt_tool import resolve_flt
 
 PRJ_PATH = Path(__file__).resolve().parent.parent
-SIM = os.environ.get("SIM", "verilator").lower()
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
+SIM = SIM.lower()
 GUI = os.environ.get("GUI", "false").lower() == "true"
 WAVES = os.environ.get("WAVES", "false").lower() == "true"
 REBUILD = os.environ.get("REBUILD", "false").lower() == "true"

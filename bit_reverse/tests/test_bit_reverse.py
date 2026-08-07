@@ -25,7 +25,9 @@ GUI = os.environ.get("GUI", "false").lower() == "true"
 
 NUM_TESTS = int(os.environ.get("NUM_TESTS", 10))
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 
 # MARK: Helper
@@ -59,8 +61,12 @@ async def reset(dut):
 async def drive(dut):
     """Drive the input data"""
     for _ in range(NUM_TESTS):
-        dr = rng.integers(-(2 ** (DATA_WIDTH - 1)), 2 ** (DATA_WIDTH - 1), size=2**LOG_FFT_SIZE)
-        di = rng.integers(-(2 ** (DATA_WIDTH - 1)), 2 ** (DATA_WIDTH - 1), size=2**LOG_FFT_SIZE)
+        dr = rng.integers(
+            -(2 ** (DATA_WIDTH - 1)), 2 ** (DATA_WIDTH - 1), size=2**LOG_FFT_SIZE
+        )
+        di = rng.integers(
+            -(2 ** (DATA_WIDTH - 1)), 2 ** (DATA_WIDTH - 1), size=2**LOG_FFT_SIZE
+        )
         for i in range(2**LOG_FFT_SIZE):
             for id in range(NUM_INLV):
                 dut.din_dr.value = int(dr[i])
@@ -85,7 +91,9 @@ async def input_monitor(dut):
     while True:
         await RisingEdge(dut.clk)
         if dut.din_valid.value and dut.din_id.value == 0:
-            input_data[i] = dut.din_dr.value.signed_integer + 1j * dut.din_di.value.signed_integer
+            input_data[i] = (
+                dut.din_dr.value.signed_integer + 1j * dut.din_di.value.signed_integer
+            )
             i += 1
             if dut.din_last.value:
                 input_queue.put_nowait(input_data)
@@ -100,7 +108,9 @@ async def output_monitor(dut):
     while True:
         await RisingEdge(dut.clk)
         if dut.dout_valid.value and dut.dout_id.value == 0:
-            output_data[i] = dut.dout_dr.value.signed_integer + 1j * dut.dout_di.value.signed_integer
+            output_data[i] = (
+                dut.dout_dr.value.signed_integer + 1j * dut.dout_di.value.signed_integer
+            )
             i += 1
             if dut.dout_last.value:
                 output_queue.put_nowait(output_data)

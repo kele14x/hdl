@@ -21,7 +21,10 @@ prj_path = Path(__file__).resolve().parent.parent
 RANDOM_TRANSFER_COUNT = int(os.getenv("RANDOM_TRANSFER_COUNT", "256"))
 
 GUI = os.getenv("GUI", "False").lower() == "true"
-SIM = os.environ.get("SIM", "verilator").lower()
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
+SIM = SIM.lower()
 
 
 @cocotb.test()

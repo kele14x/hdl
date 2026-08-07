@@ -20,13 +20,15 @@ PHASE_FRACTION_WIDTH = int(os.environ.get("PHASE_FRACTION_WIDTH", 20))
 
 GUI = os.environ.get("GUI", "FALSE") == "TRUE"
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 LATENCY = 6
 
-AMPLITUDE = 2 ** 15 - 2
+AMPLITUDE = 2**15 - 2
 PHASE_ENTRIES = (3 << (PHASE_FRACTION_WIDTH + PHASE_INTEGER_WIDTH - 2)) * NUM_PARALLEL
-TOLERANCE = math.ceil(AMPLITUDE * math.sin(2 * math.pi * 1 / 2 ** PHASE_INTEGER_WIDTH))
+TOLERANCE = math.ceil(AMPLITUDE * math.sin(2 * math.pi * 1 / 2**PHASE_INTEGER_WIDTH))
 
 input_queue = Queue()
 output_queue = Queue()
@@ -36,8 +38,14 @@ def model(state, sync, pinc, poff):
     state = poff if sync else state + pinc
     ret = (state,)
     for i in range(NUM_PARALLEL):
-        cos = round(AMPLITUDE * math.cos(2 * math.pi * (state + pinc * i / NUM_PARALLEL) / PHASE_ENTRIES))
-        sin = round(AMPLITUDE * math.sin(2 * math.pi * (state + pinc * i / NUM_PARALLEL) / PHASE_ENTRIES))
+        cos = round(
+            AMPLITUDE
+            * math.cos(2 * math.pi * (state + pinc * i / NUM_PARALLEL) / PHASE_ENTRIES)
+        )
+        sin = round(
+            AMPLITUDE
+            * math.sin(2 * math.pi * (state + pinc * i / NUM_PARALLEL) / PHASE_ENTRIES)
+        )
         ret += (cos, sin)
     return ret
 
@@ -87,8 +95,8 @@ async def output_monitor(dut):
         for i in range(NUM_PARALLEL):
             cos = (int(dut.cos.value) >> (i * 16)) & 0xFFFF
             sin = (int(dut.sin.value) >> (i * 16)) & 0xFFFF
-            cos = cos - 2 ** 16 if cos >= 2 ** 15 else cos
-            sin = sin - 2 ** 16 if sin >= 2 ** 15 else sin
+            cos = cos - 2**16 if cos >= 2**15 else cos
+            sin = sin - 2**16 if sin >= 2**15 else sin
             output += (cos, sin)
         output_queue.put_nowait(output)
 
@@ -101,14 +109,14 @@ async def checker():
             input = await input_queue.get()
             output = await output_queue.get()
             for i in range(int(len(output) / 2)):
-                f.write(f"{output[i*2]}, {output[i*2+1]}\n")
+                f.write(f"{output[i * 2]}, {output[i * 2 + 1]}\n")
             n += 1
 
             (state, *ref) = model(state, input[0], input[1], input[2])
             for i in range(len(output)):
-                assert (
-                    abs(ref[i] - output[i]) < TOLERANCE
-                ), f"ref = {ref}, output = {output}"
+                assert abs(ref[i] - output[i]) < TOLERANCE, (
+                    f"ref = {ref}, output = {output}"
+                )
 
 
 @cocotb.test()

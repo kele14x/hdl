@@ -27,7 +27,9 @@ GAIN_WIDTH = int(os.environ.get("GAIN_WIDTH", "16"))
 
 GUI = os.environ.get("GUI", "False").lower() == "true"
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 CTRL_GAIN_DR = rng.integers(
     -(2 ** (GAIN_WIDTH - 1)), 2 ** (GAIN_WIDTH - 1), size=NUM_ANT

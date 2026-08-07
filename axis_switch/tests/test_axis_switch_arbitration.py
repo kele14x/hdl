@@ -16,7 +16,9 @@ NUM_SRC = 2
 NUM_DEST = 2
 DATA_WIDTH = 8
 USER_WIDTH = 2
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
 
@@ -87,7 +89,9 @@ async def test_axis_switch_serializes_contending_broadcast_packets(dut):
         dut.s_axis_tvalid.value = source_valid
 
         await ReadOnly()
-        source_ready = [get_lane(dut.s_axis_tready, source, 1) for source in range(NUM_SRC)]
+        source_ready = [
+            get_lane(dut.s_axis_tready, source, 1) for source in range(NUM_SRC)
+        ]
         output_snapshot = []
         for destination in range(NUM_DEST):
             valid = get_lane(dut.m_axis_tvalid, destination, 1)
@@ -152,7 +156,9 @@ async def test_axis_switch_serializes_contending_broadcast_packets(dut):
                     break
             break
     else:
-        raise AssertionError(f"contending packets did not complete: word_index={word_index}")
+        raise AssertionError(
+            f"contending packets did not complete: word_index={word_index}"
+        )
 
     assert received == [expected, expected]
     assert first_ready_cycle[0] is not None

@@ -22,7 +22,9 @@ rng = np.random.default_rng(1234567890)
 
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 TEST_NUM_PACKETS = int(os.environ.get("TEST_NUM_PACKETS", 100))
 
@@ -87,7 +89,6 @@ async def send_packet(dut, packet, user=None, timestamp=0):
 async def drive(dut):
     """Drive the input of DUT"""
     for _ in range(TEST_NUM_PACKETS):
-
         ethertype = rng.choice([0x0800, 0x88F7, 0xAEFE])
 
         if ethertype == 0x0800:

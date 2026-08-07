@@ -10,7 +10,9 @@ from cocotb_tools.runner import get_runner
 
 prj_path = Path(__file__).resolve().parent.parent
 half_block = int(os.environ.get("HALF_BLOCK", "0"))
-sim = os.environ.get("SIM", "verilator")
+sim = os.environ.get("SIM")
+if not sim:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 cc_id = 3
 
 

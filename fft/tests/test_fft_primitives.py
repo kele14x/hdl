@@ -11,7 +11,9 @@ from cocotb_tools.runner import get_runner
 from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 DATA_WIDTH = 8
 LOG_FFT_SIZE = 4
 NUM_ANT = 4

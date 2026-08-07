@@ -12,7 +12,9 @@ from fft.tests.fft_fixed_model import FftConfig, bit_reverse_indices, fft_fixed
 from hdl_tools.flt_tool import resolve_flt
 
 PRJ_PATH = Path(__file__).resolve().parent.parent
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 NUM_ANT = 4
 
 

@@ -16,7 +16,9 @@ from hdl_tools.flt_tool import resolve_flt
 
 
 PRJ_PATH = Path(__file__).resolve().parent.parent
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 ADDR_WIDTH = int(os.environ.get("ADDR_WIDTH", "32"))
 DATA_WIDTH = int(os.environ.get("DATA_WIDTH", "32"))
 DATA_XOR = 0xDEAD_BEEF

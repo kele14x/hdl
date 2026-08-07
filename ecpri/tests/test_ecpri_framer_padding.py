@@ -24,7 +24,9 @@ rng = np.random.default_rng(1234567890)
 
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 TEST_NUM_PACKETS = 1000
 TEST_PACKET_SIZE_MIN = 1

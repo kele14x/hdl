@@ -20,7 +20,9 @@ PARALLEL_OUTPUT = int(os.environ.get("PARALLEL_OUTPUT", 1))
 
 GUI = os.environ.get("GUI", "False") == "True"
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 
 async def reset(dut):

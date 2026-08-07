@@ -21,7 +21,9 @@ rng = np.random.default_rng()
 
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 
 # MARK: Helper
@@ -144,7 +146,9 @@ async def message_driver(dut):
                     tkeep += 1 << j
             dut.s_message_tdata.value = tdata
             dut.s_message_tkeep.value = tkeep
-            dut.s_message_tlast.value = 1 if i == (len(packet_bytes) + 3) // 4 - 1 else 0
+            dut.s_message_tlast.value = (
+                1 if i == (len(packet_bytes) + 3) // 4 - 1 else 0
+            )
             dut.s_message_tvalid.value = 1
             await RisingEdge(dut.clk)
             # Wait for the ready signal

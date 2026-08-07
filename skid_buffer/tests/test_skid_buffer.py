@@ -26,7 +26,9 @@ prj_path = Path(__file__).resolve().parent.parent
 
 DATA_WIDTH = int(os.environ.get("DATA_WIDTH", 8))
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 
 def random_transfer_count_from_env(default: int) -> int:
@@ -138,7 +140,11 @@ class SAgent:
             await _edge(self.dut)
             cycle += 1
             if int(self.dut.s_vld_i.value) and int(self.dut.s_rdy_o.value):
-                gap = 0 if last_handshake_cycle is None else cycle - last_handshake_cycle - 1
+                gap = (
+                    0
+                    if last_handshake_cycle is None
+                    else cycle - last_handshake_cycle - 1
+                )
                 self.observed.append(
                     STransaction(data=int(self.dut.s_data_i.value), pre_packet_gap=gap)
                 )
@@ -214,7 +220,9 @@ class TransferScoreboard:
             if len(self.m_agent.observed) >= count:
                 return
             await _edge(self.s_agent.dut)
-        raise TimeoutError(f"Timed out waiting for {count} M transfers; got {len(self.m_agent.observed)}")
+        raise TimeoutError(
+            f"Timed out waiting for {count} M transfers; got {len(self.m_agent.observed)}"
+        )
 
     def check(self, s_vector: SSequence, m_vector: MSequence) -> None:
         expected_data = [transaction.data for transaction in s_vector]
@@ -295,7 +303,9 @@ class TransferTestbench:
         post_idle_cycles: int = 10,
     ) -> None:
         if len(s_vector) != len(m_vector):
-            raise ValueError("S and M vectors must contain the same number of transactions")
+            raise ValueError(
+                "S and M vectors must contain the same number of transactions"
+            )
         if post_idle_cycles < 0:
             raise ValueError("post_idle_cycles must be non-negative")
 

@@ -12,7 +12,9 @@ from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
 
@@ -22,7 +24,9 @@ async def wait_ready(dut):
         await ReadOnly()
         if int(dut.src_ready.value):
             return
-    raise AssertionError("source did not become ready after the acknowledgement round trip")
+    raise AssertionError(
+        "source did not become ready after the acknowledgement round trip"
+    )
 
 
 @cocotb.test()

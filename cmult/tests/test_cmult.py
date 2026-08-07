@@ -17,7 +17,9 @@ prj_path = Path(__file__).resolve().parent.parent
 rng = np.random.default_rng(12345)
 
 GUI = os.environ.get("GUI", "False").lower() == "true"
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 
 def get_latency(dut):

@@ -24,7 +24,9 @@ DATA_WIDTH = int(os.environ.get("DATA_WIDTH", 64))
 USER_WIDTH = int(os.environ.get("USER_WIDTH", 1))
 
 GUI = os.environ.get("GUI", "false").lower() == "true"
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 TEST_NUM_PACKETS = 100
 TEST_PACKET_SIZE_MIN = 1
@@ -110,7 +112,10 @@ async def slave_monitor(dut):
                 discarded = True
             # Read the data
             num_bytes = DATA_WIDTH // 8
-            a = [(int(dut.s_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(num_bytes)]
+            a = [
+                (int(dut.s_axis_tdata.value) >> (i * 8)) & 0xFF
+                for i in range(num_bytes)
+            ]
             keep = dut.s_axis_tkeep.value
             if dut.s_axis_tlast.value:
                 assert keep in [2 ** (i + 1) - 1 for i in range(num_bytes)]
@@ -139,13 +144,16 @@ async def master_monitor(dut):
         # Read the data
         num_bytes = DATA_WIDTH // 8
         if dut.m_axis_tvalid.value and dut.m_axis_tready.value:
-            a = [(int(dut.m_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(num_bytes)]
+            a = [
+                (int(dut.m_axis_tdata.value) >> (i * 8)) & 0xFF
+                for i in range(num_bytes)
+            ]
             keep = dut.m_axis_tkeep.value
             if dut.m_axis_tlast.value:
                 assert keep in [2 ** (i + 1) - 1 for i in range(num_bytes)]
                 for i in range(num_bytes):
                     if keep == 2 ** (i + 1) - 1:
-                        p = np.append(p, a[0:i+1])
+                        p = np.append(p, a[0 : i + 1])
                 output_queue.put_nowait(p)
                 p = np.zeros(0, dtype=np.uint8)
                 check_continuous_valid = False

@@ -9,7 +9,9 @@ from cocotb.triggers import Timer
 
 prj_path = Path(__file__).resolve().parent.parent
 half_block = int(os.environ.get("HALF_BLOCK", "0"))
-sim = os.environ.get("SIM", "verilator")
+sim = os.environ.get("SIM")
+if not sim:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 
 def expected_addresses(bank, logical_re):
@@ -31,7 +33,9 @@ async def test_fdv_buffer_map(dut):
             dut.logical_re.value = logical_re
             await Timer(1, unit="ns")
 
-            expected_iq, expected_exp, expected_half = expected_addresses(bank, logical_re)
+            expected_iq, expected_exp, expected_half = expected_addresses(
+                bank, logical_re
+            )
             assert int(dut.iq_addr.value) == expected_iq
             assert int(dut.exp_addr.value) == expected_exp
             assert int(dut.iq_half.value) == expected_half

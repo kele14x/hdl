@@ -12,7 +12,9 @@ from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
 
@@ -26,7 +28,9 @@ async def wait_for_value(signal, clock, value, cycles=20):
         await ReadWrite()
         if int(signal.value) == value:
             return
-    raise AssertionError(f"{signal._name} did not become {value} within {cycles} cycles")
+    raise AssertionError(
+        f"{signal._name} did not become {value} within {cycles} cycles"
+    )
 
 
 @cocotb.test()
@@ -206,13 +210,22 @@ def test_cdc_gray_runner():
 
 
 def test_cdc_pulse_runner():
-    run("cdc_pulse", {"DEST_SYNC_FF": 2, "INIT_SYNC_FF": 1, "REG_OUTPUT": 1, "RST_USED": 1})
+    run(
+        "cdc_pulse",
+        {"DEST_SYNC_FF": 2, "INIT_SYNC_FF": 1, "REG_OUTPUT": 1, "RST_USED": 1},
+    )
 
 
 def test_cdc_handshake_runner():
     run(
         "cdc_handshake_f",
-        {"DEST_EXT_HSK": 1, "DEST_SYNC_FF": 2, "INIT_SYNC_FF": 1, "SRC_SYNC_FF": 2, "WIDTH": 8},
+        {
+            "DEST_EXT_HSK": 1,
+            "DEST_SYNC_FF": 2,
+            "INIT_SYNC_FF": 1,
+            "SRC_SYNC_FF": 2,
+            "WIDTH": 8,
+        },
     )
 
 

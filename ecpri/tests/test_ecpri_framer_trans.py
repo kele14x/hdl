@@ -19,7 +19,9 @@ from common.tb.packets import (
 from hdl_tools.flt_tool import resolve_flt
 
 PRJ_PATH = Path(__file__).resolve().parent.parent
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 GUI = os.environ.get("GUI", "false").lower() == "true"
 TEST_HAS_VLAN = int(os.environ.get("TEST_HAS_VLAN", "1"))
 TEST_NUM_PACKETS = int(os.environ.get("TEST_NUM_PACKETS", "100"))

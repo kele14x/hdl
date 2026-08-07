@@ -19,7 +19,9 @@ FREQ = int(os.environ.get("FREQ", "1"))
 
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 
 async def reset(dut):

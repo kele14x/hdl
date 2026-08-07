@@ -15,7 +15,9 @@ prj_path = Path(__file__).resolve().parent.parent
 
 WIDTH = 8
 DEPTH = 8
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
 

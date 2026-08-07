@@ -21,7 +21,9 @@ import libbfp  # noqa: E402
 UD_COMP_METH = int(os.environ.get("UD_COMP_WIDTH", 1))
 UD_IQ_WIDTH = int(os.environ.get("UD_IQ_WIDTH", 9))
 FS_OFFSET = int(os.environ.get("FS_OFFSET", 0))
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 input_queue = Queue()
 output_queue = Queue()
@@ -156,9 +158,7 @@ def test_bfp_decomp_runner():
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
-        build_args=["-suppress", "2892"]
-        if SIM == "questa"
-        else [],
+        build_args=["-suppress", "2892"] if SIM == "questa" else [],
         waves=True,
         always=True,
     )

@@ -20,7 +20,9 @@ LATENCY = 10
 
 GUI = os.environ.get("GUI", "False").lower() == "true"
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 CTRL_PHASE_COMP = rng.integers(0, 2**31, size=16)
 

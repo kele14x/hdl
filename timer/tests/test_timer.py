@@ -19,7 +19,9 @@ NS_PER_SECOND = 100_000 if SIM_SPEED_UP else 1_000_000_000
 
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 
 REG_VERSION = 0x0

@@ -24,7 +24,9 @@ FIFO_LATENCY = int(os.environ.get("FIFO_LATENCY", 3))
 USER_WIDTH = int(os.environ.get("USER_WIDTH", 1))
 
 GUI = os.environ.get("GUI", "false").lower() == "true"
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 TEST_NUM_PACKETS = 100
 TEST_PACKET_SIZE_MIN = 1
@@ -179,7 +181,9 @@ async def test_axis_fifo(dut):
     # Create clock and start it
     cocotb.start_soon(Clock(dut.s_axis_aclk, 8, units="ns").start(start_high=False))
     if ASYNC_MODE:
-        cocotb.start_soon(Clock(dut.m_axis_aclk, 10, units="ns").start(start_high=False))
+        cocotb.start_soon(
+            Clock(dut.m_axis_aclk, 10, units="ns").start(start_high=False)
+        )
     else:
         cocotb.start_soon(Clock(dut.m_axis_aclk, 8, units="ns").start(start_high=False))
 

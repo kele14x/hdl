@@ -28,7 +28,9 @@ prj_path = Path(__file__).resolve().parent.parent
 ADDR_WIDTH = int(os.environ.get("ADDR_WIDTH", 32))
 DATA_WIDTH = int(os.environ.get("DATA_WIDTH", 32))
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 DATA_XOR = 0xDEADBEEF
 
@@ -152,9 +154,15 @@ class ARAgent:
             await _edge(self.dut)
             cycle += 1
             if int(self.dut.arvalid.value) and int(self.dut.arready.value):
-                gap = 0 if last_handshake_cycle is None else cycle - last_handshake_cycle - 1
+                gap = (
+                    0
+                    if last_handshake_cycle is None
+                    else cycle - last_handshake_cycle - 1
+                )
                 self.observed.append(
-                    ARTransaction(address=int(self.dut.araddr.value), pre_packet_gap=gap)
+                    ARTransaction(
+                        address=int(self.dut.araddr.value), pre_packet_gap=gap
+                    )
                 )
                 last_handshake_cycle = cycle
 
@@ -249,7 +257,11 @@ class BramReadModel:
         return 2 if self.error_fn(address) else 0
 
     def _latency_for(self, address: int) -> int:
-        value = self.latency(address, len(self.requests)) if callable(self.latency) else self.latency
+        value = (
+            self.latency(address, len(self.requests))
+            if callable(self.latency)
+            else self.latency
+        )
         if value < 0:
             raise ValueError("BRAM latency must be non-negative")
         return value
@@ -303,11 +315,15 @@ class ReadScoreboard:
             if len(self.r_agent.observed) >= count:
                 return
             await _edge(self.ar_agent.dut)
-        raise TimeoutError(f"Timed out waiting for {count} R transfers; got {len(self.r_agent.observed)}")
+        raise TimeoutError(
+            f"Timed out waiting for {count} R transfers; got {len(self.r_agent.observed)}"
+        )
 
     def check(self, ar_vector: ARSequence, r_vector: RSequence) -> None:
         expected_addresses = [transaction.address for transaction in ar_vector]
-        observed_addresses = [transaction.address for transaction in self.ar_agent.observed]
+        observed_addresses = [
+            transaction.address for transaction in self.ar_agent.observed
+        ]
         if observed_addresses != expected_addresses:
             raise AssertionError(
                 f"AR monitor mismatch: observed={observed_addresses!r}, expected={expected_addresses!r}"
@@ -321,7 +337,9 @@ class ReadScoreboard:
                 f"Read count mismatch: AR={len(expected_addresses)}, R={len(self.r_agent.observed)}"
             )
 
-        for index, (address, response) in enumerate(zip(expected_addresses, self.r_agent.observed)):
+        for index, (address, response) in enumerate(
+            zip(expected_addresses, self.r_agent.observed)
+        ):
             expected_data = self.ram.expected_data(address)
             expected_resp = self.ram.expected_resp(address)
             if response.resp != expected_resp:
@@ -388,7 +406,9 @@ class ReadTestbench:
         post_idle_cycles: int = 10,
     ) -> None:
         if len(ar_vector) != len(r_vector):
-            raise ValueError("AR and R vectors must contain the same number of transactions")
+            raise ValueError(
+                "AR and R vectors must contain the same number of transactions"
+            )
         if post_idle_cycles < 0:
             raise ValueError("post_idle_cycles must be non-negative")
 
@@ -431,7 +451,9 @@ async def test_single_read(dut):
 @cocotb.test()
 async def test_bram_errors(dut):
     """BRAM read errors must become AXI SLVERR responses."""
-    tb = await make_testbench(dut, latency=1, bram_error=lambda address: address == 0x104)
+    tb = await make_testbench(
+        dut, latency=1, bram_error=lambda address: address == 0x104
+    )
     addresses = [0x100, 0x104, 0x108]
     await tb.run(
         ARSequence([ARTransaction(address) for address in addresses]),
@@ -482,7 +504,9 @@ async def test_random_reads(dut):
     tb = await make_testbench(dut, latency=lambda _address, index: index % 4)
     num_reads = random_read_count_from_env(250)
     addresses = [rng.randrange(0, 0x1_0000) * 4 for _ in range(num_reads)]
-    ar_vector = ARSequence([ARTransaction(address, rng.randrange(0, 4)) for address in addresses])
+    ar_vector = ARSequence(
+        [ARTransaction(address, rng.randrange(0, 4)) for address in addresses]
+    )
     r_vector = RSequence([RTransaction(rng.choice([-1, 0, 1, 2])) for _ in addresses])
     await tb.run(ar_vector, r_vector, timeout_cycles=20_000)
 

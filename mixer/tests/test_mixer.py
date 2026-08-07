@@ -20,7 +20,9 @@ LATENCY = 13
 
 GUI = os.environ.get("GUI", "False").lower() == "true"
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 CTRL_PINC = np.zeros(NUM_ANT)
 CTRL_PINC[0] = 1600
@@ -112,7 +114,13 @@ async def checker():
         (din_dr, din_di, din_sf, din_sl, din_sy, din_chn, din_dv) = input
         (dout_dr, dout_di, dout_sf, dout_sl, dout_sy, dout_chn, dout_dv) = output
 
-        assert (dout_sf, dout_sl, dout_sy, dout_chn, dout_dv) == (din_sf, din_sl, din_sy, din_chn, din_dv)
+        assert (dout_sf, dout_sl, dout_sy, dout_chn, dout_dv) == (
+            din_sf,
+            din_sl,
+            din_sy,
+            din_chn,
+            din_dv,
+        )
         # assert (dout_dr, dout_di) == (dout_dr_ref, dout_di_ref), (
         #     f"Result mismatch! "
         #     f"Input: din_dr = {din_dr}, din_di = {din_di}; "

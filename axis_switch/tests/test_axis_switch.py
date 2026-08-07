@@ -16,7 +16,9 @@ NUM_SRC = 1
 NUM_DEST = 2
 DATA_WIDTH = 8
 USER_WIDTH = 2
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
 
@@ -85,7 +87,9 @@ async def test_axis_switch_broadcasts_packets_under_backpressure(dut):
                 active.append((destination, data, user, last))
 
             await Timer(1, unit="ps")
-            source_ready = [get_lane(dut.s_axis_tready, source, 1) for source in range(NUM_SRC)]
+            source_ready = [
+                get_lane(dut.s_axis_tready, source, 1) for source in range(NUM_SRC)
+            ]
             output_before_edge = []
             for destination in range(NUM_DEST):
                 valid = get_lane(dut.m_axis_tvalid, destination, 1)
@@ -124,7 +128,10 @@ async def test_axis_switch_broadcasts_packets_under_backpressure(dut):
                 else:
                     word_index[source] += 1
 
-            if all(packet_index[source] == len(packets[source]) for source in range(NUM_SRC)):
+            if all(
+                packet_index[source] == len(packets[source])
+                for source in range(NUM_SRC)
+            ):
                 return
             await Timer(4, unit="ns")
         raise AssertionError("source packets did not complete")

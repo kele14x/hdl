@@ -21,7 +21,9 @@ rng = np.random.default_rng(1234567890)
 
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 TEST_NUM_PACKETS = 100
 TEST_PACKET_SIZE_MIN = 1
@@ -55,7 +57,9 @@ async def reset(dut):
 async def slave_driver(dut):
     """Drive the slave side of DUT"""
     for _ in range(TEST_NUM_PACKETS):
-        packet_size = rng.integers(TEST_PACKET_SIZE_MIN, TEST_PACKET_SIZE_MAX, endpoint=True)
+        packet_size = rng.integers(
+            TEST_PACKET_SIZE_MIN, TEST_PACKET_SIZE_MAX, endpoint=True
+        )
         packet_bytes = rng.bytes(packet_size)
 
         # Pre-packet gap
@@ -100,7 +104,10 @@ async def slave_monitor(dut):
     while True:
         await RisingEdge(dut.clk)
         if dut.s_axis_tvalid.value and dut.s_axis_tready.value:
-            a = [(int(dut.s_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(DATA_BYTES)]
+            a = [
+                (int(dut.s_axis_tdata.value) >> (i * 8)) & 0xFF
+                for i in range(DATA_BYTES)
+            ]
             keep = dut.s_axis_tkeep.value
             if dut.s_axis_tlast.value:
                 if keep == 1:
@@ -134,7 +141,10 @@ async def master_monitor(dut):
     while True:
         await RisingEdge(dut.clk)
         if dut.m_axis_tvalid.value and dut.m_axis_tready.value:
-            a = [(int(dut.m_axis_tdata.value) >> (i * 8)) & 0xFF for i in range(DATA_BYTES)]
+            a = [
+                (int(dut.m_axis_tdata.value) >> (i * 8)) & 0xFF
+                for i in range(DATA_BYTES)
+            ]
             keep = dut.m_axis_tkeep.value
             if dut.m_axis_tlast.value:
                 if keep == 1:

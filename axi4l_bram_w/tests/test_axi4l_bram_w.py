@@ -28,7 +28,9 @@ prj_path = Path(__file__).resolve().parent.parent
 ADDR_WIDTH = int(os.environ.get("ADDR_WIDTH", 32))
 DATA_WIDTH = int(os.environ.get("DATA_WIDTH", 32))
 
-SIM = os.environ.get("SIM", "verilator")
+SIM = os.environ.get("SIM")
+if not SIM:
+    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 STRB_ALL = (1 << (DATA_WIDTH // 8)) - 1
 
@@ -181,9 +183,15 @@ class AWAgent:
             await _edge(self.dut)
             cycle += 1
             if int(self.dut.awvalid.value) and int(self.dut.awready.value):
-                gap = 0 if last_handshake_cycle is None else cycle - last_handshake_cycle - 1
+                gap = (
+                    0
+                    if last_handshake_cycle is None
+                    else cycle - last_handshake_cycle - 1
+                )
                 self.observed.append(
-                    AWTransaction(address=int(self.dut.awaddr.value), pre_packet_gap=gap)
+                    AWTransaction(
+                        address=int(self.dut.awaddr.value), pre_packet_gap=gap
+                    )
                 )
                 last_handshake_cycle = cycle
 
@@ -218,7 +226,11 @@ class WAgent:
             await _edge(self.dut)
             cycle += 1
             if int(self.dut.wvalid.value) and int(self.dut.wready.value):
-                gap = 0 if last_handshake_cycle is None else cycle - last_handshake_cycle - 1
+                gap = (
+                    0
+                    if last_handshake_cycle is None
+                    else cycle - last_handshake_cycle - 1
+                )
                 self.observed.append(
                     WTransaction(
                         data=int(self.dut.wdata.value),
@@ -314,7 +326,11 @@ class BramWriteModel:
         return 2 if self.error_fn(address) else 0
 
     def _latency_for(self, address: int) -> int:
-        value = self.latency(address, len(self.writes)) if callable(self.latency) else self.latency
+        value = (
+            self.latency(address, len(self.writes))
+            if callable(self.latency)
+            else self.latency
+        )
         if value < 0:
             raise ValueError("BRAM latency must be non-negative")
         return value
@@ -359,7 +375,9 @@ class BramWriteModel:
 class WriteScoreboard:
     """Checks monitor output against the vectors and the BRAM reference model."""
 
-    def __init__(self, aw_agent: AWAgent, w_agent: WAgent, b_agent: BAgent, ram: BramWriteModel):
+    def __init__(
+        self, aw_agent: AWAgent, w_agent: WAgent, b_agent: BAgent, ram: BramWriteModel
+    ):
         self.aw_agent = aw_agent
         self.w_agent = w_agent
         self.b_agent = b_agent
@@ -370,17 +388,28 @@ class WriteScoreboard:
             if len(self.b_agent.observed) >= count:
                 return
             await _edge(self.b_agent.dut)
-        raise TimeoutError(f"Timed out waiting for {count} B transfers; got {len(self.b_agent.observed)}")
+        raise TimeoutError(
+            f"Timed out waiting for {count} B transfers; got {len(self.b_agent.observed)}"
+        )
 
-    def check(self, aw_vector: AWSequence, w_vector: WSequence, b_vector: BSequence) -> None:
+    def check(
+        self, aw_vector: AWSequence, w_vector: WSequence, b_vector: BSequence
+    ) -> None:
         expected_addresses = [transaction.address for transaction in aw_vector]
-        observed_addresses = [transaction.address for transaction in self.aw_agent.observed]
+        observed_addresses = [
+            transaction.address for transaction in self.aw_agent.observed
+        ]
         if observed_addresses != expected_addresses:
             raise AssertionError(
                 f"AW monitor mismatch: observed={observed_addresses!r}, expected={expected_addresses!r}"
             )
-        expected_payloads = [(transaction.data, transaction.strb) for transaction in w_vector]
-        observed_payloads = [(transaction.data, transaction.strb) for transaction in self.w_agent.observed]
+        expected_payloads = [
+            (transaction.data, transaction.strb) for transaction in w_vector
+        ]
+        observed_payloads = [
+            (transaction.data, transaction.strb)
+            for transaction in self.w_agent.observed
+        ]
         if observed_payloads != expected_payloads:
             raise AssertionError(
                 f"W monitor mismatch: observed={observed_payloads!r}, expected={expected_payloads!r}"
@@ -394,7 +423,9 @@ class WriteScoreboard:
                 f"Write count mismatch: AW={len(expected_addresses)}, B={len(self.b_agent.observed)}"
             )
 
-        for index, (address, response) in enumerate(zip(expected_addresses, self.b_agent.observed)):
+        for index, (address, response) in enumerate(
+            zip(expected_addresses, self.b_agent.observed)
+        ):
             expected_resp = self.ram.expected_resp(address)
             if response.resp != expected_resp:
                 raise AssertionError(
@@ -484,7 +515,9 @@ class WriteTestbench:
         post_idle_cycles: int = 10,
     ) -> None:
         if not (len(aw_vector) == len(w_vector) == len(b_vector)):
-            raise ValueError("AW, W and B vectors must contain the same number of transactions")
+            raise ValueError(
+                "AW, W and B vectors must contain the same number of transactions"
+            )
         if post_idle_cycles < 0:
             raise ValueError("post_idle_cycles must be non-negative")
 
@@ -542,11 +575,15 @@ async def test_single_write(dut):
 @cocotb.test()
 async def test_bram_errors(dut):
     """BRAM write errors must become AXI SLVERR responses."""
-    tb = await make_testbench(dut, latency=1, bram_error=lambda address: address == 0x104)
+    tb = await make_testbench(
+        dut, latency=1, bram_error=lambda address: address == 0x104
+    )
     addresses = [0x100, 0x104, 0x108]
     await tb.run(
         AWSequence([AWTransaction(address) for address in addresses]),
-        WSequence([WTransaction(0xABCD_0000 + index) for index in range(len(addresses))]),
+        WSequence(
+            [WTransaction(0xABCD_0000 + index) for index in range(len(addresses))]
+        ),
         BSequence([BTransaction(-1) for _ in addresses]),
     )
 
@@ -559,7 +596,9 @@ async def test_back_to_back_writes(dut):
     strbs = [0xF, 0x1, 0x3, 0xC, 0x5]
     await tb.run(
         AWSequence([AWTransaction(0x100 + 4 * index) for index in range(count)]),
-        WSequence([WTransaction(0xA5A5_0000 + index, strbs[index]) for index in range(count)]),
+        WSequence(
+            [WTransaction(0xA5A5_0000 + index, strbs[index]) for index in range(count)]
+        ),
         BSequence([BTransaction(-1) for _ in range(count)]),
     )
 
@@ -611,7 +650,10 @@ async def test_random_writes(dut):
     tb = await make_testbench(dut, latency=lambda _address, index: index % 4)
     num_writes = random_write_count_from_env(250)
     aw_vector = AWSequence(
-        [AWTransaction(rng.randrange(0, 0x1_0000) * 4, rng.randrange(0, 4)) for _ in range(num_writes)]
+        [
+            AWTransaction(rng.randrange(0, 0x1_0000) * 4, rng.randrange(0, 4))
+            for _ in range(num_writes)
+        ]
     )
     w_vector = WSequence(
         [
@@ -623,7 +665,9 @@ async def test_random_writes(dut):
             for _ in range(num_writes)
         ]
     )
-    b_vector = BSequence([BTransaction(rng.choice([-1, 0, 1, 2])) for _ in range(num_writes)])
+    b_vector = BSequence(
+        [BTransaction(rng.choice([-1, 0, 1, 2])) for _ in range(num_writes)]
+    )
     await tb.run(aw_vector, w_vector, b_vector, timeout_cycles=20_000)
 
 
