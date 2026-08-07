@@ -130,8 +130,8 @@ module ram_sdp_asym #(
 
   localparam XpmInitParam = INIT_FILE == "NONE" ? "0" : "";
 
-  logic [DATA_WIDTH-1:0] xpm_dout;
-  logic [DATA_WIDTH-1:0] output_reg;
+  logic [DATA_WIDTH_B-1:0] xpm_dout;
+  logic [DATA_WIDTH_B-1:0] output_reg;
 
   logic                  xpm_rstb;
 
@@ -194,21 +194,21 @@ module ram_sdp_asym #(
   );
 
   // XPM's reset is connected only when its output is also the core output.
-  assign xpm_rstb = rstb && (READ_LATENCY == XpmReadLatency);
+  assign xpm_rstb = rstb && (READ_LATENCY_B == XpmReadLatency);
 
   generate
-    if (READ_LATENCY > XpmReadLatency) begin : g_output_reg
+    if (READ_LATENCY_B > XpmReadLatency) begin : g_output_reg
       always_ff @(posedge clkb) begin
         if (rstb) begin
-          output_reg <= {DATA_WIDTH{1'b0}};
-        end else if (en[READ_LATENCY-1]) begin
+          output_reg <= {DATA_WIDTH_B{1'b0}};
+        end else if (enb[READ_LATENCY_B-1]) begin
           output_reg <= xpm_dout;
         end
       end
 
-      assign dout = output_reg;
+      assign doutb = output_reg;
     end else begin : g_xpm_output
-      assign dout = xpm_dout;
+      assign doutb = xpm_dout;
     end
   endgenerate
 
