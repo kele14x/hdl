@@ -276,7 +276,6 @@ module eth_pkt_fifo #(
   ) i_buffer (
       // Port A
       .clka (aclk),
-      .ena  (wr_we),
       .wea  (wr_we),
       .addra(wr_addr),
       .dina (wr_data),

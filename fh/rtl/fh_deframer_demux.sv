@@ -319,7 +319,6 @@ module fh_deframer_demux (
       .INIT_FILE   ("NONE")
   ) i_ram (
       .clka (rx_eth_clk),
-      .ena  (wr_en),
       .wea  (wr_en),
       .addra(wr_addr),
       .dina (wr_data),

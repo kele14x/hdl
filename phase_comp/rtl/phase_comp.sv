@@ -134,7 +134,6 @@ module phase_comp #(
       .INIT_FILE   ("NONE")
   ) i_ram (
       .clka (ctrl_clk),
-      .ena  (1'b1),
       .wea  (ctrl_phase_comp_we),
       .addra(ctrl_phase_comp_addr),
       .dina (ctrl_phase_comp_din),

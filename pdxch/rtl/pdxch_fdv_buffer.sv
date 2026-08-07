@@ -185,7 +185,6 @@ module pdxch_fdv_buffer #(
           .RAM_STYLE   ("BLOCK")
       ) u_iq_ram (
           .clka (clk_eth_xran),
-          .ena  (wr_iq_en[ant]),
           .wea  (wr_iq_en[ant]),
           .addra(wr_iq_addr[ant]),
           .dina (wr_iq_data[ant]),
@@ -206,7 +205,6 @@ module pdxch_fdv_buffer #(
           .RAM_STYLE   ("BLOCK")
       ) u_exp_ram (
           .clka (clk_eth_xran),
-          .ena  (wr_exp_en[ant]),
           .wea  (wr_exp_en[ant]),
           .addra(wr_exp_addr[ant]),
           .dina (wr_exp_data[ant]),

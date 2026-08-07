@@ -216,7 +216,6 @@ module pdxch_block2stream #(
           .INIT_FILE   ("NONE")
       ) u_ram (
           .clka (clk),
-          .ena  (wr_en[i]),
           .wea  (wr_en[i]),
           .addra(wr_addr),
           .dina (wr_data),

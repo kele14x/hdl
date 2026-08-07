@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import shutil
-import tempfile
 from pathlib import Path
 
 import cocotb
@@ -14,7 +13,6 @@ from cocotb.triggers import ClockCycles, ReadOnly, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
-
 
 PRJ_PATH = Path(__file__).resolve().parent.parent
 NUM_ANT = 4
@@ -140,7 +138,7 @@ async def test_three_explicit_banks_follow_the_existing_address_mapping(dut):
                 continue
 
             physical_address = int(dut.wr_addr.value)
-            selected = [int(bank.ena.value) for bank in banks]
+            selected = [int(bank.wea.value) for bank in banks]
             assert sum(selected) == 1
             selected_bank = selected.index(1)
             assert selected_bank == physical_address >> RAM_BANK_ADDR_WIDTH
@@ -229,23 +227,23 @@ async def test_readback_preserves_bit_reverse_order_across_all_memory_banks(dut)
 
 def test_prach_stream2block_runner():
     runner = get_runner(SIM)
-    with tempfile.TemporaryDirectory(prefix="prach_stream2block_") as run_dir:
-        runner.build(
-            hdl_toplevel="prach_stream2block",
-            sources=resolve_flt(PRJ_PATH / "prach.flt"),
-            parameters={"NUM_ANT": NUM_ANT},
-            always=True,
-            waves=True,
-            build_dir=run_dir,
-        )
-        runner.test(
-            hdl_toplevel="prach_stream2block",
-            hdl_toplevel_lang="verilog",
-            test_module="test_prach_stream2block",
-            waves=True,
-            gui=os.environ.get("GUI", "false").lower() == "true",
-            test_dir=run_dir,
-        )
+    run_dir = PRJ_PATH / "sim_build" / "prach_stream2block"
+    runner.build(
+        hdl_toplevel="prach_stream2block",
+        sources=resolve_flt(PRJ_PATH / "prach.flt"),
+        parameters={"NUM_ANT": NUM_ANT},
+        always=True,
+        waves=True,
+        build_dir=run_dir,
+    )
+    runner.test(
+        hdl_toplevel="prach_stream2block",
+        hdl_toplevel_lang="verilog",
+        test_module="test_prach_stream2block",
+        waves=True,
+        gui=os.environ.get("GUI", "false").lower() == "true",
+        test_dir=run_dir,
+    )
 
 
 if __name__ == "__main__":

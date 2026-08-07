@@ -186,7 +186,6 @@ module fifo_sync #(
       .INIT_FILE   ("NONE")
   ) i_ram (
       .clka (clk),
-      .ena  (wr_en_mem),
       .wea  (wr_en_mem),
       .addra(wr_addr),
       .dina (din),

@@ -118,7 +118,6 @@ module shift_ram #(
   ) i_ram_sdp (
       // Port A, write port
       .clka (clk),
-      .ena  (cen),
       .wea  (cen),
       .addra(addra),
       .dina (dina),

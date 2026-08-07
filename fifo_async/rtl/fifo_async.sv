@@ -230,7 +230,6 @@ module fifo_async #(
       .INIT_FILE   ("NONE")
   ) i_ram (
       .clka (wr_clk),
-      .ena  (wr_en_mem),
       .wea  (wr_en_mem),
       .addra(wr_addr),
       .dina (wr_din),

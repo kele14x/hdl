@@ -341,7 +341,6 @@ module axis_fifo_alt #(
       .INIT_FILE   ("NONE")
   ) i_ram (
       .clka (wr_clk),
-      .ena  (wr_en),
       .wea  (wr_en),
       .addra(wr_addr),
       .dina (wr_din),

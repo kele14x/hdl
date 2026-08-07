@@ -414,7 +414,6 @@ module prach_stream2block #(
         ) u_ram (
             // Port A
             .clka (clk),
-            .ena  (wr_we[i] && (wr_addr[11:10] == 2'(j))),
             .wea  (wr_we[i] && (wr_addr[11:10] == 2'(j))),
             .addra(wr_addr[RamAddrWidth-1:0]),
             .dina (wr_data),

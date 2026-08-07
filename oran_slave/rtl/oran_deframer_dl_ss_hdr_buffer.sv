@@ -128,7 +128,6 @@ module oran_deframer_dl_ss_hdr_buffer #(
       ) i_valid_ram (
           //
           .clka          (clk),
-          .ena           (wr_en[i]),
           .wea           (wr_en[i]),
           .addra         (wr_addr[i]),
           .dina          (wr_din[i]),
@@ -156,7 +155,6 @@ module oran_deframer_dl_ss_hdr_buffer #(
           .INIT_FILE   ("NONE")
       ) i_valid_ram (
           .clka (clk),
-          .ena  (wr_en[i]),
           .wea  (wr_en[i]),
           .addra(wr_addr[i]),
           .dina (wr_din[i]),

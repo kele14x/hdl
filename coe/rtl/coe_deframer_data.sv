@@ -264,7 +264,6 @@ module coe_deframer_data (
   ) i_ram_sdp (
       // Port A
       .clka (clk),
-      .ena  (1'b1),
       .wea  (wr_we),
       .addra(wr_addr),
       .dina (wr_din),

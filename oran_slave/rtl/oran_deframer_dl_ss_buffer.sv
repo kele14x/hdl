@@ -167,7 +167,6 @@ module oran_deframer_dl_ss_buffer #(
       .WRITE_PROTECT          (1)
   ) i_data_ram (
       .clka          (clk),
-      .ena           (r1_wr_en),
       .wea           (r1_wr_en),
       .addra         (r1_wr_addr),
       .dina          (r1_wr_din),
@@ -195,7 +194,6 @@ module oran_deframer_dl_ss_buffer #(
       .INIT_FILE   ("NONE")
   ) i_data_ram (
       .clka (clk),
-      .ena  (r1_wr_en),
       .wea  (r1_wr_en),
       .addra(r1_wr_addr),
       .dina (r1_wr_din),
