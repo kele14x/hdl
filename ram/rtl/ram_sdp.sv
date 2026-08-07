@@ -17,7 +17,6 @@ module ram_sdp #(
 ) (
     // Port A, write port
     input var                     clka,
-    input var                     ena,
     input var                     wea,
     input var  [  ADDR_WIDTH-1:0] addra,
     input var  [  DATA_WIDTH-1:0] dina,
@@ -136,7 +135,7 @@ module ram_sdp #(
       .sleep         (1'b0),
       //
       .clka          (clka),
-      .ena           (ena),
+      .ena           (wea),
       .wea           (wea),
       .addra         (addra),
       .dina          (dina),
@@ -195,7 +194,7 @@ module ram_sdp #(
 
   // Memory write
   always @(posedge clka) begin
-    if (ena && wea) begin
+    if (wea) begin
       MEM[addra] <= dina;
     end
   end

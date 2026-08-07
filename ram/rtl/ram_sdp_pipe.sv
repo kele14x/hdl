@@ -16,7 +16,6 @@ module ram_sdp_pipe #(
 ) (
     // Port A
     input var                   clka,
-    input var                   ena,
     input var                   wea,
     input var  [ADDR_WIDTH-1:0] addra,
     input var  [DATA_WIDTH-1:0] dina,
@@ -57,7 +56,6 @@ module ram_sdp_pipe #(
   ) i_ram_sdp (
       // Port A
       .clka (clka),
-      .ena  (ena),
       .wea  (wea),
       .addra(addra),
       .dina (dina),

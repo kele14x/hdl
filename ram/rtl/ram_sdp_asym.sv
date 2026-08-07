@@ -176,7 +176,7 @@ module ram_sdp_asym #(
       .sleep         (1'b0),
       //
       .clka          (clka),
-      .ena           (1'b1),
+      .ena           (wea),
       .wea           (wea),
       .addra         (addra),
       .dina          (dina),

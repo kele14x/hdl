@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import shutil
 from pathlib import Path
@@ -9,7 +10,6 @@ from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from tools.flt_tool import resolve_flt
-
 
 prj_path = Path(__file__).resolve().parent.parent
 

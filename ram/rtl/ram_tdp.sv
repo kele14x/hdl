@@ -271,14 +271,14 @@ module ram_tdp #(
     end
   end
 
-  // Memory write
-
+  // Port A write
   always @(posedge clka) begin
     if (ena[0] && wea) begin
       MEM[addra] <= dina;
     end
   end
 
+  // Port B write
   always @(posedge clkb) begin
     if (enb[0] && web) begin
       MEM[addrb] <= dinb;
@@ -286,7 +286,6 @@ module ram_tdp #(
   end
 
   // Port A read
-
   always_ff @(posedge clka) begin
     if (rsta && (READ_LATENCY_A == 1)) begin
       rega[0] <= {DATA_WIDTH{1'b0}};
@@ -305,8 +304,7 @@ module ram_tdp #(
     end
   end
 
-  // Read B read
-
+  // Port B read
   always_ff @(posedge clkb) begin
     if (rstb && (READ_LATENCY_B == 1)) begin
       regb[0] <= {DATA_WIDTH{1'b0}};

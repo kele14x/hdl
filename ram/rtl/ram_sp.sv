@@ -1,6 +1,6 @@
 // File: ram_sp.sv
 // Brief: Simplified Single Port (SP) Memory.
-`timescale 1ns / 1ps
+`timescale 1 ns / 1 ps
 //
 `default_nettype none
 

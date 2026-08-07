@@ -1,7 +1,7 @@
 // File: ram_sp_pipe.sv
 // Brief: Simplified Single Port (SP) Memory, but with control (enable and
 //        reset) signal pipeline.
-`timescale 1ns / 1ps
+`timescale 1 ns / 1 ps
 //
 `default_nettype none
 
@@ -51,7 +51,7 @@ module ram_sp_pipe #(
       .DEPTH       (DEPTH),
       .INIT_FILE   (INIT_FILE),
       .RAM_STYLE   (RAM_STYLE)
-  ) i_ram_sdp (
+  ) i_ram_sd (
       // Port A
       .clk (clk),
       .rst (rst_d[READ_LATENCY-1]),
