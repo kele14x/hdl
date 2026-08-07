@@ -8,7 +8,7 @@ Multi-IP HDL monorepo (SystemVerilog/Verilog) for radio/transport DSP and networ
 
 ## Testing
 
-All cocotb tests use the **pytest + cocotb runner** pattern in `<module>/tests/test_*.py`. Run with `python <module>/tests/test_<name>.py` or `pytest <module>/tests/test_<name>.py`. Default simulator is **verilator**; override via the `SIM` env var (e.g. `SIM=questa`). Parameters are passed via the `parameters={}` dict to `runner.build()`; parametrized build cases are listed inline as a `CASES` list in the test file and fed to `@pytest.mark.parametrize` (no external case files).
+All cocotb tests use the **pytest + cocotb runner** pattern in `<module>/tests/test_*.py`. Run with `python <module>/tests/test_<name>.py` or `pytest <module>/tests/test_<name>.py`. The `SIM` env var must be set explicitly (e.g. `SIM=verilator` or `SIM=questa`); there is no default. Parameters are passed via the `parameters={}` dict to `runner.build()`; parametrized build cases are listed inline as a `CASES` list in the test file and fed to `@pytest.mark.parametrize` (no external case files). Build and run artifacts go under `<module>/sim_build/` (alongside the `.flt` file) so they stay available for debugging — new tests must not use temp directories for `build_dir`/`test_dir`.
 
 Test helper modules (e.g. `libaxi4l.py`, `libecpri.py`) live alongside the tests in `tests/`.
 
