@@ -10,6 +10,7 @@ from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
+from hdl_tools.sim import assert_x_or_zero
 
 prj_path = Path(__file__).resolve().parent.parent
 
@@ -112,7 +113,7 @@ async def test_ram_tdp_asym_packs_narrow_writes_in_little_endian_word_order(dut)
     dut.enb.value = (1 << READ_LATENCY_B) - 1
     await RisingEdge(dut.clkb)
     await ReadOnly()
-    assert not dut.doutb.value.is_resolvable
+    assert_x_or_zero(SIM, dut.doutb.value)
     await FallingEdge(dut.clkb)
     dut.enb.value = 0
     dut.rstb.value = 1
@@ -123,6 +124,7 @@ async def test_ram_tdp_asym_packs_narrow_writes_in_little_endian_word_order(dut)
 
 def test_ram_tdp_asym_runner():
     runner = get_runner(SIM)
+    run_dir = prj_path / "sim_build" / "ram_tdp_asym"
     sources = list(resolve_flt(prj_path / "ram.flt"))
     defines = {}
     if USE_XPM:
@@ -144,6 +146,7 @@ def test_ram_tdp_asym_runner():
         },
         always=True,
         waves=True,
+        build_dir=run_dir,
     )
     runner.test(
         hdl_toplevel="ram_tdp_asym",
@@ -151,6 +154,7 @@ def test_ram_tdp_asym_runner():
         test_module="test_ram_tdp_asym",
         waves=True,
         gui=GUI,
+        test_dir=run_dir,
     )
 
 

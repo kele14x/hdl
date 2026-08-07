@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import shutil
-import tempfile
 from pathlib import Path
 
 import cocotb
@@ -11,6 +10,7 @@ from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
+from hdl_tools.sim import assert_x_or_zero, quote_string_parameters
 
 prj_path = Path(__file__).resolve().parent.parent
 
@@ -253,7 +253,7 @@ async def test_ram_sp_modes_reset_enable_and_init(dut):
         # Propagate an out-of-range read through every enabled read stage.
         for _ in range(read_latency):
             await drive_cycle(dut, out_of_range_address, 0, 0, all_stages, 0)
-        assert not dut.dout.value.is_resolvable
+        assert_x_or_zero(SIM, dut.dout.value)
 
         # Reset recovers the visible output even though earlier stages may
         # still contain X, then valid reads flush those stages.
@@ -268,7 +268,7 @@ async def test_ram_sp_modes_reset_enable_and_init(dut):
 def test_ram_sp_runner(case):
     try:
         runner = get_runner(SIM)
-    except Exception as exc:  # pragma: no cover - simulator-specific failure
+    except ValueError as exc:  # pragma: no cover - simulator-specific failure
         pytest.fail(f"SIM={SIM!r} is not a supported cocotb simulator: {exc}")
 
     sources = list(resolve_flt(prj_path / "ram.flt"))
@@ -283,19 +283,22 @@ def test_ram_sp_runner(case):
     build_name = (
         f"ram_sp_{'xpm_' if USE_XPM else ''}{case['name']}_{case['ram_style'].lower()}"
     )
-    build_dir = Path(tempfile.gettempdir()) / "hdl-ram-sp-cocotb" / build_name
+    build_dir = prj_path / "sim_build" / build_name
     runner.build(
         hdl_toplevel="ram_sp",
-        verilog_sources=sources,
+        sources=sources,
         defines=defines,
-        parameters={
-            "ADDR_WIDTH": ADDR_WIDTH,
-            "DATA_WIDTH": DATA_WIDTH,
-            "WRITE_MODE": case["write_mode"],
-            "READ_LATENCY": case["read_latency"],
-            "RAM_STYLE": case["ram_style"],
-            "DEPTH": depth,
-        },
+        parameters=quote_string_parameters(
+            SIM,
+            {
+                "ADDR_WIDTH": ADDR_WIDTH,
+                "DATA_WIDTH": DATA_WIDTH,
+                "WRITE_MODE": case["write_mode"],
+                "READ_LATENCY": case["read_latency"],
+                "RAM_STYLE": case["ram_style"],
+                "DEPTH": depth,
+            },
+        ),
         always=True,
         build_dir=build_dir,
         waves=GUI,

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import shutil
-import tempfile
 from pathlib import Path
 
 import cocotb
@@ -11,6 +10,7 @@ from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
+from hdl_tools.sim import assert_x_or_zero, quote_string_parameters
 
 prj_path = Path(__file__).resolve().parent.parent
 
@@ -121,7 +121,7 @@ async def test_ram_tdp_applies_independent_port_write_modes(dut):
     dut.addrb.value = DEPTH
     await RisingEdge(dut.clkb)
     await ReadOnly()
-    assert not dut.doutb.value.is_resolvable
+    assert_x_or_zero(SIM, dut.doutb.value)
     await FallingEdge(dut.clkb)
     dut.enb.value = 0
     dut.rstb.value = 1
@@ -132,18 +132,20 @@ async def test_ram_tdp_applies_independent_port_write_modes(dut):
 
 def test_ram_tdp_runner():
     runner = get_runner(SIM)
-    with tempfile.TemporaryDirectory(prefix="ram_tdp_") as run_dir:
-        sources = list(resolve_flt(prj_path / "ram.flt"))
-        defines = {}
-        if USE_XPM:
-            sources.insert(0, Path(XPM_MEMORY_SV))
-            defines["RAM_USE_XPM"] = 1
+    run_dir = prj_path / "sim_build" / "ram_tdp"
+    sources = list(resolve_flt(prj_path / "ram.flt"))
+    defines = {}
+    if USE_XPM:
+        sources.insert(0, Path(XPM_MEMORY_SV))
+        defines["RAM_USE_XPM"] = 1
 
-        runner.build(
-            hdl_toplevel="ram_tdp",
-            sources=sources,
-            defines=defines,
-            parameters={
+    runner.build(
+        hdl_toplevel="ram_tdp",
+        sources=sources,
+        defines=defines,
+        parameters=quote_string_parameters(
+            SIM,
+            {
                 "ADDR_WIDTH": ADDR_WIDTH,
                 "DATA_WIDTH": DATA_WIDTH,
                 "WRITE_MODE_A": "WRITE_FIRST",
@@ -152,18 +154,19 @@ def test_ram_tdp_runner():
                 "READ_LATENCY_B": READ_LATENCY_B,
                 "DEPTH": DEPTH,
             },
-            always=True,
-            waves=True,
-            build_dir=run_dir,
-        )
-        runner.test(
-            hdl_toplevel="ram_tdp",
-            hdl_toplevel_lang="verilog",
-            test_module="test_ram_tdp",
-            waves=True,
-            gui=GUI,
-            test_dir=run_dir,
-        )
+        ),
+        always=True,
+        waves=True,
+        build_dir=run_dir,
+    )
+    runner.test(
+        hdl_toplevel="ram_tdp",
+        hdl_toplevel_lang="verilog",
+        test_module="test_ram_tdp",
+        waves=True,
+        gui=GUI,
+        test_dir=run_dir,
+    )
 
 
 if __name__ == "__main__":

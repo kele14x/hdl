@@ -9,8 +9,8 @@ most once, so shared dependencies and cycles are safe.
 from __future__ import annotations
 
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 __version__ = "1.0.0"
 

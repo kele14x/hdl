@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import shutil
-import tempfile
 from pathlib import Path
 
 import cocotb
@@ -11,6 +10,7 @@ from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
+from hdl_tools.sim import assert_x_or_zero
 
 prj_path = Path(__file__).resolve().parent.parent
 
@@ -116,7 +116,7 @@ async def test_ram_sdp_write_read_latency_and_read_enable_hold(dut):
         dut.enb.value = (1 << READ_LATENCY) - 1
         await RisingEdge(dut.clkb)
         await ReadOnly()
-    assert not dut.doutb.value.is_resolvable
+    assert_x_or_zero(SIM, dut.doutb.value)
 
     # The scalar reset always clears the externally visible stage.
     await FallingEdge(dut.clkb)
@@ -129,35 +129,35 @@ async def test_ram_sdp_write_read_latency_and_read_enable_hold(dut):
 
 def test_ram_sdp_runner():
     runner = get_runner(SIM)
-    with tempfile.TemporaryDirectory(prefix="ram_sdp_") as run_dir:
-        sources = list(resolve_flt(prj_path / "ram.flt"))
-        defines = {}
-        if USE_XPM:
-            sources.insert(0, Path(XPM_MEMORY_SV))
-            defines["RAM_USE_XPM"] = 1
+    run_dir = prj_path / "sim_build" / "ram_sdp"
+    sources = list(resolve_flt(prj_path / "ram.flt"))
+    defines = {}
+    if USE_XPM:
+        sources.insert(0, Path(XPM_MEMORY_SV))
+        defines["RAM_USE_XPM"] = 1
 
-        runner.build(
-            hdl_toplevel="ram_sdp",
-            sources=sources,
-            defines=defines,
-            parameters={
-                "ADDR_WIDTH": ADDR_WIDTH,
-                "DATA_WIDTH": DATA_WIDTH,
-                "DEPTH": DEPTH,
-                "READ_LATENCY": READ_LATENCY,
-            },
-            always=True,
-            waves=True,
-            build_dir=run_dir,
-        )
-        runner.test(
-            hdl_toplevel="ram_sdp",
-            hdl_toplevel_lang="verilog",
-            test_module="test_ram_sdp",
-            waves=True,
-            gui=GUI,
-            test_dir=run_dir,
-        )
+    runner.build(
+        hdl_toplevel="ram_sdp",
+        sources=sources,
+        defines=defines,
+        parameters={
+            "ADDR_WIDTH": ADDR_WIDTH,
+            "DATA_WIDTH": DATA_WIDTH,
+            "DEPTH": DEPTH,
+            "READ_LATENCY": READ_LATENCY,
+        },
+        always=True,
+        waves=True,
+        build_dir=run_dir,
+    )
+    runner.test(
+        hdl_toplevel="ram_sdp",
+        hdl_toplevel_lang="verilog",
+        test_module="test_ram_sdp",
+        waves=True,
+        gui=GUI,
+        test_dir=run_dir,
+    )
 
 
 if __name__ == "__main__":
