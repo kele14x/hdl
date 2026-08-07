@@ -9,7 +9,7 @@ from cocotb.triggers import ClockCycles
 from cocotb_tools.runner import get_runner
 
 from common.tb.timing import RadioTimingAgent, RadioTimingAgentConfig
-from tools.flt_tool import resolve_flt
+from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 

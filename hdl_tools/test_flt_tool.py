@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tools.flt_tool import main, resolve_flt
+from hdl_tools.flt_tool import main, resolve_flt
 
 
 def test_resolve_flt_expands_nested_lists_and_ignores_cycles(tmp_path: Path):

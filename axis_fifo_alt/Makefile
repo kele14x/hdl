@@ -7,7 +7,7 @@ MODULE := $(notdir $(CURDIR))
 FLT ?= $(MODULE).flt
 LINT_TOPS ?= $(MODULE)
 
-RTL_SOURCES = $(shell $(PYTHON) $(REPO_ROOT)/tools/flt_tool.py $(FLT))
+RTL_SOURCES = $(shell $(PYTHON) $(REPO_ROOT)/hdl_tools/flt_tool.py $(FLT))
 
 .PHONY: lint test
 

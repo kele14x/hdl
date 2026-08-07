@@ -14,7 +14,7 @@ from common.tb.axis import (
     AxisFrame,
     AxisRole,
 )
-from tools.flt_tool import resolve_flt
+from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 

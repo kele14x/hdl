@@ -8,7 +8,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import ReadOnly, ReadWrite, RisingEdge
 from cocotb_tools.runner import get_runner
 
-from tools.flt_tool import resolve_flt
+from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 SIM = os.environ.get("SIM", "verilator")

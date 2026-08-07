@@ -17,7 +17,7 @@ from common.tb.fifo import (
     directed_sequences,
     random_sequences,
 )
-from tools.flt_tool import resolve_flt
+from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 PARAM_SETS_FILE = Path(__file__).resolve().parent / "param_sets.json"

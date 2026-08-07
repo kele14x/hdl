@@ -15,7 +15,7 @@ from common.tb.dsp import (
     DspSampleAgentConfig,
     DspSampleSignals,
 )
-from tools.flt_tool import resolve_flt
+from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 rng = np.random.default_rng(12345)
