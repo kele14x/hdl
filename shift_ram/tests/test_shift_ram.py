@@ -5,7 +5,7 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, FallingEdge, ReadWrite, RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
@@ -21,59 +21,76 @@ if not SIM:
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
 
-async def reset(dut):
-    dut.rst.value = 1
-    dut.cen.value = 0
-    dut.din.value = 0
-    await ClockCycles(dut.clk, 3)
-    dut.rst.value = 0
-    await ClockCycles(dut.clk, 1)
-
-
 @cocotb.test()
 async def test_shift_ram_delay_and_clock_enable_hold(dut):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
-    await reset(dut)
+    dut.rst.value = 1
+    # Keep the pipeline enabled during reset with zero data so every stage
+    # captures a defined value.
+    dut.cen.value = 1
+    dut.din.value = 0
+    await ClockCycles(dut.clk, 3)
+    dut.rst.value = 0
+
+    # Flush the read pipeline with zeros so four-state simulators start from
+    # defined values instead of X.
+    for _ in range(DEPTH):
+        await RisingEdge(dut.clk)
+        dut.cen.value = 1
+        dut.din.value = 0
     assert int(dut.dout.value) == 0
 
-    # The RAM read pipeline and output register maintain the configured delay
-    # in enabled transfer clocks.
-    expected = deque([0] * DEPTH)
-    dut.cen.value = 1
+    # Inputs are driven right after the sampling edge, so the DUT captures
+    # them on the following edge, and a read taken right after a RisingEdge
+    # shows the output from the previous edge. Together that makes the
+    # observable delay DEPTH + 1 loop iterations.
+    expected = deque([0] * (DEPTH + 1))
     for data in range(1, 20):
-        dut.din.value = data
         await RisingEdge(dut.clk)
-        await ReadWrite()
+        dut.cen.value = 1
+        dut.din.value = data
         assert int(dut.dout.value) == expected.popleft()
         expected.append(data)
 
-    await FallingEdge(dut.clk)
-    held = int(dut.dout.value)
+    # One final enabled edge advances the pipeline once more; the read right
+    # after that edge still shows the previous output.
+    await RisingEdge(dut.clk)
     dut.cen.value = 0
-    for data in (0xAA, 0x55, 0xCC):
-        dut.din.value = data
+    dut.din.value = 0xAA
+    assert int(dut.dout.value) == expected.popleft()
+
+    # The in-flight value from the last enabled edge becomes visible one edge
+    # later, by which time cen=0 has frozen both the addresses and the output.
+    await RisingEdge(dut.clk)
+    held = int(dut.dout.value)
+    assert held == expected.popleft()
+
+    for data in (0x55, 0xCC, 0x33):
         await RisingEdge(dut.clk)
-        await ReadWrite()
+        dut.din.value = data
         assert int(dut.dout.value) == held
 
-    # Resume with the last enabled input. Disabled cycles must not advance
-    # either address or the output pipeline.
-    await FallingEdge(dut.clk)
+    # Resuming continues exactly where the frozen pipeline left off. After
+    # re-enabling, wait one edge for the pipeline to advance and one more for
+    # the read to observe it (reads trail the edge by one cycle).
+    await RisingEdge(dut.clk)
     dut.cen.value = 1
     dut.din.value = 20
     await RisingEdge(dut.clk)
-    await ReadWrite()
+    await RisingEdge(dut.clk)
     assert int(dut.dout.value) == expected.popleft()
 
 
 def test_shift_ram_runner():
     runner = get_runner(SIM)
+    run_dir = prj_path / "sim_build" / "shift_ram"
     runner.build(
         hdl_toplevel="shift_ram",
-        verilog_sources=resolve_flt(prj_path / "shift_ram.flt"),
+        sources=resolve_flt(prj_path / "shift_ram.flt"),
         parameters={"WIDTH": WIDTH, "DEPTH": DEPTH, "INPUT_REG": 0},
         always=True,
         waves=True,
+        build_dir=run_dir,
     )
     runner.test(
         hdl_toplevel="shift_ram",
@@ -81,6 +98,7 @@ def test_shift_ram_runner():
         test_module="test_shift_ram",
         waves=True,
         gui=GUI,
+        test_dir=run_dir,
     )
 
 

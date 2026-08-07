@@ -1,4 +1,3 @@
 ../ram/ram.flt
-../common/common.flt
 
 rtl/shift_ram.sv

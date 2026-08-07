@@ -12,6 +12,8 @@ All cocotb tests use the **pytest + cocotb runner** pattern in `<module>/tests/t
 
 Test helper modules (e.g. `libaxi4l.py`, `libecpri.py`) live alongside the tests in `tests/`.
 
+In cocotb tests, drive and sample signals on the **RisingEdge** of the relevant clock in almost all cases: set inputs right after `await RisingEdge(...)` (the DUT captures them on the next edge) and sample outputs after `await RisingEdge()` on the edge of 1 clock afterward where they are expected. In some cases, sampling after `await ValueChange(...)` on a none-clock signal to model a combinational delay. Never use `FallingEdge`, `ReadWrite` or `ReadOnly` for driving or sampling — they are banned.
+
 Traditional SystemVerilog testbenches (`tb_*.sv`) live in `<module>/tb/`.
 
 ## Module layout
