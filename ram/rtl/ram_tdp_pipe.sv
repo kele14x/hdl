@@ -36,7 +36,8 @@ module ram_tdp_pipe #(
 );
 
 
-  // Control signals pipeline
+  // Control signals pipeline. Stage 0 stays combinational so each core's
+  // first-stage enable aligns with the unpipelined address and data inputs.
   logic [READ_LATENCY_A-1:0] rsta_d;
   logic [READ_LATENCY_A-1:0] ena_d;
 
@@ -50,17 +51,41 @@ module ram_tdp_pipe #(
   assign enb_d[0]  = enb;
 
   generate
-    for (genvar i = 1; i < READ_LATENCY_A; i++) begin : g_pipe_a
+    if (READ_LATENCY_A > 1) begin : g_pipe_a
+      logic [READ_LATENCY_A-2:0] rsta_sr;
+      logic [READ_LATENCY_A-2:0] ena_sr;
+
       always_ff @(posedge clka) begin
-        rsta_d[i] <= rsta_d[i-1];
-        ena_d[i]  <= ena_d[i-1];
+        rsta_sr[0] <= rsta;
+        ena_sr[0]  <= ena;
+        for (int i = 1; i < READ_LATENCY_A - 1; i++) begin
+          rsta_sr[i] <= rsta_sr[i-1];
+          ena_sr[i]  <= ena_sr[i-1];
+        end
+      end
+
+      for (genvar i = 1; i < READ_LATENCY_A; i++) begin : g_tap_a
+        assign rsta_d[i] = rsta_sr[i-1];
+        assign ena_d[i]  = ena_sr[i-1];
       end
     end
 
-    for (genvar i = 1; i < READ_LATENCY_B; i++) begin : g_pipe_b
+    if (READ_LATENCY_B > 1) begin : g_pipe_b
+      logic [READ_LATENCY_B-2:0] rstb_sr;
+      logic [READ_LATENCY_B-2:0] enb_sr;
+
       always_ff @(posedge clkb) begin
-        rstb_d[i] <= rstb_d[i-1];
-        enb_d[i]  <= enb_d[i-1];
+        rstb_sr[0] <= rstb;
+        enb_sr[0]  <= enb;
+        for (int i = 1; i < READ_LATENCY_B - 1; i++) begin
+          rstb_sr[i] <= rstb_sr[i-1];
+          enb_sr[i]  <= enb_sr[i-1];
+        end
+      end
+
+      for (genvar i = 1; i < READ_LATENCY_B; i++) begin : g_tap_b
+        assign rstb_d[i] = rstb_sr[i-1];
+        assign enb_d[i]  = enb_sr[i-1];
       end
     end
   endgenerate

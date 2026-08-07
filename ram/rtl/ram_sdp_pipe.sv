@@ -28,7 +28,8 @@ module ram_sdp_pipe #(
 );
 
 
-  // Control signals pipeline
+  // Control signals pipeline. Stage 0 stays combinational so the core's
+  // first-stage enable aligns with the unpipelined address inputs.
   logic [READ_LATENCY-1:0] rstb_d;
   logic [READ_LATENCY-1:0] enb_d;
 
@@ -36,10 +37,22 @@ module ram_sdp_pipe #(
   assign enb_d[0]  = enb;
 
   generate
-    for (genvar i = 1; i < READ_LATENCY; i++) begin : g_pipe_b
+    if (READ_LATENCY > 1) begin : g_pipe_b
+      logic [READ_LATENCY-2:0] rstb_sr;
+      logic [READ_LATENCY-2:0] enb_sr;
+
       always_ff @(posedge clkb) begin
-        rstb_d[i] <= rstb_d[i-1];
-        enb_d[i]  <= enb_d[i-1];
+        rstb_sr[0] <= rstb;
+        enb_sr[0]  <= enb;
+        for (int i = 1; i < READ_LATENCY - 1; i++) begin
+          rstb_sr[i] <= rstb_sr[i-1];
+          enb_sr[i]  <= enb_sr[i-1];
+        end
+      end
+
+      for (genvar i = 1; i < READ_LATENCY; i++) begin : g_tap_b
+        assign rstb_d[i] = rstb_sr[i-1];
+        assign enb_d[i]  = enb_sr[i-1];
       end
     end
   endgenerate

@@ -25,7 +25,8 @@ module ram_sp_pipe #(
     output var [DATA_WIDTH-1:0] dout
 );
 
-  // Control signals pipeline
+  // Control signals pipeline. Stage 0 stays combinational so the core's
+  // first-stage enable aligns with the unpipelined address and data inputs.
   logic [READ_LATENCY-1:0] rst_d;
   logic [READ_LATENCY-1:0] en_d;
 
@@ -33,10 +34,22 @@ module ram_sp_pipe #(
   assign en_d[0]  = en;
 
   generate
-    for (genvar i = 1; i < READ_LATENCY; i++) begin : g_pipe
+    if (READ_LATENCY > 1) begin : g_pipe
+      logic [READ_LATENCY-2:0] rst_sr;
+      logic [READ_LATENCY-2:0] en_sr;
+
       always_ff @(posedge clk) begin
-        rst_d[i] <= rst_d[i-1];
-        en_d[i]  <= en_d[i-1];
+        rst_sr[0] <= rst;
+        en_sr[0]  <= en;
+        for (int i = 1; i < READ_LATENCY - 1; i++) begin
+          rst_sr[i] <= rst_sr[i-1];
+          en_sr[i]  <= en_sr[i-1];
+        end
+      end
+
+      for (genvar i = 1; i < READ_LATENCY; i++) begin : g_tap
+        assign rst_d[i] = rst_sr[i-1];
+        assign en_d[i]  = en_sr[i-1];
       end
     end
   endgenerate
@@ -51,7 +64,7 @@ module ram_sp_pipe #(
       .DEPTH       (DEPTH),
       .INIT_FILE   (INIT_FILE),
       .RAM_STYLE   (RAM_STYLE)
-  ) i_ram_sd (
+  ) i_ram_sp (
       // Port A
       .clk (clk),
       .rst (rst_d[READ_LATENCY-1]),
