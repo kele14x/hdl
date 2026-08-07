@@ -16,3 +16,8 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-name = "hdl_tools"
 module-root = ""
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.1",
+]
