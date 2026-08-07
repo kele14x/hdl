@@ -10,8 +10,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
 from cocotb_tools.runner import get_runner
 
-from common.tb.memory import MemoryAgent, MemoryAgentConfig, MemoryPortBus
-from tools.flt_tool import resolve_flt
+from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 
@@ -53,73 +52,76 @@ if USE_XPM:
 @cocotb.test()
 async def test_ram_sdp_write_read_latency_and_read_enable_hold(dut):
     cocotb.start_soon(Clock(dut.clka, 10, unit="ns").start())
-    cocotb.start_soon(Clock(dut.clkb, 10, unit="ns").start())
-    dut.ena.value = 0
+    cocotb.start_soon(Clock(dut.clkb, 14, unit="ns").start())
     dut.wea.value = 0
     dut.addra.value = 0
     dut.dina.value = 0
     dut.rstb.value = 1
     dut.enb.value = 0
     dut.addrb.value = 0
-    await ClockCycles(dut.clka, 3)
+    await ClockCycles(dut.clkb, 2)
     dut.rstb.value = 0
 
-    writer = MemoryAgent(
-        MemoryPortBus(
-            clock=dut.clka,
-            enable=dut.ena,
-            address=dut.addra,
-            write_enable=dut.wea,
-            write_data=dut.dina,
-        )
-    )
-    reader = MemoryAgent(
-        MemoryPortBus(
-            clock=dut.clkb,
-            enable=dut.enb,
-            address=dut.addrb,
-            read_data=dut.doutb,
-        ),
-        MemoryAgentConfig(read_latency=READ_LATENCY),
-    )
-    await writer.start()
-    await reader.start()
+    memory = {address: 0x26 + address for address in range(DEPTH)}
+    for address, data in memory.items():
+        await FallingEdge(dut.clka)
+        dut.wea.value = 1
+        dut.addra.value = address
+        dut.dina.value = data
+        await RisingEdge(dut.clka)
+    dut.wea.value = 0
 
-    memory = {0: 0x26, 2: 0x7D, 4: 0xA4}
-    await writer.write_burst(memory.items())
+    # Reset only clears the final stage; earlier stages power up unknown.
+    # Flush a known value through them one stage at a time so the unknown
+    # values never reach the output.
+    dut.addrb.value = 0
+    for stage in range(1, READ_LATENCY):
+        await FallingEdge(dut.clkb)
+        dut.enb.value = (1 << stage) - 1
+        await RisingEdge(dut.clkb)
 
-    addresses = [0, 4, 2, 0, 4, 2]
-    actual = await reader.read_burst(addresses)
-    assert actual == [memory[address] for address in addresses]
-    assert [transaction.address for transaction in writer.monitor.observed] == list(
-        memory
-    )
-    assert [response.request.address for response in reader.monitor.read_responses] == (
-        addresses
-    )
+    expected_pipeline = [memory[0]] * (READ_LATENCY - 1) + [0]
+    for address in (0, 3, 4, 1, 2):
+        await FallingEdge(dut.clkb)
+        dut.enb.value = (1 << READ_LATENCY) - 1
+        dut.addrb.value = address
+        await RisingEdge(dut.clkb)
+        await ReadOnly()
+        expected_pipeline = [memory[address], *expected_pipeline[:-1]]
+        assert int(dut.doutb.value) == expected_pipeline[-1]
 
+    await FallingEdge(dut.clkb)
+    dut.enb.value = 0
+    dut.addrb.value = 2
     held = int(dut.doutb.value)
     await ClockCycles(dut.clkb, 3)
     assert int(dut.doutb.value) == held
 
-    reader.stop()
-    writer.stop()
-
     # Out-of-range accesses are undefined: writes have no effect and reads
     # propagate X through the read pipeline in the behavioral model/XPM.
+    await FallingEdge(dut.clka)
+    dut.wea.value = 1
+    dut.addra.value = DEPTH
+    dut.dina.value = 0xA5
+    await RisingEdge(dut.clka)
+    dut.wea.value = 0
+
+    await FallingEdge(dut.clkb)
     dut.enb.value = 1
     dut.addrb.value = DEPTH
-    await ClockCycles(dut.clkb, 1)
-    dut.enb.value = (1 << READ_LATENCY) - 1
-    for _ in range(READ_LATENCY):
-        await ClockCycles(dut.clkb, 1)
+    await RisingEdge(dut.clkb)
     await ReadOnly()
+    for _ in range(READ_LATENCY - 1):
+        await FallingEdge(dut.clkb)
+        dut.enb.value = (1 << READ_LATENCY) - 1
+        await RisingEdge(dut.clkb)
+        await ReadOnly()
     assert not dut.doutb.value.is_resolvable
 
     # The scalar reset always clears the externally visible stage.
     await FallingEdge(dut.clkb)
-    dut.enb.value = 0
     dut.rstb.value = 1
+    dut.enb.value = 0
     await RisingEdge(dut.clkb)
     await ReadOnly()
     assert int(dut.doutb.value) == 0
