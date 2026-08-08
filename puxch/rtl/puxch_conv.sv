@@ -52,7 +52,10 @@ module puxch_conv #(
   //     3 | 320/288 | 176/144 |
   //-------+---------+---------+
 
-  localparam int Latency = 16;
+  // index/NCO (9 cycles) followed by the four-multiplier cmult pipeline
+  // produces data 14 cycles after the input sample.  Keep metadata aligned
+  // with that observed interface latency.
+  localparam int Latency = 14;
 
   // Signals
 
@@ -314,7 +317,7 @@ module puxch_conv #(
 
   delay #(
       .WIDTH(2),
-      .DEPTH(15)
+      .DEPTH(Latency - 1)
   ) u_delay_last (
       .clk (clk),
       .rst (1'b0),
