@@ -29,38 +29,66 @@ module prach_hb4 #(
     input  wire         ctrl_bypass
 );
 
+  // Check parameters
+
+  initial begin : drc_check
+    assert (DELAY_BASE == 128 || DELAY_BASE == 256)
+    else $error("[%m]: sparse HB4 supports DELAY_BASE=128 or 256 only");
+  end
+
   // Parameters
+
+  localparam int NumLane = 8;
+  localparam int NumOddHistory = 7;
+  localparam int NumCenterHistory = 3;
+  localparam int OddHistoryBase = 0;
+  localparam int CenterHistoryBase = NumOddHistory * 16;
+  localparam int MetadataHistoryBase = CenterHistoryBase + NumCenterHistory * 16;
+  localparam int HistoryWidth = MetadataHistoryBase + NumCenterHistory * 13;
 
   // fi(1, 18, 17)
   localparam logic signed [35:0] Rng = 1 << 16;
 
-  localparam int Latency = 10;
-  localparam int ImpulseLatency = DELAY_BASE * 3 + Latency;
-
-  localparam int Delay1 = DELAY_BASE * 3 + 9;
-  localparam int Delay2 = DELAY_BASE * 7 + 1;
-
   // Signals
 
-  logic               ctrl_bypass_s;
+  logic ctrl_bypass_s;
 
-  logic        [15:0] xp1           [Delay1];
-  logic        [15:0] xp2           [Delay2];
+  // One word contains all sample ages for one lane. This is an 8-deep,
+  // single-read/single-write memory, so all taps are available from one read.
+  (* ram_style = "distributed" *)
+  logic [HistoryWidth-1:0] lane_history[NumLane];
+  logic [HistoryWidth-1:0] history_write;
+
+  logic [3:0] history_count[NumLane];
+
+  logic signed [15:0] a_y0;
+  logic signed [15:0] a_z0;
+  logic signed [15:0] b_y0;
+  logic signed [15:0] b_z0;
+  logic signed [15:0] c_y0;
+  logic signed [15:0] c_z0;
+  logic signed [15:0] d_y0;
+  logic signed [15:0] d_z0;
+
+  logic signed [15:0] b_y_delay;
+  logic signed [15:0] b_z_delay;
+  logic signed [15:0] c_y_delay[2];
+  logic signed [15:0] c_z_delay[2];
+  logic signed [15:0] d_y_delay[3];
+  logic signed [15:0] d_z_delay[3];
+
+  logic signed [15:0] center_in;
+  logic signed [15:0] center_delay[8];
+  logic        [12:0] metadata_in;
+  logic        [12:0] center_metadata;
 
   logic signed [15:0] ay1;
-
   logic signed [15:0] az1;
-
   logic signed [15:0] by1;
-
   logic signed [15:0] bz1;
-
   logic signed [15:0] cy1;
-
   logic signed [15:0] cz1;
-
   logic signed [15:0] dy1;
-
   logic signed [15:0] dz1;
 
   logic signed [16:0] asum;
@@ -81,6 +109,42 @@ module prach_hb4 #(
 
   logic signed [38:0] dq;
 
+  wire [2:0] lane = din_chn[2:0];
+  // D128 sees the retained phase at chn 0..7 and the adjacent phase at
+  // chn 128..135. Both phases are filter samples for the same eight lanes,
+  // but only the retained phase advances to D256 after decimation.
+  wire lane_valid = din_dv && (din_chn[6:3] == '0) &&
+      ((DELAY_BASE == 128) || !din_chn[7]);
+  wire [HistoryWidth-1:0] history_read = lane_history[lane];
+
+  always_comb begin
+    center_metadata = history_read[MetadataHistoryBase+2*13+:13];
+    if ((DELAY_BASE == 128) && (center_metadata[10:3] >= 8'(NumLane))) begin
+      center_metadata[11] = 1'b0;
+    end
+  end
+
+  always_comb begin
+    history_write = history_read;
+
+    history_write[OddHistoryBase+:16] = din_dp2;
+    for (int i = 1; i < NumOddHistory; i++) begin
+      history_write[OddHistoryBase+i*16+:16] =
+          history_read[OddHistoryBase+(i-1)*16+:16];
+    end
+
+    history_write[CenterHistoryBase+:16] = din_dp1;
+    history_write[MetadataHistoryBase+:13] = {
+      din_last, din_dv, din_chn, din_sy, din_sl, din_sf
+    };
+    for (int i = 1; i < NumCenterHistory; i++) begin
+      history_write[CenterHistoryBase+i*16+:16] =
+          history_read[CenterHistoryBase+(i-1)*16+:16];
+      history_write[MetadataHistoryBase+i*13+:13] =
+          history_read[MetadataHistoryBase+(i-1)*13+:13];
+    end
+  end
+
   // Control CDC
 
   cdc_single #(
@@ -95,27 +159,98 @@ module prach_hb4 #(
       .dest_out(ctrl_bypass_s)
   );
 
-  // Data delay line
+  // Per-lane event history
 
   always_ff @(posedge clk) begin
-    xp1[0] <= din_dp1;
-    for (int i = 1; i < Delay1; i++) begin
-      xp1[i] <= xp1[i-1];
+    if (rst) begin
+      for (int i = 0; i < NumLane; i++) begin
+        history_count[i] <= '0;
+      end
+    end else if (lane_valid) begin
+      if (history_count[lane] < NumOddHistory) begin
+        history_count[lane] <= history_count[lane] + 1'b1;
+      end
     end
   end
 
   always_ff @(posedge clk) begin
-    xp2[0] <= din_dp2;
-    for (int i = 1; i < Delay2; i++) begin
-      xp2[i] <= xp2[i-1];
+    if (rst) begin
+      a_y0            <= '0;
+      a_z0            <= '0;
+      b_y0            <= '0;
+      b_z0            <= '0;
+      c_y0            <= '0;
+      c_z0            <= '0;
+      d_y0            <= '0;
+      d_z0            <= '0;
+      center_in       <= '0;
+      metadata_in     <= '0;
+    end else if (lane_valid) begin
+      a_y0 <= $signed(din_dp2);
+      a_z0 <= history_count[lane] >= 7 ?
+          $signed(history_read[OddHistoryBase+6*16+:16]) : '0;
+      b_y0 <= history_count[lane] >= 1 ?
+          $signed(history_read[OddHistoryBase+:16]) : '0;
+      b_z0 <= history_count[lane] >= 6 ?
+          $signed(history_read[OddHistoryBase+5*16+:16]) : '0;
+      c_y0 <= history_count[lane] >= 2 ?
+          $signed(history_read[OddHistoryBase+1*16+:16]) : '0;
+      c_z0 <= history_count[lane] >= 5 ?
+          $signed(history_read[OddHistoryBase+4*16+:16]) : '0;
+      d_y0 <= history_count[lane] >= 3 ?
+          $signed(history_read[OddHistoryBase+2*16+:16]) : '0;
+      d_z0 <= history_count[lane] >= 4 ?
+          $signed(history_read[OddHistoryBase+3*16+:16]) : '0;
+
+      center_in <= history_count[lane] >= 3 ?
+          $signed(history_read[CenterHistoryBase+2*16+:16]) : '0;
+      metadata_in <= history_count[lane] >= 3 ?
+          center_metadata : '0;
+
+      lane_history[lane] <= history_write;
+    end else begin
+      a_y0            <= '0;
+      a_z0            <= '0;
+      b_y0            <= '0;
+      b_z0            <= '0;
+      c_y0            <= '0;
+      c_z0            <= '0;
+      d_y0            <= '0;
+      d_z0            <= '0;
+      center_in       <= '0;
+      metadata_in     <= '0;
+    end
+  end
+
+  // Tap alignment for the four-DSP cascade
+
+  always_ff @(posedge clk) begin
+    b_y_delay <= b_y0;
+    b_z_delay <= b_z0;
+
+    c_y_delay[0] <= c_y0;
+    c_y_delay[1] <= c_y_delay[0];
+    c_z_delay[0] <= c_z0;
+    c_z_delay[1] <= c_z_delay[0];
+
+    d_y_delay[0] <= d_y0;
+    d_y_delay[1] <= d_y_delay[0];
+    d_y_delay[2] <= d_y_delay[1];
+    d_z_delay[0] <= d_z0;
+    d_z_delay[1] <= d_z_delay[0];
+    d_z_delay[2] <= d_z_delay[1];
+
+    center_delay[0] <= center_in;
+    for (int i = 1; i < 8; i++) begin
+      center_delay[i] <= center_delay[i-1];
     end
   end
 
   // DSP1
 
   always_ff @(posedge clk) begin
-    ay1 <= xp2[DELAY_BASE*0];
-    az1 <= xp2[DELAY_BASE*7];
+    ay1 <= a_y0;
+    az1 <= a_z0;
   end
 
   always_ff @(posedge clk) begin
@@ -133,8 +268,8 @@ module prach_hb4 #(
   // DSP2
 
   always_ff @(posedge clk) begin
-    by1 <= xp2[DELAY_BASE*1+1];
-    bz1 <= xp2[DELAY_BASE*6+1];
+    by1 <= b_y_delay;
+    bz1 <= b_z_delay;
   end
 
   always_ff @(posedge clk) begin
@@ -152,8 +287,8 @@ module prach_hb4 #(
   // DSP3
 
   always_ff @(posedge clk) begin
-    cy1 <= xp2[DELAY_BASE*2+2];
-    cz1 <= xp2[DELAY_BASE*5+2];
+    cy1 <= c_y_delay[1];
+    cz1 <= c_z_delay[1];
   end
 
   always_ff @(posedge clk) begin
@@ -171,8 +306,8 @@ module prach_hb4 #(
   // DSP4
 
   always_ff @(posedge clk) begin
-    dy1 <= xp2[DELAY_BASE*3+3];
-    dz1 <= xp2[DELAY_BASE*4+3];
+    dy1 <= d_y_delay[2];
+    dz1 <= d_z_delay[2];
   end
 
   always_ff @(posedge clk) begin
@@ -188,13 +323,13 @@ module prach_hb4 #(
   end
 
   always_ff @(posedge clk) begin
-    dq <= 39'(dresult) + $signed({{7{xp1[DELAY_BASE*3+7][15]}}, xp1[DELAY_BASE*3+7], 16'b0});
+    dq <= 39'(dresult) + $signed({{7{center_delay[6][15]}}, center_delay[6], 16'b0});
   end
 
   // TODO: saturate
   always_ff @(posedge clk) begin
     if (ctrl_bypass_s) begin
-      dout_dq <= xp1[DELAY_BASE*3+8];
+      dout_dq <= center_delay[7];
     end else begin
       dout_dq <= dq[32:17];
     end
@@ -202,17 +337,17 @@ module prach_hb4 #(
 
   delay #(
       .WIDTH(13),
-      .DEPTH(ImpulseLatency),
-      .INIT (0)
+      .DEPTH(9),
+      .INIT (1'b1)
   ) u_delay (
       .clk (clk),
       .cen (1'b1),
-      .rst (1'b0),
-      .din ({din_last, din_dv, din_chn, din_sy, din_sl, din_sf}),
+      .rst (rst),
+      .din (metadata_in),
       .dout({dout_last, dout_dv, dout_chn, dout_sy, dout_sl, dout_sf})
   );
 
-  wire unused_hb4 = &{1'b0, rst, dq[38:33], dq[16:0]};
+  wire unused_sparse = &{1'b0, dq[38:33], dq[16:0]};
 
 endmodule
 
