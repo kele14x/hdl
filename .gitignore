@@ -1,4 +1,5 @@
 # Vivado
+.Xil/
 *.jou
 *.log
 *.xml
@@ -24,11 +25,11 @@ transcript
 .hermes/
 .qoder/
 .vscode/
-*.swp
-*~
 
 # Others
 .DS_Store
 *.bkp
+*.swp
 *.vcd
+*~
 $*
