@@ -5,8 +5,7 @@
 module prach_top #(
     parameter int NUM_CC  = 3,
     parameter int NUM_ANT = 4,
-    parameter int ANT_ID  = 0,
-    parameter bit HAS_BFP = 1'b1
+    parameter int ANT_ID  = 0
 ) (
     // Clock & Reset
     //--------------
@@ -61,8 +60,6 @@ module prach_top #(
     input  wire         ctrl_clk,
     input  wire         ctrl_rst,
     //
-    input  wire  [ 3:0] ctrl_ud_comp_meth,
-    input  wire  [ 3:0] ctrl_ud_iq_width,
     input  wire  [ 3:0] ctrl_fs_offset,
     // 0 = disable, 1 = enable
     input  wire  [ 3:0] ctrl_bist              [NUM_CC],
@@ -119,8 +116,7 @@ module prach_top #(
       prach_channel #(
           .CC_ID  (cc),
           .ANT_ID (ANT_ID),
-          .NUM_ANT(NUM_ANT),
-          .HAS_BFP(HAS_BFP)
+          .NUM_ANT(NUM_ANT)
       ) u_channel (
           .clk                    (clk),
           .rst                    (rst),
@@ -170,8 +166,6 @@ module prach_top #(
           .ctrl_clk               (ctrl_clk),
           .ctrl_rst               (ctrl_rst),
           //
-          .ctrl_ud_comp_meth      (ctrl_ud_comp_meth),
-          .ctrl_ud_iq_width       (ctrl_ud_iq_width),
           .ctrl_fs_offset         (ctrl_fs_offset),
           //
           .ctrl_bist              (ctrl_bist[cc]),

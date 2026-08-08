@@ -5,8 +5,7 @@
 module prach_channel #(
     parameter int CC_ID   = 0,
     parameter int ANT_ID  = 0,
-    parameter int NUM_ANT = 4,
-    parameter bit HAS_BFP = 1'b1
+    parameter int NUM_ANT = 4
 ) (
     // Clock & Reset
     //--------------
@@ -60,8 +59,6 @@ module prach_channel #(
     input  wire        ctrl_clk,
     input  wire        ctrl_rst,
     //
-    input  wire [ 3:0] ctrl_ud_comp_meth,
-    input  wire [ 3:0] ctrl_ud_iq_width,
     input  wire [ 3:0] ctrl_fs_offset,
     //
     input  wire [ 3:0] ctrl_en,
@@ -390,8 +387,7 @@ module prach_channel #(
   prach_framer #(
       .CC_ID  (CC_ID),
       .ANT_ID (ANT_ID),
-      .NUM_ANT(NUM_ANT),
-      .HAS_BFP(HAS_BFP)
+      .NUM_ANT(NUM_ANT)
   ) u_framer (
       .clk              (clk),
       .rst              (rst),
@@ -417,9 +413,7 @@ module prach_channel #(
       .m_axis_tvalid    (m_axis_tvalid),
       .m_axis_tready    (m_axis_tready),
       // CSR
-      .ctrl_ud_comp_meth(ctrl_ud_comp_meth),
-      .ctrl_ud_iq_width (ctrl_ud_iq_width),
-      .ctrl_fs_offset   (ctrl_fs_offset)
+      .ctrl_fs_offset(ctrl_fs_offset)
   );
 
   wire unused_channel = &{1'b0, ctrl_ta3_offset, fft_ovf};

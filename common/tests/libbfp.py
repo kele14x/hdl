@@ -21,7 +21,7 @@ def compress_prb(iq, width=9, fs_offset=0):
 
     # For small IQ values, limit the shift to the mantissa width.
     shift = min(16 - width, msb)
-    exp = 15 - fs_offset - shift
+    exp = max(0, 15 - fs_offset - shift)
 
     # Compress and round the IQ values. Saturate positive values to the
     # maximum signed mantissa value to prevent rounding overflow.

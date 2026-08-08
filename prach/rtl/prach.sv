@@ -5,8 +5,7 @@
 module prach #(
     parameter int NUM_CC  = 3,
     parameter int NUM_ANT = 4,
-    parameter int ANT_ID  = 0,
-    parameter bit HAS_BFP = 1'b1
+    parameter int ANT_ID  = 0
 ) (
     // AXI
     input  wire        s_axi_aclk,
@@ -310,8 +309,7 @@ module prach #(
   prach_top #(
       .NUM_CC (NUM_CC),
       .NUM_ANT(NUM_ANT),
-      .ANT_ID (ANT_ID),
-      .HAS_BFP(HAS_BFP)
+      .ANT_ID (ANT_ID)
   ) i_prach_top (
       // Clock & Reset
       //--------------
@@ -366,8 +364,6 @@ module prach #(
       .ctrl_clk               (s_axi_aclk),
       .ctrl_rst               (~s_axi_aresetn),
       //
-      .ctrl_ud_comp_meth      (ctrl_ud_comp_meth),
-      .ctrl_ud_iq_width       (ctrl_ud_iq_width),
       .ctrl_fs_offset         (ctrl_fs_offset),
       //
       .ctrl_bist              (ctrl_bist),
@@ -403,7 +399,14 @@ module prach #(
       .stat_freq_offset       (stat_freq_offset)
   );
 
-  wire unused_prach = &{1'b0, ctrl_format[0], ctrl_format[1], ctrl_format[2]};
+  wire unused_prach = &{
+    1'b0,
+    ctrl_format[0],
+    ctrl_format[1],
+    ctrl_format[2],
+    ctrl_ud_comp_meth,
+    ctrl_ud_iq_width
+  };
 
 endmodule
 

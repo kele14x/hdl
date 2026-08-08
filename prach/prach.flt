@@ -3,7 +3,6 @@
 ../cdc/cdc.flt
 ../common/common.flt
 ../shift_ram/shift_ram.flt
-../bfp_comp/bfp_comp.flt
 ../axis_fifo_alt/axis_fifo_alt.flt
 ../symbol_timer/symbol_timer.flt
 ../pulse_delay/pulse_delay.flt
@@ -25,6 +24,8 @@ rtl/prach_fft_ditfft3.sv
 rtl/prach_fft_ditfft3_bf1.sv
 rtl/prach_fft_ditfft3_bf2.sv
 rtl/prach_fft_ditfft3_bf3.sv
+rtl/prach_bfp_compress.sv
+rtl/prach_bfp_gearbox.sv
 rtl/prach_framer.sv
 rtl/prach_framer_buffer.sv
 rtl/prach_hb2.sv

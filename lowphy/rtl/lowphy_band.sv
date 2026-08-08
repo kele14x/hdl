@@ -699,8 +699,7 @@ module lowphy_band #(
   prach_top #(
       .NUM_CC (NUM_CC),
       .NUM_ANT(NUM_ANT),
-      .ANT_ID (ANT_ID),
-      .HAS_BFP(HAS_BFP)
+      .ANT_ID (ANT_ID)
   ) u_prach (
       // Clock & Reset
       //--------------
@@ -755,8 +754,6 @@ module lowphy_band #(
       .ctrl_clk               (s_axi_aclk),
       .ctrl_rst               (~s_axi_aresetn),
       //
-      .ctrl_ud_comp_meth      (ctrl_prach_ud_comp_meth),
-      .ctrl_ud_iq_width       (ctrl_prach_ud_iq_width),
       .ctrl_fs_offset         (ctrl_prach_ud_fs_offset),
       //
       .ctrl_bist              (ctrl_prach_bist_bist),
