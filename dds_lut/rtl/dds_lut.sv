@@ -1,52 +1,22 @@
-/*
- * Module: dds_lut
- *
- * Description:
- * This module implements a Direct Digital Synthesis (DDS) Look-Up Table (LUT)
- * for generating cosine and sine waveforms. It supports various LUT structures
- * (FULL, HALF, QUARTER) and optional rasterization for efficient implementation.
- *
- * Parameters:
- * - STRUCTURE:    LUT structure type ("AUTO", "FULL", "HALF", or "QUARTER")
- * - PHASE_WIDTH:  Width of the phase input
- * - RASTERIZED:   Enable rasterized mode (3/4 modulus)
- * - NEGATIVE_COS: Output negative cosine data
- * - NEGATIVE_SIN: Output negative sine data
- *
- * Ports:
- * - clk:     Clock input
- * - rst:     Reset input
- * - phase:   Phase input
- * - cos_out: Cosine output
- * - sin_out: Sine output
- *
- * The module uses trigonometric identities and LUT structure optimizations
- * to efficiently generate cosine and sine waveforms based on the input phase.
- *
- * Latency: 4
- *
- * TODO: Optimize the latency for different STRUCTURE
- */
-
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
 
 module dds_lut #(
-    parameter         [8*7-1:0] STRUCTURE    = "AUTO",
-    parameter logic             RASTERIZED   = 1'b0,
-    parameter integer           DATA_WIDTH   = 16,
-    parameter integer           PHASE_WIDTH  = 12,
-    parameter logic             NEGATIVE_COS = 1'b0,
-    parameter logic             NEGATIVE_SIN = 1'b0
+    parameter string STRUCTURE = "AUTO",
+    parameter int RASTERIZED = 0,
+    parameter int DATA_WIDTH = 16,
+    parameter int PHASE_WIDTH = 12,
+    parameter int NEGATIVE_COS = 0,
+    parameter int NEGATIVE_SIN = 0
 ) (
-    input  wire                           clk,
-    input  wire                           rst,
+    input  wire                   clk,
+    input  wire                   rst,
     //
-    input  wire         [PHASE_WIDTH-1:0] phase,
+    input  wire [PHASE_WIDTH-1:0] phase,
     //
-    output logic signed [ DATA_WIDTH-1:0] cos_out,
-    output logic signed [ DATA_WIDTH-1:0] sin_out
+    output wire [ DATA_WIDTH-1:0] cos_out,
+    output wire [ DATA_WIDTH-1:0] sin_out
 );
 
   // Notes:
@@ -59,19 +29,25 @@ module dds_lut #(
 
   // Parameters
 
-  localparam MinPhaseWidth = RASTERIZED ? 4 : 2;
+  localparam int MinPhaseWidth = RASTERIZED > 0 ? 4 : 2;
 
-  localparam [8*7-1:0] StructureAuto = "AUTO";
-  localparam [8*7-1:0] StructureFull = "FULL";
-  localparam [8*7-1:0] StructureHalf = "HALF";
-  localparam [8*7-1:0] StructureQuarter = "QUARTER";
+  localparam int StructureAuto = 0;
+  localparam int StructureFull = 1;
+  localparam int StructureHalf = 2;
+  localparam int StructureQuarter = 3;
+
+  localparam int StructureConfig =
+    (STRUCTURE == "AUTO") ? StructureAuto :
+    (STRUCTURE == "FULL") ? StructureFull :
+    (STRUCTURE == "HALF") ? StructureHalf :
+    (STRUCTURE == "QUARTER") ? StructureQuarter : -1;
 
   // Check parameters
 
   // verilog_format: off
   initial begin
     // Check STRUCTURE
-    if(STRUCTURE != StructureAuto && STRUCTURE != StructureFull && STRUCTURE != StructureHalf && STRUCTURE != StructureQuarter) begin
+    if (StructureConfig < StructureAuto || StructureQuarter < StructureConfig) begin
       $fatal(1, "DDS structure (STRUCTURE) should be one of \"AUTO\", \"FULL\", \"HALF\" or \"QUARTER\", got %s. [%m]", STRUCTURE);
     end
 
@@ -87,10 +63,10 @@ module dds_lut #(
   // store half or a quarter of the waveform and relies on the trigonometric
   // function to get the correct result.
   // When Phase Word Width is small, directly store the full waveform.
-  localparam [8*7-1:0] StructureInternal = (STRUCTURE == StructureAuto) ?
-    ((PHASE_WIDTH <= 9) ? StructureFull : (PHASE_WIDTH <= 11) ? StructureHalf : StructureQuarter) : STRUCTURE;
+  localparam int StructureInternal = (StructureConfig == StructureAuto) ?
+    ((PHASE_WIDTH <= 9) ? StructureFull : (PHASE_WIDTH <= 11) ? StructureHalf : StructureQuarter) : StructureConfig;
 
-  localparam AddressWidth = (StructureInternal == StructureFull) ? PHASE_WIDTH :
+  localparam int AddressWidth = (StructureInternal == StructureFull) ? PHASE_WIDTH :
     (StructureInternal == StructureHalf) ? (PHASE_WIDTH - 1): (PHASE_WIDTH - 2);
 
   // Note:
@@ -101,9 +77,9 @@ module dds_lut #(
   // |         pi = 2 ^ (PHASE_WIDTH - 1) | 10_0000... | 0110_0000... |
   // | 3 / 2 * pi = 1 / 2 * pi + pi       | 11_0000... | 1001_0000... |
   // |     2 * pi = 2 ^ PHASE_WIDTH       | 00_0000... | 1100_0000... |
-  localparam logic [PHASE_WIDTH-1:0] PhasePi2 = RASTERIZED ?
+  localparam logic [PHASE_WIDTH-1:0] PhasePi2 = RASTERIZED > 0 ?
     ((1 << (PHASE_WIDTH - 3)) + (1 << (PHASE_WIDTH - 4))) : (1 << (PHASE_WIDTH - 2));
-  localparam logic [PHASE_WIDTH-1:0] PhasePi = RASTERIZED ?
+  localparam logic [PHASE_WIDTH-1:0] PhasePi = RASTERIZED > 0 ?
     ((1 << (PHASE_WIDTH - 2)) + (1 << (PHASE_WIDTH - 3))) : (1 << (PHASE_WIDTH - 1));
   localparam logic [PHASE_WIDTH-1:0] Phase3Pi2 = PhasePi + PhasePi2;
   localparam logic [PHASE_WIDTH-1:0] Phase2Pi = PhasePi << 1;
@@ -124,7 +100,7 @@ module dds_lut #(
       // range [pi, 2*pi) could be mapped to [0, pi) with sign changed:
       //   cos(x) = -cos(x - pi),  (pi <= x < 2*pi)
       if (StructureInternal == StructureHalf) begin
-        if (RASTERIZED) begin
+        if (RASTERIZED > 0) begin
           case (mapped[PHASE_WIDTH-1:PHASE_WIDTH-4])
             4'b0000: mapped[PHASE_WIDTH-1:PHASE_WIDTH-4] = 4'b0000;  // 0 -> 0
             4'b0001: mapped[PHASE_WIDTH-1:PHASE_WIDTH-4] = 4'b0001;  // 1 -> 1
@@ -158,7 +134,7 @@ module dds_lut #(
       //   cos(x) = -cos(x - pi), (pi <= x < 3*pi/2)
       //   cos(x) = cos(2*pi - x), (3*pi/2 <= x < pi)
       if (StructureInternal == StructureQuarter) begin
-        if (RASTERIZED) begin
+        if (RASTERIZED > 0) begin
           case (mapped[PHASE_WIDTH-1:PHASE_WIDTH-4])
             4'b0000: mapped = mapped;
             4'b0001: mapped = mapped;
@@ -191,8 +167,7 @@ module dds_lut #(
 
   // This function tells when look-up the phase-cosine table, which output
   // should be sign changed. (Phase in range [1/2*pi, 3/2*pi)).
-  function automatic negative_output(input logic [PHASE_WIDTH-1:0] phase_value,
-                                     input logic negative);
+  function automatic negative_output(input logic [PHASE_WIDTH-1:0] phase_value, input int negative);
     begin
       negative_output = 1'b0;
 
@@ -204,7 +179,7 @@ module dds_lut #(
         negative_output = (phase_value >= PhasePi2) && (phase_value < Phase3Pi2);
       end
 
-      negative_output = negative ? ~negative_output : negative_output;
+      negative_output = negative > 0 ? ~negative_output : negative_output;
     end
   endfunction
 
@@ -237,8 +212,11 @@ module dds_lut #(
   logic cos_zero, cos_zero_d, cos_zero_dd;
   logic sin_zero, sin_zero_d, sin_zero_dd;
 
-  wire signed [DATA_WIDTH-1:0] cos_dout;
-  wire signed [DATA_WIDTH-1:0] sin_dout;
+  logic signed [DATA_WIDTH-1:0] cos_dout;
+  logic signed [DATA_WIDTH-1:0] sin_dout;
+
+  logic signed [DATA_WIDTH-1:0] cos_out_r;
+  logic signed [DATA_WIDTH-1:0] sin_out_r;
 
   // Main
 
@@ -247,7 +225,7 @@ module dds_lut #(
   always_comb begin
     cos_phase = phase;
     sin_phase = phase;
-    if (RASTERIZED) begin
+    if (RASTERIZED > 0) begin
       case (sin_phase[PHASE_WIDTH-1:PHASE_WIDTH-4])
         4'b0000: sin_phase[PHASE_WIDTH-1:PHASE_WIDTH-4] = 4'b1001;  // 0 - 3 = 9
         4'b0001: sin_phase[PHASE_WIDTH-1:PHASE_WIDTH-4] = 4'b1010;  // 1 - 3 = 10
@@ -327,23 +305,26 @@ module dds_lut #(
 
   always_ff @(posedge clk) begin
     if (cos_zero_dd) begin
-      cos_out <= 0;
+      cos_out_r <= 0;
     end else if (cos_negative_dd) begin
-      cos_out <= -cos_dout;
+      cos_out_r <= -cos_dout;
     end else begin
-      cos_out <= cos_dout;
+      cos_out_r <= cos_dout;
     end
   end
 
   always_ff @(posedge clk) begin
     if (sin_zero_dd) begin
-      sin_out <= 0;
+      sin_out_r <= 0;
     end else if (sin_negative_dd) begin
-      sin_out <= -sin_dout;
+      sin_out_r <= -sin_dout;
     end else begin
-      sin_out <= sin_dout;
+      sin_out_r <= sin_dout;
     end
   end
+
+  assign cos_out = cos_out_r;
+  assign sin_out = sin_out_r;
 
 endmodule
 

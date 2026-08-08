@@ -1,15 +1,15 @@
 import math
 import os
-import random
 from pathlib import Path
 
-import pytest
 import cocotb
+import pytest
 from cocotb.clock import Clock
 from cocotb.queue import Queue
-from cocotb_tools.runner import get_runner
-from hdl_tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb_tools.runner import get_runner
+
+from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 
@@ -124,7 +124,7 @@ def test_dds_lut_runner():
     hdl_toplevel = "dds_lut"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = resolve_flt(prj_path / "dds_lut.flt")
+    sources = resolve_flt(prj_path / "dds_lut.flt")
 
     parameters = {
         "STRUCTURE": f'"{STRUCTURE}"',
@@ -137,7 +137,7 @@ def test_dds_lut_runner():
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel=hdl_toplevel,
-        verilog_sources=verilog_sources,
+        sources=sources,
         parameters=parameters,
         build_args=[],
         waves=True,

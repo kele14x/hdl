@@ -1,64 +1,35 @@
-/*
- * Module: dds_lut_rom
- *
- * Description:
- * This module implements a dual-port ROM for Direct Digital Synthesis (DDS)
- * Look-Up Table (LUT). It stores cosine waveform samples and supports different
- * LUT structures (FULL, HALF, QUARTER) and optional rasterization.
- *
- * Parameters:
- * - STRUCTURE:  LUT structure type ("FULL", "HALF", or "QUARTER")
- * - RASTERIZED: Enable rasterized mode (3/4 modulus)
- * - ADDR_WIDTH: Width of address inputs
- * - OUTPUT_REG: Enable output registers
- *
- * Ports:
- * - clk:   Clock input
- * - rsta:  Reset input for port A
- * - ena:   Enable input for port A
- * - addra: Address input for port A
- * - douta: Data output for port A
- * - rstb:  Reset input for port B
- * - enb:   Enable input for port B
- * - addrb: Address input for port B
- * - doutb: Data output for port B
- *
- * The ROM is initialized with pre-calculated cosine values from external
- * memory files, supporting various sizes based on address width and structure.
- */
-
 `timescale 1 ns / 1 ps
 //
 `default_nettype none
 //
 (* KEEP_HIERARCHY="yes" *)
 module dds_lut_rom #(
-    parameter [8*7-1:0] STRUCTURE  = "FULL",
-    parameter           RASTERIZED = 1'b0,
-    parameter           ADDR_WIDTH = 12,
-    parameter           DATA_WIDTH = 16,
-    parameter           OUTPUT_REG = 1'b1
+    parameter int STRUCTURE  = 1,
+    parameter int RASTERIZED = 0,
+    parameter int ADDR_WIDTH = 12,
+    parameter int DATA_WIDTH = 16,
+    parameter int OUTPUT_REG = 1
 ) (
-    input  wire                          clk,
+    input  wire                  clk,
     //
-    input  wire                          rsta,
-    input  wire                          ena,
-    input  wire         [ADDR_WIDTH-1:0] addra,
-    output logic signed [DATA_WIDTH-1:0] douta,
+    input  wire                  rsta,
+    input  wire                  ena,
+    input  wire [ADDR_WIDTH-1:0] addra,
+    output wire [DATA_WIDTH-1:0] douta,
     //
-    input  wire                          rstb,
-    input  wire                          enb,
-    input  wire         [ADDR_WIDTH-1:0] addrb,
-    output logic signed [DATA_WIDTH-1:0] doutb
+    input  wire                  rstb,
+    input  wire                  enb,
+    input  wire [ADDR_WIDTH-1:0] addrb,
+    output wire [DATA_WIDTH-1:0] doutb
 );
 
   // Local parameters
 
-  localparam [8*7-1:0] StructureFull = "FULL";
-  localparam [8*7-1:0] StructureHalf = "HALF";
+  localparam int StructureFull = 1;
+  localparam int StructureHalf = 2;
 
-  localparam Factor = STRUCTURE == StructureFull ? 1 : (STRUCTURE == StructureHalf ? 2 : 4);
-  localparam K = (RASTERIZED ? 3 : 4) * (2 ** ADDR_WIDTH) / 4;
+  localparam int Factor = STRUCTURE == StructureFull ? 1 : (STRUCTURE == StructureHalf ? 2 : 4);
+  localparam int K = (RASTERIZED > 0 ? 3 : 4) * (2 ** ADDR_WIDTH) / 4;
 
   // Signals
 
@@ -67,6 +38,9 @@ module dds_lut_rom #(
 
   logic signed [DATA_WIDTH-1:0] douta_s;
   logic signed [DATA_WIDTH-1:0] doutb_s;
+
+  logic signed [DATA_WIDTH-1:0] douta_r;
+  logic signed [DATA_WIDTH-1:0] doutb_r;
 
   initial begin : p_init
     integer i;
@@ -119,22 +93,25 @@ module dds_lut_rom #(
 
       always_ff @(posedge clk) begin
         if (rsta) begin
-          douta <= '0;
+          douta_r <= '0;
         end else if (ena_d) begin
-          douta <= douta_s;
+          douta_r <= douta_s;
         end
       end
 
       always_ff @(posedge clk) begin
         if (rstb) begin
-          doutb <= '0;
+          doutb_r <= '0;
         end else if (enb_d) begin
-          doutb <= doutb_s;
+          doutb_r <= doutb_s;
         end
       end
 
     end
   endgenerate
+
+  assign douta = douta_r;
+  assign doutb = doutb_r;
 
 endmodule
 
