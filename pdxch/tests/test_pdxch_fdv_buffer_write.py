@@ -1,18 +1,12 @@
 import os
-from pathlib import Path
 
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, ReadOnly, RisingEdge
-from cocotb_tools.runner import get_runner
+from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from pdxch_test_utils import PRJ_PATH, run_test
 
-
-prj_path = Path(__file__).resolve().parent.parent
 half_block = int(os.environ.get("HALF_BLOCK", "0"))
-sim = os.environ.get("SIM")
-if not sim:
-    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 cc_id = 3
 
 
@@ -49,7 +43,7 @@ async def send_packet(dut, start_prb, bank, words, cc=cc_id):
         dut.s_axis_tlast.value = int(index == len(words) - 1)
         dut.s_axis_tuser.value = packet_user(start_prb, cc) if index == 0 else 0x123456
         dut.s_axis_tvalid.value = 1
-        await ReadOnly()
+        await Timer(1, unit="ps")
 
         expected_iq_addr = iq_start + index
         expected_exp_addr = exp_start + index // 2
@@ -99,20 +93,12 @@ async def test_fdv_buffer_write(dut):
 
 
 def test_fdv_buffer_write_runner():
-    runner = get_runner(sim)
-    runner.build(
+    run_test(
         hdl_toplevel="pdxch_fdv_buffer_write",
-        sources=[prj_path / "rtl" / "pdxch_fdv_buffer_write.sv"],
-        parameters={"CC_ID": cc_id, "HALF_BLOCK": half_block},
-        always=True,
-        waves=True,
-    )
-    runner.test(
-        hdl_toplevel="pdxch_fdv_buffer_write",
-        hdl_toplevel_lang="verilog",
         test_module="test_pdxch_fdv_buffer_write",
-        waves=True,
-        gui=False,
+        sources=[PRJ_PATH / "rtl" / "pdxch_fdv_buffer_write.sv"],
+        parameters={"CC_ID": cc_id, "HALF_BLOCK": half_block},
+        build_name="fdv_buffer_write",
     )
 
 

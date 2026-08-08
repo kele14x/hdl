@@ -1,17 +1,11 @@
 import os
-from pathlib import Path
 
 import cocotb
 import pytest
-from cocotb_tools.runner import get_runner
 from cocotb.triggers import Timer
+from pdxch_test_utils import PRJ_PATH, run_test
 
-
-prj_path = Path(__file__).resolve().parent.parent
 half_block = int(os.environ.get("HALF_BLOCK", "0"))
-sim = os.environ.get("SIM")
-if not sim:
-    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 
 def expected_addresses(bank, logical_re):
@@ -42,20 +36,12 @@ async def test_fdv_buffer_map(dut):
 
 
 def test_fdv_buffer_map_runner():
-    runner = get_runner(sim)
-    runner.build(
+    run_test(
         hdl_toplevel="pdxch_fdv_buffer_map",
-        sources=[prj_path / "rtl" / "pdxch_fdv_buffer_map.sv"],
-        parameters={"HALF_BLOCK": half_block},
-        always=True,
-        waves=True,
-    )
-    runner.test(
-        hdl_toplevel="pdxch_fdv_buffer_map",
-        hdl_toplevel_lang="verilog",
         test_module="test_pdxch_fdv_buffer_map",
-        waves=True,
-        gui=False,
+        sources=[PRJ_PATH / "rtl" / "pdxch_fdv_buffer_map.sv"],
+        parameters={"HALF_BLOCK": half_block},
+        build_name="fdv_buffer_map",
     )
 
 
