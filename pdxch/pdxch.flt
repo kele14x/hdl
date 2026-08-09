@@ -9,7 +9,7 @@
 ../gain/gain.flt
 ../fft/fft.flt
 ../phase_comp/phase_comp.flt
-../bfp_gearbox/bfp_gearbox.flt
+rtl/pdxch_bfp_gearbox.sv
 rtl/pdxch_fdv_buffer_map.sv
 rtl/pdxch.sv
 rtl/pdxch_block2stream.sv

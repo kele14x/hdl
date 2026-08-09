@@ -1,19 +1,10 @@
-import os
-from pathlib import Path
-
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, ReadOnly, RisingEdge
-from cocotb_tools.runner import get_runner
-from hdl_tools.flt_tool import resolve_flt
+from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from pdxch_test_utils import PRJ_PATH, run_test
 
-
-prj_path = Path(__file__).resolve().parent.parent
 USER_WIDTH = 17
-SIM = os.environ.get("SIM")
-if not SIM:
-    raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
 
 def make_packet(num_prb, seed):
@@ -58,7 +49,7 @@ async def reset(dut):
 
 
 @cocotb.test()
-async def test_bfp_gearbox(dut):
+async def test_pdxch_bfp_gearbox(dut):
     cocotb.start_soon(Clock(dut.clk, period=10, units="ns").start())
     await reset(dut)
 
@@ -92,27 +83,15 @@ async def test_bfp_gearbox(dut):
         dut.s_axis_tvalid.value = 1
 
     drive_word(0)
+    await Timer(1, unit="ps")
+    input_fire = bool(dut.s_axis_tvalid.value and dut.s_axis_tready.value)
+    saw_input_backpressure = bool(
+        dut.s_axis_tvalid.value and not dut.s_axis_tready.value
+    )
 
     for cycle in range(3000):
-        await ReadOnly()
-
-        input_fire = bool(dut.s_axis_tvalid.value and dut.s_axis_tready.value)
-        output_valid = bool(dut.m_axis_tvalid.value)
-        saw_input_backpressure |= bool(
-            dut.s_axis_tvalid.value and not dut.s_axis_tready.value
-        )
-
-        if output_valid:
-            received.append(
-                (
-                    int(dut.m_axis_tdata.value),
-                    int(dut.m_axis_exp.value),
-                    int(dut.m_axis_tlast.value),
-                    int(dut.m_axis_tuser.value),
-                )
-            )
-
         await RisingEdge(dut.clk)
+        await Timer(1, unit="ps")
 
         if input_fire:
             word_index += 1
@@ -122,8 +101,24 @@ async def test_bfp_gearbox(dut):
             else:
                 drive_word(word_index)
 
+        if dut.m_axis_tvalid.value:
+            received.append(
+                (
+                    int(dut.m_axis_tdata.value),
+                    int(dut.m_axis_exp.value),
+                    int(dut.m_axis_tlast.value),
+                    int(dut.m_axis_tuser.value),
+                )
+            )
+
         if word_index == len(input_words) and len(received) == len(expected):
             break
+
+        await Timer(1, unit="ps")
+        input_fire = bool(dut.s_axis_tvalid.value and dut.s_axis_tready.value)
+        saw_input_backpressure |= bool(
+            dut.s_axis_tvalid.value and not dut.s_axis_tready.value
+        )
     else:
         raise AssertionError("gearbox did not finish within the cycle limit")
 
@@ -135,21 +130,13 @@ async def test_bfp_gearbox(dut):
         )
 
 
-def test_bfp_gearbox_runner():
-    runner = get_runner(SIM)
-    runner.build(
-        hdl_toplevel="bfp_gearbox",
-        sources=resolve_flt(prj_path / "bfp_gearbox.flt"),
+def test_pdxch_bfp_gearbox_runner():
+    run_test(
+        hdl_toplevel="pdxch_bfp_gearbox",
+        test_module="test_pdxch_bfp_gearbox",
+        sources=[PRJ_PATH / "rtl" / "pdxch_bfp_gearbox.sv"],
         parameters={"USER_WIDTH": USER_WIDTH},
-        always=True,
-        waves=True,
-    )
-    runner.test(
-        hdl_toplevel="bfp_gearbox",
-        hdl_toplevel_lang="verilog",
-        test_module="test_bfp_gearbox",
-        waves=True,
-        gui=False,
+        build_name="pdxch_bfp_gearbox",
     )
 
 

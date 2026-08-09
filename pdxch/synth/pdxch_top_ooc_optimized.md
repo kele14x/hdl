@@ -30,7 +30,7 @@ FF 18,254 → 14,989, and BRAM 151.5 → 115.5 tiles.
 | URAM | 0 | 0 | N/A |
 | DSP | 93 | 93 | 0.00% |
 
-The PDXCH input path now always instantiates `bfp_gearbox`; `HAS_BFP` has
+The PDXCH input path now always instantiates `pdxch_bfp_gearbox`; `HAS_BFP` has
 been removed from `pdxch` and `pdxch_top`. The shared `lowphy_band.HAS_BFP`
 parameter remains for the independent PRACH/PUXCH blocks.
 

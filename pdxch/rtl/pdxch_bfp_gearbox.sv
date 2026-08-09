@@ -12,10 +12,10 @@
 // on each of those six output words so that the IQ and exponent memories can
 // be written in lockstep.
 //
-// BYTE_REVERSE follows the convention used by bfp_comp/bfp_decomp: when set,
-// the lowest byte of s_axis_tdata is the first byte on the AXI-Stream and the
-// internal bit stream is assembled MSB first after reversing the byte lanes.
-module bfp_gearbox #(
+// BYTE_REVERSE follows the O-RAN BFP stream convention: when set, the lowest
+// byte of s_axis_tdata is the first byte on the AXI-Stream and the internal
+// bit stream is assembled MSB first after reversing the byte lanes.
+module pdxch_bfp_gearbox #(
     parameter bit BYTE_REVERSE = 1'b1,
     parameter int USER_WIDTH   = 91
 ) (
