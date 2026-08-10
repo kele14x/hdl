@@ -1,7 +1,8 @@
 # Vivado 2026.1 out-of-context synthesis for the mandatory-BFP PDXCH top.
 
-set repo_root [file normalize [file join [file dirname [info script]] .. ..]]
-set build_dir [file normalize [file join $repo_root sim_build vivado_ooc_pdxch_top_20260806]]
+set script_dir [file dirname [file normalize [info script]]]
+set repo_root [file normalize [file join $script_dir .. ..]]
+set build_dir [file normalize [file join $repo_root sim_build vivado_ooc_pdxch_top_20260811]]
 set part xcku5p-ffvb676-2-i
 set top pdxch_top
 
@@ -52,6 +53,9 @@ foreach source $sources {
 read_verilog -sv {*}$sources
 synth_design -top $top -part $part -mode out_of_context -flatten_hierarchy rebuilt \
     -verilog_define {RAM_USE_XPM}
+
+# OOC clock constraints: clk 491.52 MHz, clk_eth_xran 400 MHz
+read_xdc [file join $script_dir pdxch_top_ooc.xdc]
 
 report_utilization -file [file join $build_dir pdxch_top_utilization.rpt]
 report_utilization -hierarchical -file [file join $build_dir pdxch_top_utilization_hierarchical.rpt]
