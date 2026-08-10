@@ -44,8 +44,9 @@ module dds_lut_rom #(
     for (i = 0; i < K; i = i + 1) begin
       // The sized real-to-integer cast rounds to the nearest integer. Do not
       // use $rtoi here: it truncates toward zero and biases the LUT values.
-      mem[i] = DATA_WIDTH
-          '((2 ** (DATA_WIDTH - 1) - 2) * $cos(3.141592653589793 * 2 * i / Factor / K));
+      /* verilator lint_off REALCVT */
+      mem[i] = (2 ** (DATA_WIDTH - 1) - 2) * $cos(3.141592653589793 * 2 * i / Factor / K);
+      /* verilator lint_on REALCVT */
     end
   end
 

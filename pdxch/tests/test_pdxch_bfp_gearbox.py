@@ -57,6 +57,7 @@ async def test_pdxch_bfp_gearbox(dut):
         make_packet(1, 0x12),
         make_packet(2, 0x2A),
         make_packet(3, 0x51),
+        make_packet(8, 0x83),
     ]
     input_words = []
     expected = []
