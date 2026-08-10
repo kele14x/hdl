@@ -15,13 +15,14 @@ prj_path = Path(__file__).resolve().parent.parent
 
 
 STRUCTURE = os.environ.get("STRUCTURE", "AUTO")
-RASTERIZED = int(os.environ.get("RASTERIZED", 0))
-DATA_WIDTH = int(os.environ.get("DATA_WIDTH", 16))
-PHASE_WIDTH = int(os.environ.get("PHASE_WIDTH", 12))
-NEGATIVE_COS = int(os.environ.get("NEGATIVE_COS", 0))
-NEGATIVE_SIN = int(os.environ.get("NEGATIVE_SIN", 0))
+RASTERIZED = int(os.environ.get("RASTERIZED", "0"))
+DATA_WIDTH = int(os.environ.get("DATA_WIDTH", "16"))
+PHASE_WIDTH = int(os.environ.get("PHASE_WIDTH", "12"))
+NEGATIVE_COS = int(os.environ.get("NEGATIVE_COS", "0"))
+NEGATIVE_SIN = int(os.environ.get("NEGATIVE_SIN", "0"))
 
 LATENCY = 4
+TOLERANCE = 0.5
 
 GUI = os.environ.get("GUI", "False").lower() == "true"
 
@@ -34,15 +35,20 @@ output_queue = Queue()
 
 
 def model(phase):
-    a = 2 ** (DATA_WIDTH - 1) - 2
+    amplitude = 2 ** (DATA_WIDTH - 1) - 2
     if RASTERIZED:
         k = int(2**PHASE_WIDTH * 3 / 4)
     else:
         k = 2**PHASE_WIDTH
-    # RTL uses $rtoi, which truncates toward zero rather than Python's
-    # banker-rounding behavior.
-    cos = int(a * math.cos(2 * math.pi * phase / k))
-    sin = int(a * math.sin(2 * math.pi * phase / k))
+
+    cos = amplitude * math.cos(2 * math.pi * phase / k)
+    sin = amplitude * math.sin(2 * math.pi * phase / k)
+
+    if NEGATIVE_COS:
+        cos = -cos
+    if NEGATIVE_SIN:
+        sin = -sin
+
     return (cos, sin)
 
 
@@ -93,9 +99,9 @@ async def checker():
         sin = output[1]
 
         (cos_ref, sin_ref) = model(phase)
-        assert cos_ref == cos and sin_ref == sin, (
+        assert abs(cos_ref - cos) <= TOLERANCE and abs(sin_ref - sin) <= TOLERANCE, (
             f"Result mismatch! phase = {phase}, cos = {cos}, sin = {sin}, "
-            f"cos_ref = {cos_ref}, sin_ref = {sin_ref}"
+            f"cos_ref = {cos_ref}, sin_ref = {sin_ref}, tolerance = {TOLERANCE}"
         )
 
 

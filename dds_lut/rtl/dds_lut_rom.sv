@@ -39,14 +39,13 @@ module dds_lut_rom #(
   logic signed [DATA_WIDTH-1:0] douta_s;
   logic signed [DATA_WIDTH-1:0] doutb_s;
 
-  logic signed [DATA_WIDTH-1:0] douta_r;
-  logic signed [DATA_WIDTH-1:0] doutb_r;
-
   initial begin : p_init
     integer i;
     for (i = 0; i < K; i = i + 1) begin
+      // The sized real-to-integer cast rounds to the nearest integer. Do not
+      // use $rtoi here: it truncates toward zero and biases the LUT values.
       mem[i] = DATA_WIDTH
-          '($rtoi((2 ** (DATA_WIDTH - 1) - 2) * $cos(3.141592653589793 * 2 * i / Factor / K)));
+          '((2 ** (DATA_WIDTH - 1) - 2) * $cos(3.141592653589793 * 2 * i / Factor / K));
     end
   end
 
@@ -73,18 +72,16 @@ module dds_lut_rom #(
   generate
     if (OUTPUT_REG == 0) begin : g_no_reg
 
-      always_comb begin
-        douta = douta_s;
-      end
-
-      always_comb begin
-        doutb = doutb_s;
-      end
+      assign douta = douta_s;
+      assign doutb = doutb_s;
 
     end else begin : g_reg
 
       logic ena_d;
       logic enb_d;
+
+      logic signed [DATA_WIDTH-1:0] douta_r;
+      logic signed [DATA_WIDTH-1:0] doutb_r;
 
       always_ff @(posedge clk) begin
         ena_d <= ena;
@@ -107,11 +104,11 @@ module dds_lut_rom #(
         end
       end
 
+      assign douta = douta_r;
+      assign doutb = doutb_r;
+
     end
   endgenerate
-
-  assign douta = douta_r;
-  assign doutb = doutb_r;
 
 endmodule
 
