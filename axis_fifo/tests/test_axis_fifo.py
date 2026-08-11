@@ -39,10 +39,9 @@ PACKET_SIZE_MAX = 30
 DRAIN_TIMEOUT_CYCLES = 20_000
 
 
-def random_packet() -> AxisFrame:
-    """Build one random packet as a frame of AXI-Stream beats."""
-    size = int(RNG.integers(PACKET_SIZE_MIN, PACKET_SIZE_MAX + 1))
-    data = RNG.bytes(size)
+def packet_from_bytes(data: bytes) -> AxisFrame:
+    """Pack payload bytes into AXI-Stream beats with keep and last."""
+    size = len(data)
     beats = []
     for index in range((size + BYTES_PER_WORD - 1) // BYTES_PER_WORD):
         word = 0
@@ -55,6 +54,17 @@ def random_packet() -> AxisFrame:
         user = int(RNG.integers(0, 2**USER_WIDTH)) if USER_WIDTH else None
         beats.append(AxisBeat(data=word, keep=keep, user=user, last=last))
     return AxisFrame(beats)
+
+
+def random_packet() -> AxisFrame:
+    """Build one random packet as a frame of AXI-Stream beats."""
+    size = int(RNG.integers(PACKET_SIZE_MIN, PACKET_SIZE_MAX + 1))
+    return packet_from_bytes(RNG.bytes(size))
+
+
+def oversize_packet(num_beats: int) -> AxisFrame:
+    """Build a packet larger than the FIFO; packet mode must drop it."""
+    return packet_from_bytes(RNG.bytes(num_beats * BYTES_PER_WORD))
 
 
 def beat_bytes(beat: AxisBeat) -> bytes:
@@ -125,8 +135,7 @@ async def test_axis_fifo(dut) -> None:
     await source.start()
     await sink.start()
 
-    for _ in range(NUM_PACKETS):
-        frame = random_packet()
+    async def send_frame(frame) -> None:
         await with_timeout(
             source.send(
                 frame, gap=lambda _index: int(RNG.choice([0, 1, 2], p=[0.8, 0.1, 0.1]))
@@ -137,6 +146,20 @@ async def test_axis_fifo(dut) -> None:
         await ClockCycles(
             dut.s_axis_aclk, int(RNG.choice([0, 1, 2, 3], p=[0.7, 0.1, 0.1, 0.1]))
         )
+
+    # Oversize packets injected in packet mode; the FIFO must drop them.
+    # DEPTH+1 covers the case where the refused beat carries tlast.
+    drop_sizes = {}
+    if PACKET_MODE:
+        drop_sizes = {
+            NUM_PACKETS // 3: FIFO_DEPTH + 1,
+            2 * NUM_PACKETS // 3: FIFO_DEPTH + 4,
+        }
+
+    for index in range(NUM_PACKETS):
+        await send_frame(random_packet())
+        if index in drop_sizes:
+            await send_frame(oversize_packet(drop_sizes[index]))
 
     for _ in range(DRAIN_TIMEOUT_CYCLES // 10):
         if sink.monitor.frames.qsize() >= NUM_PACKETS:
@@ -151,9 +174,14 @@ async def test_axis_fifo(dut) -> None:
 
     sent = drain(source.monitor.frames)
     received = drain(sink.monitor.frames)
-    assert len(sent) == NUM_PACKETS, f"source monitor saw {len(sent)} packets"
-    assert len(received) == NUM_PACKETS, f"sink monitor saw {len(received)} packets"
-    for index, (tx, rx) in enumerate(zip(sent, received)):
+    expected = [frame for frame in sent if len(frame) <= FIFO_DEPTH]
+    assert len(sent) == NUM_PACKETS + len(drop_sizes), (
+        f"source monitor saw {len(sent)} packets"
+    )
+    assert len(received) == len(expected), (
+        f"sink monitor saw {len(received)} packets, expected {len(expected)}"
+    )
+    for index, (tx, rx) in enumerate(zip(expected, received)):
         assert len(tx) == len(rx), f"packet {index}: beat count mismatch"
         for beat_index, (tx_beat, rx_beat) in enumerate(zip(tx, rx)):
             assert rx_beat.data == tx_beat.data, (

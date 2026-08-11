@@ -10,7 +10,8 @@
  * synchronizer.
  *
  * Note: If the FIFO is configured in packet mode and the input packet exceeds
- * the FIFO depth, the FIFO will become stuck and will require a reset.
+ * the FIFO depth, the packet is dropped; the remaining beats are absorbed
+ * until tlast and already-committed packets are preserved.
  */
 
 `timescale 1 ns / 1 ps
@@ -84,6 +85,8 @@ module axis_fifo #(
   wire  [     AddrWidth:0] wr_count_next;
   logic [     AddrWidth:0] wr_count_reg;
   logic                    wr_full;
+  logic                    pkt_drop;
+  wire                     pkt_drop_decide;
 
   wire                     wr_en;
   wire  [   AddrWidth-1:0] wr_addr;
@@ -113,6 +116,9 @@ module axis_fifo #(
   always_ff @(posedge wr_clk) begin
     if (!wr_rstn) begin
       wr_count <= 'd0;
+    end else if (pkt_drop_decide) begin
+      // Discard the doomed packet's already-written beats.
+      wr_count <= wr_count_reg;
     end else begin
       wr_count <= wr_count_next;
     end
@@ -132,16 +138,39 @@ module axis_fifo #(
         end
       end
 
+      // Drop a packet once its uncommitted footprint fills the whole FIFO;
+      // accepting more beats would deadlock because the packet can never be
+      // committed.  On that cycle the write pointer is rolled back above and
+      // the doomed packet's remaining beats are absorbed with tready high and
+      // discarded until its tlast is seen.  The presented beat is refused by
+      // wr_full here, so the packet is oversized whether or not that beat
+      // carries tlast.
+      assign pkt_drop_decide = !pkt_drop && s_axis_tvalid &&
+                               ((wr_count - wr_count_reg) == FIFO_DEPTH[AddrWidth:0]);
+
+      always_ff @(posedge wr_clk) begin
+        if (!wr_rstn) begin
+          pkt_drop <= 1'b0;
+        end else if (pkt_drop) begin
+          pkt_drop <= !(s_axis_tvalid && s_axis_tlast);
+        end else begin
+          pkt_drop <= pkt_drop_decide;
+        end
+      end
+
     end else begin : g_no_packet_mode
 
       always_comb begin
         wr_count_reg = wr_count;
       end
 
+      assign pkt_drop = 1'b0;
+      assign pkt_drop_decide = 1'b0;
+
     end
   endgenerate
 
-  assign wr_en   = s_axis_tvalid && !wr_full;
+  assign wr_en   = s_axis_tvalid && !wr_full && !pkt_drop;
 
   assign wr_addr = wr_count[AddrWidth-1:0];
 
@@ -154,7 +183,7 @@ module axis_fifo #(
     end
   endgenerate
 
-  assign s_axis_tready = !wr_full;
+  assign s_axis_tready = !wr_full || pkt_drop;
 
   // Overflow guard: a write must never be accepted while the FIFO is really
   // full, otherwise the write pointer would overrun unread data.  Occupancy
