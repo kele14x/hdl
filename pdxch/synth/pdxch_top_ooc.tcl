@@ -1,10 +1,28 @@
-# Vivado 2026.1 out-of-context synthesis for the mandatory-BFP PDXCH top.
+# Vivado 2026.1 out-of-context synthesis for the mandatory-BFP PDXCH wrapper.
+#
+# Parameter overrides (defaults = max spec, full block + 4k FFT):
+#   tclargs: <half_block> <half_fft>
+#   half_block=0/1 -> fdv_buffer IQ depth full/half
+#   half_fft=0/1   -> FFT 4k/2k
 
 set script_dir [file dirname [file normalize [info script]]]
 set repo_root [file normalize [file join $script_dir .. ..]]
-set build_dir [file normalize [file join $repo_root sim_build vivado_ooc_pdxch_top_20260811]]
+set build_dir [file normalize [file join $repo_root sim_build vivado_ooc_pdxch_20260812]]
 set part xcku5p-ffvb676-2-i
-set top pdxch_top
+set top pdxch
+
+# Parameter override via -tclargs (default 0 0 = max spec)
+if {[llength $argv] >= 1} {
+  set half_block [lindex $argv 0]
+} else {
+  set half_block 0
+}
+if {[llength $argv] >= 2} {
+  set half_fft [lindex $argv 1]
+} else {
+  set half_fft 0
+}
+puts "INFO: pdxch OOC params: HALF_BLOCK=$half_block HALF_FFT=$half_fft"
 
 file mkdir $build_dir
 cd $build_dir
@@ -52,15 +70,16 @@ foreach source $sources {
 
 read_verilog -sv {*}$sources
 synth_design -top $top -part $part -mode out_of_context -flatten_hierarchy rebuilt \
-    -verilog_define {RAM_USE_XPM}
+    -verilog_define {RAM_USE_XPM} \
+    -generic HALF_BLOCK=$half_block -generic HALF_FFT=$half_fft
 
 # OOC clock constraints: clk 491.52 MHz, clk_eth_xran 400 MHz
 read_xdc [file join $script_dir pdxch_top_ooc.xdc]
 
-report_utilization -file [file join $build_dir pdxch_top_utilization.rpt]
-report_utilization -hierarchical -file [file join $build_dir pdxch_top_utilization_hierarchical.rpt]
-report_timing_summary -file [file join $build_dir pdxch_top_timing_summary.rpt]
-write_checkpoint -force [file join $build_dir pdxch_top_ooc.dcp]
+report_utilization -file [file join $build_dir pdxch_utilization.rpt]
+report_utilization -hierarchical -file [file join $build_dir pdxch_utilization_hierarchical.rpt]
+report_timing_summary -file [file join $build_dir pdxch_timing_summary.rpt]
+write_checkpoint -force [file join $build_dir pdxch_ooc.dcp]
 
-puts "INFO: pdxch_top OOC synthesis completed"
-puts "INFO: utilization report: [file join $build_dir pdxch_top_utilization.rpt]"
+puts "INFO: pdxch OOC synthesis completed"
+puts "INFO: utilization report: [file join $build_dir pdxch_utilization.rpt]"
