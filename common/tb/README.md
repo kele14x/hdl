@@ -1,7 +1,18 @@
 # Cocotb verification agents
 
-`common.tb` provides reusable protocol components organized like lightweight
-UVM agents. It does not attempt to reproduce the UVM factory or phase system.
+Reusable protocol components organized like lightweight UVM agents, split
+across two packages:
+
+- `hdl_tools` (installed package, importable anywhere): the protocol
+  foundation — valid/ready handshake primitives (`hdl_tools.handshake`),
+  AXI-Stream agents (`hdl_tools.axis`), and AXI4-Lite channel and
+  transaction-level agents (`hdl_tools.axi4lite`).
+- `common.tb`: domain components (register model, FIFO, memory, radio timing,
+  packet codecs). It also re-exports the AXI4-Lite and AXI-Stream names from
+  `hdl_tools` for compatibility, so `from common.tb import AxiLiteAgent`
+  keeps working.
+
+Neither package attempts to reproduce the UVM factory or phase system.
 
 | UVM concept | cocotb component |
 | --- | --- |
@@ -20,7 +31,7 @@ functional checking.
 ## AXI4-Lite
 
 ```python
-from common.tb.axi4lite import AxiLiteAgent, AxiLiteAgentConfig
+from hdl_tools.axi4lite import AxiLiteAgent, AxiLiteAgentConfig
 
 agent = AxiLiteAgent(
     dut,
@@ -40,10 +51,14 @@ observed_transaction = await agent.monitor.transactions.get()
 The monitor independently queues AW, W, and AR handshakes, then pairs them
 with B and R responses. This preserves legal AXI4-Lite address/data ordering.
 
+`hdl_tools.axi4lite` also provides per-channel agents (`ARAgent`, `AWAgent`,
+`WAgent`, `RAgent`, `BAgent`) with vector sequences for channel-level
+stimulus, all built on the valid/ready primitives in `hdl_tools.handshake`.
+
 ## AXI-Stream
 
 ```python
-from common.tb.axis import (
+from hdl_tools.axis import (
     AxisAgent,
     AxisAgentConfig,
     AxisFrame,

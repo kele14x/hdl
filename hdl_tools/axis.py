@@ -1,26 +1,28 @@
-"""UVM-style AXI-Stream transaction, driver, monitor, and agent."""
+"""AXI-Stream transactions, drivers, monitors, and agents.
+
+Built on the valid/ready handshake primitives from ``hdl_tools.handshake``:
+a source drives beats (payload plus optional sideband) with valid/tready
+handshakes, a sink drives tready from a policy, and a monitor reconstructs
+TLAST-delimited frames.  All driving and sampling happens on the rising
+clock edge.
+"""
+
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
 
 import cocotb
-from cocotb.triggers import FallingEdge, Lock, ReadOnly, RisingEdge
+from cocotb.triggers import Lock, RisingEdge
 
-from .base import AgentMode, AnalysisPort
-
-__all__ = [
-    "AxisAgent",
-    "AxisAgentConfig",
-    "AxisBeat",
-    "AxisError",
-    "AxisFrame",
-    "AxisMonitor",
-    "AxisRole",
-    "AxisSink",
-    "AxisSinkDriver",
-    "AxisSource",
-    "AxisSourceDriver",
-]
+from .handshake import (
+    HandshakeConfig,
+    HandshakeError,
+    HandshakeItem,
+    HandshakeSink,
+    HandshakeSource,
+)
+from .tb_base import AgentMode, AnalysisPort
 
 
 class AxisError(AssertionError):
@@ -99,72 +101,87 @@ class _AxisComponent:
         self.clock = getattr(dut, config.clock)
         self.reset_signal = getattr(dut, config.reset) if config.reset else None
 
+    def _name(self, name: str) -> str:
+        return f"{self.prefix}_{name}"
+
     def _sig(self, name):
-        return getattr(self.dut, f"{self.prefix}_{name}")
+        return getattr(self.dut, self._name(name))
 
     def _optional(self, name):
-        return getattr(self.dut, f"{self.prefix}_{name}", None)
+        return getattr(self.dut, self._name(name), None)
 
-    def _in_reset(self):
+    def _in_reset(self) -> bool:
         return self.reset_signal is not None and (
             int(self.reset_signal.value) == self.config.reset_active_level
+        )
+
+    def _handshake_config(self) -> HandshakeConfig:
+        return HandshakeConfig(
+            clock=self.config.clock,
+            reset=self.config.reset,
+            reset_active_level=self.config.reset_active_level,
+            timeout_cycles=self.config.timeout_cycles,
         )
 
 
 class AxisSourceDriver(_AxisComponent):
     """Active driver for TVALID, payload, and sideband signals."""
 
-    def __init__(self, dut, config):
+    def __init__(self, dut, config: AxisAgentConfig):
         super().__init__(dut, config)
         self._transaction_lock = Lock()
+        self._fields = ["tdata"] + [
+            name
+            for name in ("tkeep", "tuser", "tdest", "tlast")
+            if self._optional(name) is not None
+        ]
+        self._source = HandshakeSource(
+            dut,
+            self._name("tvalid"),
+            [self._name(name) for name in self._fields],
+            ready=self._name("tready"),
+            config=self._handshake_config(),
+        )
 
     def idle(self):
-        self._sig("tvalid").value = 0
-        for name in ("tdata", "tkeep", "tuser", "tdest", "tlast"):
-            signal = self._optional(name)
-            if signal is not None:
-                signal.value = 0
+        self._source.idle()
 
-    def _drive_beat(self, beat):
-        self._sig("tdata").value = beat.data
+    def _beat_payload(self, beat: AxisBeat) -> dict[str, int]:
+        payload = {self._name("tdata"): beat.data}
         for name, value in (
             ("tuser", beat.user),
             ("tdest", beat.dest),
             ("tlast", int(beat.last)),
         ):
-            signal = self._optional(name)
-            if signal is not None:
-                signal.value = 0 if value is None else value
-
+            if self._optional(name) is not None:
+                payload[self._name(name)] = 0 if value is None else value
         keep = self._optional("tkeep")
         if keep is not None:
-            keep.value = (1 << len(keep)) - 1 if beat.keep is None else beat.keep
+            payload[self._name("tkeep")] = (
+                (1 << len(keep)) - 1 if beat.keep is None else beat.keep
+            )
+        return payload
 
-    async def _drive_frame(self, transaction, gap):
+    async def _drive_frame(self, transaction: AxisFrame, gap):
         if not transaction.beats:
             raise ValueError("cannot drive an empty AXI-Stream frame")
         self.idle()
+        items = []
         for index, beat in enumerate(transaction.beats):
+            gap_cycles = 0
             if gap is not None:
-                gap_cycles = int(gap(index))
+                gap_cycles = int(gap(index)) if callable(gap) else int(gap)
                 if gap_cycles < 0:
                     raise ValueError("AXI-Stream gap must be non-negative")
-                if gap_cycles:
-                    self._sig("tvalid").value = 0
-                for _ in range(gap_cycles):
-                    await RisingEdge(self.clock)
-            self._drive_beat(beat)
-            self._sig("tvalid").value = 1
-            for _ in range(self.config.timeout_cycles):
-                await RisingEdge(self.clock)
-                if int(self._sig("tready").value):
-                    break
-            else:
-                self.idle()
-                raise AxisError(
-                    f"AXI-Stream {self.prefix} stalled for "
-                    f"{self.config.timeout_cycles} cycles at beat {index}"
-                )
+            items.append(HandshakeItem(self._beat_payload(beat), gap=gap_cycles))
+        try:
+            await self._source.drive(items)
+        except HandshakeError:
+            self.idle()
+            raise AxisError(
+                f"AXI-Stream {self.prefix} stalled for "
+                f"{self.config.timeout_cycles} cycles"
+            ) from None
         self.idle()
         return transaction
 
@@ -181,49 +198,40 @@ class AxisSourceDriver(_AxisComponent):
 class AxisSinkDriver(_AxisComponent):
     """Active TREADY driver with an optional backpressure policy."""
 
-    def __init__(self, dut, config, ready_policy=None):
+    def __init__(self, dut, config: AxisAgentConfig, ready_policy=None):
         super().__init__(dut, config)
         self.ready_policy = ready_policy
-        self._task = None
+        self._sink = HandshakeSink(
+            dut,
+            self._name("tvalid"),
+            [],
+            ready=self._name("tready"),
+            config=self._handshake_config(),
+        )
 
     def idle(self):
-        self._sig("tready").value = 0
+        self._sink.idle()
 
     def start(self):
-        if self._task is None:
-            self._task = cocotb.start_soon(self.run())
-        return self._task
+        # Read the policy lazily so it can be swapped after start.
+        return self._sink.start(
+            lambda cycle: (
+                True if self.ready_policy is None else bool(self.ready_policy(cycle))
+            )
+        )
 
     def stop(self):
-        if self._task is not None:
-            self._task.kill()
-            self._task = None
-        self.idle()
-
-    async def run(self):
-        cycle = 0
-        while True:
-            await FallingEdge(self.clock)
-            if self._in_reset():
-                self._sig("tready").value = 0
-            else:
-                ready = (
-                    True
-                    if self.ready_policy is None
-                    else bool(self.ready_policy(cycle))
-                )
-                self._sig("tready").value = int(ready)
-                cycle += 1
+        self._sink.stop()
 
 
 class AxisMonitor(_AxisComponent):
     """Passive monitor publishing beats and TLAST-delimited frames."""
 
-    def __init__(self, dut, config):
+    def __init__(self, dut, config: AxisAgentConfig):
         super().__init__(dut, config)
         self.beats = AnalysisPort[AxisBeat]()
         self.frames = AnalysisPort[AxisFrame]()
-        self._partial_frame = []
+        self._partial_frame: list[AxisBeat] = []
         self._task = None
 
     def start(self):
@@ -237,7 +245,7 @@ class AxisMonitor(_AxisComponent):
             self._task = None
         self._partial_frame.clear()
 
-    def _sample(self):
+    def _sample(self) -> AxisBeat:
         values = {}
         for name in ("tkeep", "tuser", "tdest", "tlast"):
             signal = self._optional(name)
@@ -253,8 +261,7 @@ class AxisMonitor(_AxisComponent):
     async def run(self):
         has_tlast = self._optional("tlast") is not None
         while True:
-            await FallingEdge(self.clock)
-            await ReadOnly()
+            await RisingEdge(self.clock)
             if self._in_reset():
                 self._partial_frame.clear()
                 continue
@@ -327,6 +334,7 @@ class AxisSource(AxisSourceDriver):
         )
         if not isinstance(clock, str):
             self.clock = clock
+            self._source.clock = clock
 
 
 class AxisSink:
@@ -343,7 +351,7 @@ class AxisSink:
         self.agent = AxisAgent(dut, config)
         if not isinstance(clock, str):
             self.agent.monitor.clock = clock
-            self.agent.driver.clock = clock
+            self.agent.driver._sink.clock = clock
         self._started = False
 
     def idle(self):

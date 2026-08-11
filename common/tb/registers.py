@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 
-from .axi4lite import AxiLiteOperation, AxiLiteTransaction
+from hdl_tools.axi4lite import AxiLiteOperation, AxiLiteTransaction
 
 __all__ = [
     "AxiLiteRegisterAdapter",

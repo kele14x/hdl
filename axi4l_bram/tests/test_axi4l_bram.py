@@ -19,8 +19,7 @@ from __future__ import annotations
 import os
 import random
 from collections import deque
-from collections.abc import Callable, Iterator, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Callable
 from pathlib import Path
 
 import cocotb
@@ -29,6 +28,24 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, ReadWrite, RisingEdge, with_timeout
 from cocotb_tools.runner import get_runner
 
+from hdl_tools.axi4lite import (
+    ARAgent,
+    ARSequence,
+    ARTransaction,
+    AWAgent,
+    AWSequence,
+    AWTransaction,
+    AxiLiteAgent,
+    BAgent,
+    BSequence,
+    BTransaction,
+    RAgent,
+    RSequence,
+    RTransaction,
+    WAgent,
+    WSequence,
+    WTransaction,
+)
 from hdl_tools.flt_tool import resolve_flt
 
 PRJ_PATH = Path(__file__).resolve().parent.parent
@@ -290,6 +307,34 @@ async def test_top_response_backpressure(dut) -> None:
     assert got_r == [(expected_read_data(addr), 0) for addr in reads]
 
 
+@cocotb.test()
+async def test_top_register_access(dut) -> None:
+    """Transaction-level writes and reads through the AXI4-Lite agent."""
+    cocotb.start_soon(Clock(dut.aclk, 10, unit="ns").start())
+    await reset(dut)
+    issued: list[tuple[bool, int, int]] = []
+    cocotb.start_soon(bram_model_split(dut, issued))
+
+    agent = AxiLiteAgent(dut, prefix="", clock="aclk", timeout_cycles=200)
+    await agent.start()
+
+    writes = [
+        (0x000, 0x1111_2222 & DATA_MASK),
+        (0x004, 0x3333_4444 & DATA_MASK),
+    ]
+    for address, data in writes:
+        response = await agent.write(address, data)
+        assert response == 0
+    for address, _ in writes:
+        data = await agent.read(address)
+        assert data == expected_read_data(address)
+
+    write_addrs, read_addrs = split_issued(issued)
+    assert write_addrs == [address for address, _ in writes]
+    assert read_addrs == [address for address, _ in writes]
+    agent.stop()
+
+
 # ---------------------------------------------------------------------------
 # Read agent environment
 # ---------------------------------------------------------------------------
@@ -302,171 +347,6 @@ def random_read_count_from_env(default: int) -> int:
     if value <= 0:
         raise ValueError("RANDOM_READ_COUNT must be positive")
     return value
-
-
-@dataclass(frozen=True)
-class ARTransaction:
-    """An AXI read-address request.
-
-    ``pre_packet_gap`` is the minimum number of idle clocks between this
-    request and the preceding request.  A value of zero permits back-to-back
-    AR handshakes.  The actual observed gap can be larger when ARREADY applies
-    backpressure.
-    """
-
-    address: int
-    pre_packet_gap: int = 0
-
-    def __post_init__(self) -> None:
-        if self.pre_packet_gap < 0:
-            raise ValueError("pre_packet_gap must be non-negative")
-
-
-@dataclass(frozen=True)
-class ARSequence:
-    """The AR-channel test vector."""
-
-    transactions: Sequence[ARTransaction] = field(default_factory=tuple)
-
-    def __iter__(self) -> Iterator[ARTransaction]:
-        return iter(self.transactions)
-
-    def __len__(self) -> int:
-        return len(self.transactions)
-
-
-@dataclass(frozen=True)
-class RTransaction:
-    """An R-channel acceptance policy, or a monitored R transfer.
-
-    For a vector, only ``idle_cycles`` is supplied.  A positive value keeps
-    RREADY low for that many clocks after RVALID is seen; zero asserts RREADY
-    in the same cycle RVALID is observed; a negative value asserts RREADY
-    proactively, before waiting for RVALID.  Monitors additionally fill in
-    ``data`` and ``resp`` for completed transfers.
-    """
-
-    idle_cycles: int = 0
-    data: int | None = None
-    resp: int | None = None
-
-
-@dataclass(frozen=True)
-class RSequence:
-    """The R-channel test vector."""
-
-    transactions: Sequence[RTransaction] = field(default_factory=tuple)
-
-    def __iter__(self) -> Iterator[RTransaction]:
-        return iter(self.transactions)
-
-    def __len__(self) -> int:
-        return len(self.transactions)
-
-
-class ARAgent:
-    """AR driver and monitor."""
-
-    def __init__(self, dut):
-        self.dut = dut
-        self.observed: list[ARTransaction] = []
-
-    async def drive(self, sequence: ARSequence) -> None:
-        self.dut.arvalid.value = 0
-        for transaction in sequence:
-            # An idle gap is measured from the handshake edge of the previous
-            # request.  Hold ARVALID low for exactly the requested clocks.
-            self.dut.arvalid.value = 0
-            if transaction.pre_packet_gap:
-                await ClockCycles(self.dut.aclk, transaction.pre_packet_gap)
-            self.dut.araddr.value = transaction.address
-            self.dut.arvalid.value = 1
-            while True:
-                await _edge(self.dut)
-                if int(self.dut.arready.value):
-                    break
-
-        self.dut.arvalid.value = 0
-
-    async def monitor(self) -> None:
-        last_handshake_cycle: int | None = None
-        cycle = 0
-        while True:
-            await _edge(self.dut)
-            cycle += 1
-            if int(self.dut.arvalid.value) and int(self.dut.arready.value):
-                gap = (
-                    0
-                    if last_handshake_cycle is None
-                    else cycle - last_handshake_cycle - 1
-                )
-                self.observed.append(
-                    ARTransaction(
-                        address=int(self.dut.araddr.value), pre_packet_gap=gap
-                    )
-                )
-                last_handshake_cycle = cycle
-
-
-class RAgent:
-    """R driver and monitor."""
-
-    def __init__(self, dut):
-        self.dut = dut
-        self.observed: list[RTransaction] = []
-
-    async def _wait_for_rvalid(self) -> None:
-        """Wait for RVALID, including the delta cycle in which it asserts."""
-
-        if not int(self.dut.rvalid.value):
-            await RisingEdge(self.dut.rvalid)
-            await ReadWrite()
-
-    async def _wait_for_handshake(self) -> None:
-        """Wait for a sampled RVALID/RREADY handshake and settle the DUT."""
-
-        while True:
-            await RisingEdge(self.dut.aclk)
-            if int(self.dut.rvalid.value) and int(self.dut.rready.value):
-                await ReadWrite()
-                return
-
-    async def drive(self, sequence: RSequence) -> None:
-        self.dut.rready.value = 0
-        for transaction in sequence:
-            if transaction.idle_cycles < 0:
-                # Negative idle requests proactive ready.  Its magnitude is
-                # deliberately not a delay: it is a policy, not a timeout.
-                self.dut.rready.value = 1
-            else:
-                await self._wait_for_rvalid()
-                if transaction.idle_cycles:
-                    await ClockCycles(self.dut.aclk, transaction.idle_cycles)
-                self.dut.rready.value = 1
-
-            # For idle_cycles == 0, RREADY was driven in the same delta cycle
-            # as RVALID's transition, so the following clock is the handshake.
-            await self._wait_for_handshake()
-            self.dut.rready.value = 0
-
-    async def monitor(self) -> None:
-        valid_since: int | None = None
-        cycle = 0
-        while True:
-            await _edge(self.dut)
-            cycle += 1
-            if int(self.dut.rvalid.value) and valid_since is None:
-                valid_since = cycle
-            if int(self.dut.rvalid.value) and int(self.dut.rready.value):
-                idle = 0 if valid_since is None else cycle - valid_since
-                self.observed.append(
-                    RTransaction(
-                        idle_cycles=idle,
-                        data=int(self.dut.rdata.value),
-                        resp=int(self.dut.rresp.value),
-                    )
-                )
-                valid_since = None
 
 
 class BramReadModel:
@@ -747,244 +627,6 @@ def random_write_count_from_env(default: int) -> int:
     return value
 
 
-@dataclass(frozen=True)
-class AWTransaction:
-    """An AXI write-address request.
-
-    ``pre_packet_gap`` is the minimum number of idle clocks between this
-    request and the preceding request.  A value of zero permits back-to-back
-    AW handshakes.  The actual observed gap can be larger when AWREADY applies
-    backpressure.
-    """
-
-    address: int
-    pre_packet_gap: int = 0
-
-    def __post_init__(self) -> None:
-        if self.pre_packet_gap < 0:
-            raise ValueError("pre_packet_gap must be non-negative")
-
-
-@dataclass(frozen=True)
-class AWSequence:
-    """The AW-channel test vector."""
-
-    transactions: Sequence[AWTransaction] = field(default_factory=tuple)
-
-    def __iter__(self) -> Iterator[AWTransaction]:
-        return iter(self.transactions)
-
-    def __len__(self) -> int:
-        return len(self.transactions)
-
-
-@dataclass(frozen=True)
-class WTransaction:
-    """An AXI write-data request.
-
-    ``pre_packet_gap`` has the same meaning as in :class:`AWTransaction`,
-    measured on the W channel.
-    """
-
-    data: int
-    strb: int = STRB_ALL
-    pre_packet_gap: int = 0
-
-    def __post_init__(self) -> None:
-        if self.pre_packet_gap < 0:
-            raise ValueError("pre_packet_gap must be non-negative")
-
-
-@dataclass(frozen=True)
-class WSequence:
-    """The W-channel test vector."""
-
-    transactions: Sequence[WTransaction] = field(default_factory=tuple)
-
-    def __iter__(self) -> Iterator[WTransaction]:
-        return iter(self.transactions)
-
-    def __len__(self) -> int:
-        return len(self.transactions)
-
-
-@dataclass(frozen=True)
-class BTransaction:
-    """A B-channel acceptance policy, or a monitored B transfer.
-
-    For a vector, only ``idle_cycles`` is supplied.  A positive value keeps
-    BREADY low for that many clocks after BVALID is seen; zero asserts BREADY
-    in the same cycle BVALID is observed; a negative value asserts BREADY
-    proactively, before waiting for BVALID.  Monitors additionally fill in
-    ``resp`` for completed transfers.
-    """
-
-    idle_cycles: int = 0
-    resp: int | None = None
-
-
-@dataclass(frozen=True)
-class BSequence:
-    """The B-channel test vector."""
-
-    transactions: Sequence[BTransaction] = field(default_factory=tuple)
-
-    def __iter__(self) -> Iterator[BTransaction]:
-        return iter(self.transactions)
-
-    def __len__(self) -> int:
-        return len(self.transactions)
-
-
-class AWAgent:
-    """AW driver and monitor."""
-
-    def __init__(self, dut):
-        self.dut = dut
-        self.observed: list[AWTransaction] = []
-
-    async def drive(self, sequence: AWSequence) -> None:
-        self.dut.awvalid.value = 0
-        for transaction in sequence:
-            # An idle gap is measured from the handshake edge of the previous
-            # request.  Hold AWVALID low for exactly the requested clocks.
-            self.dut.awvalid.value = 0
-            if transaction.pre_packet_gap:
-                await ClockCycles(self.dut.aclk, transaction.pre_packet_gap)
-            self.dut.awaddr.value = transaction.address
-            self.dut.awvalid.value = 1
-            while True:
-                await _edge(self.dut)
-                if int(self.dut.awready.value):
-                    break
-
-        self.dut.awvalid.value = 0
-
-    async def monitor(self) -> None:
-        last_handshake_cycle: int | None = None
-        cycle = 0
-        while True:
-            await _edge(self.dut)
-            cycle += 1
-            if int(self.dut.awvalid.value) and int(self.dut.awready.value):
-                gap = (
-                    0
-                    if last_handshake_cycle is None
-                    else cycle - last_handshake_cycle - 1
-                )
-                self.observed.append(
-                    AWTransaction(
-                        address=int(self.dut.awaddr.value), pre_packet_gap=gap
-                    )
-                )
-                last_handshake_cycle = cycle
-
-
-class WAgent:
-    """W driver and monitor."""
-
-    def __init__(self, dut):
-        self.dut = dut
-        self.observed: list[WTransaction] = []
-
-    async def drive(self, sequence: WSequence) -> None:
-        self.dut.wvalid.value = 0
-        for transaction in sequence:
-            self.dut.wvalid.value = 0
-            if transaction.pre_packet_gap:
-                await ClockCycles(self.dut.aclk, transaction.pre_packet_gap)
-            self.dut.wdata.value = transaction.data
-            self.dut.wstrb.value = transaction.strb
-            self.dut.wvalid.value = 1
-            while True:
-                await _edge(self.dut)
-                if int(self.dut.wready.value):
-                    break
-
-        self.dut.wvalid.value = 0
-
-    async def monitor(self) -> None:
-        last_handshake_cycle: int | None = None
-        cycle = 0
-        while True:
-            await _edge(self.dut)
-            cycle += 1
-            if int(self.dut.wvalid.value) and int(self.dut.wready.value):
-                gap = (
-                    0
-                    if last_handshake_cycle is None
-                    else cycle - last_handshake_cycle - 1
-                )
-                self.observed.append(
-                    WTransaction(
-                        data=int(self.dut.wdata.value),
-                        strb=int(self.dut.wstrb.value),
-                        pre_packet_gap=gap,
-                    )
-                )
-                last_handshake_cycle = cycle
-
-
-class BAgent:
-    """B driver and monitor."""
-
-    def __init__(self, dut):
-        self.dut = dut
-        self.observed: list[BTransaction] = []
-
-    async def _wait_for_bvalid(self) -> None:
-        """Wait for BVALID, including the delta cycle in which it asserts."""
-
-        if not int(self.dut.bvalid.value):
-            await RisingEdge(self.dut.bvalid)
-            await ReadWrite()
-
-    async def _wait_for_handshake(self) -> None:
-        """Wait for a sampled BVALID/BREADY handshake and settle the DUT."""
-
-        while True:
-            await RisingEdge(self.dut.aclk)
-            if int(self.dut.bvalid.value) and int(self.dut.bready.value):
-                await ReadWrite()
-                return
-
-    async def drive(self, sequence: BSequence) -> None:
-        self.dut.bready.value = 0
-        for transaction in sequence:
-            if transaction.idle_cycles < 0:
-                # Negative idle requests proactive ready.  Its magnitude is
-                # deliberately not a delay: it is a policy, not a timeout.
-                self.dut.bready.value = 1
-            else:
-                await self._wait_for_bvalid()
-                if transaction.idle_cycles:
-                    await ClockCycles(self.dut.aclk, transaction.idle_cycles)
-                self.dut.bready.value = 1
-
-            # For idle_cycles == 0, BREADY was driven in the same delta cycle
-            # as BVALID's transition, so the following clock is the handshake.
-            await self._wait_for_handshake()
-            self.dut.bready.value = 0
-
-    async def monitor(self) -> None:
-        valid_since: int | None = None
-        cycle = 0
-        while True:
-            await _edge(self.dut)
-            cycle += 1
-            if int(self.dut.bvalid.value) and valid_since is None:
-                valid_since = cycle
-            if int(self.dut.bvalid.value) and int(self.dut.bready.value):
-                idle = 0 if valid_since is None else cycle - valid_since
-                self.observed.append(
-                    BTransaction(
-                        idle_cycles=idle,
-                        resp=int(self.dut.bresp.value),
-                    )
-                )
-                valid_since = None
-
-
 class BramWriteModel:
     """Pipelined BRAM write model with a configurable write latency.
 
@@ -1088,7 +730,11 @@ class WriteScoreboard:
                 f"AW monitor mismatch: observed={observed_addresses!r}, expected={expected_addresses!r}"
             )
         expected_payloads = [
-            (transaction.data, transaction.strb) for transaction in w_vector
+            (
+                transaction.data,
+                STRB_ALL if transaction.strb is None else transaction.strb,
+            )
+            for transaction in w_vector
         ]
         observed_payloads = [
             (transaction.data, transaction.strb)
@@ -1117,7 +763,8 @@ class WriteScoreboard:
                 )
 
         expected_writes = [
-            (aw.address, w.data, w.strb) for aw, w in zip(aw_vector, w_vector)
+            (aw.address, w.data, STRB_ALL if w.strb is None else w.strb)
+            for aw, w in zip(aw_vector, w_vector)
         ]
         if self.ram.writes != expected_writes:
             raise AssertionError(

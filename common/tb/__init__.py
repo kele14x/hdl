@@ -1,6 +1,6 @@
 """Reusable cocotb verification components."""
 
-from .axi4lite import (
+from hdl_tools.axi4lite import (
     AxiLiteAgent,
     AxiLiteAgentConfig,
     AxiLiteMasterDriver,
@@ -8,7 +8,7 @@ from .axi4lite import (
     AxiLiteOperation,
     AxiLiteTransaction,
 )
-from .axis import (
+from hdl_tools.axis import (
     AxisAgent,
     AxisAgentConfig,
     AxisBeat,
@@ -18,6 +18,7 @@ from .axis import (
     AxisSinkDriver,
     AxisSourceDriver,
 )
+
 from .base import AgentMode, AnalysisPort
 from .dsp import (
     DspSample,
