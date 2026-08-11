@@ -48,9 +48,9 @@ module pdxch_fdv_buffer_write #(
   wire         packet_match = packet_first ? (rx_u_cc == 4'(CC_ID)) : packet_match_r;
 
   wire [11:0] iq_start_addr =
-      (s_dl_sym_num[0] ? IQ_BANK_DEPTH : 0) + (rx_u_startPrb * 12'd6);
+      (s_dl_sym_num[0] ? 12'(IQ_BANK_DEPTH) : 12'd0) + (rx_u_startPrb * 12'd6);
   wire [11:0] exp_start_addr =
-      (s_dl_sym_num[0] ? EXP_BANK_DEPTH : 0) + (rx_u_startPrb * 12'd3);
+      (s_dl_sym_num[0] ? 12'(EXP_BANK_DEPTH) : 12'd0) + (rx_u_startPrb * 12'd3);
 
   assign wr_iq_addr = packet_first ? iq_start_addr : iq_addr_r;
   assign wr_iq_en   = s_axis_tvalid && packet_match;

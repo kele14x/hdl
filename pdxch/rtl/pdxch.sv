@@ -92,6 +92,9 @@ module pdxch #(
 
   // Main
 
+  /* verilator lint_off SELRANGE */
+  // pdxch_regs is fixed 3CC x 4ANT; gain array is NUM_ANT-parameterized,
+  // so NUM_ANT<4 instantiations index out of range (benign: ant>=NUM_ANT unused).
   pdxch_regs i_regs (
       .s_axi_aclk             (s_axi_aclk),
       .s_axi_aresetn          (s_axi_aresetn),
@@ -193,6 +196,7 @@ module pdxch #(
       .dl_phase_comp_dout     (ctrl_phase_comp_dout),
       .dl_phase_comp_valid    (ctrl_phase_comp_valid)
   );
+  /* verilator lint_on SELRANGE */
 
 
   generate

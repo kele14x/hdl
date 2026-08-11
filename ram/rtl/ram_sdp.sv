@@ -195,7 +195,9 @@ module ram_sdp #(
   // Memory write
   always @(posedge clka) begin
     if (wea) begin
+      /* verilator lint_off WIDTHTRUNC */
       MEM[addra] <= dina;
+      /* verilator lint_on WIDTHTRUNC */
     end
   end
 
@@ -204,7 +206,9 @@ module ram_sdp #(
     if (rstb && (READ_LATENCY == 1)) begin
       regb[0] <= {DATA_WIDTH{1'b0}};
     end else if (enb[0]) begin
+      /* verilator lint_off WIDTHTRUNC */
       regb[0] <= MEM[addrb];
+      /* verilator lint_on WIDTHTRUNC */
     end
   end
 

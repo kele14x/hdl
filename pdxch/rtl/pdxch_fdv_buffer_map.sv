@@ -31,8 +31,8 @@ module pdxch_fdv_buffer_map #(
     iq_addr  = logical_re >> 1;
     exp_addr = logical_re >> 2;
     if (bank) begin
-      iq_addr  = iq_addr + IQ_BANK_DEPTH;
-      exp_addr = exp_addr + EXP_BANK_DEPTH;
+      iq_addr  = iq_addr + 12'(IQ_BANK_DEPTH);
+      exp_addr = exp_addr + 12'(EXP_BANK_DEPTH);
     end
   end
 

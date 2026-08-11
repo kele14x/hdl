@@ -3,12 +3,14 @@
 `default_nettype none
 
 module dds_lut #(
+    /* verilator lint_off WIDTHEXPAND */
     parameter string STRUCTURE = "AUTO",
     parameter int RASTERIZED = 0,
     parameter int DATA_WIDTH = 16,
     parameter int PHASE_WIDTH = 12,
     parameter int NEGATIVE_COS = 0,
     parameter int NEGATIVE_SIN = 0
+    /* verilator lint_on WIDTHEXPAND */
 ) (
     input  wire                   clk,
     input  wire                   rst,
