@@ -191,7 +191,7 @@ CASES = [
         },
     }
     for async_mode, packet_mode in ((0, 0), (0, 1), (1, 0), (1, 1))
-    for depth, latency in ((16, 1), (32, 3))
+    for depth, latency in ((16, 1), (16, 2), (32, 2), (32, 3))
 ]
 
 

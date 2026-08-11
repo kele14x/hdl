@@ -4,6 +4,11 @@
  * This FIFO is used to store AXI-Stream packets in the pipeline. This FIFO has
  * backward pressure on the input slave AXI-Stream.
  *
+ * Note: `s_axis_aresetn` must be synchronized to `s_axis_aclk` before it
+ * enters this core; it is only registered here, not synchronized. In
+ * ASYNC_MODE the read-domain reset is derived with an internal reset
+ * synchronizer.
+ *
  * Note: If the FIFO is configured in packet mode and the input packet exceeds
  * the FIFO depth, the FIFO will become stuck and will require a reset.
  */
@@ -13,12 +18,12 @@
 `default_nettype none
 
 module axis_fifo #(
-    parameter logic   ASYNC_MODE   = 1'b0,
-    parameter logic   PACKET_MODE  = 1'b0,
-    parameter integer FIFO_DEPTH   = 4096,
-    parameter integer FIFO_LATENCY = 3,
-    parameter integer DATA_WIDTH   = 32,
-    parameter integer USER_WIDTH   = 1
+    parameter int ASYNC_MODE   = 0,
+    parameter int PACKET_MODE  = 0,
+    parameter int FIFO_DEPTH   = 4096,
+    parameter int FIFO_LATENCY = 3,
+    parameter int DATA_WIDTH   = 32,
+    parameter int USER_WIDTH   = 1
 ) (
     input  wire                                          s_axis_aclk,
     input  wire                                          s_axis_aresetn,
@@ -42,49 +47,31 @@ module axis_fifo #(
 
   // Parameters
 
-  localparam integer UserWidthInt = (USER_WIDTH > 0) ? USER_WIDTH : 0;
-  localparam integer DataWidth = DATA_WIDTH + DATA_WIDTH / 8 + UserWidthInt + 1;
-  localparam integer AddrWidth = $clog2(FIFO_DEPTH);
+  localparam int UserWidthInt = (USER_WIDTH > 0) ? USER_WIDTH : 0;
+  localparam int DataWidth = DATA_WIDTH + DATA_WIDTH / 8 + UserWidthInt + 1;
+  localparam int AddrWidth = $clog2(FIFO_DEPTH);
 
   localparam logic OutputReg = (FIFO_LATENCY >= 2);
   localparam logic FabricReg = (FIFO_LATENCY >= 3);
 
-  initial begin
-    // Check FIFO depth
-    if ((FIFO_DEPTH < 4) || (32768 < FIFO_DEPTH)) begin
-      $display("ERROR: FIFO_DEPTH (%0d) is outside of valid range 4-32768. [%m]", FIFO_DEPTH);
-      $finish();
-    end
+  initial begin : drc_check
+    assert (FIFO_DEPTH >= 4 && FIFO_DEPTH <= 32768)
+    else $error("[%m]: FIFO_DEPTH (%0d) is outside of valid range 4-32768.", FIFO_DEPTH);
 
-    // Check FIFO depth is a power of 2
-    if ((FIFO_DEPTH & (FIFO_DEPTH - 1)) != 0) begin
-      $display("ERROR: FIFO_DEPTH (%0d) is not a power of 2. [%m]", FIFO_DEPTH);
-      $finish();
-    end
+    assert ((FIFO_DEPTH & (FIFO_DEPTH - 1)) == 0)
+    else $error("[%m]: FIFO_DEPTH (%0d) is not a power of 2.", FIFO_DEPTH);
 
-    // Check input FIFO latency
-    if ((FIFO_LATENCY < 1) || (3 < FIFO_LATENCY)) begin
-      $display("ERROR: FIFO_LATENCY (%0d) is outside of valid range 1-3. [%m]", FIFO_LATENCY);
-      $finish();
-    end
+    assert (FIFO_LATENCY >= 1 && FIFO_LATENCY <= 3)
+    else $error("[%m]: FIFO_LATENCY (%0d) is outside of valid range 1-3.", FIFO_LATENCY);
 
-    // Check data width
-    if (DataWidth < 0 || DataWidth > 4096) begin
-      $display("ERROR: Data width (%0d) is outside of valid range 0-4096. [%m]", DataWidth);
-      $finish();
-    end
+    assert (DataWidth <= 4096)
+    else $error("[%m]: Data width (%0d) is outside of valid range 0-4096.", DataWidth);
 
-    // Check data width is multiple of 8
-    if (DATA_WIDTH % 8 != 0) begin
-      $display("ERROR: DATA_WIDTH (%0d) is not a multiple of 8. [%m]", DATA_WIDTH);
-      $finish();
-    end
+    assert ((DATA_WIDTH % 8) == 0)
+    else $error("[%m]: DATA_WIDTH (%0d) is not a multiple of 8.", DATA_WIDTH);
 
-    // Check user width
-    if (USER_WIDTH < 0 || USER_WIDTH > 4096) begin
-      $display("ERROR: User width (%0d) is outside of valid range 0-4096. [%m]", USER_WIDTH);
-      $finish();
-    end
+    assert (USER_WIDTH >= 0 && USER_WIDTH <= 4096)
+    else $error("[%m]: USER_WIDTH (%0d) is outside of valid range 0-4096.", USER_WIDTH);
   end
 
   // Signals
@@ -115,8 +102,6 @@ module axis_fifo #(
 
   logic [  FIFO_LATENCY:0] valid;
 
-  genvar i;
-
   // Write pointer
 
   assign wr_clk = s_axis_aclk;
@@ -136,7 +121,7 @@ module axis_fifo #(
   assign wr_count_next = wr_en ? (wr_count + 1'd1) : wr_count;
 
   generate
-    if (PACKET_MODE) begin : g_packet_mode
+    if (PACKET_MODE != 0) begin : g_packet_mode
 
       // Commit the write pointer when a packet is accepted
       always_ff @(posedge wr_clk) begin
@@ -171,6 +156,14 @@ module axis_fifo #(
 
   assign s_axis_tready = !wr_full;
 
+  // Overflow guard: a write must never be accepted while the FIFO is really
+  // full, otherwise the write pointer would overrun unread data.  Occupancy
+  // uses the same (possibly stale) read pointer as the full flag, so this
+  // only fires if the full prediction itself is wrong.
+  assert property (@(posedge wr_clk) disable iff (!wr_rstn)
+                   wr_en |-> ((wr_count - rd_count_wr) != FIFO_DEPTH[AddrWidth:0]))
+  else $error("[%m]: overflow, write accepted while FIFO is full.");
+
   // The full flag `wr_full` is set when the write pointer catches up to the
   // read pointer. It can be computed as:
   //
@@ -191,7 +184,7 @@ module axis_fifo #(
 
   // Read pointer
 
-  assign rd_clk = ASYNC_MODE ? m_axis_aclk : s_axis_aclk;
+  assign rd_clk = (ASYNC_MODE != 0) ? m_axis_aclk : s_axis_aclk;
 
   always_ff @(posedge rd_clk) begin
     if (!rd_rstn) begin
@@ -210,7 +203,7 @@ module axis_fifo #(
   // RAM read
 
   generate
-    for (i = 0; i < FIFO_LATENCY; i = i + 1) begin : g_rd_en
+    for (genvar i = 0; i < FIFO_LATENCY; i = i + 1) begin : g_rd_en
       assign rd_en[i] = valid[i] && (~&valid[FIFO_LATENCY:i+1] || m_axis_tready);
     end
   endgenerate
@@ -218,7 +211,7 @@ module axis_fifo #(
   // The valid flags
 
   generate
-    for (i = 0; i <= FIFO_LATENCY; i = i + 1) begin : g_valid
+    for (genvar i = 0; i <= FIFO_LATENCY; i = i + 1) begin : g_valid
 
       if (i == 0) begin : g_first
 
@@ -316,7 +309,7 @@ module axis_fifo #(
   );
 
   generate
-    if (ASYNC_MODE) begin : g_async_cdc
+    if (ASYNC_MODE != 0) begin : g_async_cdc
 
       // Reset synchronization
 
