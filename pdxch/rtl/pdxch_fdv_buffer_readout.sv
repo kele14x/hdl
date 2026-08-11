@@ -79,6 +79,7 @@ module pdxch_fdv_buffer_readout #(
   logic        bist_en_r                                    [NUM_ANT];
   logic        bist_en_any;
   logic        bist_en_any_d;
+  logic        bist_en_any_dd;
 
   logic [15:0] bist_data_dr;
   logic [15:0] bist_data_di;
@@ -98,6 +99,10 @@ module pdxch_fdv_buffer_readout #(
   logic [35:0] rd_iq_data_c;
   logic [ 3:0] rd_exp_data_c;
   logic [17:0] rd_pair_c;
+  logic [30:0] rd_expanded_dr_c;
+  logic [30:0] rd_expanded_di_c;
+  logic [30:0] rd_expanded_dr_r;
+  logic [30:0] rd_expanded_di_r;
   logic [15:0] rd_decoded_dr_c;
   logic [15:0] rd_decoded_di_c;
   logic [31:0] rd_data_r;
@@ -196,17 +201,23 @@ module pdxch_fdv_buffer_readout #(
       .dest_out(ctrl_fs_offset_s)
   );
 
-  function automatic logic [15:0] bfp9_decompress(
+  function automatic logic [30:0] bfp9_decompress_s1(
       input logic [8:0] data,
-      input logic [3:0] exp,
-      input logic [3:0] fs_offset
+      input logic [3:0] exp
   );
     logic signed [30:0] expanded;
-    logic               sign;
-    logic [16:0]        temp;
 
     expanded = $signed({data, 22'b0});
     expanded = expanded >>> (15 - int'(exp));
+    bfp9_decompress_s1 = expanded;
+  endfunction
+
+  function automatic logic [15:0] bfp9_decompress_s2(
+      input logic [30:0] expanded,
+      input logic [3:0]  fs_offset
+  );
+    logic        sign;
+    logic [16:0] temp;
 
     // Full-scale alignment and saturation are the same as the former
     // bfp_decomp implementation, but only the BFP9 path remains here.
@@ -218,7 +229,7 @@ module pdxch_fdv_buffer_readout #(
       end
     end
     temp = temp == 17'h0FFFF ? temp : temp + 1'b1;
-    bfp9_decompress = temp[16:1];
+    bfp9_decompress_s2 = temp[16:1];
   endfunction
 
   pdxch_fdv_buffer_map #(
@@ -381,7 +392,8 @@ module pdxch_fdv_buffer_readout #(
   end
 
   always_ff @(posedge clk) begin
-    bist_en_any_d <= bist_en_any;
+    bist_en_any_d  <= bist_en_any;
+    bist_en_any_dd <= bist_en_any_d;
   end
 
   lfsr #(
@@ -401,7 +413,7 @@ module pdxch_fdv_buffer_readout #(
   );
 
   always_ff @(posedge clk) begin
-    if (bist_en_any_d) begin
+    if (bist_en_any_dd) begin
       case (lfsr[1:0])
         2'b00: begin
           bist_data_dr <= 16'sd4210;
@@ -501,8 +513,18 @@ module pdxch_fdv_buffer_readout #(
 
   always_comb begin
     rd_pair_c = rd_half_dd ? rd_iq_data_c[17:0] : rd_iq_data_c[35:18];
-    rd_decoded_dr_c = bfp9_decompress(rd_pair_c[17:9], rd_exp_data_c, ctrl_fs_offset_s);
-    rd_decoded_di_c = bfp9_decompress(rd_pair_c[8:0], rd_exp_data_c, ctrl_fs_offset_s);
+    rd_expanded_dr_c = bfp9_decompress_s1(rd_pair_c[17:9], rd_exp_data_c);
+    rd_expanded_di_c = bfp9_decompress_s1(rd_pair_c[8:0], rd_exp_data_c);
+  end
+
+  always_ff @(posedge clk) begin
+    rd_expanded_dr_r <= rd_expanded_dr_c;
+    rd_expanded_di_r <= rd_expanded_di_c;
+  end
+
+  always_comb begin
+    rd_decoded_dr_c = bfp9_decompress_s2(rd_expanded_dr_r, ctrl_fs_offset_s);
+    rd_decoded_di_c = bfp9_decompress_s2(rd_expanded_di_r, ctrl_fs_offset_s);
   end
 
   always_ff @(posedge clk) begin
@@ -519,7 +541,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(3),
-      .DEPTH(5)
+      .DEPTH(6)
   ) u_delay_sf (
       .clk (clk),
       .rst (1'b0),
@@ -566,7 +588,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(4),
-      .DEPTH(5),
+      .DEPTH(6),
       .INIT (1'b0)
   ) u_delay_chn (
       .clk (clk),
@@ -578,7 +600,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(1),
-      .DEPTH(5),
+      .DEPTH(6),
       .INIT (1'b0)
   ) u_delay_dv (
       .clk (clk),
@@ -590,7 +612,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(1),
-      .DEPTH(5),
+      .DEPTH(6),
       .INIT (1'b0)
   ) u_delay_last (
       .clk (clk),
