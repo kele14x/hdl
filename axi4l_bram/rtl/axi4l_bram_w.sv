@@ -3,8 +3,8 @@
 `default_nettype none
 
 module axi4l_bram_w #(
-    parameter integer ADDR_WIDTH = 32,
-    parameter integer DATA_WIDTH = 32
+    parameter int ADDR_WIDTH = 32,
+    parameter int DATA_WIDTH = 32
 ) (
     input  wire                    aclk,
     input  wire                    aresetn,

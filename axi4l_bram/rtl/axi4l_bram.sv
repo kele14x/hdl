@@ -9,8 +9,8 @@
 // in shared mode the single command stream is split by its write enable, so
 // at most one port enable is asserted per cycle.
 module axi4l_bram #(
-    parameter int ADDR_WIDTH = 32,
-    parameter int DATA_WIDTH = 32,
+    parameter int ADDR_WIDTH    = 32,
+    parameter int DATA_WIDTH    = 32,
     parameter int USE_DUAL_PORT = 0
 ) (
     input  wire                    aclk,
