@@ -1,18 +1,5 @@
 #!/usr/bin/env python3
-"""Cocotb regression for the merged AXI4-Lite BRAM adapter top.
-
-Every scenario drives the ``axi4l_bram`` top through its split read/write
-BRAM ports.  One parametrized runner iterates the configuration matrix —
-``USE_DUAL_PORT`` 0/1, ``ADDR_WIDTH`` 32/12 and ``DATA_WIDTH`` 32/16 — and
-each build runs the whole scenario set:
-
-- ``test_top_*``: directed mixed-traffic scenarios
-- ``test_r_*``:   read agent environment (AR/R vectors, reference model)
-- ``test_w_*``:   write agent environment (AW/W/B vectors, reference model)
-
-The agent scenarios are intentionally only vector construction: add a new one
-by building the matching sequences and calling the testbench ``run`` method.
-"""
+"""Cocotb regression for the merged AXI4-Lite BRAM adapter top."""
 
 from __future__ import annotations
 

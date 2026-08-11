@@ -608,7 +608,7 @@ class AxiLiteMonitor(_AxiLiteComponent):
 
     def stop(self):
         if self._task is not None:
-            self._task.kill()
+            self._task.cancel()
             self._task = None
 
     def _prot(self, name: str) -> int:

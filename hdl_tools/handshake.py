@@ -181,7 +181,7 @@ class HandshakeSink(_HandshakeComponent):
 
     def stop(self) -> None:
         if self._task is not None:
-            self._task.kill()
+            self._task.cancel()
             self._task = None
         self.idle()
 
@@ -230,7 +230,7 @@ class HandshakeMonitor(_HandshakeComponent):
 
     def stop(self) -> None:
         if self._task is not None:
-            self._task.kill()
+            self._task.cancel()
             self._task = None
 
     async def run(self) -> None:

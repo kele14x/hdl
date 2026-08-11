@@ -241,7 +241,7 @@ class AxisMonitor(_AxisComponent):
 
     def stop(self):
         if self._task is not None:
-            self._task.kill()
+            self._task.cancel()
             self._task = None
         self._partial_frame.clear()
 
