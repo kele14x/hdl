@@ -11,15 +11,15 @@ module adder #(
     parameter int ROUND    = 0,
     parameter int SATURATE = 0
 ) (
-    input  wire                      clk,
-    input  wire                      rst,
+    input var                       clk,
+    input var                       rst,
     //
-    input  wire signed [A_WIDTH-1:0] a,
-    input  wire signed [B_WIDTH-1:0] b,
-    input  wire                      sub,
+    input var  signed [A_WIDTH-1:0] a,
+    input var  signed [B_WIDTH-1:0] b,
+    input var                       sub,
     //
-    output wire signed [P_WIDTH-1:0] p,
-    output wire                      ovf
+    output var signed [P_WIDTH-1:0] p,
+    output var                      ovf
 );
 
   /* verilator lint_off UNUSEDPARAM */

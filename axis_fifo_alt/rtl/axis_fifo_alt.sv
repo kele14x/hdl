@@ -12,11 +12,11 @@
 `default_nettype none
 
 module axis_fifo_alt #(
-    parameter int     ASYNC_MODE   = 0,
-    parameter integer FIFO_DEPTH   = 4096,
-    parameter integer FIFO_LATENCY = 3,
-    parameter integer DATA_WIDTH   = 32,
-    parameter integer USER_WIDTH   = 1
+    parameter int ASYNC_MODE   = 0,
+    parameter int FIFO_DEPTH   = 4096,
+    parameter int FIFO_LATENCY = 3,
+    parameter int DATA_WIDTH   = 32,
+    parameter int USER_WIDTH   = 1
 ) (
     input  wire                                          s_axis_aclk,
     input  wire                                          s_axis_aresetn,
@@ -41,10 +41,10 @@ module axis_fifo_alt #(
 
   // Parameters
 
-  localparam integer UserWidthInt = (USER_WIDTH > 0) ? USER_WIDTH : 0;
+  localparam int UserWidthInt = (USER_WIDTH > 0) ? USER_WIDTH : 0;
   // Data width = tdata + tkeep + tlast + tuser
-  localparam integer DataWidth = DATA_WIDTH + DATA_WIDTH / 8 + 1 + UserWidthInt;
-  localparam integer AddrWidth = $clog2(FIFO_DEPTH);
+  localparam int DataWidth = DATA_WIDTH + DATA_WIDTH / 8 + 1 + UserWidthInt;
+  localparam int AddrWidth = $clog2(FIFO_DEPTH);
 
   localparam logic OutputReg = (FIFO_LATENCY >= 2);
   localparam logic FabricReg = (FIFO_LATENCY >= 3);
