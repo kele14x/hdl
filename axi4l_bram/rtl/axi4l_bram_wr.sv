@@ -1,9 +1,13 @@
 `timescale 1 ns / 1 ps
+//
 `default_nettype none
 
 // AXI4-Lite adapter for a single command BRAM port. Read and write requests
 // each have two entries of response credit and complete independently. Each
 // acknowledgement channel must preserve the issue order for its command type.
+// The BRAM side appears as separate read and write ports: the single command
+// stream is split by its write enable, so at most one port enable is asserted
+// per cycle.
 module axi4l_bram_wr #(
     parameter int ADDR_WIDTH = 32,
     parameter int DATA_WIDTH = 32
@@ -33,88 +37,114 @@ module axi4l_bram_wr #(
     output wire                    rvalid,
     input  wire                    rready,
     //
-    output wire [  ADDR_WIDTH-1:0] bram_addr,
-    output wire [  DATA_WIDTH-1:0] bram_wr_data,
-    output wire [DATA_WIDTH/8-1:0] bram_wr_strb,
-    output wire                    bram_we,
-    output wire                    bram_en,
-    //
-    input  wire                    bram_wr_ack,
-    input  wire                    bram_wr_err,
+    output wire [  ADDR_WIDTH-1:0] bram_rd_addr,
+    output wire                    bram_rd_en,
     //
     input  wire [  DATA_WIDTH-1:0] bram_rd_data,
     input  wire                    bram_rd_ack,
-    input  wire                    bram_rd_err
+    input  wire                    bram_rd_err,
+    //
+    output wire [  ADDR_WIDTH-1:0] bram_wr_addr,
+    output wire [  DATA_WIDTH-1:0] bram_wr_data,
+    output wire [DATA_WIDTH/8-1:0] bram_wr_strb,
+    output wire                    bram_wr_we,
+    //
+    input  wire                    bram_wr_ack,
+    input  wire                    bram_wr_err
 );
 
   localparam integer STRB_WIDTH = DATA_WIDTH / 8;
 
-  logic head_valid;
-  logic head_write;
+  logic                  head_valid;
+  logic                  head_write;
   logic [ADDR_WIDTH-1:0] head_addr;
   logic [DATA_WIDTH-1:0] head_wdata;
   logic [STRB_WIDTH-1:0] head_wstrb;
-  logic ar_back_valid;
+  logic                  ar_back_valid;
   logic [ADDR_WIDTH-1:0] ar_back_addr;
-  logic aw_back_valid;
+  logic                  aw_back_valid;
   logic [ADDR_WIDTH-1:0] aw_back_addr;
-  logic w_back_valid;
+  logic                  w_back_valid;
   logic [DATA_WIDTH-1:0] w_back_data;
   logic [STRB_WIDTH-1:0] w_back_strb;
-  logic priority_read;
+  logic                  priority_read;
 
-  logic [1:0] b_outstanding;
-  logic [1:0] r_outstanding;
-  logic [1:0] b_wait_ack;
-  logic [1:0] r_wait_ack;
-  logic [1:0] b_pending;
-  logic [1:0] r_pending;
-  logic b_err_slot0;
-  logic b_err_slot1;
+  logic [           1:0] b_outstanding;
+  logic [           1:0] r_outstanding;
+  logic [           1:0] b_wait_ack;
+  logic [           1:0] r_wait_ack;
+  logic [           1:0] b_pending;
+  logic [           1:0] r_pending;
+  logic                  b_err_slot0;
+  logic                  b_err_slot1;
   logic [DATA_WIDTH-1:0] r_slot0;
   logic [DATA_WIDTH-1:0] r_slot1;
-  logic r_err_slot0;
-  logic r_err_slot1;
+  logic                  r_err_slot0;
+  logic                  r_err_slot1;
   logic [ADDR_WIDTH-1:0] bram_addr_r;
   logic [DATA_WIDTH-1:0] bram_wr_data_r;
   logic [STRB_WIDTH-1:0] bram_wr_strb_r;
-  logic bram_we_r;
-  logic bram_en_r;
+  logic                  bram_we_r;
+  logic                  bram_en_r;
 
-  wire b_hs = bvalid && bready;
-  wire r_hs = rvalid && rready;
-  wire wr_ack_fire = bram_wr_ack && (b_wait_ack != 2'd0);
-  wire rd_ack_fire = bram_rd_ack && (r_wait_ack != 2'd0);
-  wire b_credit = (b_outstanding != 2'd2) || b_hs;
-  wire r_credit = (r_outstanding != 2'd2) || r_hs;
-  wire issue = head_valid && (head_write ? b_credit : r_credit);
-  wire issue_write = issue && head_write;
-  wire issue_read = issue && !head_write;
-  wire head_available = !head_valid || issue;
-  wire read_waiting = ar_back_valid || arvalid;
-  wire write_waiting = aw_back_valid && w_back_valid;
-  wire grant_read = head_available && read_waiting && (!write_waiting || priority_read);
-  wire grant_write = head_available && write_waiting && (!read_waiting || !priority_read);
-  wire load_read_back = grant_read && ar_back_valid;
-  wire load_read_direct = grant_read && !ar_back_valid && arvalid;
-  wire load_write_back = grant_write;
-  wire ar_hs = arvalid && arready;
-  wire aw_hs = awvalid && awready;
-  wire w_hs = wvalid && wready;
+  logic                  b_hs;
+  logic                  r_hs;
+  logic                  wr_ack_fire;
+  logic                  rd_ack_fire;
+  logic                  b_credit;
+  logic                  r_credit;
+  logic                  issue;
+  logic                  issue_write;
+  logic                  issue_read;
+  logic                  head_available;
+  logic                  read_waiting;
+  logic                  write_waiting;
+  logic                  grant_read;
+  logic                  grant_write;
+  logic                  load_read_back;
+  logic                  load_read_direct;
+  logic                  load_write_back;
+  logic                  ar_hs;
+  logic                  aw_hs;
+  logic                  w_hs;
 
-  assign bvalid = b_pending != 2'd0;
-  assign bresp = b_err_slot0 ? 2'b10 : 2'b00;
-  assign rvalid = r_pending != 2'd0;
-  assign rdata = r_slot0;
-  assign rresp = r_err_slot0 ? 2'b10 : 2'b00;
-  assign arready = !ar_back_valid || load_read_back;
-  assign awready = !aw_back_valid || load_write_back;
-  assign wready = !w_back_valid || load_write_back;
-  assign bram_addr = bram_addr_r;
-  assign bram_wr_data = bram_wr_data_r;
-  assign bram_wr_strb = bram_wr_strb_r;
-  assign bram_we = bram_we_r;
-  assign bram_en = bram_en_r;
+  //
+
+  assign bvalid           = b_pending != 2'd0;
+  assign bresp            = b_err_slot0 ? 2'b10 : 2'b00;
+  assign rvalid           = r_pending != 2'd0;
+  assign rdata            = r_slot0;
+  assign rresp            = r_err_slot0 ? 2'b10 : 2'b00;
+  assign arready          = !ar_back_valid || load_read_back;
+  assign awready          = !aw_back_valid || load_write_back;
+  assign wready           = !w_back_valid || load_write_back;
+  assign bram_rd_addr     = bram_addr_r;
+  assign bram_rd_en       = bram_en_r && !bram_we_r;
+  assign bram_wr_addr     = bram_addr_r;
+  assign bram_wr_data     = bram_wr_data_r;
+  assign bram_wr_strb     = bram_wr_strb_r;
+  assign bram_wr_we       = bram_en_r && bram_we_r;
+
+  assign b_hs             = bvalid && bready;
+  assign r_hs             = rvalid && rready;
+  assign wr_ack_fire      = bram_wr_ack && (b_wait_ack != 2'd0);
+  assign rd_ack_fire      = bram_rd_ack && (r_wait_ack != 2'd0);
+  assign b_credit         = (b_outstanding != 2'd2) || b_hs;
+  assign r_credit         = (r_outstanding != 2'd2) || r_hs;
+  assign issue            = head_valid && (head_write ? b_credit : r_credit);
+  assign issue_write      = issue && head_write;
+  assign issue_read       = issue && !head_write;
+  assign head_available   = !head_valid || issue;
+  assign read_waiting     = ar_back_valid || arvalid;
+  assign write_waiting    = aw_back_valid && w_back_valid;
+  assign grant_read       = head_available && read_waiting && (!write_waiting || priority_read);
+  assign grant_write      = head_available && write_waiting && (!read_waiting || !priority_read);
+  assign load_read_back   = grant_read && ar_back_valid;
+  assign load_read_direct = grant_read && !ar_back_valid && arvalid;
+  assign load_write_back  = grant_write;
+  assign ar_hs            = arvalid && arready;
+  assign aw_hs            = awvalid && awready;
+  assign w_hs             = wvalid && wready;
 
   initial begin : drc_check
     assert (ADDR_WIDTH > 0)

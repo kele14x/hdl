@@ -23,9 +23,9 @@ module axi4l_bram_w #(
     input  wire                    bready,
     //
     output wire [  ADDR_WIDTH-1:0] bram_addr,
-    output wire [  DATA_WIDTH-1:0] bram_wr_data,
-    output wire [DATA_WIDTH/8-1:0] bram_wr_strb,
-    output wire                    bram_en,
+    output wire [  DATA_WIDTH-1:0] bram_data,
+    output wire [DATA_WIDTH/8-1:0] bram_strb,
+    output wire                    bram_we,
     //
     input  wire                    bram_ack,
     input  wire                    bram_err
@@ -57,7 +57,7 @@ module axi4l_bram_w #(
   logic [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot0_next;
   logic [DATA_WIDTH+DATA_WIDTH/8-1:0] w_slot1_next;
 
-  logic                               bram_en_r;
+  logic                               bram_we_r;
 
   // 2'b00: no write is outstanding
   // 2'b01: 1 write is outstanding
@@ -439,18 +439,18 @@ module axi4l_bram_w #(
   // BRAM
 
   assign bram_addr = aw_slot0;
-  assign bram_wr_data = w_slot0[DATA_WIDTH+DATA_WIDTH/8-1:DATA_WIDTH/8];
-  assign bram_wr_strb = w_slot0[DATA_WIDTH/8-1:0];
+  assign bram_data = w_slot0[DATA_WIDTH+DATA_WIDTH/8-1:DATA_WIDTH/8];
+  assign bram_strb = w_slot0[DATA_WIDTH/8-1:0];
 
   always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin
-      bram_en_r <= 1'b0;
+      bram_we_r <= 1'b0;
     end else begin
-      bram_en_r <= aw_state_next[0] && w_state_next[0] && ~b_count_next[1];
+      bram_we_r <= aw_state_next[0] && w_state_next[0] && ~b_count_next[1];
     end
   end
 
-  assign bram_en = bram_en_r;
+  assign bram_we = bram_we_r;
 
   // B channel
 

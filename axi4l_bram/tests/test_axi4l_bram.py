@@ -148,7 +148,7 @@ async def bram_model_split(
         dut.bram_rd_ack.value = 0
         dut.bram_rd_err.value = 0
 
-        if int(dut.bram_wr_en.value):
+        if int(dut.bram_wr_we.value):
             address = int(dut.bram_wr_addr.value)
             data = int(dut.bram_wr_data.value)
             issued.append((True, address, data))
@@ -670,7 +670,7 @@ class BramWriteModel:
         self.dut.bram_wr_err.value = 0
         while True:
             await RisingEdge(self.dut.aclk)
-            # bram_wr_en is assigned by a nonblocking assignment in the DUT.
+            # bram_wr_we is assigned by a nonblocking assignment in the DUT.
             # ReadWrite sees its new value in this same timestep, allowing a
             # latency-zero request to drive ACK without a clock delay.
             await ReadWrite()
@@ -678,7 +678,7 @@ class BramWriteModel:
             self.dut.bram_wr_ack.value = 0
             self.dut.bram_wr_err.value = 0
 
-            if int(self.dut.bram_wr_en.value):
+            if int(self.dut.bram_wr_we.value):
                 address = int(self.dut.bram_wr_addr.value)
                 data = int(self.dut.bram_wr_data.value)
                 strb = int(self.dut.bram_wr_strb.value)

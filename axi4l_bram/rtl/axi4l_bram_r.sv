@@ -21,7 +21,7 @@ module axi4l_bram_r #(
     output wire [ADDR_WIDTH-1:0] bram_addr,
     output wire                  bram_en,
     //
-    input  wire [DATA_WIDTH-1:0] bram_rd_data,
+    input  wire [DATA_WIDTH-1:0] bram_data,
     input  wire                  bram_ack,
     input  wire                  bram_err
 );
@@ -288,13 +288,13 @@ module axi4l_bram_r #(
     case (r_state)
       2'b00: begin
         if (bram_ack) begin
-          r_slot0_next = bram_rd_data;
+          r_slot0_next = bram_data;
         end
       end
 
       2'b01: begin
         if (bram_ack && rready) begin
-          r_slot0_next = bram_rd_data;
+          r_slot0_next = bram_data;
         end
       end
 
@@ -325,7 +325,7 @@ module axi4l_bram_r #(
     case (r_state)
       2'b01: begin
         if (bram_ack && !rready) begin
-          r_slot1_next = bram_rd_data;
+          r_slot1_next = bram_data;
         end
       end
 

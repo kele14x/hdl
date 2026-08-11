@@ -1,4 +1,5 @@
 `timescale 1 ns / 1 ps
+//
 `default_nettype none
 
 // AXI4-Lite to BRAM adapter top with a selectable BRAM port structure.
@@ -40,17 +41,17 @@ module axi4l_bram #(
     output wire [  ADDR_WIDTH-1:0] bram_rd_addr,
     output wire                    bram_rd_en,
     //
+    input  wire [  DATA_WIDTH-1:0] bram_rd_data,
+    input  wire                    bram_rd_ack,
+    input  wire                    bram_rd_err,
+    //
     output wire [  ADDR_WIDTH-1:0] bram_wr_addr,
     output wire [  DATA_WIDTH-1:0] bram_wr_data,
     output wire [DATA_WIDTH/8-1:0] bram_wr_strb,
-    output wire                    bram_wr_en,
+    output wire                    bram_wr_we,
     //
     input  wire                    bram_wr_ack,
-    input  wire                    bram_wr_err,
-    //
-    input  wire [  DATA_WIDTH-1:0] bram_rd_data,
-    input  wire                    bram_rd_ack,
-    input  wire                    bram_rd_err
+    input  wire                    bram_wr_err
 );
 
   initial begin : drc_check
@@ -64,96 +65,84 @@ module axi4l_bram #(
 
   generate
     if (USE_DUAL_PORT == 0) begin : gen_single_port
-      wire [  ADDR_WIDTH-1:0] shared_addr;
-      wire [  DATA_WIDTH-1:0] shared_wdata;
-      wire [DATA_WIDTH/8-1:0] shared_wstrb;
-      wire                    shared_we;
-      wire                    shared_en;
-
       axi4l_bram_wr #(
           .ADDR_WIDTH(ADDR_WIDTH),
           .DATA_WIDTH(DATA_WIDTH)
       ) u_axi4l_bram_wr (
-          .aclk       (aclk),
-          .aresetn    (aresetn),
-          .awaddr     (awaddr),
-          .awvalid    (awvalid),
-          .awready    (awready),
-          .wdata      (wdata),
-          .wstrb      (wstrb),
-          .wvalid     (wvalid),
-          .wready     (wready),
-          .bresp      (bresp),
-          .bvalid     (bvalid),
-          .bready     (bready),
-          .araddr     (araddr),
-          .arvalid    (arvalid),
-          .arready    (arready),
-          .rdata      (rdata),
-          .rresp      (rresp),
-          .rvalid     (rvalid),
-          .rready     (rready),
-          .bram_addr    (shared_addr),
-          .bram_wr_data (shared_wdata),
-          .bram_wr_strb (shared_wstrb),
-          .bram_we      (shared_we),
-          .bram_en      (shared_en),
-          .bram_wr_ack  (bram_wr_ack),
-          .bram_wr_err  (bram_wr_err),
-          .bram_rd_data (bram_rd_data),
-          .bram_rd_ack  (bram_rd_ack),
-          .bram_rd_err  (bram_rd_err)
+          .aclk        (aclk),
+          .aresetn     (aresetn),
+          .awaddr      (awaddr),
+          .awvalid     (awvalid),
+          .awready     (awready),
+          .wdata       (wdata),
+          .wstrb       (wstrb),
+          .wvalid      (wvalid),
+          .wready      (wready),
+          .bresp       (bresp),
+          .bvalid      (bvalid),
+          .bready      (bready),
+          .araddr      (araddr),
+          .arvalid     (arvalid),
+          .arready     (arready),
+          .rdata       (rdata),
+          .rresp       (rresp),
+          .rvalid      (rvalid),
+          .rready      (rready),
+          .bram_rd_addr(bram_rd_addr),
+          .bram_rd_en  (bram_rd_en),
+          .bram_wr_addr(bram_wr_addr),
+          .bram_wr_data(bram_wr_data),
+          .bram_wr_strb(bram_wr_strb),
+          .bram_wr_we  (bram_wr_we),
+          .bram_wr_ack (bram_wr_ack),
+          .bram_wr_err (bram_wr_err),
+          .bram_rd_data(bram_rd_data),
+          .bram_rd_ack (bram_rd_ack),
+          .bram_rd_err (bram_rd_err)
       );
-
-      assign bram_rd_addr = shared_addr;
-      assign bram_rd_en = shared_en && !shared_we;
-      assign bram_wr_addr = shared_addr;
-      assign bram_wr_data = shared_wdata;
-      assign bram_wr_strb = shared_wstrb;
-      assign bram_wr_en = shared_en && shared_we;
     end else begin : gen_dual_port
       axi4l_bram_r #(
           .ADDR_WIDTH(ADDR_WIDTH),
           .DATA_WIDTH(DATA_WIDTH)
       ) u_axi4l_bram_r (
-          .aclk      (aclk),
-          .aresetn   (aresetn),
-          .araddr    (araddr),
-          .arvalid   (arvalid),
-          .arready   (arready),
-          .rdata     (rdata),
-          .rresp     (rresp),
-          .rvalid    (rvalid),
-          .rready    (rready),
-          .bram_addr   (bram_rd_addr),
-          .bram_en     (bram_rd_en),
-          .bram_rd_data(bram_rd_data),
-          .bram_ack    (bram_rd_ack),
-          .bram_err    (bram_rd_err)
+          .aclk     (aclk),
+          .aresetn  (aresetn),
+          .araddr   (araddr),
+          .arvalid  (arvalid),
+          .arready  (arready),
+          .rdata    (rdata),
+          .rresp    (rresp),
+          .rvalid   (rvalid),
+          .rready   (rready),
+          .bram_addr(bram_rd_addr),
+          .bram_en  (bram_rd_en),
+          .bram_data(bram_rd_data),
+          .bram_ack (bram_rd_ack),
+          .bram_err (bram_rd_err)
       );
 
       axi4l_bram_w #(
           .ADDR_WIDTH(ADDR_WIDTH),
           .DATA_WIDTH(DATA_WIDTH)
       ) u_axi4l_bram_w (
-          .aclk      (aclk),
-          .aresetn   (aresetn),
-          .awaddr    (awaddr),
-          .awvalid   (awvalid),
-          .awready   (awready),
-          .wdata     (wdata),
-          .wstrb     (wstrb),
-          .wvalid    (wvalid),
-          .wready    (wready),
-          .bresp     (bresp),
-          .bvalid    (bvalid),
-          .bready    (bready),
-          .bram_addr   (bram_wr_addr),
-          .bram_wr_data(bram_wr_data),
-          .bram_wr_strb(bram_wr_strb),
-          .bram_en     (bram_wr_en),
-          .bram_ack    (bram_wr_ack),
-          .bram_err    (bram_wr_err)
+          .aclk     (aclk),
+          .aresetn  (aresetn),
+          .awaddr   (awaddr),
+          .awvalid  (awvalid),
+          .awready  (awready),
+          .wdata    (wdata),
+          .wstrb    (wstrb),
+          .wvalid   (wvalid),
+          .wready   (wready),
+          .bresp    (bresp),
+          .bvalid   (bvalid),
+          .bready   (bready),
+          .bram_addr(bram_wr_addr),
+          .bram_data(bram_wr_data),
+          .bram_strb(bram_wr_strb),
+          .bram_we  (bram_wr_we),
+          .bram_ack (bram_wr_ack),
+          .bram_err (bram_wr_err)
       );
     end
   endgenerate
