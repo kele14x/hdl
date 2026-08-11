@@ -10,7 +10,7 @@
 // complex REs).
 module pdxch_fdv_buffer_write #(
     parameter int CC_ID      = 0,
-    parameter bit HALF_BLOCK = 1'b0
+    parameter int HALF_BLOCK = 0
 ) (
     input wire         clk,
     input wire         rst,
@@ -32,8 +32,8 @@ module pdxch_fdv_buffer_write #(
     output wire [  3:0] wr_exp_data
 );
 
-  localparam int IQ_BANK_DEPTH  = HALF_BLOCK ? 1024 : 1792;
-  localparam int EXP_BANK_DEPTH = HALF_BLOCK ? 480 : 825;
+  localparam int IQ_BANK_DEPTH  = (HALF_BLOCK != 0) ? 1024 : 1792;
+  localparam int EXP_BANK_DEPTH = (HALF_BLOCK != 0) ? 480 : 825;
 
   logic        packet_active;
   logic        packet_match_r;

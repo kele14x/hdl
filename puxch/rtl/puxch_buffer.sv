@@ -5,7 +5,7 @@
 module puxch_buffer #(
     parameter int ID         = 0,
     parameter int NUM_CC     = 3,
-    parameter bit HALF_BLOCK = 1'b0
+    parameter int HALF_BLOCK = 0
 ) (
     input  wire        clk,
     input  wire        rst,
@@ -222,7 +222,7 @@ module puxch_buffer #(
 
   generate
     for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_ram
-      if (HALF_BLOCK) begin : g_half
+    if (HALF_BLOCK != 0) begin : g_half
 
         logic [11:0] wr_addr_s;
         logic        wr_we_s;

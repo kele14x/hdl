@@ -7,9 +7,9 @@ module cmult #(
     parameter int B_WIDTH    = 16,
     parameter int P_WIDTH    = 16,
     parameter int SHIFT      = 15,
-    parameter bit ROUND      = 1'b0,
-    parameter bit SATURATE   = 1'b0,
-    parameter bit USE_3_MULT = 1'b0
+    parameter int ROUND      = 0,
+    parameter int SATURATE   = 0,
+    parameter int USE_3_MULT = 0
 ) (
     input  wire                      clk,
     input  wire                      rst,
@@ -27,7 +27,7 @@ module cmult #(
 );
 
   /* verilator lint_off UNUSEDPARAM */
-  localparam int Latency = USE_3_MULT ? 7 : 5;
+  localparam int Latency = (USE_3_MULT != 0) ? 7 : 5;
   /* verilator lint_on UNUSEDPARAM */
   localparam int FullWidth = A_WIDTH + B_WIDTH + 1;
   localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
@@ -75,7 +75,7 @@ module cmult #(
   logic signed [FullWidth-1:0] pi_int;
 
   generate
-    if (USE_3_MULT) begin : g_3_mult
+    if (USE_3_MULT != 0) begin : g_3_mult
       logic signed [A_WIDTH-1:0] ar_d;
       logic signed [A_WIDTH-1:0] ar_dd;
       logic signed [A_WIDTH-1:0] ar_ddd;

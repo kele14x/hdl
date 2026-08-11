@@ -31,7 +31,7 @@ module dds_lut #(
 
   // Parameters
 
-  localparam int MinPhaseWidth = RASTERIZED > 0 ? 4 : 2;
+  localparam int MinPhaseWidth = RASTERIZED != 0 ? 4 : 2;
 
   localparam int StructureAuto = 0;
   localparam int StructureFull = 1;
@@ -79,9 +79,9 @@ module dds_lut #(
   // |         pi = 2 ^ (PHASE_WIDTH - 1) | 10_0000... | 0110_0000... |
   // | 3 / 2 * pi = 1 / 2 * pi + pi       | 11_0000... | 1001_0000... |
   // |     2 * pi = 2 ^ PHASE_WIDTH       | 00_0000... | 1100_0000... |
-  localparam logic [PHASE_WIDTH-1:0] PhasePi2 = RASTERIZED > 0 ?
+  localparam logic [PHASE_WIDTH-1:0] PhasePi2 = RASTERIZED != 0 ?
     ((1 << (PHASE_WIDTH - 3)) + (1 << (PHASE_WIDTH - 4))) : (1 << (PHASE_WIDTH - 2));
-  localparam logic [PHASE_WIDTH-1:0] PhasePi = RASTERIZED > 0 ?
+  localparam logic [PHASE_WIDTH-1:0] PhasePi = RASTERIZED != 0 ?
     ((1 << (PHASE_WIDTH - 2)) + (1 << (PHASE_WIDTH - 3))) : (1 << (PHASE_WIDTH - 1));
   localparam logic [PHASE_WIDTH-1:0] Phase3Pi2 = PhasePi + PhasePi2;
   localparam logic [PHASE_WIDTH-1:0] Phase2Pi = PhasePi << 1;
@@ -102,7 +102,7 @@ module dds_lut #(
       // range [pi, 2*pi) could be mapped to [0, pi) with sign changed:
       //   cos(x) = -cos(x - pi),  (pi <= x < 2*pi)
       if (StructureInternal == StructureHalf) begin
-        if (RASTERIZED > 0) begin
+        if (RASTERIZED != 0) begin
           case (mapped[PHASE_WIDTH-1:PHASE_WIDTH-4])
             4'b0000: mapped[PHASE_WIDTH-1:PHASE_WIDTH-4] = 4'b0000;  // 0 -> 0
             4'b0001: mapped[PHASE_WIDTH-1:PHASE_WIDTH-4] = 4'b0001;  // 1 -> 1
@@ -136,7 +136,7 @@ module dds_lut #(
       //   cos(x) = -cos(x - pi), (pi <= x < 3*pi/2)
       //   cos(x) = cos(2*pi - x), (3*pi/2 <= x < pi)
       if (StructureInternal == StructureQuarter) begin
-        if (RASTERIZED > 0) begin
+        if (RASTERIZED != 0) begin
           case (mapped[PHASE_WIDTH-1:PHASE_WIDTH-4])
             4'b0000: mapped = mapped;
             4'b0001: mapped = mapped;
@@ -181,7 +181,7 @@ module dds_lut #(
         negative_output = (phase_value >= PhasePi2) && (phase_value < Phase3Pi2);
       end
 
-      negative_output = negative > 0 ? ~negative_output : negative_output;
+      negative_output = negative != 0 ? ~negative_output : negative_output;
     end
   endfunction
 
@@ -227,7 +227,7 @@ module dds_lut #(
   always_comb begin
     cos_phase = phase;
     sin_phase = phase;
-    if (RASTERIZED > 0) begin
+      if (RASTERIZED != 0) begin
       case (sin_phase[PHASE_WIDTH-1:PHASE_WIDTH-4])
         4'b0000: sin_phase[PHASE_WIDTH-1:PHASE_WIDTH-4] = 4'b1001;  // 0 - 3 = 9
         4'b0001: sin_phase[PHASE_WIDTH-1:PHASE_WIDTH-4] = 4'b1010;  // 1 - 3 = 10

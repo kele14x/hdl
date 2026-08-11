@@ -7,7 +7,7 @@
 
 module fft_twiddle #(
     parameter integer NUM_ANT      = 4,
-    parameter logic   INV_FFT      = 1'b0,
+    parameter int     INV_FFT      = 0,
     parameter integer LOG_FFT_SIZE = 4,
     parameter integer DATA_WIDTH   = 18
 ) (
@@ -139,7 +139,7 @@ module fft_twiddle #(
       .RASTERIZED  (0),
       .PHASE_WIDTH (LOG_FFT_SIZE),
       .NEGATIVE_COS(0),
-      .NEGATIVE_SIN(~INV_FFT)
+      .NEGATIVE_SIN(INV_FFT == 0)
   ) i_twiddle_rom (
       .clk    (clk),
       .rst    (1'b0),

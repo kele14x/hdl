@@ -8,8 +8,8 @@ module mult #(
     parameter int P_WIDTH  = 16,
     parameter int SHIFT    = 15,
     //
-    parameter bit ROUND    = 1'b0,
-    parameter bit SATURATE = 1'b0
+    parameter int ROUND    = 0,
+    parameter int SATURATE = 0
 ) (
     input  wire                      clk,
     input  wire                      rst,

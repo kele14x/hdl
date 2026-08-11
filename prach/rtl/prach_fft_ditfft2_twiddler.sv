@@ -5,7 +5,7 @@
 module prach_fft_ditfft2_twiddler #(
     parameter int FFT_SIZE   = 4,
     parameter int DATA_WIDTH = 18,
-    parameter bit SCALE      = 0
+    parameter int SCALE      = 0
 ) (
     input  wire                  clk,
     input  wire                  rst,
@@ -115,7 +115,7 @@ module prach_fft_ditfft2_twiddler #(
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (PhaseWidth),
       .P_WIDTH (DATA_WIDTH),
-      .SHIFT   (SCALE ? PhaseWidth : PhaseWidth - 1),
+      .SHIFT   ((SCALE != 0) ? PhaseWidth : PhaseWidth - 1),
       //
       .ROUND   (1'b1),
       .SATURATE(1'b0)

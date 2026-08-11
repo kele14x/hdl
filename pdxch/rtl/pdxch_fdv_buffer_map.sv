@@ -8,7 +8,7 @@
 // shared by four complex REs, so one PRB occupies three exponent words. The
 // two ping-pong banks are placed in consecutive address ranges.
 module pdxch_fdv_buffer_map #(
-    parameter bit HALF_BLOCK = 1'b0
+    parameter int HALF_BLOCK = 0
 ) (
     input  wire        bank,
     input  wire [11:0] logical_re,
@@ -17,8 +17,8 @@ module pdxch_fdv_buffer_map #(
     output wire        iq_half
 );
 
-  localparam int IQ_BANK_DEPTH  = HALF_BLOCK ? 1024 : 1792;
-  localparam int EXP_BANK_DEPTH = HALF_BLOCK ? 480 : 825;
+  localparam int IQ_BANK_DEPTH  = (HALF_BLOCK != 0) ? 1024 : 1792;
+  localparam int EXP_BANK_DEPTH = (HALF_BLOCK != 0) ? 480 : 825;
 
   initial begin : drc_check
     assert (IQ_BANK_DEPTH > 0 && EXP_BANK_DEPTH > 0)

@@ -3,7 +3,7 @@
 `default_nettype none
 
 module oran_framer_ul_ss #(
-    parameter bit        HAS_BFPX          = 1,
+    parameter int        HAS_BFPX          = 1,
     parameter int        NUM_ETHERNET_PORT = 1,
     parameter bit [15:0] PC_ID             = 16'h0000,
     parameter int        ADAPTOR_SIZE      = 1024,
@@ -207,7 +207,7 @@ module oran_framer_ul_ss #(
   );
 
   generate
-    if (HAS_BFPX) begin : g_comp
+    if (HAS_BFPX != 0) begin : g_comp
       oran_framer_ul_ss_comp i_comp (
           .clk              (clk),
           .rst              (rst),

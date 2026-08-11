@@ -4,7 +4,7 @@
 
 module puxch_channel #(
     parameter int NUM_ANT    = 4,
-    parameter bit HALF_BLOCK = 1'b0
+    parameter int HALF_BLOCK = 0
 ) (
     // Internal I/F
     //-------------
@@ -52,7 +52,7 @@ module puxch_channel #(
     input  wire [31:0] ctrl_phase_comp_din
 );
 
-  localparam int LogFftSize = HALF_BLOCK ? 11 : 12;
+  localparam int LogFftSize = (HALF_BLOCK != 0) ? 11 : 12;
 
   logic [ 1:0] ctrl_rat_s;
   logic [22:0] ctrl_rfs_offset_s;

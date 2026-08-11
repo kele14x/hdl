@@ -139,13 +139,19 @@ def _cmult_q15_shift16(
 def _twiddle_coefficients(
     phase: np.ndarray, log_fft_size: int, inverse: bool
 ) -> tuple[np.ndarray, np.ndarray]:
-    # dds_lut_rom initializes values with $rtoi, which truncates toward zero.
+    # Match the sized real-to-integer conversion in dds_lut_rom: round to the
+    # nearest integer, with exact half-way values rounded away from zero.
+    def round_real(values: np.ndarray) -> np.ndarray:
+        return np.where(
+            values >= 0.0, np.floor(values + 0.5), np.ceil(values - 0.5)
+        ).astype(np.int64)
+
     amplitude = (1 << 15) - 2
     period = 1 << log_fft_size
     angle = 2.0 * math.pi * phase.astype(np.float64) / period
-    real = np.trunc(amplitude * np.cos(angle)).astype(np.int64)
+    real = round_real(amplitude * np.cos(angle))
     imag_sign = 1.0 if inverse else -1.0
-    imag = np.trunc(imag_sign * amplitude * np.sin(angle)).astype(np.int64)
+    imag = round_real(imag_sign * amplitude * np.sin(angle))
     return real, imag
 
 

@@ -3,7 +3,7 @@
 `default_nettype none
 
 module pdxch_conv #(
-    parameter bit HAS_CDC = 1'b0,
+    parameter int HAS_CDC = 0,
     parameter int NUM_ANT = 4
 ) (
     input  wire        clk,
@@ -85,7 +85,7 @@ module pdxch_conv #(
   // Main
 
   generate
-    if (HAS_CDC) begin : g_cdc
+    if (HAS_CDC != 0) begin : g_cdc
 
       cdc_array_single #(
           .DEST_SYNC_FF (2),

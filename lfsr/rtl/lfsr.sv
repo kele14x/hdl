@@ -41,14 +41,14 @@ module lfsr #(
     parameter bit [BIT_WIDTH:0] POLYNOMIAL = {{(BIT_WIDTH - 8) {1'b0}}, 9'b100000011},
     parameter string STRUCTURE = "FIBONACCI",  // "FIBONACCI" or "GALOIS"
     parameter string GATE_TYPE = "XOR",  // "XOR" or "XNOR"
-    parameter bit PARALLEL_OUTPUT = 1'b0
+    parameter int PARALLEL_OUTPUT = 0
 ) (
     input var                                          clk,
     input var                                          rst,
     input var                                          en,
     input var                                          load,
     input var  [                        BIT_WIDTH-1:0] din,
-    output var [(PARALLEL_OUTPUT ? BIT_WIDTH : 1)-1:0] dout
+    output var [((PARALLEL_OUTPUT != 0) ? BIT_WIDTH : 1)-1:0] dout
 );
 
   // Check parameters
@@ -139,7 +139,7 @@ module lfsr #(
   endgenerate
 
   generate
-    if (PARALLEL_OUTPUT) begin : g_parallel_output
+    if (PARALLEL_OUTPUT != 0) begin : g_parallel_output
       assign dout = lfsr_regs;
     end else begin : g_serial_output
       assign dout = lfsr_regs[0];

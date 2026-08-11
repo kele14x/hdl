@@ -7,9 +7,9 @@ module lowphy_band #(
     parameter int NUM_ANT    = 4,
     parameter int CC_ID      = 0,
     parameter int ANT_ID     = 0,
-    parameter bit HAS_BFP    = 1'b1,
-    parameter bit HALF_BLOCK = 1'b0,
-    parameter bit HALF_FFT   = 1'b0
+    parameter int HAS_BFP    = 1,
+    parameter int HALF_BLOCK = 0,
+    parameter int HALF_FFT   = 0
 ) (
     // AXI
     //----

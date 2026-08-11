@@ -6,7 +6,7 @@
 
 module fft_ct #(
     parameter integer NUM_ANT      = 4,
-    parameter logic   INV_FFT      = 1'b0,
+    parameter int     INV_FFT      = 0,
     parameter integer LOG_FFT_SIZE = 4,
     parameter integer DATA_WIDTH   = 18
 ) (
@@ -85,8 +85,8 @@ module fft_ct #(
 
   always_comb begin
     if (swap) begin
-      data_r_s = ~INV_FFT ? din_di : -din_di;
-      data_i_s = ~INV_FFT ? -din_dr : din_dr;
+      data_r_s = (INV_FFT == 0) ? din_di : -din_di;
+      data_i_s = (INV_FFT == 0) ? -din_dr : din_dr;
     end else begin
       data_r_s = din_dr;
       data_i_s = din_di;

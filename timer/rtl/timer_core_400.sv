@@ -3,7 +3,7 @@
 `default_nettype none
 
 module timer_core_400 #(
-    parameter logic SIM_SPEED_UP = 1'b0
+    parameter int SIM_SPEED_UP = 0
 ) (
     input  wire         clk,
     input  wire         rst,
@@ -37,7 +37,8 @@ module timer_core_400 #(
   // 3'b101, ~= 2.5 ns
   localparam [32:0] TimerIncrement = 33'd5;
 
-  localparam [31:0] NsPerSecond = (SIM_SPEED_UP ? 32'd100_000 : 32'd1_000_000_000);
+  localparam [31:0] NsPerSecond =
+      ((SIM_SPEED_UP != 0) ? 32'd100_000 : 32'd1_000_000_000);
 
   wire unused_pps_in = pps_in;
 

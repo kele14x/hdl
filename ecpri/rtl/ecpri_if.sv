@@ -4,8 +4,8 @@
 `default_nettype none
 
 module ecpri_if #(
-    parameter logic HAS_ODM_FUNCTION = 1'b1,
-    parameter logic HAS_STATISTICS   = 1'b1
+    parameter int HAS_ODM_FUNCTION = 1,
+    parameter int HAS_STATISTICS   = 1
 ) (
     // Ethernet I/F
     //-------------
@@ -316,7 +316,7 @@ module ecpri_if #(
   );
 
   generate
-    if (HAS_ODM_FUNCTION) begin : g_odm
+    if (HAS_ODM_FUNCTION != 0) begin : g_odm
 
       cdc_handshake_f #(
           .DEST_EXT_HSK(1),
@@ -376,7 +376,7 @@ module ecpri_if #(
   endgenerate
 
   generate
-    if (HAS_STATISTICS) begin : g_statistics
+    if (HAS_STATISTICS != 0) begin : g_statistics
 
       ecpri_statistics i_statistics (
           .clk                    (clk),

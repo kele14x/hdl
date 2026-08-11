@@ -3,7 +3,7 @@
 `default_nettype none
 
 module mixer #(
-    parameter bit HAS_CDC = 1'b0,
+    parameter int HAS_CDC = 0,
     parameter int NUM_ANT = 4
 ) (
     input  wire        clk,
@@ -92,7 +92,7 @@ module mixer #(
   // Main
 
   generate
-    if (HAS_CDC) begin : g_cdc
+    if (HAS_CDC != 0) begin : g_cdc
       for (genvar i = 0; i < NUM_ANT; i = i + 1) begin : g_ch
 
         cdc_array_single #(

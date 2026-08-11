@@ -3,7 +3,7 @@
 `default_nettype none
 
 module bfp_comp #(
-    parameter bit BYTE_REVERSE = 1'b1,
+    parameter int BYTE_REVERSE = 1,
     parameter int USER_WIDTH   = 32
 ) (
     input  wire                   clk,
@@ -242,7 +242,7 @@ module bfp_comp #(
   //----
   // Input register, and counter for 1 RB (6 tick input)
 
-  assign s_axis_tdata_rev = (BYTE_REVERSE ? byte_reverse(
+  assign s_axis_tdata_rev = ((BYTE_REVERSE != 0) ? byte_reverse(
       s_axis_tdata
   ) : s_axis_tdata) ^ {64{|s_axis_tkeep & 1'b0}};
 
@@ -581,13 +581,13 @@ module bfp_comp #(
     end else if (t6_eop_ext_out) begin
       // Emit the final half word of an odd-PRB packet directly. This leaves
       // the gearbox free to accept the first word of a following packet.
-      m_axis_tdata  <= BYTE_REVERSE ? byte_reverse(t6_eop_data) : t6_eop_data;
+        m_axis_tdata  <= (BYTE_REVERSE != 0) ? byte_reverse(t6_eop_data) : t6_eop_data;
       m_axis_tkeep  <= 8'h0F;
       m_axis_tlast  <= 1'b1;
       m_axis_tuser  <= t6_eop_user;
       m_axis_tvalid <= 1'b1;
     end else if (t6_valid) begin
-      m_axis_tdata  <= BYTE_REVERSE ? byte_reverse(t6_data) : t6_data;
+        m_axis_tdata  <= (BYTE_REVERSE != 0) ? byte_reverse(t6_data) : t6_data;
       m_axis_tkeep  <= t6_keep;
       m_axis_tlast  <= t6_eop;
       m_axis_tuser  <= t6_user;

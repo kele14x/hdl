@@ -3,9 +3,9 @@
 `default_nettype none
 
 module gain #(
-    parameter bit HAS_CDC    = 1'b0,
+    parameter int HAS_CDC    = 0,
     parameter int NUM_ANT    = 4,
-    parameter bit COMPLEX    = 1'b1,
+    parameter int COMPLEX    = 1,
     parameter int GAIN_WIDTH = 16
 ) (
     input  wire                  clk,
@@ -37,7 +37,7 @@ module gain #(
   logic [GAIN_WIDTH-1:0] ctrl_gain_dr_s[NUM_ANT];
   logic [GAIN_WIDTH-1:0] ctrl_gain_di_s[NUM_ANT];
 
-  localparam int Latency = COMPLEX ? 6 : 5;
+  localparam int Latency = (COMPLEX != 0) ? 6 : 5;
   localparam int AntAddrWidth = $clog2(NUM_ANT);
 
   logic [          15:0] din_dr_d;
@@ -51,7 +51,7 @@ module gain #(
   logic                  unused_mult_di_ovf;
 
   generate
-    if (!COMPLEX) begin : g_unused_real_gain_di
+    if (COMPLEX == 0) begin : g_unused_real_gain_di
       for (genvar i = 0; i < NUM_ANT; i++) begin : g_ant
         wire unused = &{1'b0, ctrl_gain_di[i], ctrl_gain_di_s[i], ctrl_gain_di_ch};
       end
@@ -59,7 +59,7 @@ module gain #(
   endgenerate
 
   generate
-    if (HAS_CDC) begin : g_dr_cdc
+    if (HAS_CDC != 0) begin : g_dr_cdc
 
       for (genvar i = 0; i < NUM_ANT; i++) begin : g_ch
         cdc_array_single #(
@@ -84,7 +84,7 @@ module gain #(
   endgenerate
 
   generate
-    if (HAS_CDC && COMPLEX) begin : g_di_cdc
+    if ((HAS_CDC != 0) && (COMPLEX != 0)) begin : g_di_cdc
 
       for (genvar i = 0; i < NUM_ANT; i++) begin : g_ch
         cdc_array_single #(
@@ -126,7 +126,7 @@ module gain #(
   end
 
   generate
-    if (COMPLEX) begin : g_complex
+    if (COMPLEX != 0) begin : g_complex
 
       always_ff @(posedge clk) begin
         if (din_dv) begin

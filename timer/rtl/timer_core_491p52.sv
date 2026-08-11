@@ -3,7 +3,7 @@
 `default_nettype none
 
 module timer_core_491p52 #(
-    parameter logic SIM_SPEED_UP = 1'b0
+    parameter int SIM_SPEED_UP = 0
 ) (
     input  wire         clk,
     input  wire         rst,
@@ -42,7 +42,8 @@ module timer_core_491p52 #(
   // 11'b10_000010010, ~= 2.0352 ns
   localparam [40:0] TimerIncrement1 = 41'd1042;
 
-  localparam [31:0] NsPerSecond = (SIM_SPEED_UP ? 32'd100_000 : 32'd1_000_000_000);
+  localparam [31:0] NsPerSecond =
+      ((SIM_SPEED_UP != 0) ? 32'd100_000 : 32'd1_000_000_000);
 
   wire unused_pps_in = pps_in;
 

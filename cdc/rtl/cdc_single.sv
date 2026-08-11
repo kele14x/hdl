@@ -5,8 +5,8 @@
 (* KEEP_HIERARCHY = "yes" *)
 module cdc_single #(
     parameter int DEST_SYNC_FF  = 4,
-    parameter bit INIT_SYNC_FF  = 1'b0,
-    parameter bit SRC_INPUT_REG = 1'b1
+    parameter int INIT_SYNC_FF  = 0,
+    parameter int SRC_INPUT_REG = 1
 ) (
     input  wire src_clk,
     input  wire src_in,
@@ -41,7 +41,7 @@ module cdc_single #(
   logic [DEST_SYNC_FF-1:0] syncstages_ff;
 
   initial begin : p_init
-    if (INIT_SYNC_FF) begin
+    if (INIT_SYNC_FF != 0) begin
       src_ff = 1'b0;
       syncstages_ff = '0;
     end

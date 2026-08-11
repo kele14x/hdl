@@ -4,10 +4,10 @@
 
 module fft #(
     parameter integer NUM_ANT            = 4,
-    parameter logic   INV_FFT            = 1'b0,
+    parameter int     INV_FFT            = 0,
     parameter integer LOG_FFT_SIZE       = 12,
     parameter integer DATA_WIDTH         = 16,
-    parameter logic   BIT_REVERSED_INPUT = 1'b1
+    parameter int     BIT_REVERSED_INPUT = 1
 ) (
     input  wire                          clk,
     input  wire                          rst,
@@ -159,7 +159,7 @@ module fft #(
       //
       // For bit reversed input, the log2(FFT_SIZE) per each stage is 4, 16, ...
       // For natural input, the log2(FFT_SIZE) per each stage is N, N/4, ...
-      localparam integer StageLogFftSize = BIT_REVERSED_INPUT ?
+      localparam integer StageLogFftSize = (BIT_REVERSED_INPUT != 0) ?
         ((2 * i + 2) <= LOG_FFT_SIZE ? (2 * i + 2) : LOG_FFT_SIZE) :
         ((NumStages - i) * 2 >= LOG_FFT_SIZE ? LOG_FFT_SIZE : (NumStages - i) * 2);
 
@@ -240,9 +240,9 @@ module fft #(
 
   always_ff @(posedge clk) begin
     if (ctrl_size == 2'b00) begin
-      bypass <= BIT_REVERSED_INPUT ? 12'b110000000000 : 12'b000000000011;
+        bypass <= (BIT_REVERSED_INPUT != 0) ? 12'b110000000000 : 12'b000000000011;
     end else if (ctrl_size == 2'b01) begin
-      bypass <= BIT_REVERSED_INPUT ? 12'b100000000000 : 12'b000000000001;
+        bypass <= (BIT_REVERSED_INPUT != 0) ? 12'b100000000000 : 12'b000000000001;
     end else begin
       bypass <= 12'b000000000000;
     end

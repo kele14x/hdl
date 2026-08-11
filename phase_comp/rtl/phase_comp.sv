@@ -3,7 +3,7 @@
 `default_nettype none
 
 module phase_comp #(
-    parameter bit HAS_CDC = 1'b0,
+    parameter int HAS_CDC = 0,
     parameter int NUM_ANT = 4
 ) (
     input  wire        clk,
@@ -68,7 +68,7 @@ module phase_comp #(
   // Main
 
   generate
-    if (HAS_CDC) begin : g_cdc
+    if (HAS_CDC != 0) begin : g_cdc
 
       cdc_array_single #(
           .DEST_SYNC_FF (2),

@@ -5,7 +5,7 @@
 module pdxch_fdv_buffer #(
     parameter int CC_ID      = 0,
     parameter int NUM_ANT    = 4,
-    parameter bit HALF_BLOCK = 1'b0
+    parameter int HALF_BLOCK = 0
 ) (
     input  wire         clk_eth_xran,
     input  wire         rst_eth_xran,
@@ -173,8 +173,8 @@ module pdxch_fdv_buffer #(
           .wr_exp_data  (wr_exp_data[ant])
       );
 
-      localparam int IQ_DEPTH  = HALF_BLOCK ? 2048 : 3584;
-      localparam int EXP_DEPTH = HALF_BLOCK ? 960 : 1650;
+  localparam int IQ_DEPTH  = (HALF_BLOCK != 0) ? 2048 : 3584;
+  localparam int EXP_DEPTH = (HALF_BLOCK != 0) ? 960 : 1650;
 
       ram_sdp #(
           .ADDR_WIDTH  (12),

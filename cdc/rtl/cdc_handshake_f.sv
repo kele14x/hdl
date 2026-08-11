@@ -4,9 +4,9 @@
 //
 (* KEEP_HIERARCHY = "yes" *)
 module cdc_handshake_f #(
-    parameter bit DEST_EXT_HSK = 1'b1,
+    parameter int DEST_EXT_HSK = 1,
     parameter int DEST_SYNC_FF = 32'd4,
-    parameter bit INIT_SYNC_FF = 1'b0,
+    parameter int INIT_SYNC_FF = 0,
     parameter int SRC_SYNC_FF  = 32'd4,
     parameter int WIDTH        = 32'd1
 ) (
@@ -67,7 +67,7 @@ module cdc_handshake_f #(
   logic             dest_count_sync_ff;
 
   initial begin : p_init
-    if (INIT_SYNC_FF) begin
+    if (INIT_SYNC_FF != 0) begin
       src_hsdata_ff     = '0;
       src_count_ff      = 1'b0;
       // Start not-ready for one source clock so an uninitialized valid input

@@ -29,11 +29,11 @@
 `default_nettype none
 
 module symbol_timer #(
-    parameter logic   ASYNC = 1'b1,
-    parameter logic   MODE  = 1'b1,  // 0 for UL, 1 for DL
+    parameter int     ASYNC = 1,
+    parameter int     MODE  = 1,  // 0 for UL, 1 for DL
     parameter integer FREQ  = 32,    // 32: 122.88, 64: 245.76, 128: 491.52
-    parameter logic   AUTO  = 1'b0,  // 1: Auto roll over, 0: Manual roll over
-    parameter logic   INIT  = 1'b0
+    parameter int     AUTO  = 0,  // 1: Auto roll over, 0: Manual roll over
+    parameter int     INIT  = 0
 ) (
     input  wire         clk,
     input  wire         rst,
@@ -146,7 +146,7 @@ module symbol_timer #(
   // Pulse posedge detector
 
   generate
-    if (ASYNC) begin : g_async_cdc
+    if (ASYNC != 0) begin : g_async_cdc
 
       async_input_sync #(
           .SYNC_STAGES    (3),
@@ -200,10 +200,10 @@ module symbol_timer #(
   // Restart to the counters
 
   // Automatic start the counters after reset is de-assert
-  assign restart_init = (AUTO && INIT && ~init_n);
+  assign restart_init = ((AUTO != 0) && (INIT != 0) && ~init_n);
 
   generate
-    if (ASYNC && AUTO) begin : g_async_resync
+    if ((ASYNC != 0) && (AUTO != 0)) begin : g_async_resync
 
       // Tolerate +-1 clock error caused by CDC
 
@@ -229,7 +229,7 @@ module symbol_timer #(
   endgenerate
 
   // Auto restart (roll over) the counters when one frame is over
-  assign restart_auto = (AUTO && frame_wrap);
+  assign restart_auto = ((AUTO != 0) && frame_wrap);
 
   assign restart = restart_init || restart_ext || restart_auto;
 
@@ -254,7 +254,8 @@ module symbol_timer #(
   end
 
   always_ff @(posedge clk) begin
-    if ((MODE == 1'b0 && symbol_id % 14 == 13) || (MODE == 1'b1 && symbol_id % 14 == 0)) begin
+        if (((MODE == 0) && symbol_id % 14 == 13) ||
+            ((MODE != 0) && symbol_id % 14 == 0)) begin
       sample_counter_max <= LongSymbolSamples;
     end else begin
       sample_counter_max <= ShortSymbolSamples;

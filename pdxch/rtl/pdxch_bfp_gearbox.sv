@@ -9,7 +9,7 @@
 // side normalizes both PRB alignments into two ping-pong 4 x 64 distributed
 // RAM banks.  The read side then uses only fixed slices to emit six words.
 module pdxch_bfp_gearbox #(
-    parameter bit BYTE_REVERSE = 1'b1,
+    parameter int BYTE_REVERSE = 1,
     parameter int USER_WIDTH   = 91
 ) (
     input  wire                   clk,
@@ -85,7 +85,7 @@ module pdxch_bfp_gearbox #(
     end
   endfunction
 
-  assign input_data_ordered = BYTE_REVERSE ? byte_reverse64(s_axis_tdata) : s_axis_tdata;
+  assign input_data_ordered = (BYTE_REVERSE != 0) ? byte_reverse64(s_axis_tdata) : s_axis_tdata;
   assign final_half_beat = s_axis_tlast && (s_axis_tkeep == 8'h0F);
 
   // A PRB that begins on a beat boundary owns wr_pair_bank.  Phase 3 may

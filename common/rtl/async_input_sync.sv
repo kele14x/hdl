@@ -5,7 +5,7 @@
 module async_input_sync #(
     parameter SYNC_STAGES = 3,
     parameter PIPELINE_STAGES = 1,
-    parameter INIT = 1'b0
+    parameter int INIT = 0
 ) (
     input  wire clk,
     input  wire async_in,

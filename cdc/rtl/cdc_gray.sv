@@ -5,8 +5,8 @@
 (* KEEP_HIERARCHY = "yes" *)
 module cdc_gray #(
     parameter int DEST_SYNC_FF = 4,
-    parameter bit INIT_SYNC_FF = 1'b0,
-    parameter bit REG_OUTPUT   = 1'b0,
+    parameter int INIT_SYNC_FF = 0,
+    parameter int REG_OUTPUT   = 0,
     parameter int WIDTH        = 2
 ) (
     input  wire [WIDTH-1:0] src_in_bin,
@@ -72,7 +72,7 @@ module cdc_gray #(
   end
 
   generate
-    if (REG_OUTPUT) begin : g_reg_out
+    if (REG_OUTPUT != 0) begin : g_reg_out
       logic [WIDTH-1:0] dest_out_bin_ff;
 
       always_ff @(posedge dest_clk) begin

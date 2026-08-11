@@ -8,10 +8,10 @@
 
 module fft_stage #(
     parameter integer NUM_ANT            = 4,
-    parameter logic   INV_FFT            = 1'b0,
+    parameter int     INV_FFT            = 0,
     parameter integer LOG_FFT_SIZE       = 4,
     parameter integer DATA_WIDTH         = 18,
-    parameter logic   BIT_REVERSED_INPUT = 1'b1
+    parameter int     BIT_REVERSED_INPUT = 1
 ) (
     input  wire                         clk,
     input  wire                         rst,
@@ -42,8 +42,8 @@ module fft_stage #(
   localparam integer LogFftSizeBf2i = HasBf2ii ? (LOG_FFT_SIZE - 1) : LOG_FFT_SIZE;
   // The LOG_FFT_SIZE=2 stage has no twiddle multiplier to provide the /2
   // scaling used by the other stages. Scale its last butterfly explicitly.
-  localparam logic ScaleBfi = !HasTwiddle && !BIT_REVERSED_INPUT;
-  localparam logic ScaleBfii = !HasTwiddle && BIT_REVERSED_INPUT;
+  localparam logic ScaleBfi = !HasTwiddle && (BIT_REVERSED_INPUT == 0);
+  localparam logic ScaleBfii = !HasTwiddle && (BIT_REVERSED_INPUT != 0);
 
   // Signals
 
@@ -221,7 +221,7 @@ module fft_stage #(
   endgenerate
 
   generate
-    if (BIT_REVERSED_INPUT) begin : g_dit_fft
+    if (BIT_REVERSED_INPUT != 0) begin : g_dit_fft
 
       // Twiddle -> BFi -> [CT -> BFii]
 

@@ -8,7 +8,7 @@ module fft_bf2 #(
     parameter integer NUM_ANT      = 4,
     parameter integer LOG_FFT_SIZE = 4,
     parameter integer DATA_WIDTH   = 18,
-    parameter logic   SCALE        = 1'b0
+    parameter int     SCALE        = 0
 ) (
     input  wire                         clk,
     input  wire                         rst,
@@ -196,17 +196,17 @@ module fft_bf2 #(
     end
   end
 
-  assign x1r_store = (SCALE && ctrl_scale && sel) ? round_convergent_shift1(
+  assign x1r_store = ((SCALE != 0) && ctrl_scale && sel) ? round_convergent_shift1(
       x1r_s
   ) : x1r_s[DATA_WIDTH-1:0];
-  assign x1i_store = (SCALE && ctrl_scale && sel) ? round_convergent_shift1(
+  assign x1i_store = ((SCALE != 0) && ctrl_scale && sel) ? round_convergent_shift1(
       x1i_s
   ) : x1i_s[DATA_WIDTH-1:0];
 
-  assign x2r_store = (SCALE && ctrl_scale && sel) ? round_convergent_shift1(
+  assign x2r_store = ((SCALE != 0) && ctrl_scale && sel) ? round_convergent_shift1(
       x2r_s
   ) : x2r_s[DATA_WIDTH-1:0];
-  assign x2i_store = (SCALE && ctrl_scale && sel) ? round_convergent_shift1(
+  assign x2i_store = ((SCALE != 0) && ctrl_scale && sel) ? round_convergent_shift1(
       x2i_s
   ) : x2i_s[DATA_WIDTH-1:0];
 
@@ -267,7 +267,7 @@ module fft_bf2 #(
   end
 
   always_ff @(posedge clk) begin
-    if (SCALE && ctrl_scale && sel) begin
+      if ((SCALE != 0) && ctrl_scale && sel) begin
       ovf_r <= 1'b0;
     end else begin
       ovf_r <= ~(x1r_s[DATA_WIDTH-:2] == 2'b00 || x1r_s[DATA_WIDTH-:2] == 2'b11) ||

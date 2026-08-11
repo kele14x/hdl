@@ -34,8 +34,8 @@ module srl #(
     parameter int ADDR_WIDTH = 4,
     parameter int DATA_WIDTH = 8,
     //
-    parameter bit OUTPUT_REG = 1'b1,
-    parameter bit INIT       = 1'b1
+    parameter int OUTPUT_REG = 1,
+    parameter int INIT       = 1
 ) (
     // Read Interface
     input  wire                  clk,
@@ -52,7 +52,7 @@ module srl #(
   logic [DATA_WIDTH-1:0] dout_s;
 
   initial begin
-    if (INIT) begin
+    if (INIT != 0) begin
       for (int i = 0; i < 2 ** ADDR_WIDTH; i = i + 1) begin
         dsrl[i] = 'b0;
       end

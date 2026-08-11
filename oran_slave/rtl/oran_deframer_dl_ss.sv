@@ -3,7 +3,7 @@
 `default_nettype none
 
 module oran_deframer_dl_ss #(
-    parameter bit HAS_BFPX      = 1,
+    parameter int HAS_BFPX      = 1,
     parameter int ADAPTOR_SIZE  = 1024,
     parameter int BUFFER_SIZE   = 4096,
     parameter int BUFFER_SYMBOL = 10
@@ -256,7 +256,7 @@ module oran_deframer_dl_ss #(
   );
 
   generate
-    if (HAS_BFPX) begin : g_decomp
+    if (HAS_BFPX != 0) begin : g_decomp
       oran_deframer_dl_ss_decomp i_decomp (
           .clk              (clk),
           .rst              (rst),

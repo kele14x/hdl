@@ -5,8 +5,8 @@
 module puxch_top #(
     parameter int NUM_CC     = 3,
     parameter int NUM_ANT    = 4,
-    parameter bit HAS_BFP    = 1'b1,
-    parameter bit HALF_BLOCK = 1'b0
+    parameter int HAS_BFP    = 1,
+    parameter int HALF_BLOCK = 0
 ) (
     // Clock & Reset
     //--------------
@@ -172,7 +172,7 @@ module puxch_top #(
           .ctrl_bw        (ctrl_bw)
       );
 
-      if (HAS_BFP) begin : g_bfp
+    if (HAS_BFP != 0) begin : g_bfp
 
         bfp_comp #(
             .BYTE_REVERSE(1'b1)

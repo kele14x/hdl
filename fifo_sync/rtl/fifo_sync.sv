@@ -8,7 +8,7 @@ module fifo_sync #(
     parameter int FIFO_DEPTH   = 512,
     parameter int FIFO_LATENCY = 1,
     parameter int DATA_WIDTH   = 16,
-    parameter bit FWFT_MODE    = 1
+    parameter int FWFT_MODE    = 1
 ) (
     // Common to write and read
     input var                   clk,

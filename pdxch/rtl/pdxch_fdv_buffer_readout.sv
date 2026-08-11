@@ -4,7 +4,7 @@
 
 module pdxch_fdv_buffer_readout #(
     parameter int NUM_ANT    = 4,
-    parameter bit HALF_BLOCK = 1'b0
+    parameter int HALF_BLOCK = 0
 ) (
     input  wire         clk,
     input  wire         rst,

@@ -23,10 +23,10 @@ module shift_ram #(
   // which means maximum delay taps 2 ** (AddrWidth) - 1. Additional
   // RAM is configured to have latency of 3, result maximum depth is
   // 2 ** (AddrWidth) + 2.
-  localparam integer AddrWidth = $clog2(DEPTH - 2 - (INPUT_REG > 0 ? 1 : 0));
+  localparam integer AddrWidth = $clog2(DEPTH - 2 - (INPUT_REG != 0 ? 1 : 0));
 
-  localparam integer MinDepth = INPUT_REG > 0 ? 5 : 4;
-  localparam integer RamReadLatency = PACKED_URAM > 0 ? 3 : 2;
+  localparam integer MinDepth = INPUT_REG != 0 ? 5 : 4;
+  localparam integer RamReadLatency = PACKED_URAM != 0 ? 3 : 2;
 
   // Check parameters
 
@@ -40,8 +40,8 @@ module shift_ram #(
     assert (PACKED_URAM == 0 || PACKED_URAM == 1)
     else $fatal(1, "PACKED_URAM must be 0 or 1, got %0d. [%m]", PACKED_URAM);
 
-    if (PACKED_URAM > 0) begin
-      assert (WIDTH == 36 && DEPTH == 8192 && INPUT_REG > 0)
+    if (PACKED_URAM != 0) begin
+      assert (WIDTH == 36 && DEPTH == 8192 && INPUT_REG != 0)
       else $fatal(1, "PACKED_URAM requires WIDTH=36, DEPTH=8192, and INPUT_REG=1. [%m]");
     end
   end
@@ -72,7 +72,7 @@ module shift_ram #(
   end
 
   generate
-    if (INPUT_REG > 0) begin : g_ireg
+    if (INPUT_REG != 0) begin : g_ireg
       always_ff @(posedge clk) begin
         if (cen) begin
           dina <= din;
@@ -88,15 +88,15 @@ module shift_ram #(
   // Compensate the RAM pipeline so the externally visible delay stays DEPTH.
   always_ff @(posedge clk) begin
     if (rst) begin
-      addrb <= addr_cast(-DEPTH + 1 + RamReadLatency + (INPUT_REG > 0 ? 1 : 0));
+      addrb <= addr_cast(-DEPTH + 1 + RamReadLatency + (INPUT_REG != 0 ? 1 : 0));
     end else if (cen) begin
       addrb <= addr_cast(integer'(addra) + 2 + RamReadLatency - DEPTH +
-                         (INPUT_REG > 0 ? 1 : 0));
+                         (INPUT_REG != 0 ? 1 : 0));
     end
   end
 
   generate
-    if (PACKED_URAM > 0) begin : g_packed_uram
+    if (PACKED_URAM != 0) begin : g_packed_uram
       ram_sdp_uram_8k36 i_ram_sdp (
           // Port A, write port
           .clka (clk),

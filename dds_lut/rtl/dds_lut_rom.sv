@@ -29,7 +29,7 @@ module dds_lut_rom #(
   localparam int StructureHalf = 2;
 
   localparam int Factor = STRUCTURE == StructureFull ? 1 : (STRUCTURE == StructureHalf ? 2 : 4);
-  localparam int K = (RASTERIZED > 0 ? 3 : 4) * (2 ** ADDR_WIDTH) / 4;
+  localparam int K = (RASTERIZED != 0 ? 3 : 4) * (2 ** ADDR_WIDTH) / 4;
 
   // Signals
 

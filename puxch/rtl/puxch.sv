@@ -5,8 +5,8 @@
 module puxch #(
     parameter int NUM_CC     = 3,
     parameter int NUM_ANT    = 4,
-    parameter bit HAS_BFP    = 1'b1,
-    parameter bit HALF_BLOCK = 1'b1
+    parameter int HAS_BFP    = 1,
+    parameter int HALF_BLOCK = 1
 ) (
     input  wire        s_axi_aclk,
     input  wire        s_axi_aresetn,

@@ -3,7 +3,7 @@
 `default_nettype none
 
 module timer_syncer_312p5 #(
-    parameter logic SIM_SPEEDUP = 1'b0
+    parameter int SIM_SPEEDUP = 0
 ) (
     input  wire        clk,
     input  wire        rst,
@@ -26,7 +26,8 @@ module timer_syncer_312p5 #(
 
   // Parameters
 
-  localparam [31:0] NanosecondsPerSecond = SIM_SPEEDUP ? 32'd1_000_000 : 32'd1_000_000_000;
+  localparam [31:0] NanosecondsPerSecond =
+      (SIM_SPEEDUP != 0) ? 32'd1_000_000 : 32'd1_000_000_000;
 
   // Signals
 

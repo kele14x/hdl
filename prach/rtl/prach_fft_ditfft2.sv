@@ -5,7 +5,7 @@
 module prach_fft_ditfft2 #(
     parameter int FFT_SIZE   = 4,
     parameter int DATA_WIDTH = 18,
-    parameter bit SCALE      = 0
+    parameter int SCALE      = 0
 ) (
     input  wire                         clk,
     input  wire                         rst,

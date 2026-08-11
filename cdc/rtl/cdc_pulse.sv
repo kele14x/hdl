@@ -5,9 +5,9 @@
 (* KEEP_HIERARCHY = "yes" *)
 module cdc_pulse #(
     parameter int DEST_SYNC_FF = 4,
-    parameter bit INIT_SYNC_FF = 1'b0,
-    parameter bit REG_OUTPUT   = 1'b0,
-    parameter bit RST_USED     = 1'b1
+    parameter int INIT_SYNC_FF = 0,
+    parameter int REG_OUTPUT   = 0,
+    parameter int RST_USED     = 1
 ) (
     input  wire src_clk,
     input  wire src_rst,

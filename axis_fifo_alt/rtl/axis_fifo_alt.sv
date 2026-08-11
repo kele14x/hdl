@@ -12,7 +12,7 @@
 `default_nettype none
 
 module axis_fifo_alt #(
-    parameter logic   ASYNC_MODE   = 1'b0,
+    parameter int     ASYNC_MODE   = 0,
     parameter integer FIFO_DEPTH   = 4096,
     parameter integer FIFO_LATENCY = 3,
     parameter integer DATA_WIDTH   = 32,
@@ -226,7 +226,7 @@ module axis_fifo_alt #(
 
   // Read side
 
-  assign rd_clk = ASYNC_MODE ? m_axis_aclk : s_axis_aclk;
+  assign rd_clk = (ASYNC_MODE != 0) ? m_axis_aclk : s_axis_aclk;
 
   // Read pointer
 
@@ -353,7 +353,7 @@ module axis_fifo_alt #(
   );
 
   generate
-    if (ASYNC_MODE) begin : g_async_cdc
+    if (ASYNC_MODE != 0) begin : g_async_cdc
 
       // Reset synchronization
 

@@ -4,7 +4,7 @@
 
 module timer #(
     parameter integer FREQ_MODE    = 0,    // 0: 400 MHz, 1: 491.52 MHz
-    parameter logic   SIM_SPEED_UP = 1'b0
+    parameter int     SIM_SPEED_UP = 0
 ) (
     input  wire        s_axi_aclk,
     input  wire        s_axi_aresetn,

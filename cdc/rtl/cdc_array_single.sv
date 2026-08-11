@@ -3,8 +3,8 @@
 `default_nettype none (* KEEP_HIERARCHY = "yes" *)
 module cdc_array_single #(
     parameter int DEST_SYNC_FF  = 4,
-    parameter bit INIT_SYNC_FF  = 1'b0,
-    parameter bit SRC_INPUT_REG = 1'b1,
+    parameter int INIT_SYNC_FF  = 0,
+    parameter int SRC_INPUT_REG = 1,
     parameter int WIDTH         = 2
 ) (
     input  wire             src_clk,
@@ -43,7 +43,7 @@ module cdc_array_single #(
   logic [WIDTH-1:0] syncstages_ff  [DEST_SYNC_FF];
 
   initial begin : p_init
-    if (INIT_SYNC_FF) begin
+    if (INIT_SYNC_FF != 0) begin
       for (int i = 0; i < DEST_SYNC_FF; i++) begin
         syncstages_ff[i] = '0;
       end
@@ -51,7 +51,7 @@ module cdc_array_single #(
   end
 
   generate
-    if (SRC_INPUT_REG) begin : g_inreg
+    if (SRC_INPUT_REG != 0) begin : g_inreg
       logic [WIDTH-1:0] src_ff;
 
       always_ff @(posedge src_clk) begin
