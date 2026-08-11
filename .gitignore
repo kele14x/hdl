@@ -8,6 +8,7 @@
 __pycache__/
 .pytest_cache/
 .venv/
+.venv_wsl/
 
 # cocotb
 sim_build/
