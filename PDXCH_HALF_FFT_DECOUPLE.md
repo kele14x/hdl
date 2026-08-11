@@ -71,6 +71,15 @@ module pdxch_top #(
 - **建议**（待确认）: HALF_FFT=1 时钳制 ctrl_size 上限为 2'b01（2k），或加断言/DRC check；确认实际产品是否存在该配置组合。
 - **验证方式**: 读 pdxch_channel ctrl_size 映射 + fft bypass 逻辑确认（已做，逻辑确认存在）；可通过 HALF_FFT=1 实例化 + 4k 配置仿真复现（未做）。
 
+### Finding 2: pdxch_regs 固定 3CC×4ANT 与 pdxch NUM_ANT 参数化不匹配 — [Open/未确认]
+
+- **位置**: `pdxch.sv` ctrl_gain 数组声明（L84 `[NUM_CC][NUM_ANT]`）+ `pdxch_regs` 实例化（L95-198，固定连接 4ANT 的 gain 端口 L165-187）
+- **现象**: `pdxch_regs` 无参数化，硬编码 3CC×4ANT 的 `dl_gain_*_val_out` 端口；而 `pdxch.sv` 用 `NUM_ANT` 参数声明 `ctrl_gain [NUM_CC][NUM_ANT]`。当 NUM_ANT=2（如低带宽实例/测试）时，连接 `ctrl_gain[cc][2]`/`[3]` 越界。Verilator 报 `SELRANGE`（Selection index out of range），Questa 不报。
+- **处理**: 已在 `pdxch.sv` 加 `/* verilator lint_off SELRANGE */` 包住 regs 实例化（ant≥NUM_ANT 的连接在功能上未使用，Quest 双通道 11 passed 验证无功能影响）。**这只是压掉 lint，根因未修**。
+- **影响**: NUM_ANT<4 时 regs 仍为不存在的 ant 输出 gain——当前无功能影响（未使用），但属于真实设计不匹配，若未来 regs 增加对 ant 的依赖（如 per-ant 状态回读）会出问题。
+- **建议**（待确认）: 让 `pdxch_regs` 参数化（NUM_ANT 传入，generate 生成 gain 端口），或 `pdxch.sv` 用 generate 按 NUM_ANT 选择连接。
+- **验证方式**: 已通过 Verilator SELRANGE 警告定位（NUM_ANT=2 测试触发）；Quest 仿真 11 passed 确认现行为无功能影响。
+
 ### 已确认无问题的项（本次 review 排除）
 
 - pdxch_conv NCO 步进与编译期 FFT 尺寸解耦 ✓
