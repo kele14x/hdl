@@ -3,9 +3,9 @@
 `default_nettype none
 
 module async_input_sync #(
-    parameter SYNC_STAGES = 3,
-    parameter PIPELINE_STAGES = 1,
-    parameter int INIT = 0
+    parameter int SYNC_STAGES     = 3,
+    parameter int PIPELINE_STAGES = 1,
+    parameter int INIT            = 0
 ) (
     input  wire clk,
     input  wire async_in,
@@ -13,7 +13,7 @@ module async_input_sync #(
 );
 
   initial begin : drc_check
-    assert (INIT == 1'b0 || INIT == 1'b1)
+    assert (INIT == 0 || INIT == 1)
     else begin
       $error("[%m]: INIT value is outside of valid range.");
     end
