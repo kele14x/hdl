@@ -8,7 +8,8 @@ module lowphy_band #(
     parameter int CC_ID      = 0,
     parameter int ANT_ID     = 0,
     parameter bit HAS_BFP    = 1'b1,
-    parameter bit HALF_BLOCK = 1'b0
+    parameter bit HALF_BLOCK = 1'b0,
+    parameter bit HALF_FFT   = 1'b0
 ) (
     // AXI
     //----
@@ -584,7 +585,8 @@ module lowphy_band #(
   pdxch_top #(
       .NUM_CC    (NUM_CC),
       .NUM_ANT   (NUM_ANT),
-      .HALF_BLOCK(HALF_BLOCK)
+      .HALF_BLOCK(HALF_BLOCK),
+      .HALF_FFT  (HALF_FFT)
   ) u_pdxch (
       // DFE Ports
       //----------

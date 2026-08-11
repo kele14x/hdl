@@ -465,7 +465,8 @@ module lowphy0 (
   lowphy_band #(
       .NUM_CC    (NumCc),
       .NUM_ANT   (NumAnt),
-      .HALF_BLOCK(HalfBlock)
+      .HALF_BLOCK(HalfBlock),
+      .HALF_FFT  (1'b0)
   ) u_b0 (
       // AXI
       //----

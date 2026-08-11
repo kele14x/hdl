@@ -5,7 +5,8 @@
 module pdxch_top #(
     parameter int NUM_CC     = 3,
     parameter int NUM_ANT    = 4,
-    parameter bit HALF_BLOCK = 1'b0
+    parameter bit HALF_BLOCK = 1'b0,
+    parameter bit HALF_FFT   = 1'b0
 ) (
     // Radio I/F
     //----------
@@ -160,7 +161,8 @@ module pdxch_top #(
 
       pdxch_channel #(
           .NUM_ANT   (NUM_ANT),
-          .HALF_BLOCK(HALF_BLOCK)
+          .HALF_BLOCK(HALF_BLOCK),
+          .HALF_FFT  (HALF_FFT)
       ) u_channel (
           .clk                 (clk),
           .rst                 (rst),

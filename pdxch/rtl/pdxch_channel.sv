@@ -5,7 +5,8 @@
 module pdxch_channel #(
     parameter bit HAS_CDC    = 1'b1,
     parameter int NUM_ANT    = 4,
-    parameter bit HALF_BLOCK = 1'b0
+    parameter bit HALF_BLOCK = 1'b0,
+    parameter bit HALF_FFT   = 1'b0
 ) (
     // Clock & Reset
     //--------------
@@ -40,7 +41,10 @@ module pdxch_channel #(
     input  wire [31:0] ctrl_phase_comp_din
 );
 
-  localparam int LogFftSize = HALF_BLOCK ? 11 : 12;
+  localparam int LogFftSize = HALF_FFT ? 11 : 12;
+
+  // HALF_BLOCK is retained for compatibility with existing instantiations.
+  wire unused_half_block = &{1'b0, HALF_BLOCK};
 
   // Signals
 

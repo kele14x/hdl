@@ -5,7 +5,8 @@
 module pdxch #(
     parameter int NUM_CC     = 3,
     parameter int NUM_ANT    = 4,
-    parameter bit HALF_BLOCK = 1'b1
+    parameter bit HALF_BLOCK = 1'b1,
+    parameter bit HALF_FFT   = 1'b1
 ) (
     input  wire        s_axi_aclk,
     input  wire        s_axi_aresetn,
@@ -203,7 +204,8 @@ module pdxch #(
   pdxch_top #(
       .NUM_CC    (NUM_CC),
       .NUM_ANT   (NUM_ANT),
-      .HALF_BLOCK(HALF_BLOCK)
+      .HALF_BLOCK(HALF_BLOCK),
+      .HALF_FFT  (HALF_FFT)
   ) i_pdxch_top (
       // Radio I/F
       .clk                  (clk),
