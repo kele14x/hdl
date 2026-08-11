@@ -23,8 +23,8 @@ module axi4l_bram_w #(
     input  wire                    bready,
     //
     output wire [  ADDR_WIDTH-1:0] bram_addr,
-    output wire [  DATA_WIDTH-1:0] bram_wdata,
-    output wire [DATA_WIDTH/8-1:0] bram_wstrb,
+    output wire [  DATA_WIDTH-1:0] bram_wr_data,
+    output wire [DATA_WIDTH/8-1:0] bram_wr_strb,
     output wire                    bram_en,
     //
     input  wire                    bram_ack,
@@ -439,8 +439,8 @@ module axi4l_bram_w #(
   // BRAM
 
   assign bram_addr = aw_slot0;
-  assign bram_wdata = w_slot0[DATA_WIDTH+DATA_WIDTH/8-1:DATA_WIDTH/8];
-  assign bram_wstrb = w_slot0[DATA_WIDTH/8-1:0];
+  assign bram_wr_data = w_slot0[DATA_WIDTH+DATA_WIDTH/8-1:DATA_WIDTH/8];
+  assign bram_wr_strb = w_slot0[DATA_WIDTH/8-1:0];
 
   always_ff @(posedge aclk or negedge aresetn) begin
     if (!aresetn) begin

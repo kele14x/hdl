@@ -1,1 +1,4 @@
+rtl/axi4l_bram_wr.sv
+rtl/axi4l_bram_r.sv
+rtl/axi4l_bram_w.sv
 rtl/axi4l_bram.sv

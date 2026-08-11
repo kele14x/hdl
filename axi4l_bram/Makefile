@@ -5,7 +5,7 @@ VERILATOR ?= verilator
 REPO_ROOT := $(abspath ..)
 MODULE := $(notdir $(CURDIR))
 FLT ?= $(MODULE).flt
-LINT_TOPS ?= $(MODULE)
+LINT_TOPS ?= axi4l_bram axi4l_bram_wr axi4l_bram_r axi4l_bram_w
 
 RTL_SOURCES = $(shell $(PYTHON) $(REPO_ROOT)/hdl_tools/flt_tool.py $(FLT))
 
