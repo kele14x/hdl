@@ -5,6 +5,11 @@
  * it will store and forward the packet. And this FIFO does not support
  * backward pressure on the slave interface. If the FIFO is full, it will
  * discard the entire packet.
+ *
+ * Note: `s_axis_aresetn` must be synchronized to `s_axis_aclk` before it
+ * enters this core; it is only registered here, not synchronized. In
+ * ASYNC_MODE the read-domain reset is derived with an internal reset
+ * synchronizer.
  */
 
 `timescale 1 ns / 1 ps
@@ -49,42 +54,24 @@ module axis_fifo_alt #(
   localparam logic OutputReg = (FIFO_LATENCY >= 2);
   localparam logic FabricReg = (FIFO_LATENCY >= 3);
 
-  initial begin
-    // Check FIFO depth
-    if ((FIFO_DEPTH < 4) || (32768 < FIFO_DEPTH)) begin
-      $display("ERROR: FIFO_DEPTH (%0d) is outside of valid range 4-32768. [%m]", FIFO_DEPTH);
-      $finish();
-    end
+  initial begin : drc_check
+    assert (FIFO_DEPTH >= 4 && FIFO_DEPTH <= 32768)
+    else $error("[%m]: FIFO_DEPTH (%0d) is outside of valid range 4-32768.", FIFO_DEPTH);
 
-    // Check FIFO depth is a power of 2
-    if ((FIFO_DEPTH & (FIFO_DEPTH - 1)) != 0) begin
-      $display("ERROR: FIFO_DEPTH (%0d) is not a power of 2. [%m]", FIFO_DEPTH);
-      $finish();
-    end
+    assert ((FIFO_DEPTH & (FIFO_DEPTH - 1)) == 0)
+    else $error("[%m]: FIFO_DEPTH (%0d) is not a power of 2.", FIFO_DEPTH);
 
-    // Check input FIFO latency
-    if ((FIFO_LATENCY < 1) || (3 < FIFO_LATENCY)) begin
-      $display("ERROR: FIFO_LATENCY (%0d) is outside of valid range 1-3. [%m]", FIFO_LATENCY);
-      $finish();
-    end
+    assert (FIFO_LATENCY >= 1 && FIFO_LATENCY <= 3)
+    else $error("[%m]: FIFO_LATENCY (%0d) is outside of valid range 1-3.", FIFO_LATENCY);
 
-    // Check data width
-    if (DataWidth < 0 || DataWidth > 4096) begin
-      $display("ERROR: Data width (%0d) is outside of valid range 0-4096. [%m]", DataWidth);
-      $finish();
-    end
+    assert (DataWidth <= 4096)
+    else $error("[%m]: Data width (%0d) is outside of valid range 0-4096.", DataWidth);
 
-    // Check data width is multiple of 8
-    if (DATA_WIDTH % 8 != 0) begin
-      $display("ERROR: DATA_WIDTH (%0d) is not a multiple of 8. [%m]", DATA_WIDTH);
-      $finish();
-    end
+    assert ((DATA_WIDTH % 8) == 0)
+    else $error("[%m]: DATA_WIDTH (%0d) is not a multiple of 8.", DATA_WIDTH);
 
-    // Check user width
-    if (USER_WIDTH < 0 || USER_WIDTH > 4096) begin
-      $display("ERROR: User width (%0d) is outside of valid range 0-4096. [%m]", USER_WIDTH);
-      $finish();
-    end
+    assert (USER_WIDTH >= 0 && USER_WIDTH <= 4096)
+    else $error("[%m]: USER_WIDTH (%0d) is outside of valid range 0-4096.", USER_WIDTH);
   end
 
   // Signals
@@ -92,7 +79,7 @@ module axis_fifo_alt #(
   wire                     wr_clk;
   logic                    wr_rstn;
 
-  logic                    wr_sync_n;
+  logic                    wr_mid_packet;
   logic [     AddrWidth:0] wr_count;
   wire  [     AddrWidth:0] wr_count_rd;
   logic [     AddrWidth:0] wr_count_next;
@@ -118,8 +105,6 @@ module axis_fifo_alt #(
 
   logic [  FIFO_LATENCY:0] valid;
 
-  genvar i;
-
   // Write side
 
   assign wr_clk = s_axis_aclk;
@@ -128,14 +113,14 @@ module axis_fifo_alt #(
     wr_rstn <= s_axis_aresetn;
   end
 
-  // Synchronize the first word of the packet
+  // Mid-packet flag: set after a non-last beat is presented, cleared by tlast
   always_ff @(posedge wr_clk) begin
     if (!wr_rstn) begin
-      wr_sync_n <= 1'b0;
+      wr_mid_packet <= 1'b0;
     end else if (s_axis_tvalid && s_axis_tlast) begin
-      wr_sync_n <= 1'b0;
+      wr_mid_packet <= 1'b0;
     end else if (s_axis_tvalid) begin
-      wr_sync_n <= 1'b1;
+      wr_mid_packet <= 1'b1;
     end
   end
 
@@ -154,7 +139,10 @@ module axis_fifo_alt #(
     if (s_axis_tvalid && wr_discard) begin
       wr_count_next = wr_count;
     end else if (s_axis_tvalid && wr_full) begin
-      wr_count_next = wr_count_last;
+      // On a first beat (wr_mid_packet low) wr_count_last still holds the
+      // previous packet's start, but nothing was written for this packet yet,
+      // so the correct rollback target is wr_count itself.
+      wr_count_next = wr_mid_packet ? wr_count_last : wr_count;
     end else if (s_axis_tvalid) begin
       wr_count_next = wr_count + 1'b1;
     end else begin
@@ -162,11 +150,11 @@ module axis_fifo_alt #(
     end
   end
 
-  // Log the last write pointer
+  // Log the packet start pointer on each packet's first beat
   always_ff @(posedge wr_clk) begin
     if (!wr_rstn) begin
       wr_count_last <= 'd0;
-    end else if (s_axis_tvalid && !wr_sync_n) begin
+    end else if (s_axis_tvalid && !wr_mid_packet) begin
       wr_count_last <= wr_count;
     end
   end
@@ -222,7 +210,14 @@ module axis_fifo_alt #(
     end
   end
 
-  assign err_discard = s_axis_tvalid && wr_full;
+  // Pulse once per discarded packet, on the beat that runs the FIFO full
+  assign err_discard = s_axis_tvalid && wr_full && !wr_discard;
+
+  // The write pointer must never fall behind the committed pointer; the
+  // uncommitted footprint cannot exceed the FIFO depth.
+  assert property (@(posedge wr_clk) disable iff (!wr_rstn)
+                   (wr_count - wr_count_reg) <= FIFO_DEPTH[AddrWidth:0])
+  else $error("[%m]: wr_count fell behind wr_count_reg.");
 
   // Read side
 
@@ -247,7 +242,7 @@ module axis_fifo_alt #(
   // RAM read
 
   generate
-    for (i = 0; i < FIFO_LATENCY; i = i + 1) begin : g_rd_en
+    for (genvar i = 0; i < FIFO_LATENCY; i = i + 1) begin : g_rd_en
       assign rd_en[i] = valid[i] && (~&valid[FIFO_LATENCY:i+1] || m_axis_tready);
     end
   endgenerate
@@ -255,7 +250,7 @@ module axis_fifo_alt #(
   // The valid flags
 
   generate
-    for (i = 0; i <= FIFO_LATENCY; i = i + 1) begin : g_valid
+    for (genvar i = 0; i <= FIFO_LATENCY; i = i + 1) begin : g_valid
 
       if (i == 0) begin : g_first
 

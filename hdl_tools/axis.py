@@ -3,7 +3,8 @@
 Built on the valid/ready handshake primitives from ``hdl_tools.handshake``:
 a source drives beats (payload plus optional sideband) with valid/tready
 handshakes, a sink drives tready from a policy, and a monitor reconstructs
-TLAST-delimited frames.  All driving and sampling happens on the rising
+TLAST-delimited frames.  ``tready`` is optional; an interface without it is
+treated as always ready.  All driving and sampling happens on the rising
 clock edge.
 """
 
@@ -135,11 +136,12 @@ class AxisSourceDriver(_AxisComponent):
             for name in ("tkeep", "tuser", "tdest", "tlast")
             if self._optional(name) is not None
         ]
+        ready = self._name("tready") if self._optional("tready") is not None else None
         self._source = HandshakeSource(
             dut,
             self._name("tvalid"),
             [self._name(name) for name in self._fields],
-            ready=self._name("tready"),
+            ready=ready,
             config=self._handshake_config(),
         )
 
@@ -260,12 +262,15 @@ class AxisMonitor(_AxisComponent):
 
     async def run(self):
         has_tlast = self._optional("tlast") is not None
+        ready_signal = self._optional("tready")
         while True:
             await RisingEdge(self.clock)
             if self._in_reset():
                 self._partial_frame.clear()
                 continue
-            if not (int(self._sig("tvalid").value) and int(self._sig("tready").value)):
+            if not int(self._sig("tvalid").value):
+                continue
+            if ready_signal is not None and not int(ready_signal.value):
                 continue
 
             beat = self._sample()
