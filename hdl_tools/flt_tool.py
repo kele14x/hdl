@@ -3,7 +3,9 @@
 
 Each non-comment entry is resolved relative to the file list that contains it.
 Entries ending in ``.flt`` are expanded recursively; every file list is read at
-most once, so shared dependencies and cycles are safe.
+most once, so shared dependencies and cycles are safe. Source files are
+deduplicated by their resolved absolute path, so a file listed more than once
+(through any relative spelling) is emitted only once.
 """
 
 from __future__ import annotations
@@ -16,9 +18,15 @@ __version__ = "1.0.0"
 
 
 def resolve_flt(flt_file: Path) -> list[Path]:
-    """Return source files from *flt_file*, recursively expanding ``.flt`` entries."""
+    """Return source files from *flt_file*, recursively expanding ``.flt`` entries.
+
+    Source files are deduplicated by their resolved absolute path, so the same
+    file referenced from multiple file lists (via any relative spelling) is
+    returned only once, in first-seen order.
+    """
     resolved_files: list[Path] = []
     parsed_flts: set[Path] = set()
+    seen_sources: set[Path] = set()
 
     def parse(file_list: Path) -> None:
         file_list = file_list.resolve()
@@ -41,6 +49,9 @@ def resolve_flt(flt_file: Path) -> list[Path]:
                     raise FileNotFoundError(
                         f"Source listed by {file_list} does not exist: {line}"
                     )
+                if entry in seen_sources:
+                    continue
+                seen_sources.add(entry)
                 resolved_files.append(entry)
 
     parse(flt_file)
