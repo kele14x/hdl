@@ -1,18 +1,19 @@
+#!/usr/bin/env python3
 import os
+import random
 from pathlib import Path
 
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge, with_timeout
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
 
-
 prj_path = Path(__file__).resolve().parent.parent
 
-NUM_SRC = 1
+NUM_SRC = 2
 NUM_DEST = 2
 DATA_WIDTH = 8
 USER_WIDTH = 2
@@ -21,168 +22,286 @@ if not SIM:
     raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 GUI = os.environ.get("GUI", "false").lower() == "true"
 
-
-def set_lane(signal, lane, width, value):
-    mask = ((1 << width) - 1) << (lane * width)
-    signal.value = (int(signal.value) & ~mask) | ((value << (lane * width)) & mask)
-
-
-def get_lane(signal, lane, width):
-    return (int(signal.value) >> (lane * width)) & ((1 << width) - 1)
+TIMEOUT_NS = 20_000
 
 
 async def reset(dut):
     dut.rst.value = 1
-    dut.s_axis_tdata.value = 0
-    dut.s_axis_tkeep.value = 0
-    dut.s_axis_tlast.value = 0
-    dut.s_axis_tdest.value = 0
-    dut.s_axis_tuser.value = 0
-    dut.s_axis_tvalid.value = 0
-    dut.m_axis_tready.value = 0
+    for source in range(NUM_SRC):
+        dut.s_axis_tdata[source].value = 0
+        dut.s_axis_tkeep[source].value = 0
+        dut.s_axis_tlast[source].value = 0
+        dut.s_axis_tdest[source].value = 0
+        dut.s_axis_tuser[source].value = 0
+        dut.s_axis_tvalid[source].value = 0
+    for destination in range(NUM_DEST):
+        dut.m_axis_tready[destination].value = 0
     await ClockCycles(dut.clk, 4)
     dut.rst.value = 0
     await ClockCycles(dut.clk, 2)
 
 
+def expected_beats(packets):
+    """Flatten (dest, [(data, user), ...]) packets into scoreboard words."""
+    beats = []
+    for _, words in packets:
+        for index, (data, user) in enumerate(words):
+            beats.append((data, 1, int(index == len(words) - 1), user))
+    return beats
+
+
+async def drive_source(dut, source, packets):
+    """Drive packets as (dest bitmask, [(data, user), ...]) on one source."""
+    for dest, words in packets:
+        for index, (data, user) in enumerate(words):
+            dut.s_axis_tdata[source].value = data
+            dut.s_axis_tkeep[source].value = 1
+            dut.s_axis_tlast[source].value = int(index == len(words) - 1)
+            dut.s_axis_tdest[source].value = dest
+            dut.s_axis_tuser[source].value = user
+            dut.s_axis_tvalid[source].value = 1
+            await RisingEdge(dut.clk)
+            while not int(dut.s_axis_tready[source].value):
+                await RisingEdge(dut.clk)
+    dut.s_axis_tvalid[source].value = 0
+
+
+async def drive_ready(dut, policy):
+    """Drive m_axis_tready from policy(cycle, destination) -> bool."""
+    cycle = 0
+    while True:
+        for destination in range(NUM_DEST):
+            dut.m_axis_tready[destination].value = int(policy(cycle, destination))
+        await RisingEdge(dut.clk)
+        cycle += 1
+
+
+async def monitor_dest(dut, destination, received):
+    while True:
+        await RisingEdge(dut.clk)
+        if int(dut.m_axis_tvalid[destination].value) and int(
+            dut.m_axis_tready[destination].value
+        ):
+            received.append(
+                (
+                    int(dut.m_axis_tdata[destination].value),
+                    int(dut.m_axis_tkeep[destination].value),
+                    int(dut.m_axis_tlast[destination].value),
+                    int(dut.m_axis_tuser[destination].value),
+                )
+            )
+
+
+async def check_payload_stable(dut, destination):
+    """AXI-Stream: payload must hold while TVALID is high and TREADY low."""
+    pending = None
+    while True:
+        await RisingEdge(dut.clk)
+        valid = int(dut.m_axis_tvalid[destination].value)
+        ready = int(dut.m_axis_tready[destination].value)
+        payload = (
+            int(dut.m_axis_tdata[destination].value),
+            int(dut.m_axis_tkeep[destination].value),
+            int(dut.m_axis_tlast[destination].value),
+            int(dut.m_axis_tuser[destination].value),
+        )
+        if valid and not ready:
+            assert pending is None or payload == pending, (
+                f"dest{destination} payload changed while stalled: "
+                f"{pending} -> {payload}"
+            )
+            pending = payload
+        else:
+            pending = None
+
+
+async def run_and_collect(dut, sources, received, expected, ready_task=None):
+    """Join the source drivers, then wait until every beat is observed."""
+    for task in sources:
+        await with_timeout(task, TIMEOUT_NS, "ns")
+    total = sum(len(beats) for beats in expected)
+    for _ in range(1000):
+        if sum(len(words) for words in received) >= total:
+            break
+        await RisingEdge(dut.clk)
+    else:
+        raise AssertionError(f"expected {total} beats, observed {received}")
+    if ready_task is not None:
+        ready_task.cancel()
+
+
 @cocotb.test()
-async def test_axis_switch_broadcasts_packets_under_backpressure(dut):
+async def test_broadcast_under_backpressure(dut):
+    """Two broadcast packets serialize and reach every destination intact."""
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     await reset(dut)
 
-    # Each source has a sequence of packets: (destination bitmask, words).
     packets = [
-        [
-            (0b11, [(0x11, 0), (0x12, 1)]),
-            (0b11, [(0x31, 2), (0x32, 3)]),
-        ],
+        [(0b11, [(0x11, 0), (0x12, 1)])],
+        [(0b11, [(0x21, 2), (0x22, 3), (0x23, 0)])],
     ]
-    packet_index = [0] * NUM_SRC
-    word_index = [0] * NUM_SRC
-    expected = [[] for _ in range(NUM_DEST)]
+    # Fixed-priority arbitration lets source 0 finish before source 1 starts.
+    expected = [expected_beats(packets[0]) + expected_beats(packets[1])] * NUM_DEST
+
+    rng = random.Random(1234)
     received = [[] for _ in range(NUM_DEST)]
+    monitors = [
+        cocotb.start_soon(monitor_dest(dut, destination, received[destination]))
+        for destination in range(NUM_DEST)
+    ]
+    checks = [
+        cocotb.start_soon(check_payload_stable(dut, destination))
+        for destination in range(NUM_DEST)
+    ]
+    ready_task = cocotb.start_soon(
+        drive_ready(dut, lambda cycle, destination: rng.random() < 0.7)
+    )
 
-    async def drive_sources():
-        for cycle in range(300):
-            await Timer(1, unit="ps")
-            # Create a periodic independent backpressure pattern for both outputs.
-            dut.m_axis_tready.value = 0b11 if cycle % 4 else 0b01
-
-            active = []
-            for source in range(NUM_SRC):
-                if packet_index[source] == len(packets[source]):
-                    set_lane(dut.s_axis_tvalid, source, 1, 0)
-                    active.append(None)
-                    continue
-
-                destination, words = packets[source][packet_index[source]]
-                data, user = words[word_index[source]]
-                last = int(word_index[source] == len(words) - 1)
-                set_lane(dut.s_axis_tdata, source, DATA_WIDTH, data)
-                set_lane(dut.s_axis_tkeep, source, DATA_WIDTH // 8, 1)
-                set_lane(dut.s_axis_tlast, source, 1, last)
-                set_lane(dut.s_axis_tdest, source, NUM_DEST, destination)
-                set_lane(dut.s_axis_tuser, source, USER_WIDTH, user)
-                set_lane(dut.s_axis_tvalid, source, 1, 1)
-                active.append((destination, data, user, last))
-
-            await Timer(1, unit="ps")
-            source_ready = [
-                get_lane(dut.s_axis_tready, source, 1) for source in range(NUM_SRC)
-            ]
-            output_before_edge = []
-            for destination in range(NUM_DEST):
-                valid = get_lane(dut.m_axis_tvalid, destination, 1)
-                ready = get_lane(dut.m_axis_tready, destination, 1)
-                if valid and ready:
-                    output_before_edge.append(
-                        (
-                            valid,
-                            ready,
-                            get_lane(dut.m_axis_tdata, destination, DATA_WIDTH),
-                            get_lane(dut.m_axis_tkeep, destination, DATA_WIDTH // 8),
-                            get_lane(dut.m_axis_tlast, destination, 1),
-                            get_lane(dut.m_axis_tuser, destination, USER_WIDTH),
-                        )
-                    )
-                else:
-                    output_before_edge.append((valid, ready, 0, 0, 0, 0))
-
-            await RisingEdge(dut.clk)
-
-            for destination, output in enumerate(output_before_edge):
-                valid, ready, data, keep, last, user = output
-                if valid and ready:
-                    received[destination].append((data, keep, last, user))
-
-            for source, transaction in enumerate(active):
-                if transaction is None or not source_ready[source]:
-                    continue
-                destination, data, user, last = transaction
-                for output in range(NUM_DEST):
-                    if (destination >> output) & 1:
-                        expected[output].append((data, 1, last, user))
-                if last:
-                    packet_index[source] += 1
-                    word_index[source] = 0
-                else:
-                    word_index[source] += 1
-
-            if all(
-                packet_index[source] == len(packets[source])
-                for source in range(NUM_SRC)
-            ):
-                return
-            await Timer(4, unit="ns")
-        raise AssertionError("source packets did not complete")
-
-    sender = cocotb.start_soon(drive_sources())
-    await sender
-
-    # Drain the registered output paths after the final input transfer.
-    dut.s_axis_tvalid.value = 0
-    dut.m_axis_tready.value = 0b11
-    for _ in range(20):
-        await Timer(1, unit="ps")
-        output_before_edge = []
-        for destination in range(NUM_DEST):
-            valid = get_lane(dut.m_axis_tvalid, destination, 1)
-            if valid:
-                output_before_edge.append(
-                    (
-                        valid,
-                        get_lane(dut.m_axis_tdata, destination, DATA_WIDTH),
-                        get_lane(dut.m_axis_tkeep, destination, DATA_WIDTH // 8),
-                        get_lane(dut.m_axis_tlast, destination, 1),
-                        get_lane(dut.m_axis_tuser, destination, USER_WIDTH),
-                    )
-                )
-            else:
-                output_before_edge.append((valid, 0, 0, 0, 0))
-        await RisingEdge(dut.clk)
-        for destination, output in enumerate(output_before_edge):
-            valid, data, keep, last, user = output
-            if valid:
-                received[destination].append((data, keep, last, user))
-        if received == expected:
-            break
+    sources = [
+        cocotb.start_soon(drive_source(dut, source, packets[source]))
+        for source in range(NUM_SRC)
+    ]
+    await run_and_collect(dut, sources, received, expected, ready_task)
+    for task in monitors + checks:
+        task.cancel()
 
     assert received == expected
-    assert [word[0] for word in received[0]] == [0x11, 0x12, 0x31, 0x32]
-    assert received[1] == received[0]
+
+
+@cocotb.test()
+async def test_disjoint_unicast_routes_independently(dut):
+    """Each destination only sees the source that targeted it."""
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await reset(dut)
+
+    packets = [
+        [(0b01, [(0xB1, 0), (0xB2, 1)]), (0b01, [(0xB3, 2), (0xB4, 3)])],
+        [(0b10, [(0xC1, 0), (0xC2, 1)])],
+    ]
+    expected = [expected_beats(packets[source]) for source in range(NUM_SRC)]
+
+    received = [[] for _ in range(NUM_DEST)]
+    monitors = [
+        cocotb.start_soon(monitor_dest(dut, destination, received[destination]))
+        for destination in range(NUM_DEST)
+    ]
+    for destination in range(NUM_DEST):
+        dut.m_axis_tready[destination].value = 1
+
+    sources = [
+        cocotb.start_soon(drive_source(dut, source, packets[source]))
+        for source in range(NUM_SRC)
+    ]
+    await run_and_collect(dut, sources, received, expected)
+    for task in monitors:
+        task.cancel()
+
+    assert received == expected
+
+
+@cocotb.test()
+async def test_tdest_zero_discards_packet(dut):
+    """A TDEST == 0 packet is absorbed silently; later packets still route."""
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await reset(dut)
+
+    packets = [
+        [(0b00, [(0xD1, 0), (0xD2, 0)]), (0b01, [(0xA1, 1), (0xA2, 2)])],
+        [(0b10, [(0xE1, 3), (0xE2, 0)])],
+    ]
+    # The discarded packet of source 0 must not appear anywhere.
+    expected = [
+        expected_beats(packets[0][1:]),
+        expected_beats(packets[1]),
+    ]
+
+    received = [[] for _ in range(NUM_DEST)]
+    monitors = [
+        cocotb.start_soon(monitor_dest(dut, destination, received[destination]))
+        for destination in range(NUM_DEST)
+    ]
+    for destination in range(NUM_DEST):
+        dut.m_axis_tready[destination].value = 1
+
+    sources = [
+        cocotb.start_soon(drive_source(dut, source, packets[source]))
+        for source in range(NUM_SRC)
+    ]
+    await run_and_collect(dut, sources, received, expected)
+    for task in monitors:
+        task.cancel()
+
+    assert received == expected
+
+
+@cocotb.test()
+async def test_contending_broadcasts_serialize(dut):
+    """A packet owns all its destinations until its TLAST transfer."""
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await reset(dut)
+
+    packets = [
+        [(0b11, [(0x10, 1), (0x11, 2)])],
+        [(0b11, [(0x20, 3), (0x21, 0)])],
+    ]
+    expected = [expected_beats(packets[0]) + expected_beats(packets[1])] * NUM_DEST
+
+    received = [[] for _ in range(NUM_DEST)]
+    monitors = [
+        cocotb.start_soon(monitor_dest(dut, destination, received[destination]))
+        for destination in range(NUM_DEST)
+    ]
+    checks = [
+        cocotb.start_soon(check_payload_stable(dut, destination))
+        for destination in range(NUM_DEST)
+    ]
+    # Destination 1 stalls while words are pending; the stalled payload must
+    # be retained and source 0 must not advance past it.
+    ready_task = cocotb.start_soon(
+        drive_ready(
+            dut, lambda cycle, destination: destination == 0 or cycle not in (4, 5, 10)
+        )
+    )
+
+    first_ready = [None] * NUM_SRC
+
+    async def track_first_ready(source):
+        cycle = 0
+        while True:
+            await RisingEdge(dut.clk)
+            if int(dut.s_axis_tready[source].value) and first_ready[source] is None:
+                first_ready[source] = cycle
+            cycle += 1
+
+    trackers = [
+        cocotb.start_soon(track_first_ready(source)) for source in range(NUM_SRC)
+    ]
+    sources = [
+        cocotb.start_soon(drive_source(dut, source, packets[source]))
+        for source in range(NUM_SRC)
+    ]
+    await run_and_collect(dut, sources, received, expected, ready_task)
+    for task in monitors + checks + trackers:
+        task.cancel()
+
+    assert received == expected
+    assert first_ready[0] is not None
+    assert first_ready[1] is not None
+    assert first_ready[0] < first_ready[1]
 
 
 def test_axis_switch_runner():
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel="axis_switch",
-        verilog_sources=resolve_flt(prj_path / "axis_switch.flt"),
+        sources=resolve_flt(prj_path / "axis_switch.flt"),
         parameters={
             "NUM_SRC": NUM_SRC,
             "NUM_DEST": NUM_DEST,
             "DATA_WIDTH": DATA_WIDTH,
             "USER_WIDTH": USER_WIDTH,
         },
+        build_dir=str(prj_path / "sim_build"),
         always=True,
         waves=True,
     )
@@ -190,6 +309,7 @@ def test_axis_switch_runner():
         hdl_toplevel="axis_switch",
         hdl_toplevel_lang="verilog",
         test_module="test_axis_switch",
+        build_dir=str(prj_path / "sim_build"),
         waves=True,
         gui=GUI,
     )

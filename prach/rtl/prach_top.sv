@@ -214,20 +214,20 @@ module prach_top #(
       .clk          (clk_eth_xran),
       .rst          (rst_eth_xran),
       //
-      .s_axis_tdata ({m_axis_tdata[2],  m_axis_tdata[1],  m_axis_tdata[0]}),
-      .s_axis_tkeep ({m_axis_tkeep[2],  m_axis_tkeep[1],  m_axis_tkeep[0]}),
-      .s_axis_tlast ({m_axis_tlast[2],  m_axis_tlast[1],  m_axis_tlast[0]}),
-      .s_axis_tdest ({1'b1, 1'b1, 1'b1}),
-      .s_axis_tuser ({m_axis_tuser[2],  m_axis_tuser[1],  m_axis_tuser[0]}),
-      .s_axis_tvalid({m_axis_tvalid[2], m_axis_tvalid[1], m_axis_tvalid[0]}),
-      .s_axis_tready({m_axis_tready[2], m_axis_tready[1], m_axis_tready[0]}),
+      .s_axis_tdata (m_axis_tdata),
+      .s_axis_tkeep (m_axis_tkeep),
+      .s_axis_tlast (m_axis_tlast),
+      .s_axis_tdest ('{default: '1}),
+      .s_axis_tuser (m_axis_tuser),
+      .s_axis_tvalid(m_axis_tvalid),
+      .s_axis_tready(m_axis_tready),
       //
-      .m_axis_tdata (m_fram_prach_tdata),
-      .m_axis_tkeep (m_fram_prach_tkeep),
-      .m_axis_tlast (m_fram_prach_tlast),
-      .m_axis_tuser (m_fram_prach_tuser),
-      .m_axis_tvalid(m_fram_prach_tvalid),
-      .m_axis_tready(m_fram_prach_tready)
+      .m_axis_tdata ('{m_fram_prach_tdata}),
+      .m_axis_tkeep ('{m_fram_prach_tkeep}),
+      .m_axis_tlast ('{m_fram_prach_tlast}),
+      .m_axis_tuser ('{m_fram_prach_tuser}),
+      .m_axis_tvalid('{m_fram_prach_tvalid}),
+      .m_axis_tready('{m_fram_prach_tready})
   );
   // verilog_format: on
 

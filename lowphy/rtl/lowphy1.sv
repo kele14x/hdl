@@ -1762,20 +1762,20 @@ module lowphy1 (
       .clk          (clk),
       .rst          (rst),
       //
-      .s_axis_tdata ({s2_fram_unsol_tdata, s1_fram_unsol_tdata, s0_fram_unsol_tdata}),
-      .s_axis_tkeep ({s2_fram_unsol_tkeep, s1_fram_unsol_tkeep, s0_fram_unsol_tkeep}),
-      .s_axis_tlast ({s2_fram_unsol_tlast, s1_fram_unsol_tlast, s0_fram_unsol_tlast}),
-      .s_axis_tdest ({1'b1, 1'b1, 1'b1}),
-      .s_axis_tuser ({s2_fram_unsol_tuser, s1_fram_unsol_tuser, s0_fram_unsol_tuser}),
-      .s_axis_tvalid({s2_fram_unsol_tvalid, s1_fram_unsol_tvalid, s0_fram_unsol_tvalid}),
-      .s_axis_tready({s2_fram_unsol_tready, s1_fram_unsol_tready, s0_fram_unsol_tready}),
+      .s_axis_tdata ('{s0_fram_unsol_tdata, s1_fram_unsol_tdata, s2_fram_unsol_tdata}),
+      .s_axis_tkeep ('{s0_fram_unsol_tkeep, s1_fram_unsol_tkeep, s2_fram_unsol_tkeep}),
+      .s_axis_tlast ('{s0_fram_unsol_tlast, s1_fram_unsol_tlast, s2_fram_unsol_tlast}),
+      .s_axis_tdest ('{default: '1}),
+      .s_axis_tuser ('{s0_fram_unsol_tuser, s1_fram_unsol_tuser, s2_fram_unsol_tuser}),
+      .s_axis_tvalid('{s0_fram_unsol_tvalid, s1_fram_unsol_tvalid, s2_fram_unsol_tvalid}),
+      .s_axis_tready('{s0_fram_unsol_tready, s1_fram_unsol_tready, s2_fram_unsol_tready}),
       //
-      .m_axis_tdata (m00_fram_unsol_tdata),
-      .m_axis_tkeep (m00_fram_unsol_tkeep),
-      .m_axis_tlast (m00_fram_unsol_tlast),
-      .m_axis_tuser (m00_fram_unsol_tuser),
-      .m_axis_tvalid(m00_fram_unsol_tvalid),
-      .m_axis_tready(m00_fram_unsol_tready)
+      .m_axis_tdata ('{m00_fram_unsol_tdata}),
+      .m_axis_tkeep ('{m00_fram_unsol_tkeep}),
+      .m_axis_tlast ('{m00_fram_unsol_tlast}),
+      .m_axis_tuser ('{m00_fram_unsol_tuser}),
+      .m_axis_tvalid('{m00_fram_unsol_tvalid}),
+      .m_axis_tready('{m00_fram_unsol_tready})
   );
 
   // PRACH AXIS Switch
@@ -1789,20 +1789,20 @@ module lowphy1 (
       .clk          (internal_bus_clk),
       .rst          (fram_reset),
       //
-      .s_axis_tdata ({s2_fram_prach_tdata, s1_fram_prach_tdata, s0_fram_prach_tdata}),
-      .s_axis_tkeep ({s2_fram_prach_tkeep, s1_fram_prach_tkeep, s0_fram_prach_tkeep}),
-      .s_axis_tlast ({s2_fram_prach_tlast, s1_fram_prach_tlast, s0_fram_prach_tlast}),
-      .s_axis_tdest ({1'b1, 1'b1, 1'b1}),
-      .s_axis_tuser ({s2_fram_prach_tuser, s1_fram_prach_tuser, s0_fram_prach_tuser}),
-      .s_axis_tvalid({s2_fram_prach_tvalid, s1_fram_prach_tvalid, s0_fram_prach_tvalid}),
-      .s_axis_tready({s2_fram_prach_tready, s1_fram_prach_tready, s0_fram_prach_tready}),
+      .s_axis_tdata ('{s0_fram_prach_tdata, s1_fram_prach_tdata, s2_fram_prach_tdata}),
+      .s_axis_tkeep ('{s0_fram_prach_tkeep, s1_fram_prach_tkeep, s2_fram_prach_tkeep}),
+      .s_axis_tlast ('{s0_fram_prach_tlast, s1_fram_prach_tlast, s2_fram_prach_tlast}),
+      .s_axis_tdest ('{default: '1}),
+      .s_axis_tuser ('{s0_fram_prach_tuser, s1_fram_prach_tuser, s2_fram_prach_tuser}),
+      .s_axis_tvalid('{s0_fram_prach_tvalid, s1_fram_prach_tvalid, s2_fram_prach_tvalid}),
+      .s_axis_tready('{s0_fram_prach_tready, s1_fram_prach_tready, s2_fram_prach_tready}),
       //
-      .m_axis_tdata (m00_fram_prach_tdata),
-      .m_axis_tkeep (m00_fram_prach_tkeep),
-      .m_axis_tlast (m00_fram_prach_tlast),
-      .m_axis_tuser (m00_fram_prach_tuser),
-      .m_axis_tvalid(m00_fram_prach_tvalid),
-      .m_axis_tready(m00_fram_prach_tready)
+      .m_axis_tdata ('{m00_fram_prach_tdata}),
+      .m_axis_tkeep ('{m00_fram_prach_tkeep}),
+      .m_axis_tlast ('{m00_fram_prach_tlast}),
+      .m_axis_tuser ('{m00_fram_prach_tuser}),
+      .m_axis_tvalid('{m00_fram_prach_tvalid}),
+      .m_axis_tready('{m00_fram_prach_tready})
   );
 
 endmodule

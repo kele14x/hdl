@@ -353,20 +353,20 @@ module ecpri_framer (
       .clk          (tx_eth_clk),
       .rst          (tx_eth_rst),
       //
-      .s_axis_tdata ({s3_axis_tdata, s2_axis_tdata, s1_axis_tdata, s0_axis_tdata}),
-      .s_axis_tkeep ({s3_axis_tkeep, s2_axis_tkeep, s1_axis_tkeep, s0_axis_tkeep}),
-      .s_axis_tlast ({s3_axis_tlast, s2_axis_tlast, s1_axis_tlast, s0_axis_tlast}),
-      .s_axis_tuser ({s3_axis_tuser, s2_axis_tuser, s1_axis_tuser, s0_axis_tuser}),
-      .s_axis_tdest ({1'b1, 1'b1, 1'b1, 1'b1}),
-      .s_axis_tvalid({s3_axis_tvalid, s2_axis_tvalid, s1_axis_tvalid, s0_axis_tvalid}),
-      .s_axis_tready({s3_axis_tready, s2_axis_tready, s1_axis_tready, s0_axis_tready}),
+      .s_axis_tdata ('{s0_axis_tdata, s1_axis_tdata, s2_axis_tdata, s3_axis_tdata}),
+      .s_axis_tkeep ('{s0_axis_tkeep, s1_axis_tkeep, s2_axis_tkeep, s3_axis_tkeep}),
+      .s_axis_tlast ('{s0_axis_tlast, s1_axis_tlast, s2_axis_tlast, s3_axis_tlast}),
+      .s_axis_tuser ('{s0_axis_tuser, s1_axis_tuser, s2_axis_tuser, s3_axis_tuser}),
+      .s_axis_tdest ('{default: '1}),
+      .s_axis_tvalid('{s0_axis_tvalid, s1_axis_tvalid, s2_axis_tvalid, s3_axis_tvalid}),
+      .s_axis_tready('{s0_axis_tready, s1_axis_tready, s2_axis_tready, s3_axis_tready}),
       //
-      .m_axis_tdata (s4_axis_tdata),
-      .m_axis_tkeep (s4_axis_tkeep),
-      .m_axis_tlast (s4_axis_tlast),
-      .m_axis_tuser (s4_axis_tuser),
-      .m_axis_tvalid(s4_axis_tvalid),
-      .m_axis_tready(s4_axis_tready)
+      .m_axis_tdata ('{s4_axis_tdata}),
+      .m_axis_tkeep ('{s4_axis_tkeep}),
+      .m_axis_tlast ('{s4_axis_tlast}),
+      .m_axis_tuser ('{s4_axis_tuser}),
+      .m_axis_tvalid('{s4_axis_tvalid}),
+      .m_axis_tready('{s4_axis_tready})
   );
 
   ecpri_framer_padding i_padding (

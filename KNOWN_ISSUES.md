@@ -60,11 +60,9 @@ Pre-existing; `axis_reg/tests/test_axis_reg.py` is clean for comparison.
 ## 4. Repo-wide — deprecated `verilog_sources=` in cocotb runners
 
 AGENTS.md requires the language-agnostic `sources=` argument. `axis_reg` and
-`skid_buffer` are clean; the following 20 test files still pass
+`skid_buffer` are clean; the following 18 test files still pass
 `verilog_sources=` to `runner.build()` and each emits a `DeprecationWarning`:
 
-- axis_switch/tests/test_axis_switch.py
-- axis_switch/tests/test_axis_switch_arbitration.py
 - bfp_comp/tests/test_bfp_comp.py
 - bit_reverse/tests/test_bit_reverse.py
 - cdc/tests/test_cdc.py
