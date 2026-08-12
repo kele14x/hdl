@@ -52,7 +52,9 @@ module pdxch_conv #(
   //     3 | 320/288 | 176/144 |
   //-------+---------+---------+
 
-  localparam int Latency = 15;
+  // 8 (NCO match delay) + 5 (cmult 4-mult pipeline) = 13;
+  // use 15 with 3-mult cmult (USE_3_MULT=1).
+  localparam int Latency = 13;
   localparam int AntAddrWidth = $clog2(NUM_ANT);
 
   // Signals

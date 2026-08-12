@@ -89,10 +89,10 @@ async def test_control_table_and_sideband_latency(dut):
         await Timer(1, unit="ps")
         history.append(current)
 
-        # delay.DEPTH=15 contains registers [0:14]; an item sampled at an
-        # edge is therefore visible at the output 14 edges later.
-        if cycle >= 14:
-            expected = history[cycle - 14]
+        # delay.DEPTH=13 contains registers [0:12]; an item sampled at an
+        # edge is therefore visible at the output 12 edges later.
+        if cycle >= 12:
+            expected = history[cycle - 12]
             actual = (
                 int(dut.dout_sf.value),
                 int(dut.dout_sl.value),
@@ -109,6 +109,56 @@ async def test_control_table_and_sideband_latency(dut):
 
         current = vector
         _set_input(dut, **vector)
+
+
+@cocotb.test()
+async def test_nonzero_data_and_sideband_alignment(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+
+    dut.rst.value = 1
+    dut.ctrl_rat.value = 0
+    dut.ctrl_bw.value = 0
+    _set_input(dut)
+    await ClockCycles(dut.clk, 4)
+    dut.rst.value = 0
+
+    # Keep the phase increment at zero so the mixer is unity (cos=1, sin=0),
+    # making each non-zero output sample directly identifiable. Flush the NCO
+    # and data pipelines before applying the scored sequence.
+    for _ in range(24):
+        await RisingEdge(dut.clk)
+        _set_input(dut)
+
+    samples = [
+        {
+            "real": 1000 + 37 * index,
+            "imag": 2000 + 29 * index,
+            "chn": (index // 2 + index // 5) % 2,
+            "dv": int(index % 3 != 1),
+        }
+        for index in range(18)
+    ]
+    pipeline = []
+    current = {}
+
+    for vector in samples + [{}] * 13:
+        await RisingEdge(dut.clk)
+        await Timer(1, unit="ps")
+        pipeline.append(current)
+
+        if len(pipeline) > 12:
+            expected = pipeline[-13]
+            if expected:
+                assert int(dut.dout_dr.value) == expected["real"]
+                assert int(dut.dout_di.value) == expected["imag"]
+                assert int(dut.dout_chn.value) == expected["chn"]
+                assert int(dut.dout_dv.value) == expected["dv"]
+
+        if vector:
+            _set_input(dut, **vector)
+        else:
+            _set_input(dut)
+        current = vector
 
 
 def test_pdxch_conv_runner():
