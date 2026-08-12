@@ -75,8 +75,8 @@ module pdxch_fdv_buffer #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (23)
   ) u_cdc_ctrl_rfs_offset (
       .src_clk (1'b1),
@@ -115,9 +115,9 @@ module pdxch_fdv_buffer #(
   // Trigger the symbol timer
   cdc_pulse #(
       .DEST_SYNC_FF(4),
-      .INIT_SYNC_FF(1'b1),
-      .REG_OUTPUT  (1'b1),
-      .RST_USED    (1'b1)
+      .INIT_SYNC_FF(1),
+      .REG_OUTPUT  (1),
+      .RST_USED    (1)
   ) u_cdc_defm_radio_start_10ms (
       .src_clk   (clk_eth_xran),
       .src_rst   (rst_eth_xran),
@@ -129,10 +129,10 @@ module pdxch_fdv_buffer #(
   );
 
   symbol_timer #(
-      .ASYNC(1'b0),
-      .MODE (1'b1),
+      .ASYNC(0),
+      .MODE (1),
       .FREQ (128),
-      .AUTO (1'b0)
+      .AUTO (0)
   ) u_symbol_timer (
       .clk            (clk),
       .rst            (rst),

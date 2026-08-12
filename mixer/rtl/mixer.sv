@@ -175,7 +175,7 @@ module mixer #(
       .POLYNOMIAL     (21'h100005),
       .STRUCTURE      ("FIBONACCI"),
       .GATE_TYPE      ("XOR"),
-      .PARALLEL_OUTPUT(1'b1)
+      .PARALLEL_OUTPUT(1)
   ) i_lfsr (
       .clk (clk),
       .rst (rst),
@@ -206,7 +206,7 @@ module mixer #(
   delay #(
       .WIDTH(16),
       .DEPTH(6),
-      .INIT (1'b0)
+      .INIT (0)
   ) i_delay_dr (
       .clk (clk),
       .rst (1'b0),
@@ -219,7 +219,7 @@ module mixer #(
   delay #(
       .WIDTH(16),
       .DEPTH(6),
-      .INIT (1'b0)
+      .INIT (0)
   ) i_delay_di (
       .clk (clk),
       .rst (1'b0),
@@ -232,7 +232,7 @@ module mixer #(
   // Complex multiplier
 
   cmult #(
-      .USE_3_MULT(1'b1),
+      .USE_3_MULT(1),
       .A_WIDTH (16),
       .B_WIDTH (16),
       .P_WIDTH (16),
@@ -259,7 +259,7 @@ module mixer #(
   delay #(
       .WIDTH(5),
       .DEPTH(Latency),
-      .INIT (1'b0)
+      .INIT (0)
   ) i_delay_dv (
       .clk (clk),
       .rst (1'b0),
@@ -272,7 +272,7 @@ module mixer #(
   delay #(
       .WIDTH(4),
       .DEPTH(Latency),
-      .INIT (1'b0)
+      .INIT (0)
   ) i_delay_chn (
       .clk (clk),
       .rst (1'b0),

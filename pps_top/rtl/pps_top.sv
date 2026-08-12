@@ -314,9 +314,9 @@ module pps_top #(
 `else
   cdc_pulse #(
       .DEST_SYNC_FF(2),
-      .INIT_SYNC_FF(1'b0),
-      .REG_OUTPUT  (1'b1),
-      .RST_USED    (1'b1)
+      .INIT_SYNC_FF(0),
+      .REG_OUTPUT  (1),
+      .RST_USED    (1)
   ) i_cdc_pulse_pps (
       .src_clk   (clk),
       .src_rst   (rst_int),

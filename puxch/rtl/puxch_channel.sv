@@ -161,8 +161,8 @@ module puxch_channel #(
   // Single CDC for control signals
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (23 + 2)
   ) u_ctrl_cdc (
       .src_clk (1'b1),
@@ -210,9 +210,9 @@ module puxch_channel #(
   // CDC for sync_s to clk domain
   cdc_pulse #(
       .DEST_SYNC_FF(4),
-      .INIT_SYNC_FF(1'b0),
-      .REG_OUTPUT  (1'b1),
-      .RST_USED    (1'b1)
+      .INIT_SYNC_FF(0),
+      .REG_OUTPUT  (1),
+      .RST_USED    (1)
   ) u_cdc_pulse (
       .src_clk   (clk_eth_xran),
       .src_rst   (rst_eth_xran),
@@ -253,9 +253,9 @@ module puxch_channel #(
   );
 
   gain #(
-      .HAS_CDC   (1'b1),
+      .HAS_CDC   (1),
       .NUM_ANT   (NUM_ANT),
-      .COMPLEX   (1'b0),
+      .COMPLEX   (0),
       .GAIN_WIDTH(17)
   ) u_gain (
       .clk         (clk),
@@ -314,10 +314,10 @@ module puxch_channel #(
 
   fft #(
       .NUM_ANT           (NUM_ANT),
-      .INV_FFT           (1'b0),
+      .INV_FFT           (0),
       .LOG_FFT_SIZE      (LogFftSize),
       .DATA_WIDTH        (16),
-      .BIT_REVERSED_INPUT(1'b0)
+      .BIT_REVERSED_INPUT(0)
   ) u_fft (
       .clk      (clk),
       .rst      (rst),
@@ -347,7 +347,7 @@ module puxch_channel #(
   );
 
   phase_comp #(
-      .HAS_CDC(1'b1),
+      .HAS_CDC(1),
       .NUM_ANT(NUM_ANT)
   ) u_phase_comp (
       .clk                 (clk),

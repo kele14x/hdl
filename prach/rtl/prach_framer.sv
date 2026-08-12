@@ -76,7 +76,7 @@ module prach_framer #(
   );
 
   axis_fifo_alt #(
-      .ASYNC_MODE  (1'b1),
+      .ASYNC_MODE  (1),
       .FIFO_DEPTH  (1024),
       .FIFO_LATENCY(3),
       .DATA_WIDTH  (64),

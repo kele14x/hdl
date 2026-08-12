@@ -101,7 +101,7 @@ module prach_fft #(
         prach_fft_ditfft2 #(
             .FFT_SIZE  (3 * 2 ** i),
             .DATA_WIDTH(DataWidthInt),
-            .SCALE     (i % 2 == 1)
+            .SCALE     ((i % 2 == 1) ? 1 : 0)
         ) u_ditfft2 (
             .clk    (clk),
             .rst    (rst),
@@ -134,7 +134,7 @@ module prach_fft #(
   delay #(
       .WIDTH(2),
       .DEPTH(Latency),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay_chn (
       .clk (clk),
       .rst (1'b0),

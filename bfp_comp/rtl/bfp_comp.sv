@@ -201,8 +201,8 @@ module bfp_comp #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (4)
   ) i_cdc_ud_comp_meth (
       .src_clk (1'b1),
@@ -213,8 +213,8 @@ module bfp_comp #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (4)
   ) i_cdc_ud_iq_width (
       .src_clk (1'b1),
@@ -225,8 +225,8 @@ module bfp_comp #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (4)
   ) i_cdc_fs_offset (
       .src_clk (1'b1),

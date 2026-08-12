@@ -117,8 +117,8 @@ module oran_framer_ul_ss_buffer #(
   );
 `else
   axis_fifo #(
-      .ASYNC_MODE  (1'b0),
-      .PACKET_MODE (1'b1),
+      .ASYNC_MODE  (0),
+      .PACKET_MODE (1),
       .FIFO_DEPTH  (FifoDepth),
       .FIFO_LATENCY(3),
       .DATA_WIDTH  (64),

@@ -162,7 +162,7 @@ module nco #(
       .POLYNOMIAL     (LFSR_POLYNOMIAL),
       .STRUCTURE      ("FIBONACCI"),
       .GATE_TYPE      ("XOR"),
-      .PARALLEL_OUTPUT(1'b1)
+      .PARALLEL_OUTPUT(1)
   ) i_lfsr (
       .clk (clk),
       .rst (rst || sync),

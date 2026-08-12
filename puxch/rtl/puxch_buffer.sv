@@ -102,8 +102,8 @@ module puxch_buffer #(
 
       cdc_array_single #(
           .DEST_SYNC_FF (2),
-          .INIT_SYNC_FF (1'b0),
-          .SRC_INPUT_REG(1'b0),
+          .INIT_SYNC_FF (0),
+          .SRC_INPUT_REG(0),
           .WIDTH        (2 + 4)
       ) u_ctrl_cdc (
           .src_clk (1'b1),
@@ -379,7 +379,7 @@ module puxch_buffer #(
   delay #(
       .WIDTH(1),
       .DEPTH(3),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay_valid (
       .clk (clk_eth_xran),
       .rst (1'b0),
@@ -392,7 +392,7 @@ module puxch_buffer #(
   delay #(
       .WIDTH(1),
       .DEPTH(3),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay_last (
       .clk (clk_eth_xran),
       .rst (1'b0),
@@ -405,7 +405,7 @@ module puxch_buffer #(
   // TODO: we can remove this FIFO and implement the back pressure by our self
   // to save RAM resource
   axis_fifo_alt #(
-      .ASYNC_MODE  (1'b0),
+      .ASYNC_MODE  (0),
       .FIFO_DEPTH  (2048),
       .FIFO_LATENCY(2),
       .DATA_WIDTH  (64),

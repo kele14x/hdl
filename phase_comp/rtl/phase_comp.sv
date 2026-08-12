@@ -166,7 +166,7 @@ module phase_comp #(
   );
 
   cmult #(
-      .USE_3_MULT(1'b0),
+      .USE_3_MULT(0),
       .A_WIDTH (16),
       .B_WIDTH (16),
       .P_WIDTH (16),

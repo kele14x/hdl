@@ -65,8 +65,8 @@ module rts2_playback_ctrl #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (1)
   ) u_ctrl_en_cdc (
       .src_clk (1'b1),
@@ -78,8 +78,8 @@ module rts2_playback_ctrl #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (32)
   ) u_ctrl_addr_offset_cdc (
       .src_clk (1'b1),
@@ -91,8 +91,8 @@ module rts2_playback_ctrl #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (32)
   ) u_ctrl_addr_size_cdc (
       .src_clk (1'b1),

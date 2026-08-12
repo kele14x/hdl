@@ -74,7 +74,7 @@ module fh_framer (
   wire        unused_outputs = &{1'b0, fh_fifo_tuser, fh_fifo_err_discard, message_tuser_unused};
 
   axis_fifo_alt #(
-      .ASYNC_MODE  (1'b1),
+      .ASYNC_MODE  (1),
       .FIFO_DEPTH  (4096),
       .FIFO_LATENCY(3),
       .DATA_WIDTH  (64),

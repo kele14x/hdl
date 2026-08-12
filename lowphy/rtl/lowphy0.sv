@@ -444,7 +444,7 @@ module lowphy0 (
 
   localparam int NumCc = 3;
   localparam int NumAnt = 4;
-  localparam bit HalfBlock = 1'b0;
+  localparam int HalfBlock = 0;
 
   // Signals
 
@@ -466,7 +466,7 @@ module lowphy0 (
       .NUM_CC    (NumCc),
       .NUM_ANT   (NumAnt),
       .HALF_BLOCK(HalfBlock),
-      .HALF_FFT  (1'b0)
+      .HALF_FFT  (0)
   ) u_b0 (
       // AXI
       //----

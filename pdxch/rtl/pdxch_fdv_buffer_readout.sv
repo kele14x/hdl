@@ -125,8 +125,8 @@ module pdxch_fdv_buffer_readout #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (4)
   ) i_cdc_ctrl_en (
       .src_clk (1'b1),
@@ -138,8 +138,8 @@ module pdxch_fdv_buffer_readout #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (2)
   ) i_cdc_ctrl_rat (
       .src_clk (1'b1),
@@ -151,8 +151,8 @@ module pdxch_fdv_buffer_readout #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (4)
   ) i_cdc_ctrl_bist (
       .src_clk (1'b1),
@@ -164,8 +164,8 @@ module pdxch_fdv_buffer_readout #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (4)
   ) i_cdc_ctrl_bw (
       .src_clk (1'b1),
@@ -177,8 +177,8 @@ module pdxch_fdv_buffer_readout #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (9)
   ) i_cdc_ctrl_nprb (
       .src_clk (1'b1),
@@ -190,8 +190,8 @@ module pdxch_fdv_buffer_readout #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (4)
   ) i_cdc_ctrl_fs_offset (
       .src_clk (1'b1),
@@ -397,7 +397,7 @@ module pdxch_fdv_buffer_readout #(
       .POLYNOMIAL     (25'h1C20001),
       .STRUCTURE      ("FIBONACCI"),
       .GATE_TYPE      ("XOR"),
-      .PARALLEL_OUTPUT(1'b1)
+      .PARALLEL_OUTPUT(1)
   ) i_lfsr (
       .clk (clk),
       .rst (rst),
@@ -582,7 +582,7 @@ module pdxch_fdv_buffer_readout #(
   delay #(
       .WIDTH(4),
       .DEPTH(6),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay_chn (
       .clk (clk),
       .rst (1'b0),
@@ -594,7 +594,7 @@ module pdxch_fdv_buffer_readout #(
   delay #(
       .WIDTH(1),
       .DEPTH(6),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay_dv (
       .clk (clk),
       .rst (1'b0),
@@ -606,7 +606,7 @@ module pdxch_fdv_buffer_readout #(
   delay #(
       .WIDTH(1),
       .DEPTH(6),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay_last (
       .clk (clk),
       .rst (1'b0),

@@ -77,9 +77,9 @@ module pps_timer_cdc (
   );
 `else
   cdc_handshake_f #(
-      .DEST_EXT_HSK(1'b0),
+      .DEST_EXT_HSK(0),
       .DEST_SYNC_FF(2),
-      .INIT_SYNC_FF(1'b0),
+      .INIT_SYNC_FF(0),
       .SRC_SYNC_FF (2),
       .WIDTH       (80)
   ) i_cdc_handshake_ts (

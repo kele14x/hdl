@@ -331,8 +331,8 @@ module oran_framer_eth #(
   );
 `else
   axis_fifo #(
-      .ASYNC_MODE  (1'b1),
-      .PACKET_MODE (1'b1),
+      .ASYNC_MODE  (1),
+      .PACKET_MODE (1),
       .FIFO_DEPTH  (FIFO_DEPTH),
       .FIFO_LATENCY(3),
       .DATA_WIDTH  (64),

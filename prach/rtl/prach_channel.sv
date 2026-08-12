@@ -151,8 +151,8 @@ module prach_channel #(
   // Single CDC for control signals
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (23)
   ) u_ctrl_cdc (
       .src_clk (1'b1),
@@ -177,9 +177,9 @@ module prach_channel #(
 
   cdc_pulse #(
       .DEST_SYNC_FF(4),
-      .INIT_SYNC_FF(1'b1),
-      .REG_OUTPUT  (1'b1),
-      .RST_USED    (1'b1)
+      .INIT_SYNC_FF(1),
+      .REG_OUTPUT  (1),
+      .RST_USED    (1)
   ) u_cdc_sync (
       .src_clk   (clk_eth_xran),
       .src_rst   (rst_eth_xran),

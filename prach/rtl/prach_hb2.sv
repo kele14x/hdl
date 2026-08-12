@@ -67,8 +67,8 @@ module prach_hb2 #(
 
   cdc_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0)
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0)
   ) u_cdc_ctrl_bypass (
       .src_clk (1'b1),
       .src_in  (ctrl_bypass),

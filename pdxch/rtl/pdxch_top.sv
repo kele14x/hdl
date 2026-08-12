@@ -93,7 +93,7 @@ module pdxch_top #(
       // BFP9 is mandatory for PDXCH. Keep it compressed in the FDV buffer;
       // decompression is performed in the readout clock domain after BRAM.
       pdxch_bfp_gearbox #(
-          .BYTE_REVERSE(1'b1),
+          .BYTE_REVERSE(1),
           .USER_WIDTH  (91)
       ) u_pdxch_bfp_gearbox (
           .clk          (clk_eth_xran),

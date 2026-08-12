@@ -111,7 +111,7 @@ module fft_twiddle #(
   delay #(
       .WIDTH(DATA_WIDTH * 2),
       .DEPTH(4),
-      .INIT (1'b0)
+      .INIT (0)
   ) i_data_delay (
       .clk (clk),
       .rst (1'b0),
@@ -124,7 +124,7 @@ module fft_twiddle #(
   delay #(
       .WIDTH(1),
       .DEPTH(Latency),
-      .INIT (1'b0)
+      .INIT (0)
   ) i_valid_delay (
       .clk (clk),
       .rst (1'b0),
@@ -151,7 +151,7 @@ module fft_twiddle #(
   );
 
   cmult #(
-      .USE_3_MULT(1'b0),
+      .USE_3_MULT(0),
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (16),
       .P_WIDTH (DATA_WIDTH),

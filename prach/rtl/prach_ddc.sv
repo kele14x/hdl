@@ -117,7 +117,7 @@ module prach_ddc #(
   end
 
   mixer #(
-      .HAS_CDC(1'b0),
+      .HAS_CDC(0),
       .NUM_ANT(NUM_ANT)
   ) u_mixer (
       .clk      (clk),
@@ -149,7 +149,7 @@ module prach_ddc #(
   delay #(
       .WIDTH(8),
       .DEPTH(13),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay_chn (
       .clk (clk),
       .rst (1'b0),

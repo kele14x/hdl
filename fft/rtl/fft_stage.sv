@@ -42,8 +42,8 @@ module fft_stage #(
   localparam int LogFftSizeBf2i = HasBf2ii ? (LOG_FFT_SIZE - 1) : LOG_FFT_SIZE;
   // The LOG_FFT_SIZE=2 stage has no twiddle multiplier to provide the /2
   // scaling used by the other stages. Scale its last butterfly explicitly.
-  localparam logic ScaleBfi = !HasTwiddle && (BIT_REVERSED_INPUT == 0);
-  localparam logic ScaleBfii = !HasTwiddle && (BIT_REVERSED_INPUT != 0);
+  localparam int ScaleBfi = (!HasTwiddle && (BIT_REVERSED_INPUT == 0)) ? 1 : 0;
+  localparam int ScaleBfii = (!HasTwiddle && (BIT_REVERSED_INPUT != 0)) ? 1 : 0;
 
   // Signals
 

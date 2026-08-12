@@ -143,8 +143,8 @@ module prach_hb4 #(
 
   cdc_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0)
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0)
   ) u_cdc_ctrl_bypass (
       .src_clk (1'b1),
       .src_in  (ctrl_bypass),
@@ -161,8 +161,8 @@ module prach_hb4 #(
         history_count[i] <= '0;
       end
     end else if (lane_valid) begin
-      if (history_count[lane] < NumOddHistory) begin
-        history_count[lane] <= history_count[lane] + 1'b1;
+      if (history_count[lane] < NumOddHistory[3:0]) begin
+        history_count[lane] <= history_count[lane] + 4'd1;
       end
     end
   end
@@ -325,7 +325,7 @@ module prach_hb4 #(
   delay #(
       .WIDTH(13),
       .DEPTH(9),
-      .INIT (1'b1)
+      .INIT (1)
   ) u_delay (
       .clk (clk),
       .cen (1'b1),

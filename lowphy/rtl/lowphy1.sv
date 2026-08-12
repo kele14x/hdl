@@ -786,7 +786,7 @@ module lowphy1 (
 
   localparam int NumCc = 3;
   localparam int NumAnt = 8;
-  localparam bit HalfBlock = 1'b1;
+  localparam int HalfBlock = 1;
 
   // Signals
 
@@ -905,7 +905,7 @@ module lowphy1 (
       .NUM_CC    (NumCc),
       .NUM_ANT   (NumAnt / 2),
       .HALF_BLOCK(HalfBlock),
-      .HALF_FFT  (1'b1)
+      .HALF_FFT  (1)
   ) u_b0 (
       // AXI
       //----
@@ -1175,7 +1175,7 @@ module lowphy1 (
       .CC_ID     (0),
       .ANT_ID    (0),
       .HALF_BLOCK(HalfBlock),
-      .HALF_FFT  (1'b1)
+      .HALF_FFT  (1)
   ) u_b1 (
       // AXI
       //----
@@ -1445,7 +1445,7 @@ module lowphy1 (
       .CC_ID     (0),
       .ANT_ID    (2),
       .HALF_BLOCK(HalfBlock),
-      .HALF_FFT  (1'b1)
+      .HALF_FFT  (1)
   ) u_b2 (
       // AXI
       //----

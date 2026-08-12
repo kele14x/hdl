@@ -110,7 +110,7 @@ module prach_fft_ditfft3_bf3 #(
   delay #(
       .WIDTH(1),
       .DEPTH(1),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay (
       .clk (clk),
       .rst (1'b0),

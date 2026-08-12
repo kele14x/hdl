@@ -66,8 +66,8 @@ module puxch_resync #(
   // Single CDC for all control signals
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (CtrlSignalWidth)
   ) u_ctrl_cdc (
       .src_clk (1'b1),
@@ -172,10 +172,10 @@ module puxch_resync #(
   // Symbol timer
 
   symbol_timer #(
-      .ASYNC(1'b1),
-      .MODE (1'b0),
+      .ASYNC(1),
+      .MODE (0),
       .FREQ (128),
-      .AUTO (1'b0)
+      .AUTO (0)
   ) u_symbol_timer (
       .clk            (clk),
       .rst            (rst),

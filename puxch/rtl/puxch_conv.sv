@@ -99,8 +99,8 @@ module puxch_conv #(
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (2 + 4 + 9)
   ) u_ctrl_cdc (
       .src_clk (1'b1),
@@ -237,8 +237,8 @@ module puxch_conv #(
       .P_WIDTH (12),
       .SHIFT   (1),
       //
-      .ROUND   (1'b0),
-      .SATURATE(1'b0)
+      .ROUND   (0),
+      .SATURATE(0)
   ) u_mult (
       .clk(clk),
       .rst(rst),
@@ -252,11 +252,11 @@ module puxch_conv #(
 
   dds_lut #(
       .STRUCTURE   ("AUTO"),
-      .RASTERIZED  (1'b0),
+      .RASTERIZED  (0),
       .DATA_WIDTH  (16),
       .PHASE_WIDTH (12),
-      .NEGATIVE_COS(1'b0),
-      .NEGATIVE_SIN(1'b0)
+      .NEGATIVE_COS(0),
+      .NEGATIVE_SIN(0)
   ) u_dds_lut (
       .clk    (clk),
       .rst    (rst),
@@ -280,14 +280,14 @@ module puxch_conv #(
   );
 
   cmult #(
-      .USE_3_MULT(1'b0),
+      .USE_3_MULT(0),
       .A_WIDTH (16),
       .B_WIDTH (16),
       .P_WIDTH (16),
       .SHIFT   (15),
       //
-      .ROUND   (1'b1),
-      .SATURATE(1'b0)
+      .ROUND   (1),
+      .SATURATE(0)
   ) u_cmult (
       .clk(clk),
       .rst(rst),

@@ -240,9 +240,9 @@ module pps_timer (
 `else
   cdc_pulse #(
       .DEST_SYNC_FF(2),
-      .INIT_SYNC_FF(1'b0),
-      .REG_OUTPUT  (1'b0),
-      .RST_USED    (1'b1)
+      .INIT_SYNC_FF(0),
+      .REG_OUTPUT  (0),
+      .RST_USED    (1)
   ) i_cdc_pulse_get (
       .src_clk   (ctrl_clk),
       .src_rst   (ctrl_rst),
@@ -274,9 +274,9 @@ module pps_timer (
   );
 `else
   cdc_handshake_f #(
-      .DEST_EXT_HSK(1'b0),
+      .DEST_EXT_HSK(0),
       .DEST_SYNC_FF(2),
-      .INIT_SYNC_FF(1'b0),
+      .INIT_SYNC_FF(0),
       .SRC_SYNC_FF (2),
       .WIDTH       (80)
   ) i_cdc_handshake_get (
@@ -326,9 +326,9 @@ module pps_timer (
   );
 `else
   cdc_handshake_f #(
-      .DEST_EXT_HSK(1'b0),
+      .DEST_EXT_HSK(0),
       .DEST_SYNC_FF(2),
-      .INIT_SYNC_FF(1'b0),
+      .INIT_SYNC_FF(0),
       .SRC_SYNC_FF (2),
       .WIDTH       (80)
   ) i_cdc_handshake_set (
@@ -368,9 +368,9 @@ module pps_timer (
   );
 `else
   cdc_handshake_f #(
-      .DEST_EXT_HSK(1'b0),
+      .DEST_EXT_HSK(0),
       .DEST_SYNC_FF(2),
-      .INIT_SYNC_FF(1'b0),
+      .INIT_SYNC_FF(0),
       .SRC_SYNC_FF (2),
       .WIDTH       (32)
   ) i_cdc_handshake_adj (

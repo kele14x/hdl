@@ -77,8 +77,8 @@ module fh_framer_32to64 #(
   );
 
   axis_fifo #(
-      .ASYNC_MODE  (1'b1),
-      .PACKET_MODE (1'b1),
+      .ASYNC_MODE  (1),
+      .PACKET_MODE (1),
       .FIFO_DEPTH  (FIFO_DEPTH),
       .FIFO_LATENCY(FIFO_LATENCY),
       .DATA_WIDTH  (64),

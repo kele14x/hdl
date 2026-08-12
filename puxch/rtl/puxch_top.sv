@@ -175,7 +175,7 @@ module puxch_top #(
       if (HAS_BFP != 0) begin : g_bfp
 
         bfp_comp #(
-            .BYTE_REVERSE(1'b1)
+            .BYTE_REVERSE(1)
         ) u_bfp_comp (
             .clk              (clk_eth_xran),
             .rst              (rst_eth_xran),

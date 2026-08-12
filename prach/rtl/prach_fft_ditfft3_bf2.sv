@@ -166,7 +166,7 @@ module prach_fft_ditfft3_bf2 #(
   delay #(
       .WIDTH(DATA_WIDTH * 2 + 1),
       .DEPTH(2),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay_data (
       .clk (clk),
       .rst (1'b0),
@@ -178,7 +178,7 @@ module prach_fft_ditfft3_bf2 #(
   delay #(
       .WIDTH(1),
       .DEPTH(1),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay_ctrl (
       .clk (clk),
       .rst (1'b0),

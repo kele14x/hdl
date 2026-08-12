@@ -102,7 +102,7 @@ module pdxch_block2stream #(
   delay #(
       .WIDTH(37),
       .DEPTH(3),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay_din (
       .clk (clk),
       .rst (1'b0),
@@ -171,7 +171,7 @@ module pdxch_block2stream #(
       delay #(
           .WIDTH(32),
           .DEPTH(NUM_ANT - i - 1),
-          .INIT (1'b0)
+          .INIT (0)
       ) u_delay_tdata (
           .clk (clk),
           .rst (1'b0),
@@ -183,7 +183,7 @@ module pdxch_block2stream #(
       delay #(
           .WIDTH(1),
           .DEPTH(6 - i),
-          .INIT (1'b0)
+          .INIT (0)
       ) u_delay_tuser (
           .clk (clk),
           .rst (1'b0),

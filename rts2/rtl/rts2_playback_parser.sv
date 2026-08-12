@@ -126,8 +126,8 @@ module rts2_playback_parser (
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (1)
   ) u_ctrl_en_cdc (
       .src_clk (1'b1),
@@ -435,9 +435,9 @@ module rts2_playback_parser (
 
   // CDC the microsecond counter to DDR4 clock domain
   cdc_handshake_f #(
-      .DEST_EXT_HSK(1'b0),
+      .DEST_EXT_HSK(0),
       .DEST_SYNC_FF(4),
-      .INIT_SYNC_FF(1'b1),
+      .INIT_SYNC_FF(1),
       .SRC_SYNC_FF (4),
       .WIDTH       (15)
   ) i_cdc_handshake_timestamp (

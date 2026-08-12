@@ -194,10 +194,10 @@ module pdxch_channel #(
 
   fft #(
       .NUM_ANT           (NUM_ANT),
-      .INV_FFT           (1'b1),
+      .INV_FFT           (1),
       .LOG_FFT_SIZE      (LogFftSize),
       .DATA_WIDTH        (16),
-      .BIT_REVERSED_INPUT(1'b1)
+      .BIT_REVERSED_INPUT(1)
   ) u_fft (
       .clk      (clk),
       .rst      (rst),

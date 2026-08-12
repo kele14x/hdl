@@ -101,7 +101,7 @@ module gain #(
         );
       end
 
-    end else if (COMPLEX) begin : g_di
+    end else if (COMPLEX != 0) begin : g_di
 
       assign ctrl_gain_di_s = ctrl_gain_di;
 
@@ -137,7 +137,7 @@ module gain #(
       end
 
       cmult #(
-          .USE_3_MULT(1'b0),
+          .USE_3_MULT(0),
           .A_WIDTH (16),
           .B_WIDTH (GAIN_WIDTH),
           .P_WIDTH (16),
@@ -206,7 +206,7 @@ module gain #(
   delay #(
       .WIDTH(9),
       .DEPTH(Latency),
-      .INIT (1'b0)
+      .INIT (0)
   ) i_delay (
       .clk (clk),
       .rst (1'b0),

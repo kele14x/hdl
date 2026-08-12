@@ -101,7 +101,7 @@ module prach_fft_ditfft2_twiddler #(
   delay #(
       .WIDTH(DATA_WIDTH * 2),
       .DEPTH(3),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay_data (
       .clk (clk),
       .rst (1'b0),
@@ -111,14 +111,14 @@ module prach_fft_ditfft2_twiddler #(
   );
 
   cmult #(
-      .USE_3_MULT(1'b0),
+      .USE_3_MULT(0),
       .A_WIDTH (DATA_WIDTH),
       .B_WIDTH (PhaseWidth),
       .P_WIDTH (DATA_WIDTH),
       .SHIFT   ((SCALE != 0) ? PhaseWidth : PhaseWidth - 1),
       //
-      .ROUND   (1'b1),
-      .SATURATE(1'b0)
+      .ROUND   (1),
+      .SATURATE(0)
   ) u_cmult (
       .clk(clk),
       .rst(rst),
@@ -138,7 +138,7 @@ module prach_fft_ditfft2_twiddler #(
   delay #(
       .WIDTH(1),
       .DEPTH(Latency - 1),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay (
       .clk (clk),
       .rst (1'b0),

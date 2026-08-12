@@ -556,8 +556,8 @@ module lowphy_band #(
 
   cdc_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0)
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0)
   ) defm_reset_cdc (
       .src_clk (1'b0),
       .src_in  (defm_reset),
@@ -567,8 +567,8 @@ module lowphy_band #(
 
   cdc_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0)
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0)
   ) fram_reset_cdc (
       .src_clk (1'b0),
       .src_in  (fram_reset),

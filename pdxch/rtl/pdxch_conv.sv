@@ -229,7 +229,7 @@ module pdxch_conv #(
   delay #(
       .WIDTH(32),
       .DEPTH(8),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_dq_delay (
       .clk (clk),
       .rst (1'b0),
@@ -239,7 +239,7 @@ module pdxch_conv #(
   );
 
   cmult #(
-      .USE_3_MULT(1'b0),
+      .USE_3_MULT(0),
       .A_WIDTH(16),
       .B_WIDTH(16),
       .P_WIDTH(16),
@@ -263,7 +263,7 @@ module pdxch_conv #(
   delay #(
       .WIDTH(9),
       .DEPTH(Latency),
-      .INIT (1'b0)
+      .INIT (0)
   ) u_delay (
       .clk (clk),
       .rst (1'b0),

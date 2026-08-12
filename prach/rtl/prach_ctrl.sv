@@ -208,8 +208,8 @@ module prach_ctrl #(
   // Single CDC for all control signals
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (CtrlSignalWidth)
   ) i_cdc_ctrl_signals (
       .src_clk (1'b1),
@@ -264,9 +264,9 @@ module prach_ctrl #(
 
   // CDC handshake for all PRACH signals
   cdc_handshake_f #(
-      .DEST_EXT_HSK(1'b0),
+      .DEST_EXT_HSK(0),
       .DEST_SYNC_FF(2),
-      .INIT_SYNC_FF(1'b1),
+      .INIT_SYNC_FF(1),
       .SRC_SYNC_FF (2),
       .WIDTH       (PrachSignalWidth)
   ) i_cdc_prach_signals (
@@ -503,8 +503,8 @@ module prach_ctrl #(
   // Single CDC instance for all status signals
   cdc_array_single #(
       .DEST_SYNC_FF (2),
-      .INIT_SYNC_FF (1'b0),
-      .SRC_INPUT_REG(1'b0),
+      .INIT_SYNC_FF (0),
+      .SRC_INPUT_REG(0),
       .WIDTH        (76)
   ) i_cdc_stat_combined (
       .src_clk (1'b1),
