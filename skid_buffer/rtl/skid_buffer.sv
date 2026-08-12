@@ -31,7 +31,7 @@ module skid_buffer #(
 
   // state
 
-  always_ff @(posedge clk or negedge rst_n) begin
+  always_ff @(posedge clk) begin
     if (!rst_n) begin
       state <= 2'b00;
     end else begin
@@ -72,12 +72,8 @@ module skid_buffer #(
 
   // slot0
 
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-      slot0 <= {DATA_WIDTH{1'b0}};
-    end else begin
-      slot0 <= slot0_next;
-    end
+  always_ff @(posedge clk) begin
+    slot0 <= slot0_next;
   end
 
   always_comb begin
@@ -109,12 +105,8 @@ module skid_buffer #(
 
   // slot1
 
-  always_ff @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
-      slot1 <= {DATA_WIDTH{1'b0}};
-    end else begin
-      slot1 <= slot1_next;
-    end
+  always_ff @(posedge clk) begin
+    slot1 <= slot1_next;
   end
 
   always_comb begin
@@ -134,7 +126,17 @@ module skid_buffer #(
 
   // slave / master channels
 
-  assign s_rdy_o  = ~state[1];
+  // Registered ready: held low during reset (no handshake while in reset, per
+  // AXI), then tracks the buffer fullness.  Driving from state_next keeps it
+  // aligned with the same-cycle value of ~state[1].
+  always_ff @(posedge clk) begin
+    if (!rst_n) begin
+      s_rdy_o <= 1'b0;
+    end else begin
+      s_rdy_o <= ~state_next[1];
+    end
+  end
+
   assign m_data_o = slot0;
   assign m_vld_o  = state[0];
 

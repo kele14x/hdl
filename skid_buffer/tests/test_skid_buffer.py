@@ -392,7 +392,7 @@ def test_skid_buffer_runner():
     """Run the test for skid buffer"""
     hdl_toplevel = "skid_buffer"
 
-    verilog_sources = resolve_flt(prj_path / "skid_buffer.flt")
+    sources = resolve_flt(prj_path / "skid_buffer.flt")
 
     parameters = {
         "DATA_WIDTH": DATA_WIDTH,
@@ -401,7 +401,7 @@ def test_skid_buffer_runner():
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel=hdl_toplevel,
-        verilog_sources=verilog_sources,
+        sources=sources,
         parameters=parameters,
         always=True,
         waves=True,
