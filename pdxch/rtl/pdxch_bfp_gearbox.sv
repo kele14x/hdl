@@ -41,6 +41,9 @@ module pdxch_bfp_gearbox #(
   logic                  input_fire;
   logic                  final_half_beat;
   logic                  input_ready;
+  logic                  rd_finishing;
+  logic                  wr_pair_bank_ready;
+  logic                  wr_other_bank_ready;
 
   // beat_phase describes a pair of PRBs:
   //   0..2 : aligned PRB rows 0..2
@@ -70,6 +73,7 @@ module pdxch_bfp_gearbox #(
   logic [           2:0] rd_word;
   logic [           1:0] rd_addr;
   logic [          63:0] rd_ram_data;
+  logic [           3:0] rd_next_bank_exp;
   logic [          19:0] rd_residue;
   logic [           3:0] rd_exp;
   logic [          35:0] output_data;
@@ -87,6 +91,11 @@ module pdxch_bfp_gearbox #(
 
   assign input_data_ordered = (BYTE_REVERSE != 0) ? byte_reverse64(s_axis_tdata) : s_axis_tdata;
   assign final_half_beat = s_axis_tlast && (s_axis_tkeep == 8'h0F);
+  assign rd_finishing = rd_active && (rd_word == 5);
+  assign wr_pair_bank_ready =
+      !bank_full[wr_pair_bank] || (rd_finishing && (rd_bank == wr_pair_bank));
+  assign wr_other_bank_ready =
+      !bank_full[~wr_pair_bank] || (rd_finishing && (rd_bank == ~wr_pair_bank));
 
   // A PRB that begins on a beat boundary owns wr_pair_bank.  Phase 3 may
   // also begin the unaligned PRB in the other bank, so both banks must be
@@ -96,8 +105,8 @@ module pdxch_bfp_gearbox #(
       input_ready = 1'b0;
     end else begin
       case (beat_phase)
-        3'd0: input_ready = !bank_full[wr_pair_bank];
-        3'd3: input_ready = final_half_beat || !bank_full[~wr_pair_bank];
+        3'd0: input_ready = wr_pair_bank_ready;
+        3'd3: input_ready = final_half_beat || wr_other_bank_ready;
         default: input_ready = 1'b1;
       endcase
     end
@@ -279,6 +288,7 @@ module pdxch_bfp_gearbox #(
   end
 
   assign rd_ram_data = prb_ram[{rd_bank, rd_addr}];
+  assign rd_next_bank_exp = prb_ram[{~rd_bank, 2'd0}][59:56];
 
   assign m_axis_tvalid = rd_active;
   assign m_axis_tdata  = output_data;
@@ -307,7 +317,7 @@ module pdxch_bfp_gearbox #(
       rd_residue <= '0;
       rd_exp     <= '0;
     end else if (!rd_active) begin
-      if (bank_full[rd_bank]) begin
+      if (bank_full_next[rd_bank]) begin
         rd_active <= 1'b1;
         rd_word   <= '0;
         rd_exp    <= rd_ram_data[59:56];
@@ -321,9 +331,16 @@ module pdxch_bfp_gearbox #(
       endcase
 
       if (rd_word == 5) begin
-        rd_active <= 1'b0;
         rd_bank   <= ~rd_bank;
         rd_word   <= '0;
+        if (bank_full_next[~rd_bank]) begin
+          // The asynchronous RAM read lets the reader switch directly to a
+          // completed bank. Keep TVALID asserted between adjacent PRBs.
+          rd_active <= 1'b1;
+          rd_exp    <= rd_next_bank_exp;
+        end else begin
+          rd_active <= 1'b0;
+        end
       end else begin
         rd_word <= rd_word + 1'b1;
       end

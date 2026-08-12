@@ -43,8 +43,10 @@ async def send_packet(dut, start_prb, bank, words, cc=cc_id):
         dut.s_axis_tlast.value = int(index == len(words) - 1)
         dut.s_axis_tuser.value = packet_user(start_prb, cc) if index == 0 else 0x123456
         dut.s_axis_tvalid.value = 1
+        await RisingEdge(dut.clk)
         await Timer(1, unit="ps")
 
+        # The RAM write interface is registered by one clock cycle.
         expected_iq_addr = iq_start + index
         expected_exp_addr = exp_start + index // 2
         expected_exp_en = index % 2 == 0
@@ -55,11 +57,13 @@ async def send_packet(dut, start_prb, bank, words, cc=cc_id):
         assert int(dut.wr_exp_addr.value) == expected_exp_addr
         assert int(dut.wr_exp_en.value) == (expected_en and expected_exp_en)
         assert int(dut.wr_exp_data.value) == exponent
-        await RisingEdge(dut.clk)
 
     dut.s_axis_tvalid.value = 0
     dut.s_axis_tlast.value = 0
     await RisingEdge(dut.clk)
+    await Timer(1, unit="ps")
+    assert int(dut.wr_iq_en.value) == 0
+    assert int(dut.wr_exp_en.value) == 0
 
 
 @cocotb.test()

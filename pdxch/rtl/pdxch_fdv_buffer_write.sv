@@ -42,10 +42,18 @@ module pdxch_fdv_buffer_write #(
   logic [11:0] exp_addr_r;
   logic [11:0] word_count_r;
 
+  logic [11:0] wr_iq_addr_c;
+  logic        wr_iq_en_c;
+  logic [35:0] wr_iq_data_c;
+  logic [11:0] wr_exp_addr_c;
+  logic        wr_exp_en_c;
+  logic [ 3:0] wr_exp_data_c;
+
   wire packet_first = ~packet_active;
   wire [3:0] rx_u_cc = s_axis_tuser[30:27];
   wire [9:0] rx_u_startPrb = s_axis_tuser[9:0];
   wire packet_match = packet_first ? (rx_u_cc == 4'(CC_ID)) : packet_match_r;
+  wire unused_inputs = &{1'b0, s_dl_sym_num[11:1], s_axis_tuser[90:31], s_axis_tuser[26:10]};
 
   wire [11:0] iq_start_addr =
       (s_dl_sym_num[0] ? 12'(IQ_BANK_DEPTH) : 12'd0) + (rx_u_startPrb * 12'd6);
@@ -56,19 +64,40 @@ module pdxch_fdv_buffer_write #(
       s_dl_sym_num[0] ? 12'(2 * IQ_BANK_DEPTH) : 12'(IQ_BANK_DEPTH);
   wire [11:0] exp_bank_limit =
       s_dl_sym_num[0] ? 12'(2 * EXP_BANK_DEPTH) : 12'(EXP_BANK_DEPTH);
-  wire bank_overflow = (wr_iq_addr >= iq_bank_limit) || (wr_exp_addr >= exp_bank_limit);
+  wire bank_overflow =
+      (wr_iq_addr_c >= iq_bank_limit) || (wr_exp_addr_c >= exp_bank_limit);
 
-  assign wr_iq_addr = packet_first ? iq_start_addr : iq_addr_r;
-  assign wr_iq_en = s_axis_tvalid && packet_match && ~bank_overflow;
-  assign wr_iq_data = s_axis_tdata;
+  assign wr_iq_addr_c = packet_first ? iq_start_addr : iq_addr_r;
+  assign wr_iq_en_c = s_axis_tvalid && packet_match && ~bank_overflow;
+  assign wr_iq_data_c = s_axis_tdata;
 
-  assign wr_exp_addr = packet_first ? exp_start_addr : exp_addr_r;
-  assign wr_exp_en = wr_iq_en && (packet_first || ~word_count_r[0]);
-  assign wr_exp_data = s_axis_exp;
+  assign wr_exp_addr_c = packet_first ? exp_start_addr : exp_addr_r;
+  assign wr_exp_en_c = wr_iq_en_c && (packet_first || ~word_count_r[0]);
+  assign wr_exp_data_c = s_axis_exp;
 
   initial begin : drc_check
     assert (0 <= CC_ID && CC_ID < 16)
     else $error("[%m]: CC_ID (%0d) must fit in the 4-bit TUSER field.", CC_ID);
+  end
+
+  // Register the complete RAM write bundle to shorten the path from the
+  // U-Plane packet decode and address generators into the FDV memories.
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      wr_iq_addr  <= '0;
+      wr_iq_en    <= 1'b0;
+      wr_iq_data  <= '0;
+      wr_exp_addr <= '0;
+      wr_exp_en   <= 1'b0;
+      wr_exp_data <= '0;
+    end else begin
+      wr_iq_addr  <= wr_iq_addr_c;
+      wr_iq_en    <= wr_iq_en_c;
+      wr_iq_data  <= wr_iq_data_c;
+      wr_exp_addr <= wr_exp_addr_c;
+      wr_exp_en   <= wr_exp_en_c;
+      wr_exp_data <= wr_exp_data_c;
+    end
   end
 
   always_ff @(posedge clk) begin

@@ -162,15 +162,17 @@ async def test_write_drops_packet_at_half_block_boundary(dut):
     observed_iq_addresses = []
     observed_exp_addresses = []
 
+    await RisingEdge(dut.clk_eth_xran)
     for index in range(packet_words):
-        await RisingEdge(dut.clk_eth_xran)
         dut.s_axis_tdata[0].value = _iq_word(index + 1, index + 2)
         dut.s_axis_exp[0].value = index & 0xF
         dut.s_axis_tvalid[0].value = 1
         dut.s_axis_tlast[0].value = int(index == packet_words - 1)
         dut.s_axis_tuser[0].value = start_prb if index == 0 else 0
+        await RisingEdge(dut.clk_eth_xran)
         await Timer(1, unit="ps")
 
+        # The write bundle is observed one cycle after the input word.
         iq_en = int(dut.wr_iq_en[0].value)
         exp_en = int(dut.wr_exp_en[0].value)
         if iq_en:

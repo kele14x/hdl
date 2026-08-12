@@ -50,7 +50,7 @@ async def reset(dut):
 
 @cocotb.test()
 async def test_pdxch_bfp_gearbox(dut):
-    cocotb.start_soon(Clock(dut.clk, period=10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk, period=10, unit="ns").start())
     await reset(dut)
 
     packets = [
@@ -74,6 +74,7 @@ async def test_pdxch_bfp_gearbox(dut):
     received = []
     word_index = 0
     saw_input_backpressure = False
+    output_packet_active = False
 
     def drive_word(index):
         tdata, tkeep, tlast, tuser = input_words[index]
@@ -102,7 +103,18 @@ async def test_pdxch_bfp_gearbox(dut):
             else:
                 drive_word(word_index)
 
+        if output_packet_active:
+            assert dut.m_axis_tvalid.value, (
+                f"output TVALID bubbled within a packet at cycle {cycle}, "
+                f"after {len(received)} output words; "
+                f"rd_bank={int(dut.rd_bank.value)}, "
+                f"rd_word={int(dut.rd_word.value)}, "
+                f"bank_full={int(dut.bank_full.value)}, "
+                f"beat_phase={int(dut.beat_phase.value)}"
+            )
+
         if dut.m_axis_tvalid.value:
+            output_packet_active = not bool(dut.m_axis_tlast.value)
             received.append(
                 (
                     int(dut.m_axis_tdata.value),
