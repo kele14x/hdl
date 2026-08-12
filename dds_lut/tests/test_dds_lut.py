@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import math
 import os
 from pathlib import Path
@@ -12,7 +13,6 @@ from cocotb_tools.runner import get_runner
 from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
-
 
 STRUCTURE = os.environ.get("STRUCTURE", "AUTO")
 RASTERIZED = int(os.environ.get("RASTERIZED", "0"))
@@ -34,12 +34,13 @@ input_queue = Queue()
 output_queue = Queue()
 
 
+def num_phases():
+    return int(2**PHASE_WIDTH * 3 / 4) if RASTERIZED else 2**PHASE_WIDTH
+
+
 def model(phase):
     amplitude = 2 ** (DATA_WIDTH - 1) - 2
-    if RASTERIZED:
-        k = int(2**PHASE_WIDTH * 3 / 4)
-    else:
-        k = 2**PHASE_WIDTH
+    k = num_phases()
 
     cos = amplitude * math.cos(2 * math.pi * phase / k)
     sin = amplitude * math.sin(2 * math.pi * phase / k)
@@ -53,22 +54,15 @@ def model(phase):
 
 
 async def reset(dut):
-    # Reset the DUT
     dut.rst.value = 1
-
     dut.phase.value = 0
-
     await ClockCycles(dut.clk, 10)
     dut.rst.value = 0
     await ClockCycles(dut.clk, 10)
 
 
 async def drive(dut):
-    if RASTERIZED:
-        K = int(2**PHASE_WIDTH * 3 / 4)
-    else:
-        K = 2**PHASE_WIDTH
-    for i in range(K):
+    for i in range(num_phases()):
         dut.phase.value = i
         await RisingEdge(dut.clk)
 
@@ -76,7 +70,7 @@ async def drive(dut):
 async def input_monitor(dut):
     while True:
         await RisingEdge(dut.clk)
-        input_queue.put_nowait((dut.phase.value.integer,))
+        input_queue.put_nowait((dut.phase.value.to_unsigned(),))
 
 
 async def output_monitor(dut):
@@ -84,23 +78,17 @@ async def output_monitor(dut):
     while True:
         await RisingEdge(dut.clk)
         output_queue.put_nowait(
-            (dut.cos_out.value.signed_integer, dut.sin_out.value.signed_integer)
+            (dut.cos_out.value.to_signed(), dut.sin_out.value.to_signed())
         )
 
 
-async def checker():
-    n = 0
-    while True:
-        input = await input_queue.get()
-        output = await output_queue.get()
-        n += 1
-        phase = input[0]
-        cos = output[0]
-        sin = output[1]
-
+async def checker(n):
+    for i in range(n):
+        (phase,) = await input_queue.get()
+        (cos, sin) = await output_queue.get()
         (cos_ref, sin_ref) = model(phase)
         assert abs(cos_ref - cos) <= TOLERANCE and abs(sin_ref - sin) <= TOLERANCE, (
-            f"Result mismatch! phase = {phase}, cos = {cos}, sin = {sin}, "
+            f"Result mismatch at sample {i}! phase = {phase}, cos = {cos}, sin = {sin}, "
             f"cos_ref = {cos_ref}, sin_ref = {sin_ref}, tolerance = {TOLERANCE}"
         )
 
@@ -108,54 +96,137 @@ async def checker():
 @cocotb.test()
 async def test_dds_lut(dut):
     dut._log.info("Simulation started")
-    # Create clock and start it
     cocotb.start_soon(Clock(dut.clk, 10).start())
 
-    # Reset the DUT
     await reset(dut)
 
-    # Start monitor and checker
     cocotb.start_soon(input_monitor(dut))
     cocotb.start_soon(output_monitor(dut))
-    cocotb.start_soon(checker())
+    num_samples = num_phases()
+    checker_task = cocotb.start_soon(checker(num_samples))
 
-    # Run test multiple times
     await drive(dut)
+    await checker_task
 
     await ClockCycles(dut.clk, 10)
     dut._log.info("Simulation finished")
 
 
-def test_dds_lut_runner():
-    hdl_toplevel = "dds_lut"
-    hdl_toplevel_lang = "verilog"
+CASES = [
+    {
+        "name": "auto_norm_pw12",
+        "params": {
+            "STRUCTURE": "AUTO",
+            "RASTERIZED": 0,
+            "DATA_WIDTH": 16,
+            "PHASE_WIDTH": 12,
+            "NEGATIVE_COS": 0,
+            "NEGATIVE_SIN": 0,
+        },
+    },
+    {
+        "name": "full_norm_pw10",
+        "params": {
+            "STRUCTURE": "FULL",
+            "RASTERIZED": 0,
+            "DATA_WIDTH": 16,
+            "PHASE_WIDTH": 10,
+            "NEGATIVE_COS": 0,
+            "NEGATIVE_SIN": 0,
+        },
+    },
+    {
+        "name": "half_norm_pw11",
+        "params": {
+            "STRUCTURE": "HALF",
+            "RASTERIZED": 0,
+            "DATA_WIDTH": 16,
+            "PHASE_WIDTH": 11,
+            "NEGATIVE_COS": 0,
+            "NEGATIVE_SIN": 0,
+        },
+    },
+    {
+        "name": "quarter_norm_pw12",
+        "params": {
+            "STRUCTURE": "QUARTER",
+            "RASTERIZED": 0,
+            "DATA_WIDTH": 16,
+            "PHASE_WIDTH": 12,
+            "NEGATIVE_COS": 0,
+            "NEGATIVE_SIN": 0,
+        },
+    },
+    {
+        "name": "quarter_rast_pw12",
+        "params": {
+            "STRUCTURE": "QUARTER",
+            "RASTERIZED": 1,
+            "DATA_WIDTH": 16,
+            "PHASE_WIDTH": 12,
+            "NEGATIVE_COS": 0,
+            "NEGATIVE_SIN": 0,
+        },
+    },
+    {
+        "name": "half_rast_pw10",
+        "params": {
+            "STRUCTURE": "HALF",
+            "RASTERIZED": 1,
+            "DATA_WIDTH": 16,
+            "PHASE_WIDTH": 10,
+            "NEGATIVE_COS": 0,
+            "NEGATIVE_SIN": 0,
+        },
+    },
+    {
+        "name": "full_rast_pw8",
+        "params": {
+            "STRUCTURE": "FULL",
+            "RASTERIZED": 1,
+            "DATA_WIDTH": 16,
+            "PHASE_WIDTH": 8,
+            "NEGATIVE_COS": 0,
+            "NEGATIVE_SIN": 0,
+        },
+    },
+    {
+        "name": "quarter_norm_pw13_dw12_neg",
+        "params": {
+            "STRUCTURE": "QUARTER",
+            "RASTERIZED": 0,
+            "DATA_WIDTH": 12,
+            "PHASE_WIDTH": 13,
+            "NEGATIVE_COS": 1,
+            "NEGATIVE_SIN": 1,
+        },
+    },
+]
 
-    sources = resolve_flt(prj_path / "dds_lut.flt")
 
-    parameters = {
-        "STRUCTURE": f'"{STRUCTURE}"',
-        "PHASE_WIDTH": PHASE_WIDTH,
-        "RASTERIZED": RASTERIZED,
-        "NEGATIVE_COS": NEGATIVE_COS,
-        "NEGATIVE_SIN": NEGATIVE_SIN,
-    }
+@pytest.mark.parametrize("case", CASES, ids=lambda case: case["name"])
+def test_dds_lut_runner(case):
+    params = case["params"]
+    parameters = {**params, "STRUCTURE": f'"{params["STRUCTURE"]}"'}
+    run_dir = prj_path / "sim_build" / case["name"]
 
     runner = get_runner(SIM)
     runner.build(
-        hdl_toplevel=hdl_toplevel,
-        sources=sources,
+        hdl_toplevel="dds_lut",
+        sources=resolve_flt(prj_path / "dds_lut.flt"),
         parameters=parameters,
-        build_args=[],
-        waves=True,
         always=True,
+        waves=True,
+        build_dir=run_dir,
     )
-
     runner.test(
-        hdl_toplevel=hdl_toplevel,
-        hdl_toplevel_lang=hdl_toplevel_lang,
+        hdl_toplevel="dds_lut",
+        hdl_toplevel_lang="verilog",
         test_module="test_dds_lut",
         waves=True,
-        gui=False,
+        gui=GUI,
+        test_dir=run_dir,
+        extra_env={key: str(value) for key, value in params.items()},
     )
 
 
