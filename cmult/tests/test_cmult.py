@@ -158,14 +158,17 @@ async def test_cmult_basic(dut):
     dut.rst.value = 0
     await ClockCycles(dut.clk, 10)
 
+    a_val = 1 << (cfg["A_WIDTH"] - 2)
+    b_val = 1 << (cfg["B_WIDTH"] - 2)
+
     await RisingEdge(dut.clk)
-    dut.ar.value = 16384
-    dut.ai.value = 16384
-    dut.br.value = 16384
-    dut.bi.value = 16384
+    dut.ar.value = a_val
+    dut.ai.value = a_val
+    dut.br.value = b_val
+    dut.bi.value = b_val
 
     await ClockCycles(dut.clk, get_latency(dut) + 2)
-    (pr_ref, pi_ref, ovf_ref) = model(16384, 16384, 16384, 16384, cfg)
+    (pr_ref, pi_ref, ovf_ref) = model(a_val, a_val, b_val, b_val, cfg)
     assert dut.pr.value.to_signed() == pr_ref, f"pr should be {pr_ref}"
     assert dut.pi.value.to_signed() == pi_ref, f"pi should be {pi_ref}"
     assert int(dut.ovf.value) == ovf_ref, f"ovf should be {ovf_ref}"
@@ -243,6 +246,65 @@ CASES = [
         "ROUND": 0,
         "SATURATE": 0,
         "USE_3_MULT": 1,
+    },
+    # SignExp = +3: sign-extension output (g_sgexp) and overflow impossible (g_no_ovf).
+    {
+        "A_WIDTH": 8,
+        "B_WIDTH": 8,
+        "P_WIDTH": 16,
+        "SHIFT": 4,
+        "ROUND": 1,
+        "SATURATE": 1,
+        "USE_3_MULT": 0,
+    },
+    {
+        "A_WIDTH": 8,
+        "B_WIDTH": 8,
+        "P_WIDTH": 16,
+        "SHIFT": 4,
+        "ROUND": 1,
+        "SATURATE": 1,
+        "USE_3_MULT": 1,
+    },
+    # SignExp = 0 boundary: no sign-extension, no overflow.
+    {
+        "A_WIDTH": 8,
+        "B_WIDTH": 8,
+        "P_WIDTH": 13,
+        "SHIFT": 4,
+        "ROUND": 0,
+        "SATURATE": 0,
+        "USE_3_MULT": 0,
+    },
+    # SHIFT = 0: rounding disabled (Rng = 0), full-precision passthrough.
+    {
+        "A_WIDTH": 8,
+        "B_WIDTH": 8,
+        "P_WIDTH": 17,
+        "SHIFT": 0,
+        "ROUND": 1,
+        "SATURATE": 0,
+        "USE_3_MULT": 0,
+    },
+    # Asymmetric operand widths (A != B) through the 3-mult path.
+    {
+        "A_WIDTH": 12,
+        "B_WIDTH": 8,
+        "P_WIDTH": 16,
+        "SHIFT": 8,
+        "ROUND": 1,
+        "SATURATE": 1,
+        "USE_3_MULT": 1,
+    },
+    # SignExp = -10: frequent overflow to stress saturation clamping.
+    {
+        "A_WIDTH": 16,
+        "B_WIDTH": 16,
+        "P_WIDTH": 8,
+        "SHIFT": 15,
+        "ROUND": 1,
+        "SATURATE": 1,
+        "USE_3_MULT": 0,
     },
 ]
 
