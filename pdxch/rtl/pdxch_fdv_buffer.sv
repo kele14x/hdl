@@ -64,6 +64,7 @@ module pdxch_fdv_buffer #(
   logic [11:0] rd_iq_addr                [NUM_ANT];
   logic [11:0] rd_exp_addr               [NUM_ANT];
   logic        rd_en                     [NUM_ANT];
+  logic        rd_en_d                   [NUM_ANT];
   logic [35:0] rd_iq_data                [NUM_ANT];
   logic [ 3:0] rd_exp_data               [NUM_ANT];
   logic        unused_stat_resync;
@@ -150,6 +151,10 @@ module pdxch_fdv_buffer #(
   generate
     for (genvar ant = 0; ant < NUM_ANT; ant++) begin : g_ant
 
+      always_ff @(posedge clk) begin
+        rd_en_d[ant] <= rd_en[ant];
+      end
+
       pdxch_fdv_buffer_write #(
           .CC_ID     (CC_ID),
           .HALF_BLOCK(HALF_BLOCK)
@@ -191,7 +196,7 @@ module pdxch_fdv_buffer #(
           //
           .clkb (clk),
           .rstb (1'b0),
-          .enb  ({2{rd_en[ant]}}),
+          .enb  ({rd_en_d[ant], rd_en[ant]}),
           .addrb(rd_iq_addr[ant]),
           .doutb(rd_iq_data[ant])
       );
@@ -211,7 +216,7 @@ module pdxch_fdv_buffer #(
           //
           .clkb (clk),
           .rstb (1'b0),
-          .enb  ({2{rd_en[ant]}}),
+          .enb  ({rd_en_d[ant], rd_en[ant]}),
           .addrb(rd_exp_addr[ant]),
           .doutb(rd_exp_data[ant])
       );

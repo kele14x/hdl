@@ -11,6 +11,11 @@ from pdxch_test_utils import PRJ_PATH, pdxch_sources, run_test
 NUM_ANT = 2
 
 
+def _iq_word(real, imag):
+    pair = ((real & 0x1FF) << 9) | (imag & 0x1FF)
+    return (pair << 18) | pair
+
+
 def _set_inputs(dut):
     dut.sync_in.value = 0
     dut.s_dl_sym_num.value = 0
@@ -89,6 +94,61 @@ async def test_sync_timer_and_bist_readout(dut):
         sample[0] and sample[1] == 0 and sample[2] in corners and sample[3] in corners
         for sample in radio_samples
     )
+
+
+@cocotb.test()
+async def test_real_ram_read_address_alignment(dut):
+    cocotb.start_soon(Clock(dut.clk_eth_xran, 8, unit="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await _reset(dut)
+
+    dut.ctrl_bist.value = 0
+
+    # Fill IQ addresses 0..5 with address-specific values. Both packed halves
+    # are identical so each decoded result identifies the RAM address alone.
+    expected_by_addr = {}
+    await RisingEdge(dut.clk_eth_xran)
+    for addr in range(6):
+        real = 20 + addr
+        imag = 60 + addr
+        expected_by_addr[addr] = (real * 128, imag * 128)
+        dut.s_axis_tdata[0].value = _iq_word(real, imag)
+        dut.s_axis_exp[0].value = 15
+        dut.s_axis_tvalid[0].value = 1
+        dut.s_axis_tlast[0].value = int(addr == 5)
+        dut.s_axis_tuser[0].value = 0
+        await RisingEdge(dut.clk_eth_xran)
+
+    dut.s_axis_tvalid[0].value = 0
+    dut.s_axis_tlast[0].value = 0
+
+    # Start the timer/readout path. The first symbol reads bank 0, which was
+    # just populated above.
+    dut.sync_in.value = 1
+    await RisingEdge(dut.clk_eth_xran)
+    dut.sync_in.value = 0
+
+    pending = {}
+    requested_addresses = []
+    for cycle in range(18000):
+        await RisingEdge(dut.clk)
+        await Timer(1, unit="ps")
+
+        if cycle in pending:
+            expected = pending.pop(cycle)
+            actual = (int(dut.dout_dr.value), int(dut.dout_di.value))
+            assert actual == expected
+
+        if int(dut.rd_en[0].value):
+            addr = int(dut.rd_iq_addr[0].value)
+            assert addr in expected_by_addr
+            requested_addresses.append(addr)
+            pending[cycle + 4] = expected_by_addr[addr]
+
+        if len(set(requested_addresses)) >= 3 and not pending:
+            break
+
+    assert len(set(requested_addresses)) >= 3
 
 
 def test_pdxch_fdv_buffer_runner():
