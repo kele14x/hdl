@@ -1,2 +1,2 @@
-../common/common.flt
+../cdc/cdc.flt
 rtl/symbol_timer.sv

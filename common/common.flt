@@ -1,5 +1,4 @@
 pcap_pkg.sv
-rtl/async_input_sync.sv
 rtl/delay.sv
 rtl/srl.sv
 rtl/util_clk_fwd.sv
