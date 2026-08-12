@@ -75,11 +75,11 @@ module axi4l_bram_w #(
   logic                               b_err_slot0_next;
   logic                               b_err_slot1_next;
 
-  wire                                b_rdy;
-  wire                                b_hs;
-  wire                                wr_issue;
-  wire                                aw_go;
-  wire                                w_go;
+  logic                               b_rdy;
+  logic                               b_hs;
+  logic                               wr_issue;
+  logic                               aw_go;
+  logic                               w_go;
 
   // AW state
 

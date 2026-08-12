@@ -76,32 +76,32 @@ module axis_fifo_alt #(
 
   // Signals
 
-  wire                     wr_clk;
+  logic                    wr_clk;
   logic                    wr_rstn;
 
   logic                    wr_mid_packet;
   logic [     AddrWidth:0] wr_count;
-  wire  [     AddrWidth:0] wr_count_rd;
+  logic [     AddrWidth:0] wr_count_rd;
   logic [     AddrWidth:0] wr_count_next;
   logic [     AddrWidth:0] wr_count_reg;
   logic [     AddrWidth:0] wr_count_last;
   logic                    wr_discard;
   logic                    wr_full;
 
-  wire                     wr_en;
-  wire  [   AddrWidth-1:0] wr_addr;
-  wire  [   DataWidth-1:0] wr_din;
+  logic                    wr_en;
+  logic [   AddrWidth-1:0] wr_addr;
+  logic [   DataWidth-1:0] wr_din;
 
-  wire                     rd_clk;
-  wire                     rd_rstn;
+  logic                    rd_clk;
+  logic                    rd_rstn;
 
   logic [     AddrWidth:0] rd_count;
-  wire  [     AddrWidth:0] rd_count_wr;
-  wire  [     AddrWidth:0] rd_count_next;
+  logic [     AddrWidth:0] rd_count_wr;
+  logic [     AddrWidth:0] rd_count_next;
 
-  wire  [FIFO_LATENCY-1:0] rd_en;
-  wire  [   AddrWidth-1:0] rd_addr;
-  wire  [   DataWidth-1:0] rd_dout;
+  logic [FIFO_LATENCY-1:0] rd_en;
+  logic [   AddrWidth-1:0] rd_addr;
+  logic [   DataWidth-1:0] rd_dout;
 
   logic [  FIFO_LATENCY:0] valid;
 

@@ -44,7 +44,7 @@ module axi4l_bram_r #(
   logic [           1:0] r_count;
   logic [           1:0] r_count_next;
 
-  wire                   r_rdy;
+  logic                  r_rdy;
 
   // 2'b00: no read data is buffered
   // 2'b01: 1 read data is buffered at slot0
