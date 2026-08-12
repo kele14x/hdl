@@ -3,10 +3,10 @@
 `timescale 1 ns / 1 ps
 
 module bit_reverse_stage #(
-    parameter NUM_INLV     = 4,
-    parameter IDX_STAGE    = 0,
-    parameter LOG_FFT_SIZE = 12,
-    parameter DATA_WIDTH   = 16
+    parameter int NUM_INLV     = 4,
+    parameter int IDX_STAGE    = 0,
+    parameter int LOG_FFT_SIZE = 12,
+    parameter int DATA_WIDTH   = 16
 ) (
     input var                                               clk,
     input var                                               rst,
@@ -30,24 +30,33 @@ module bit_reverse_stage #(
   localparam int DelayTaps = NUM_INLV * (2 ** (LOG_FFT_SIZE - 1 - IDX_STAGE) - 2 ** IDX_STAGE);
 
   localparam int IdWidth = NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV);
-  localparam [31:0] LastIdFull = NUM_INLV - 1;
-  localparam [IdWidth-1:0] LastId = LastIdFull[IdWidth-1:0];
+  localparam logic [31:0] LastIdFull = NUM_INLV - 1;
+  localparam logic [IdWidth-1:0] LastId = LastIdFull[IdWidth-1:0];
+
+  // DRC
+
+  initial begin : drc_check
+    assert (1 <= DelayTaps && DelayTaps <= 16384)
+    else begin
+      $error("[%m]: DelayTaps (%0d) must be within the range 1 to 16384.", DelayTaps);
+    end
+  end
 
   // Each stage has a local counter, which counts from 0 to FFT_SIZE-1. Counter
   // synchronize with `din_dr`.
   logic [        LOG_FFT_SIZE-1:0] counter;
 
-  wire                             switch;
+  logic                            switch;
 
-  wire  [2*DATA_WIDTH+IdWidth+1:0] data_m0;
-  wire  [2*DATA_WIDTH+IdWidth+1:0] data_m1;
-  wire  [2*DATA_WIDTH+IdWidth+1:0] data_delayed;
+  logic [2*DATA_WIDTH+IdWidth+1:0] data_m0;
+  logic [2*DATA_WIDTH+IdWidth+1:0] data_m1;
+  logic [2*DATA_WIDTH+IdWidth+1:0] data_delayed;
 
-  wire  [          DATA_WIDTH-1:0] data_dr_s;
-  wire  [          DATA_WIDTH-1:0] data_di_s;
-  wire  [             IdWidth-1:0] data_id_s;
-  wire                             data_valid_s;
-  wire                             data_last_s;
+  logic [          DATA_WIDTH-1:0] data_dr_s;
+  logic [          DATA_WIDTH-1:0] data_di_s;
+  logic [             IdWidth-1:0] data_id_s;
+  logic                            data_valid_s;
+  logic                            data_last_s;
 
   // Main
 
@@ -58,8 +67,6 @@ module bit_reverse_stage #(
       counter <= 'd0;
     end else if (din_valid && din_id == LastId) begin
       counter <= counter + 1'd1;
-    end else begin
-      counter <= counter;
     end
   end
 
@@ -68,17 +75,34 @@ module bit_reverse_stage #(
 
   assign data_m0 = switch ? data_delayed : {din_last, din_valid, din_id, din_di, din_dr};
 
-  // D = 2^j - 2^k
-  shift_ram #(
-      .DEPTH(DelayTaps),
-      .WIDTH(2 * DATA_WIDTH + IdWidth + 2)
-  ) i_delay (
-      .clk (clk),
-      .rst (rst),
-      .cen (1'b1),
-      .din (data_m0),
-      .dout(data_delayed)
-  );
+  // For smaller delay, choose register based delay for optimized resource
+  // and lower latency. For big delay, choose RAMs based implementation
+  // (same threshold as fft_bf2).
+  generate
+    if (DelayTaps <= 128) begin : g_delay
+      delay #(
+          .WIDTH(2 * DATA_WIDTH + IdWidth + 2),
+          .DEPTH(DelayTaps)
+      ) i_delay (
+          .clk (clk),
+          .rst (rst),
+          .cen (1'b1),
+          .din (data_m0),
+          .dout(data_delayed)
+      );
+    end else begin : g_shift_ram
+      shift_ram #(
+          .DEPTH(DelayTaps),
+          .WIDTH(2 * DATA_WIDTH + IdWidth + 2)
+      ) i_delay (
+          .clk (clk),
+          .rst (rst),
+          .cen (1'b1),
+          .din (data_m0),
+          .dout(data_delayed)
+      );
+    end
+  endgenerate
 
   assign data_m1 = switch ? {din_last, din_valid, din_id, din_di, din_dr} : data_delayed;
 

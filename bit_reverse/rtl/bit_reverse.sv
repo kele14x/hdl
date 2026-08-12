@@ -3,9 +3,9 @@
 `timescale 1 ns / 1 ps
 
 module bit_reverse #(
-    parameter NUM_INLV     = 4,
-    parameter LOG_FFT_SIZE = 11,
-    parameter DATA_WIDTH   = 16
+    parameter int NUM_INLV     = 4,
+    parameter int LOG_FFT_SIZE = 11,
+    parameter int DATA_WIDTH   = 16
 ) (
     input var                                               clk,
     input var                                               rst,
@@ -27,11 +27,37 @@ module bit_reverse #(
 
   localparam int IdWidth = NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV);
 
-  wire [DATA_WIDTH-1:0] data_dr_s   [0:NumStage];
-  wire [DATA_WIDTH-1:0] data_di_s   [0:NumStage];
-  wire [   IdWidth-1:0] data_id_s   [0:NumStage];
-  wire                  data_valid_s[0:NumStage];
-  wire                  data_last_s [0:NumStage];
+  // DRC
+
+  initial begin : drc_check
+    assert (NUM_INLV >= 1)
+    else begin
+      $error("[%m]: NUM_INLV must be at least 1, got %0d", NUM_INLV);
+    end
+
+    assert (LOG_FFT_SIZE >= 2)
+    else begin
+      $error("[%m]: LOG_FFT_SIZE must be at least 2, got %0d", LOG_FFT_SIZE);
+    end
+
+    assert (DATA_WIDTH >= 1)
+    else begin
+      $error("[%m]: DATA_WIDTH must be at least 1, got %0d", DATA_WIDTH);
+    end
+
+    // The first stage has the longest delay line
+    assert (NUM_INLV * (2 ** (LOG_FFT_SIZE - 1) - 1) <= 16384)
+    else begin
+      $error("[%m]: stage delay exceeds 16384 taps for NUM_INLV=%0d, LOG_FFT_SIZE=%0d",
+             NUM_INLV, LOG_FFT_SIZE);
+    end
+  end
+
+  wire [DATA_WIDTH-1:0] data_dr_s   [NumStage+1];
+  wire [DATA_WIDTH-1:0] data_di_s   [NumStage+1];
+  wire [   IdWidth-1:0] data_id_s   [NumStage+1];
+  wire                  data_valid_s[NumStage+1];
+  wire                  data_last_s [NumStage+1];
 
   // Main
 
