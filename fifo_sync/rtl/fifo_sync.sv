@@ -52,7 +52,7 @@ module fifo_sync #(
       $error("[%m]: DATA_WIDTH must be within the range 1 to 4096, got %0d.", DATA_WIDTH);
     end
 
-    assert (FWFT_MODE != 0)
+    assert (FWFT_MODE == 1)
     else begin
       $error("[%m]: fifo_sync only supports FWFT_MODE=1.");
     end

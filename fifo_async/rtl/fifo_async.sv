@@ -64,6 +64,9 @@ module fifo_async #(
     assert (FIFO_DEPTH >= 4 && FIFO_DEPTH <= 32768)
     else $error("[%m]: FIFO_DEPTH (%0d) is outside of valid range 4-32768.", FIFO_DEPTH);
 
+    assert ((FIFO_DEPTH & (FIFO_DEPTH - 1)) == 0)
+    else $error("[%m]: FIFO_DEPTH (%0d) is not a power of 2.", FIFO_DEPTH);
+
     assert (FIFO_LATENCY >= 1 && FIFO_LATENCY <= 3)
     else $error("[%m]: FIFO_LATENCY (%0d) is outside of valid range 1-3.", FIFO_LATENCY);
 

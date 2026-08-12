@@ -60,6 +60,8 @@ async def test_fifo_async(dut):
 
 
 CASES = [
+    {"FIFO_DEPTH": 16, "FIFO_LATENCY": 1, "DATA_WIDTH": 8},
+    {"FIFO_DEPTH": 16, "FIFO_LATENCY": 2, "DATA_WIDTH": 8},
     {"FIFO_DEPTH": 16, "FIFO_LATENCY": 3, "DATA_WIDTH": 8},
 ]
 

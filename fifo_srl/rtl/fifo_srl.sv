@@ -26,6 +26,19 @@ module fifo_srl #(
 
   localparam int AddrWidth = $clog2(FIFO_DEPTH);
 
+  // DRC
+
+  initial begin : drc_check
+    assert (FIFO_DEPTH >= 4 && FIFO_DEPTH <= 32768)
+    else $error("[%m]: FIFO_DEPTH (%0d) is outside of valid range 4-32768.", FIFO_DEPTH);
+
+    assert ((FIFO_DEPTH & (FIFO_DEPTH - 1)) == 0)
+    else $error("[%m]: FIFO_DEPTH (%0d) is not a power of 2.", FIFO_DEPTH);
+
+    assert (DATA_WIDTH >= 1 && DATA_WIDTH <= 4096)
+    else $error("[%m]: DATA_WIDTH (%0d) is outside of valid range 1-4096.", DATA_WIDTH);
+  end
+
   // Signals
 
   logic [AddrWidth-1:0] addr;
