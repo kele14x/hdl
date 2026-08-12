@@ -1,2 +1,0 @@
-../common/pcap_pkg.sv
-rtl/eth_injector.sv

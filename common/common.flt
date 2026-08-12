@@ -1,4 +1,3 @@
-pcap_pkg.sv
 rtl/delay.sv
 rtl/srl.sv
 rtl/util_clk_fwd.sv
