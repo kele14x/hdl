@@ -11,7 +11,7 @@ from cocotb.triggers import ClockCycles, RisingEdge, Timer
 from pdxch_test_utils import PRJ_PATH, pdxch_sources, run_test
 
 NUM_ANT = int(os.environ.get("NUM_ANT", "2"))
-CASES = [1, 2]
+CASES = [1, 2, 4]
 
 
 def _set_input(

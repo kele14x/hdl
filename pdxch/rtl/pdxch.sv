@@ -11,7 +11,7 @@ module pdxch #(
     input var         s_axi_aclk,
     input var         s_axi_aresetn,
     //
-    input var  [ 8:0] s_axi_awaddr,
+    input var  [11:0] s_axi_awaddr,
     input var  [ 2:0] s_axi_awprot,
     input var         s_axi_awvalid,
     output var        s_axi_awready,
@@ -25,7 +25,7 @@ module pdxch #(
     output var        s_axi_bvalid,
     input var         s_axi_bready,
     //
-    input var  [ 8:0] s_axi_araddr,
+    input var  [11:0] s_axi_araddr,
     input var  [ 2:0] s_axi_arprot,
     input var         s_axi_arvalid,
     output var        s_axi_arready,
@@ -99,7 +99,7 @@ module pdxch #(
       .s_axi_aclk             (s_axi_aclk),
       .s_axi_aresetn          (s_axi_aresetn),
       //
-      .s_axi_awaddr           ({3'b000, s_axi_awaddr}),
+      .s_axi_awaddr           (s_axi_awaddr),
       .s_axi_awprot           (s_axi_awprot),
       .s_axi_awvalid          (s_axi_awvalid),
       .s_axi_awready          (s_axi_awready),
@@ -113,7 +113,7 @@ module pdxch #(
       .s_axi_bvalid           (s_axi_bvalid),
       .s_axi_bready           (s_axi_bready),
       //
-      .s_axi_araddr           ({3'b000, s_axi_araddr}),
+      .s_axi_araddr           (s_axi_araddr),
       .s_axi_arprot           (s_axi_arprot),
       .s_axi_arvalid          (s_axi_arvalid),
       .s_axi_arready          (s_axi_arready),

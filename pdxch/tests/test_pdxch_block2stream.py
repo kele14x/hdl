@@ -11,7 +11,7 @@ from cocotb.triggers import ClockCycles, RisingEdge, Timer
 from pdxch_test_utils import PRJ_PATH, pdxch_sources, run_test
 
 NUM_ANT = int(os.environ.get("NUM_ANT", "2"))
-CASES = [1, 2]
+CASES = [1, 2, 4]
 
 
 def _set_input(
@@ -79,10 +79,8 @@ async def test_direct_path_and_memory_playback(dut):
     # First check that the serialized input reaches the matching antenna and
     # that each output is permanently valid while tlast remains unused.
     direct_words = [
-        (0, 0x1111, 0xAAAA, 1),
-        (1 % NUM_ANT, 0x2222, 0xBBBB, 0),
-        (0, 0x3333, 0xCCCC, 0),
-        (1 % NUM_ANT, 0x4444, 0xDDDD, 0),
+        (antenna, 0x1111 + antenna, 0xAAAA + antenna, int(antenna == 0))
+        for antenna in range(NUM_ANT)
     ]
     observed = []
     for chn, real, imag, sf in direct_words:
@@ -112,6 +110,11 @@ async def test_direct_path_and_memory_playback(dut):
     ]
     for chn, real, imag, _ in direct_words:
         assert (imag << 16) | real in observed_data[chn]
+    expected_parallel = [(imag << 16) | real for _, real, imag, _ in direct_words]
+    assert any(
+        [outputs[antenna][0] for antenna in range(NUM_ANT)] == expected_parallel
+        for outputs in observed
+    )
 
     # Reset clears the write counters. A start-of-symbol on each serialized
     # antenna arms its read sequencer; subsequent invalid cycles play the

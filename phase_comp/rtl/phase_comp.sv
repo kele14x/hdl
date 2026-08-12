@@ -39,7 +39,8 @@ module phase_comp #(
 
   // Parameters
 
-  localparam int Latency = 10;
+  // Data latency: i_dq_delay (3) + cmult with USE_3_MULT=0 (5).
+  localparam int Latency = 8;
   localparam int AddrWidth = 4;
   localparam int AntSelWidth = (NUM_ANT <= 1) ? 1 : $clog2(NUM_ANT);
   localparam logic [3:0] NumAnt = 4'(NUM_ANT);

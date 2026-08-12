@@ -8,7 +8,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
 from pdxch_test_utils import PRJ_PATH, pdxch_sources, run_test
 
-NUM_ANT = 2
+NUM_ANT = 4
 
 
 def _iq_word(real, imag):
@@ -191,6 +191,59 @@ async def test_write_drops_packet_at_half_block_boundary(dut):
 
     assert observed_iq_addresses == list(range(159 * 6, 160 * 6))
     assert observed_exp_addresses == list(range(159 * 3, 160 * 3))
+
+
+@cocotb.test()
+async def test_real_ram_multi_antenna_data_matches_channel_tag(dut):
+    cocotb.start_soon(Clock(dut.clk_eth_xran, 8, unit="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await _reset(dut)
+
+    dut.ctrl_en.value = (1 << NUM_ANT) - 1
+    dut.ctrl_bist.value = 0
+    expected = {
+        antenna: ((13 + 17 * antenna) * 128, (29 + 19 * antenna) * 128)
+        for antenna in range(NUM_ANT)
+    }
+
+    await RisingEdge(dut.clk_eth_xran)
+    for word in range(6):
+        for antenna in range(NUM_ANT):
+            real = 13 + 17 * antenna
+            imag = 29 + 19 * antenna
+            dut.s_axis_tdata[antenna].value = _iq_word(real, imag)
+            dut.s_axis_exp[antenna].value = 15
+            dut.s_axis_tvalid[antenna].value = 1
+            dut.s_axis_tlast[antenna].value = int(word == 5)
+            dut.s_axis_tuser[antenna].value = 0
+        await RisingEdge(dut.clk_eth_xran)
+
+    for antenna in range(NUM_ANT):
+        dut.s_axis_tvalid[antenna].value = 0
+        dut.s_axis_tlast[antenna].value = 0
+
+    dut.sync_in.value = 1
+    await RisingEdge(dut.clk_eth_xran)
+    dut.sync_in.value = 0
+
+    checked_channels = set()
+    for _ in range(18000):
+        await RisingEdge(dut.clk)
+        await Timer(1, unit="ps")
+        if dut.dout_dv.value.is_resolvable and int(dut.dout_dv.value):
+            channel = int(dut.dout_chn.value)
+            actual = (int(dut.dout_dr.value), int(dut.dout_di.value))
+            if actual == (0, 0):
+                continue
+            assert actual == expected[channel], (
+                f"channel tag {channel} carried {actual}, expected "
+                f"antenna {channel} data {expected[channel]}"
+            )
+            checked_channels.add(channel)
+            if len(checked_channels) == NUM_ANT:
+                break
+
+    assert checked_channels == set(range(NUM_ANT))
 
 
 def test_pdxch_fdv_buffer_runner():

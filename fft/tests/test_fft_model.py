@@ -189,6 +189,7 @@ async def test_fft_rtl_matches_fixed_model(dut):
         (4096, 0, 1, "low-level"),
         (4096, 0, 0, "low-level"),
         (1024, 1, 1, "low-level"),
+        (4096, 1, 1, "low-level"),
         (4096, 0, 1, "stress"),
     ],
     ids=[
@@ -197,6 +198,7 @@ async def test_fft_rtl_matches_fixed_model(dut):
         "4k-forward-dit",
         "4k-forward-dif",
         "1k-inverse-dit",
+        "4k-inverse-dit",
         "4k-forward-dynamic-range-stress",
     ],
 )

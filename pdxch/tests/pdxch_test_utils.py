@@ -54,20 +54,21 @@ def run_test(
     """Build and run a test in the persistent PDXCH sim_build directory."""
 
     run_dir = PRJ_PATH / "sim_build" / (build_name or test_module)
+    waves = os.environ.get("PDXCH_WAVES", "true").lower() == "true"
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel=hdl_toplevel,
         sources=list(sources),
         parameters=parameters or {},
         always=True,
-        waves=True,
+        waves=waves,
         build_dir=run_dir,
     )
     runner.test(
         hdl_toplevel=hdl_toplevel,
         hdl_toplevel_lang="verilog",
         test_module=test_module,
-        waves=True,
+        waves=waves,
         gui=os.environ.get("GUI", "false").lower() == "true",
         test_dir=run_dir,
     )

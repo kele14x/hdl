@@ -8,7 +8,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
 from pdxch_test_utils import PRJ_PATH, pdxch_sources, run_test
 
-NUM_ANT = 2
+NUM_ANT = 4
 HALF_BLOCK = 1
 IQ_REAL = 1
 IQ_IMAG = 2
@@ -171,6 +171,50 @@ async def test_fs_offset_alignment_and_saturation(dut):
             f"fs_offset={fs_offset} {case_name} vector decoded as {decoded}, "
             f"expected 0x{expected:04x}"
         )
+
+
+@cocotb.test()
+async def test_multi_antenna_data_matches_channel_tag(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await _reset(dut)
+
+    expected = {}
+    for antenna in range(NUM_ANT):
+        real = 11 + 17 * antenna
+        imag = 23 + 19 * antenna
+        dut.rd_iq_data[antenna].value = (
+            ((real & 0x1FF) << 27)
+            | ((imag & 0x1FF) << 18)
+            | ((real & 0x1FF) << 9)
+            | (imag & 0x1FF)
+        )
+        dut.rd_exp_data[antenna].value = 15
+        expected[antenna] = (real * 128, imag * 128)
+
+    dut.ctrl_en.value = (1 << NUM_ANT) - 1
+    dut.ctrl_bist.value = 0
+    await ClockCycles(dut.clk, 4)
+    await _start_symbol(dut)
+
+    checked = 0
+    for _ in range(128):
+        await RisingEdge(dut.clk)
+        await Timer(1, unit="ps")
+        if dut.dout_dv.value.is_resolvable and int(dut.dout_dv.value):
+            channel = int(dut.dout_chn.value)
+            actual = (
+                _signed16(int(dut.dout_dr.value)),
+                _signed16(int(dut.dout_di.value)),
+            )
+            if actual == (0, 0):
+                continue
+            assert actual == expected[channel], (
+                f"channel tag {channel} carried {actual}, expected "
+                f"antenna {channel} data {expected[channel]}"
+            )
+            checked += 1
+
+    assert checked >= NUM_ANT
 
 
 def test_pdxch_fdv_buffer_readout_runner():
