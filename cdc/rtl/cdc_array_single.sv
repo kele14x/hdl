@@ -1,6 +1,8 @@
 `timescale 1 ns / 1 ps
 //
-`default_nettype none (* KEEP_HIERARCHY = "yes" *)
+`default_nettype none
+//
+(* KEEP_HIERARCHY = "yes" *)
 module cdc_array_single #(
     parameter int DEST_SYNC_FF  = 4,
     parameter int INIT_SYNC_FF  = 0,
@@ -60,7 +62,9 @@ module cdc_array_single #(
 
       assign src_inqual = src_ff;
     end else begin : g_no_inreg
-      assign src_inqual = src_in ^ {WIDTH{src_clk & 1'b0}};
+      wire unused_src_clk = src_clk;
+
+      assign src_inqual = src_in;
     end
   endgenerate
 

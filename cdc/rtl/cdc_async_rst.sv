@@ -1,6 +1,13 @@
 `timescale 1 ns / 1 ps
 //
-`default_nettype none (* KEEP_HIERARCHY = "yes" *)
+`default_nettype none
+//
+// dest_arst asserts asynchronously as soon as src_arst asserts, with no
+// dest_clk edges needed; deassertion is synchronized over DEST_SYNC_FF
+// dest_clk cycles. INIT_SYNC_FF is unused and exists only for compatibility
+// with AMD XPM_CDC.
+//
+(* KEEP_HIERARCHY = "yes" *)
 module cdc_async_rst #(
     parameter int DEST_SYNC_FF    = 4,
     parameter int INIT_SYNC_FF    = 0,
@@ -33,7 +40,7 @@ module cdc_async_rst #(
 
   generate
     if (RST_ACTIVE_HIGH != 0) begin : g_active_high
-      always_ff @(posedge dest_clk) begin
+      always_ff @(posedge dest_clk or posedge src_arst) begin
         if (src_arst) begin
           arststages_ff <= '1;
         end else begin
@@ -41,7 +48,7 @@ module cdc_async_rst #(
         end
       end
     end else begin : g_active_low
-      always_ff @(posedge dest_clk) begin
+      always_ff @(posedge dest_clk or negedge src_arst) begin
         if (!src_arst) begin
           arststages_ff <= '0;
         end else begin

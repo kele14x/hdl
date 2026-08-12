@@ -2,6 +2,11 @@
 //
 `default_nettype none
 //
+// src_pulse must be held for at least one src_clk cycle, and pulses must be
+// separated by at least one deasserted cycle; back-to-back pulses merge into
+// a single toggle. A toggle already crossing when dest_rst asserts can still
+// produce one dest_pulse after dest_rst releases.
+//
 (* KEEP_HIERARCHY = "yes" *)
 module cdc_pulse #(
     parameter int DEST_SYNC_FF = 4,

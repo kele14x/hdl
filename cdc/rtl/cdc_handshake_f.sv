@@ -2,6 +2,10 @@
 //
 `default_nettype none
 //
+// One outstanding transfer at a time: src_ready stays low until the
+// destination consumes the data and the acknowledgement toggles back, so
+// throughput is one transfer per full synchronizer round trip.
+//
 (* KEEP_HIERARCHY = "yes" *)
 module cdc_handshake_f #(
     parameter int DEST_EXT_HSK = 1,

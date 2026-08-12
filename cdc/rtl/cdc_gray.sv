@@ -2,6 +2,11 @@
 //
 `default_nettype none
 //
+// src_in_bin must move by at most +/-1 per src_clk cycle (monotonic Gray
+// counting); jumps that change more than one Gray bit can transfer a
+// corrupted value. INIT_SYNC_FF is unused and exists only for compatibility
+// with AMD XPM_CDC.
+//
 (* KEEP_HIERARCHY = "yes" *)
 module cdc_gray #(
     parameter int DEST_SYNC_FF = 4,
@@ -9,8 +14,8 @@ module cdc_gray #(
     parameter int REG_OUTPUT   = 0,
     parameter int WIDTH        = 2
 ) (
-    input var  [WIDTH-1:0] src_in_bin,
     input var              src_clk,
+    input var  [WIDTH-1:0] src_in_bin,
     //
     input var              dest_clk,
     output var [WIDTH-1:0] dest_out_bin
