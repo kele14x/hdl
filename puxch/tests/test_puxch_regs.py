@@ -6,7 +6,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 from puxch_test_utils import PRJ_PATH, run_cocotb, sample_after_rising
 
-from common.tb.axi4lite import AxiLiteAgent, AxiLiteAgentConfig
+from hdl_tools.axi4lite import AxiLiteAgent, AxiLiteAgentConfig
 
 
 async def memory_model(dut):

@@ -13,7 +13,7 @@ from cocotb_tools.runner import get_runner
 from lowphy_ral import create_lowphy_ral
 from lowphy_tb import input_port_names
 
-from common.tb.axi4lite import (
+from hdl_tools.axi4lite import (
     AxiLiteAgent,
     AxiLiteAgentConfig,
     AxiLiteOperation,

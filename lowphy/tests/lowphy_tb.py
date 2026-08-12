@@ -8,7 +8,7 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge
 
-from common.tb.axi4lite import AxiLiteAgent, AxiLiteAgentConfig
+from hdl_tools.axi4lite import AxiLiteAgent, AxiLiteAgentConfig
 
 _PORT_RE = re.compile(
     r"\binput\s+(?:wire|logic)\s+(?:signed\s+)?"

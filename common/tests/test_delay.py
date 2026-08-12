@@ -1,15 +1,13 @@
 import os
-from collections import deque
 from pathlib import Path
 
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, FallingEdge, ReadWrite, RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
-
 
 prj_path = Path(__file__).resolve().parent.parent
 
@@ -30,19 +28,26 @@ async def test_delay_reset_data_delay_and_clock_enable(dut):
     await ClockCycles(dut.clk, 3)
     dut.rst.value = 0
 
-    expected = deque([0] * DEPTH)
+    # Enable the delay line and feed one value per clock. Reset clears the
+    # pipeline to zero, so the sampled output is the input delayed by DEPTH
+    # samples: DEPTH leading zeros followed by the driven values.
     dut.cen.value = 1
-    for value in (3, 7, 11, 19, 23, 29):
+    values = [3, 7, 11, 19, 23, 29]
+    stream = values + [0] * DEPTH
+    seen = []
+    for value in stream:
         dut.din.value = value
         await RisingEdge(dut.clk)
-        await ReadWrite()
-        assert int(dut.dout.value) == expected.popleft()
-        expected.append(value)
+        seen.append(int(dut.dout.value))
+    assert seen == [0] * DEPTH + values
 
-    await FallingEdge(dut.clk)
-    held = int(dut.dout.value)
+    # With cen deasserted the output must hold (din must not shift through).
+    # Deassert cen, let it take effect, then sample the frozen output and
+    # verify it stays constant.
     dut.cen.value = 0
     dut.din.value = 0xFF
+    await RisingEdge(dut.clk)
+    held = int(dut.dout.value)
     await ClockCycles(dut.clk, 3)
     assert int(dut.dout.value) == held
 
@@ -51,7 +56,7 @@ def test_delay_runner():
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel="delay",
-        verilog_sources=resolve_flt(prj_path / "common.flt"),
+        sources=resolve_flt(prj_path / "common.flt"),
         parameters={"WIDTH": WIDTH, "DEPTH": DEPTH, "INIT": 1},
         always=True,
         waves=True,

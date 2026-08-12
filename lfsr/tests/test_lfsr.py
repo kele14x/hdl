@@ -4,19 +4,20 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb_tools.runner import get_runner
-from hdl_tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb_tools.runner import get_runner
+
+from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 
 
-BIT_WIDTH = int(os.environ.get("BIT_WIDTH", 8))
+BIT_WIDTH = int(os.environ.get("BIT_WIDTH", "8"))
 INITIAL = int(os.environ.get("INITIAL", 2**BIT_WIDTH - 1))
-POLYNOMIAL = int(os.environ.get("POLYNOMIAL", 259))
+POLYNOMIAL = int(os.environ.get("POLYNOMIAL", "259"))
 STRUCTURE = os.environ.get("STRUCTURE", "FIBONACCI")
 GATE_TYPE = os.environ.get("GATE_TYPE", "XOR")
-PARALLEL_OUTPUT = int(os.environ.get("PARALLEL_OUTPUT", 1))
+PARALLEL_OUTPUT = int(os.environ.get("PARALLEL_OUTPUT", "1"))
 
 GUI = os.environ.get("GUI", "False") == "True"
 
@@ -39,7 +40,7 @@ async def reset(dut):
 @cocotb.test()
 async def test_lfsr(dut):
     # Create clock and start it
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     await reset(dut)
 
@@ -54,12 +55,12 @@ def test_lfsr_runner():
     hdl_toplevel = "lfsr"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = resolve_flt(prj_path / "lfsr.flt")
+    sources = resolve_flt(prj_path / "lfsr.flt")
 
     parameters = {
         "BIT_WIDTH": BIT_WIDTH,
-        "INITIAL": INITIAL,
-        "POLYNOMIAL": POLYNOMIAL,
+        "INITIAL": f"{BIT_WIDTH}'d{INITIAL}",
+        "POLYNOMIAL": f"{BIT_WIDTH + 1}'d{POLYNOMIAL}",
         "STRUCTURE": f'"{STRUCTURE}"',
         "GATE_TYPE": f'"{GATE_TYPE}"',
         "PARALLEL_OUTPUT": PARALLEL_OUTPUT,
@@ -68,7 +69,7 @@ def test_lfsr_runner():
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel=hdl_toplevel,
-        verilog_sources=verilog_sources,
+        sources=sources,
         parameters=parameters,
         build_args=[],
         waves=True,

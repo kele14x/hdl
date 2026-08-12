@@ -1,4 +1,3 @@
-from common.tb.axis import AxisBeat, AxisFrame
 from common.tb.packets import (
     EcpriCodec,
     EcpriCommonHeader,
@@ -11,6 +10,7 @@ from common.tb.packets import (
     axis_frame_from_bytes,
     axis_frame_to_bytes,
 )
+from hdl_tools.axis import AxisBeat, AxisFrame
 
 
 def test_ethernet_vlan_round_trip():

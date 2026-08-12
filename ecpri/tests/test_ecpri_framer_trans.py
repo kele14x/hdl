@@ -8,7 +8,6 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, FallingEdge
 from cocotb_tools.runner import get_runner
 
-from common.tb.axis import AxisAgent, AxisAgentConfig, AxisRole
 from common.tb.packets import (
     AxisCodecAgent,
     EcpriCodec,
@@ -16,6 +15,7 @@ from common.tb.packets import (
     EcpriIqMessage,
     RawBytesCodec,
 )
+from hdl_tools.axis import AxisAgent, AxisAgentConfig, AxisRole
 from hdl_tools.flt_tool import resolve_flt
 
 PRJ_PATH = Path(__file__).resolve().parent.parent

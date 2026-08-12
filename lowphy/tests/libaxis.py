@@ -1,6 +1,6 @@
 """Compatibility imports for the shared AXI-Stream verification agent."""
 
-from common.tb.axis import (
+from hdl_tools.axis import (
     AxisAgent,
     AxisAgentConfig,
     AxisBeat,

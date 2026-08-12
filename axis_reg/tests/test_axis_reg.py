@@ -7,7 +7,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 from cocotb_tools.runner import get_runner
 
-from common.tb.axis import (
+from hdl_tools.axis import (
     AxisAgent,
     AxisAgentConfig,
     AxisBeat,
