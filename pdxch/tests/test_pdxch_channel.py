@@ -40,6 +40,45 @@ async def _reset(dut):
     await ClockCycles(dut.clk, 8)
 
 
+async def _write_fft_config(dut, *, rat, bw):
+    await RisingEdge(dut.ctrl_clk)
+    dut.ctrl_rat.value = rat
+    dut.ctrl_bw.value = bw
+    await RisingEdge(dut.ctrl_clk)
+
+
+async def _pulse_symbol_boundary(dut):
+    await RisingEdge(dut.clk)
+    dut.din_sy.value = 1
+    await RisingEdge(dut.clk)
+    dut.din_sy.value = 0
+    await RisingEdge(dut.clk)
+    await Timer(1, unit="ps")
+
+
+async def _wait_pending_fft_config(
+    dut,
+    *,
+    expected_size,
+    expected_itlv,
+    allowed=None,
+):
+    expected = (expected_size << 2) | expected_itlv
+    for _ in range(80):
+        await RisingEdge(dut.clk)
+        await Timer(1, unit="ps")
+        observed = int(dut.ctrl_fft_cfg_pending.value)
+        if allowed is not None:
+            observed_pair = (observed >> 2, observed & 0x3)
+            assert observed_pair in allowed
+        if observed == expected:
+            return
+    raise AssertionError(
+        f"FFT configuration did not cross clock domains: observed 0x{observed:x}, "
+        f"expected 0x{expected:x}"
+    )
+
+
 @cocotb.test()
 async def test_rate_bandwidth_table_and_output_contract(dut):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
@@ -57,12 +96,17 @@ async def test_rate_bandwidth_table_and_output_contract(dut):
         (2, 15, 2, 2),
     ]
     for rat, bw, expected_size, expected_itlv in cases:
-        dut.ctrl_rat.value = rat
-        dut.ctrl_bw.value = bw
-        await RisingEdge(dut.ctrl_clk)
-        await Timer(1, unit="ps")
-        assert int(dut.ctrl_size.value) == expected_size
-        assert int(dut.ctrl_itlv.value) == expected_itlv
+        await _write_fft_config(dut, rat=rat, bw=bw)
+        await _wait_pending_fft_config(
+            dut,
+            expected_size=expected_size,
+            expected_itlv=expected_itlv,
+        )
+
+    # The pending configuration becomes active only at the symbol boundary.
+    assert (int(dut.ctrl_size.value), int(dut.ctrl_itlv.value)) == (1, 0)
+    await _pulse_symbol_boundary(dut)
+    assert (int(dut.ctrl_size.value), int(dut.ctrl_itlv.value)) == (2, 2)
 
     # The block-to-stream endpoint is intentionally always-valid and never
     # asserts tlast; check this contract after all delay lines have flushed.
@@ -78,6 +122,38 @@ async def test_rate_bandwidth_table_and_output_contract(dut):
         )
     for cycle in outputs[8:]:
         assert cycle == [(1, 0)] * NUM_ANT
+
+
+@cocotb.test()
+async def test_fft_config_cdc_is_atomic_and_latest_value_wins(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    cocotb.start_soon(Clock(dut.ctrl_clk, 14, unit="ns").start())
+    await _reset(dut)
+
+    updates = [
+        (1, 3, (2, 1)),
+        (2, 2, (0, 0)),
+        (2, 4, (2, 2)),
+    ]
+    allowed = {(1, 0)} | {expected for _, _, expected in updates}
+
+    # Change the source faster than one round-trip handshake. Intermediate
+    # configurations may be coalesced, but the final value must arrive and no
+    # torn size/interleave pair may become active.
+    for rat, bw, _ in updates:
+        await _write_fft_config(dut, rat=rat, bw=bw)
+
+    final_expected = updates[-1][2]
+    await _wait_pending_fft_config(
+        dut,
+        expected_size=final_expected[0],
+        expected_itlv=final_expected[1],
+        allowed=allowed,
+    )
+
+    assert (int(dut.ctrl_size.value), int(dut.ctrl_itlv.value)) == (1, 0)
+    await _pulse_symbol_boundary(dut)
+    assert (int(dut.ctrl_size.value), int(dut.ctrl_itlv.value)) == final_expected
 
 
 def test_pdxch_channel_runner():

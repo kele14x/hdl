@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import os
+
 import cocotb
 import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
 from pdxch_test_utils import PRJ_PATH, pdxch_sources, run_test
 
-NUM_ANT = 2
+NUM_ANT = int(os.environ.get("NUM_ANT", "2"))
+CASES = [1, 2]
 
 
 def _set_input(
@@ -77,9 +80,9 @@ async def test_direct_path_and_memory_playback(dut):
     # that each output is permanently valid while tlast remains unused.
     direct_words = [
         (0, 0x1111, 0xAAAA, 1),
-        (1, 0x2222, 0xBBBB, 0),
+        (1 % NUM_ANT, 0x2222, 0xBBBB, 0),
         (0, 0x3333, 0xCCCC, 0),
-        (1, 0x4444, 0xDDDD, 0),
+        (1 % NUM_ANT, 0x4444, 0xDDDD, 0),
     ]
     observed = []
     for chn, real, imag, sf in direct_words:
@@ -103,30 +106,32 @@ async def test_direct_path_and_memory_playback(dut):
             if last is not None:
                 assert last == 0
 
-    ant0_data = [data for data, _, _, _ in [outputs[0] for outputs in observed]]
-    ant1_data = [data for data, _, _, _ in [outputs[1] for outputs in observed]]
-    assert 0xAAAA1111 in ant0_data
-    assert 0xCCCC3333 in ant0_data
-    assert 0xBBBB2222 in ant1_data
-    assert 0xDDDD4444 in ant1_data
+    observed_data = [
+        [data for data, _, _, _ in [outputs[ant] for outputs in observed]]
+        for ant in range(NUM_ANT)
+    ]
+    for chn, real, imag, _ in direct_words:
+        assert (imag << 16) | real in observed_data[chn]
 
     # Reset clears the write counters. A start-of-symbol on each serialized
     # antenna arms its read sequencer; subsequent invalid cycles play the
     # corresponding word back from RAM.
     await _reset(dut)
     await _clock_with_input(dut, chn=0, real=0x1357, imag=0x2468, sf=1, sy=1, dv=1)
-    await _clock_with_input(dut, chn=1, real=0xABCD, imag=0x0123, sy=1, dv=1)
+    if NUM_ANT > 1:
+        await _clock_with_input(dut, chn=1, real=0xABCD, imag=0x0123, sy=1, dv=1)
 
     playback = []
-    for chn in (0, 0, 0, 1, 1, 1, 1):
+    for chn in (0, 0, 0, 1 % NUM_ANT, 1 % NUM_ANT, 1 % NUM_ANT, 1 % NUM_ANT):
         playback.append(await _clock_with_input(dut, chn=chn))
     for _ in range(8):
-        playback.append(await _clock_with_input(dut, chn=1))
+        playback.append(await _clock_with_input(dut, chn=1 % NUM_ANT))
 
     ant0_playback = [data for data, _, _, _ in [outputs[0] for outputs in playback]]
-    ant1_playback = [data for data, _, _, _ in [outputs[1] for outputs in playback]]
     assert 0x24681357 in ant0_playback
-    assert 0x0123ABCD in ant1_playback
+    if NUM_ANT > 1:
+        ant1_playback = [data for data, _, _, _ in [outputs[1] for outputs in playback]]
+        assert 0x0123ABCD in ant1_playback
 
     # The start-of-frame marker is carried on the matching antenna's user bit.
     assert any(
@@ -135,15 +140,17 @@ async def test_direct_path_and_memory_playback(dut):
     )
 
 
-def test_pdxch_block2stream_runner():
+@pytest.mark.parametrize("num_ant", CASES, ids=lambda value: f"num_ant_{value}")
+def test_pdxch_block2stream_runner(num_ant, monkeypatch):
+    monkeypatch.setenv("NUM_ANT", str(num_ant))
     sources = [PRJ_PATH / "rtl" / "pdxch_block2stream.sv"]
     sources += pdxch_sources("../common/common.flt", "../ram/ram.flt")
     run_test(
         hdl_toplevel="pdxch_block2stream",
         test_module="test_pdxch_block2stream",
         sources=sources,
-        parameters={"NUM_ANT": NUM_ANT},
-        build_name="block2stream",
+        parameters={"NUM_ANT": num_ant},
+        build_name=f"block2stream_num_ant_{num_ant}",
     )
 
 

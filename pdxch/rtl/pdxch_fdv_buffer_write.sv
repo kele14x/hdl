@@ -52,8 +52,14 @@ module pdxch_fdv_buffer_write #(
   wire [11:0] exp_start_addr =
       (s_dl_sym_num[0] ? 12'(EXP_BANK_DEPTH) : 12'd0) + (rx_u_startPrb * 12'd3);
 
+  wire [11:0] iq_bank_limit =
+      s_dl_sym_num[0] ? 12'(2 * IQ_BANK_DEPTH) : 12'(IQ_BANK_DEPTH);
+  wire [11:0] exp_bank_limit =
+      s_dl_sym_num[0] ? 12'(2 * EXP_BANK_DEPTH) : 12'(EXP_BANK_DEPTH);
+  wire bank_overflow = (wr_iq_addr >= iq_bank_limit) || (wr_exp_addr >= exp_bank_limit);
+
   assign wr_iq_addr = packet_first ? iq_start_addr : iq_addr_r;
-  assign wr_iq_en = s_axis_tvalid && packet_match;
+  assign wr_iq_en = s_axis_tvalid && packet_match && ~bank_overflow;
   assign wr_iq_data = s_axis_tdata;
 
   assign wr_exp_addr = packet_first ? exp_start_addr : exp_addr_r;
@@ -77,10 +83,16 @@ module pdxch_fdv_buffer_write #(
 
       if (packet_first) begin
         packet_match_r <= (rx_u_cc == 4'(CC_ID));
-        iq_addr_r      <= iq_start_addr + 1'b1;
-        exp_addr_r     <= exp_start_addr;
-        word_count_r   <= 12'd1;
-      end else begin
+        if (bank_overflow) begin
+          iq_addr_r    <= iq_start_addr;
+          exp_addr_r   <= exp_start_addr;
+          word_count_r <= '0;
+        end else begin
+          iq_addr_r    <= iq_start_addr + 1'b1;
+          exp_addr_r   <= exp_start_addr;
+          word_count_r <= 12'd1;
+        end
+      end else if (!bank_overflow) begin
         iq_addr_r    <= iq_addr_r + 1'b1;
         word_count_r <= word_count_r + 1'b1;
         if (word_count_r[0]) begin

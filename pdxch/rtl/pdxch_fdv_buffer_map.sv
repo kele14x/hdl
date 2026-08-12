@@ -19,10 +19,17 @@ module pdxch_fdv_buffer_map #(
 
   localparam int IQ_BANK_DEPTH = (HALF_BLOCK != 0) ? 1024 : 1792;
   localparam int EXP_BANK_DEPTH = (HALF_BLOCK != 0) ? 480 : 825;
+  localparam int MAX_PRB = (HALF_BLOCK != 0) ? 160 : 275;
 
   initial begin : drc_check
     assert (IQ_BANK_DEPTH > 0 && EXP_BANK_DEPTH > 0)
     else $error("[%m]: invalid FDV buffer bank depth");
+
+    assert (EXP_BANK_DEPTH >= MAX_PRB * 3)
+    else $error("[%m]: EXP bank depth (%0d) cannot hold MAX_PRB (%0d).", EXP_BANK_DEPTH, MAX_PRB);
+
+    assert (IQ_BANK_DEPTH >= MAX_PRB * 6)
+    else $error("[%m]: IQ bank depth (%0d) cannot hold MAX_PRB (%0d).", IQ_BANK_DEPTH, MAX_PRB);
   end
 
   assign iq_half = logical_re[0];

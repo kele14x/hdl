@@ -42,6 +42,7 @@ module pdxch_channel #(
 );
 
   localparam int LogFftSize = (HALF_FFT != 0) ? 11 : 12;
+  localparam int CtrlFftCfgWidth = 4;
 
   // HALF_BLOCK is retained for compatibility with existing instantiations.
   wire         unused_half_block = &{1'b0, HALF_BLOCK};
@@ -86,49 +87,118 @@ module pdxch_channel #(
 
   logic [ 1:0] ctrl_size;
   logic [ 1:0] ctrl_itlv;
+  logic [ 1:0] ctrl_size_ctrl;
+  logic [ 1:0] ctrl_itlv_ctrl;
+  wire  [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_ctrl = {ctrl_size_ctrl, ctrl_itlv_ctrl};
+  logic [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_sent;
+  wire                        ctrl_fft_cfg_src_valid = ctrl_fft_cfg_ctrl != ctrl_fft_cfg_sent;
+  wire                        ctrl_fft_cfg_src_ready;
+  wire  [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_cdc;
+  wire                        ctrl_fft_cfg_dest_valid;
+  logic [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_pending;
+  logic                       din_sy_d;
   logic        unused_fft_stat_ovf;
 
   // Main
 
   always_ff @(posedge ctrl_clk) begin
-    if (ctrl_rat == 2'b00) begin  // LTE
-      ctrl_size <= 2'b01;  // 2k
-    end else if (ctrl_rat == 2'b01) begin  // NR 15 kHz SCS
-      case (ctrl_bw)
-        4'd0:    ctrl_size <= 2'b01; // 2k
-        4'd1:    ctrl_size <= 2'b01; // 2k
-        4'd2:    ctrl_size <= 2'b01; // 2k
-        default: ctrl_size <= 2'b10; // 4k
-      endcase
-    end else begin  // NR 30kHz SCS
-      case (ctrl_bw)
-        4'd0:    ctrl_size <= 2'b00; // 1k
-        4'd1:    ctrl_size <= 2'b00; // 1k
-        4'd2:    ctrl_size <= 2'b00; // 1k
-        4'd3:    ctrl_size <= 2'b01; // 2k
-        default: ctrl_size <= 2'b10; // 4k
-      endcase
+    if (ctrl_rst) begin
+      ctrl_size_ctrl <= 2'b01;
+    end else begin
+      if (ctrl_rat == 2'b00) begin  // LTE
+        ctrl_size_ctrl <= 2'b01;  // 2k
+      end else if (ctrl_rat == 2'b01) begin  // NR 15 kHz SCS
+        case (ctrl_bw)
+          4'd0:    ctrl_size_ctrl <= 2'b01; // 2k
+          4'd1:    ctrl_size_ctrl <= 2'b01; // 2k
+          4'd2:    ctrl_size_ctrl <= 2'b01; // 2k
+          default: ctrl_size_ctrl <= 2'b10; // 4k
+        endcase
+      end else begin  // NR 30kHz SCS
+        case (ctrl_bw)
+          4'd0:    ctrl_size_ctrl <= 2'b00; // 1k
+          4'd1:    ctrl_size_ctrl <= 2'b00; // 1k
+          4'd2:    ctrl_size_ctrl <= 2'b00; // 1k
+          4'd3:    ctrl_size_ctrl <= 2'b01; // 2k
+          default: ctrl_size_ctrl <= 2'b10; // 4k
+        endcase
+      end
     end
   end
 
   always_ff @(posedge ctrl_clk) begin
-    if (ctrl_rat == 2'b00) begin  // LTE
-      ctrl_itlv <= 2'b00;  // 16
-    end else if (ctrl_rat == 2'b01) begin  // NR 15 kHz SCS
-      case (ctrl_bw)
-        4'd0:    ctrl_itlv <= 2'b00; // 16
-        4'd1:    ctrl_itlv <= 2'b00; // 16
-        4'd2:    ctrl_itlv <= 2'b00; // 16
-        default: ctrl_itlv <= 2'b01; // 8
-      endcase
-    end else begin  // NR 30kHz SCS
-      case (ctrl_bw)
-        4'd0:    ctrl_itlv <= 2'b00; // 16
-        4'd1:    ctrl_itlv <= 2'b00; // 16
-        4'd2:    ctrl_itlv <= 2'b00; // 16
-        4'd3:    ctrl_itlv <= 2'b01; // 8
-        default: ctrl_itlv <= 2'b10; // 4
-      endcase
+    if (ctrl_rst) begin
+      ctrl_itlv_ctrl <= 2'b00;
+    end else begin
+      if (ctrl_rat == 2'b00) begin  // LTE
+        ctrl_itlv_ctrl <= 2'b00;  // 16
+      end else if (ctrl_rat == 2'b01) begin  // NR 15 kHz SCS
+        case (ctrl_bw)
+          4'd0:    ctrl_itlv_ctrl <= 2'b00; // 16
+          4'd1:    ctrl_itlv_ctrl <= 2'b00; // 16
+          4'd2:    ctrl_itlv_ctrl <= 2'b00; // 16
+          default: ctrl_itlv_ctrl <= 2'b01; // 8
+        endcase
+      end else begin  // NR 30kHz SCS
+        case (ctrl_bw)
+          4'd0:    ctrl_itlv_ctrl <= 2'b00; // 16
+          4'd1:    ctrl_itlv_ctrl <= 2'b00; // 16
+          4'd2:    ctrl_itlv_ctrl <= 2'b00; // 16
+          4'd3:    ctrl_itlv_ctrl <= 2'b01; // 8
+          default: ctrl_itlv_ctrl <= 2'b10; // 4
+        endcase
+      end
+    end
+  end
+
+  always_ff @(posedge ctrl_clk) begin
+    if (ctrl_rst) begin
+      ctrl_fft_cfg_sent <= ~{2'b01, 2'b00};
+    end else if (ctrl_fft_cfg_src_valid && ctrl_fft_cfg_src_ready) begin
+      ctrl_fft_cfg_sent <= ctrl_fft_cfg_ctrl;
+    end
+  end
+
+  cdc_handshake_f #(
+      .DEST_EXT_HSK(1),
+      .DEST_SYNC_FF(4),
+      .INIT_SYNC_FF(1),
+      .SRC_SYNC_FF (4),
+      .WIDTH       (CtrlFftCfgWidth)
+  ) u_cdc_fft_cfg (
+      .src_clk   (ctrl_clk),
+      .src_in    (ctrl_fft_cfg_ctrl),
+      .src_valid (ctrl_fft_cfg_src_valid),
+      .src_ready (ctrl_fft_cfg_src_ready),
+      //
+      .dest_clk  (clk),
+      .dest_out  (ctrl_fft_cfg_cdc),
+      .dest_valid(ctrl_fft_cfg_dest_valid),
+      .dest_ready(~rst)
+  );
+
+  // Apply the coherent FFT configuration only between symbols. din_sy may
+  // span multiple antenna cycles, so use its rising edge as the boundary.
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      ctrl_fft_cfg_pending <= {2'b01, 2'b00};
+      ctrl_size            <= 2'b01;
+      ctrl_itlv            <= 2'b00;
+      din_sy_d             <= 1'b0;
+    end else begin
+      din_sy_d <= din_sy;
+
+      if (ctrl_fft_cfg_dest_valid) begin
+        ctrl_fft_cfg_pending <= ctrl_fft_cfg_cdc;
+      end
+
+      if (din_sy && !din_sy_d) begin
+        if (ctrl_fft_cfg_dest_valid) begin
+          {ctrl_size, ctrl_itlv} <= ctrl_fft_cfg_cdc;
+        end else begin
+          {ctrl_size, ctrl_itlv} <= ctrl_fft_cfg_pending;
+        end
+      end
     end
   end
 

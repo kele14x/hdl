@@ -151,6 +151,48 @@ async def test_real_ram_read_address_alignment(dut):
     assert len(set(requested_addresses)) >= 3
 
 
+@cocotb.test()
+async def test_write_drops_packet_at_half_block_boundary(dut):
+    cocotb.start_soon(Clock(dut.clk_eth_xran, 8, unit="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await _reset(dut)
+
+    start_prb = 159
+    packet_words = 4 * 6
+    observed_iq_addresses = []
+    observed_exp_addresses = []
+
+    for index in range(packet_words):
+        await RisingEdge(dut.clk_eth_xran)
+        dut.s_axis_tdata[0].value = _iq_word(index + 1, index + 2)
+        dut.s_axis_exp[0].value = index & 0xF
+        dut.s_axis_tvalid[0].value = 1
+        dut.s_axis_tlast[0].value = int(index == packet_words - 1)
+        dut.s_axis_tuser[0].value = start_prb if index == 0 else 0
+        await Timer(1, unit="ps")
+
+        iq_en = int(dut.wr_iq_en[0].value)
+        exp_en = int(dut.wr_exp_en[0].value)
+        if iq_en:
+            iq_addr = int(dut.wr_iq_addr[0].value)
+            observed_iq_addresses.append(iq_addr)
+            assert iq_addr < 1024
+        if exp_en:
+            exp_addr = int(dut.wr_exp_addr[0].value)
+            observed_exp_addresses.append(exp_addr)
+            assert exp_addr < 480
+
+        assert iq_en == int(index < 6)
+        assert exp_en == int(index < 6 and index % 2 == 0)
+
+    await RisingEdge(dut.clk_eth_xran)
+    dut.s_axis_tvalid[0].value = 0
+    dut.s_axis_tlast[0].value = 0
+
+    assert observed_iq_addresses == list(range(159 * 6, 160 * 6))
+    assert observed_exp_addresses == list(range(159 * 3, 160 * 3))
+
+
 def test_pdxch_fdv_buffer_runner():
     sources = [
         PRJ_PATH / "rtl" / "pdxch_fdv_buffer.sv",

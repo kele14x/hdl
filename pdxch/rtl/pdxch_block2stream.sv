@@ -26,7 +26,12 @@ module pdxch_block2stream #(
 
   localparam int AddrWidth = 9;
   localparam int DataWidth = 32;
-  localparam int AntAddrWidth = $clog2(NUM_ANT);
+  localparam int AntAddrWidth = NUM_ANT <= 1 ? 1 : $clog2(NUM_ANT);
+
+  initial begin : drc_check
+    assert (NUM_ANT >= 1)
+    else $error("[%m]: NUM_ANT (%0d) must be at least 1.", NUM_ANT);
+  end
 
   // Signals
   logic [         15:0] din_dr_d;

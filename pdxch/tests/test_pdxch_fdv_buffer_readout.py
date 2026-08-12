@@ -40,6 +40,11 @@ def _signed16(value: int) -> int:
     return value - 0x10000 if value & 0x8000 else value
 
 
+def _packed_iq_word(mantissa: int) -> int:
+    pair = ((mantissa & 0x1FF) << 9) | (mantissa & 0x1FF)
+    return (pair << 18) | pair
+
+
 async def _reset(dut):
     dut.rst.value = 1
     _set_common_inputs(dut)
@@ -125,6 +130,47 @@ async def test_memory_readout_and_bist(dut):
 
     # NUM_ANT=2 and ctrl_en[1]=0 keep the stream on antenna/channel 0.
     assert all(sample["chn"] == 0 for sample in bist_samples if sample["dv"])
+
+
+@cocotb.test()
+async def test_fs_offset_alignment_and_saturation(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+
+    vectors = [
+        (1, 0x080, 14, 0x4000, "normal"),
+        (1, 0x0FF, 15, 0x7FFF, "saturation"),
+        (8, 0x001, 0, 0x0001, "normal"),
+        (8, 0x001, 15, 0x7FFF, "saturation"),
+        (14, 0x001, 0, 0x0040, "normal"),
+        (14, 0x0FF, 15, 0x7FFF, "saturation"),
+        (15, 0x001, 0, 0x0080, "normal"),
+        (15, 0x0FF, 15, 0x7FFF, "saturation"),
+    ]
+
+    for fs_offset, mantissa, exponent, expected, case_name in vectors:
+        await _reset(dut)
+        word = _packed_iq_word(mantissa)
+        for ant in range(NUM_ANT):
+            dut.rd_iq_data[ant].value = word
+            dut.rd_exp_data[ant].value = exponent
+        dut.ctrl_fs_offset.value = fs_offset
+        _set_controls(dut, bist=0)
+        await ClockCycles(dut.clk, 4)
+        await _start_symbol(dut)
+
+        decoded = []
+        for _ in range(80):
+            await RisingEdge(dut.clk)
+            await Timer(1, unit="ps")
+            if dut.dout_dv.value.is_resolvable and int(dut.dout_dv.value):
+                assert dut.dout_dr.value.is_resolvable
+                assert dut.dout_di.value.is_resolvable
+                decoded.append((int(dut.dout_dr.value), int(dut.dout_di.value)))
+
+        assert (expected, expected) in decoded, (
+            f"fs_offset={fs_offset} {case_name} vector decoded as {decoded}, "
+            f"expected 0x{expected:04x}"
+        )
 
 
 def test_pdxch_fdv_buffer_readout_runner():

@@ -36,6 +36,8 @@ module pdxch_fdv_buffer_readout #(
     input var  [ 3:0] ctrl_fs_offset
 );
 
+  localparam int MAX_PRB = (HALF_BLOCK != 0) ? 160 : 275;
+
   // Control signals
 
   wire  [ 3:0] ctrl_en_s;
@@ -213,13 +215,15 @@ module pdxch_fdv_buffer_readout #(
                                                      input logic [3:0] fs_offset);
     logic        sign;
     logic [16:0] temp;
+    logic [31:0] expanded_g;
 
     // Full-scale alignment and saturation are the same as the former
     // bfp_decomp implementation, but only the BFP9 path remains here.
-    temp = expanded[30-fs_offset-:17];
-    sign = expanded[30];
+    expanded_g = {expanded, 1'b0};
+    sign       = expanded[30];
+    temp       = expanded_g[31-fs_offset-:17];
     for (int i = 0; i < 15; i++) begin
-      if (i < fs_offset && (sign ^ expanded[29-fs_offset])) begin
+      if (i < fs_offset && (sign ^ expanded[29-i])) begin
         temp = sign ? 17'h10000 : 17'h0FFFF;
       end
     end
@@ -238,6 +242,9 @@ module pdxch_fdv_buffer_readout #(
   );
 
   // Main
+
+  assert property (@(posedge clk) disable iff (rst) (ctrl_nprb_s <= 9'(MAX_PRB)))
+  else $error("[%m]: ctrl_nprb (%0d) exceeds MAX_PRB (%0d).", ctrl_nprb_s, MAX_PRB);
 
   always_comb begin
     if (ctrl_rat_s < 2) begin  // 15 kHz

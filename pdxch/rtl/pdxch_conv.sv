@@ -55,7 +55,12 @@ module pdxch_conv #(
   // 8 (NCO match delay) + 5 (cmult 4-mult pipeline) = 13;
   // use 15 with 3-mult cmult (USE_3_MULT=1).
   localparam int Latency = 13;
-  localparam int AntAddrWidth = $clog2(NUM_ANT);
+  localparam int AntAddrWidth = NUM_ANT <= 1 ? 1 : $clog2(NUM_ANT);
+
+  initial begin : drc_check
+    assert (NUM_ANT >= 1)
+    else $error("[%m]: NUM_ANT (%0d) must be at least 1.", NUM_ANT);
+  end
 
   // Signals
 

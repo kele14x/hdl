@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import os
+
 import cocotb
 import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
 from pdxch_test_utils import PRJ_PATH, pdxch_sources, run_test
+
+NUM_ANT = int(os.environ.get("NUM_ANT", "2"))
+CASES = [1, 2]
 
 
 def _set_input(
@@ -76,8 +81,8 @@ async def test_control_table_and_sideband_latency(dut):
     pattern = [
         zero,
         {"sf": 1, "sl": 0, "sy": 1, "chn": 0, "dv": 1, "last": 0},
-        {"sf": 0, "sl": 1, "sy": 0, "chn": 1, "dv": 1, "last": 0},
-        {"sf": 0, "sl": 0, "sy": 0, "chn": 1, "dv": 0, "last": 1},
+        {"sf": 0, "sl": 1, "sy": 0, "chn": 1 % NUM_ANT, "dv": 1, "last": 0},
+        {"sf": 0, "sl": 0, "sy": 0, "chn": 1 % NUM_ANT, "dv": 0, "last": 1},
         {"sf": 0, "sl": 0, "sy": 1, "chn": 0, "dv": 1, "last": 1},
     ]
     stimuli = [zero] * 24 + pattern + [zero] * 20
@@ -133,7 +138,7 @@ async def test_nonzero_data_and_sideband_alignment(dut):
         {
             "real": 1000 + 37 * index,
             "imag": 2000 + 29 * index,
-            "chn": (index // 2 + index // 5) % 2,
+            "chn": (index // 2 + index // 5) % NUM_ANT,
             "dv": int(index % 3 != 1),
         }
         for index in range(18)
@@ -161,7 +166,9 @@ async def test_nonzero_data_and_sideband_alignment(dut):
         current = vector
 
 
-def test_pdxch_conv_runner():
+@pytest.mark.parametrize("num_ant", CASES, ids=lambda value: f"num_ant_{value}")
+def test_pdxch_conv_runner(num_ant, monkeypatch):
+    monkeypatch.setenv("NUM_ANT", str(num_ant))
     sources = [
         PRJ_PATH / "rtl" / "pdxch_conv.sv",
         PRJ_PATH / "rtl" / "pdxch_conv_nco.sv",
@@ -176,8 +183,8 @@ def test_pdxch_conv_runner():
         hdl_toplevel="pdxch_conv",
         test_module="test_pdxch_conv",
         sources=sources,
-        parameters={"HAS_CDC": 0, "NUM_ANT": 2},
-        build_name="conv",
+        parameters={"HAS_CDC": 0, "NUM_ANT": num_ant},
+        build_name=f"conv_num_ant_{num_ant}",
     )
 
 
