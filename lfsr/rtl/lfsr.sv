@@ -54,20 +54,20 @@ module lfsr #(
   // Check parameters
   //=================
 
-  initial begin
+  initial begin : drc_check
     assert (STRUCTURE == "FIBONACCI" || STRUCTURE == "GALOIS")
     else begin
-      $fatal(1, "[%m]: LFSR structure (STRUCTURE) should be one of \"FIBONACCI\" or \"GALOIS\".");
+      $error("[%m]: LFSR structure (STRUCTURE) should be one of \"FIBONACCI\" or \"GALOIS\".");
     end
 
     assert (GATE_TYPE == "XOR" || GATE_TYPE == "XNOR")
     else begin
-      $fatal(1, "[%m]: Gate type (GATE_TYPE) should be one of \"XOR\" or \"XNOR\".");
+      $error("[%m]: Gate type (GATE_TYPE) should be one of \"XOR\" or \"XNOR\".");
     end
 
     assert (POLYNOMIAL[0] == 1'b1 && POLYNOMIAL[BIT_WIDTH] == 1'b1)
     else begin
-      $fatal(1, "[%m]: Feedback polynomial (POLYNOMIAL) should have MSB & LSB both set to 1.");
+      $error("[%m]: Feedback polynomial (POLYNOMIAL) should have MSB & LSB both set to 1.");
     end
   end
 

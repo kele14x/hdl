@@ -58,27 +58,16 @@ module fft #(
 
   // Check parameters
 
-  // verilog_format: off
-  initial begin
-    // Check number of interleaved channels
-    if (NUM_ANT < 1 || NUM_ANT > 16) begin
-      $display("Number of interleaved channels (NUM_ANT) must be within the range 1 to 16, got %0d. [%m]", NUM_ANT);
-      $finish();
-    end
+  initial begin : drc_check
+    assert (NUM_ANT >= 1 && NUM_ANT <= 16)
+    else $error("[%m]: NUM_ANT (%0d) must be within the range 1 to 16.", NUM_ANT);
 
-    // Check FFT size
-    if (LOG_FFT_SIZE < 1 || LOG_FFT_SIZE > 14) begin
-      $display("Log2 FFT size (LOG_FFT_SIZE) must be within the range 1 to 14, got %0d. [%m]", LOG_FFT_SIZE);
-      $finish();
-    end
+    assert (LOG_FFT_SIZE >= 1 && LOG_FFT_SIZE <= 14)
+    else $error("[%m]: LOG_FFT_SIZE (%0d) must be within the range 1 to 14.", LOG_FFT_SIZE);
 
-    // Check input data width
-    if (DATA_WIDTH < 8 || DATA_WIDTH > 32) begin
-      $display("Input data width (DATA_WIDTH) must be within the range 8 to 32, got %0d. [%m]", DATA_WIDTH);
-      $finish();
-    end
+    assert (DATA_WIDTH >= 8 && DATA_WIDTH <= 32)
+    else $error("[%m]: DATA_WIDTH (%0d) must be within the range 8 to 32.", DATA_WIDTH);
   end
-  // verilog_format: on
 
   // Signals
 

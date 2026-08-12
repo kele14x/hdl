@@ -272,21 +272,15 @@ module lowphy_band #(
 
   // Parmaeters
 
-  initial begin
-    // Check NUM_CC
-    if (NUM_CC < 1 || NUM_CC > 3) begin
-      $fatal(1, "Number of CCs (NUM_CC) must be between 1 and 3, get %d [%m]", NUM_CC);
-    end
+  initial begin : drc_check
+    assert (NUM_CC >= 1 && NUM_CC <= 3)
+    else $error("[%m]: NUM_CC (%d) must be between 1 and 3.", NUM_CC);
 
-    // Check NUM_ANT
-    if (NUM_ANT != 1 && NUM_ANT != 2 && NUM_ANT != 4) begin
-      $fatal(1, "Number of antennas (NUM_ANT) must be 1, 2, or 4, get %d [%m]", NUM_ANT);
-    end
+    assert (NUM_ANT == 1 || NUM_ANT == 2 || NUM_ANT == 4)
+    else $error("[%m]: NUM_ANT (%d) must be 1, 2, or 4.", NUM_ANT);
 
-    // Check CC_ID
-    if (CC_ID < 0 || CC_ID >= NUM_CC) begin
-      $fatal(1, "Carrier ID (CC_ID) must be between 0 and NUM_CC-1, get %d [%m]", CC_ID);
-    end
+    assert (CC_ID >= 0 && CC_ID < NUM_CC)
+    else $error("[%m]: CC_ID (%d) must be between 0 and NUM_CC-1.", CC_ID);
   end
 
   // Signals

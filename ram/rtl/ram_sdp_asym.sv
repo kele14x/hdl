@@ -42,52 +42,49 @@ module ram_sdp_asym #(
   initial begin : drc_check
     assert (1 <= READ_LATENCY_B && READ_LATENCY_B <= 3)
     else begin
-      $fatal(1, "[%m]: Read latency (READ_LATENCY_B) should be within range 1 to 3, got %d",
+      $error("[%m]: Read latency (READ_LATENCY_B) should be within range 1 to 3, got %d",
              READ_LATENCY_B);
     end
 
     assert (INIT_FILE != "")
     else begin
-      $fatal(1, "[%m]: INIT_FILE must be NONE or a legal initialization file name");
+      $error("[%m]: INIT_FILE must be NONE or a legal initialization file name");
     end
 
     assert (DATA_WIDTH_A > 0 && DATA_WIDTH_B > 0)
     else begin
-      $fatal(1, "[%m]: DATA_WIDTH_A and DATA_WIDTH_B should be greater than zero");
+      $error("[%m]: DATA_WIDTH_A and DATA_WIDTH_B should be greater than zero");
     end
 
     assert (ADDR_WIDTH_A > 0 && ADDR_WIDTH_B > 0)
     else begin
-      $fatal(1, "[%m]: ADDR_WIDTH_A and ADDR_WIDTH_B should be greater than zero");
+      $error("[%m]: ADDR_WIDTH_A and ADDR_WIDTH_B should be greater than zero");
     end
 
     assert (DEPTH > 0)
     else begin
-      $fatal(1, "[%m]: DEPTH must be positive, got %d", DEPTH);
+      $error("[%m]: DEPTH must be positive, got %d", DEPTH);
     end
 
     assert (MaxWidth % MinWidth == 0)
     else begin
-      $fatal(1,
-             "The wider RAM port width should be an integer multiple of the narrower port width.");
+      $error("[%m]: The wider RAM port width should be an integer multiple of the narrower port width.");
     end
 
     assert ((Ratio & (Ratio - 1)) == 0)
     else begin
-      $fatal(
-          1,
-          "[%m]: The ratio of the wider RAM port width to the narrower port width should be a power of two, got %d",
-          Ratio);
+      $error("[%m]: The ratio of the wider RAM port width to the narrower port width should be a power of two, got %d",
+             Ratio);
     end
 
     assert (DEPTH * MinWidth % DATA_WIDTH_A == 0 && DEPTH * MinWidth % DATA_WIDTH_B == 0)
     else begin
-      $fatal(1, "[%m]: DEPTH * narrower port width must be divisible by both port widths");
+      $error("[%m]: DEPTH * narrower port width must be divisible by both port widths");
     end
 
     assert (ADDR_WIDTH_A >= $clog2(SizeA) && ADDR_WIDTH_B >= $clog2(SizeB))
     else begin
-      $fatal(1, "[%m]: address width is too small for DEPTH %d", DEPTH);
+      $error("[%m]: address width is too small for DEPTH %d", DEPTH);
     end
 
     /* verilator lint_off WIDTHEXPAND */
@@ -95,7 +92,7 @@ module ram_sdp_asym #(
             RAM_STYLE == "REGISTER" || RAM_STYLE == "ULTRA")
     /* verilator lint_on WIDTHEXPAND */
     else begin
-      $fatal(1, "[%m]: invalid RAM_STYLE %s (use AUTO, BLOCK, DISTRIBUTED, REGISTER, or ULTRA)",
+      $error("[%m]: invalid RAM_STYLE %s (use AUTO, BLOCK, DISTRIBUTED, REGISTER, or ULTRA)",
              RAM_STYLE);
     end
 
@@ -104,12 +101,12 @@ module ram_sdp_asym #(
     assert (RAM_STYLE != "REGISTER")
     /* verilator lint_on WIDTHEXPAND */
     else begin
-      $fatal(1, "[%m]: RAM_STYLE REGISTER is not supported by xpm_memory_sdpram");
+      $error("[%m]: RAM_STYLE REGISTER is not supported by xpm_memory_sdpram");
     end
 
     assert (RAM_STYLE != "DISTRIBUTED" || DATA_WIDTH_A == DATA_WIDTH_B)
     else begin
-      $fatal(1, "[%m]: RAM_STYLE DISTRIBUTED is not supported for asymmetric xpm_memory_sdpram");
+      $error("[%m]: RAM_STYLE DISTRIBUTED is not supported for asymmetric xpm_memory_sdpram");
     end
 `endif
   end

@@ -30,22 +30,16 @@ module shift_ram #(
 
   // Check parameters
 
-  // verilog_format: off
-  initial begin
-    // Check DEPTH
-    if (DEPTH < MinDepth || 16384 < DEPTH) begin
-      $fatal(1, "Delay depth (DEPTH) must be within the range %0d to 16384, got %0d. [%m]", MinDepth, DEPTH);
-    end
+  initial begin : drc_check
+    assert (DEPTH >= MinDepth && DEPTH <= 16384)
+    else $error("[%m]: DEPTH (%0d) must be within the range %0d to 16384.", DEPTH, MinDepth);
 
     assert (PACKED_URAM == 0 || PACKED_URAM == 1)
-    else $fatal(1, "PACKED_URAM must be 0 or 1, got %0d. [%m]", PACKED_URAM);
+    else $error("[%m]: PACKED_URAM (%0d) must be 0 or 1.", PACKED_URAM);
 
-    if (PACKED_URAM != 0) begin
-      assert (WIDTH == 36 && DEPTH == 8192 && INPUT_REG != 0)
-      else $fatal(1, "PACKED_URAM requires WIDTH=36, DEPTH=8192, and INPUT_REG=1. [%m]");
-    end
+    assert (PACKED_URAM == 0 || (WIDTH == 36 && DEPTH == 8192 && INPUT_REG != 0))
+    else $error("[%m]: PACKED_URAM requires WIDTH=36, DEPTH=8192, and INPUT_REG=1.");
   end
-  // verilog_format: on
 
   // Signals
 

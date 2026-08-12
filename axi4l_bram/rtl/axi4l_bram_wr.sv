@@ -148,9 +148,9 @@ module axi4l_bram_wr #(
 
   initial begin : drc_check
     assert (ADDR_WIDTH > 0)
-    else $error("ADDR_WIDTH must be positive");
+    else $error("[%m]: ADDR_WIDTH must be positive");
     assert (DATA_WIDTH > 0 && DATA_WIDTH % 8 == 0)
-    else $error("DATA_WIDTH must be a positive multiple of 8");
+    else $error("[%m]: DATA_WIDTH must be a positive multiple of 8");
   end
 
   always_ff @(posedge aclk or negedge aresetn) begin

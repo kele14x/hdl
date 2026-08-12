@@ -18,17 +18,13 @@ module delay #(
 
   // Check parameters
 
-  // verilog_format: off
-  initial begin
-    if (DEPTH < 0 || 16384 < DEPTH) begin
-      $fatal(1, "Delay depth (DEPTH) must be within the range 0 to 16384, got %d. [%m]", DEPTH);
-    end
+  initial begin : drc_check
+    assert (DEPTH >= 0 && DEPTH <= 16384)
+    else $error("[%m]: DEPTH (%d) must be within the range 0 to 16384.", DEPTH);
 
-    if (WIDTH < 1 || 1024 < WIDTH) begin
-      $fatal(1, "Data width (WIDTH) must be within the range 1 to 1024, got %d. [%m]", WIDTH);
-    end
+    assert (WIDTH >= 1 && WIDTH <= 1024)
+    else $error("[%m]: WIDTH (%d) must be within the range 1 to 1024.", WIDTH);
   end
-  // verilog_format: on
 
   generate
     if (DEPTH == 0) begin : g_no_reg

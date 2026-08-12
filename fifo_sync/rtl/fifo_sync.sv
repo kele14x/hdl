@@ -38,23 +38,23 @@ module fifo_sync #(
   initial begin : drc_check
     assert (4 <= FIFO_DEPTH && FIFO_DEPTH <= 32768 && (FIFO_DEPTH & (FIFO_DEPTH - 1)) == 0)
     else begin
-      $fatal(1, "FIFO_DEPTH must be a power of two within the range 4 to 32768, got %0d.",
+      $error("[%m]: FIFO_DEPTH must be a power of two within the range 4 to 32768, got %0d.",
              FIFO_DEPTH);
     end
 
     assert (1 <= FIFO_LATENCY && FIFO_LATENCY <= 3)
     else begin
-      $fatal(1, "FIFO_LATENCY must be within the range 1 to 3, got %0d.", FIFO_LATENCY);
+      $error("[%m]: FIFO_LATENCY must be within the range 1 to 3, got %0d.", FIFO_LATENCY);
     end
 
     assert (1 <= DATA_WIDTH && DATA_WIDTH <= 4096)
     else begin
-      $fatal(1, "DATA_WIDTH must be within the range 1 to 4096, got %0d.", DATA_WIDTH);
+      $error("[%m]: DATA_WIDTH must be within the range 1 to 4096, got %0d.", DATA_WIDTH);
     end
 
-    assert (FWFT_MODE)
+    assert (FWFT_MODE != 0)
     else begin
-      $fatal(1, "fifo_sync only supports FWFT_MODE=1.");
+      $error("[%m]: fifo_sync only supports FWFT_MODE=1.");
     end
   end
 

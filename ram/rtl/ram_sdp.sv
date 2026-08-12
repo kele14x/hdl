@@ -32,28 +32,28 @@ module ram_sdp #(
   initial begin : drc_check
     assert (1 <= READ_LATENCY && READ_LATENCY <= 3)
     else begin
-      $fatal(1, "[%m]: Read latency (READ_LATENCY) should be within range 1 to 3, got %d",
+      $error("[%m]: Read latency (READ_LATENCY) should be within range 1 to 3, got %d",
              READ_LATENCY);
     end
 
     assert (INIT_FILE != "")
     else begin
-      $fatal(1, "[%m]: INIT_FILE must be NONE or a legal initialization file name");
+      $error("[%m]: INIT_FILE must be NONE or a legal initialization file name");
     end
 
     assert (ADDR_WIDTH > 0)
     else begin
-      $fatal(1, "[%m]: ADDR_WIDTH must be positive, got %d", ADDR_WIDTH);
+      $error("[%m]: ADDR_WIDTH must be positive, got %d", ADDR_WIDTH);
     end
 
     assert (DEPTH > 0)
     else begin
-      $fatal(1, "[%m]: DEPTH must be positive, got %d", DEPTH);
+      $error("[%m]: DEPTH must be positive, got %d", DEPTH);
     end
 
     assert (ADDR_WIDTH >= $clog2(DEPTH))
     else begin
-      $fatal(1, "[%m]: ADDR_WIDTH %d is too small for DEPTH %d", ADDR_WIDTH, DEPTH);
+      $error("[%m]: ADDR_WIDTH %d is too small for DEPTH %d", ADDR_WIDTH, DEPTH);
     end
 
     /* verilator lint_off WIDTHEXPAND */
@@ -61,7 +61,7 @@ module ram_sdp #(
             RAM_STYLE == "REGISTER" || RAM_STYLE == "ULTRA")
     /* verilator lint_on WIDTHEXPAND */
     else begin
-      $fatal(1, "[%m]: invalid RAM_STYLE %s (use AUTO, BLOCK, DISTRIBUTED, REGISTER, or ULTRA)",
+      $error("[%m]: invalid RAM_STYLE %s (use AUTO, BLOCK, DISTRIBUTED, REGISTER, or ULTRA)",
              RAM_STYLE);
     end
 
@@ -70,7 +70,7 @@ module ram_sdp #(
     assert (RAM_STYLE != "REGISTER")
     /* verilator lint_on WIDTHEXPAND */
     else begin
-      $fatal(1, "[%m]: RAM_STYLE REGISTER is not supported by xpm_memory_sdpram");
+      $error("[%m]: RAM_STYLE REGISTER is not supported by xpm_memory_sdpram");
     end
 `endif
   end

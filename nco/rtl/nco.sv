@@ -68,21 +68,18 @@ module nco #(
 
   // Check parameters
 
-  // verilog_format: off
-  initial begin
-    if (PHASE_INTEGER_WIDTH < 4 || 12 < PHASE_INTEGER_WIDTH) begin
-      $fatal(1, "[%m]: Phase integer word width (PHASE_INTEGER_WIDTH) must be within the range 4 to 12, got %d.", PHASE_INTEGER_WIDTH);
-    end
+  initial begin : drc_check
+    assert (PHASE_INTEGER_WIDTH >= 4 && PHASE_INTEGER_WIDTH <= 12)
+    else $error("[%m]: PHASE_INTEGER_WIDTH (%d) must be within the range 4 to 12.",
+                PHASE_INTEGER_WIDTH);
 
-    if (PHASE_FRACTION_WIDTH < 0 || 20 < PHASE_FRACTION_WIDTH) begin
-      $fatal(1, "[%m]: Phase fraction word width (PHASE_FRACTION_WIDTH) must be within the range 0 to 20, got %d.", PHASE_FRACTION_WIDTH);
-    end
+    assert (PHASE_FRACTION_WIDTH >= 0 && PHASE_FRACTION_WIDTH <= 20)
+    else $error("[%m]: PHASE_FRACTION_WIDTH (%d) must be within the range 0 to 20.",
+                PHASE_FRACTION_WIDTH);
 
-    if (1 != NUM_PARALLEL && 2 != NUM_PARALLEL && 4 != NUM_PARALLEL) begin
-      $fatal(1, "[%m]: Number of parallel output (NUM_PARALLEL) must be within the range 1, 2 or 4, got %d.", NUM_PARALLEL);
-    end
+    assert (NUM_PARALLEL == 1 || NUM_PARALLEL == 2 || NUM_PARALLEL == 4)
+    else $error("[%m]: NUM_PARALLEL (%d) must be 1, 2 or 4.", NUM_PARALLEL);
   end
-  // verilog_format: on
 
   // Signals
 

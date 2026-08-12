@@ -42,39 +42,39 @@ module ram_tdp #(
   initial begin : drc_check
     assert (1 <= READ_LATENCY_A && READ_LATENCY_A <= 3)
     else begin
-      $fatal(1, "[%m]: READ_LATENCY_A should be within range 1 to 3.");
+      $error("[%m]: READ_LATENCY_A should be within range 1 to 3.");
     end
 
     assert (1 <= READ_LATENCY_B && READ_LATENCY_B <= 3)
     else begin
-      $fatal(1, "[%m]: READ_LATENCY_B should be within range 1 to 3.");
+      $error("[%m]: READ_LATENCY_B should be within range 1 to 3.");
     end
 
     assert (INIT_FILE != "")
     else begin
-      $fatal(1, "[%m]: INIT_FILE must be NONE or a legal initialization file name");
+      $error("[%m]: INIT_FILE must be NONE or a legal initialization file name");
     end
 
     assert (ADDR_WIDTH > 0)
     else begin
-      $fatal(1, "[%m]: ADDR_WIDTH must be positive, got %d", ADDR_WIDTH);
+      $error("[%m]: ADDR_WIDTH must be positive, got %d", ADDR_WIDTH);
     end
 
     assert (DEPTH > 0)
     else begin
-      $fatal(1, "[%m]: DEPTH must be positive, got %d", DEPTH);
+      $error("[%m]: DEPTH must be positive, got %d", DEPTH);
     end
 
     assert (ADDR_WIDTH >= $clog2(DEPTH))
     else begin
-      $fatal(1, "[%m]: ADDR_WIDTH %d is too small for DEPTH %d", ADDR_WIDTH, DEPTH);
+      $error("[%m]: ADDR_WIDTH %d is too small for DEPTH %d", ADDR_WIDTH, DEPTH);
     end
 
     /* verilator lint_off WIDTHEXPAND */
     assert (WRITE_MODE_A == "WRITE_FIRST" || WRITE_MODE_A == "READ_FIRST" || WRITE_MODE_A == "NO_CHANGE")
     /* verilator lint_on WIDTHEXPAND */
     else begin
-      $fatal(1, "[%m]: invalid WRITE_MODE_A %s (use WRITE_FIRST, READ_FIRST, or NO_CHANGE)",
+      $error("[%m]: invalid WRITE_MODE_A %s (use WRITE_FIRST, READ_FIRST, or NO_CHANGE)",
              WRITE_MODE_A);
     end
 
@@ -82,7 +82,7 @@ module ram_tdp #(
     assert (WRITE_MODE_B == "WRITE_FIRST" || WRITE_MODE_B == "READ_FIRST" || WRITE_MODE_B == "NO_CHANGE")
     /* verilator lint_on WIDTHEXPAND */
     else begin
-      $fatal(1, "[%m]: invalid WRITE_MODE_B %s (use WRITE_FIRST, READ_FIRST, or NO_CHANGE)",
+      $error("[%m]: invalid WRITE_MODE_B %s (use WRITE_FIRST, READ_FIRST, or NO_CHANGE)",
              WRITE_MODE_B);
     end
 
@@ -91,7 +91,7 @@ module ram_tdp #(
             RAM_STYLE == "REGISTER" || RAM_STYLE == "ULTRA")
     /* verilator lint_on WIDTHEXPAND */
     else begin
-      $fatal(1, "[%m]: invalid RAM_STYLE %s (use AUTO, BLOCK, DISTRIBUTED, REGISTER, or ULTRA)",
+      $error("[%m]: invalid RAM_STYLE %s (use AUTO, BLOCK, DISTRIBUTED, REGISTER, or ULTRA)",
              RAM_STYLE);
     end
 
@@ -100,15 +100,14 @@ module ram_tdp #(
     assert (RAM_STYLE != "REGISTER")
     /* verilator lint_on WIDTHEXPAND */
     else begin
-      $fatal(1, "[%m]: RAM_STYLE REGISTER is not supported by xpm_memory_tdpram");
+      $error("[%m]: RAM_STYLE REGISTER is not supported by xpm_memory_tdpram");
     end
 
     /* verilator lint_off WIDTHEXPAND */
     assert (RAM_STYLE != "DISTRIBUTED")
     /* verilator lint_on WIDTHEXPAND */
     else begin
-      $fatal(1,
-             "[%m]: RAM_STYLE DISTRIBUTED does not preserve both write ports in xpm_memory_tdpram");
+      $error("[%m]: RAM_STYLE DISTRIBUTED does not preserve both write ports in xpm_memory_tdpram");
     end
 
 `endif

@@ -19,22 +19,22 @@ module cdc_gray #(
   initial begin : drc_check
     assert (DEST_SYNC_FF >= 2 && DEST_SYNC_FF <= 10)
     else begin
-      $fatal(1, "[%m]: DEST_SYNC_FF (%0d) is outside of valid range of 2-10.", DEST_SYNC_FF);
+      $error("[%m]: DEST_SYNC_FF (%0d) is outside of valid range of 2-10.", DEST_SYNC_FF);
     end
 
     assert (INIT_SYNC_FF == 0 || INIT_SYNC_FF == 1)
     else begin
-      $fatal(1, "[%m]: INIT_SYNC_FF (%0d) value is outside of valid range.", INIT_SYNC_FF);
+      $error("[%m]: INIT_SYNC_FF (%0d) value is outside of valid range.", INIT_SYNC_FF);
     end
 
     assert (REG_OUTPUT == 0 || REG_OUTPUT == 1)
     else begin
-      $fatal(1, "[%m]: REG_OUTPUT (%0d) value is outside of valid range.", REG_OUTPUT);
+      $error("[%m]: REG_OUTPUT (%0d) value is outside of valid range.", REG_OUTPUT);
     end
 
     assert (WIDTH >= 2 && WIDTH <= 32)
     else begin
-      $fatal(1, "[%m]: WIDTH (%0d) is outside of valid range of 2-32.", WIDTH);
+      $error("[%m]: WIDTH (%0d) is outside of valid range of 2-32.", WIDTH);
     end
   end
 

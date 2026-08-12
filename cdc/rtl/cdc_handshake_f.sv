@@ -44,7 +44,7 @@ module cdc_handshake_f #(
 
     assert (WIDTH >= 1 && WIDTH <= 1024)
     else begin
-      $fatal(1, "[%m]: WIDTH (%0d) is outside of valid range of 1-1024.", WIDTH);
+      $error("[%m]: WIDTH (%0d) is outside of valid range of 1-1024.", WIDTH);
     end
   end
 

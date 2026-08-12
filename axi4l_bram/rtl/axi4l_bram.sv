@@ -56,11 +56,11 @@ module axi4l_bram #(
 
   initial begin : drc_check
     assert (ADDR_WIDTH > 0)
-    else $error("ADDR_WIDTH must be positive");
+    else $error("[%m]: ADDR_WIDTH must be positive");
     assert (DATA_WIDTH > 0 && DATA_WIDTH % 8 == 0)
-    else $error("DATA_WIDTH must be a positive multiple of 8");
+    else $error("[%m]: DATA_WIDTH must be a positive multiple of 8");
     assert (USE_DUAL_PORT == 0 || USE_DUAL_PORT == 1)
-    else $error("USE_DUAL_PORT must be 0 or 1");
+    else $error("[%m]: USE_DUAL_PORT must be 0 or 1");
   end
 
   generate

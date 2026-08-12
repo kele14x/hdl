@@ -46,19 +46,15 @@ module dds_lut #(
 
   // Check parameters
 
-  // verilog_format: off
-  initial begin
-    // Check STRUCTURE
-    if (StructureConfig < StructureAuto || StructureQuarter < StructureConfig) begin
-      $fatal(1, "DDS structure (STRUCTURE) should be one of \"AUTO\", \"FULL\", \"HALF\" or \"QUARTER\", got %s. [%m]", STRUCTURE);
-    end
+  initial begin : drc_check
+    assert (StructureConfig >= StructureAuto && StructureConfig <= StructureQuarter)
+    else $error("[%m]: STRUCTURE (%s) should be one of \"AUTO\", \"FULL\", \"HALF\" or \"QUARTER\".",
+                STRUCTURE);
 
-    // Check PHASE_WIDTH
-    if (PHASE_WIDTH < MinPhaseWidth || 14 < PHASE_WIDTH) begin
-      $fatal(1, "DDS phase width (PHASE_WIDTH) should be with in range %0d to 14, got %0d. [%m]", MinPhaseWidth, PHASE_WIDTH);
-    end
+    assert (PHASE_WIDTH >= MinPhaseWidth && PHASE_WIDTH <= 14)
+    else $error("[%m]: PHASE_WIDTH (%0d) should be within range %0d to 14.", PHASE_WIDTH,
+                MinPhaseWidth);
   end
-  // verilog_format: on
 
   // When Phase Word Width (PHASE_WIDTH) is large, it's proper to store the
   // waveform into block memory. To save the block memory, it could only
