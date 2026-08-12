@@ -78,5 +78,4 @@ AGENTS.md requires the language-agnostic `sources=` argument. `axis_reg` and
 - phase_comp/tests/test_phase_comp.py
 - power_meter/tests/test_power_meter.py
 - pulse_delay/tests/test_pulse_delay.py
-- rts/tests/test_rts.py
 - timer/tests/test_timer.py
