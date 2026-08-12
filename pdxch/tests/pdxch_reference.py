@@ -112,10 +112,10 @@ def frequency_converter_stream(
     return converted_real + 1j * converted_imag
 
 
-def pdxch_nr100m_reference(
-    *, cc: int, antenna: int, symbol: int, num_prb: int = 273
+def pdxch_nr_reference(
+    *, cc: int, antenna: int, symbol: int, num_prb: int, fft_size: int
 ) -> PdxchReferenceResult:
-    """Run the fixed-point-aware 4096-point NR PDXCH reference chain."""
+    """Run a fixed-point-aware NR PDXCH reference chain."""
 
     resource_elements = qpsk_bfp9_resource_elements(
         num_prb=num_prb,
@@ -123,39 +123,53 @@ def pdxch_nr100m_reference(
         antenna=antenna,
         symbol=symbol,
     )
-    fdv_stream = fdv_readout_stream(resource_elements)
+    fdv_stream = fdv_readout_stream(resource_elements, fft_size=fft_size)
     converter_stream = frequency_converter_stream(
         fdv_stream,
         phase_increment=-11 if symbol == 0 else -9,
     )
+    config = FftConfig(
+        fft_size=fft_size,
+        inverse=True,
+        bit_reversed_input=True,
+    )
     output_real, output_imag, stats = fft_fixed(
         converter_stream.real.astype(np.int64),
         converter_stream.imag.astype(np.int64),
-        FftConfig(
-            fft_size=4096,
-            inverse=True,
-            bit_reversed_input=True,
-        ),
+        config,
     )
     if stats.butterfly_wraps or stats.twiddle_wraps or stats.coarse_twiddle_wraps:
         raise AssertionError(f"reference FFT overflowed internally: {stats}")
     fixed_time_domain = output_real + 1j * output_imag
 
     # Independent floating-point reference: restore natural bin order and
-    # apply the same pre-IFFT phase ramp without quantizing the NCO. The RTL
-    # 4096-point FFT scales by 64 rather than by 4096.
-    bit_reversed = bit_reverse_indices(4096)
+    # apply the ideal, unquantized NCO ramp.
+    bit_reversed = bit_reverse_indices(fft_size)
     phase_increment = -11 if symbol == 0 else -9
     phase = (bit_reversed * phase_increment) & 0x7F
     ideal_converter_stream = fdv_stream * np.exp(1j * 2 * math.pi * phase / 128)
     natural_frequency = ideal_converter_stream[bit_reversed]
-    time_domain = np.fft.ifft(natural_frequency) * (4096 / 64)
+    time_domain = np.fft.ifft(natural_frequency) * (fft_size / config.scale_factor)
     return PdxchReferenceResult(
         resource_elements=resource_elements,
         fdv_stream=fdv_stream,
         converter_stream=converter_stream,
         fixed_time_domain=fixed_time_domain,
         time_domain=time_domain,
+    )
+
+
+def pdxch_nr100m_reference(
+    *, cc: int, antenna: int, symbol: int, num_prb: int = 273
+) -> PdxchReferenceResult:
+    """Run the fixed-point-aware 4096-point NR 100 MHz reference chain."""
+
+    return pdxch_nr_reference(
+        cc=cc,
+        antenna=antenna,
+        symbol=symbol,
+        num_prb=num_prb,
+        fft_size=4096,
     )
 
 
