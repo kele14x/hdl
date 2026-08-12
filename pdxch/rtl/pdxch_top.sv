@@ -10,81 +10,81 @@ module pdxch_top #(
 ) (
     // Radio I/F
     //----------
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     //
-    output wire [31:0] m_axis_tdata         [ NUM_CC][NUM_ANT],
-    output wire [ 7:0] m_axis_tuser         [ NUM_CC][NUM_ANT],
-    output wire        m_axis_tlast         [ NUM_CC][NUM_ANT],
-    output wire        m_axis_tvalid        [ NUM_CC][NUM_ANT],
-    input  wire        m_axis_tready        [ NUM_CC][NUM_ANT],
+    output var [31:0] m_axis_tdata         [ NUM_CC][NUM_ANT],
+    output var [ 7:0] m_axis_tuser         [ NUM_CC][NUM_ANT],
+    output var        m_axis_tlast         [ NUM_CC][NUM_ANT],
+    output var        m_axis_tvalid        [ NUM_CC][NUM_ANT],
+    input var         m_axis_tready        [ NUM_CC][NUM_ANT],
     // O-RAN
     //------
-    input  wire        clk_eth_xran,
-    input  wire        rst_eth_xran,
+    input var         clk_eth_xran,
+    input var         rst_eth_xran,
     //
-    input  wire        sync_in,
+    input var         sync_in,
     //
-    output wire        defm_radio_start_10ms[ NUM_CC],
-    input  wire [11:0] s_dl_sym_num         [ NUM_CC],
+    output var        defm_radio_start_10ms[ NUM_CC],
+    input var  [11:0] s_dl_sym_num         [ NUM_CC],
     // U-Plane
-    input  wire [63:0] s_defm_data_tdata    [NUM_ANT],
-    input  wire [ 7:0] s_defm_data_tkeep    [NUM_ANT],
-    input  wire        s_defm_data_tvalid   [NUM_ANT],
-    input  wire        s_defm_data_tlast    [NUM_ANT],
-    output wire        s_defm_data_tready   [NUM_ANT],
-    input  wire [90:0] s_defm_data_tuser    [NUM_ANT],
-    input  wire [ 4:0] s_defm_data_tdest    [NUM_ANT],
+    input var  [63:0] s_defm_data_tdata    [NUM_ANT],
+    input var  [ 7:0] s_defm_data_tkeep    [NUM_ANT],
+    input var         s_defm_data_tvalid   [NUM_ANT],
+    input var         s_defm_data_tlast    [NUM_ANT],
+    output var        s_defm_data_tready   [NUM_ANT],
+    input var  [90:0] s_defm_data_tuser    [NUM_ANT],
+    input var  [ 4:0] s_defm_data_tdest    [NUM_ANT],
     // CSR
     //----
-    input  wire        ctrl_clk,
-    input  wire        ctrl_rst,
+    input var         ctrl_clk,
+    input var         ctrl_rst,
     //
-    input  wire [ 3:0] ctrl_ud_comp_meth,
-    input  wire [ 3:0] ctrl_ud_iq_width,
-    input  wire [ 3:0] ctrl_fs_offset,
+    input var  [ 3:0] ctrl_ud_comp_meth,
+    input var  [ 3:0] ctrl_ud_iq_width,
+    input var  [ 3:0] ctrl_fs_offset,
     // 0 = disable, 1 = enable
-    input  wire [ 3:0] ctrl_en              [ NUM_CC],
+    input var  [ 3:0] ctrl_en              [ NUM_CC],
     // 0 = LTE, 1 = NR 15kHz, 2 = NR 30kHz
-    input  wire [ 1:0] ctrl_rat             [ NUM_CC],
+    input var  [ 1:0] ctrl_rat             [ NUM_CC],
     // 0 = disable, 1 = enable
-    input  wire [ 3:0] ctrl_bist            [ NUM_CC],
+    input var  [ 3:0] ctrl_bist            [ NUM_CC],
     // 0 = 5, 1 = 10, 2 = 15/20/25, 3 = 30/40/50, 4 = 60/70/80/90/100
-    input  wire [ 3:0] ctrl_bw              [ NUM_CC],
-    input  wire [ 8:0] ctrl_nprb            [ NUM_CC],
+    input var  [ 3:0] ctrl_bw              [ NUM_CC],
+    input var  [ 8:0] ctrl_nprb            [ NUM_CC],
     // 1 = 4.069 ns
-    input  wire [22:0] ctrl_rfs_offset      [ NUM_CC],
+    input var  [22:0] ctrl_rfs_offset      [ NUM_CC],
     // 0x4000 = 0 dB
-    input  wire [16:0] ctrl_gain            [ NUM_CC][NUM_ANT],
+    input var  [16:0] ctrl_gain            [ NUM_CC][NUM_ANT],
     // addr = {cc[5:4], symbol[3:0]}
-    input  wire [ 5:0] ctrl_phase_comp_addr,
-    input  wire        ctrl_phase_comp_en,
-    input  wire        ctrl_phase_comp_we,
-    input  wire [31:0] ctrl_phase_comp_din,
-    output wire [31:0] ctrl_phase_comp_dout,
-    output wire        ctrl_phase_comp_valid
+    input var  [ 5:0] ctrl_phase_comp_addr,
+    input var         ctrl_phase_comp_en,
+    input var         ctrl_phase_comp_we,
+    input var  [31:0] ctrl_phase_comp_din,
+    output var [31:0] ctrl_phase_comp_dout,
+    output var        ctrl_phase_comp_valid
 );
 
   // Signals
 
-  logic         ctrl_phase_comp_we_s                           [ NUM_CC];
-  logic         ctrl_phase_comp_en_d;
-  wire          unused_ctrl_ud = &{1'b0, ctrl_ud_comp_meth, ctrl_ud_iq_width};
+  logic        ctrl_phase_comp_we_s                                          [ NUM_CC];
+  logic        ctrl_phase_comp_en_d;
+  wire         unused_ctrl_ud = &{1'b0, ctrl_ud_comp_meth, ctrl_ud_iq_width};
 
-  logic [ 35:0] s0_axis_tdata                                  [NUM_ANT];
-  logic [  3:0] s0_axis_exp                                    [NUM_ANT];
-  logic         s0_axis_tvalid                                 [NUM_ANT];
-  logic         s0_axis_tlast                                  [NUM_ANT];
-  logic [ 90:0] s0_axis_tuser                                  [NUM_ANT];
+  logic [35:0] s0_axis_tdata                                                 [NUM_ANT];
+  logic [ 3:0] s0_axis_exp                                                   [NUM_ANT];
+  logic        s0_axis_tvalid                                                [NUM_ANT];
+  logic        s0_axis_tlast                                                 [NUM_ANT];
+  logic [90:0] s0_axis_tuser                                                 [NUM_ANT];
 
-  logic [ 15:0] fdv_dout_dr                                    [ NUM_CC];
-  logic [ 15:0] fdv_dout_di                                    [ NUM_CC];
-  logic         fdv_dout_sf                                    [ NUM_CC];
-  logic         fdv_dout_sl                                    [ NUM_CC];
-  logic         fdv_dout_sy                                    [ NUM_CC];
-  logic [  3:0] fdv_dout_chn                                   [ NUM_CC];
-  logic         fdv_dout_dv                                    [ NUM_CC];
-  logic         fdv_dout_last                                  [ NUM_CC];
+  logic [15:0] fdv_dout_dr                                                   [ NUM_CC];
+  logic [15:0] fdv_dout_di                                                   [ NUM_CC];
+  logic        fdv_dout_sf                                                   [ NUM_CC];
+  logic        fdv_dout_sl                                                   [ NUM_CC];
+  logic        fdv_dout_sy                                                   [ NUM_CC];
+  logic [ 3:0] fdv_dout_chn                                                  [ NUM_CC];
+  logic        fdv_dout_dv                                                   [ NUM_CC];
+  logic        fdv_dout_last                                                 [ NUM_CC];
 
   // Main
 

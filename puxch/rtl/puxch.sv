@@ -8,57 +8,57 @@ module puxch #(
     parameter int HAS_BFP    = 1,
     parameter int HALF_BLOCK = 1
 ) (
-    input  wire        s_axi_aclk,
-    input  wire        s_axi_aresetn,
+    input var         s_axi_aclk,
+    input var         s_axi_aresetn,
     //
-    input  wire [11:0] s_axi_awaddr,
-    input  wire [ 2:0] s_axi_awprot,
-    input  wire        s_axi_awvalid,
-    output wire        s_axi_awready,
+    input var  [11:0] s_axi_awaddr,
+    input var  [ 2:0] s_axi_awprot,
+    input var         s_axi_awvalid,
+    output var        s_axi_awready,
     //
-    input  wire [31:0] s_axi_wdata,
-    input  wire [ 3:0] s_axi_wstrb,
-    input  wire        s_axi_wvalid,
-    output wire        s_axi_wready,
+    input var  [31:0] s_axi_wdata,
+    input var  [ 3:0] s_axi_wstrb,
+    input var         s_axi_wvalid,
+    output var        s_axi_wready,
     //
-    output wire [ 1:0] s_axi_bresp,
-    output wire        s_axi_bvalid,
-    input  wire        s_axi_bready,
+    output var [ 1:0] s_axi_bresp,
+    output var        s_axi_bvalid,
+    input var         s_axi_bready,
     //
-    input  wire [11:0] s_axi_araddr,
-    input  wire [ 2:0] s_axi_arprot,
-    input  wire        s_axi_arvalid,
-    output wire        s_axi_arready,
+    input var  [11:0] s_axi_araddr,
+    input var  [ 2:0] s_axi_arprot,
+    input var         s_axi_arvalid,
+    output var        s_axi_arready,
     //
-    output wire [31:0] s_axi_rdata,
-    output wire [ 1:0] s_axi_rresp,
-    output wire        s_axi_rvalid,
-    input  wire        s_axi_rready,
+    output var [31:0] s_axi_rdata,
+    output var [ 1:0] s_axi_rresp,
+    output var        s_axi_rvalid,
+    input var         s_axi_rready,
     // Clock & Reset
     //--------------
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire [31:0] s_axis_tdata         [ NUM_CC][NUM_ANT],
-    input  wire [ 7:0] s_axis_tuser         [ NUM_CC][NUM_ANT],
-    input  wire        s_axis_tlast         [ NUM_CC][NUM_ANT],
-    input  wire        s_axis_tvalid        [ NUM_CC][NUM_ANT],
-    output wire        s_axis_tready        [ NUM_CC][NUM_ANT],
+    input var  [31:0] s_axis_tdata         [ NUM_CC][NUM_ANT],
+    input var  [ 7:0] s_axis_tuser         [ NUM_CC][NUM_ANT],
+    input var         s_axis_tlast         [ NUM_CC][NUM_ANT],
+    input var         s_axis_tvalid        [ NUM_CC][NUM_ANT],
+    output var        s_axis_tready        [ NUM_CC][NUM_ANT],
     // O-RAN U-Plane
     //--------------
-    input  wire        clk_eth_xran,
-    input  wire        rst_eth_xran,
+    input var         clk_eth_xran,
+    input var         rst_eth_xran,
     //
-    input  wire        sync_in,
+    input var         sync_in,
     //
-    output wire        fram_radio_start_10ms[ NUM_CC],
+    output var        fram_radio_start_10ms[ NUM_CC],
     //
-    output wire [63:0] m_fram_data_tdata    [NUM_ANT],
-    output wire [ 7:0] m_fram_data_tkeep    [NUM_ANT],
-    output wire        m_fram_data_tvalid   [NUM_ANT],
-    output wire        m_fram_data_tlast    [NUM_ANT],
-    input  wire        m_fram_data_tready   [NUM_ANT],
-    input  wire [32:0] m_fram_data_req      [NUM_ANT]
+    output var [63:0] m_fram_data_tdata    [NUM_ANT],
+    output var [ 7:0] m_fram_data_tkeep    [NUM_ANT],
+    output var        m_fram_data_tvalid   [NUM_ANT],
+    output var        m_fram_data_tlast    [NUM_ANT],
+    input var         m_fram_data_tready   [NUM_ANT],
+    input var  [32:0] m_fram_data_req      [NUM_ANT]
 );
 
   logic [ 3:0] ctrl_ud_comp_meth;

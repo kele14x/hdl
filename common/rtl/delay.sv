@@ -8,12 +8,12 @@ module delay #(
     parameter int DEPTH      = 8,
     parameter int INIT       = 0
 ) (
-    input  wire             clk,
-    input  wire             rst,
-    input  wire             cen,
+    input var              clk,
+    input var              rst,
+    input var              cen,
     //
-    input  wire [WIDTH-1:0] din,
-    output wire [WIDTH-1:0] dout
+    input var  [WIDTH-1:0] din,
+    output var [WIDTH-1:0] dout
 );
 
   // Check parameters

@@ -5,24 +5,24 @@
 `default_nettype none
 
 module fft_ct #(
-    parameter integer NUM_ANT      = 4,
-    parameter int     INV_FFT      = 0,
-    parameter integer LOG_FFT_SIZE = 4,
-    parameter integer DATA_WIDTH   = 18
+    parameter int NUM_ANT      = 4,
+    parameter int INV_FFT      = 0,
+    parameter int LOG_FFT_SIZE = 4,
+    parameter int DATA_WIDTH   = 18
 ) (
-    input  wire                          clk,
-    input  wire                          rst,
+    input var                          clk,
+    input var                          rst,
     //
-    input  wire signed  [DATA_WIDTH-1:0] din_dr,
-    input  wire signed  [DATA_WIDTH-1:0] din_di,
-    input  wire                          din_dv,
+    input var  signed [DATA_WIDTH-1:0] din_dr,
+    input var  signed [DATA_WIDTH-1:0] din_di,
+    input var                          din_dv,
     //
-    output logic signed [DATA_WIDTH-1:0] dout_dr,
-    output logic signed [DATA_WIDTH-1:0] dout_di,
-    output logic                         dout_dv,
+    output var signed [DATA_WIDTH-1:0] dout_dr,
+    output var signed [DATA_WIDTH-1:0] dout_di,
+    output var                         dout_dv,
     //
-    input  wire         [           1:0] ctrl_itlv,
-    input  wire                          ctrl_bypass
+    input var         [           1:0] ctrl_itlv,
+    input var                          ctrl_bypass
 );
 
   // Signals

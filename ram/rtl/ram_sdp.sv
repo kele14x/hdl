@@ -77,7 +77,7 @@ module ram_sdp #(
 
 `ifdef RAM_USE_XPM
 
-  localparam integer XpmMemorySize = DATA_WIDTH * DEPTH;
+  localparam int XpmMemorySize = DATA_WIDTH * DEPTH;
 
   // UltraRAM requires a common clock; the two clock ports may be tied
   // together by the caller even though the interface exposes both ports.

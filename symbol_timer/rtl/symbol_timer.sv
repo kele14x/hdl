@@ -29,23 +29,23 @@
 `default_nettype none
 
 module symbol_timer #(
-    parameter int     ASYNC = 1,
-    parameter int     MODE  = 1,  // 0 for UL, 1 for DL
-    parameter integer FREQ  = 32,    // 32: 122.88, 64: 245.76, 128: 491.52
-    parameter int     AUTO  = 0,  // 1: Auto roll over, 0: Manual roll over
-    parameter int     INIT  = 0
+    parameter int ASYNC = 1,
+    parameter int MODE  = 1,   // 0 for UL, 1 for DL
+    parameter int FREQ  = 32,  // 32: 122.88, 64: 245.76, 128: 491.52
+    parameter int AUTO  = 0,   // 1: Auto roll over, 0: Manual roll over
+    parameter int INIT  = 0
 ) (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire         sync,
+    input var         sync,
     //
-    output logic        start_of_frame,
-    output logic        start_of_slot,
-    output logic [ 1:0] start_of_symbol,  // {mu1, mu0}
+    output var        start_of_frame,
+    output var        start_of_slot,
+    output var [ 1:0] start_of_symbol,  // {mu1, mu0}
     //
-    input  wire  [22:0] ctrl_delay,
-    output logic        stat_resync
+    input var  [22:0] ctrl_delay,
+    output var        stat_resync
 );
 
   //------------------------------------------------------------------
@@ -254,8 +254,7 @@ module symbol_timer #(
   end
 
   always_ff @(posedge clk) begin
-        if (((MODE == 0) && symbol_id % 14 == 13) ||
-            ((MODE != 0) && symbol_id % 14 == 0)) begin
+    if (((MODE == 0) && symbol_id % 14 == 13) || ((MODE != 0) && symbol_id % 14 == 0)) begin
       sample_counter_max <= LongSymbolSamples;
     end else begin
       sample_counter_max <= ShortSymbolSamples;

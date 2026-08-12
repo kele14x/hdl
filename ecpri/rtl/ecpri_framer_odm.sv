@@ -4,30 +4,30 @@
 `default_nettype none
 
 module ecpri_framer_odm (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire         s_axis_tvalid,
-    output wire         s_axis_tready,
+    input var         s_axis_tvalid,
+    output var        s_axis_tready,
     //
-    input  wire  [ 7:0] s_odm_measurementid,
-    input  wire  [ 7:0] s_odm_actiontype,
-    input  wire  [79:0] s_odm_timestamp,
-    input  wire  [63:0] s_odm_compensation,
+    input var  [ 7:0] s_odm_measurementid,
+    input var  [ 7:0] s_odm_actiontype,
+    input var  [79:0] s_odm_timestamp,
+    input var  [63:0] s_odm_compensation,
     //
-    output logic [31:0] m_axis_tdata,
-    output logic [ 3:0] m_axis_tkeep,
-    output logic        m_axis_tlast,
-    output logic [17:0] m_axis_tuser,
-    output logic        m_axis_tvalid,
-    input  wire         m_axis_tready,
+    output var [31:0] m_axis_tdata,
+    output var [ 3:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var [17:0] m_axis_tuser,
+    output var        m_axis_tvalid,
+    input var         m_axis_tready,
     //
-    input  wire  [47:0] ctrl_dest_mac,
-    input  wire  [47:0] ctrl_src_mac,
-    input  wire         ctrl_has_vlan,
-    input  wire  [15:0] ctrl_vlan_tag,
+    input var  [47:0] ctrl_dest_mac,
+    input var  [47:0] ctrl_src_mac,
+    input var         ctrl_has_vlan,
+    input var  [15:0] ctrl_vlan_tag,
     //
-    input  wire  [15:0] ctrl_topology_id
+    input var  [15:0] ctrl_topology_id
 );
 
   import ecpri_pkg::*;
@@ -43,19 +43,19 @@ module ecpri_framer_odm (
 
   localparam logic [31:0] EcpriHeader = {Version, Reserved, Concat, MessageType, PayloadSize};
 
-  localparam integer S_RST         = 0;
-  localparam integer S_IDLE        = 1;
-  localparam integer S_DMACH       = 2;
-  localparam integer S_DMACL_SMACH = 3;
-  localparam integer S_SMACL       = 4;
-  localparam integer S_VLAN        = 5;
-  localparam integer S_ETYPE_COMMH = 6;
-  localparam integer S_COMML_DATA0 = 7;
-  localparam integer S_DATA1       = 8;
-  localparam integer S_DATA2       = 9;
-  localparam integer S_DATA3       = 10;
-  localparam integer S_DATA4       = 11;
-  localparam integer S_DATA5       = 12;
+  localparam int S_RST         = 0;
+  localparam int S_IDLE        = 1;
+  localparam int S_DMACH       = 2;
+  localparam int S_DMACL_SMACH = 3;
+  localparam int S_SMACL       = 4;
+  localparam int S_VLAN        = 5;
+  localparam int S_ETYPE_COMMH = 6;
+  localparam int S_COMML_DATA0 = 7;
+  localparam int S_DATA1       = 8;
+  localparam int S_DATA2       = 9;
+  localparam int S_DATA3       = 10;
+  localparam int S_DATA4       = 11;
+  localparam int S_DATA5       = 12;
   // verilog_format: on
 
   // Signals

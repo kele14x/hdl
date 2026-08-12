@@ -3,33 +3,33 @@
 `default_nettype none
 
 module prach_ddc #(
-    parameter integer NUM_ANT   = 4,
-    parameter integer NUM_STAGE = 6
+    parameter int NUM_ANT   = 4,
+    parameter int NUM_STAGE = 6
 ) (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [15:0] din_dr,
-    input  wire  [15:0] din_di,
-    input  wire         din_sf,
-    input  wire         din_sl,
-    input  wire         din_sy,
-    input  wire  [ 7:0] din_chn,
-    input  wire         din_dv,
-    input  wire         din_last,
+    input var  [15:0] din_dr,
+    input var  [15:0] din_di,
+    input var         din_sf,
+    input var         din_sl,
+    input var         din_sy,
+    input var  [ 7:0] din_chn,
+    input var         din_dv,
+    input var         din_last,
     //
-    output logic [15:0] dout_dr,
-    output logic [15:0] dout_di,
-    output logic        dout_sf,
-    output logic        dout_sl,
-    output logic        dout_sy,
-    output logic [ 7:0] dout_chn,
-    output logic        dout_dv,
-    output logic        dout_last,
+    output var [15:0] dout_dr,
+    output var [15:0] dout_di,
+    output var        dout_sf,
+    output var        dout_sl,
+    output var        dout_sy,
+    output var [ 7:0] dout_chn,
+    output var        dout_dv,
+    output var        dout_last,
     // CSR
     //----
-    input  wire  [17:0] ctrl_fcw,
-    input  wire  [ 3:0] ctrl_bw
+    input var  [17:0] ctrl_fcw,
+    input var  [ 3:0] ctrl_bw
 );
 
   // Signals

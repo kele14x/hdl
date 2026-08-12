@@ -6,28 +6,28 @@ module prach_fft #(
     parameter int FFT_SIZE   = 1536,
     parameter int DATA_WIDTH = 16
 ) (
-    input  wire                          clk,
-    input  wire                          rst,
+    input var                          clk,
+    input var                          rst,
     //
-    input  wire signed  [DATA_WIDTH-1:0] din_dr,
-    input  wire signed  [DATA_WIDTH-1:0] din_di,
-    input  wire                          din_sf,
-    input  wire                          din_sl,
-    input  wire                          din_sy,
-    input  wire         [           1:0] din_chn,
-    input  wire                          din_dv,
-    input  wire                          din_last,
+    input var  signed [DATA_WIDTH-1:0] din_dr,
+    input var  signed [DATA_WIDTH-1:0] din_di,
+    input var                          din_sf,
+    input var                          din_sl,
+    input var                          din_sy,
+    input var         [           1:0] din_chn,
+    input var                          din_dv,
+    input var                          din_last,
     //
-    output logic signed [DATA_WIDTH-1:0] dout_dr,
-    output logic signed [DATA_WIDTH-1:0] dout_di,
-    output wire                          dout_sf,
-    output wire                          dout_sl,
-    output wire                          dout_sy,
-    output wire         [           1:0] dout_chn,
-    output logic                         dout_dv,
-    output logic                         dout_last,
+    output var signed [DATA_WIDTH-1:0] dout_dr,
+    output var signed [DATA_WIDTH-1:0] dout_di,
+    output var                         dout_sf,
+    output var                         dout_sl,
+    output var                         dout_sy,
+    output var        [           1:0] dout_chn,
+    output var                         dout_dv,
+    output var                         dout_last,
     //
-    output logic                         ovf
+    output var                         ovf
 );
 
   // Parameters

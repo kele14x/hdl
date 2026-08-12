@@ -6,34 +6,34 @@ module power_meter #(
     parameter int NUM_CC   = 3,
     parameter int NUM_BAND = 2
 ) (
-    input  wire        clk,
-    input  wire        rst_n,
+    input var         clk,
+    input var         rst_n,
     //
-    input  wire [15:0] din0_dr      [NUM_CC][NUM_BAND],
-    input  wire [15:0] din0_di      [NUM_CC][NUM_BAND],
-    input  wire [ 1:0] din0_chn     [NUM_CC][NUM_BAND],
-    input  wire [ 8:0] din0_sym     [NUM_CC][NUM_BAND],
-    input  wire        din0_dv      [NUM_CC][NUM_BAND],
-    input  wire        din0_sync    [NUM_CC][NUM_BAND],
+    input var  [15:0] din0_dr      [NUM_CC][NUM_BAND],
+    input var  [15:0] din0_di      [NUM_CC][NUM_BAND],
+    input var  [ 1:0] din0_chn     [NUM_CC][NUM_BAND],
+    input var  [ 8:0] din0_sym     [NUM_CC][NUM_BAND],
+    input var         din0_dv      [NUM_CC][NUM_BAND],
+    input var         din0_sync    [NUM_CC][NUM_BAND],
     //
-    input  wire [15:0] din1_dr      [NUM_CC][NUM_BAND],
-    input  wire [15:0] din1_di      [NUM_CC][NUM_BAND],
-    input  wire [ 1:0] din1_chn     [NUM_CC][NUM_BAND],
-    input  wire [ 8:0] din1_sym     [NUM_CC][NUM_BAND],
-    input  wire        din1_dv      [NUM_CC][NUM_BAND],
-    input  wire        din1_sync    [NUM_CC][NUM_BAND],
+    input var  [15:0] din1_dr      [NUM_CC][NUM_BAND],
+    input var  [15:0] din1_di      [NUM_CC][NUM_BAND],
+    input var  [ 1:0] din1_chn     [NUM_CC][NUM_BAND],
+    input var  [ 8:0] din1_sym     [NUM_CC][NUM_BAND],
+    input var         din1_dv      [NUM_CC][NUM_BAND],
+    input var         din1_sync    [NUM_CC][NUM_BAND],
     //----
-    input  wire        clk_csr,
-    input  wire        rst_csr_n,
+    input var         clk_csr,
+    input var         rst_csr_n,
     //
-    input  wire        ctrl_mu      [NUM_CC][NUM_BAND],
+    input var         ctrl_mu      [NUM_CC][NUM_BAND],
     //
-    input  wire [ 1:0] ctrl_cc_sel,
-    input  wire        ctrl_band_sel,
-    input  wire [ 1:0] ctrl_ant_sel,
-    input  wire        ctrl_pos_sel,
+    input var  [ 1:0] ctrl_cc_sel,
+    input var         ctrl_band_sel,
+    input var  [ 1:0] ctrl_ant_sel,
+    input var         ctrl_pos_sel,
     //
-    output wire [31:0] stat_power   [    20]
+    output var [31:0] stat_power   [    20]
 );
 
   logic               ctrl_mu_sel;

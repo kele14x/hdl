@@ -5,26 +5,26 @@
 module timer_core_491p52 #(
     parameter int SIM_SPEED_UP = 0
 ) (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire         pps_in,
-    output logic        pps_out,
+    input var         pps_in,
+    output var        pps_out,
     //
-    output wire  [47:0] tod_sec,
-    output wire  [31:0] tod_ns,
+    output var [47:0] tod_sec,
+    output var [31:0] tod_ns,
     //
-    input  wire         ctrl_clk,
-    input  wire         ctrl_rst,
+    input var         ctrl_clk,
+    input var         ctrl_rst,
     //
-    input  wire         ctrl_rtc_offset_valid,
-    input  wire  [31:0] ctrl_rtc_offset_ns,
-    input  wire  [47:0] ctrl_rtc_offset_sec,
+    input var         ctrl_rtc_offset_valid,
+    input var  [31:0] ctrl_rtc_offset_ns,
+    input var  [47:0] ctrl_rtc_offset_sec,
     //
-    input  wire         ctrl_rtc_current_snap,
+    input var         ctrl_rtc_current_snap,
     //
-    output wire  [31:0] stat_rtc_current_ns,
-    output wire  [47:0] stat_rtc_current_sec
+    output var [31:0] stat_rtc_current_ns,
+    output var [47:0] stat_rtc_current_sec
 );
 
   // Note:
@@ -42,8 +42,7 @@ module timer_core_491p52 #(
   // 11'b10_000010010, ~= 2.0352 ns
   localparam [40:0] TimerIncrement1 = 41'd1042;
 
-  localparam [31:0] NsPerSecond =
-      ((SIM_SPEED_UP != 0) ? 32'd100_000 : 32'd1_000_000_000);
+  localparam [31:0] NsPerSecond = ((SIM_SPEED_UP != 0) ? 32'd100_000 : 32'd1_000_000_000);
 
   wire unused_pps_in = pps_in;
 

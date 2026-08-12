@@ -3,41 +3,41 @@
 `default_nettype none
 
 module rts_ram (
-    input  wire         clk,
-    input  wire         clk_l,
-    input  wire         rst,
+    input var         clk,
+    input var         clk_l,
+    input var         rst,
     //
-    input  wire         sync,
+    input var         sync,
     //
-    output logic [31:0] dout0,
-    output logic [31:0] dout1,
-    output logic [31:0] dout2,
+    output var [31:0] dout0,
+    output var [31:0] dout1,
+    output var [31:0] dout2,
     //
-    input  wire         ctrl_clk,
-    input  wire         ctrl_rst,
+    input var         ctrl_clk,
+    input var         ctrl_rst,
     //
-    input  wire  [ 2:0] ctrl_ram_mode,
+    input var  [ 2:0] ctrl_ram_mode,
     //
-    input  wire  [19:0] ctrl_ram0_offset,
-    input  wire  [19:0] ctrl_ram1_offset,
-    input  wire  [19:0] ctrl_ram2_offset,
+    input var  [19:0] ctrl_ram0_offset,
+    input var  [19:0] ctrl_ram1_offset,
+    input var  [19:0] ctrl_ram2_offset,
     //
-    input  wire  [ 6:0] ctrl_ram_addr_msb,
+    input var  [ 6:0] ctrl_ram_addr_msb,
     //
-    input  wire  [12:0] ctrl_ram_addr,
-    input  wire         ctrl_ram_en,
-    input  wire         ctrl_ram_we,
-    input  wire  [31:0] ctrl_ram_din,
-    output wire  [31:0] ctrl_ram_dout,
-    output wire         ctrl_ram_valid
+    input var  [12:0] ctrl_ram_addr,
+    input var         ctrl_ram_en,
+    input var         ctrl_ram_we,
+    input var  [31:0] ctrl_ram_din,
+    output var [31:0] ctrl_ram_dout,
+    output var        ctrl_ram_valid
 );
 
   // Parameters
 
-  localparam integer AddrWdith = 20;
-  localparam integer DataWidth = 32;
+  localparam int AddrWdith = 20;
+  localparam int DataWidth = 32;
 
-  localparam integer NumChannel = 3;
+  localparam int NumChannel = 3;
 
   // Signals
 

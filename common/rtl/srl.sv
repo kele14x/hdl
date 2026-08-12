@@ -38,13 +38,13 @@ module srl #(
     parameter int INIT       = 1
 ) (
     // Read Interface
-    input  wire                  clk,
-    input  wire                  rst,
-    input  wire                  cen,
+    input var                   clk,
+    input var                   rst,
+    input var                   cen,
     //
-    input  wire [ADDR_WIDTH-1:0] addr,
-    input  wire [DATA_WIDTH-1:0] din,
-    output wire [DATA_WIDTH-1:0] dout
+    input var  [ADDR_WIDTH-1:0] addr,
+    input var  [DATA_WIDTH-1:0] din,
+    output var [DATA_WIDTH-1:0] dout
 );
 
   logic [DATA_WIDTH-1:0] dsrl[2**ADDR_WIDTH];

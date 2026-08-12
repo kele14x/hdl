@@ -3,18 +3,18 @@
 `default_nettype none
 
 module skid_buffer #(
-    parameter integer DATA_WIDTH = 8
+    parameter int DATA_WIDTH = 8
 ) (
-    input  wire                  clk,
-    input  wire                  rst_n,
+    input var                   clk,
+    input var                   rst_n,
     //
-    input  wire [DATA_WIDTH-1:0] s_data_i,
-    input  wire                  s_vld_i,
-    output wire                  s_rdy_o,
+    input var  [DATA_WIDTH-1:0] s_data_i,
+    input var                   s_vld_i,
+    output var                  s_rdy_o,
     //
-    output wire [DATA_WIDTH-1:0] m_data_o,
-    output wire                  m_vld_o,
-    input  wire                  m_rdy_i
+    output var [DATA_WIDTH-1:0] m_data_o,
+    output var                  m_vld_o,
+    input var                   m_rdy_i
 );
 
   // 2'b00: no data is buffered

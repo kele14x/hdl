@@ -3,26 +3,26 @@
 `default_nettype none
 
 module timer_syncer_ch #(
-    parameter integer FREQ_MODE   = 0,  // 0: 156.25 MHz, 1: 312.5 MHz, 2: 390.625 MHz
+    parameter int FREQ_MODE   = 0,  // 0: 156.25 MHz, 1: 312.5 MHz, 2: 390.625 MHz
     parameter int SIM_SPEEDUP = 0
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire        pps_in,
+    input var         pps_in,
     //
-    input  wire [47:0] tod_sec,
-    input  wire [31:0] tod_ns,
+    input var  [47:0] tod_sec,
+    input var  [31:0] tod_ns,
     //
-    input  wire        eth_clk,
-    input  wire        eth_rst,
+    input var         eth_clk,
+    input var         eth_rst,
     //
-    input  wire        ctrl_clk,
-    input  wire        ctrl_rst,
+    input var         ctrl_clk,
+    input var         ctrl_rst,
     //
-    output wire [79:0] ctl_systemtimer,
+    output var [79:0] ctl_systemtimer,
     //
-    output wire [31:0] stat_resync_cnt
+    output var [31:0] stat_resync_cnt
 );
 
   generate

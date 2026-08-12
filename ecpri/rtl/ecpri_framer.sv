@@ -5,61 +5,61 @@
 module ecpri_framer (
     // Ethernet I/F
     //-------------
-    input  wire        tx_eth_clk,
-    input  wire        tx_eth_rst,
+    input var         tx_eth_clk,
+    input var         tx_eth_rst,
     //
-    output wire [31:0] m_axis_tdata,
-    output wire [ 3:0] m_axis_tkeep,
-    output wire        m_axis_tlast,
-    output wire        m_axis_tuser,
-    output wire        m_axis_tvalid,
-    input  wire        m_axis_tready,
+    output var [31:0] m_axis_tdata,
+    output var [ 3:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var        m_axis_tuser,
+    output var        m_axis_tvalid,
+    input var         m_axis_tready,
     //
-    output wire [ 1:0] tx_ptp_1588op,
-    output wire [15:0] tx_ptp_tag_field,
+    output var [ 1:0] tx_ptp_1588op,
+    output var [15:0] tx_ptp_tag_field,
     // Internal I/F
     //-------------
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     // I/Q
-    input  wire [31:0] s_axis_tdata,
-    input  wire [ 3:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
-    input  wire        s_axis_tvalid,
-    output wire        s_axis_tready,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 3:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var         s_axis_tvalid,
+    output var        s_axis_tready,
     // eCPRI OOB ports
-    input  wire [ 7:0] s_trans_messagetype,
-    input  wire [15:0] s_trans_payloadsize,
-    input  wire [15:0] s_trans_rtc_pc_id,
+    input var  [ 7:0] s_trans_messagetype,
+    input var  [15:0] s_trans_payloadsize,
+    input var  [15:0] s_trans_rtc_pc_id,
     // ODM
-    input  wire        s_axis_odm_tvalid,
-    output wire        s_axis_odm_tready,
+    input var         s_axis_odm_tvalid,
+    output var        s_axis_odm_tready,
     //
-    input  wire [ 7:0] s_odm_measurementid,
-    input  wire [ 7:0] s_odm_actiontype,
-    input  wire [79:0] s_odm_timestamp,
-    input  wire [63:0] s_odm_compensation,
+    input var  [ 7:0] s_odm_measurementid,
+    input var  [ 7:0] s_odm_actiontype,
+    input var  [79:0] s_odm_timestamp,
+    input var  [63:0] s_odm_compensation,
     // PTP
-    input  wire [31:0] s_ptp_tdata,
-    input  wire [ 3:0] s_ptp_tkeep,
-    input  wire        s_ptp_tlast,
-    input  wire [17:0] s_ptp_tuser,
-    input  wire        s_ptp_tvalid,
-    output wire        s_ptp_tready,
+    input var  [31:0] s_ptp_tdata,
+    input var  [ 3:0] s_ptp_tkeep,
+    input var         s_ptp_tlast,
+    input var  [17:0] s_ptp_tuser,
+    input var         s_ptp_tvalid,
+    output var        s_ptp_tready,
     //
-    input  wire [31:0] s_message_tdata,
-    input  wire [ 3:0] s_message_tkeep,
-    input  wire        s_message_tlast,
-    input  wire        s_message_tvalid,
-    output wire        s_message_tready,
+    input var  [31:0] s_message_tdata,
+    input var  [ 3:0] s_message_tkeep,
+    input var         s_message_tlast,
+    input var         s_message_tvalid,
+    output var        s_message_tready,
     // Control I/F
     //------------
-    input  wire [47:0] ctrl_dest_mac,
-    input  wire [47:0] ctrl_src_mac,
-    input  wire        ctrl_has_vlan,
-    input  wire [15:0] ctrl_vlan_tag,
+    input var  [47:0] ctrl_dest_mac,
+    input var  [47:0] ctrl_src_mac,
+    input var         ctrl_has_vlan,
+    input var  [15:0] ctrl_vlan_tag,
     //
-    input  wire [15:0] ctrl_topology_id
+    input var  [15:0] ctrl_topology_id
 );
 
   wire [47:0] ctrl_dest_mac_s;

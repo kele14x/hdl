@@ -3,39 +3,39 @@
 `timescale 1 ns / 1 ps
 
 module fft #(
-    parameter integer NUM_ANT            = 4,
-    parameter int     INV_FFT            = 0,
-    parameter integer LOG_FFT_SIZE       = 12,
-    parameter integer DATA_WIDTH         = 16,
-    parameter int     BIT_REVERSED_INPUT = 1
+    parameter int NUM_ANT            = 4,
+    parameter int INV_FFT            = 0,
+    parameter int LOG_FFT_SIZE       = 12,
+    parameter int DATA_WIDTH         = 16,
+    parameter int BIT_REVERSED_INPUT = 1
 ) (
-    input  wire                          clk,
-    input  wire                          rst,
+    input var                          clk,
+    input var                          rst,
     // Data input
-    input  wire signed  [DATA_WIDTH-1:0] din_dr,
-    input  wire signed  [DATA_WIDTH-1:0] din_di,
-    input  wire                          din_sf,
-    input  wire                          din_sl,
-    input  wire                          din_sy,
-    input  wire         [           3:0] din_chn,
-    input  wire                          din_dv,
-    input  wire                          din_last,
+    input var  signed [DATA_WIDTH-1:0] din_dr,
+    input var  signed [DATA_WIDTH-1:0] din_di,
+    input var                          din_sf,
+    input var                          din_sl,
+    input var                          din_sy,
+    input var         [           3:0] din_chn,
+    input var                          din_dv,
+    input var                          din_last,
     // Data output
-    output logic signed [DATA_WIDTH-1:0] dout_dr,
-    output logic signed [DATA_WIDTH-1:0] dout_di,
-    output wire                          dout_sf,
-    output wire                          dout_sl,
-    output wire                          dout_sy,
-    output logic        [           3:0] dout_chn,
-    output logic                         dout_dv,
-    output wire                          dout_last,
+    output var signed [DATA_WIDTH-1:0] dout_dr,
+    output var signed [DATA_WIDTH-1:0] dout_di,
+    output var                         dout_sf,
+    output var                         dout_sl,
+    output var                         dout_sy,
+    output var        [           3:0] dout_chn,
+    output var                         dout_dv,
+    output var                         dout_last,
     //
     // 0: 1k, 1: 2k, 2: 4k
-    input  wire         [           1:0] ctrl_size,
+    input var         [           1:0] ctrl_size,
     // 0: 16 (30.72), 1: 8 (61.44), 2: 4 (122.88)
-    input  wire         [           1:0] ctrl_itlv,
+    input var         [           1:0] ctrl_itlv,
     // Status output
-    output logic                         stat_ovf
+    output var                         stat_ovf
 );
 
   // Local parameters
@@ -43,18 +43,18 @@ module fft #(
   // Number of stages,
   //   - If LOG_FFT_SIZE is even, number of stages is LOG_FFT_SIZE / 2.
   //   - If LOG_FFT_SIZE is odd, number of stages is floor(LOG_FFT_SIZE / 2) + 1
-  localparam integer NumStages = (LOG_FFT_SIZE + 1) / 2;
+  localparam int NumStages = (LOG_FFT_SIZE + 1) / 2;
 
   // Number of Butterfly
-  localparam integer NumButterfly = LOG_FFT_SIZE;
+  localparam int NumButterfly = LOG_FFT_SIZE;
 
   // Number of coarse twiddlers
-  localparam integer NumCoarseTwiddler = LOG_FFT_SIZE / 2;
+  localparam int NumCoarseTwiddler = LOG_FFT_SIZE / 2;
 
   // Number of twiddlers
-  localparam integer NumTwiddler = NumStages - 1;
+  localparam int NumTwiddler = NumStages - 1;
 
-  localparam integer DataWidthInt = DATA_WIDTH + 2;
+  localparam int DataWidthInt = DATA_WIDTH + 2;
 
   // Check parameters
 
@@ -159,7 +159,7 @@ module fft #(
       //
       // For bit reversed input, the log2(FFT_SIZE) per each stage is 4, 16, ...
       // For natural input, the log2(FFT_SIZE) per each stage is N, N/4, ...
-      localparam integer StageLogFftSize = (BIT_REVERSED_INPUT != 0) ?
+      localparam int StageLogFftSize = (BIT_REVERSED_INPUT != 0) ?
         ((2 * i + 2) <= LOG_FFT_SIZE ? (2 * i + 2) : LOG_FFT_SIZE) :
         ((NumStages - i) * 2 >= LOG_FFT_SIZE ? LOG_FFT_SIZE : (NumStages - i) * 2);
 
@@ -240,9 +240,9 @@ module fft #(
 
   always_ff @(posedge clk) begin
     if (ctrl_size == 2'b00) begin
-        bypass <= (BIT_REVERSED_INPUT != 0) ? 12'b110000000000 : 12'b000000000011;
+      bypass <= (BIT_REVERSED_INPUT != 0) ? 12'b110000000000 : 12'b000000000011;
     end else if (ctrl_size == 2'b01) begin
-        bypass <= (BIT_REVERSED_INPUT != 0) ? 12'b100000000000 : 12'b000000000001;
+      bypass <= (BIT_REVERSED_INPUT != 0) ? 12'b100000000000 : 12'b000000000001;
     end else begin
       bypass <= 12'b000000000000;
     end

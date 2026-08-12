@@ -10,17 +10,17 @@ module dds_lut_rom #(
     parameter int DATA_WIDTH = 16,
     parameter int OUTPUT_REG = 1
 ) (
-    input  wire                  clk,
+    input var                   clk,
     //
-    input  wire                  rsta,
-    input  wire                  ena,
-    input  wire [ADDR_WIDTH-1:0] addra,
-    output wire [DATA_WIDTH-1:0] douta,
+    input var                   rsta,
+    input var                   ena,
+    input var  [ADDR_WIDTH-1:0] addra,
+    output var [DATA_WIDTH-1:0] douta,
     //
-    input  wire                  rstb,
-    input  wire                  enb,
-    input  wire [ADDR_WIDTH-1:0] addrb,
-    output wire [DATA_WIDTH-1:0] doutb
+    input var                   rstb,
+    input var                   enb,
+    input var  [ADDR_WIDTH-1:0] addrb,
+    output var [DATA_WIDTH-1:0] doutb
 );
 
   // Local parameters

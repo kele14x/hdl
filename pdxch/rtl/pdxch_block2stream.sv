@@ -5,23 +5,23 @@
 module pdxch_block2stream #(
     parameter int NUM_ANT = 4
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire [15:0] din_dr,
-    input  wire [15:0] din_di,
-    input  wire        din_sf,
-    input  wire        din_sl,
-    input  wire        din_sy,
-    input  wire [ 3:0] din_chn,
-    input  wire        din_dv,
-    input  wire        din_last,
+    input var  [15:0] din_dr,
+    input var  [15:0] din_di,
+    input var         din_sf,
+    input var         din_sl,
+    input var         din_sy,
+    input var  [ 3:0] din_chn,
+    input var         din_dv,
+    input var         din_last,
     //
-    output wire [31:0] m_axis_tdata [NUM_ANT],
-    output wire [ 7:0] m_axis_tuser [NUM_ANT],
-    output wire        m_axis_tlast [NUM_ANT],
-    output wire        m_axis_tvalid[NUM_ANT],
-    input  wire        m_axis_tready[NUM_ANT]
+    output var [31:0] m_axis_tdata [NUM_ANT],
+    output var [ 7:0] m_axis_tuser [NUM_ANT],
+    output var        m_axis_tlast [NUM_ANT],
+    output var        m_axis_tvalid[NUM_ANT],
+    input var         m_axis_tready[NUM_ANT]
 );
 
   localparam int AddrWidth = 9;
@@ -34,24 +34,24 @@ module pdxch_block2stream #(
   logic [          3:0] din_chn_d;
   logic                 din_dv_d;
 
-  logic [         11:0] wr_cnt_ch                                                [NUM_ANT];
+  logic [         11:0] wr_cnt_ch   [NUM_ANT];
   logic [         11:0] wr_cnt_next;
   logic [AddrWidth-1:0] wr_cnt_r;
 
   logic [AddrWidth-1:0] wr_addr;
-  logic                 wr_en                                                    [NUM_ANT];
+  logic                 wr_en       [NUM_ANT];
   logic [DataWidth-1:0] wr_data;
 
-  logic                 sync                                                     [NUM_ANT];
+  logic                 sync        [NUM_ANT];
 
-  logic                 rd_run                                                   [NUM_ANT];
-  logic [AddrWidth-1:0] rd_addr                                                  [NUM_ANT];
-  logic                 rd_en                                                    [NUM_ANT];
-  logic                 rd_en_d                                                  [NUM_ANT];
-  logic                 rd_en_dd                                                 [NUM_ANT];
-  logic [DataWidth-1:0] rd_data                                                  [NUM_ANT];
+  logic                 rd_run      [NUM_ANT];
+  logic [AddrWidth-1:0] rd_addr     [NUM_ANT];
+  logic                 rd_en       [NUM_ANT];
+  logic                 rd_en_d     [NUM_ANT];
+  logic                 rd_en_dd    [NUM_ANT];
+  logic [DataWidth-1:0] rd_data     [NUM_ANT];
 
-  logic [         31:0] dout                                                     [NUM_ANT];
+  logic [         31:0] dout        [NUM_ANT];
 
   // Main
 

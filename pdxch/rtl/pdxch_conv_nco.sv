@@ -3,10 +3,10 @@
 `default_nettype none
 
 module pdxch_conv_nco (
-    input  wire        clk,
-    input  wire [ 6:0] phase,
-    output wire [15:0] cos,
-    output wire [15:0] sin
+    input var         clk,
+    input var  [ 6:0] phase,
+    output var [15:0] cos,
+    output var [15:0] sin
 );
 
 

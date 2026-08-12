@@ -7,66 +7,66 @@ module pdxch_fdv_buffer #(
     parameter int NUM_ANT    = 4,
     parameter int HALF_BLOCK = 0
 ) (
-    input  wire         clk_eth_xran,
-    input  wire         rst_eth_xran,
+    input var         clk_eth_xran,
+    input var         rst_eth_xran,
     //
-    input  wire         sync_in,
+    input var         sync_in,
     //
-    output wire         defm_radio_start_10ms,
-    input  wire [ 11:0] s_dl_sym_num,
+    output var        defm_radio_start_10ms,
+    input var  [11:0] s_dl_sym_num,
     // U-Plane
-    input  wire [ 35:0] s_axis_tdata         [NUM_ANT],
-    input  wire [  3:0] s_axis_exp           [NUM_ANT],
-    input  wire         s_axis_tvalid        [NUM_ANT],
-    input  wire         s_axis_tlast         [NUM_ANT],
-    input  wire [ 90:0] s_axis_tuser         [NUM_ANT],
+    input var  [35:0] s_axis_tdata         [NUM_ANT],
+    input var  [ 3:0] s_axis_exp           [NUM_ANT],
+    input var         s_axis_tvalid        [NUM_ANT],
+    input var         s_axis_tlast         [NUM_ANT],
+    input var  [90:0] s_axis_tuser         [NUM_ANT],
     //
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    output wire [ 15:0] dout_dr,
-    output wire [ 15:0] dout_di,
-    output wire         dout_sf,
-    output wire         dout_sl,
-    output wire         dout_sy,
-    output wire [  3:0] dout_chn,
-    output wire         dout_dv,
-    output wire         dout_last,
+    output var [15:0] dout_dr,
+    output var [15:0] dout_di,
+    output var        dout_sf,
+    output var        dout_sl,
+    output var        dout_sy,
+    output var [ 3:0] dout_chn,
+    output var        dout_dv,
+    output var        dout_last,
     // CSR
     //----
-    input  wire [  3:0] ctrl_en,
-    input  wire [  1:0] ctrl_rat,
-    input  wire [  3:0] ctrl_bist,
-    input  wire [  3:0] ctrl_bw,
-    input  wire [  8:0] ctrl_nprb,
-    input  wire [ 22:0] ctrl_rfs_offset,
-    input  wire [  3:0] ctrl_fs_offset
+    input var  [ 3:0] ctrl_en,
+    input var  [ 1:0] ctrl_rat,
+    input var  [ 3:0] ctrl_bist,
+    input var  [ 3:0] ctrl_bw,
+    input var  [ 8:0] ctrl_nprb,
+    input var  [22:0] ctrl_rfs_offset,
+    input var  [ 3:0] ctrl_fs_offset
 );
 
   // Signals
 
-  logic [ 22:0] ctrl_rfs_offset_s;
+  logic [22:0] ctrl_rfs_offset_s;
 
-  logic         defm_radio_start_10ms_s;
-  logic         defm_radio_start_10ms_cdc;
+  logic        defm_radio_start_10ms_s;
+  logic        defm_radio_start_10ms_cdc;
 
-  logic         start_of_frame;
-  logic         start_of_slot;
-  logic [  1:0] start_of_symbol;
+  logic        start_of_frame;
+  logic        start_of_slot;
+  logic [ 1:0] start_of_symbol;
 
-  logic [ 11:0] wr_iq_addr                [NUM_ANT];
-  logic         wr_iq_en                  [NUM_ANT];
-  logic [ 35:0] wr_iq_data                [NUM_ANT];
-  logic [ 11:0] wr_exp_addr               [NUM_ANT];
-  logic         wr_exp_en                 [NUM_ANT];
-  logic [  3:0] wr_exp_data               [NUM_ANT];
+  logic [11:0] wr_iq_addr                [NUM_ANT];
+  logic        wr_iq_en                  [NUM_ANT];
+  logic [35:0] wr_iq_data                [NUM_ANT];
+  logic [11:0] wr_exp_addr               [NUM_ANT];
+  logic        wr_exp_en                 [NUM_ANT];
+  logic [ 3:0] wr_exp_data               [NUM_ANT];
 
-  logic [ 11:0] rd_iq_addr                [NUM_ANT];
-  logic [ 11:0] rd_exp_addr               [NUM_ANT];
-  logic         rd_en                     [NUM_ANT];
-  logic [ 35:0] rd_iq_data                [NUM_ANT];
-  logic [  3:0] rd_exp_data               [NUM_ANT];
-  logic         unused_stat_resync;
+  logic [11:0] rd_iq_addr                [NUM_ANT];
+  logic [11:0] rd_exp_addr               [NUM_ANT];
+  logic        rd_en                     [NUM_ANT];
+  logic [35:0] rd_iq_data                [NUM_ANT];
+  logic [ 3:0] rd_exp_data               [NUM_ANT];
+  logic        unused_stat_resync;
 
   // Main
 
@@ -173,8 +173,8 @@ module pdxch_fdv_buffer #(
           .wr_exp_data  (wr_exp_data[ant])
       );
 
-  localparam int IQ_DEPTH  = (HALF_BLOCK != 0) ? 2048 : 3584;
-  localparam int EXP_DEPTH = (HALF_BLOCK != 0) ? 960 : 1650;
+      localparam int IQ_DEPTH = (HALF_BLOCK != 0) ? 2048 : 3584;
+      localparam int EXP_DEPTH = (HALF_BLOCK != 0) ? 960 : 1650;
 
       ram_sdp #(
           .ADDR_WIDTH  (12),

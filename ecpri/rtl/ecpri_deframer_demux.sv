@@ -15,52 +15,52 @@
 module ecpri_deframer_demux (
     // Ethernet clock domain
     //----------------------
-    input  wire        rx_eth_clk,
-    input  wire        rx_eth_rst,
+    input var         rx_eth_clk,
+    input var         rx_eth_rst,
     //
-    input  wire [31:0] s_axis_tdata,
-    input  wire [ 3:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
-    input  wire        s_axis_tuser,
-    input  wire        s_axis_tvalid,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 3:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var         s_axis_tuser,
+    input var         s_axis_tvalid,
     //
-    input  wire [79:0] rx_ptp_timestamp,
-    input  wire        rx_ptp_timestamp_valid,
+    input var  [79:0] rx_ptp_timestamp,
+    input var         rx_ptp_timestamp_valid,
     // Internal clock domain
     //----------------------
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     // eCPRI message
-    output wire [31:0] m_axis_tdata,
-    output wire [ 3:0] m_axis_tkeep,
-    output wire        m_axis_tlast,
-    output wire [79:0] m_axis_tuser,
-    output wire        m_axis_tvalid,
+    output var [31:0] m_axis_tdata,
+    output var [ 3:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var [79:0] m_axis_tuser,
+    output var        m_axis_tvalid,
     // PTP message
-    output wire [31:0] m_ptp_tdata,
-    output wire [ 3:0] m_ptp_tkeep,
-    output wire        m_ptp_tlast,
-    output wire [79:0] m_ptp_tuser,
-    output wire        m_ptp_tvalid,
+    output var [31:0] m_ptp_tdata,
+    output var [ 3:0] m_ptp_tkeep,
+    output var        m_ptp_tlast,
+    output var [79:0] m_ptp_tuser,
+    output var        m_ptp_tvalid,
     // none-eCPRI message
-    output wire [31:0] m_message_tdata,
-    output wire [ 3:0] m_message_tkeep,
-    output wire        m_message_tlast,
-    output wire        m_message_tvalid,
+    output var [31:0] m_message_tdata,
+    output var [ 3:0] m_message_tkeep,
+    output var        m_message_tlast,
+    output var        m_message_tvalid,
     // Control & Status
     //-----------------
-    output wire        stat_corrupt_pkt
+    output var        stat_corrupt_pkt
 );
 
   import ecpri_pkg::*;
 
   // Parameters
 
-  localparam integer AddrWidth = 12;
-  localparam integer DataWidth = 37;
+  localparam int AddrWidth = 12;
+  localparam int DataWidth = 37;
 
-  localparam integer FiFoDepth = 2 ** (AddrWidth - 4);
-  localparam integer FiFoDataWidth = 108;
+  localparam int FiFoDepth = 2 ** (AddrWidth - 4);
+  localparam int FiFoDataWidth = 108;
 
   // FSM states
 
@@ -71,13 +71,13 @@ module ecpri_deframer_demux (
   // - VLAN Tag:         16 (2), if previous EtherType is VLAN
   // - EtherType:        16 (2), if previous EtherType is VLAN
 
-  localparam integer S_RST = 0;  // Under reset
-  localparam integer S_DMACH = 1;  // Destination MAC [47:16]
-  localparam integer S_DMACL_SMACH = 2;  // Destination MAC [15:0] and Source MAC [47:32]
-  localparam integer S_SMACL = 3;  // Source MAC [31:0]
-  localparam integer S_ETYPE = 4;  // EtherType (2) and Payload (2)
-  localparam integer S_PAYLOAD = 5;  // Actually eCPRI Payload
-  localparam integer S_DISCARD = 6;  // Discard the packet
+  localparam int S_RST = 0;  // Under reset
+  localparam int S_DMACH = 1;  // Destination MAC [47:16]
+  localparam int S_DMACL_SMACH = 2;  // Destination MAC [15:0] and Source MAC [47:32]
+  localparam int S_SMACL = 3;  // Source MAC [31:0]
+  localparam int S_ETYPE = 4;  // EtherType (2) and Payload (2)
+  localparam int S_PAYLOAD = 5;  // Actually eCPRI Payload
+  localparam int S_DISCARD = 6;  // Discard the packet
 
   // Signals
 

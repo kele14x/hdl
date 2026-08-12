@@ -15,27 +15,27 @@
 `default_nettype none
 
 module ecpri_deframer_eth (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [31:0] s_axis_tdata,
-    input  wire  [ 3:0] s_axis_tkeep,
-    input  wire         s_axis_tlast,
-    input  wire         s_axis_tvalid,
-    input  wire  [79:0] s_axis_tuser,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 3:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var         s_axis_tvalid,
+    input var  [79:0] s_axis_tuser,
     //
-    output logic [31:0] m_axis_tdata,
-    output logic [ 3:0] m_axis_tkeep,
-    output logic        m_axis_tlast,
-    output logic        m_axis_tvalid,
-    output logic [79:0] m_axis_tuser,
+    output var [31:0] m_axis_tdata,
+    output var [ 3:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var        m_axis_tvalid,
+    output var [79:0] m_axis_tuser,
     //
-    output logic        m_mac_header_valid,
-    output logic [47:0] m_mac_dest_mac,
-    output logic [47:0] m_mac_source_mac,
-    output logic        m_mac_with_vlan,
-    output logic [15:0] m_mac_vlan_tag,
-    output logic [15:0] m_mac_ethertype
+    output var        m_mac_header_valid,
+    output var [47:0] m_mac_dest_mac,
+    output var [47:0] m_mac_source_mac,
+    output var        m_mac_with_vlan,
+    output var [15:0] m_mac_vlan_tag,
+    output var [15:0] m_mac_ethertype
 );
 
   import ecpri_pkg::*;
@@ -49,13 +49,13 @@ module ecpri_deframer_eth (
   // - VLAN Tag:         16 (2), if previous EtherType is VLAN
   // - EtherType:        16 (2), if previous EtherType is VLAN
 
-  localparam integer S_RST = 0;  // Under reset
-  localparam integer S_DMACH = 1;  // Destination MAC [47:16]
-  localparam integer S_DMACL_SMACH = 2;  // Destination MAC [15:0] and Source MAC [47:32]
-  localparam integer S_SMACL = 3;  // Source MAC [31:0]
-  localparam integer S_ETYPE = 4;  // EtherType (2) and Payload (2)
-  localparam integer S_PAYLOAD = 5;  // Actually eCPRI Payload
-  localparam integer S_DISCARD = 6;  // Not eCPRI Payload
+  localparam int S_RST = 0;  // Under reset
+  localparam int S_DMACH = 1;  // Destination MAC [47:16]
+  localparam int S_DMACL_SMACH = 2;  // Destination MAC [15:0] and Source MAC [47:32]
+  localparam int S_SMACL = 3;  // Source MAC [31:0]
+  localparam int S_ETYPE = 4;  // EtherType (2) and Payload (2)
+  localparam int S_PAYLOAD = 5;  // Actually eCPRI Payload
+  localparam int S_DISCARD = 6;  // Not eCPRI Payload
 
   // Signals
 

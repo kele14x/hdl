@@ -9,13 +9,13 @@ module cdc_pulse #(
     parameter int REG_OUTPUT   = 0,
     parameter int RST_USED     = 1
 ) (
-    input  wire src_clk,
-    input  wire src_rst,
-    input  wire src_pulse,
+    input var  src_clk,
+    input var  src_rst,
+    input var  src_pulse,
     //
-    input  wire dest_clk,
-    input  wire dest_rst,
-    output wire dest_pulse
+    input var  dest_clk,
+    input var  dest_rst,
+    output var dest_pulse
 );
 
   logic src_in_ff;

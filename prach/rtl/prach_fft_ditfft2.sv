@@ -7,18 +7,18 @@ module prach_fft_ditfft2 #(
     parameter int DATA_WIDTH = 18,
     parameter int SCALE      = 0
 ) (
-    input  wire                         clk,
-    input  wire                         rst,
+    input var                          clk,
+    input var                          rst,
     //
-    input  wire signed [DATA_WIDTH-1:0] din_dr,
-    input  wire signed [DATA_WIDTH-1:0] din_di,
-    input  wire                         din_dv,
+    input var  signed [DATA_WIDTH-1:0] din_dr,
+    input var  signed [DATA_WIDTH-1:0] din_di,
+    input var                          din_dv,
     //
-    output wire signed [DATA_WIDTH-1:0] dout_dr,
-    output wire signed [DATA_WIDTH-1:0] dout_di,
-    output wire                         dout_dv,
+    output var signed [DATA_WIDTH-1:0] dout_dr,
+    output var signed [DATA_WIDTH-1:0] dout_di,
+    output var                         dout_dv,
     //
-    output wire                         ovf
+    output var                         ovf
 );
 
   logic signed [DATA_WIDTH-1:0] s0_dr;

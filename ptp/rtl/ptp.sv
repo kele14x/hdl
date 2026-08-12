@@ -3,78 +3,78 @@
 `default_nettype none
 
 module ptp #(
-    parameter integer CLK_FREQ = 49152000
+    parameter int CLK_FREQ = 49152000
 ) (
     // AXI-Lite I/F
     //-------------
-    input  wire        s_axi_aclk,
-    input  wire        s_axi_aresetn,
+    input var         s_axi_aclk,
+    input var         s_axi_aresetn,
     //
-    input  wire [31:0] s_axi_awaddr,
-    input  wire [ 2:0] s_axi_awprot,
-    input  wire        s_axi_awvalid,
-    output wire        s_axi_awready,
+    input var  [31:0] s_axi_awaddr,
+    input var  [ 2:0] s_axi_awprot,
+    input var         s_axi_awvalid,
+    output var        s_axi_awready,
     //
-    input  wire [31:0] s_axi_wdata,
-    input  wire [ 3:0] s_axi_wstrb,
-    input  wire        s_axi_wvalid,
-    output wire        s_axi_wready,
+    input var  [31:0] s_axi_wdata,
+    input var  [ 3:0] s_axi_wstrb,
+    input var         s_axi_wvalid,
+    output var        s_axi_wready,
     //
-    output wire [ 1:0] s_axi_bresp,
-    output wire        s_axi_bvalid,
-    input  wire        s_axi_bready,
+    output var [ 1:0] s_axi_bresp,
+    output var        s_axi_bvalid,
+    input var         s_axi_bready,
     //
-    input  wire [31:0] s_axi_araddr,
-    input  wire [ 2:0] s_axi_arprot,
-    input  wire        s_axi_arvalid,
-    output wire        s_axi_arready,
+    input var  [31:0] s_axi_araddr,
+    input var  [ 2:0] s_axi_arprot,
+    input var         s_axi_arvalid,
+    output var        s_axi_arready,
     //
-    output wire [31:0] s_axi_rdata,
-    output wire [ 1:0] s_axi_rresp,
-    output wire        s_axi_rvalid,
-    input  wire        s_axi_rready,
+    output var [31:0] s_axi_rdata,
+    output var [ 1:0] s_axi_rresp,
+    output var        s_axi_rvalid,
+    input var         s_axi_rready,
     // Ethernet I/F
     //-------------
     // Rx Ethernet ports
-    input  wire        rx_eth_clk,
-    input  wire        rx_eth_rst,
+    input var         rx_eth_clk,
+    input var         rx_eth_rst,
     //
-    input  wire [31:0] s_axis_tdata,
-    input  wire [ 3:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
-    input  wire        s_axis_tuser,
-    input  wire        s_axis_tvalid,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 3:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var         s_axis_tuser,
+    input var         s_axis_tvalid,
     // Tx Ethernet ports
-    input  wire        tx_eth_clk,
-    input  wire        tx_eth_rst,
+    input var         tx_eth_clk,
+    input var         tx_eth_rst,
     //
-    output wire [31:0] m_axis_tdata,
-    output wire [ 3:0] m_axis_tkeep,
-    output wire        m_axis_tlast,
-    output wire        m_axis_tuser,
-    output wire        m_axis_tvalid,
-    input  wire        m_axis_tready,
+    output var [31:0] m_axis_tdata,
+    output var [ 3:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var        m_axis_tuser,
+    output var        m_axis_tvalid,
+    input var         m_axis_tready,
     // PTP ports
-    input  wire [79:0] rx_ptp_timestamp,
-    input  wire        rx_ptp_timestamp_valid,
+    input var  [79:0] rx_ptp_timestamp,
+    input var         rx_ptp_timestamp_valid,
     //
-    output wire [ 1:0] tx_ptp_1588op,
-    output wire [15:0] tx_ptp_tag_field,
-    input  wire [79:0] tx_ptp_timestamp,
-    input  wire [15:0] tx_ptp_timestamp_tag,
-    input  wire        tx_ptp_timestamp_valid,
+    output var [ 1:0] tx_ptp_1588op,
+    output var [15:0] tx_ptp_tag_field,
+    input var  [79:0] tx_ptp_timestamp,
+    input var  [15:0] tx_ptp_timestamp_tag,
+    input var         tx_ptp_timestamp_valid,
     // PTP Control Interface
-    output wire [79:0] ctl_rx_systemtimer,
-    output wire [79:0] ctl_tx_systemtimer,
+    output var [79:0] ctl_rx_systemtimer,
+    output var [79:0] ctl_tx_systemtimer,
     // Internal I/F
     //-------------
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire        pps_in,
+    input var         pps_in,
     //
-    input  wire [47:0] tod_sec,
-    input  wire [31:0] tod_ns
+    input var  [47:0] tod_sec,
+    input var  [31:0] tod_ns
 );
 
   // Signals

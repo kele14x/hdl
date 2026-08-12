@@ -7,29 +7,29 @@
 `default_nettype none
 
 module ecpri_framer_trans (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [31:0] s_axis_tdata,
-    input  wire  [ 3:0] s_axis_tkeep,
-    input  wire         s_axis_tlast,
-    input  wire         s_axis_tvalid,
-    output wire         s_axis_tready,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 3:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var         s_axis_tvalid,
+    output var        s_axis_tready,
     //
-    input  wire  [ 7:0] s_trans_messagetype,
-    input  wire  [15:0] s_trans_payloadsize,
-    input  wire  [15:0] s_trans_rtc_pc_id,
+    input var  [ 7:0] s_trans_messagetype,
+    input var  [15:0] s_trans_payloadsize,
+    input var  [15:0] s_trans_rtc_pc_id,
     //
-    output logic [31:0] m_axis_tdata,
-    output logic [ 3:0] m_axis_tkeep,
-    output logic        m_axis_tlast,
-    output logic        m_axis_tvalid,
-    input  wire         m_axis_tready,
+    output var [31:0] m_axis_tdata,
+    output var [ 3:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var        m_axis_tvalid,
+    input var         m_axis_tready,
     //
-    input  wire  [47:0] ctrl_dest_mac,
-    input  wire  [47:0] ctrl_src_mac,
-    input  wire         ctrl_has_vlan,
-    input  wire  [15:0] ctrl_vlan_tag
+    input var  [47:0] ctrl_dest_mac,
+    input var  [47:0] ctrl_src_mac,
+    input var         ctrl_has_vlan,
+    input var  [15:0] ctrl_vlan_tag
 );
 
   import ecpri_pkg::*;
@@ -41,17 +41,17 @@ module ecpri_framer_trans (
   localparam logic [ 2:0] Reserved    = 3'b000;
   localparam logic        Concat      = 1'b0;
 
-  localparam integer S_RST             = 0;
-  localparam integer S_IDLE            = 1;
-  localparam integer S_DMACH           = 2;
-  localparam integer S_DMACL_SMACH     = 3;
-  localparam integer S_SMACL           = 4;
-  localparam integer S_VLAN            = 5;
-  localparam integer S_ETYPE_COMMH     = 6;
-  localparam integer S_COMML_TRANH     = 7;
-  localparam integer S_TRANSL_PAYLOAD0 = 8;
-  localparam integer S_PAYLOAD         = 9;
-  localparam integer S_LAST            = 10;
+  localparam int S_RST             = 0;
+  localparam int S_IDLE            = 1;
+  localparam int S_DMACH           = 2;
+  localparam int S_DMACL_SMACH     = 3;
+  localparam int S_SMACL           = 4;
+  localparam int S_VLAN            = 5;
+  localparam int S_ETYPE_COMMH     = 6;
+  localparam int S_COMML_TRANH     = 7;
+  localparam int S_TRANSL_PAYLOAD0 = 8;
+  localparam int S_PAYLOAD         = 9;
+  localparam int S_LAST            = 10;
   // verilog_format: on
 
   // Signals

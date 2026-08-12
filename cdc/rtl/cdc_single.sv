@@ -8,11 +8,11 @@ module cdc_single #(
     parameter int INIT_SYNC_FF  = 0,
     parameter int SRC_INPUT_REG = 1
 ) (
-    input  wire src_clk,
-    input  wire src_in,
+    input var  src_clk,
+    input var  src_in,
     //
-    input  wire dest_clk,
-    output wire dest_out
+    input var  dest_clk,
+    output var dest_out
 );
 
   initial begin : drc_check

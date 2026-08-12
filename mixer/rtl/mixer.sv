@@ -6,29 +6,29 @@ module mixer #(
     parameter int HAS_CDC = 0,
     parameter int NUM_ANT = 4
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire [15:0] din_dr,
-    input  wire [15:0] din_di,
-    input  wire        din_sf,
-    input  wire        din_sl,
-    input  wire        din_sy,
-    input  wire [ 3:0] din_chn,
-    input  wire        din_dv,
-    input  wire        din_last,
+    input var  [15:0] din_dr,
+    input var  [15:0] din_di,
+    input var         din_sf,
+    input var         din_sl,
+    input var         din_sy,
+    input var  [ 3:0] din_chn,
+    input var         din_dv,
+    input var         din_last,
     //
-    output wire [15:0] dout_dr,
-    output wire [15:0] dout_di,
-    output wire        dout_sf,
-    output wire        dout_sl,
-    output wire        dout_sy,
-    output wire [ 3:0] dout_chn,
-    output wire        dout_dv,
-    output wire        dout_last,
+    output var [15:0] dout_dr,
+    output var [15:0] dout_di,
+    output var        dout_sf,
+    output var        dout_sl,
+    output var        dout_sy,
+    output var [ 3:0] dout_chn,
+    output var        dout_dv,
+    output var        dout_last,
     // Control signals
-    input  wire [19:0] ctrl_pinc[NUM_ANT],
-    input  wire [19:0] ctrl_poff[NUM_ANT]
+    input var  [19:0] ctrl_pinc[NUM_ANT],
+    input var  [19:0] ctrl_poff[NUM_ANT]
 );
 
   // Local parameters

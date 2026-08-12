@@ -5,23 +5,23 @@
 module rts_mux #(
     parameter NUM_CC = 12
 ) (
-    input  wire                  clk,
-    input  wire                  rst,
+    input var                  clk,
+    input var                  rst,
     //
-    input  wire                  sync,
+    input var                  sync,
     //
-    input  wire  [         31:0] cw_data,
-    input  wire  [         31:0] ram0_data,
-    input  wire  [         31:0] ram1_data,
-    input  wire  [         31:0] ram2_data,
+    input var  [         31:0] cw_data,
+    input var  [         31:0] ram0_data,
+    input var  [         31:0] ram1_data,
+    input var  [         31:0] ram2_data,
     //
-    output logic [NUM_CC*32-1:0] m_axis_tdata,
-    output logic [          7:0] m_axis_tuser,
-    output wire                  m_axis_tlast,
-    output logic                 m_axis_tvalid,
-    input  wire                  m_axis_tready,
+    output var [NUM_CC*32-1:0] m_axis_tdata,
+    output var [          7:0] m_axis_tuser,
+    output var                 m_axis_tlast,
+    output var                 m_axis_tvalid,
+    input var                  m_axis_tready,
     //
-    input  wire  [ NUM_CC*6-1:0] ctrl_src_sel
+    input var  [ NUM_CC*6-1:0] ctrl_src_sel
 );
 
   // Parameters

@@ -3,18 +3,18 @@
 `default_nettype none
 
 module rts_cw (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire         sync,
+    input var         sync,
     //
-    output logic [15:0] cw_cos,
-    output logic [15:0] cw_sin,
+    output var [15:0] cw_cos,
+    output var [15:0] cw_sin,
     //
-    input  wire  [19:0] ctrl_cw0_freq,
-    input  wire  [15:0] ctrl_cw0_pow,
-    input  wire  [19:0] ctrl_cw1_freq,
-    input  wire  [15:0] ctrl_cw1_pow
+    input var  [19:0] ctrl_cw0_freq,
+    input var  [15:0] ctrl_cw0_pow,
+    input var  [19:0] ctrl_cw1_freq,
+    input var  [15:0] ctrl_cw1_pow
 );
 
   wire        [19:0] ctrl_cw0_freq_s;

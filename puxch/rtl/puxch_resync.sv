@@ -5,30 +5,30 @@
 module puxch_resync #(
     parameter int NUM_ANT = 4
 ) (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire         sync_in,
+    input var         sync_in,
     //
-    input  wire  [31:0] s_axis_tdata [NUM_ANT],
-    input  wire  [ 7:0] s_axis_tuser [NUM_ANT],
-    input  wire         s_axis_tlast [NUM_ANT],
-    input  wire         s_axis_tvalid[NUM_ANT],
-    output wire         s_axis_tready[NUM_ANT],
+    input var  [31:0] s_axis_tdata [NUM_ANT],
+    input var  [ 7:0] s_axis_tuser [NUM_ANT],
+    input var         s_axis_tlast [NUM_ANT],
+    input var         s_axis_tvalid[NUM_ANT],
+    output var        s_axis_tready[NUM_ANT],
     //
-    output logic [15:0] dout_dr,
-    output logic [15:0] dout_di,
-    output logic        dout_sf,
-    output logic        dout_sl,
-    output logic        dout_sy,
-    output logic [ 3:0] dout_chn,
-    output logic        dout_dv,
-    output wire         dout_last,
+    output var [15:0] dout_dr,
+    output var [15:0] dout_di,
+    output var        dout_sf,
+    output var        dout_sl,
+    output var        dout_sy,
+    output var [ 3:0] dout_chn,
+    output var        dout_dv,
+    output var        dout_last,
     // CSR
-    input  wire  [ 3:0] ctrl_en,
-    input  wire  [ 1:0] ctrl_rat,
-    input  wire  [ 3:0] ctrl_bist,
-    input  wire  [ 3:0] ctrl_bw
+    input var  [ 3:0] ctrl_en,
+    input var  [ 1:0] ctrl_rat,
+    input var  [ 3:0] ctrl_bist,
+    input var  [ 3:0] ctrl_bw
 );
 
   // sync_in => start_of_frame => chn => dout_chn

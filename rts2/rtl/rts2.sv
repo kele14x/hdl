@@ -3,91 +3,91 @@
 `default_nettype none
 
 module rts2 (
-    input  wire        s_axi_aclk,
-    input  wire        s_axi_aresetn,
+    input var         s_axi_aclk,
+    input var         s_axi_aresetn,
     //
-    input  wire [15:0] s_axi_awaddr,
-    input  wire [ 2:0] s_axi_awprot,
-    input  wire        s_axi_awvalid,
-    output wire        s_axi_awready,
+    input var  [15:0] s_axi_awaddr,
+    input var  [ 2:0] s_axi_awprot,
+    input var         s_axi_awvalid,
+    output var        s_axi_awready,
     //
-    input  wire [31:0] s_axi_wdata,
-    input  wire [ 3:0] s_axi_wstrb,
-    input  wire        s_axi_wvalid,
-    output wire        s_axi_wready,
+    input var  [31:0] s_axi_wdata,
+    input var  [ 3:0] s_axi_wstrb,
+    input var         s_axi_wvalid,
+    output var        s_axi_wready,
     //
-    output wire [ 1:0] s_axi_bresp,
-    output wire        s_axi_bvalid,
-    input  wire        s_axi_bready,
+    output var [ 1:0] s_axi_bresp,
+    output var        s_axi_bvalid,
+    input var         s_axi_bready,
     //
-    input  wire [15:0] s_axi_araddr,
-    input  wire [ 2:0] s_axi_arprot,
-    input  wire        s_axi_arvalid,
-    output wire        s_axi_arready,
+    input var  [15:0] s_axi_araddr,
+    input var  [ 2:0] s_axi_arprot,
+    input var         s_axi_arvalid,
+    output var        s_axi_arready,
     //
-    output wire [31:0] s_axi_rdata,
-    output wire [ 1:0] s_axi_rresp,
-    output wire        s_axi_rvalid,
-    input  wire        s_axi_rready,
+    output var [31:0] s_axi_rdata,
+    output var [ 1:0] s_axi_rresp,
+    output var        s_axi_rvalid,
+    input var         s_axi_rready,
     // Timer interfaces
     //-----------------
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire        rfs_in,
+    input var         rfs_in,
     // DataMover interface
     //--------------------
-    input  wire        ddr4_clk,
-    input  wire        ddr4_rst,
+    input var         ddr4_clk,
+    input var         ddr4_rst,
     // S2MM CMD
-    output wire [79:0] m_axis_s2mm_cmd_tdata,
-    output wire        m_axis_s2mm_cmd_tvalid,
-    input  wire        m_axis_s2mm_cmd_tready,
+    output var [79:0] m_axis_s2mm_cmd_tdata,
+    output var        m_axis_s2mm_cmd_tvalid,
+    input var         m_axis_s2mm_cmd_tready,
     // MM2S CMD
-    output wire [79:0] m_axis_mm2s_cmd_tdata,
-    output wire        m_axis_mm2s_cmd_tvalid,
-    input  wire        m_axis_mm2s_cmd_tready,
+    output var [79:0] m_axis_mm2s_cmd_tdata,
+    output var        m_axis_mm2s_cmd_tvalid,
+    input var         m_axis_mm2s_cmd_tready,
     // S2MM STS
-    input  wire [31:0] s_axis_s2mm_sts_tdata,
-    input  wire [ 3:0] s_axis_s2mm_sts_tkeep,
-    input  wire        s_axis_s2mm_sts_tlast,
-    input  wire        s_axis_s2mm_sts_tvalid,
-    output wire        s_axis_s2mm_sts_tready,
+    input var  [31:0] s_axis_s2mm_sts_tdata,
+    input var  [ 3:0] s_axis_s2mm_sts_tkeep,
+    input var         s_axis_s2mm_sts_tlast,
+    input var         s_axis_s2mm_sts_tvalid,
+    output var        s_axis_s2mm_sts_tready,
     // MM2S STS
-    input  wire [ 7:0] s_axis_mm2s_sts_tdata,
-    input  wire [ 0:0] s_axis_mm2s_sts_tkeep,
-    input  wire        s_axis_mm2s_sts_tlast,
-    input  wire        s_axis_mm2s_sts_tvalid,
-    output wire        s_axis_mm2s_sts_tready,
+    input var  [ 7:0] s_axis_mm2s_sts_tdata,
+    input var  [ 0:0] s_axis_mm2s_sts_tkeep,
+    input var         s_axis_mm2s_sts_tlast,
+    input var         s_axis_mm2s_sts_tvalid,
+    output var        s_axis_mm2s_sts_tready,
     //
-    input  wire        mm2s_err,
-    input  wire        s2mm_err,
+    input var         mm2s_err,
+    input var         s2mm_err,
     // MM2S AXIS
-    output wire [63:0] m_axis_s2mm_tdata,
-    output wire [ 7:0] m_axis_s2mm_tkeep,
-    output wire        m_axis_s2mm_tlast,
-    output wire        m_axis_s2mm_tvalid,
-    input  wire        m_axis_s2mm_tready,
+    output var [63:0] m_axis_s2mm_tdata,
+    output var [ 7:0] m_axis_s2mm_tkeep,
+    output var        m_axis_s2mm_tlast,
+    output var        m_axis_s2mm_tvalid,
+    input var         m_axis_s2mm_tready,
     // S2MM AXIS
-    input  wire [63:0] s_axis_mm2s_tdata,
-    input  wire [ 7:0] s_axis_mm2s_tkeep,
-    input  wire        s_axis_mm2s_tlast,
-    input  wire        s_axis_mm2s_tvalid,
-    output wire        s_axis_mm2s_tready,
+    input var  [63:0] s_axis_mm2s_tdata,
+    input var  [ 7:0] s_axis_mm2s_tkeep,
+    input var         s_axis_mm2s_tlast,
+    input var         s_axis_mm2s_tvalid,
+    output var        s_axis_mm2s_tready,
     // Ethernet ports
     //--------------
-    output wire [63:0] m_tx_axis_tdata,
-    output wire [ 7:0] m_tx_axis_tkeep,
-    output wire        m_tx_axis_tlast,
-    output wire        m_tx_axis_tvalid,
+    output var [63:0] m_tx_axis_tdata,
+    output var [ 7:0] m_tx_axis_tkeep,
+    output var        m_tx_axis_tlast,
+    output var        m_tx_axis_tvalid,
     //
-    input  wire [63:0] s_rx_axis_tdata,
-    input  wire [ 7:0] s_rx_axis_tkeep,
-    input  wire        s_rx_axis_tlast,
-    input  wire        s_rx_axis_tvalid
+    input var  [63:0] s_rx_axis_tdata,
+    input var  [ 7:0] s_rx_axis_tkeep,
+    input var         s_rx_axis_tlast,
+    input var         s_rx_axis_tvalid
 );
 
-  localparam integer AddrWidth = 40;
+  localparam int AddrWidth = 40;
 
   wire [0:0] ctrl_en;
 

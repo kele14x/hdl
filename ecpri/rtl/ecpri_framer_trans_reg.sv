@@ -3,39 +3,39 @@
 `default_nettype none
 
 module ecpri_framer_trans_reg (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [31:0] s_axis_tdata,
-    input  wire  [ 3:0] s_axis_tkeep,
-    input  wire         s_axis_tvalid,
-    input  wire         s_axis_tlast,
-    output logic        s_axis_tready,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 3:0] s_axis_tkeep,
+    input var         s_axis_tvalid,
+    input var         s_axis_tlast,
+    output var        s_axis_tready,
     //
-    input  wire  [ 7:0] s_trans_messagetype,
-    input  wire  [15:0] s_trans_payloadsize,
-    input  wire  [15:0] s_trans_rtc_pc_id,
+    input var  [ 7:0] s_trans_messagetype,
+    input var  [15:0] s_trans_payloadsize,
+    input var  [15:0] s_trans_rtc_pc_id,
     //
-    output wire  [31:0] m_axis_tdata,
-    output wire  [ 3:0] m_axis_tkeep,
-    output wire         m_axis_tvalid,
-    output wire         m_axis_tlast,
-    output wire         m_axis_tlast_extra,
-    input  wire         m_axis_tready,
+    output var [31:0] m_axis_tdata,
+    output var [ 3:0] m_axis_tkeep,
+    output var        m_axis_tvalid,
+    output var        m_axis_tlast,
+    output var        m_axis_tlast_extra,
+    input var         m_axis_tready,
     //
-    output logic [ 7:0] m_trans_messagetype,
-    output logic [15:0] m_trans_payloadsize,
-    output logic [15:0] m_trans_rtc_pc_id
+    output var [ 7:0] m_trans_messagetype,
+    output var [15:0] m_trans_payloadsize,
+    output var [15:0] m_trans_rtc_pc_id
 );
 
   import ecpri_pkg::*;
 
   // Parameters
 
-  localparam integer S_RST = 0;
-  localparam integer S_IDLE = 1;
-  localparam integer S_DEPTH0 = 2;
-  localparam integer S_DEPTH1 = 3;
+  localparam int S_RST = 0;
+  localparam int S_IDLE = 1;
+  localparam int S_DEPTH0 = 2;
+  localparam int S_DEPTH1 = 3;
 
   // Signals
 

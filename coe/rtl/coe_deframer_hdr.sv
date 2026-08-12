@@ -4,23 +4,23 @@
 
 module coe_deframer_hdr (
     // Ethernet
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire         sync,
+    input var         sync,
     //
-    input  wire  [31:0] s_axis_tdata,
-    input  wire  [ 3:0] s_axis_tkeep,
-    input  wire         s_axis_tlast,
-    input  wire         s_axis_tvalid,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 3:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var         s_axis_tvalid,
     // Radio I/F
-    output logic [31:0] m_axis_tdata,
-    output logic [ 3:0] m_axis_tkeep,
-    output logic        m_axis_tlast,
-    output logic        m_axis_tvalid,
+    output var [31:0] m_axis_tdata,
+    output var [ 3:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var        m_axis_tvalid,
     //
-    output logic        m_app_valid,
-    output logic [18:0] m_app_ts
+    output var        m_app_valid,
+    output var [18:0] m_app_ts
 );
 
   import coe_pkg::*;

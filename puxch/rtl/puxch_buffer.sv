@@ -7,32 +7,32 @@ module puxch_buffer #(
     parameter int NUM_CC     = 3,
     parameter int HALF_BLOCK = 0
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire [15:0] din_dr         [NUM_CC],
-    input  wire [15:0] din_di         [NUM_CC],
-    input  wire        din_sf         [NUM_CC],
-    input  wire        din_sl         [NUM_CC],
-    input  wire        din_sy         [NUM_CC],
-    input  wire [ 3:0] din_chn        [NUM_CC],
-    input  wire        din_dv         [NUM_CC],
+    input var  [15:0] din_dr         [NUM_CC],
+    input var  [15:0] din_di         [NUM_CC],
+    input var         din_sf         [NUM_CC],
+    input var         din_sl         [NUM_CC],
+    input var         din_sy         [NUM_CC],
+    input var  [ 3:0] din_chn        [NUM_CC],
+    input var         din_dv         [NUM_CC],
     //
-    input  wire        clk_eth_xran,
-    input  wire        rst_eth_xran,
+    input var         clk_eth_xran,
+    input var         rst_eth_xran,
     //
-    input  wire [11:0] s_ul_sym_num   [NUM_CC],
+    input var  [11:0] s_ul_sym_num   [NUM_CC],
     //
-    output wire [63:0] m_axis_tdata,
-    output wire [ 7:0] m_axis_tkeep,
-    output wire        m_axis_tlast,
-    output wire        m_axis_tvalid,
-    input  wire        m_axis_tready,
+    output var [63:0] m_axis_tdata,
+    output var [ 7:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var        m_axis_tvalid,
+    input var         m_axis_tready,
     //
-    input  wire [32:0] m_fram_data_req,
+    input var  [32:0] m_fram_data_req,
     //
-    input  wire [ 1:0] ctrl_rat       [NUM_CC],
-    input  wire [ 3:0] ctrl_bw        [NUM_CC]
+    input var  [ 1:0] ctrl_rat       [NUM_CC],
+    input var  [ 3:0] ctrl_bw        [NUM_CC]
 );
 
   // Signals
@@ -222,7 +222,7 @@ module puxch_buffer #(
 
   generate
     for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_ram
-    if (HALF_BLOCK != 0) begin : g_half
+      if (HALF_BLOCK != 0) begin : g_half
 
         logic [11:0] wr_addr_s;
         logic        wr_we_s;

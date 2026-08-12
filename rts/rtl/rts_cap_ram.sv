@@ -3,47 +3,47 @@
 `default_nettype none
 
 module rts_cap_ram (
-    input  wire         clk,
-    input  wire         clk_l,
-    input  wire         rst,
+    input var         clk,
+    input var         clk_l,
+    input var         rst,
     //
-    input  wire         sync,
+    input var         sync,
     //
-    input  wire  [31:0] s_axis_tdata,
-    input  wire  [ 7:0] s_axis_tuser,
-    input  wire         s_axis_tlast,
-    input  wire         s_axis_tvalid,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 7:0] s_axis_tuser,
+    input var         s_axis_tlast,
+    input var         s_axis_tvalid,
     //
-    input  wire         ctrl_clk,
-    input  wire         ctrl_rst,
+    input var         ctrl_clk,
+    input var         ctrl_rst,
     //
-    input  wire         ctrl_cap_trigger,
-    input  wire         ctrl_cap_force,
-    input  wire  [ 1:0] ctrl_cap_mode,
-    input  wire  [18:0] ctrl_cap_offset,
-    input  wire  [ 4:0] ctrl_cap_len,
+    input var         ctrl_cap_trigger,
+    input var         ctrl_cap_force,
+    input var  [ 1:0] ctrl_cap_mode,
+    input var  [18:0] ctrl_cap_offset,
+    input var  [ 4:0] ctrl_cap_len,
     //
-    output logic        stat_cap_status,
+    output var        stat_cap_status,
     //
-    input  wire  [ 3:0] ctrl_ram_addr_msb,
+    input var  [ 3:0] ctrl_ram_addr_msb,
     //
-    input  wire  [12:0] ctrl_ram_addr,
-    input  wire         ctrl_ram_en,
-    input  wire         ctrl_ram_we,
-    input  wire  [31:0] ctrl_ram_din,
-    output wire  [31:0] ctrl_ram_dout,
-    output logic        ctrl_ram_valid
+    input var  [12:0] ctrl_ram_addr,
+    input var         ctrl_ram_en,
+    input var         ctrl_ram_we,
+    input var  [31:0] ctrl_ram_din,
+    output var [31:0] ctrl_ram_dout,
+    output var        ctrl_ram_valid
 );
 
   // Parameters
 
-  localparam integer AddrWidth = 17;
-  localparam integer DataWidth = 32;
+  localparam int AddrWidth = 17;
+  localparam int DataWidth = 32;
 
-  localparam integer S_RST = 0;
-  localparam integer S_IDLE = 1;
-  localparam integer S_WAIT = 2;
-  localparam integer S_CAPTURE = 3;
+  localparam int S_RST = 0;
+  localparam int S_IDLE = 1;
+  localparam int S_WAIT = 2;
+  localparam int S_CAPTURE = 3;
 
   // Signals
 

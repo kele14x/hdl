@@ -10,16 +10,16 @@ module fifo_srl #(
     parameter int DATA_WIDTH = 16
 ) (
     // Common to write and read
-    input  wire                  clk,
-    input  wire                  rst,
+    input var                   clk,
+    input var                   rst,
     // Write interface
-    input  wire                  wren,
-    input  wire [DATA_WIDTH-1:0] din,
-    output wire                  full,
+    input var                   wren,
+    input var  [DATA_WIDTH-1:0] din,
+    output var                  full,
     // Read interface
-    input  wire                  rden,
-    output wire [DATA_WIDTH-1:0] dout,
-    output wire                  empty
+    input var                   rden,
+    output var [DATA_WIDTH-1:0] dout,
+    output var                  empty
 );
 
   // Local parameters

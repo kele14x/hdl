@@ -12,13 +12,13 @@ module dds_lut #(
     parameter int NEGATIVE_SIN = 0
     /* verilator lint_on WIDTHEXPAND */
 ) (
-    input  wire                   clk,
-    input  wire                   rst,
+    input var                    clk,
+    input var                    rst,
     //
-    input  wire [PHASE_WIDTH-1:0] phase,
+    input var  [PHASE_WIDTH-1:0] phase,
     //
-    output wire [ DATA_WIDTH-1:0] cos_out,
-    output wire [ DATA_WIDTH-1:0] sin_out
+    output var [ DATA_WIDTH-1:0] cos_out,
+    output var [ DATA_WIDTH-1:0] sin_out
 );
 
   // Notes:
@@ -227,7 +227,7 @@ module dds_lut #(
   always_comb begin
     cos_phase = phase;
     sin_phase = phase;
-      if (RASTERIZED != 0) begin
+    if (RASTERIZED != 0) begin
       case (sin_phase[PHASE_WIDTH-1:PHASE_WIDTH-4])
         4'b0000: sin_phase[PHASE_WIDTH-1:PHASE_WIDTH-4] = 4'b1001;  // 0 - 3 = 9
         4'b0001: sin_phase[PHASE_WIDTH-1:PHASE_WIDTH-4] = 4'b1010;  // 1 - 3 = 10

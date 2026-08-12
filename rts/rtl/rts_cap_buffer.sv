@@ -6,18 +6,18 @@ module rts_cap_buffer #(
     parameter ADDR_WIDTH = 17,
     parameter DATA_WIDTH = 32
 ) (
-    input  wire                  clka,
-    input  wire                  clka_l,
-    input  wire                  rsta,
-    input  wire                  wea,
-    input  wire [ADDR_WIDTH-1:0] addra,
-    input  wire [DATA_WIDTH-1:0] dina,
+    input var                   clka,
+    input var                   clka_l,
+    input var                   rsta,
+    input var                   wea,
+    input var  [ADDR_WIDTH-1:0] addra,
+    input var  [DATA_WIDTH-1:0] dina,
     //
-    input  wire                  clkb,
-    input  wire                  rstb,
-    input  wire                  enb,
-    input  wire [ADDR_WIDTH-1:0] addrb,
-    output wire [DATA_WIDTH-1:0] doutb
+    input var                   clkb,
+    input var                   rstb,
+    input var                   enb,
+    input var  [ADDR_WIDTH-1:0] addrb,
+    output var [DATA_WIDTH-1:0] doutb
 );
 
   logic                  cnt;

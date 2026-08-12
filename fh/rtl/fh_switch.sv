@@ -4,33 +4,33 @@
 `default_nettype none
 
 module fh_switch #(
-    parameter integer NUM_SRC    = 2,
-    parameter integer NUM_DEST   = 4,
-    parameter integer DATA_WIDTH = 32,
-    parameter integer USER_WIDTH = 1
+    parameter int NUM_SRC    = 2,
+    parameter int NUM_DEST   = 4,
+    parameter int DATA_WIDTH = 32,
+    parameter int USER_WIDTH = 1
 ) (
-    input  wire                                                  clk,
-    input  wire                                                  rst,
+    input var                                                   clk,
+    input var                                                   rst,
     //
-    input  wire [                        DATA_WIDTH*NUM_SRC-1:0] s_axis_tdata,
-    input  wire [                      DATA_WIDTH*NUM_SRC/8-1:0] s_axis_tkeep,
-    input  wire [                                   NUM_SRC-1:0] s_axis_tlast,
-    input  wire [                          NUM_DEST*NUM_SRC-1:0] s_axis_tdest,
-    input  wire [ (USER_WIDTH > 0 ? USER_WIDTH : 1)*NUM_SRC-1:0] s_axis_tuser,
-    input  wire [                                   NUM_SRC-1:0] s_axis_tvalid,
-    output wire [                                   NUM_SRC-1:0] s_axis_tready,
+    input var  [                        DATA_WIDTH*NUM_SRC-1:0] s_axis_tdata,
+    input var  [                      DATA_WIDTH*NUM_SRC/8-1:0] s_axis_tkeep,
+    input var  [                                   NUM_SRC-1:0] s_axis_tlast,
+    input var  [                          NUM_DEST*NUM_SRC-1:0] s_axis_tdest,
+    input var  [ (USER_WIDTH > 0 ? USER_WIDTH : 1)*NUM_SRC-1:0] s_axis_tuser,
+    input var  [                                   NUM_SRC-1:0] s_axis_tvalid,
+    output var [                                   NUM_SRC-1:0] s_axis_tready,
     //
-    output wire [                       DATA_WIDTH*NUM_DEST-1:0] m_axis_tdata,
-    output wire [                     DATA_WIDTH*NUM_DEST/8-1:0] m_axis_tkeep,
-    output wire [                                  NUM_DEST-1:0] m_axis_tlast,
-    output wire [(USER_WIDTH > 0 ? USER_WIDTH : 1)*NUM_DEST-1:0] m_axis_tuser,
-    output wire [                                  NUM_DEST-1:0] m_axis_tvalid,
-    input  wire [                                  NUM_DEST-1:0] m_axis_tready
+    output var [                       DATA_WIDTH*NUM_DEST-1:0] m_axis_tdata,
+    output var [                     DATA_WIDTH*NUM_DEST/8-1:0] m_axis_tkeep,
+    output var [                                  NUM_DEST-1:0] m_axis_tlast,
+    output var [(USER_WIDTH > 0 ? USER_WIDTH : 1)*NUM_DEST-1:0] m_axis_tuser,
+    output var [                                  NUM_DEST-1:0] m_axis_tvalid,
+    input var  [                                  NUM_DEST-1:0] m_axis_tready
 );
 
   // Parameters
 
-  localparam integer UserWidthInt = (USER_WIDTH > 0 ? USER_WIDTH : 1);
+  localparam int UserWidthInt = (USER_WIDTH > 0 ? USER_WIDTH : 1);
 
   // Signals
 

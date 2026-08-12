@@ -3,28 +3,28 @@
 `default_nettype none
 
 module rts2_playback_ctrl #(
-    parameter integer ADDR_WIDTH = 40
+    parameter int ADDR_WIDTH = 40
 ) (
     // DataMover I/F
     //--------------
-    input  wire         ddr4_clk,
-    input  wire         ddr4_rst,
+    input var         ddr4_clk,
+    input var         ddr4_rst,
     //
-    output logic [79:0] m_axis_mm2s_cmd_tdata,
-    output wire         m_axis_mm2s_cmd_tvalid,
-    input  wire         m_axis_mm2s_cmd_tready,
+    output var [79:0] m_axis_mm2s_cmd_tdata,
+    output var        m_axis_mm2s_cmd_tvalid,
+    input var         m_axis_mm2s_cmd_tready,
     //
-    input  wire  [ 7:0] s_axis_mm2s_sts_tdata,
-    input  wire  [ 0:0] s_axis_mm2s_sts_tkeep,
-    input  wire         s_axis_mm2s_sts_tlast,
-    input  wire         s_axis_mm2s_sts_tvalid,
-    output wire         s_axis_mm2s_sts_tready,
+    input var  [ 7:0] s_axis_mm2s_sts_tdata,
+    input var  [ 0:0] s_axis_mm2s_sts_tkeep,
+    input var         s_axis_mm2s_sts_tlast,
+    input var         s_axis_mm2s_sts_tvalid,
+    output var        s_axis_mm2s_sts_tready,
     //
-    input  wire         mm2s_err,
+    input var         mm2s_err,
     //
-    input  wire         ctrl_en,
-    input  wire  [31:0] ctrl_addr_offset,
-    input  wire  [31:0] ctrl_addr_size
+    input var         ctrl_en,
+    input var  [31:0] ctrl_addr_offset,
+    input var  [31:0] ctrl_addr_size
 );
 
   // Parameters
@@ -32,11 +32,11 @@ module rts2_playback_ctrl #(
   localparam [ADDR_WIDTH-1:0] AddrBase = 40'h04_0000_0000;
   localparam [31:0] PageSize = 32'd4096;
 
-  localparam integer S_RST = 0;
-  localparam integer S_IDLE = 1;
-  localparam integer S_PRE = 2;
-  localparam integer S_CMD = 3;
-  localparam integer S_STS = 4;
+  localparam int S_RST = 0;
+  localparam int S_IDLE = 1;
+  localparam int S_PRE = 2;
+  localparam int S_CMD = 3;
+  localparam int S_STS = 4;
 
   // Signals
 

@@ -23,10 +23,10 @@ module shift_ram #(
   // which means maximum delay taps 2 ** (AddrWidth) - 1. Additional
   // RAM is configured to have latency of 3, result maximum depth is
   // 2 ** (AddrWidth) + 2.
-  localparam integer AddrWidth = $clog2(DEPTH - 2 - (INPUT_REG != 0 ? 1 : 0));
+  localparam int AddrWidth = $clog2(DEPTH - 2 - (INPUT_REG != 0 ? 1 : 0));
 
-  localparam integer MinDepth = INPUT_REG != 0 ? 5 : 4;
-  localparam integer RamReadLatency = PACKED_URAM != 0 ? 3 : 2;
+  localparam int MinDepth = INPUT_REG != 0 ? 5 : 4;
+  localparam int RamReadLatency = PACKED_URAM != 0 ? 3 : 2;
 
   // Check parameters
 
@@ -49,12 +49,12 @@ module shift_ram #(
 
   // Signals
 
-  logic [AddrWidth-1:0] addra;
-  logic [AddrWidth-1:0] addrb;
+  logic [     AddrWidth-1:0] addra;
+  logic [     AddrWidth-1:0] addrb;
 
-  logic [    WIDTH-1:0] dina;
+  logic [         WIDTH-1:0] dina;
 
-  logic [    WIDTH-1:0] doutb;
+  logic [         WIDTH-1:0] doutb;
   logic [RamReadLatency-1:0] vld;
 
   function automatic [AddrWidth-1:0] addr_cast(input integer value);
@@ -90,8 +90,7 @@ module shift_ram #(
     if (rst) begin
       addrb <= addr_cast(-DEPTH + 1 + RamReadLatency + (INPUT_REG != 0 ? 1 : 0));
     end else if (cen) begin
-      addrb <= addr_cast(integer'(addra) + 2 + RamReadLatency - DEPTH +
-                         (INPUT_REG != 0 ? 1 : 0));
+      addrb <= addr_cast(integer'(addra) + 2 + RamReadLatency - DEPTH + (INPUT_REG != 0 ? 1 : 0));
     end
   end
 

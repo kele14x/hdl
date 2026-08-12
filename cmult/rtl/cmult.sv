@@ -11,19 +11,19 @@ module cmult #(
     parameter int SATURATE   = 0,
     parameter int USE_3_MULT = 0
 ) (
-    input  wire                      clk,
-    input  wire                      rst,
+    input var                       clk,
+    input var                       rst,
     //
-    input  wire signed [A_WIDTH-1:0] ar,
-    input  wire signed [A_WIDTH-1:0] ai,
+    input var  signed [A_WIDTH-1:0] ar,
+    input var  signed [A_WIDTH-1:0] ai,
     //
-    input  wire signed [B_WIDTH-1:0] br,
-    input  wire signed [B_WIDTH-1:0] bi,
+    input var  signed [B_WIDTH-1:0] br,
+    input var  signed [B_WIDTH-1:0] bi,
     //
-    output wire signed [P_WIDTH-1:0] pr,
-    output wire signed [P_WIDTH-1:0] pi,
+    output var signed [P_WIDTH-1:0] pr,
+    output var signed [P_WIDTH-1:0] pi,
     //
-    output wire                      ovf
+    output var                      ovf
 );
 
   /* verilator lint_off UNUSEDPARAM */

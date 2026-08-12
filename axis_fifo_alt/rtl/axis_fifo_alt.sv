@@ -18,25 +18,25 @@ module axis_fifo_alt #(
     parameter int DATA_WIDTH   = 32,
     parameter int USER_WIDTH   = 1
 ) (
-    input  wire                                          s_axis_aclk,
-    input  wire                                          s_axis_aresetn,
+    input var                                          s_axis_aclk,
+    input var                                          s_axis_aresetn,
     //
-    input  wire  [                       DATA_WIDTH-1:0] s_axis_tdata,
-    input  wire  [                     DATA_WIDTH/8-1:0] s_axis_tkeep,
-    input  wire                                          s_axis_tlast,
-    input  wire  [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] s_axis_tuser,
-    input  wire                                          s_axis_tvalid,
+    input var  [                       DATA_WIDTH-1:0] s_axis_tdata,
+    input var  [                     DATA_WIDTH/8-1:0] s_axis_tkeep,
+    input var                                          s_axis_tlast,
+    input var  [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] s_axis_tuser,
+    input var                                          s_axis_tvalid,
     //
-    input  wire                                          m_axis_aclk,
+    input var                                          m_axis_aclk,
     //
-    output logic [                       DATA_WIDTH-1:0] m_axis_tdata,
-    output logic [                     DATA_WIDTH/8-1:0] m_axis_tkeep,
-    output logic                                         m_axis_tlast,
-    output logic [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] m_axis_tuser,
-    output wire                                          m_axis_tvalid,
-    input  wire                                          m_axis_tready,
+    output var [                       DATA_WIDTH-1:0] m_axis_tdata,
+    output var [                     DATA_WIDTH/8-1:0] m_axis_tkeep,
+    output var                                         m_axis_tlast,
+    output var [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] m_axis_tuser,
+    output var                                         m_axis_tvalid,
+    input var                                          m_axis_tready,
     //
-    output wire                                          err_discard
+    output var                                         err_discard
 );
 
   // Parameters

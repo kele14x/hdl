@@ -3,35 +3,35 @@
 `default_nettype none
 
 module ptp_lite #(
-    parameter integer CLK_FREQ = 49152000
+    parameter int CLK_FREQ = 49152000
 ) (
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire [31:0] s_axis_tdata,
-    input  wire [ 3:0] s_axis_tkeep,
-    input  wire        s_axis_tlast,
-    input  wire [79:0] s_axis_tuser,
-    input  wire        s_axis_tvalid,
-    output wire        s_axis_tready,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 3:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var  [79:0] s_axis_tuser,
+    input var         s_axis_tvalid,
+    output var        s_axis_tready,
     //
-    output wire [31:0] m_axis_tdata,
-    output wire [ 3:0] m_axis_tkeep,
-    output wire        m_axis_tlast,
-    output wire [17:0] m_axis_tuser,
-    output wire        m_axis_tvalid,
-    input  wire        m_axis_tready,
+    output var [31:0] m_axis_tdata,
+    output var [ 3:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var [17:0] m_axis_tuser,
+    output var        m_axis_tvalid,
+    input var         m_axis_tready,
     //
-    input  wire [79:0] tx_ptp_timestamp,
-    input  wire [15:0] tx_ptp_timestamp_tag,
-    input  wire        tx_ptp_timestamp_valid,
+    input var  [79:0] tx_ptp_timestamp,
+    input var  [15:0] tx_ptp_timestamp_tag,
+    input var         tx_ptp_timestamp_valid,
     //
-    input  wire        ctrl_master_en,
-    input  wire [47:0] ctrl_src_mac,
-    input  wire [ 7:0] ctrl_domain_number,
-    input  wire [15:0] ctrl_utc_offset,
-    input  wire [ 7:0] ctrl_log_announce_interval,
-    input  wire [ 7:0] ctrl_log_sync_interval
+    input var         ctrl_master_en,
+    input var  [47:0] ctrl_src_mac,
+    input var  [ 7:0] ctrl_domain_number,
+    input var  [15:0] ctrl_utc_offset,
+    input var  [ 7:0] ctrl_log_announce_interval,
+    input var  [ 7:0] ctrl_log_sync_interval
 );
 
   // Signals

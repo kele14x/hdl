@@ -4,39 +4,39 @@
 `default_nettype none
 
 module ecpri_odm (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [79:0] tx_ptp_timestamp,
-    input  wire  [15:0] tx_ptp_timestamp_tag,
-    input  wire         tx_ptp_timestamp_valid,
+    input var  [79:0] tx_ptp_timestamp,
+    input var  [15:0] tx_ptp_timestamp_tag,
+    input var         tx_ptp_timestamp_valid,
     // Receive I/F
-    input  wire         s_odm_header_valid,
-    input  wire  [ 7:0] s_odm_measurementid,
-    input  wire  [ 7:0] s_odm_actiontype,
-    input  wire  [79:0] s_odm_timestamp,
-    input  wire  [63:0] s_odm_compensation,
-    input  wire  [79:0] s_odm_timestamp2,
+    input var         s_odm_header_valid,
+    input var  [ 7:0] s_odm_measurementid,
+    input var  [ 7:0] s_odm_actiontype,
+    input var  [79:0] s_odm_timestamp,
+    input var  [63:0] s_odm_compensation,
+    input var  [79:0] s_odm_timestamp2,
     // Transmit I/F
-    output logic        m_axis_tvalid,
-    input  wire         m_axis_tready,
+    output var        m_axis_tvalid,
+    input var         m_axis_tready,
     //
-    output logic [ 7:0] m_odm_measurementid,
-    output logic [ 7:0] m_odm_actiontype,
-    output logic [79:0] m_odm_timestamp,
-    output logic [63:0] m_odm_compensation,
+    output var [ 7:0] m_odm_measurementid,
+    output var [ 7:0] m_odm_actiontype,
+    output var [79:0] m_odm_timestamp,
+    output var [63:0] m_odm_compensation,
     //
-    input  wire         ctrl_clk,
-    input  wire         ctrl_rst,
+    input var         ctrl_clk,
+    input var         ctrl_rst,
     //
-    input  wire         ctrl_en,
-    input  wire  [31:0] ctrl_meas_interval,
+    input var         ctrl_en,
+    input var  [31:0] ctrl_meas_interval,
     //
-    output wire  [31:0] stat_ts_diff_ingress_ns,
-    output wire  [47:0] stat_ts_diff_ingress_sec,
+    output var [31:0] stat_ts_diff_ingress_ns,
+    output var [47:0] stat_ts_diff_ingress_sec,
     //
-    output wire  [31:0] stat_ts_diff_egress_ns,
-    output wire  [47:0] stat_ts_diff_egress_sec
+    output var [31:0] stat_ts_diff_egress_ns,
+    output var [47:0] stat_ts_diff_egress_sec
 );
 
   wire unused_inputs = &{1'b0, s_odm_compensation, ctrl_rst};

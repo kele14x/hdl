@@ -4,13 +4,13 @@
 module eth_injector_tb #(
     parameter string PCAP_FILE = ""
 ) (
-    input  wire        aclk,
-    input  wire        aresetn,
-    output wire [63:0] m_eth_tdata,
-    output wire [ 7:0] m_eth_tkeep,
-    output wire        m_eth_tvalid,
-    output wire        m_eth_tlast,
-    input  wire        m_eth_tready
+    input var         aclk,
+    input var         aresetn,
+    output var [63:0] m_eth_tdata,
+    output var [ 7:0] m_eth_tkeep,
+    output var        m_eth_tvalid,
+    output var        m_eth_tlast,
+    input var         m_eth_tready
 );
 
   eth_injector #(

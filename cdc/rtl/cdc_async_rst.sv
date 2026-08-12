@@ -6,9 +6,9 @@ module cdc_async_rst #(
     parameter int INIT_SYNC_FF    = 0,
     parameter int RST_ACTIVE_HIGH = 0
 ) (
-    input  wire src_arst,
-    input  wire dest_clk,
-    output wire dest_arst
+    input var  src_arst,
+    input var  dest_clk,
+    output var dest_arst
 );
 
   initial begin : drc_check

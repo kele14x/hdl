@@ -7,25 +7,25 @@ module bit_reverse #(
     parameter LOG_FFT_SIZE = 11,
     parameter DATA_WIDTH   = 16
 ) (
-    input  wire                                              clk,
-    input  wire                                              rst,
+    input var                                               clk,
+    input var                                               rst,
     // Data input
-    input  wire [                            DATA_WIDTH-1:0] din_dr,
-    input  wire [                            DATA_WIDTH-1:0] din_di,
-    input  wire [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] din_id,
-    input  wire                                              din_valid,
-    input  wire                                              din_last,
+    input var  [                            DATA_WIDTH-1:0] din_dr,
+    input var  [                            DATA_WIDTH-1:0] din_di,
+    input var  [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] din_id,
+    input var                                               din_valid,
+    input var                                               din_last,
     // Data output
-    output wire [                            DATA_WIDTH-1:0] dout_dr,
-    output wire [                            DATA_WIDTH-1:0] dout_di,
-    output wire [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] dout_id,
-    output wire                                              dout_valid,
-    output wire                                              dout_last
+    output var [                            DATA_WIDTH-1:0] dout_dr,
+    output var [                            DATA_WIDTH-1:0] dout_di,
+    output var [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] dout_id,
+    output var                                              dout_valid,
+    output var                                              dout_last
 );
 
-  localparam integer NumStage = LOG_FFT_SIZE / 2;
+  localparam int NumStage = LOG_FFT_SIZE / 2;
 
-  localparam integer IdWidth = NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV);
+  localparam int IdWidth = NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV);
 
   wire [DATA_WIDTH-1:0] data_dr_s   [0:NumStage];
   wire [DATA_WIDTH-1:0] data_di_s   [0:NumStage];

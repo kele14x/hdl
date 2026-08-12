@@ -3,28 +3,28 @@
 `default_nettype none
 
 module ptp_framer (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    output wire  [31:0] m_axis_tdata,
-    output logic [ 3:0] m_axis_tkeep,
-    output logic        m_axis_tlast,
-    output logic [17:0] m_axis_tuser,
-    output logic        m_axis_tvalid,
-    input  wire         m_axis_tready,
+    output var [31:0] m_axis_tdata,
+    output var [ 3:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var [17:0] m_axis_tuser,
+    output var        m_axis_tvalid,
+    input var         m_axis_tready,
     //
-    input  wire         ap_valid,
-    output logic        ap_ready,
-    input  wire  [ 3:0] ap_message_type,
-    input  wire  [15:0] ap_sequence_id,
-    input  wire  [ 7:0] ap_log_message_interval,
-    input  wire  [79:0] ap_origin_timestamp,
-    input  wire  [79:0] ap_requesting_port_identity,
-    input  wire  [15:0] ap_tag_field,
+    input var         ap_valid,
+    output var        ap_ready,
+    input var  [ 3:0] ap_message_type,
+    input var  [15:0] ap_sequence_id,
+    input var  [ 7:0] ap_log_message_interval,
+    input var  [79:0] ap_origin_timestamp,
+    input var  [79:0] ap_requesting_port_identity,
+    input var  [15:0] ap_tag_field,
     // CSR
-    input  wire  [47:0] ctrl_src_mac,
-    input  wire  [ 7:0] ctrl_domain_number,
-    input  wire  [15:0] ctrl_utc_offset
+    input var  [47:0] ctrl_src_mac,
+    input var  [ 7:0] ctrl_domain_number,
+    input var  [15:0] ctrl_utc_offset
 );
 
   // Parameters
@@ -39,49 +39,49 @@ module ptp_framer (
     PTP_MULTICAST_MAC_PDELAY
   };
 
-  localparam integer S_RST = 0;
-  localparam integer S_IDLE = 1;
+  localparam int S_RST = 0;
+  localparam int S_IDLE = 1;
   //
-  localparam integer S_DMAC0 = 2;
-  localparam integer S_DMAC1_SMAC0 = 3;
-  localparam integer S_SMAC1 = 4;
+  localparam int S_DMAC0 = 2;
+  localparam int S_DMAC1_SMAC0 = 3;
+  localparam int S_SMAC1 = 4;
   //
-  localparam integer S_ETHERTYPE_HEADER0 = 5;
-  localparam integer S_HEADER1 = 6;
-  localparam integer S_HEADER2 = 7;
-  localparam integer S_HEADER3 = 8;
-  localparam integer S_HEADER4 = 9;
-  localparam integer S_HEADER5 = 10;
-  localparam integer S_HEADER6 = 11;
-  localparam integer S_HEADER7 = 12;
-  localparam integer S_HEADER8 = 13;
+  localparam int S_ETHERTYPE_HEADER0 = 5;
+  localparam int S_HEADER1 = 6;
+  localparam int S_HEADER2 = 7;
+  localparam int S_HEADER3 = 8;
+  localparam int S_HEADER4 = 9;
+  localparam int S_HEADER5 = 10;
+  localparam int S_HEADER6 = 11;
+  localparam int S_HEADER7 = 12;
+  localparam int S_HEADER8 = 13;
   //
-  localparam integer S_SYNC0 = 14;
-  localparam integer S_SYNC1 = 15;
-  localparam integer S_SYNC2 = 16;
+  localparam int S_SYNC0 = 14;
+  localparam int S_SYNC1 = 15;
+  localparam int S_SYNC2 = 16;
   //
-  localparam integer S_DELAY_REQ0 = 17;
-  localparam integer S_DELAY_REQ1 = 18;
-  localparam integer S_DELAY_REQ2 = 19;
+  localparam int S_DELAY_REQ0 = 17;
+  localparam int S_DELAY_REQ1 = 18;
+  localparam int S_DELAY_REQ2 = 19;
   //
-  localparam integer S_FOLLOW_UP0 = 20;
-  localparam integer S_FOLLOW_UP1 = 21;
-  localparam integer S_FOLLOW_UP2 = 22;
+  localparam int S_FOLLOW_UP0 = 20;
+  localparam int S_FOLLOW_UP1 = 21;
+  localparam int S_FOLLOW_UP2 = 22;
   //
-  localparam integer S_DELAY_RESP0 = 23;
-  localparam integer S_DELAY_RESP1 = 24;
-  localparam integer S_DELAY_RESP2 = 25;
-  localparam integer S_DELAY_RESP3 = 26;
-  localparam integer S_DELAY_RESP4 = 27;
+  localparam int S_DELAY_RESP0 = 23;
+  localparam int S_DELAY_RESP1 = 24;
+  localparam int S_DELAY_RESP2 = 25;
+  localparam int S_DELAY_RESP3 = 26;
+  localparam int S_DELAY_RESP4 = 27;
   //
-  localparam integer S_ANNOUNCE0 = 28;
-  localparam integer S_ANNOUNCE1 = 29;
-  localparam integer S_ANNOUNCE2 = 30;
-  localparam integer S_ANNOUNCE3 = 31;
-  localparam integer S_ANNOUNCE4 = 32;
-  localparam integer S_ANNOUNCE5 = 33;
-  localparam integer S_ANNOUNCE6 = 34;
-  localparam integer S_ANNOUNCE7 = 35;
+  localparam int S_ANNOUNCE0 = 28;
+  localparam int S_ANNOUNCE1 = 29;
+  localparam int S_ANNOUNCE2 = 30;
+  localparam int S_ANNOUNCE3 = 31;
+  localparam int S_ANNOUNCE4 = 32;
+  localparam int S_ANNOUNCE5 = 33;
+  localparam int S_ANNOUNCE6 = 34;
+  localparam int S_ANNOUNCE7 = 35;
 
   // Signals
 

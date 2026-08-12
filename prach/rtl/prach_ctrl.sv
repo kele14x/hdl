@@ -9,76 +9,76 @@ module prach_ctrl #(
 ) (
     // Clock & Reset
     //--------------
-    input  wire                clk,
-    input  wire                rst,
+    input var                clk,
+    input var                rst,
     //
-    output logic [NUM_ANT-1:0] rd_channel_req,
-    input  wire  [NUM_ANT-1:0] rd_channel_ack,
-    output logic [        8:0] rd_start_symbol0,
-    output logic [        8:0] rd_start_symbol1,
-    output logic [       18:0] rd_start_sample,
-    output logic [        3:0] rd_num_symbol,
-    output logic [       17:0] rd_fcw,
-    output logic [       11:0] rd_section_id,
+    output var [NUM_ANT-1:0] rd_channel_req,
+    input var  [NUM_ANT-1:0] rd_channel_ack,
+    output var [        8:0] rd_start_symbol0,
+    output var [        8:0] rd_start_symbol1,
+    output var [       18:0] rd_start_sample,
+    output var [        3:0] rd_num_symbol,
+    output var [       17:0] rd_fcw,
+    output var [       11:0] rd_section_id,
     // ORAN C-Plane
     //-------------
-    input  wire                clk_eth_xran,
-    input  wire                rst_eth_xran,
+    input var                clk_eth_xran,
+    input var                rst_eth_xran,
     //
-    input  wire                s_prach_tvalid,
-    input  wire  [       15:0] s_prach_rtc_pc_id,
-    input  wire  [        3:0] s_prach_cc,
-    input  wire  [        7:0] s_prach_ss,
-    input  wire  [       11:0] s_prach_section_id,
-    input  wire  [        3:0] s_prach_return_port,
-    input  wire  [        3:0] s_prach_filter_index,
-    input  wire  [        7:0] s_prach_f,
-    input  wire  [        3:0] s_prach_sf,
-    input  wire  [        5:0] s_prach_sl,
-    input  wire  [        5:0] s_prach_sy,
-    input  wire  [       15:0] s_prach_time_offset,
-    input  wire  [        7:0] s_prach_frame_structure,
-    input  wire  [       15:0] s_prach_cp_length,
-    input  wire  [        7:0] s_prach_udcomphdr,
-    input  wire                s_prach_rb,
-    input  wire                s_prach_syminc,
-    input  wire  [        9:0] s_prach_start_prbc,
-    input  wire  [        7:0] s_prach_num_prbc,
-    input  wire  [       11:0] s_prach_remask,
-    input  wire  [        3:0] s_prach_num_symbol,
-    input  wire  [       14:0] s_prach_beamid,
-    input  wire  [       23:0] s_prach_freqoffset,
+    input var                s_prach_tvalid,
+    input var  [       15:0] s_prach_rtc_pc_id,
+    input var  [        3:0] s_prach_cc,
+    input var  [        7:0] s_prach_ss,
+    input var  [       11:0] s_prach_section_id,
+    input var  [        3:0] s_prach_return_port,
+    input var  [        3:0] s_prach_filter_index,
+    input var  [        7:0] s_prach_f,
+    input var  [        3:0] s_prach_sf,
+    input var  [        5:0] s_prach_sl,
+    input var  [        5:0] s_prach_sy,
+    input var  [       15:0] s_prach_time_offset,
+    input var  [        7:0] s_prach_frame_structure,
+    input var  [       15:0] s_prach_cp_length,
+    input var  [        7:0] s_prach_udcomphdr,
+    input var                s_prach_rb,
+    input var                s_prach_syminc,
+    input var  [        9:0] s_prach_start_prbc,
+    input var  [        7:0] s_prach_num_prbc,
+    input var  [       11:0] s_prach_remask,
+    input var  [        3:0] s_prach_num_symbol,
+    input var  [       14:0] s_prach_beamid,
+    input var  [       23:0] s_prach_freqoffset,
     // CSR
     //----
-    input  wire                ctrl_clk,
-    input  wire                ctrl_rst,
+    input var                ctrl_clk,
+    input var                ctrl_rst,
     //
-    input  wire  [        1:0] ctrl_rat,
+    input var  [        1:0] ctrl_rat,
     //
-    input  wire  [        3:0] ctrl_static_c,
+    input var  [        3:0] ctrl_static_c,
     //
-    input  wire  [        3:0] ctrl_subframe_inc,
-    input  wire  [        3:0] ctrl_subframe_id,
-    input  wire  [        5:0] ctrl_slot_id,
-    input  wire  [        5:0] ctrl_symbol_id,
+    input var  [        3:0] ctrl_subframe_inc,
+    input var  [        3:0] ctrl_subframe_id,
+    input var  [        5:0] ctrl_slot_id,
+    input var  [        5:0] ctrl_symbol_id,
     //
-    input  wire  [       15:0] ctrl_time_offset,
-    input  wire  [       15:0] ctrl_cp_length,
+    input var  [       15:0] ctrl_time_offset,
+    input var  [       15:0] ctrl_cp_length,
     //
-    input  wire  [        3:0] ctrl_num_symbol,
-    input  wire  [       23:0] ctrl_freq_offset,
+    input var  [        3:0] ctrl_num_symbol,
+    input var  [       23:0] ctrl_freq_offset,
     //
-    input  wire  [       15:0] ctrl_sampling_offset,
+    input var  [       15:0] ctrl_sampling_offset,
     // Status
-    output wire  [        3:0] stat_subframe_id,
-    output wire  [        5:0] stat_slot_id,
-    output wire  [        5:0] stat_symbol_id,
+    output var [        3:0] stat_subframe_id,
+    output var [        5:0] stat_slot_id,
+    output var [        5:0] stat_symbol_id,
     //
-    output wire  [       15:0] stat_time_offset,
-    output wire  [       15:0] stat_cp_length,
+    output var [       15:0] stat_time_offset,
+    output var [       15:0] stat_cp_length,
     //
-    output wire  [        3:0] stat_num_symbol,
-    output wire  [       23:0] stat_freq_offset
+    output var [        3:0] stat_num_symbol,
+    output var [       23:0] stat_freq_offset
 );
 
   // Parameters
@@ -90,7 +90,7 @@ module prach_ctrl #(
   localparam int StatusSignalWidth = 4 + 6 + 6 + 16 + 16 + 4 + 24;
 
   // Define the combined width of all s_prach signals
-  localparam integer PrachSignalWidth = 16 + 4 + 8 + 12 + 4 + 4 + 8 + 4 + 6 + 6 + 16 + 8 + 16 + 8 +
+  localparam int PrachSignalWidth = 16 + 4 + 8 + 12 + 4 + 4 + 8 + 4 + 6 + 6 + 16 + 8 + 16 + 8 +
                                         1 + 1 + 10 + 8 + 12 + 4 + 15 + 24;
 
   // Helper

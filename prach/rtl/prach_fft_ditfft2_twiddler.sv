@@ -7,18 +7,18 @@ module prach_fft_ditfft2_twiddler #(
     parameter int DATA_WIDTH = 18,
     parameter int SCALE      = 0
 ) (
-    input  wire                  clk,
-    input  wire                  rst,
+    input var                   clk,
+    input var                   rst,
     //
-    input  wire [DATA_WIDTH-1:0] din_dr,
-    input  wire [DATA_WIDTH-1:0] din_di,
-    input  wire                  din_dv,
+    input var  [DATA_WIDTH-1:0] din_dr,
+    input var  [DATA_WIDTH-1:0] din_di,
+    input var                   din_dv,
     //
-    output wire [DATA_WIDTH-1:0] dout_dr,
-    output wire [DATA_WIDTH-1:0] dout_di,
-    output wire                  dout_dv,
+    output var [DATA_WIDTH-1:0] dout_dr,
+    output var [DATA_WIDTH-1:0] dout_di,
+    output var                  dout_dv,
     //
-    output wire                  ovf
+    output var                  ovf
 );
 
   // x0, x1 -> x0 + x1, x0 - x1

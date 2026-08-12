@@ -3,34 +3,34 @@
 `default_nettype none
 
 module ptp_ctrl #(
-    parameter integer CLK_FREQ = 49152000
+    parameter int CLK_FREQ = 49152000
 ) (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     // Rx de-framer
-    input  wire         s_msg_valid,
-    input  wire  [ 3:0] s_msg_message_type,
-    input  wire  [15:0] s_msg_sequence_id,
-    input  wire  [79:0] s_msg_timestamp,
-    input  wire  [79:0] s_msg_origin_timestamp,
-    input  wire  [79:0] s_msg_source_port_identity,
+    input var         s_msg_valid,
+    input var  [ 3:0] s_msg_message_type,
+    input var  [15:0] s_msg_sequence_id,
+    input var  [79:0] s_msg_timestamp,
+    input var  [79:0] s_msg_origin_timestamp,
+    input var  [79:0] s_msg_source_port_identity,
     // Tx framer
-    output logic        ap_valid,
-    input  wire         ap_ready,
-    output logic [ 3:0] ap_message_type,
-    output logic [15:0] ap_sequence_id,
-    output logic [ 7:0] ap_log_message_interval,
-    output logic [79:0] ap_origin_timestamp,
-    output logic [79:0] ap_requesting_port_identity,
-    output logic [15:0] ap_tag_field,
+    output var        ap_valid,
+    input var         ap_ready,
+    output var [ 3:0] ap_message_type,
+    output var [15:0] ap_sequence_id,
+    output var [ 7:0] ap_log_message_interval,
+    output var [79:0] ap_origin_timestamp,
+    output var [79:0] ap_requesting_port_identity,
+    output var [15:0] ap_tag_field,
     // Tx Ethernet
-    input  wire  [79:0] tx_ptp_timestamp,
-    input  wire  [15:0] tx_ptp_timestamp_tag,
-    input  wire         tx_ptp_timestamp_valid,
+    input var  [79:0] tx_ptp_timestamp,
+    input var  [15:0] tx_ptp_timestamp_tag,
+    input var         tx_ptp_timestamp_valid,
     // CSR
-    input  wire         ctrl_master_en,
-    input  wire  [ 7:0] ctrl_log_announce_interval,
-    input  wire  [ 7:0] ctrl_log_sync_interval
+    input var         ctrl_master_en,
+    input var  [ 7:0] ctrl_log_announce_interval,
+    input var  [ 7:0] ctrl_log_sync_interval
 );
 
   // Parameters
@@ -41,7 +41,7 @@ module ptp_ctrl #(
   localparam [3:0] PTP_MESSAGE_TYPE_DELAY_RESP = 4'h9;
   localparam [3:0] PTP_MESSAGE_TYPE_ANNOUNCE = 4'hB;
 
-  localparam integer CounterWidth = $clog2(CLK_FREQ);
+  localparam int CounterWidth = $clog2(CLK_FREQ);
   localparam [CounterWidth-1:0] ClkFreq = CLK_FREQ[CounterWidth-1:0];
   localparam [CounterWidth-1:0] OneCount = {{(CounterWidth - 1) {1'b0}}, 1'b1};
 

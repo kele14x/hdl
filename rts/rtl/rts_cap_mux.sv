@@ -3,30 +3,30 @@
 `default_nettype none
 
 module rts_cap_mux #(
-    parameter integer NUM_CC = 12
+    parameter int NUM_CC = 12
 ) (
-    input  wire                       clk,
-    input  wire                       rst,
+    input var                       clk,
+    input var                       rst,
     // monitor interface
-    input  wire  [     NUM_CC*32-1:0] s0_axis_tdata,
-    input  wire  [               7:0] s0_axis_tuser,
-    input  wire                       s0_axis_tlast,
-    input  wire                       s0_axis_tvalid,
-    input  wire                       s0_axis_tready,
+    input var  [     NUM_CC*32-1:0] s0_axis_tdata,
+    input var  [               7:0] s0_axis_tuser,
+    input var                       s0_axis_tlast,
+    input var                       s0_axis_tvalid,
+    input var                       s0_axis_tready,
     //
-    input  wire  [     NUM_CC*32-1:0] s1_axis_tdata,
-    input  wire  [               7:0] s1_axis_tuser,
-    input  wire                       s1_axis_tlast,
-    input  wire                       s1_axis_tvalid,
-    input  wire                       s1_axis_tready,
+    input var  [     NUM_CC*32-1:0] s1_axis_tdata,
+    input var  [               7:0] s1_axis_tuser,
+    input var                       s1_axis_tlast,
+    input var                       s1_axis_tvalid,
+    input var                       s1_axis_tready,
     //
-    output logic [              31:0] m_axis_tdata,
-    output logic [               7:0] m_axis_tuser,
-    output logic                      m_axis_tlast,
-    output logic                      m_axis_tvalid,
+    output var [              31:0] m_axis_tdata,
+    output var [               7:0] m_axis_tuser,
+    output var                      m_axis_tlast,
+    output var                      m_axis_tvalid,
     //
-    input  wire                       ctrl_pos_sel,
-    input  wire  [$clog2(NUM_CC)-1:0] ctrl_cc_sel
+    input var                       ctrl_pos_sel,
+    input var  [$clog2(NUM_CC)-1:0] ctrl_cc_sel
 );
 
   // Signals

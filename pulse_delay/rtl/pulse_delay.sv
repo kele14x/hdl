@@ -3,15 +3,15 @@
 `default_nettype none
 
 module pulse_delay #(
-    parameter integer WIDTH = 8
+    parameter int WIDTH = 8
 ) (
-    input  wire              clk,
-    input  wire              rst,
+    input var              clk,
+    input var              rst,
     //
-    input  wire              pulse_in,
-    output logic             pulse_out,
+    input var              pulse_in,
+    output var             pulse_out,
     //
-    input  wire  [WIDTH-1:0] delay
+    input var  [WIDTH-1:0] delay
 );
 
   localparam [WIDTH-1:0] DelayOffset = 2;

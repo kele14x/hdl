@@ -8,28 +8,28 @@ module bit_reverse_stage #(
     parameter LOG_FFT_SIZE = 12,
     parameter DATA_WIDTH   = 16
 ) (
-    input  wire                                               clk,
-    input  wire                                               rst,
+    input var                                               clk,
+    input var                                               rst,
     // Data input
-    input  wire  [                            DATA_WIDTH-1:0] din_dr,
-    input  wire  [                            DATA_WIDTH-1:0] din_di,
-    input  wire  [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] din_id,
-    input  wire                                               din_valid,
-    input  wire                                               din_last,
+    input var  [                            DATA_WIDTH-1:0] din_dr,
+    input var  [                            DATA_WIDTH-1:0] din_di,
+    input var  [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] din_id,
+    input var                                               din_valid,
+    input var                                               din_last,
     // Data output
-    output logic [                            DATA_WIDTH-1:0] dout_dr,
-    output logic [                            DATA_WIDTH-1:0] dout_di,
-    output logic [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] dout_id,
-    output logic                                              dout_valid,
-    output logic                                              dout_last
+    output var [                            DATA_WIDTH-1:0] dout_dr,
+    output var [                            DATA_WIDTH-1:0] dout_di,
+    output var [(NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV))-1:0] dout_id,
+    output var                                              dout_valid,
+    output var                                              dout_last
 );
 
   // Swap x_j and x_k, where:
   //   j = N - 1 - i
   //   k = i
-  localparam integer DelayTaps = NUM_INLV * (2 ** (LOG_FFT_SIZE - 1 - IDX_STAGE) - 2 ** IDX_STAGE);
+  localparam int DelayTaps = NUM_INLV * (2 ** (LOG_FFT_SIZE - 1 - IDX_STAGE) - 2 ** IDX_STAGE);
 
-  localparam integer IdWidth = NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV);
+  localparam int IdWidth = NUM_INLV <= 1 ? 1 : $clog2(NUM_INLV);
   localparam [31:0] LastIdFull = NUM_INLV - 1;
   localparam [IdWidth-1:0] LastId = LastIdFull[IdWidth-1:0];
 

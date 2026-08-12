@@ -7,9 +7,9 @@ module async_input_sync #(
     parameter int PIPELINE_STAGES = 1,
     parameter int INIT            = 0
 ) (
-    input  wire clk,
-    input  wire async_in,
-    output wire sync_out
+    input var  clk,
+    input var  async_in,
+    output var sync_out
 );
 
   initial begin : drc_check

@@ -32,27 +32,27 @@
 `default_nettype none
 
 module fifo_async #(
-    parameter integer FIFO_DEPTH   = 512,
-    parameter integer FIFO_LATENCY = 3,
-    parameter integer DATA_WIDTH   = 16
+    parameter int FIFO_DEPTH   = 512,
+    parameter int FIFO_LATENCY = 3,
+    parameter int DATA_WIDTH   = 16
 ) (
     // Common to write and read domain
-    input  wire                   rst,
+    input var                   rst,
     // Write interface
-    input  wire                   wr_clk,
-    input  wire                   wr_en,
-    input  wire  [DATA_WIDTH-1:0] wr_din,
-    output logic                  wr_full,
+    input var                   wr_clk,
+    input var                   wr_en,
+    input var  [DATA_WIDTH-1:0] wr_din,
+    output var                  wr_full,
     // Read interface
-    input  wire                   rd_clk,
-    input  wire                   rd_en,
-    output logic [DATA_WIDTH-1:0] rd_dout,
-    output wire                   rd_empty
+    input var                   rd_clk,
+    input var                   rd_en,
+    output var [DATA_WIDTH-1:0] rd_dout,
+    output var                  rd_empty
 );
 
   // Local parameters
 
-  localparam integer AddrWidth = $clog2(FIFO_DEPTH);
+  localparam int AddrWidth = $clog2(FIFO_DEPTH);
 
   localparam logic OutputReg = FIFO_LATENCY >= 2 ? 1 : 0;
 

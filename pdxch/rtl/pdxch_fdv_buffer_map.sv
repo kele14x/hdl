@@ -10,14 +10,14 @@
 module pdxch_fdv_buffer_map #(
     parameter int HALF_BLOCK = 0
 ) (
-    input  wire        bank,
-    input  wire [11:0] logical_re,
-    output logic [11:0] iq_addr,
-    output logic [11:0] exp_addr,
-    output wire        iq_half
+    input var         bank,
+    input var  [11:0] logical_re,
+    output var [11:0] iq_addr,
+    output var [11:0] exp_addr,
+    output var        iq_half
 );
 
-  localparam int IQ_BANK_DEPTH  = (HALF_BLOCK != 0) ? 1024 : 1792;
+  localparam int IQ_BANK_DEPTH = (HALF_BLOCK != 0) ? 1024 : 1792;
   localparam int EXP_BANK_DEPTH = (HALF_BLOCK != 0) ? 480 : 825;
 
   initial begin : drc_check

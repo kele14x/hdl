@@ -3,15 +3,15 @@
 `default_nettype none
 
 module timer_pps #(
-    parameter integer FREQ_MODE = 0
+    parameter int FREQ_MODE = 0
 ) (
-    input  wire  clk,
-    input  wire  rst,
+    input var  clk,
+    input var  rst,
     //
-    input  wire  pps_in,
+    input var  pps_in,
     //
-    output logic pps_out,
-    output logic pps_pad
+    output var pps_out,
+    output var pps_pad
 );
 
   // Parameters

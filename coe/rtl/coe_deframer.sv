@@ -4,39 +4,39 @@
 
 module coe_deframer (
     // Ethernet
-    input  wire         clk,
-    input  wire         rst,
+    input var          clk,
+    input var          rst,
     //
-    input  wire         sync,
+    input var          sync,
     //
-    input  wire [ 31:0] s_axis_tdata,
-    input  wire [  3:0] s_axis_tkeep,
-    input  wire         s_axis_tlast,
-    input  wire         s_axis_tvalid,
+    input var  [ 31:0] s_axis_tdata,
+    input var  [  3:0] s_axis_tkeep,
+    input var          s_axis_tlast,
+    input var          s_axis_tvalid,
     //
-    input  wire         s_trans_header_valid,
-    input  wire [ 15:0] s_trans_rtc_pc_id,
-    input  wire [  7:0] s_trans_seqid,
-    input  wire         s_trans_ebit,
-    input  wire [  6:0] s_trans_subseqid,
+    input var          s_trans_header_valid,
+    input var  [ 15:0] s_trans_rtc_pc_id,
+    input var  [  7:0] s_trans_seqid,
+    input var          s_trans_ebit,
+    input var  [  6:0] s_trans_subseqid,
     // Radio I/F
-    output wire [767:0] m_axis_rx_tdata,
-    output wire [  7:0] m_axis_rx_tuser,
-    output wire         m_axis_rx_tlast,
-    output wire         m_axis_rx_tvalid,
-    input  wire         m_axis_rx_tready,
+    output var [767:0] m_axis_rx_tdata,
+    output var [  7:0] m_axis_rx_tuser,
+    output var         m_axis_rx_tlast,
+    output var         m_axis_rx_tvalid,
+    input var          m_axis_rx_tready,
     // CSR
     //----
-    input  wire         ctrl_clk,
-    input  wire         ctrl_rst,
+    input var          ctrl_clk,
+    input var          ctrl_rst,
     //
-    input  wire         ctrl_en,
-    input  wire [ 15:0] ctrl_seq_en,
-    input  wire [ 95:0] ctrl_seq_id,
+    input var          ctrl_en,
+    input var  [ 15:0] ctrl_seq_en,
+    input var  [ 95:0] ctrl_seq_id,
     //
-    input  wire [  8:0] ctrl_ts_offset,
+    input var  [  8:0] ctrl_ts_offset,
     //
-    output wire [ 31:0] stat_conflict_cnt
+    output var [ 31:0] stat_conflict_cnt
 );
 
   wire [31:0] s0_axis_tdata;

@@ -8,48 +8,48 @@ module puxch_channel #(
 ) (
     // Internal I/F
     //-------------
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire [31:0] s_axis_tdata         [NUM_ANT],
-    input  wire [ 7:0] s_axis_tuser         [NUM_ANT],
-    input  wire        s_axis_tlast         [NUM_ANT],
-    input  wire        s_axis_tvalid        [NUM_ANT],
-    output wire        s_axis_tready        [NUM_ANT],
+    input var  [31:0] s_axis_tdata         [NUM_ANT],
+    input var  [ 7:0] s_axis_tuser         [NUM_ANT],
+    input var         s_axis_tlast         [NUM_ANT],
+    input var         s_axis_tvalid        [NUM_ANT],
+    output var        s_axis_tready        [NUM_ANT],
     //
-    output wire [15:0] dout_dr,
-    output wire [15:0] dout_di,
-    output wire        dout_sf,
-    output wire        dout_sl,
-    output wire        dout_sy,
-    output wire [ 3:0] dout_chn,
-    output wire        dout_dv,
-    output wire        dout_last,
+    output var [15:0] dout_dr,
+    output var [15:0] dout_di,
+    output var        dout_sf,
+    output var        dout_sl,
+    output var        dout_sy,
+    output var [ 3:0] dout_chn,
+    output var        dout_dv,
+    output var        dout_last,
     // O-RAN I/F
     //----------
-    input  wire        clk_eth_xran,
-    input  wire        rst_eth_xran,
+    input var         clk_eth_xran,
+    input var         rst_eth_xran,
     //
-    input  wire        sync_in,
+    input var         sync_in,
     //
-    output wire        fram_radio_start_10ms,
+    output var        fram_radio_start_10ms,
     // CSR
     //----
-    input  wire        ctrl_clk,
-    input  wire        ctrl_rst,
+    input var         ctrl_clk,
+    input var         ctrl_rst,
     //
-    input  wire [ 3:0] ctrl_en,
-    input  wire [ 1:0] ctrl_rat,
-    input  wire [ 3:0] ctrl_bist,
-    input  wire [ 3:0] ctrl_bw,
-    input  wire [ 8:0] ctrl_nprb,
-    input  wire [22:0] ctrl_rfs_offset,
+    input var  [ 3:0] ctrl_en,
+    input var  [ 1:0] ctrl_rat,
+    input var  [ 3:0] ctrl_bist,
+    input var  [ 3:0] ctrl_bw,
+    input var  [ 8:0] ctrl_nprb,
+    input var  [22:0] ctrl_rfs_offset,
     //
-    input  wire [16:0] ctrl_gain            [NUM_ANT],
+    input var  [16:0] ctrl_gain            [NUM_ANT],
     // addr = [3:0]symbol
-    input  wire [ 3:0] ctrl_phase_comp_addr,
-    input  wire        ctrl_phase_comp_we,
-    input  wire [31:0] ctrl_phase_comp_din
+    input var  [ 3:0] ctrl_phase_comp_addr,
+    input var         ctrl_phase_comp_we,
+    input var  [31:0] ctrl_phase_comp_din
 );
 
   localparam int LogFftSize = (HALF_BLOCK != 0) ? 11 : 12;

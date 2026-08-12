@@ -8,13 +8,13 @@ module prach_fft_ditfft2_rom #(
     parameter int DATA_WIDTH = 18,
     parameter     RAM_STYLE  = "BLOCK"
 ) (
-    input  wire                         clk,
-    input  wire                         rst,
+    input var                          clk,
+    input var                          rst,
     //
-    input  wire        [ADDR_WIDTH-1:0] addr,
+    input var         [ADDR_WIDTH-1:0] addr,
     //
-    output wire signed [DATA_WIDTH-1:0] tr,
-    output wire signed [DATA_WIDTH-1:0] ti
+    output var signed [DATA_WIDTH-1:0] tr,
+    output var signed [DATA_WIDTH-1:0] ti
 );
 
   // Parameters

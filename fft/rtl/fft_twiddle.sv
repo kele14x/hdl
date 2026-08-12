@@ -6,32 +6,32 @@
 `default_nettype none
 
 module fft_twiddle #(
-    parameter integer NUM_ANT      = 4,
-    parameter int     INV_FFT      = 0,
-    parameter integer LOG_FFT_SIZE = 4,
-    parameter integer DATA_WIDTH   = 18
+    parameter int NUM_ANT      = 4,
+    parameter int INV_FFT      = 0,
+    parameter int LOG_FFT_SIZE = 4,
+    parameter int DATA_WIDTH   = 18
 ) (
-    input  wire                         clk,
-    input  wire                         rst,
+    input var                          clk,
+    input var                          rst,
     // Input
-    input  wire signed [DATA_WIDTH-1:0] din_dr,
-    input  wire signed [DATA_WIDTH-1:0] din_di,
-    input  wire                         din_dv,
+    input var  signed [DATA_WIDTH-1:0] din_dr,
+    input var  signed [DATA_WIDTH-1:0] din_di,
+    input var                          din_dv,
     // Output
-    output wire signed [DATA_WIDTH-1:0] dout_dr,
-    output wire signed [DATA_WIDTH-1:0] dout_di,
-    output wire                         dout_dv,
+    output var signed [DATA_WIDTH-1:0] dout_dr,
+    output var signed [DATA_WIDTH-1:0] dout_di,
+    output var                         dout_dv,
     //
-    input  wire        [           1:0] ctrl_itlv,
-    input  wire        [           1:0] ctrl_bypass,
+    input var         [           1:0] ctrl_itlv,
+    input var         [           1:0] ctrl_bypass,
     // Status
-    output wire                         stat_ovf
+    output var                         stat_ovf
 );
 
   // Parameters
 
-  localparam integer Latency = 9;
-  localparam integer LogFftSize2 = LOG_FFT_SIZE + integer'(LOG_FFT_SIZE & 1) - 1;
+  localparam int Latency = 9;
+  localparam int LogFftSize2 = LOG_FFT_SIZE + integer'(LOG_FFT_SIZE & 1) - 1;
 
   // Signals
 

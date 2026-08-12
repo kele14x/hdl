@@ -5,23 +5,23 @@
 module prach_bfp_compress #(
     parameter int NUM_ANT = 4
 ) (
-    input  wire                clk,
-    input  wire                rst,
+    input var                clk,
+    input var                rst,
     //
-    input  wire  [        15:0] din_dr,
-    input  wire  [        15:0] din_di,
-    input  wire                din_dv,
-    input  wire                din_sy,
-    input  wire  [         1:0] din_chn,
-    input  wire  [         3:0] ctrl_fs_offset,
+    input var  [       15:0] din_dr,
+    input var  [       15:0] din_di,
+    input var                din_dv,
+    input var                din_sy,
+    input var  [        1:0] din_chn,
+    input var  [        3:0] ctrl_fs_offset,
     //
-    output logic [NUM_ANT-1:0] wr_we,
-    output logic [         8:0] wr_addr,
-    output logic [        35:0] wr_data,
-    output logic [NUM_ANT-1:0] exp_we,
-    output logic [         6:0] exp_addr,
-    output logic [         3:0] exp_wdata,
-    output logic [NUM_ANT-1:0] section_done
+    output var [NUM_ANT-1:0] wr_we,
+    output var [        8:0] wr_addr,
+    output var [       35:0] wr_data,
+    output var [NUM_ANT-1:0] exp_we,
+    output var [        6:0] exp_addr,
+    output var [        3:0] exp_wdata,
+    output var [NUM_ANT-1:0] section_done
 );
 
   initial begin : drc_check
@@ -29,7 +29,7 @@ module prach_bfp_compress #(
     else $error("[%m]: NUM_ANT (%0d) must be between 1 and 4.", NUM_ANT);
   end
 
-  logic [31:0] capture_data[2][12];
+  logic [31:0] capture_data      [2][12];
   logic        capture_active;
   logic        capture_bank;
   logic [ 3:0] capture_re_idx;
@@ -165,22 +165,22 @@ module prach_bfp_compress #(
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      capture_active   <= 1'b0;
-      capture_bank     <= 1'b0;
-      capture_re_idx   <= '0;
-      capture_prb_idx  <= '0;
-      capture_count    <= '0;
-      capture_max_msb  <= '0;
-      capture_ant      <= '0;
-      section_started  <= 1'b0;
+      capture_active    <= 1'b0;
+      capture_bank      <= 1'b0;
+      capture_re_idx    <= '0;
+      capture_prb_idx   <= '0;
+      capture_count     <= '0;
+      capture_max_msb   <= '0;
+      capture_ant       <= '0;
+      section_started   <= 1'b0;
       section_done_seen <= 1'b0;
-      process_valid    <= 1'b0;
-      process_bank     <= 1'b0;
-      process_word_idx <= '0;
-      process_prb_idx  <= '0;
-      process_msb      <= '0;
-      process_exp      <= '0;
-      process_ant      <= '0;
+      process_valid     <= 1'b0;
+      process_bank      <= 1'b0;
+      process_word_idx  <= '0;
+      process_prb_idx   <= '0;
+      process_msb       <= '0;
+      process_exp       <= '0;
+      process_ant       <= '0;
     end else begin
       if (process_valid) begin
         if (process_word_idx == 5) begin
@@ -196,17 +196,17 @@ module prach_bfp_compress #(
 
       if (din_sy && din_dv) begin
         capture_data[0][0] <= {din_dr, din_di};
-        capture_active   <= 1'b1;
-        capture_bank     <= 1'b0;
-        capture_re_idx   <= 1;
-        capture_prb_idx  <= '0;
-        capture_count    <= 1;
-        capture_max_msb  <= din_max_msb;
-        capture_ant      <= din_chn;
-        section_started  <= 1'b1;
-        section_done_seen <= 1'b0;
-        process_valid    <= 1'b0;
-        process_word_idx <= '0;
+        capture_active     <= 1'b1;
+        capture_bank       <= 1'b0;
+        capture_re_idx     <= 1;
+        capture_prb_idx    <= '0;
+        capture_count      <= 1;
+        capture_max_msb    <= din_max_msb;
+        capture_ant        <= din_chn;
+        section_started    <= 1'b1;
+        section_done_seen  <= 1'b0;
+        process_valid      <= 1'b0;
+        process_word_idx   <= '0;
       end else if (capture_active && din_dv) begin
         capture_data[capture_bank][capture_re_idx] <= {din_dr, din_di};
         capture_count <= capture_count + 1'b1;
@@ -220,9 +220,9 @@ module prach_bfp_compress #(
           process_exp      <= get_exp(capture_next_msb, ctrl_fs_offset);
           process_ant      <= capture_ant;
 
-          capture_bank    <= ~capture_bank;
-          capture_re_idx  <= '0;
-          capture_max_msb <= '0;
+          capture_bank     <= ~capture_bank;
+          capture_re_idx   <= '0;
+          capture_max_msb  <= '0;
           if (capture_prb_idx == 71) begin
             capture_active <= 1'b0;
           end else begin
@@ -247,8 +247,8 @@ module prach_bfp_compress #(
       end
       if (capture_active && din_dv && !(din_sy && din_dv)) begin
         assert (din_chn == capture_ant)
-        else $error("[%m]: din_chn changed from %0d to %0d during a section.", capture_ant,
-                    din_chn);
+        else
+          $error("[%m]: din_chn changed from %0d to %0d during a section.", capture_ant, din_chn);
         assert (!(process_valid && (process_bank == capture_bank)))
         else $error("[%m]: capture attempted to overwrite the active process bank.");
         assert (capture_count < 864)

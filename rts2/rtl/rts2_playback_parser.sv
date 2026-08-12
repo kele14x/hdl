@@ -4,42 +4,42 @@
 
 module rts2_playback_parser (
     // Timer
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire         sync_in,
+    input var         sync_in,
     // DDR DataMover
-    input  wire         ddr4_clk,
-    input  wire         ddr4_rst,
+    input var         ddr4_clk,
+    input var         ddr4_rst,
     //
-    input  wire  [63:0] s_axis_tdata,
-    input  wire  [ 7:0] s_axis_tkeep,
-    input  wire         s_axis_tlast,
-    input  wire         s_axis_tvalid,
-    output wire         s_axis_tready,
+    input var  [63:0] s_axis_tdata,
+    input var  [ 7:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var         s_axis_tvalid,
+    output var        s_axis_tready,
     //
-    output logic [63:0] m_axis_tdata,
-    output logic [ 7:0] m_axis_tkeep,
-    output logic        m_axis_tlast,
-    output logic        m_axis_tvalid,
+    output var [63:0] m_axis_tdata,
+    output var [ 7:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var        m_axis_tvalid,
     // CSR
-    input  wire         ctrl_en
+    input var         ctrl_en
 );
 
   // Parameters
 
-  localparam integer S_RST = 0;
-  localparam integer S_IDLE = 1;
+  localparam int S_RST = 0;
+  localparam int S_IDLE = 1;
 
-  localparam integer S_FHEADER0 = 2;
-  localparam integer S_FHEADER1 = 3;
-  localparam integer S_FHEADER2 = 4;
+  localparam int S_FHEADER0 = 2;
+  localparam int S_FHEADER1 = 3;
+  localparam int S_FHEADER2 = 4;
 
-  localparam integer S_RHEADER0 = 5;
-  localparam integer S_RHEADER1 = 6;
+  localparam int S_RHEADER0 = 5;
+  localparam int S_RHEADER1 = 6;
 
-  localparam integer S_WAIT = 7;
-  localparam integer S_DATA = 8;
+  localparam int S_WAIT = 7;
+  localparam int S_DATA = 8;
 
   // Byte reverse a 64-bit word, which is suitable for the Ethernet packet
   function [63:0] byte_reverse64;

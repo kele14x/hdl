@@ -9,33 +9,33 @@
 `default_nettype none
 
 module ecpri_deframer_iq (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [31:0] s_axis_tdata,
-    input  wire  [ 3:0] s_axis_tkeep,
-    input  wire         s_axis_tlast,
-    input  wire         s_axis_tvalid,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 3:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var         s_axis_tvalid,
     //
-    output logic [31:0] m_axis_tdata,
-    output logic [ 3:0] m_axis_tkeep,
-    output logic        m_axis_tlast,
-    output logic        m_axis_tvalid,
+    output var [31:0] m_axis_tdata,
+    output var [ 3:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var        m_axis_tvalid,
     // eCPRI IQ Header
-    output logic        m_trans_header_valid,
-    output logic [15:0] m_trans_rtc_pc_id,
-    output logic [ 7:0] m_trans_seqid,
-    output logic        m_trans_ebit,
-    output logic [ 6:0] m_trans_subseqid
+    output var        m_trans_header_valid,
+    output var [15:0] m_trans_rtc_pc_id,
+    output var [ 7:0] m_trans_seqid,
+    output var        m_trans_ebit,
+    output var [ 6:0] m_trans_subseqid
 );
 
   import ecpri_pkg::*;
 
   // FSM
 
-  localparam integer S_RST = 0;  // Under reset
-  localparam integer S_TRANS = 1;  // Transport header (4)
-  localparam integer S_PAYLOAD = 2;  // Payload
+  localparam int S_RST = 0;  // Under reset
+  localparam int S_TRANS = 1;  // Transport header (4)
+  localparam int S_PAYLOAD = 2;  // Payload
 
   integer state, state_next;
 

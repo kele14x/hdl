@@ -47,24 +47,24 @@ module nco #(
     parameter [PHASE_FRACTION_WIDTH-1:0] LFSR_INITIAL         = 20'hFFFFF,
     parameter [  PHASE_FRACTION_WIDTH:0] LFSR_POLYNOMIAL      = 21'h100005
 ) (
-    input wire clk,
-    input wire rst,
+    input var clk,
+    input var rst,
     //
-    input wire sync,
+    input var sync,
     //
-    output wire [NUM_PARALLEL*16-1:0] cos,
-    output wire [NUM_PARALLEL*16-1:0] sin,
+    output var [NUM_PARALLEL*16-1:0] cos,
+    output var [NUM_PARALLEL*16-1:0] sin,
     //
-    input wire [$clog2(NUM_PARALLEL)+PHASE_INTEGER_WIDTH+PHASE_FRACTION_WIDTH-1:0] ctrl_poff,
-    input wire [$clog2(NUM_PARALLEL)+PHASE_INTEGER_WIDTH+PHASE_FRACTION_WIDTH-1:0] ctrl_pinc
+    input var [$clog2(NUM_PARALLEL)+PHASE_INTEGER_WIDTH+PHASE_FRACTION_WIDTH-1:0] ctrl_poff,
+    input var [$clog2(NUM_PARALLEL)+PHASE_INTEGER_WIDTH+PHASE_FRACTION_WIDTH-1:0] ctrl_pinc
 );
 
   // Local parameters
 
   // Integer bit width for multi-phase parallel arch
-  localparam integer PhaseParallelWidth = $clog2(NUM_PARALLEL);
+  localparam int PhaseParallelWidth = $clog2(NUM_PARALLEL);
   // Total bit with of phase control word
-  localparam integer PhaseWidth = PhaseParallelWidth + PHASE_INTEGER_WIDTH + PHASE_FRACTION_WIDTH;
+  localparam int PhaseWidth = PhaseParallelWidth + PHASE_INTEGER_WIDTH + PHASE_FRACTION_WIDTH;
 
   // Check parameters
 

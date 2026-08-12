@@ -7,11 +7,11 @@ module cdc_array_single #(
     parameter int SRC_INPUT_REG = 1,
     parameter int WIDTH         = 2
 ) (
-    input  wire             src_clk,
-    input  wire [WIDTH-1:0] src_in,
+    input var              src_clk,
+    input var  [WIDTH-1:0] src_in,
     //
-    input  wire             dest_clk,
-    output wire [WIDTH-1:0] dest_out
+    input var              dest_clk,
+    output var [WIDTH-1:0] dest_out
 );
 
   initial begin : drc_check

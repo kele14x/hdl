@@ -6,27 +6,27 @@ module prach_hb4 #(
     parameter int           DELAY_BASE    = 128,
     parameter signed [17:0] UNIQ_COE  [4] = '{-18'sd669, 18'sd3099, -18'sd9939, 18'sd40231}
 ) (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [15:0] din_dp1,
-    input  wire  [15:0] din_dp2,
-    input  wire         din_sf,
-    input  wire         din_sl,
-    input  wire         din_sy,
-    input  wire  [ 7:0] din_chn,
-    input  wire         din_dv,
-    input  wire         din_last,
+    input var  [15:0] din_dp1,
+    input var  [15:0] din_dp2,
+    input var         din_sf,
+    input var         din_sl,
+    input var         din_sy,
+    input var  [ 7:0] din_chn,
+    input var         din_dv,
+    input var         din_last,
     //
-    output logic [15:0] dout_dq,
-    output wire         dout_sf,
-    output wire         dout_sl,
-    output wire         dout_sy,
-    output wire  [ 7:0] dout_chn,
-    output wire         dout_dv,
-    output wire         dout_last,
+    output var [15:0] dout_dq,
+    output var        dout_sf,
+    output var        dout_sl,
+    output var        dout_sy,
+    output var [ 7:0] dout_chn,
+    output var        dout_dv,
+    output var        dout_last,
     //
-    input  wire         ctrl_bypass
+    input var         ctrl_bypass
 );
 
   // Check parameters
@@ -79,8 +79,8 @@ module prach_hb4 #(
 
   logic signed [15:0] center_in;
   logic signed [15:0] center_delay[8];
-  logic        [12:0] metadata_in;
-  logic        [12:0] center_metadata;
+  logic [12:0] metadata_in;
+  logic [12:0] center_metadata;
 
   logic signed [15:0] ay1;
   logic signed [15:0] az1;
@@ -113,8 +113,7 @@ module prach_hb4 #(
   // D128 sees the retained phase at chn 0..7 and the adjacent phase at
   // chn 128..135. Both phases are filter samples for the same eight lanes,
   // but only the retained phase advances to D256 after decimation.
-  wire lane_valid = din_dv && (din_chn[6:3] == '0) &&
-      ((DELAY_BASE == 128) || !din_chn[7]);
+  wire lane_valid = din_dv && (din_chn[6:3] == '0) && ((DELAY_BASE == 128) || !din_chn[7]);
   wire [HistoryWidth-1:0] history_read = lane_history[lane];
 
   always_comb begin
@@ -129,19 +128,14 @@ module prach_hb4 #(
 
     history_write[OddHistoryBase+:16] = din_dp2;
     for (int i = 1; i < NumOddHistory; i++) begin
-      history_write[OddHistoryBase+i*16+:16] =
-          history_read[OddHistoryBase+(i-1)*16+:16];
+      history_write[OddHistoryBase+i*16+:16] = history_read[OddHistoryBase+(i-1)*16+:16];
     end
 
-    history_write[CenterHistoryBase+:16] = din_dp1;
-    history_write[MetadataHistoryBase+:13] = {
-      din_last, din_dv, din_chn, din_sy, din_sl, din_sf
-    };
+    history_write[CenterHistoryBase+:16]   = din_dp1;
+    history_write[MetadataHistoryBase+:13] = {din_last, din_dv, din_chn, din_sy, din_sl, din_sf};
     for (int i = 1; i < NumCenterHistory; i++) begin
-      history_write[CenterHistoryBase+i*16+:16] =
-          history_read[CenterHistoryBase+(i-1)*16+:16];
-      history_write[MetadataHistoryBase+i*13+:13] =
-          history_read[MetadataHistoryBase+(i-1)*13+:13];
+      history_write[CenterHistoryBase+i*16+:16]   = history_read[CenterHistoryBase+(i-1)*16+:16];
+      history_write[MetadataHistoryBase+i*13+:13] = history_read[MetadataHistoryBase+(i-1)*13+:13];
     end
   end
 
@@ -175,50 +169,43 @@ module prach_hb4 #(
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      a_y0            <= '0;
-      a_z0            <= '0;
-      b_y0            <= '0;
-      b_z0            <= '0;
-      c_y0            <= '0;
-      c_z0            <= '0;
-      d_y0            <= '0;
-      d_z0            <= '0;
-      center_in       <= '0;
-      metadata_in     <= '0;
+      a_y0        <= '0;
+      a_z0        <= '0;
+      b_y0        <= '0;
+      b_z0        <= '0;
+      c_y0        <= '0;
+      c_z0        <= '0;
+      d_y0        <= '0;
+      d_z0        <= '0;
+      center_in   <= '0;
+      metadata_in <= '0;
     end else if (lane_valid) begin
       a_y0 <= $signed(din_dp2);
-      a_z0 <= history_count[lane] >= 7 ?
-          $signed(history_read[OddHistoryBase+6*16+:16]) : '0;
-      b_y0 <= history_count[lane] >= 1 ?
-          $signed(history_read[OddHistoryBase+:16]) : '0;
-      b_z0 <= history_count[lane] >= 6 ?
-          $signed(history_read[OddHistoryBase+5*16+:16]) : '0;
-      c_y0 <= history_count[lane] >= 2 ?
-          $signed(history_read[OddHistoryBase+1*16+:16]) : '0;
-      c_z0 <= history_count[lane] >= 5 ?
-          $signed(history_read[OddHistoryBase+4*16+:16]) : '0;
-      d_y0 <= history_count[lane] >= 3 ?
-          $signed(history_read[OddHistoryBase+2*16+:16]) : '0;
-      d_z0 <= history_count[lane] >= 4 ?
-          $signed(history_read[OddHistoryBase+3*16+:16]) : '0;
+      a_z0 <= history_count[lane] >= 7 ? $signed(history_read[OddHistoryBase+6*16+:16]) : '0;
+      b_y0 <= history_count[lane] >= 1 ? $signed(history_read[OddHistoryBase+:16]) : '0;
+      b_z0 <= history_count[lane] >= 6 ? $signed(history_read[OddHistoryBase+5*16+:16]) : '0;
+      c_y0 <= history_count[lane] >= 2 ? $signed(history_read[OddHistoryBase+1*16+:16]) : '0;
+      c_z0 <= history_count[lane] >= 5 ? $signed(history_read[OddHistoryBase+4*16+:16]) : '0;
+      d_y0 <= history_count[lane] >= 3 ? $signed(history_read[OddHistoryBase+2*16+:16]) : '0;
+      d_z0 <= history_count[lane] >= 4 ? $signed(history_read[OddHistoryBase+3*16+:16]) : '0;
 
-      center_in <= history_count[lane] >= 3 ?
-          $signed(history_read[CenterHistoryBase+2*16+:16]) : '0;
-      metadata_in <= history_count[lane] >= 3 ?
-          center_metadata : '0;
+      center_in <= history_count[lane] >= 3 ? $signed(
+          history_read[CenterHistoryBase+2*16+:16]
+      ) : '0;
+      metadata_in <= history_count[lane] >= 3 ? center_metadata : '0;
 
       lane_history[lane] <= history_write;
     end else begin
-      a_y0            <= '0;
-      a_z0            <= '0;
-      b_y0            <= '0;
-      b_z0            <= '0;
-      c_y0            <= '0;
-      c_z0            <= '0;
-      d_y0            <= '0;
-      d_z0            <= '0;
-      center_in       <= '0;
-      metadata_in     <= '0;
+      a_y0        <= '0;
+      a_z0        <= '0;
+      b_y0        <= '0;
+      b_z0        <= '0;
+      c_y0        <= '0;
+      c_z0        <= '0;
+      d_y0        <= '0;
+      d_z0        <= '0;
+      center_in   <= '0;
+      metadata_in <= '0;
     end
   end
 

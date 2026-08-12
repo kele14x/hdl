@@ -10,58 +10,58 @@ module puxch_top #(
 ) (
     // Clock & Reset
     //--------------
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [31:0] s_axis_tdata         [ NUM_CC][NUM_ANT],
-    input  wire  [ 7:0] s_axis_tuser         [ NUM_CC][NUM_ANT],
-    input  wire         s_axis_tlast         [ NUM_CC][NUM_ANT],
-    input  wire         s_axis_tvalid        [ NUM_CC][NUM_ANT],
-    output wire         s_axis_tready        [ NUM_CC][NUM_ANT],
+    input var  [31:0] s_axis_tdata         [ NUM_CC][NUM_ANT],
+    input var  [ 7:0] s_axis_tuser         [ NUM_CC][NUM_ANT],
+    input var         s_axis_tlast         [ NUM_CC][NUM_ANT],
+    input var         s_axis_tvalid        [ NUM_CC][NUM_ANT],
+    output var        s_axis_tready        [ NUM_CC][NUM_ANT],
     // O-RAN U-Plane
     //--------------
-    input  wire         clk_eth_xran,
-    input  wire         rst_eth_xran,
+    input var         clk_eth_xran,
+    input var         rst_eth_xran,
     //
-    input  wire         sync_in,
+    input var         sync_in,
     //
-    output wire         fram_radio_start_10ms[ NUM_CC],
-    input  wire  [11:0] s_ul_sym_num         [ NUM_CC],
+    output var        fram_radio_start_10ms[ NUM_CC],
+    input var  [11:0] s_ul_sym_num         [ NUM_CC],
     //
-    output wire  [63:0] m_fram_data_tdata    [NUM_ANT],
-    output wire  [ 7:0] m_fram_data_tkeep    [NUM_ANT],
-    output wire         m_fram_data_tvalid   [NUM_ANT],
-    output wire         m_fram_data_tlast    [NUM_ANT],
-    input  wire         m_fram_data_tready   [NUM_ANT],
-    input  wire  [32:0] m_fram_data_req      [NUM_ANT],
+    output var [63:0] m_fram_data_tdata    [NUM_ANT],
+    output var [ 7:0] m_fram_data_tkeep    [NUM_ANT],
+    output var        m_fram_data_tvalid   [NUM_ANT],
+    output var        m_fram_data_tlast    [NUM_ANT],
+    input var         m_fram_data_tready   [NUM_ANT],
+    input var  [32:0] m_fram_data_req      [NUM_ANT],
     // CSR
     //----
-    input  wire         ctrl_clk,
-    input  wire         ctrl_rst,
+    input var         ctrl_clk,
+    input var         ctrl_rst,
     //
-    input  wire  [ 3:0] ctrl_ud_comp_meth,
-    input  wire  [ 3:0] ctrl_ud_iq_width,
-    input  wire  [ 3:0] ctrl_fs_offset,
+    input var  [ 3:0] ctrl_ud_comp_meth,
+    input var  [ 3:0] ctrl_ud_iq_width,
+    input var  [ 3:0] ctrl_fs_offset,
     // 0 = diable, 1 = enable
-    input  wire  [ 3:0] ctrl_en              [ NUM_CC],
+    input var  [ 3:0] ctrl_en              [ NUM_CC],
     // 0 = LTE, 1 = NR 15kHz, 2 = NR 30kHz
-    input  wire  [ 1:0] ctrl_rat             [ NUM_CC],
+    input var  [ 1:0] ctrl_rat             [ NUM_CC],
     // 0 = diable, 1 = enable
-    input  wire  [ 3:0] ctrl_bist            [ NUM_CC],
+    input var  [ 3:0] ctrl_bist            [ NUM_CC],
     // 0 = 5, 1 = 10, 2 = 15/20/25, 3 = 30/40/50
-    input  wire  [ 3:0] ctrl_bw              [ NUM_CC],
-    input  wire  [ 8:0] ctrl_nprb            [ NUM_CC],
+    input var  [ 3:0] ctrl_bw              [ NUM_CC],
+    input var  [ 8:0] ctrl_nprb            [ NUM_CC],
     // 1 = 2.5 ns
-    input  wire  [22:0] ctrl_rfs_offset      [ NUM_CC],
+    input var  [22:0] ctrl_rfs_offset      [ NUM_CC],
     // 0x4000 = 0 dB
-    input  wire  [16:0] ctrl_gain            [ NUM_CC][NUM_ANT],
+    input var  [16:0] ctrl_gain            [ NUM_CC][NUM_ANT],
     // addr = {[5:4]cc, [3:0]symbol}
-    input  wire  [ 5:0] ctrl_phase_comp_addr,
-    input  wire         ctrl_phase_comp_en,
-    input  wire         ctrl_phase_comp_we,
-    input  wire  [31:0] ctrl_phase_comp_din,
-    output wire  [31:0] ctrl_phase_comp_dout,
-    output logic        ctrl_phase_comp_valid
+    input var  [ 5:0] ctrl_phase_comp_addr,
+    input var         ctrl_phase_comp_en,
+    input var         ctrl_phase_comp_we,
+    input var  [31:0] ctrl_phase_comp_din,
+    output var [31:0] ctrl_phase_comp_dout,
+    output var        ctrl_phase_comp_valid
 );
 
   logic [15:0] dout_dr             [ NUM_CC];
@@ -172,7 +172,7 @@ module puxch_top #(
           .ctrl_bw        (ctrl_bw)
       );
 
-    if (HAS_BFP != 0) begin : g_bfp
+      if (HAS_BFP != 0) begin : g_bfp
 
         bfp_comp #(
             .BYTE_REVERSE(1'b1)

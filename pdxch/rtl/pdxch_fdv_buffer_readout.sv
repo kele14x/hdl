@@ -6,34 +6,34 @@ module pdxch_fdv_buffer_readout #(
     parameter int NUM_ANT    = 4,
     parameter int HALF_BLOCK = 0
 ) (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     // Timer
-    input  wire         start_of_frame,
-    input  wire         start_of_slot,
-    input  wire  [ 1:0] start_of_symbol,
+    input var         start_of_frame,
+    input var         start_of_slot,
+    input var  [ 1:0] start_of_symbol,
     //
-    output wire  [11:0] rd_iq_addr     [NUM_ANT],
-    output wire  [11:0] rd_exp_addr    [NUM_ANT],
-    output wire         rd_en          [NUM_ANT],
-    input  wire  [35:0] rd_iq_data     [NUM_ANT],
-    input  wire  [ 3:0] rd_exp_data    [NUM_ANT],
+    output var [11:0] rd_iq_addr     [NUM_ANT],
+    output var [11:0] rd_exp_addr    [NUM_ANT],
+    output var        rd_en          [NUM_ANT],
+    input var  [35:0] rd_iq_data     [NUM_ANT],
+    input var  [ 3:0] rd_exp_data    [NUM_ANT],
     // Block data output
-    output logic [15:0] dout_dr,
-    output logic [15:0] dout_di,
-    output wire         dout_sf,
-    output wire         dout_sl,
-    output wire         dout_sy,
-    output wire  [ 3:0] dout_chn,
-    output wire         dout_dv,
-    output wire         dout_last,
+    output var [15:0] dout_dr,
+    output var [15:0] dout_di,
+    output var        dout_sf,
+    output var        dout_sl,
+    output var        dout_sy,
+    output var [ 3:0] dout_chn,
+    output var        dout_dv,
+    output var        dout_last,
     //
-    input  wire  [ 3:0] ctrl_en,
-    input  wire  [ 1:0] ctrl_rat,
-    input  wire  [ 3:0] ctrl_bist,
-    input  wire  [ 3:0] ctrl_bw,
-    input  wire  [ 8:0] ctrl_nprb,
-    input  wire  [ 3:0] ctrl_fs_offset
+    input var  [ 3:0] ctrl_en,
+    input var  [ 1:0] ctrl_rat,
+    input var  [ 3:0] ctrl_bist,
+    input var  [ 3:0] ctrl_bw,
+    input var  [ 8:0] ctrl_nprb,
+    input var  [ 3:0] ctrl_fs_offset
 );
 
   // Control signals
@@ -44,7 +44,7 @@ module pdxch_fdv_buffer_readout #(
   wire  [ 3:0] ctrl_bw_s;
   wire  [ 8:0] ctrl_nprb_s;
 
-  wire  [  3:0] ctrl_fs_offset_s;
+  wire  [ 3:0] ctrl_fs_offset_s;
   wire         unused_ctrl_bist = &{1'b0, ctrl_bist_s[3:2]};
 
   // Internal signals
@@ -201,10 +201,7 @@ module pdxch_fdv_buffer_readout #(
       .dest_out(ctrl_fs_offset_s)
   );
 
-  function automatic logic [30:0] bfp9_decompress_s1(
-      input logic [8:0] data,
-      input logic [3:0] exp
-  );
+  function automatic logic [30:0] bfp9_decompress_s1(input logic [8:0] data, input logic [3:0] exp);
     logic signed [30:0] expanded;
 
     expanded = $signed({data, 22'b0});
@@ -212,10 +209,8 @@ module pdxch_fdv_buffer_readout #(
     bfp9_decompress_s1 = expanded;
   endfunction
 
-  function automatic logic [15:0] bfp9_decompress_s2(
-      input logic [30:0] expanded,
-      input logic [3:0]  fs_offset
-  );
+  function automatic logic [15:0] bfp9_decompress_s2(input logic [30:0] expanded,
+                                                     input logic [3:0] fs_offset);
     logic        sign;
     logic [16:0] temp;
 
@@ -504,10 +499,8 @@ module pdxch_fdv_buffer_readout #(
     rd_iq_data_c  = '0;
     rd_exp_data_c = '0;
     for (int ant = 0; ant < NUM_ANT; ant++) begin
-      rd_iq_data_c  = rd_iq_data_c |
-          (rd_en_dd[ant] ? rd_iq_data[ant] : 36'b0);
-      rd_exp_data_c = rd_exp_data_c |
-          (rd_en_dd[ant] ? rd_exp_data[ant] : 4'b0);
+      rd_iq_data_c  = rd_iq_data_c | (rd_en_dd[ant] ? rd_iq_data[ant] : 36'b0);
+      rd_exp_data_c = rd_exp_data_c | (rd_en_dd[ant] ? rd_exp_data[ant] : 4'b0);
     end
   end
 

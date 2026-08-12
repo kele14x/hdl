@@ -3,25 +3,25 @@
 `default_nettype none
 
 module fh_framer_padding (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [63:0] s_axis_tdata,
-    input  wire  [ 7:0] s_axis_tkeep,
-    input  wire         s_axis_tlast,
-    input  wire  [17:0] s_axis_tuser,
-    input  wire         s_axis_tvalid,
-    output wire         s_axis_tready,
+    input var  [63:0] s_axis_tdata,
+    input var  [ 7:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var  [17:0] s_axis_tuser,
+    input var         s_axis_tvalid,
+    output var        s_axis_tready,
     //
-    output logic [63:0] m_axis_tdata,
-    output logic [ 7:0] m_axis_tkeep,
-    output logic        m_axis_tlast,
-    output wire         m_axis_tuser,
-    output logic        m_axis_tvalid,
-    input  wire         m_axis_tready,
+    output var [63:0] m_axis_tdata,
+    output var [ 7:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var        m_axis_tuser,
+    output var        m_axis_tvalid,
+    input var         m_axis_tready,
     //
-    output logic [ 1:0] tx_ptp_1588op,
-    output logic [15:0] tx_ptp_tag_field
+    output var [ 1:0] tx_ptp_1588op,
+    output var [15:0] tx_ptp_tag_field
 );
 
   // Notes:

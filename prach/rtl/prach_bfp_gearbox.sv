@@ -5,28 +5,28 @@
 module prach_bfp_gearbox #(
     parameter int USER_WIDTH = 32
 ) (
-    input  wire                   clk,
-    input  wire                   rst,
+    input var                   clk,
+    input var                   rst,
     // A start pulse launches one packet containing num_prb PRBs.
-    input  wire                   start,
-    input  wire  [           6:0] num_prb,
-    input  wire  [USER_WIDTH-1:0] start_tuser,
-    output logic                  busy,
-    output logic                  done,
+    input var                   start,
+    input var  [           6:0] num_prb,
+    input var  [USER_WIDTH-1:0] start_tuser,
+    output var                  busy,
+    output var                  done,
     // READ_LATENCY=2 ram_sdp interfaces. en[0] samples the address and
     // en[1] flushes the RAM output register one clock later.
-    output logic [           1:0] data_rd_en,
-    output logic [           8:0] data_rd_addr,
-    input  wire  [          35:0] data_rd_data,
-    output logic [           1:0] exp_rd_en,
-    output logic [           6:0] exp_rd_addr,
-    input  wire  [           3:0] exp_rd_data,
+    output var [           1:0] data_rd_en,
+    output var [           8:0] data_rd_addr,
+    input var  [          35:0] data_rd_data,
+    output var [           1:0] exp_rd_en,
+    output var [           6:0] exp_rd_addr,
+    input var  [           3:0] exp_rd_data,
     // Packed BFP9 stream.
-    output logic [          63:0] m_axis_tdata,
-    output logic [           7:0] m_axis_tkeep,
-    output logic                  m_axis_tlast,
-    output logic [USER_WIDTH-1:0] m_axis_tuser,
-    output logic                  m_axis_tvalid
+    output var [          63:0] m_axis_tdata,
+    output var [           7:0] m_axis_tkeep,
+    output var                  m_axis_tlast,
+    output var [USER_WIDTH-1:0] m_axis_tuser,
+    output var                  m_axis_tvalid
 );
 
   initial begin : drc_check
@@ -34,30 +34,30 @@ module prach_bfp_gearbox #(
     else $error("[%m]: USER_WIDTH (%0d) must be at least 1.", USER_WIDTH);
   end
 
-  logic [ 9:0] total_words;
-  logic [ 9:0] request_count;
-  logic [ 9:0] consume_count;
-  logic [ 2:0] request_word_in_prb;
-  logic [ 6:0] request_prb;
-  logic        read_active;
-  logic        data_req;
-  logic        data_req_d1;
-  logic        data_req_d2;
-  logic        exp_req;
-  logic        exp_req_d1;
-  logic        exp_req_d2;
-  logic        input_eop;
+  logic [           9:0] total_words;
+  logic [           9:0] request_count;
+  logic [           9:0] consume_count;
+  logic [           2:0] request_word_in_prb;
+  logic [           6:0] request_prb;
+  logic                  read_active;
+  logic                  data_req;
+  logic                  data_req_d1;
+  logic                  data_req_d2;
+  logic                  exp_req;
+  logic                  exp_req_d1;
+  logic                  exp_req_d2;
+  logic                  input_eop;
 
-  logic [ 3:0] t6_cnt;
-  logic [63:0] t6_data;
-  logic [63:0] t6_data_f;
+  logic [           3:0] t6_cnt;
+  logic [          63:0] t6_data;
+  logic [          63:0] t6_data_f;
   logic [USER_WIDTH-1:0] t6_user;
-  logic        t6_valid;
-  logic        t6_eop;
-  logic        t6_eop_ext;
-  logic [63:0] t6_eop_data;
+  logic                  t6_valid;
+  logic                  t6_eop;
+  logic                  t6_eop_ext;
+  logic [          63:0] t6_eop_data;
   logic [USER_WIDTH-1:0] t6_eop_user;
-  logic        t6_eop_ext_out;
+  logic                  t6_eop_ext_out;
 
   function automatic logic [63:0] byte_reverse(input logic [63:0] din);
     for (int i = 0; i < 8; i++) begin
@@ -77,16 +77,16 @@ module prach_bfp_gearbox #(
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      total_words        <= '0;
-      request_count      <= '0;
-      consume_count      <= '0;
+      total_words         <= '0;
+      request_count       <= '0;
+      consume_count       <= '0;
       request_word_in_prb <= '0;
-      request_prb        <= '0;
-      read_active        <= 1'b0;
-      data_req_d1        <= 1'b0;
-      data_req_d2        <= 1'b0;
-      exp_req_d1         <= 1'b0;
-      exp_req_d2         <= 1'b0;
+      request_prb         <= '0;
+      read_active         <= 1'b0;
+      data_req_d1         <= 1'b0;
+      data_req_d2         <= 1'b0;
+      exp_req_d1          <= 1'b0;
+      exp_req_d2          <= 1'b0;
     end else begin
       data_req_d1 <= data_req;
       data_req_d2 <= data_req_d1;

@@ -13,45 +13,45 @@ module axi4l_bram #(
     parameter int DATA_WIDTH    = 32,
     parameter int USE_DUAL_PORT = 0
 ) (
-    input  wire                    aclk,
-    input  wire                    aresetn,
+    input var                     aclk,
+    input var                     aresetn,
     //
-    input  wire [  ADDR_WIDTH-1:0] awaddr,
-    input  wire                    awvalid,
-    output wire                    awready,
+    input var  [  ADDR_WIDTH-1:0] awaddr,
+    input var                     awvalid,
+    output var                    awready,
     //
-    input  wire [  DATA_WIDTH-1:0] wdata,
-    input  wire [DATA_WIDTH/8-1:0] wstrb,
-    input  wire                    wvalid,
-    output wire                    wready,
+    input var  [  DATA_WIDTH-1:0] wdata,
+    input var  [DATA_WIDTH/8-1:0] wstrb,
+    input var                     wvalid,
+    output var                    wready,
     //
-    output wire [             1:0] bresp,
-    output wire                    bvalid,
-    input  wire                    bready,
+    output var [             1:0] bresp,
+    output var                    bvalid,
+    input var                     bready,
     //
-    input  wire [  ADDR_WIDTH-1:0] araddr,
-    input  wire                    arvalid,
-    output wire                    arready,
+    input var  [  ADDR_WIDTH-1:0] araddr,
+    input var                     arvalid,
+    output var                    arready,
     //
-    output wire [  DATA_WIDTH-1:0] rdata,
-    output wire [             1:0] rresp,
-    output wire                    rvalid,
-    input  wire                    rready,
+    output var [  DATA_WIDTH-1:0] rdata,
+    output var [             1:0] rresp,
+    output var                    rvalid,
+    input var                     rready,
     //
-    output wire [  ADDR_WIDTH-1:0] bram_rd_addr,
-    output wire                    bram_rd_en,
+    output var [  ADDR_WIDTH-1:0] bram_rd_addr,
+    output var                    bram_rd_en,
     //
-    input  wire [  DATA_WIDTH-1:0] bram_rd_data,
-    input  wire                    bram_rd_ack,
-    input  wire                    bram_rd_err,
+    input var  [  DATA_WIDTH-1:0] bram_rd_data,
+    input var                     bram_rd_ack,
+    input var                     bram_rd_err,
     //
-    output wire [  ADDR_WIDTH-1:0] bram_wr_addr,
-    output wire [  DATA_WIDTH-1:0] bram_wr_data,
-    output wire [DATA_WIDTH/8-1:0] bram_wr_strb,
-    output wire                    bram_wr_we,
+    output var [  ADDR_WIDTH-1:0] bram_wr_addr,
+    output var [  DATA_WIDTH-1:0] bram_wr_data,
+    output var [DATA_WIDTH/8-1:0] bram_wr_strb,
+    output var                    bram_wr_we,
     //
-    input  wire                    bram_wr_ack,
-    input  wire                    bram_wr_err
+    input var                     bram_wr_ack,
+    input var                     bram_wr_err
 );
 
   initial begin : drc_check

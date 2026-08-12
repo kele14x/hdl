@@ -10,41 +10,41 @@ module pdxch_channel #(
 ) (
     // Clock & Reset
     //--------------
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     // 4 ant sequential
-    input  wire [15:0] din_dr,
-    input  wire [15:0] din_di,
-    input  wire        din_sf,
-    input  wire        din_sl,
-    input  wire        din_sy,
-    input  wire [ 3:0] din_chn,
-    input  wire        din_dv,
-    input  wire        din_last,
+    input var  [15:0] din_dr,
+    input var  [15:0] din_di,
+    input var         din_sf,
+    input var         din_sl,
+    input var         din_sy,
+    input var  [ 3:0] din_chn,
+    input var         din_dv,
+    input var         din_last,
     //
-    output wire [31:0] m_axis_tdata        [NUM_ANT],
-    output wire [ 7:0] m_axis_tuser        [NUM_ANT],
-    output wire        m_axis_tlast        [NUM_ANT],
-    output wire        m_axis_tvalid       [NUM_ANT],
-    input  wire        m_axis_tready       [NUM_ANT],
+    output var [31:0] m_axis_tdata        [NUM_ANT],
+    output var [ 7:0] m_axis_tuser        [NUM_ANT],
+    output var        m_axis_tlast        [NUM_ANT],
+    output var        m_axis_tvalid       [NUM_ANT],
+    input var         m_axis_tready       [NUM_ANT],
     // CSR
     //----
-    input  wire        ctrl_clk,
-    input  wire        ctrl_rst,
+    input var         ctrl_clk,
+    input var         ctrl_rst,
     //
-    input  wire [ 1:0] ctrl_rat,
-    input  wire [ 3:0] ctrl_bw,
-    input  wire [16:0] ctrl_gain           [NUM_ANT],
+    input var  [ 1:0] ctrl_rat,
+    input var  [ 3:0] ctrl_bw,
+    input var  [16:0] ctrl_gain           [NUM_ANT],
     //
-    input  wire [ 3:0] ctrl_phase_comp_addr,
-    input  wire        ctrl_phase_comp_we,
-    input  wire [31:0] ctrl_phase_comp_din
+    input var  [ 3:0] ctrl_phase_comp_addr,
+    input var         ctrl_phase_comp_we,
+    input var  [31:0] ctrl_phase_comp_din
 );
 
   localparam int LogFftSize = (HALF_FFT != 0) ? 11 : 12;
 
   // HALF_BLOCK is retained for compatibility with existing instantiations.
-  wire unused_half_block = &{1'b0, HALF_BLOCK};
+  wire         unused_half_block = &{1'b0, HALF_BLOCK};
 
   // Signals
 

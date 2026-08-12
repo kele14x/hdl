@@ -3,12 +3,12 @@
 `default_nettype none
 
 module shift_ram_packed_compare (
-    input  wire        clk,
-    input  wire        rst,
-    input  wire        cen,
-    input  wire [35:0] din,
-    output wire [35:0] dout_standard,
-    output wire [35:0] dout_packed
+    input var         clk,
+    input var         rst,
+    input var         cen,
+    input var  [35:0] din,
+    output var [35:0] dout_standard,
+    output var [35:0] dout_packed
 );
 
   shift_ram #(

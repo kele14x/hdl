@@ -4,37 +4,37 @@
 `default_nettype none
 
 module ecpri_deframer_odm (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [31:0] s_axis_tdata,
-    input  wire  [ 3:0] s_axis_tkeep,
-    input  wire         s_axis_tlast,
-    input  wire         s_axis_tvalid,
-    input  wire  [79:0] s_axis_tuser,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 3:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var         s_axis_tvalid,
+    input var  [79:0] s_axis_tuser,
     // eCPRI O-RAN Delay Measurement Header
-    output logic        m_odm_header_valid,
-    output logic [ 7:0] m_odm_measurementid,
-    output logic [ 7:0] m_odm_actiontype,
-    output logic [79:0] m_odm_timestamp,
-    output logic [63:0] m_odm_compensation,
-    output logic [79:0] m_odm_timestamp2,
+    output var        m_odm_header_valid,
+    output var [ 7:0] m_odm_measurementid,
+    output var [ 7:0] m_odm_actiontype,
+    output var [79:0] m_odm_timestamp,
+    output var [63:0] m_odm_compensation,
+    output var [79:0] m_odm_timestamp2,
     //
-    output logic [15:0] stat_topology_id
+    output var [15:0] stat_topology_id
 );
 
   import ecpri_pkg::*;
 
   // FSM
 
-  localparam integer S_RST = 0;  // Under reset
-  localparam integer S_D0 = 1;  // Measurement ID (1), Action Type (1), Timestamp0 (2)
-  localparam integer S_D1 = 2;  // Timestamp1 (4)
-  localparam integer S_D2 = 3;  // Timestamp2 (4)
-  localparam integer S_D3 = 4;  // Compensation0 (4)
-  localparam integer S_D4 = 5;  // Compensation1 (4)
-  localparam integer S_D5 = 6;  // Topology ID (2)
-  localparam integer S_PAD = 7;  // Pad
+  localparam int S_RST = 0;  // Under reset
+  localparam int S_D0 = 1;  // Measurement ID (1), Action Type (1), Timestamp0 (2)
+  localparam int S_D1 = 2;  // Timestamp1 (4)
+  localparam int S_D2 = 3;  // Timestamp2 (4)
+  localparam int S_D3 = 4;  // Compensation0 (4)
+  localparam int S_D4 = 5;  // Compensation1 (4)
+  localparam int S_D5 = 6;  // Topology ID (2)
+  localparam int S_PAD = 7;  // Pad
 
   integer state, state_next;
 

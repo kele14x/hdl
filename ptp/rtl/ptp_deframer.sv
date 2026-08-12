@@ -3,22 +3,22 @@
 `default_nettype none
 
 module ptp_deframer (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [31:0] s_axis_tdata,
-    input  wire  [ 3:0] s_axis_tkeep,
-    input  wire         s_axis_tlast,
-    input  wire  [79:0] s_axis_tuser,
-    input  wire         s_axis_tvalid,
-    output logic        s_axis_tready,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 3:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var  [79:0] s_axis_tuser,
+    input var         s_axis_tvalid,
+    output var        s_axis_tready,
     //
-    output logic        m_msg_valid,
-    output wire  [ 3:0] m_msg_message_type,
-    output wire  [15:0] m_msg_sequence_id,
-    output wire  [79:0] m_msg_timestamp,
-    output wire  [79:0] m_msg_origin_timestamp,
-    output wire  [79:0] m_msg_source_port_identity
+    output var        m_msg_valid,
+    output var [ 3:0] m_msg_message_type,
+    output var [15:0] m_msg_sequence_id,
+    output var [79:0] m_msg_timestamp,
+    output var [79:0] m_msg_origin_timestamp,
+    output var [79:0] m_msg_source_port_identity
 );
 
   // Parameters
@@ -39,49 +39,49 @@ module ptp_deframer (
     end
   endfunction
 
-  localparam integer S_RST = 0;
-  localparam integer S_PAD = 1;
+  localparam int S_RST = 0;
+  localparam int S_PAD = 1;
   //
-  localparam integer S_DMAC0 = 2;
-  localparam integer S_DMAC1_SMAC0 = 3;
-  localparam integer S_SMAC1 = 4;
+  localparam int S_DMAC0 = 2;
+  localparam int S_DMAC1_SMAC0 = 3;
+  localparam int S_SMAC1 = 4;
   //
-  localparam integer S_ETHERTYPE_HEADER0 = 5;
-  localparam integer S_HEADER1 = 6;
-  localparam integer S_HEADER2 = 7;
-  localparam integer S_HEADER3 = 8;
-  localparam integer S_HEADER4 = 9;
-  localparam integer S_HEADER5 = 10;
-  localparam integer S_HEADER6 = 11;
-  localparam integer S_HEADER7 = 12;
-  localparam integer S_HEADER8 = 13;
+  localparam int S_ETHERTYPE_HEADER0 = 5;
+  localparam int S_HEADER1 = 6;
+  localparam int S_HEADER2 = 7;
+  localparam int S_HEADER3 = 8;
+  localparam int S_HEADER4 = 9;
+  localparam int S_HEADER5 = 10;
+  localparam int S_HEADER6 = 11;
+  localparam int S_HEADER7 = 12;
+  localparam int S_HEADER8 = 13;
   //
-  localparam integer S_SYNC0 = 14;
-  localparam integer S_SYNC1 = 15;
-  localparam integer S_SYNC2 = 16;
+  localparam int S_SYNC0 = 14;
+  localparam int S_SYNC1 = 15;
+  localparam int S_SYNC2 = 16;
   //
-  localparam integer S_DELAY_REQ0 = 17;
-  localparam integer S_DELAY_REQ1 = 18;
-  localparam integer S_DELAY_REQ2 = 19;
+  localparam int S_DELAY_REQ0 = 17;
+  localparam int S_DELAY_REQ1 = 18;
+  localparam int S_DELAY_REQ2 = 19;
   //
-  localparam integer S_FOLLOW_UP0 = 20;
-  localparam integer S_FOLLOW_UP1 = 21;
-  localparam integer S_FOLLOW_UP2 = 22;
+  localparam int S_FOLLOW_UP0 = 20;
+  localparam int S_FOLLOW_UP1 = 21;
+  localparam int S_FOLLOW_UP2 = 22;
   //
-  localparam integer S_DELAY_RESP0 = 23;
-  localparam integer S_DELAY_RESP1 = 24;
-  localparam integer S_DELAY_RESP2 = 25;
-  localparam integer S_DELAY_RESP3 = 26;
-  localparam integer S_DELAY_RESP4 = 27;
+  localparam int S_DELAY_RESP0 = 23;
+  localparam int S_DELAY_RESP1 = 24;
+  localparam int S_DELAY_RESP2 = 25;
+  localparam int S_DELAY_RESP3 = 26;
+  localparam int S_DELAY_RESP4 = 27;
   //
-  localparam integer S_ANNOUNCE0 = 28;
-  localparam integer S_ANNOUNCE1 = 29;
-  localparam integer S_ANNOUNCE2 = 30;
-  localparam integer S_ANNOUNCE3 = 31;
-  localparam integer S_ANNOUNCE4 = 32;
-  localparam integer S_ANNOUNCE5 = 33;
-  localparam integer S_ANNOUNCE6 = 34;
-  localparam integer S_ANNOUNCE7 = 35;
+  localparam int S_ANNOUNCE0 = 28;
+  localparam int S_ANNOUNCE1 = 29;
+  localparam int S_ANNOUNCE2 = 30;
+  localparam int S_ANNOUNCE3 = 31;
+  localparam int S_ANNOUNCE4 = 32;
+  localparam int S_ANNOUNCE5 = 33;
+  localparam int S_ANNOUNCE6 = 34;
+  localparam int S_ANNOUNCE7 = 35;
 
   // Signals
 

@@ -8,59 +8,59 @@ module pdxch #(
     parameter int HALF_BLOCK = 1,
     parameter int HALF_FFT   = 1
 ) (
-    input  wire        s_axi_aclk,
-    input  wire        s_axi_aresetn,
+    input var         s_axi_aclk,
+    input var         s_axi_aresetn,
     //
-    input  wire [ 8:0] s_axi_awaddr,
-    input  wire [ 2:0] s_axi_awprot,
-    input  wire        s_axi_awvalid,
-    output wire        s_axi_awready,
+    input var  [ 8:0] s_axi_awaddr,
+    input var  [ 2:0] s_axi_awprot,
+    input var         s_axi_awvalid,
+    output var        s_axi_awready,
     //
-    input  wire [31:0] s_axi_wdata,
-    input  wire [ 3:0] s_axi_wstrb,
-    input  wire        s_axi_wvalid,
-    output wire        s_axi_wready,
+    input var  [31:0] s_axi_wdata,
+    input var  [ 3:0] s_axi_wstrb,
+    input var         s_axi_wvalid,
+    output var        s_axi_wready,
     //
-    output wire [ 1:0] s_axi_bresp,
-    output wire        s_axi_bvalid,
-    input  wire        s_axi_bready,
+    output var [ 1:0] s_axi_bresp,
+    output var        s_axi_bvalid,
+    input var         s_axi_bready,
     //
-    input  wire [ 8:0] s_axi_araddr,
-    input  wire [ 2:0] s_axi_arprot,
-    input  wire        s_axi_arvalid,
-    output wire        s_axi_arready,
+    input var  [ 8:0] s_axi_araddr,
+    input var  [ 2:0] s_axi_arprot,
+    input var         s_axi_arvalid,
+    output var        s_axi_arready,
     //
-    output wire [31:0] s_axi_rdata,
-    output wire [ 1:0] s_axi_rresp,
-    output wire        s_axi_rvalid,
-    input  wire        s_axi_rready,
+    output var [31:0] s_axi_rdata,
+    output var [ 1:0] s_axi_rresp,
+    output var        s_axi_rvalid,
+    input var         s_axi_rready,
     // Radio I/F
     //----------
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     //
-    output wire [31:0] m_axis_tdata         [ NUM_CC][NUM_ANT],
-    output wire [ 7:0] m_axis_tuser         [ NUM_CC][NUM_ANT],
-    output wire        m_axis_tlast         [ NUM_CC][NUM_ANT],
-    output wire        m_axis_tvalid        [ NUM_CC][NUM_ANT],
-    input  wire        m_axis_tready        [ NUM_CC][NUM_ANT],
+    output var [31:0] m_axis_tdata         [ NUM_CC][NUM_ANT],
+    output var [ 7:0] m_axis_tuser         [ NUM_CC][NUM_ANT],
+    output var        m_axis_tlast         [ NUM_CC][NUM_ANT],
+    output var        m_axis_tvalid        [ NUM_CC][NUM_ANT],
+    input var         m_axis_tready        [ NUM_CC][NUM_ANT],
     // O-RAN
     //------
-    input  wire        clk_eth_xran,
-    input  wire        rst_eth_xran,
+    input var         clk_eth_xran,
+    input var         rst_eth_xran,
     //
-    input  wire        sync_in,
+    input var         sync_in,
     //
-    output wire        defm_radio_start_10ms[ NUM_CC],
-    input  wire [11:0] s_dl_sym_num         [ NUM_CC],
+    output var        defm_radio_start_10ms[ NUM_CC],
+    input var  [11:0] s_dl_sym_num         [ NUM_CC],
     // U-Plane
-    input  wire [63:0] s_defm_data_tdata    [NUM_ANT],
-    input  wire [ 7:0] s_defm_data_tkeep    [NUM_ANT],
-    input  wire        s_defm_data_tvalid   [NUM_ANT],
-    input  wire        s_defm_data_tlast    [NUM_ANT],
-    output wire        s_defm_data_tready   [NUM_ANT],
-    input  wire [90:0] s_defm_data_tuser    [NUM_ANT],
-    input  wire [ 4:0] s_defm_data_tdest    [NUM_ANT]
+    input var  [63:0] s_defm_data_tdata    [NUM_ANT],
+    input var  [ 7:0] s_defm_data_tkeep    [NUM_ANT],
+    input var         s_defm_data_tvalid   [NUM_ANT],
+    input var         s_defm_data_tlast    [NUM_ANT],
+    output var        s_defm_data_tready   [NUM_ANT],
+    input var  [90:0] s_defm_data_tuser    [NUM_ANT],
+    input var  [ 4:0] s_defm_data_tdest    [NUM_ANT]
 );
 
   // Signals

@@ -3,15 +3,15 @@
 `default_nettype none
 
 module prach_conv_nco (
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     // Sync
-    input  wire        sync_in,
+    input var         sync_in,
     //
-    output wire [15:0] dout_cos,
-    output wire [15:0] dout_sin,
-    output wire [ 7:0] dout_chn,
-    output wire        sync_out
+    output var [15:0] dout_cos,
+    output var [15:0] dout_sin,
+    output var [ 7:0] dout_chn,
+    output var        sync_out
 );
 
   localparam int Latency = 4;

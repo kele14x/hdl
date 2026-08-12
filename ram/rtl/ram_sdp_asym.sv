@@ -116,7 +116,7 @@ module ram_sdp_asym #(
 
 `ifdef RAM_USE_XPM
 
-  localparam integer XpmMemorySize = DEPTH * MinWidth;
+  localparam int XpmMemorySize = DEPTH * MinWidth;
 
   // UltraRAM requires a common clock; the two clock ports may be tied
   // together by the caller even though the interface exposes both ports.
@@ -124,19 +124,19 @@ module ram_sdp_asym #(
 
   // XPM exposes independent enables for its first read stage and its final
   // output stage. Keep the third stage in RTL so enb[2] remains independent.
-  localparam integer XpmReadLatency = READ_LATENCY_B < 3 ? READ_LATENCY_B : 2;
+  localparam int XpmReadLatency = READ_LATENCY_B < 3 ? READ_LATENCY_B : 2;
 
-  localparam integer RtlPipelineStart = XpmReadLatency;
+  localparam int RtlPipelineStart = XpmReadLatency;
 
   localparam XpmInitParam = INIT_FILE == "NONE" ? "0" : "";
 
   logic [DATA_WIDTH_B-1:0] xpm_dout;
   logic [DATA_WIDTH_B-1:0] output_reg;
 
-  logic                  xpm_rstb;
+  logic                    xpm_rstb;
 
-  logic                  xpm_sbiterrb;
-  logic                  xpm_dbiterrb;
+  logic                    xpm_sbiterrb;
+  logic                    xpm_dbiterrb;
 
   xpm_memory_sdpram #(
       // Common module parameters

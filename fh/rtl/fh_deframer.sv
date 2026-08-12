@@ -6,40 +6,40 @@ module fh_deframer (
     // Ethernet I/F
     //-------------
     // Rx Ethernet ports
-    input  wire        rx_eth_clk,
-    input  wire        rx_eth_rst,
+    input var         rx_eth_clk,
+    input var         rx_eth_rst,
     //
-    input  wire [63:0] s_axis_rx_tdata,
-    input  wire [ 7:0] s_axis_rx_tkeep,
-    input  wire        s_axis_rx_tlast,
-    input  wire        s_axis_rx_tuser,
-    input  wire        s_axis_rx_tvalid,
+    input var  [63:0] s_axis_rx_tdata,
+    input var  [ 7:0] s_axis_rx_tkeep,
+    input var         s_axis_rx_tlast,
+    input var         s_axis_rx_tuser,
+    input var         s_axis_rx_tvalid,
     // PTP ports
-    input  wire [79:0] rx_ptp_timestamp,
-    input  wire        rx_ptp_timestamp_valid,
+    input var  [79:0] rx_ptp_timestamp,
+    input var         rx_ptp_timestamp_valid,
     // Internal Interface
     //-------------------
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     // Receive interface
-    output wire [63:0] m_axis_tdata,
-    output wire [ 7:0] m_axis_tkeep,
-    output wire        m_axis_tlast,
-    output wire [79:0] m_axis_tuser,
-    output wire        m_axis_tvalid,
+    output var [63:0] m_axis_tdata,
+    output var [ 7:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var [79:0] m_axis_tuser,
+    output var        m_axis_tvalid,
     // PTP interface
-    output wire [31:0] m_ptp_tdata,
-    output wire [ 3:0] m_ptp_tkeep,
-    output wire        m_ptp_tlast,
-    output wire [79:0] m_ptp_tuser,
-    output wire        m_ptp_tvalid,
-    input  wire        m_ptp_tready,
+    output var [31:0] m_ptp_tdata,
+    output var [ 3:0] m_ptp_tkeep,
+    output var        m_ptp_tlast,
+    output var [79:0] m_ptp_tuser,
+    output var        m_ptp_tvalid,
+    input var         m_ptp_tready,
     //
-    output wire [31:0] m_message_tdata,
-    output wire [ 3:0] m_message_tkeep,
-    output wire        m_message_tlast,
-    output wire        m_message_tvalid,
-    input  wire        m_message_tready
+    output var [31:0] m_message_tdata,
+    output var [ 3:0] m_message_tkeep,
+    output var        m_message_tlast,
+    output var        m_message_tvalid,
+    input var         m_message_tready
 );
 
   wire [63:0] s0_axis_tdata;

@@ -3,17 +3,17 @@
 `default_nettype none
 
 module timer_rfs #(
-    parameter integer FREQ_MODE = 0
+    parameter int FREQ_MODE = 0
 ) (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire         pps_in,
+    input var         pps_in,
     //
-    output logic        rfs_out,
-    output logic        rfs_pad,
+    output var        rfs_out,
+    output var        rfs_pad,
     //
-    input  wire  [22:0] ctrl_rfs_offset
+    input var  [22:0] ctrl_rfs_offset
 );
 
   // Parameters

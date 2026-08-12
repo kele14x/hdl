@@ -7,28 +7,28 @@
 `default_nettype none
 
 module fft_stage #(
-    parameter integer NUM_ANT            = 4,
-    parameter int     INV_FFT            = 0,
-    parameter integer LOG_FFT_SIZE       = 4,
-    parameter integer DATA_WIDTH         = 18,
-    parameter int     BIT_REVERSED_INPUT = 1
+    parameter int NUM_ANT            = 4,
+    parameter int INV_FFT            = 0,
+    parameter int LOG_FFT_SIZE       = 4,
+    parameter int DATA_WIDTH         = 18,
+    parameter int BIT_REVERSED_INPUT = 1
 ) (
-    input  wire                         clk,
-    input  wire                         rst,
+    input var                          clk,
+    input var                          rst,
     // Input
-    input  wire signed [DATA_WIDTH-1:0] din_dr,
-    input  wire signed [DATA_WIDTH-1:0] din_di,
-    input  wire                         din_dv,
+    input var  signed [DATA_WIDTH-1:0] din_dr,
+    input var  signed [DATA_WIDTH-1:0] din_di,
+    input var                          din_dv,
     // Output
-    output wire signed [DATA_WIDTH-1:0] dout_dr,
-    output wire signed [DATA_WIDTH-1:0] dout_di,
-    output wire                         dout_dv,
+    output var signed [DATA_WIDTH-1:0] dout_dr,
+    output var signed [DATA_WIDTH-1:0] dout_di,
+    output var                         dout_dv,
     //
-    input  wire        [           1:0] ctrl_itlv,
-    input  wire        [           1:0] ctrl_bypass,
-    input  wire                         ctrl_scale,
+    input var         [           1:0] ctrl_itlv,
+    input var         [           1:0] ctrl_bypass,
+    input var                          ctrl_scale,
     //
-    output wire                         stat_ovf
+    output var                         stat_ovf
 );
 
   // Local parameter
@@ -39,7 +39,7 @@ module fft_stage #(
   // If LOG_FFT_SIZE is an even number, we have 2 Butterfly operator
   localparam logic HasBf2ii = (LOG_FFT_SIZE % 2 == 0) ? 1 : 0;
   // Log2 FFT size of BF2I
-  localparam integer LogFftSizeBf2i = HasBf2ii ? (LOG_FFT_SIZE - 1) : LOG_FFT_SIZE;
+  localparam int LogFftSizeBf2i = HasBf2ii ? (LOG_FFT_SIZE - 1) : LOG_FFT_SIZE;
   // The LOG_FFT_SIZE=2 stage has no twiddle multiplier to provide the /2
   // scaling used by the other stages. Scale its last butterfly explicitly.
   localparam logic ScaleBfi = !HasTwiddle && (BIT_REVERSED_INPUT == 0);

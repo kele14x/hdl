@@ -6,25 +6,25 @@ module bfp_comp #(
     parameter int BYTE_REVERSE = 1,
     parameter int USER_WIDTH   = 32
 ) (
-    input  wire                   clk,
-    input  wire                   rst,
+    input var                   clk,
+    input var                   rst,
     //
-    input  wire  [          63:0] s_axis_tdata,
-    input  wire  [           7:0] s_axis_tkeep,
-    input  wire                   s_axis_tvalid,
-    input  wire                   s_axis_tlast,
-    input  wire  [USER_WIDTH-1:0] s_axis_tuser,
+    input var  [          63:0] s_axis_tdata,
+    input var  [           7:0] s_axis_tkeep,
+    input var                   s_axis_tvalid,
+    input var                   s_axis_tlast,
+    input var  [USER_WIDTH-1:0] s_axis_tuser,
     //
-    output logic [          63:0] m_axis_tdata,
-    output logic [           7:0] m_axis_tkeep,
-    output logic                  m_axis_tvalid,
-    output logic                  m_axis_tlast,
-    output logic [USER_WIDTH-1:0] m_axis_tuser,
+    output var [          63:0] m_axis_tdata,
+    output var [           7:0] m_axis_tkeep,
+    output var                  m_axis_tvalid,
+    output var                  m_axis_tlast,
+    output var [USER_WIDTH-1:0] m_axis_tuser,
     // Control
     //--------
-    input  wire  [           3:0] ctrl_ud_comp_meth,
-    input  wire  [           3:0] ctrl_ud_iq_width,
-    input  wire  [           3:0] ctrl_fs_offset
+    input var  [           3:0] ctrl_ud_comp_meth,
+    input var  [           3:0] ctrl_ud_iq_width,
+    input var  [           3:0] ctrl_fs_offset
 );
 
   // Parameters
@@ -581,13 +581,13 @@ module bfp_comp #(
     end else if (t6_eop_ext_out) begin
       // Emit the final half word of an odd-PRB packet directly. This leaves
       // the gearbox free to accept the first word of a following packet.
-        m_axis_tdata  <= (BYTE_REVERSE != 0) ? byte_reverse(t6_eop_data) : t6_eop_data;
+      m_axis_tdata  <= (BYTE_REVERSE != 0) ? byte_reverse(t6_eop_data) : t6_eop_data;
       m_axis_tkeep  <= 8'h0F;
       m_axis_tlast  <= 1'b1;
       m_axis_tuser  <= t6_eop_user;
       m_axis_tvalid <= 1'b1;
     end else if (t6_valid) begin
-        m_axis_tdata  <= (BYTE_REVERSE != 0) ? byte_reverse(t6_data) : t6_data;
+      m_axis_tdata  <= (BYTE_REVERSE != 0) ? byte_reverse(t6_data) : t6_data;
       m_axis_tkeep  <= t6_keep;
       m_axis_tlast  <= t6_eop;
       m_axis_tuser  <= t6_user;

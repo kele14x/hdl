@@ -12,67 +12,67 @@ module pdxch_bfp_gearbox #(
     parameter int BYTE_REVERSE = 1,
     parameter int USER_WIDTH   = 91
 ) (
-    input  wire                   clk,
-    input  wire                   rst,
+    input var                   clk,
+    input var                   rst,
     //
-    input  wire [          63:0] s_axis_tdata,
-    input  wire [           7:0] s_axis_tkeep,
-    input  wire                   s_axis_tlast,
-    input  wire [USER_WIDTH-1:0] s_axis_tuser,
-    input  wire                   s_axis_tvalid,
-    output wire                   s_axis_tready,
+    input var  [          63:0] s_axis_tdata,
+    input var  [           7:0] s_axis_tkeep,
+    input var                   s_axis_tlast,
+    input var  [USER_WIDTH-1:0] s_axis_tuser,
+    input var                   s_axis_tvalid,
+    output var                  s_axis_tready,
     //
-    output wire [          35:0] m_axis_tdata,
-    output wire [           3:0] m_axis_exp,
-    output wire                   m_axis_tlast,
-    output wire [USER_WIDTH-1:0] m_axis_tuser,
-    output wire                   m_axis_tvalid
+    output var [          35:0] m_axis_tdata,
+    output var [           3:0] m_axis_exp,
+    output var                  m_axis_tlast,
+    output var [USER_WIDTH-1:0] m_axis_tuser,
+    output var                  m_axis_tvalid
 );
 
   // The address MSB selects one of two logical 4-row ping-pong banks.  A
   // synchronous write plus asynchronous read infers simple dual-port LUTRAM.
-  (* ram_style = "distributed" *) logic [63:0] prb_ram [0:7];
+  (* ram_style = "distributed" *)logic [          63:0] prb_ram            [0:7];
 
-  logic [1:0] bank_full;
-  logic [1:0] bank_full_next;
-  logic [1:0] bank_last;
+  logic [           1:0] bank_full;
+  logic [           1:0] bank_full_next;
+  logic [           1:0] bank_last;
 
-  logic [63:0] input_data_ordered;
-  logic        input_fire;
-  logic        final_half_beat;
-  logic        input_ready;
+  logic [          63:0] input_data_ordered;
+  logic                  input_fire;
+  logic                  final_half_beat;
+  logic                  input_ready;
 
   // beat_phase describes a pair of PRBs:
   //   0..2 : aligned PRB rows 0..2
   //   3    : aligned PRB row 3 and the next PRB's first 32 bits
   //   4..6 : unaligned PRB, joined through odd_residue
-  logic [2:0] beat_phase;
-  logic       wr_pair_bank;
-  logic       packet_open;
-  logic       packet_end_pending;
+  logic [           2:0] beat_phase;
+  logic                  wr_pair_bank;
+  logic                  packet_open;
+  logic                  packet_end_pending;
   logic [USER_WIDTH-1:0] packet_user;
-  logic [31:0] odd_residue;
+  logic [          31:0] odd_residue;
 
   // The unaligned PRB's final 32 bits are written on the cycle after phase 6.
   // Input is paused for that cycle so the 8 x 64 RAM needs only one write port.
-  logic       tail_pending;
-  logic       tail_bank;
+  logic                  tail_pending;
+  logic                  tail_bank;
 
-  logic        ram_we;
-  logic [2:0]  ram_waddr;
-  logic [63:0] ram_wdata;
-  logic        input_write_bank;
-  logic [1:0]  input_write_addr;
-  logic [63:0] input_write_data;
+  logic                  ram_we;
+  logic [           2:0] ram_waddr;
+  logic [          63:0] ram_wdata;
+  logic                  input_write_bank;
+  logic [           1:0] input_write_addr;
+  logic [          63:0] input_write_data;
 
-  logic        rd_active;
-  logic        rd_bank;
-  logic [2:0]  rd_word;
-  logic [1:0]  rd_addr;
-  logic [63:0] rd_ram_data;
-  logic [19:0] rd_residue;
-  logic [3:0]  rd_exp;
-  logic [35:0] output_data;
+  logic                  rd_active;
+  logic                  rd_bank;
+  logic [           2:0] rd_word;
+  logic [           1:0] rd_addr;
+  logic [          63:0] rd_ram_data;
+  logic [          19:0] rd_residue;
+  logic [           3:0] rd_exp;
+  logic [          35:0] output_data;
 
   initial begin : drc_check
     assert (USER_WIDTH >= 1)
@@ -182,13 +182,13 @@ module pdxch_bfp_gearbox #(
         end
 
         case (beat_phase)
-          3'd0: beat_phase <= 3'd1;
-          3'd1: beat_phase <= 3'd2;
-          3'd2: beat_phase <= 3'd3;
+          3'd0:    beat_phase <= 3'd1;
+          3'd1:    beat_phase <= 3'd2;
+          3'd2:    beat_phase <= 3'd3;
           3'd3: begin
             bank_last[wr_pair_bank] <= s_axis_tlast;
             if (s_axis_tlast) begin
-              beat_phase   <= 3'd0;
+              beat_phase <= 3'd0;
               wr_pair_bank <= ~wr_pair_bank;
               packet_open <= 1'b0;
               packet_end_pending <= 1'b1;
@@ -271,11 +271,9 @@ module pdxch_bfp_gearbox #(
   // the six output words be formed from fixed slices and a 20-bit residue.
   always_comb begin
     case (rd_word)
-      3'd0:   rd_addr = 2'd0;
-      3'd1,
-      3'd2:   rd_addr = 2'd1;
-      3'd3,
-      3'd4:   rd_addr = 2'd2;
+      3'd0: rd_addr = 2'd0;
+      3'd1, 3'd2: rd_addr = 2'd1;
+      3'd3, 3'd4: rd_addr = 2'd2;
       default: rd_addr = 2'd3;
     endcase
   end

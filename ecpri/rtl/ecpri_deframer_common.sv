@@ -15,34 +15,34 @@
 `default_nettype none
 
 module ecpri_deframer_common (
-    input  wire         clk,
-    input  wire         rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [31:0] s_axis_tdata,
-    input  wire  [ 3:0] s_axis_tkeep,
-    input  wire         s_axis_tlast,
-    input  wire  [79:0] s_axis_tuser,
-    input  wire         s_axis_tvalid,
+    input var  [31:0] s_axis_tdata,
+    input var  [ 3:0] s_axis_tkeep,
+    input var         s_axis_tlast,
+    input var  [79:0] s_axis_tuser,
+    input var         s_axis_tvalid,
     //
-    output logic [31:0] m_axis_tdata,
-    output logic [ 3:0] m_axis_tkeep,
-    output logic        m_axis_tlast,
-    output logic [79:0] m_axis_tuser,
-    output logic        m_axis_tvalid,
+    output var [31:0] m_axis_tdata,
+    output var [ 3:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var [79:0] m_axis_tuser,
+    output var        m_axis_tvalid,
     // Transport header (eCPRI header)
-    output logic        m_ecpri_header_valid,
-    output logic        m_ecpri_concat,
-    output logic [ 7:0] m_ecpri_messagetype,
-    output logic [15:0] m_ecpri_payloadsize
+    output var        m_ecpri_header_valid,
+    output var        m_ecpri_concat,
+    output var [ 7:0] m_ecpri_messagetype,
+    output var [15:0] m_ecpri_payloadsize
 );
 
   import ecpri_pkg::*;
 
   // FSM states
 
-  localparam integer S_RST = 0;  // Under reset
-  localparam integer S_COMM = 1;  // Common header
-  localparam integer S_PAYLOAD = 2;  // Payload
+  localparam int S_RST = 0;  // Under reset
+  localparam int S_COMM = 1;  // Common header
+  localparam int S_PAYLOAD = 2;  // Payload
 
   // Input data
 

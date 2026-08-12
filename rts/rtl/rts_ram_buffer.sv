@@ -4,19 +4,19 @@
 `default_nettype none
 
 module rts_ram_buffer (
-    input  wire        clk,
+    input var         clk,
     // Port A
-    input  wire [19:0] addra,
-    input  wire        ena,
-    input  wire        wea,
-    input  wire [31:0] dina,
-    output wire [31:0] douta,
+    input var  [19:0] addra,
+    input var         ena,
+    input var         wea,
+    input var  [31:0] dina,
+    output var [31:0] douta,
     // Port B
-    input  wire [19:0] addrb,
-    input  wire        enb,
-    input  wire        web,
-    input  wire [31:0] dinb,
-    output wire [31:0] doutb
+    input var  [19:0] addrb,
+    input var         enb,
+    input var         web,
+    input var  [31:0] dinb,
+    output var [31:0] doutb
 );
 
   parameter NumBlocks = 16;

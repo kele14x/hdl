@@ -6,24 +6,24 @@ module axi4l_bram_r #(
     parameter int ADDR_WIDTH = 32,
     parameter int DATA_WIDTH = 32
 ) (
-    input  wire                  aclk,
-    input  wire                  aresetn,
+    input var                   aclk,
+    input var                   aresetn,
     //
-    input  wire [ADDR_WIDTH-1:0] araddr,
-    input  wire                  arvalid,
-    output wire                  arready,
+    input var  [ADDR_WIDTH-1:0] araddr,
+    input var                   arvalid,
+    output var                  arready,
     //
-    output wire [DATA_WIDTH-1:0] rdata,
-    output wire [           1:0] rresp,
-    output wire                  rvalid,
-    input  wire                  rready,
+    output var [DATA_WIDTH-1:0] rdata,
+    output var [           1:0] rresp,
+    output var                  rvalid,
+    input var                   rready,
     //
-    output wire [ADDR_WIDTH-1:0] bram_addr,
-    output wire                  bram_en,
+    output var [ADDR_WIDTH-1:0] bram_addr,
+    output var                  bram_en,
     //
-    input  wire [DATA_WIDTH-1:0] bram_data,
-    input  wire                  bram_ack,
-    input  wire                  bram_err
+    input var  [DATA_WIDTH-1:0] bram_data,
+    input var                   bram_ack,
+    input var                   bram_err
 );
 
   // 3'b000: under reset

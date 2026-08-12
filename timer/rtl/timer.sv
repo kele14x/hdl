@@ -3,49 +3,49 @@
 `default_nettype none
 
 module timer #(
-    parameter integer FREQ_MODE    = 0,    // 0: 400 MHz, 1: 491.52 MHz
-    parameter int     SIM_SPEED_UP = 0
+    parameter int FREQ_MODE    = 0,  // 0: 400 MHz, 1: 491.52 MHz
+    parameter int SIM_SPEED_UP = 0
 ) (
-    input  wire        s_axi_aclk,
-    input  wire        s_axi_aresetn,
+    input var         s_axi_aclk,
+    input var         s_axi_aresetn,
     //
-    input  wire [15:0] s_axi_awaddr,
-    input  wire [ 2:0] s_axi_awprot,
-    input  wire        s_axi_awvalid,
-    output wire        s_axi_awready,
+    input var  [15:0] s_axi_awaddr,
+    input var  [ 2:0] s_axi_awprot,
+    input var         s_axi_awvalid,
+    output var        s_axi_awready,
     //
-    input  wire [31:0] s_axi_wdata,
-    input  wire [ 3:0] s_axi_wstrb,
-    input  wire        s_axi_wvalid,
-    output wire        s_axi_wready,
+    input var  [31:0] s_axi_wdata,
+    input var  [ 3:0] s_axi_wstrb,
+    input var         s_axi_wvalid,
+    output var        s_axi_wready,
     //
-    output wire [ 1:0] s_axi_bresp,
-    output wire        s_axi_bvalid,
-    input  wire        s_axi_bready,
+    output var [ 1:0] s_axi_bresp,
+    output var        s_axi_bvalid,
+    input var         s_axi_bready,
     //
-    input  wire [15:0] s_axi_araddr,
-    input  wire [ 2:0] s_axi_arprot,
-    input  wire        s_axi_arvalid,
-    output wire        s_axi_arready,
+    input var  [15:0] s_axi_araddr,
+    input var  [ 2:0] s_axi_arprot,
+    input var         s_axi_arvalid,
+    output var        s_axi_arready,
     //
-    output wire [31:0] s_axi_rdata,
-    output wire [ 1:0] s_axi_rresp,
-    output wire        s_axi_rvalid,
-    input  wire        s_axi_rready,
+    output var [31:0] s_axi_rdata,
+    output var [ 1:0] s_axi_rresp,
+    output var        s_axi_rvalid,
+    input var         s_axi_rready,
     //
-    input  wire        clk,
-    input  wire        rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire        pps_in,
+    input var         pps_in,
     //
-    output wire [47:0] tod_sec,
-    output wire [31:0] tod_ns,
+    output var [47:0] tod_sec,
+    output var [31:0] tod_ns,
     //
-    output wire        pps_out,
-    output wire        pps_pad,
+    output var        pps_out,
+    output var        pps_pad,
     //
-    output wire        rfs_out,
-    output wire        rfs_pad
+    output var        rfs_out,
+    output var        rfs_pad
 );
 
   wire        ctrl_rtc_offset_valid;

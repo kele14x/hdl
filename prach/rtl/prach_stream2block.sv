@@ -5,35 +5,35 @@
 module prach_stream2block #(
     parameter int NUM_ANT = 4
 ) (
-    input  wire                clk,
-    input  wire                rst,
+    input var                clk,
+    input var                rst,
     //
-    input  wire  [       15:0] din_dr,
-    input  wire  [       15:0] din_di,
-    input  wire                din_sf,
-    input  wire                din_sl,
-    input  wire                din_sy,
-    input  wire  [        7:0] din_chn,
-    input  wire                din_dv,
-    input  wire                din_last,
+    input var  [       15:0] din_dr,
+    input var  [       15:0] din_di,
+    input var                din_sf,
+    input var                din_sl,
+    input var                din_sy,
+    input var  [        7:0] din_chn,
+    input var                din_dv,
+    input var                din_last,
     //
-    output logic [       15:0] dout_dr,
-    output logic [       15:0] dout_di,
-    output wire                dout_sf,
-    output wire                dout_sl,
-    output wire                dout_sy,
-    output wire  [        1:0] dout_chn,
-    output wire                dout_dv,
-    output wire                dout_last,
+    output var [       15:0] dout_dr,
+    output var [       15:0] dout_di,
+    output var               dout_sf,
+    output var               dout_sl,
+    output var               dout_sy,
+    output var [        1:0] dout_chn,
+    output var               dout_dv,
+    output var               dout_last,
     //
-    input  wire  [NUM_ANT-1:0] rd_channel_req,
-    output logic [NUM_ANT-1:0] rd_channel_ack,
+    input var  [NUM_ANT-1:0] rd_channel_req,
+    output var [NUM_ANT-1:0] rd_channel_ack,
     // CSR
     //----
-    input  wire  [        8:0] ctrl_start_symbol0,
-    input  wire  [        8:0] ctrl_start_symbol1,
-    input  wire  [       18:0] ctrl_start_sample,
-    input  wire  [        3:0] ctrl_num_symbol
+    input var  [        8:0] ctrl_start_symbol0,
+    input var  [        8:0] ctrl_start_symbol1,
+    input var  [       18:0] ctrl_start_sample,
+    input var  [        3:0] ctrl_num_symbol
 );
 
   // Notes
@@ -301,9 +301,9 @@ module prach_stream2block #(
   endgenerate
 
   always_ff @(posedge clk) begin
-    rd_en_d  <= rd_en;
+    rd_en_d <= rd_en;
     rd_en_dd <= rd_en_d;
-    rd_addr_bank_d  <= rd_addr[11:10];
+    rd_addr_bank_d <= rd_addr[11:10];
     rd_addr_bank_dd <= rd_addr_bank_d;
   end
 
@@ -413,15 +413,14 @@ module prach_stream2block #(
             .RAM_STYLE   ("BLOCK")
         ) u_ram (
             // Port A
-            .clka (clk),
-            .wea  (wr_we[i] && (wr_addr[11:10] == 2'(j))),
+            .clka(clk),
+            .wea(wr_we[i] && (wr_addr[11:10] == 2'(j))),
             .addra(wr_addr[RamAddrWidth-1:0]),
-            .dina (wr_data),
+            .dina(wr_data),
             // Port B
-            .clkb (clk),
-            .rstb (~(rd_en_d[i] && (rd_addr_bank_d == 2'(j)))),
-            .enb  ({rd_en_d[i] && (rd_addr_bank_d == 2'(j)),
-                    rd_en[i] && (rd_addr[11:10] == 2'(j))}),
+            .clkb(clk),
+            .rstb(~(rd_en_d[i] && (rd_addr_bank_d == 2'(j)))),
+            .enb({rd_en_d[i] && (rd_addr_bank_d == 2'(j)), rd_en[i] && (rd_addr[11:10] == 2'(j))}),
             .addrb(rd_addr[RamAddrWidth-1:0]),
             .doutb(rd_data[i][j])
         );

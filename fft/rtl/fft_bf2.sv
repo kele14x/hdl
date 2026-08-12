@@ -5,33 +5,33 @@
 `default_nettype none
 
 module fft_bf2 #(
-    parameter integer NUM_ANT      = 4,
-    parameter integer LOG_FFT_SIZE = 4,
-    parameter integer DATA_WIDTH   = 18,
-    parameter int     SCALE        = 0
+    parameter int NUM_ANT      = 4,
+    parameter int LOG_FFT_SIZE = 4,
+    parameter int DATA_WIDTH   = 18,
+    parameter int SCALE        = 0
 ) (
-    input  wire                         clk,
-    input  wire                         rst,
+    input var                          clk,
+    input var                          rst,
     //
-    input  wire signed [DATA_WIDTH-1:0] din_dr,
-    input  wire signed [DATA_WIDTH-1:0] din_di,
-    input  wire                         din_dv,
+    input var  signed [DATA_WIDTH-1:0] din_dr,
+    input var  signed [DATA_WIDTH-1:0] din_di,
+    input var                          din_dv,
     //
-    output wire signed [DATA_WIDTH-1:0] dout_dr,
-    output wire signed [DATA_WIDTH-1:0] dout_di,
-    output wire                         dout_dv,
+    output var signed [DATA_WIDTH-1:0] dout_dr,
+    output var signed [DATA_WIDTH-1:0] dout_di,
+    output var                         dout_dv,
     //
-    input  wire        [           1:0] ctrl_itlv,
-    input  wire                         ctrl_bypass,
-    input  wire                         ctrl_scale,
+    input var         [           1:0] ctrl_itlv,
+    input var                          ctrl_bypass,
+    input var                          ctrl_scale,
     //
-    output wire                         stat_ovf
+    output var                         stat_ovf
 );
 
   // Parameters
 
-  localparam integer DelayWidth = DATA_WIDTH * 2;
-  localparam integer DelayDepth = (1 << (LOG_FFT_SIZE + $clog2(NUM_ANT) - 1));
+  localparam int DelayWidth = DATA_WIDTH * 2;
+  localparam int DelayDepth = (1 << (LOG_FFT_SIZE + $clog2(NUM_ANT) - 1));
 
   // Signals
 
@@ -267,7 +267,7 @@ module fft_bf2 #(
   end
 
   always_ff @(posedge clk) begin
-      if ((SCALE != 0) && ctrl_scale && sel) begin
+    if ((SCALE != 0) && ctrl_scale && sel) begin
       ovf_r <= 1'b0;
     end else begin
       ovf_r <= ~(x1r_s[DATA_WIDTH-:2] == 2'b00 || x1r_s[DATA_WIDTH-:2] == 2'b11) ||

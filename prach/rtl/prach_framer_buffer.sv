@@ -7,36 +7,36 @@ module prach_framer_buffer #(
     parameter int ANT_ID  = 0,
     parameter int NUM_ANT = 4
 ) (
-    input  wire          clk,
-    input  wire          rst,
+    input var         clk,
+    input var         rst,
     //
-    input  wire  [15:0] din_dr,
-    input  wire  [15:0] din_di,
-    input  wire         din_sf,
-    input  wire         din_sl,
-    input  wire         din_sy,
-    input  wire  [ 1:0] din_chn,
-    input  wire         din_dv,
-    input  wire         din_last,
+    input var  [15:0] din_dr,
+    input var  [15:0] din_di,
+    input var         din_sf,
+    input var         din_sl,
+    input var         din_sy,
+    input var  [ 1:0] din_chn,
+    input var         din_dv,
+    input var         din_last,
     //
-    input  wire  [11:0] rd_section_id,
-    input  wire  [ 3:0] ctrl_fs_offset,
+    input var  [11:0] rd_section_id,
+    input var  [ 3:0] ctrl_fs_offset,
     //
-    output logic [63:0] m_axis_tdata,
-    output logic [ 7:0] m_axis_tkeep,
-    output logic        m_axis_tlast,
-    output logic [31:0] m_axis_tuser,
-    output logic        m_axis_tvalid
+    output var [63:0] m_axis_tdata,
+    output var [ 7:0] m_axis_tkeep,
+    output var        m_axis_tlast,
+    output var [31:0] m_axis_tuser,
+    output var        m_axis_tvalid
 );
 
-  logic [ 3:0] ctrl_fs_offset_s;
+  logic [        3:0] ctrl_fs_offset_s;
 
   logic [NUM_ANT-1:0] wr_we;
-  logic [         8:0] wr_addr;
-  logic [        35:0] wr_data;
+  logic [        8:0] wr_addr;
+  logic [       35:0] wr_data;
   logic [NUM_ANT-1:0] exp_we;
-  logic [         6:0] exp_addr;
-  logic [         3:0] exp_wdata;
+  logic [        6:0] exp_addr;
+  logic [        3:0] exp_wdata;
   logic [NUM_ANT-1:0] section_done;
 
   logic [NUM_ANT-1:0] ap_req;
@@ -44,17 +44,17 @@ module prach_framer_buffer #(
   logic               gearbox_start;
   logic               gearbox_busy;
   logic               gearbox_done;
-  logic [         1:0] read_ant;
-  logic [        31:0] gearbox_tuser;
+  logic [        1:0] read_ant;
+  logic [       31:0] gearbox_tuser;
 
-  logic [         1:0] data_rd_en;
-  logic [         8:0] data_rd_addr;
-  logic [        35:0] data_rd_data[NUM_ANT];
-  logic [        35:0] data_rd_data_c;
-  logic [         1:0] exp_rd_en;
-  logic [         6:0] exp_rd_addr;
-  logic [         3:0] exp_rd_data[NUM_ANT];
-  logic [         3:0] exp_rd_data_c;
+  logic [        1:0] data_rd_en;
+  logic [        8:0] data_rd_addr;
+  logic [       35:0] data_rd_data     [NUM_ANT];
+  logic [       35:0] data_rd_data_c;
+  logic [        1:0] exp_rd_en;
+  logic [        6:0] exp_rd_addr;
+  logic [        3:0] exp_rd_data      [NUM_ANT];
+  logic [        3:0] exp_rd_data_c;
 
   cdc_array_single #(
       .DEST_SYNC_FF (2),
@@ -168,11 +168,11 @@ module prach_framer_buffer #(
 
   always_comb begin
     data_rd_data_c = '0;
-    exp_rd_data_c = '0;
+    exp_rd_data_c  = '0;
     for (int ant = 0; ant < NUM_ANT; ant++) begin
       if (int'(read_ant) == ant) begin
         data_rd_data_c = data_rd_data[ant];
-        exp_rd_data_c = exp_rd_data[ant];
+        exp_rd_data_c  = exp_rd_data[ant];
       end
     end
   end

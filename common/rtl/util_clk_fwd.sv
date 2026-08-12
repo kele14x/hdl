@@ -2,8 +2,8 @@
 `default_nettype none
 
 module util_clk_fwd (
-    input  wire clk_i,
-    output wire clk_o
+    input var  clk_i,
+    output var clk_o
 );
 
   assign clk_o = ~clk_i;
