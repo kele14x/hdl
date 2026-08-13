@@ -6,7 +6,8 @@ module puxch_top #(
     parameter int NUM_CC     = 3,
     parameter int NUM_ANT    = 4,
     parameter int HAS_BFP    = 1,
-    parameter int HALF_BLOCK = 0
+    parameter int HALF_BLOCK = 0,
+    parameter int HALF_FFT   = 0
 ) (
     // Clock & Reset
     //--------------
@@ -86,7 +87,9 @@ module puxch_top #(
     for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_cc
 
       puxch_channel #(
-          .NUM_ANT(NUM_ANT)
+          .NUM_ANT   (NUM_ANT),
+          .HALF_BLOCK(HALF_BLOCK),
+          .HALF_FFT  (HALF_FFT)
       ) u_channel (
           .clk                  (clk),
           .rst                  (rst),

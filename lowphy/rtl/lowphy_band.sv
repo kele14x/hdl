@@ -636,10 +636,11 @@ module lowphy_band #(
   );
 
   puxch_top #(
-      .NUM_CC(NUM_CC),
-      .NUM_ANT(NUM_ANT),
-      .HAS_BFP(HAS_BFP),
-      .HALF_BLOCK(HALF_BLOCK)
+      .NUM_CC    (NUM_CC),
+      .NUM_ANT   (NUM_ANT),
+      .HAS_BFP   (HAS_BFP),
+      .HALF_BLOCK(HALF_BLOCK),
+      .HALF_FFT  (HALF_FFT)
   ) u_puxch (
       // Clock & Reset
       //--------------

@@ -120,6 +120,7 @@ def test_puxch_top_runner():
             "NUM_ANT": NUM_ANT,
             "HAS_BFP": 0,
             "HALF_BLOCK": 1,
+            "HALF_FFT": 1,
         },
     )
 

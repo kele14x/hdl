@@ -4,7 +4,8 @@
 
 module puxch_channel #(
     parameter int NUM_ANT    = 4,
-    parameter int HALF_BLOCK = 0
+    parameter int HALF_BLOCK = 0,
+    parameter int HALF_FFT   = 0
 ) (
     // Internal I/F
     //-------------
@@ -52,7 +53,10 @@ module puxch_channel #(
     input var  [31:0] ctrl_phase_comp_din
 );
 
-  localparam int LogFftSize = (HALF_BLOCK != 0) ? 11 : 12;
+  localparam int LogFftSize = (HALF_FFT != 0) ? 11 : 12;
+
+  // HALF_BLOCK is retained for compatibility with existing instantiations.
+  wire unused_half_block = &{1'b0, HALF_BLOCK};
 
   logic [ 1:0] ctrl_rat_s;
   logic [22:0] ctrl_rfs_offset_s;

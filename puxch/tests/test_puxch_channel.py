@@ -88,7 +88,7 @@ def test_puxch_channel_runner():
     run_cocotb(
         "puxch_channel",
         Path(__file__).stem,
-        parameters={"NUM_ANT": NUM_ANT, "HALF_BLOCK": 1},
+        parameters={"NUM_ANT": NUM_ANT, "HALF_BLOCK": 0, "HALF_FFT": 1},
     )
 
 

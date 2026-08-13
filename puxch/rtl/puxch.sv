@@ -6,7 +6,8 @@ module puxch #(
     parameter int NUM_CC     = 3,
     parameter int NUM_ANT    = 4,
     parameter int HAS_BFP    = 1,
-    parameter int HALF_BLOCK = 1
+    parameter int HALF_BLOCK = 1,
+    parameter int HALF_FFT   = 1
 ) (
     input var         s_axi_aclk,
     input var         s_axi_aresetn,
@@ -192,7 +193,8 @@ module puxch #(
       .NUM_CC    (NUM_CC),
       .NUM_ANT   (NUM_ANT),
       .HAS_BFP   (HAS_BFP),
-      .HALF_BLOCK(HALF_BLOCK)
+      .HALF_BLOCK(HALF_BLOCK),
+      .HALF_FFT  (HALF_FFT)
   ) i_puxch (
       .clk                  (clk),
       .rst                  (rst),
