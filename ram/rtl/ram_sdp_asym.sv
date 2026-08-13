@@ -68,13 +68,15 @@ module ram_sdp_asym #(
 
     assert (MaxWidth % MinWidth == 0)
     else begin
-      $error("[%m]: The wider RAM port width should be an integer multiple of the narrower port width.");
+      $error(
+          "[%m]: The wider RAM port width should be an integer multiple of the narrower port width.");
     end
 
     assert ((Ratio & (Ratio - 1)) == 0)
     else begin
-      $error("[%m]: The ratio of the wider RAM port width to the narrower port width should be a power of two, got %d",
-             Ratio);
+      $error(
+          "[%m]: The ratio of the wider RAM port width to the narrower port width should be a power of two, got %d",
+          Ratio);
     end
 
     assert (DEPTH * MinWidth % DATA_WIDTH_A == 0 && DEPTH * MinWidth % DATA_WIDTH_B == 0)

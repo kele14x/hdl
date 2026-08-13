@@ -48,12 +48,17 @@ module dds_lut #(
 
   initial begin : drc_check
     assert (StructureConfig >= StructureAuto && StructureConfig <= StructureQuarter)
-    else $error("[%m]: STRUCTURE (%s) should be one of \"AUTO\", \"FULL\", \"HALF\" or \"QUARTER\".",
-                STRUCTURE);
+    else
+      $error(
+          "[%m]: STRUCTURE (%s) should be one of \"AUTO\", \"FULL\", \"HALF\" or \"QUARTER\".",
+          STRUCTURE
+      );
 
     assert (PHASE_WIDTH >= MinPhaseWidth && PHASE_WIDTH <= 14)
-    else $error("[%m]: PHASE_WIDTH (%0d) should be within range %0d to 14.", PHASE_WIDTH,
-                MinPhaseWidth);
+    else
+      $error(
+          "[%m]: PHASE_WIDTH (%0d) should be within range %0d to 14.", PHASE_WIDTH, MinPhaseWidth
+      );
   end
 
   // When Phase Word Width (PHASE_WIDTH) is large, it's proper to store the

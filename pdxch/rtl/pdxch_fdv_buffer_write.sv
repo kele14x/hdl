@@ -43,11 +43,11 @@ module pdxch_fdv_buffer_write #(
   logic [11:0] word_count_r;
 
   logic [11:0] wr_iq_addr_c;
-  logic        wr_iq_en_c;
+  logic wr_iq_en_c;
   logic [35:0] wr_iq_data_c;
   logic [11:0] wr_exp_addr_c;
-  logic        wr_exp_en_c;
-  logic [ 3:0] wr_exp_data_c;
+  logic wr_exp_en_c;
+  logic [3:0] wr_exp_data_c;
 
   wire packet_first = ~packet_active;
   wire [3:0] rx_u_cc = s_axis_tuser[30:27];
@@ -60,12 +60,9 @@ module pdxch_fdv_buffer_write #(
   wire [11:0] exp_start_addr =
       (s_dl_sym_num[0] ? 12'(EXP_BANK_DEPTH) : 12'd0) + (rx_u_startPrb * 12'd3);
 
-  wire [11:0] iq_bank_limit =
-      s_dl_sym_num[0] ? 12'(2 * IQ_BANK_DEPTH) : 12'(IQ_BANK_DEPTH);
-  wire [11:0] exp_bank_limit =
-      s_dl_sym_num[0] ? 12'(2 * EXP_BANK_DEPTH) : 12'(EXP_BANK_DEPTH);
-  wire bank_overflow =
-      (wr_iq_addr_c >= iq_bank_limit) || (wr_exp_addr_c >= exp_bank_limit);
+  wire [11:0] iq_bank_limit = s_dl_sym_num[0] ? 12'(2 * IQ_BANK_DEPTH) : 12'(IQ_BANK_DEPTH);
+  wire [11:0] exp_bank_limit = s_dl_sym_num[0] ? 12'(2 * EXP_BANK_DEPTH) : 12'(EXP_BANK_DEPTH);
+  wire bank_overflow = (wr_iq_addr_c >= iq_bank_limit) || (wr_exp_addr_c >= exp_bank_limit);
 
   assign wr_iq_addr_c = packet_first ? iq_start_addr : iq_addr_r;
   assign wr_iq_en_c = s_axis_tvalid && packet_match && ~bank_overflow;

@@ -45,50 +45,50 @@ module pdxch_channel #(
   localparam int CtrlFftCfgWidth = 4;
 
   // HALF_BLOCK is retained for compatibility with existing instantiations.
-  wire         unused_half_block = &{1'b0, HALF_BLOCK};
+  wire                        unused_half_block = &{1'b0, HALF_BLOCK};
 
   // Signals
 
-  logic [15:0] gain_dout_dr;
-  logic [15:0] gain_dout_di;
-  logic        gain_dout_sf;
-  logic        gain_dout_sl;
-  logic        gain_dout_sy;
-  logic [ 3:0] gain_dout_chn;
-  logic        gain_dout_dv;
-  logic        gain_dout_last;
+  logic [               15:0] gain_dout_dr;
+  logic [               15:0] gain_dout_di;
+  logic                       gain_dout_sf;
+  logic                       gain_dout_sl;
+  logic                       gain_dout_sy;
+  logic [                3:0] gain_dout_chn;
+  logic                       gain_dout_dv;
+  logic                       gain_dout_last;
 
-  logic [15:0] pre_conv_dout_dr;
-  logic [15:0] pre_conv_dout_di;
-  logic        pre_conv_dout_sf;
-  logic        pre_conv_dout_sl;
-  logic        pre_conv_dout_sy;
-  logic [ 3:0] pre_conv_dout_chn;
-  logic        pre_conv_dout_dv;
-  logic        pre_conv_dout_last;
+  logic [               15:0] pre_conv_dout_dr;
+  logic [               15:0] pre_conv_dout_di;
+  logic                       pre_conv_dout_sf;
+  logic                       pre_conv_dout_sl;
+  logic                       pre_conv_dout_sy;
+  logic [                3:0] pre_conv_dout_chn;
+  logic                       pre_conv_dout_dv;
+  logic                       pre_conv_dout_last;
 
-  logic [15:0] fft_dout_dr;
-  logic [15:0] fft_dout_di;
-  logic        fft_dout_sf;
-  logic        fft_dout_sl;
-  logic        fft_dout_sy;
-  logic [ 3:0] fft_dout_chn;
-  logic        fft_dout_dv;
-  logic        fft_dout_last;
+  logic [               15:0] fft_dout_dr;
+  logic [               15:0] fft_dout_di;
+  logic                       fft_dout_sf;
+  logic                       fft_dout_sl;
+  logic                       fft_dout_sy;
+  logic [                3:0] fft_dout_chn;
+  logic                       fft_dout_dv;
+  logic                       fft_dout_last;
 
-  logic [15:0] phase_comp_dout_dr;
-  logic [15:0] phase_comp_dout_di;
-  logic        phase_comp_dout_sf;
-  logic        phase_comp_dout_sl;
-  logic        phase_comp_dout_sy;
-  logic [ 3:0] phase_comp_dout_chn;
-  logic        phase_comp_dout_dv;
-  logic        phase_comp_dout_last;
+  logic [               15:0] phase_comp_dout_dr;
+  logic [               15:0] phase_comp_dout_di;
+  logic                       phase_comp_dout_sf;
+  logic                       phase_comp_dout_sl;
+  logic                       phase_comp_dout_sy;
+  logic [                3:0] phase_comp_dout_chn;
+  logic                       phase_comp_dout_dv;
+  logic                       phase_comp_dout_last;
 
-  logic [ 1:0] ctrl_size;
-  logic [ 1:0] ctrl_itlv;
-  logic [ 1:0] ctrl_size_ctrl;
-  logic [ 1:0] ctrl_itlv_ctrl;
+  logic [                1:0] ctrl_size;
+  logic [                1:0] ctrl_itlv;
+  logic [                1:0] ctrl_size_ctrl;
+  logic [                1:0] ctrl_itlv_ctrl;
   wire  [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_ctrl = {ctrl_size_ctrl, ctrl_itlv_ctrl};
   logic [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_sent;
   wire                        ctrl_fft_cfg_src_valid = ctrl_fft_cfg_ctrl != ctrl_fft_cfg_sent;
@@ -97,7 +97,7 @@ module pdxch_channel #(
   wire                        ctrl_fft_cfg_dest_valid;
   logic [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_pending;
   logic                       din_sy_d;
-  logic        unused_fft_stat_ovf;
+  logic                       unused_fft_stat_ovf;
 
   // Main
 

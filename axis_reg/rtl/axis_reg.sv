@@ -29,7 +29,7 @@ module axis_reg #(
   // whole beat passes through one skid_buffer instance.
 
   localparam int USER_KEEP_WIDTH = USER_WIDTH > 0 ? USER_WIDTH : 1;
-  localparam int PAYLOAD_WIDTH = DATA_WIDTH + DATA_WIDTH/8 + 1 + USER_KEEP_WIDTH;
+  localparam int PAYLOAD_WIDTH = DATA_WIDTH + DATA_WIDTH / 8 + 1 + USER_KEEP_WIDTH;
 
   logic [PAYLOAD_WIDTH-1:0] s_payload;
   logic [PAYLOAD_WIDTH-1:0] m_payload;

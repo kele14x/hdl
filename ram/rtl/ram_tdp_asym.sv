@@ -5,19 +5,19 @@
 `default_nettype none
 
 module ram_tdp_asym #(
-    parameter int ADDR_WIDTH_A   = 11,
-    parameter int DATA_WIDTH_A   = 16,
+    parameter int ADDR_WIDTH_A = 11,
+    parameter int DATA_WIDTH_A = 16,
     parameter int READ_LATENCY_A = 2,
-    parameter     WRITE_MODE_A   = "READ_FIRST",
+    parameter WRITE_MODE_A = "READ_FIRST",
     //
-    parameter int ADDR_WIDTH_B   = 10,
-    parameter int DATA_WIDTH_B   = 32,
+    parameter int ADDR_WIDTH_B = 10,
+    parameter int DATA_WIDTH_B = 32,
     parameter int READ_LATENCY_B = 2,
-    parameter     WRITE_MODE_B   = "READ_FIRST",
+    parameter WRITE_MODE_B = "READ_FIRST",
     //
-    parameter int DEPTH          = 1 << ((ADDR_WIDTH_A > ADDR_WIDTH_B) ? ADDR_WIDTH_A : ADDR_WIDTH_B),
-    parameter     INIT_FILE      = "NONE",
-    parameter     RAM_STYLE      = "AUTO"
+    parameter int DEPTH = 1 << ((ADDR_WIDTH_A > ADDR_WIDTH_B) ? ADDR_WIDTH_A : ADDR_WIDTH_B),
+    parameter INIT_FILE = "NONE",
+    parameter RAM_STYLE = "AUTO"
 ) (
     // Port A
     input var                       clka,
@@ -132,8 +132,8 @@ module ram_tdp_asym #(
 `endif
   end
 
-  wire                     ena_s;
-  wire                     enb_s;
+  wire ena_s;
+  wire enb_s;
 
   // This makes Vivado recognize correct EN pin
   assign ena_s = ena[0];

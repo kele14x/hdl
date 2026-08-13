@@ -55,8 +55,7 @@ module ram_sp #(
     assert (WRITE_MODE == "WRITE_FIRST" || WRITE_MODE == "READ_FIRST" || WRITE_MODE == "NO_CHANGE")
     /* verilator lint_on WIDTHEXPAND */
     else begin
-      $error("[%m]: invalid WRITE_MODE %s (use WRITE_FIRST, READ_FIRST, or NO_CHANGE)",
-             WRITE_MODE);
+      $error("[%m]: invalid WRITE_MODE %s (use WRITE_FIRST, READ_FIRST, or NO_CHANGE)", WRITE_MODE);
     end
 
     /* verilator lint_off WIDTHEXPAND */

@@ -31,7 +31,7 @@ module pdxch_bfp_gearbox #(
 
   // The address MSB selects one of two logical 4-row ping-pong banks.  A
   // synchronous write plus asynchronous read infers simple dual-port LUTRAM.
-  (* ram_style = "distributed" *)logic [          63:0] prb_ram            [0:7];
+  (* ram_style = "distributed" *)logic [          63:0] prb_ram             [0:7];
 
   logic [           1:0] bank_full;
   logic [           1:0] bank_full_next;
@@ -331,8 +331,8 @@ module pdxch_bfp_gearbox #(
       endcase
 
       if (rd_word == 5) begin
-        rd_bank   <= ~rd_bank;
-        rd_word   <= '0;
+        rd_bank <= ~rd_bank;
+        rd_word <= '0;
         if (bank_full_next[~rd_bank]) begin
           // The asynchronous RAM read lets the reader switch directly to a
           // completed bank. Keep TVALID asserted between adjacent PRBs.

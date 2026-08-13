@@ -151,14 +151,14 @@ module symbol_timer #(
       // Async, clock-less input: no source clock, so skip the source register.
       // src_clk is unused (SRC_INPUT_REG=0) and tied to clk to keep it toggling.
       cdc_single #(
-          .DEST_SYNC_FF  (4),
-          .INIT_SYNC_FF  (0),
-          .SRC_INPUT_REG (0)
+          .DEST_SYNC_FF (4),
+          .INIT_SYNC_FF (0),
+          .SRC_INPUT_REG(0)
       ) i_async_sync (
-          .src_clk  (clk),
-          .src_in   (sync),
-          .dest_clk (clk),
-          .dest_out (sync_s0)
+          .src_clk (clk),
+          .src_in  (sync),
+          .dest_clk(clk),
+          .dest_out(sync_s0)
       );
 
     end else begin : g_no_async_cdc

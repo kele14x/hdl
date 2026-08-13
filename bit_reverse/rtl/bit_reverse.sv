@@ -48,8 +48,8 @@ module bit_reverse #(
     // The first stage has the longest delay line
     assert (NUM_INLV * (2 ** (LOG_FFT_SIZE - 1) - 1) <= 16384)
     else begin
-      $error("[%m]: stage delay exceeds 16384 taps for NUM_INLV=%0d, LOG_FFT_SIZE=%0d",
-             NUM_INLV, LOG_FFT_SIZE);
+      $error("[%m]: stage delay exceeds 16384 taps for NUM_INLV=%0d, LOG_FFT_SIZE=%0d", NUM_INLV,
+             LOG_FFT_SIZE);
     end
   end
 

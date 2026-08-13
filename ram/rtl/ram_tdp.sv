@@ -11,8 +11,8 @@
 module ram_tdp #(
     parameter int ADDR_WIDTH     = 10,
     parameter int DATA_WIDTH     = 32,
-    parameter     WRITE_MODE_A   = "READ_FIRST",  // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
-    parameter     WRITE_MODE_B   = "READ_FIRST",  // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
+    parameter     WRITE_MODE_A   = "READ_FIRST",     // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
+    parameter     WRITE_MODE_B   = "READ_FIRST",     // "WRITE_FIRST", "READ_FIRST", or "NO_CHANGE"
     parameter int READ_LATENCY_A = 2,
     parameter int READ_LATENCY_B = 2,
     //

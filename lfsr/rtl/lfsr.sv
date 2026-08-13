@@ -43,11 +43,11 @@ module lfsr #(
     parameter string GATE_TYPE = "XOR",  // "XOR" or "XNOR"
     parameter int PARALLEL_OUTPUT = 0
 ) (
-    input var                                          clk,
-    input var                                          rst,
-    input var                                          en,
-    input var                                          load,
-    input var  [                        BIT_WIDTH-1:0] din,
+    input var                                                 clk,
+    input var                                                 rst,
+    input var                                                 en,
+    input var                                                 load,
+    input var  [                               BIT_WIDTH-1:0] din,
     output var [((PARALLEL_OUTPUT != 0) ? BIT_WIDTH : 1)-1:0] dout
 );
 

@@ -20,13 +20,13 @@ module ram_sdp_uram_8k36 (
 
   // UltraScale+ UltraRAM has a fixed 4096 x 72 organization. Logical address
   // bit 0 selects one of the two 36-bit samples packed into each physical word.
-  wire [11:0] physical_addra;
-  wire [11:0] physical_addrb;
-  wire [71:0] physical_dina;
-  wire [ 7:0] physical_wea;
-  wire [71:0] physical_doutb;
+  wire  [11:0] physical_addra;
+  wire  [11:0] physical_addrb;
+  wire  [71:0] physical_dina;
+  wire  [ 7:0] physical_wea;
+  wire  [71:0] physical_doutb;
 
-  logic [2:0] read_half;
+  logic [ 2:0] read_half;
 
   assign physical_addra = addra[12:1];
   assign physical_addrb = addrb[12:1];
