@@ -94,23 +94,64 @@ module fft #(
 
   genvar i;
 
-  wire unused_din_chn = &{1'b0, din_chn, 1'b0};
+  wire                         unused_din_chn = &{1'b0, din_chn, 1'b0};
 
-  // Helpers
+  wire signed [DATA_WIDTH-1:0] sat_dr;
+  wire signed [DATA_WIDTH-1:0] sat_di;
+  wire                         sat_ovf_dr;
+  wire                         sat_ovf_di;
 
-  function automatic [DATA_WIDTH-1:0] saturate(input [DataWidthInt-1:0] din);
-    begin
-      if (&(~din[DataWidthInt-1:DATA_WIDTH-1])) begin
-        saturate = din[DATA_WIDTH-1:0];
-      end else if (&din[DataWidthInt-1:DATA_WIDTH-1]) begin
-        saturate = din[DATA_WIDTH-1:0];
-      end else if (din[DataWidthInt-1]) begin
-        saturate = 16'h8000;
-      end else begin
-        saturate = 16'h7FFF;
-      end
-    end
-  endfunction
+  // Sign-extend the input to the internal stage width.
+  wire                         sext_ovf_dr;
+  wire                         sext_ovf_di;
+  wire                         unused_sext_ovf = &{1'b0, sext_ovf_dr, sext_ovf_di, 1'b0};
+
+  type_case #(
+      .IN_WIDTH (DATA_WIDTH),
+      .OUT_WIDTH(DataWidthInt),
+      .TRUNC    (0)
+  ) i_sext_dr (
+      .din (data_dr),
+      .dout(data_dr_s[0]),
+      .ovf (sext_ovf_dr)
+  );
+
+  type_case #(
+      .IN_WIDTH (DATA_WIDTH),
+      .OUT_WIDTH(DataWidthInt),
+      .TRUNC    (0)
+  ) i_sext_di (
+      .din (data_di),
+      .dout(data_di_s[0]),
+      .ovf (sext_ovf_di)
+  );
+
+  assign data_dv_s[0] = data_dv;
+
+  // Saturate the FFT output back to the output width.
+  type_case #(
+      .IN_WIDTH (DataWidthInt),
+      .OUT_WIDTH(DATA_WIDTH),
+      .TRUNC    (0),
+      .SATURATE (1)
+  ) i_sat_dr (
+      .din (data_dr_s[NumStages]),
+      .dout(sat_dr),
+      .ovf (sat_ovf_dr)
+  );
+
+  type_case #(
+      .IN_WIDTH (DataWidthInt),
+      .OUT_WIDTH(DATA_WIDTH),
+      .TRUNC    (0),
+      .SATURATE (1)
+  ) i_sat_di (
+      .din (data_di_s[NumStages]),
+      .dout(sat_di),
+      .ovf (sat_ovf_di)
+  );
+
+  assign ovf_at_saturate = sat_ovf_dr | sat_ovf_di;
 
   // Main
 
@@ -121,21 +162,11 @@ module fft #(
     data_dv <= din_dv;
   end
 
-  // Connect input
-  assign data_dr_s[0] = {{(DataWidthInt - DATA_WIDTH) {data_dr[DATA_WIDTH-1]}}, data_dr};
-  assign data_di_s[0] = {{(DataWidthInt - DATA_WIDTH) {data_di[DATA_WIDTH-1]}}, data_di};
-  assign data_dv_s[0] = data_dv;
-
   always_ff @(posedge clk) begin
-    dout_dr <= saturate(data_dr_s[NumStages]);
-    dout_di <= saturate(data_di_s[NumStages]);
+    dout_dr <= sat_dr;
+    dout_di <= sat_di;
     dout_dv <= data_dv_s[NumStages];
   end
-
-  assign ovf_at_saturate = (!(&(~data_dr_s[NumStages][DataWidthInt-1:DATA_WIDTH-1]) ||
-                                &data_dr_s[NumStages][DataWidthInt-1:DATA_WIDTH-1])) ||
-                           (!(&(~data_di_s[NumStages][DataWidthInt-1:DATA_WIDTH-1]) ||
-                                &data_di_s[NumStages][DataWidthInt-1:DATA_WIDTH-1]));
 
   // Loop generate each stage
   generate

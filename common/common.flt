@@ -1,4 +1,5 @@
 rtl/delay.sv
 rtl/srl.sv
+rtl/type_case.sv
 rtl/util_clk_fwd.sv
 rtl/util_gpio_gw.sv

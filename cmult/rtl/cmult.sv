@@ -30,7 +30,6 @@ module cmult #(
   localparam int Latency = (USE_3_MULT != 0) ? 7 : 5;
   /* verilator lint_on UNUSEDPARAM */
   localparam int FullWidth = A_WIDTH + B_WIDTH + 1;
-  localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
 
   initial begin : drc_check
     assert (A_WIDTH >= 1)
@@ -209,54 +208,37 @@ module cmult #(
     end
   endgenerate
 
-  logic signed [P_WIDTH-1:0] pr_ext;
-  logic signed [P_WIDTH-1:0] pr_sat;
+  wire signed [P_WIDTH-1:0] pr_sat;
   logic signed [P_WIDTH-1:0] pr_reg;
 
-  logic signed [P_WIDTH-1:0] pi_ext;
-  logic signed [P_WIDTH-1:0] pi_sat;
+  wire signed [P_WIDTH-1:0] pi_sat;
   logic signed [P_WIDTH-1:0] pi_reg;
 
-  logic pr_ovf_s;
-  logic pi_ovf_s;
+  wire pr_ovf_s;
+  wire pi_ovf_s;
   logic ovf_r;
-  logic pr_overflow;
-  logic pi_overflow;
-  logic pr_underflow;
-  logic pi_underflow;
 
-  generate
-    if (SignExp > 0) begin : g_sgexp
-      assign pr_ext = {{SignExp{pr_int[FullWidth-1]}}, pr_int[FullWidth-1:SHIFT]};
-      assign pi_ext = {{SignExp{pi_int[FullWidth-1]}}, pi_int[FullWidth-1:SHIFT]};
-    end else begin : g_no_sgexp
-      assign pr_ext = pr_int[SHIFT+P_WIDTH-1:SHIFT];
-      assign pi_ext = pi_int[SHIFT+P_WIDTH-1:SHIFT];
-    end
-  endgenerate
+  type_case #(
+      .IN_WIDTH (FullWidth),
+      .OUT_WIDTH(P_WIDTH),
+      .TRUNC    (SHIFT),
+      .SATURATE (SATURATE)
+  ) i_tc_pr (
+      .din (pr_int),
+      .dout(pr_sat),
+      .ovf (pr_ovf_s)
+  );
 
-  generate
-    if (SignExp >= 0) begin : g_no_ovf
-      assign pr_ovf_s = 1'b0;
-      assign pi_ovf_s = 1'b0;
-      assign pr_overflow = 1'b0;
-      assign pi_overflow = 1'b0;
-      assign pr_underflow = 1'b0;
-      assign pi_underflow = 1'b0;
-    end else begin : g_ovf
-      assign pr_ovf_s = ~(&pr_int[FullWidth-1:P_WIDTH+SHIFT-1] || ~|pr_int[FullWidth-1:P_WIDTH+SHIFT-1]);
-      assign pi_ovf_s = ~(&pi_int[FullWidth-1:P_WIDTH+SHIFT-1] || ~|pi_int[FullWidth-1:P_WIDTH+SHIFT-1]);
-      assign pr_overflow = pr_ovf_s & ~pr_int[FullWidth-1];
-      assign pi_overflow = pi_ovf_s & ~pi_int[FullWidth-1];
-      assign pr_underflow = pr_ovf_s & pr_int[FullWidth-1];
-      assign pi_underflow = pi_ovf_s & pi_int[FullWidth-1];
-    end
-  endgenerate
-
-  assign pr_sat = ((SATURATE != 0) && pr_overflow) ? {1'b0, {P_WIDTH - 1{1'b1}}} :
-                  ((SATURATE != 0) && pr_underflow) ? {1'b1, {P_WIDTH - 1{1'b0}}} : pr_ext;
-  assign pi_sat = ((SATURATE != 0) && pi_overflow) ? {1'b0, {P_WIDTH - 1{1'b1}}} :
-                  ((SATURATE != 0) && pi_underflow) ? {1'b1, {P_WIDTH - 1{1'b0}}} : pi_ext;
+  type_case #(
+      .IN_WIDTH (FullWidth),
+      .OUT_WIDTH(P_WIDTH),
+      .TRUNC    (SHIFT),
+      .SATURATE (SATURATE)
+  ) i_tc_pi (
+      .din (pi_int),
+      .dout(pi_sat),
+      .ovf (pi_ovf_s)
+  );
 
   always_ff @(posedge clk) begin
     if (rst) begin

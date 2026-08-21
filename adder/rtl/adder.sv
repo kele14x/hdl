@@ -25,7 +25,6 @@ module adder #(
   /* verilator lint_off UNUSEDPARAM */
   localparam int Latency = 1;
   localparam int FullWidth = (A_WIDTH >= B_WIDTH) ? A_WIDTH + 1 : B_WIDTH + 1;
-  localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
 
   initial begin : drc_check
     assert (A_WIDTH >= 1)
@@ -65,42 +64,27 @@ module adder #(
   logic signed [FullWidth-1:0] b_full;
 
   logic signed [FullWidth-1:0] p_full;
-  logic signed [  P_WIDTH-1:0] p_ext;
-  logic signed [  P_WIDTH-1:0] p_sat;
+  wire signed  [  P_WIDTH-1:0] p_sat;
   logic signed [  P_WIDTH-1:0] p_reg;
 
-  logic                        ovf_s;
+  wire                         ovf_s;
   logic                        ovf_r;
-  logic                        overflow;
-  logic                        underflow;
 
   assign a_full = {{(FullWidth - A_WIDTH) {a[A_WIDTH-1]}}, a};
   assign b_full = {{(FullWidth - B_WIDTH) {b[B_WIDTH-1]}}, b};
 
   assign p_full = sub ? (a_full - b_full + Rng) : (a_full + b_full + Rng);
 
-  generate
-    if (SignExp > 0) begin : g_sgexp
-      assign p_ext = {{SignExp{p_full[FullWidth-1]}}, p_full[FullWidth-1:SHIFT]};
-    end else begin : g_no_sgexp
-      assign p_ext = p_full[P_WIDTH+SHIFT-1:SHIFT];
-    end
-  endgenerate
-
-  generate
-    if (SignExp >= 0) begin : g_no_ovf
-      assign ovf_s = 1'b0;
-      assign overflow = 1'b0;
-      assign underflow = 1'b0;
-    end else begin : g_ovf
-      assign ovf_s = ~(&p_full[FullWidth-1:P_WIDTH+SHIFT-1] || ~|p_full[FullWidth-1:P_WIDTH+SHIFT-1]);
-      assign overflow = ovf_s & ~p_full[FullWidth-1];
-      assign underflow = ovf_s & p_full[FullWidth-1];
-    end
-  endgenerate
-
-  assign p_sat = ((SATURATE != 0) && overflow) ? {1'b0, {P_WIDTH - 1{1'b1}}} :
-                 ((SATURATE != 0) && underflow) ? {1'b1, {P_WIDTH - 1{1'b0}}} : p_ext;
+  type_case #(
+      .IN_WIDTH (FullWidth),
+      .OUT_WIDTH(P_WIDTH),
+      .TRUNC    (SHIFT),
+      .SATURATE (SATURATE)
+  ) i_type_case (
+      .din (p_full),
+      .dout(p_sat),
+      .ovf (ovf_s)
+  );
 
   always_ff @(posedge clk) begin
     if (rst) begin

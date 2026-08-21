@@ -26,7 +26,6 @@ module mult #(
   localparam int Latency = 4;
   /* verilator lint_on UNUSEDPARAM */
   localparam int FullWidth = A_WIDTH + B_WIDTH;
-  localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
 
   initial begin : drc_check
     assert (A_WIDTH >= 1)
@@ -76,14 +75,11 @@ module mult #(
   logic                        product_nonnegative;
   logic                        product_nonnegative_d;
 
-  wire signed  [  P_WIDTH-1:0] p_ext;
   wire signed  [  P_WIDTH-1:0] p_sat;
   logic signed [  P_WIDTH-1:0] p_reg;
 
   wire                         ovf_s;
   logic                        ovf_r;
-  wire                         overflow;
-  wire                         underflow;
 
   always_ff @(posedge clk) begin
     a_d <= a;
@@ -111,28 +107,16 @@ module mult #(
     /* verilator lint_on WIDTHEXPAND */
   end
 
-  generate
-    if (SignExp > 0) begin : g_sgexp
-      assign p_ext = {{SignExp{p_full[FullWidth-1]}}, p_full[FullWidth-1:SHIFT]};
-    end else begin : g_sgexp
-      assign p_ext = p_full[P_WIDTH+SHIFT-1:SHIFT];
-    end
-  endgenerate
-
-  generate
-    if (SignExp >= 0) begin : g_no_ovf
-      assign ovf_s = 1'b0;
-      assign overflow = 1'b0;
-      assign underflow = 1'b0;
-    end else begin : g_ovf
-      assign ovf_s = ~(&p_full[FullWidth-1:P_WIDTH+SHIFT-1] || ~|p_full[FullWidth-1:P_WIDTH+SHIFT-1]);
-      assign overflow = ovf_s & ~p_full[FullWidth-1];
-      assign underflow = ovf_s & p_full[FullWidth-1];
-    end
-  endgenerate
-
-  assign p_sat = ((SATURATE != 0) && overflow) ? {1'b0, {P_WIDTH - 1{1'b1}}} :
-                 ((SATURATE != 0) && underflow) ? {1'b1, {P_WIDTH - 1{1'b0}}} : p_ext;
+  type_case #(
+      .IN_WIDTH (FullWidth),
+      .OUT_WIDTH(P_WIDTH),
+      .TRUNC    (SHIFT),
+      .SATURATE (SATURATE)
+  ) i_type_case (
+      .din (p_full),
+      .dout(p_sat),
+      .ovf (ovf_s)
+  );
 
   always_ff @(posedge clk) begin
     if (rst) begin
