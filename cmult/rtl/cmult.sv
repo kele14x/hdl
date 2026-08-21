@@ -52,6 +52,11 @@ module cmult #(
       $error("[%m]: SHIFT (%0d) is outside of valid range.", SHIFT);
     end
 
+    assert (SHIFT < FullWidth)
+    else begin
+      $error("[%m]: SHIFT (%0d) must be smaller than the full width (%0d).", SHIFT, FullWidth);
+    end
+
     assert (ROUND == 0 || ROUND == 1)
     else begin
       $error("[%m]: ROUND (%0d) value is outside of valid range.", ROUND);
@@ -67,8 +72,6 @@ module cmult #(
       $error("[%m]: USE_3_MULT (%0d) value is outside of valid range.", USE_3_MULT);
     end
   end
-
-  localparam logic signed [FullWidth-1:0] Rng = ((ROUND != 0) && (SHIFT > 0)) ? (1 << (SHIFT - 1)) : 0;
 
   logic signed [FullWidth-1:0] pr_int;
   logic signed [FullWidth-1:0] pi_int;
@@ -130,7 +133,7 @@ module cmult #(
       always_ff @(posedge clk) begin
         addcommon <= ar_d - ai_d;
         mult0     <= addcommon * bi_dd;
-        common    <= mult0 + Rng;
+        common    <= mult0;
       end
 
       // Real product ar * (br - bi) + (ar - ai) * bi = ar * br - ai * bi
@@ -184,7 +187,7 @@ module cmult #(
       // Real component
       always_ff @(posedge clk) begin
         m_ii <= ai_d * bi_d;
-        p_ii <= m_ii - Rng;
+        p_ii <= m_ii;
       end
 
       always_ff @(posedge clk) begin
@@ -195,7 +198,7 @@ module cmult #(
       // Imaginary component
       always_ff @(posedge clk) begin
         m_ri <= ar_d * bi_d;
-        p_ri <= m_ri + Rng;
+        p_ri <= m_ri;
       end
 
       always_ff @(posedge clk) begin
@@ -222,6 +225,7 @@ module cmult #(
       .IN_WIDTH (FullWidth),
       .OUT_WIDTH(P_WIDTH),
       .TRUNC    (SHIFT),
+      .ROUND    (ROUND),
       .SATURATE (SATURATE)
   ) i_tc_pr (
       .din (pr_int),
@@ -233,6 +237,7 @@ module cmult #(
       .IN_WIDTH (FullWidth),
       .OUT_WIDTH(P_WIDTH),
       .TRUNC    (SHIFT),
+      .ROUND    (ROUND),
       .SATURATE (SATURATE)
   ) i_tc_pi (
       .din (pi_int),

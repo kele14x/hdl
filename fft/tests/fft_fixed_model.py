@@ -125,11 +125,12 @@ def _cmult_q15_shift16(
     width: int,
     stats: QuantizationStats,
 ) -> tuple[np.ndarray, np.ndarray]:
-    # Match cmult USE_3_MULT=0, ROUND=1, SHIFT=16. ROUND adds a positive
-    # half-LSB before the arithmetic shift for both signs, exactly as the RTL.
-    rounding = 1 << 15
-    pr_full = ar * br - ai * bi + rounding
-    pi_full = ai * br + ar * bi + rounding
+    # Match cmult USE_3_MULT=0, ROUND=1, SHIFT=16 (round-to-nearest, ties-to-even).
+    rounding = (1 << 15) - 1
+    pr = ar * br - ai * bi
+    pi = ai * br + ar * bi
+    pr_full = pr + rounding + ((pr >> 16) & 1)
+    pi_full = pi + rounding + ((pi >> 16) & 1)
     return (
         wrap_signed(pr_full >> 16, width, stats, "twiddle_wraps"),
         wrap_signed(pi_full >> 16, width, stats, "twiddle_wraps"),

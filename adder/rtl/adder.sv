@@ -47,6 +47,11 @@ module adder #(
       $error("[%m]: SHIFT (%0d) is outside of valid range.", SHIFT);
     end
 
+    assert (SHIFT < FullWidth)
+    else begin
+      $error("[%m]: SHIFT (%0d) must be smaller than the full width (%0d).", SHIFT, FullWidth);
+    end
+
     assert (ROUND == 0 || ROUND == 1)
     else begin
       $error("[%m]: ROUND (%0d) value is outside of valid range.", ROUND);
@@ -57,8 +62,6 @@ module adder #(
       $error("[%m]: SATURATE (%0d) value is outside of valid range.", SATURATE);
     end
   end
-
-  localparam signed [FullWidth-1:0] Rng = ((ROUND != 0) && (SHIFT > 0)) ? (1 << (SHIFT - 1)) : 0;
 
   logic signed [FullWidth-1:0] a_full;
   logic signed [FullWidth-1:0] b_full;
@@ -73,12 +76,13 @@ module adder #(
   assign a_full = {{(FullWidth - A_WIDTH) {a[A_WIDTH-1]}}, a};
   assign b_full = {{(FullWidth - B_WIDTH) {b[B_WIDTH-1]}}, b};
 
-  assign p_full = sub ? (a_full - b_full + Rng) : (a_full + b_full + Rng);
+  assign p_full = sub ? (a_full - b_full) : (a_full + b_full);
 
   type_case #(
       .IN_WIDTH (FullWidth),
       .OUT_WIDTH(P_WIDTH),
       .TRUNC    (SHIFT),
+      .ROUND    (ROUND),
       .SATURATE (SATURATE)
   ) i_type_case (
       .din (p_full),

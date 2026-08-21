@@ -48,8 +48,7 @@ def model(a, b, cfg):
     p = a * b
     if shift > 0:
         if rnd:
-            half_lsb = 2 ** (shift - 1)
-            p += half_lsb if p >= 0 else half_lsb - 1
+            p += 2 ** (shift - 1) - 1 + ((p >> shift) & 1)
         p >>= shift
 
     ovf = p > 2 ** (p_width - 1) - 1 or p < -(2 ** (p_width - 1))

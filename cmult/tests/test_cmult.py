@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-import math
 import os
 from pathlib import Path
 
@@ -48,15 +47,12 @@ def model(ar, ai, br, bi, cfg):
     pr = ar * br - ai * bi
     pi = ar * bi + ai * br
 
-    if rnd and shift > 0:
-        pr = (pr + 2 ** (shift - 1)) / 2**shift
-        pi = (pi + 2 ** (shift - 1)) / 2**shift
-    else:
-        pr = pr / 2**shift if shift > 0 else pr
-        pi = pi / 2**shift if shift > 0 else pi
-
-    pr = math.floor(pr)
-    pi = math.floor(pi)
+    if shift > 0:
+        if rnd:
+            pr += 2 ** (shift - 1) - 1 + ((pr >> shift) & 1)
+            pi += 2 ** (shift - 1) - 1 + ((pi >> shift) & 1)
+        pr = pr >> shift
+        pi = pi >> shift
 
     ovf = (
         pr > 2 ** (p_width - 1) - 1

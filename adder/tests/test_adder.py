@@ -47,11 +47,10 @@ def model(a, b, sub, cfg):
     saturate_en = cfg["SATURATE"]
 
     p = a - b if sub else a + b
-    if rnd and shift > 0:
-        p = (p + 2 ** (shift - 1)) / 2**shift
-    else:
-        p = p / 2**shift if shift > 0 else p
-    p = int(np.floor(p))
+    if shift > 0:
+        if rnd:
+            p += 2 ** (shift - 1) - 1 + ((p >> shift) & 1)
+        p = p >> shift
 
     ovf = p > 2 ** (p_width - 1) - 1 or p < -(2 ** (p_width - 1))
     p = saturation(p, p_width) if saturate_en else truncate(p, p_width)

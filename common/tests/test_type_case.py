@@ -39,6 +39,22 @@ CASES = [
         "params": {"IN_WIDTH": 32, "OUT_WIDTH": 16, "TRUNC": 15, "SATURATE": 0},
     },
     {
+        "name": "trunc_rne_sat",
+        "params": {"IN_WIDTH": 32, "OUT_WIDTH": 16, "TRUNC": 15, "ROUND": 1, "SATURATE": 1},
+    },
+    {
+        "name": "trunc_rne_wrap",
+        "params": {"IN_WIDTH": 32, "OUT_WIDTH": 16, "TRUNC": 15, "ROUND": 1, "SATURATE": 0},
+    },
+    {
+        "name": "rne_ties",
+        "params": {"IN_WIDTH": 8, "OUT_WIDTH": 4, "TRUNC": 4, "ROUND": 1, "SATURATE": 1},
+    },
+    {
+        "name": "rne_sext",
+        "params": {"IN_WIDTH": 8, "OUT_WIDTH": 16, "TRUNC": 2, "ROUND": 1, "SATURATE": 1},
+    },
+    {
         "name": "pad_sext",
         "params": {"IN_WIDTH": 16, "OUT_WIDTH": 18, "TRUNC": -2, "SATURATE": 1},
     },
@@ -56,20 +72,23 @@ def to_signed(x, w):
     return x
 
 
-def model(din, in_w, out_w, trunc, saturate):
-    sign = 1 if din < 0 else 0
+def model(din, in_w, out_w, trunc, round_, saturate):
     if trunc >= 0:
+        if round_ and trunc > 0:
+            din += (1 << (trunc - 1)) - 1 + ((din >> trunc) & 1)
         val = din >> trunc
+        eff = in_w - trunc
     else:
         val = din << (-trunc)
-    eff = in_w - trunc
+        eff = in_w - trunc
+    sign = 1 if val < 0 else 0
     diff = eff - out_w
-    if diff <= 0:
+    if diff <= -1:
         ovf = 0
         dout = to_signed(val, out_w)
     else:
-        top = (val >> (out_w - 1)) & ((1 << (diff + 1)) - 1)
-        in_range = top == 0 or top == (1 << (diff + 1)) - 1
+        top = (val >> (out_w - 1)) & ((1 << (diff + 2)) - 1)
+        in_range = top == 0 or top == (1 << (diff + 2)) - 1
         ovf = 0 if in_range else 1
         if in_range or not saturate:
             dout = to_signed(val, out_w)
@@ -83,6 +102,7 @@ async def test_type_case(dut):
     in_w = int(os.environ.get("IN_WIDTH", "16"))
     out_w = int(os.environ.get("OUT_WIDTH", "16"))
     trunc = int(os.environ.get("TRUNC", "0"))
+    round_ = int(os.environ.get("ROUND", "0"))
     saturate = int(os.environ.get("SATURATE", "1"))
 
     rng = np.random.default_rng(12345)
@@ -95,7 +115,7 @@ async def test_type_case(dut):
     for v in values:
         dut.din.value = v
         await Timer(1, unit="ns")
-        exp_dout, exp_ovf = model(v, in_w, out_w, trunc, saturate)
+        exp_dout, exp_ovf = model(v, in_w, out_w, trunc, round_, saturate)
         got_dout = int(dut.dout.value.signed_integer)
         got_ovf = int(dut.ovf.value)
         assert got_ovf == exp_ovf, (
