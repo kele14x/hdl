@@ -56,6 +56,44 @@ def model(a, b, cfg):
     return (p, int(ovf))
 
 
+def boundary_probes(cfg):
+    """Saturation clamp-boundary (a, b) probes for SATURATE=1 configs.
+
+    Brute-forces the input space for products whose post-shift (and post-round)
+    value sits exactly on the representable range limits: the max/min in-range
+    near-misses (hi, lo) and the first out-of-range values (hi+1, lo-1). These
+    pin the saturation clamp and the ovf flag to deterministic directed cases.
+    Returns [] when SATURATE is off (no clamp to probe). Intended for the small
+    parameter corners in CASES; input ranges beyond ~2**12 make the scan slow.
+    """
+    if not cfg["SATURATE"]:
+        return []
+
+    aw, bw = cfg["A_WIDTH"], cfg["B_WIDTH"]
+    shift, pw = cfg["SHIFT"], cfg["P_WIDTH"]
+    a_max, b_max = 2 ** (aw - 1) - 1, 2 ** (bw - 1) - 1
+    lo, hi = -(2 ** (pw - 1)), 2 ** (pw - 1) - 1
+
+    aa = np.arange(-a_max, a_max + 1, dtype=np.int64)
+    bb = np.arange(-b_max, b_max + 1, dtype=np.int64)
+    prod = aa[:, None] * bb[None, :]
+
+    # Post-shift (and post-round) value, same formula as model().
+    if cfg["ROUND"] and shift > 0:
+        bias = 2 ** (shift - 1) - 1 + ((prod >> shift) & 1)
+        post = (prod + bias) >> shift
+    else:
+        post = prod >> shift
+
+    probes = []
+    for target in [hi, hi + 1, lo, lo - 1]:
+        flat = np.flatnonzero(post == target)
+        if flat.size:
+            idx = int(flat[0])
+            probes.append((int(aa[idx // bb.size]), int(bb[idx % bb.size])))
+    return probes
+
+
 async def reset(dut):
     dut.rst.value = 1
     dut.a.value = 0
@@ -73,6 +111,7 @@ async def drive(dut, cfg):
     directed = [(0, 0), (1, 1), (-1, 1), (1, -1), (-1, -1)]
     if a_width >= 2 and b_width >= 4:
         directed += [(1, 7), (-1, 7), (1, 8), (-1, 8)]
+    directed += boundary_probes(cfg)
     for a, b in directed:
         await RisingEdge(dut.clk)
         dut.a.value = a
@@ -147,6 +186,7 @@ CASES = [
         "SATURATE": 0,
     },
     {"A_WIDTH": 8, "B_WIDTH": 8, "P_WIDTH": 8, "SHIFT": 4, "ROUND": 1, "SATURATE": 0},
+    {"A_WIDTH": 8, "B_WIDTH": 8, "P_WIDTH": 6, "SHIFT": 8, "ROUND": 0, "SATURATE": 1},
 ]
 
 
