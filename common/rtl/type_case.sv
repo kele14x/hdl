@@ -81,35 +81,40 @@ module type_case #(
     else $error("[%m]: SATURATE (%0d) value is outside of valid range.", SATURATE);
   end
 
-  // Sign-extended input with one bit of headroom for the rounding bias.
+  // Sign-extended input with one bit of headroom.
+  /* verilator lint_off UNUSEDSIGNAL */
   wire signed [IN_WIDTH:0] din_wide;
+  /* verilator lint_on UNUSEDSIGNAL */
 
   assign din_wide = {din[IN_WIDTH-1], din};
 
-  // Round-to-nearest, ties-to-even: add (2**(TRUNC-1) - 1) + din[TRUNC] when
-  // dropping TRUNC LSBs, where din[TRUNC] is the LSB of the kept integer part.
-  /* verilator lint_off UNUSEDSIGNAL */
-  wire signed [IN_WIDTH:0] din_r;
-  /* verilator lint_on UNUSEDSIGNAL */
-
-  generate
-    if (ROUND != 0 && TRUNC > 0) begin : g_rnd
-      /* verilator lint_off WIDTHEXPAND */
-      assign din_r = din_wide + ((1 << (TRUNC - 1)) - 1) + din[TRUNC];
-      /* verilator lint_on WIDTHEXPAND */
-    end else begin : g_nornd
-      assign din_r = din_wide;
-    end
-  endgenerate
-
   // Effective value after LSB truncation or zero padding, with headroom.
+  // ROUND avoids a full-width bias add: the dropped LSBs are truncated first
+  // (plain floor for two's complement), then a single 1-bit round_up increment
+  // is added to the kept bits. round_up = 1 when the dropped LSBs exceed half
+  // an LSB, or land exactly on half with the kept LSB set (ties to even).
   wire signed [EffWidth:0] val;
 
   generate
     if (TRUNC >= 0) begin : g_trunc
-      assign val = din_r[IN_WIDTH:TRUNC];
+      if (ROUND != 0 && TRUNC > 0) begin : g_rnd
+        wire lsb_any;
+        if (TRUNC >= 2) begin : g_lsb
+          assign lsb_any = |din[TRUNC-2:0];
+        end else begin : g_nolsb
+          assign lsb_any = 1'b0;
+        end
+
+        wire round_up;
+        assign round_up = din[TRUNC-1] & (din[TRUNC] | lsb_any);
+        /* verilator lint_off WIDTHEXPAND */
+        assign val = {din[IN_WIDTH-1], din[IN_WIDTH-1:TRUNC]} + {1'b0, round_up};
+        /* verilator lint_on WIDTHEXPAND */
+      end else begin : g_nornd
+        assign val = din_wide[IN_WIDTH:TRUNC];
+      end
     end else begin : g_pad
-      assign val = {din_r, {(-TRUNC) {1'b0}}};
+      assign val = {din_wide, {(-TRUNC) {1'b0}}};
     end
   endgenerate
 

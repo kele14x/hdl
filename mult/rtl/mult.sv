@@ -8,8 +8,8 @@ module mult #(
     parameter int P_WIDTH  = 16,
     parameter int SHIFT    = 15,
     //
-    parameter int ROUND    = 0,
-    parameter int SATURATE = 0
+    parameter int ROUND    = 1,
+    parameter int SATURATE = 1
 ) (
     input var                       clk,
     input var                       rst,
