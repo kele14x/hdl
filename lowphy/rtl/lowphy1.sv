@@ -787,6 +787,7 @@ module lowphy1 (
   localparam int NumCc = 3;
   localparam int NumAnt = 8;
   localparam int HalfBlock = 1;
+  localparam int NumCcBand12 = 2;
 
   // Signals
 
@@ -803,29 +804,29 @@ module lowphy1 (
   logic        s0_axis_tready[NumCc][4];
 
 
-  logic [31:0] m1_axis_tdata [NumCc][2];
-  logic [ 7:0] m1_axis_tuser [NumCc][2];
-  logic        m1_axis_tlast [NumCc][2];
-  logic        m1_axis_tvalid[NumCc][2];
-  logic        m1_axis_tready[NumCc][2];
+  logic [31:0] m1_axis_tdata [NumCcBand12][2];
+  logic [ 7:0] m1_axis_tuser [NumCcBand12][2];
+  logic        m1_axis_tlast [NumCcBand12][2];
+  logic        m1_axis_tvalid[NumCcBand12][2];
+  logic        m1_axis_tready[NumCcBand12][2];
 
-  logic [31:0] s1_axis_tdata [NumCc][2];
-  logic [ 7:0] s1_axis_tuser [NumCc][2];
-  logic        s1_axis_tlast [NumCc][2];
-  logic        s1_axis_tvalid[NumCc][2];
-  logic        s1_axis_tready[NumCc][2];
+  logic [31:0] s1_axis_tdata [NumCcBand12][2];
+  logic [ 7:0] s1_axis_tuser [NumCcBand12][2];
+  logic        s1_axis_tlast [NumCcBand12][2];
+  logic        s1_axis_tvalid[NumCcBand12][2];
+  logic        s1_axis_tready[NumCcBand12][2];
 
-  logic [31:0] m2_axis_tdata [NumCc][2];
-  logic [ 7:0] m2_axis_tuser [NumCc][2];
-  logic        m2_axis_tlast [NumCc][2];
-  logic        m2_axis_tvalid[NumCc][2];
-  logic        m2_axis_tready[NumCc][2];
+  logic [31:0] m2_axis_tdata [NumCcBand12][2];
+  logic [ 7:0] m2_axis_tuser [NumCcBand12][2];
+  logic        m2_axis_tlast [NumCcBand12][2];
+  logic        m2_axis_tvalid[NumCcBand12][2];
+  logic        m2_axis_tready[NumCcBand12][2];
 
-  logic [31:0] s2_axis_tdata [NumCc][2];
-  logic [ 7:0] s2_axis_tuser [NumCc][2];
-  logic        s2_axis_tlast [NumCc][2];
-  logic        s2_axis_tvalid[NumCc][2];
-  logic        s2_axis_tready[NumCc][2];
+  logic [31:0] s2_axis_tdata [NumCcBand12][2];
+  logic [ 7:0] s2_axis_tuser [NumCcBand12][2];
+  logic        s2_axis_tlast [NumCcBand12][2];
+  logic        s2_axis_tvalid[NumCcBand12][2];
+  logic        s2_axis_tready[NumCcBand12][2];
 
   generate
     for (genvar unused_cc = 0; unused_cc < NumCc; unused_cc++) begin : gen_unused_cc
@@ -905,7 +906,7 @@ module lowphy1 (
       .NUM_CC    (NumCc),
       .NUM_ANT   (NumAnt / 2),
       .HALF_BLOCK(HalfBlock),
-      .HALF_FFT  (1)
+      .HALF_FFT  (0)
   ) u_b0 (
       // AXI
       //----
@@ -1170,7 +1171,7 @@ module lowphy1 (
   );
 
   lowphy_band #(
-      .NUM_CC    (NumCc),
+      .NUM_CC    (NumCcBand12),
       .NUM_ANT   (NumAnt / 4),
       .CC_ID     (0),
       .ANT_ID    (0),
@@ -1244,20 +1245,20 @@ module lowphy1 (
       .s_prach_freqoffset            (s0_prach_freqoffset),
       // verilog_format: off
       // Timer ports
-      .s_ul_sym_num                  ('{s3_ul_sym_num,     s4_ul_sym_num,     s5_ul_sym_num}),
-      .s_ul_cta_sym_num              ('{s3_ul_cta_sym_num, s4_ul_cta_sym_num, s5_ul_cta_sym_num}),
-      .s_ul_update                   ('{s3_ul_update,      s4_ul_update,      s5_ul_update}),
-      .s_ul_slot_update              ('{s3_ul_slot_update, s4_ul_slot_update, s5_ul_slot_update}),
-      .s_dl_sym_num                  ('{s3_dl_sym_num,     s4_dl_sym_num,     s5_dl_sym_num}),
-      .s_dl_cta_sym_num              ('{s3_dl_cta_sym_num, s4_dl_cta_sym_num, s5_dl_cta_sym_num}),
-      .s_dl_update                   ('{s3_dl_update,      s4_dl_update,      s5_dl_update}),
-      .s_dl_slot_update              ('{s3_dl_slot_update, s4_dl_slot_update, s5_dl_slot_update}),
-      .s_ul_toggle                   ('{s3_ul_toggle,      s4_ul_toggle,      s5_ul_toggle}),
-      .s_dl_toggle                   ('{s3_dl_toggle,      s4_dl_toggle,      s5_dl_toggle}),
-      // .s_ul_symbol_inc               ('{s3_ul_symbol_inc,  s4_ul_symbol_inc,  s5_ul_symbol_inc}),
-      // .s_dl_symbol_inc               ('{s3_dl_symbol_inc,  s4_dl_symbol_inc,  s5_dl_symbol_inc}),
-      .s_cc_enable                   ('{s3_cc_enable,      s4_cc_enable,      s5_cc_enable}),
-      .s_cc_reload                   ('{s3_cc_reload,      s4_cc_reload,      s5_cc_reload}),
+      .s_ul_sym_num                  ('{s3_ul_sym_num,     s4_ul_sym_num}),
+      .s_ul_cta_sym_num              ('{s3_ul_cta_sym_num, s4_ul_cta_sym_num}),
+      .s_ul_update                   ('{s3_ul_update,      s4_ul_update}),
+      .s_ul_slot_update              ('{s3_ul_slot_update, s4_ul_slot_update}),
+      .s_dl_sym_num                  ('{s3_dl_sym_num,     s4_dl_sym_num}),
+      .s_dl_cta_sym_num              ('{s3_dl_cta_sym_num, s4_dl_cta_sym_num}),
+      .s_dl_update                   ('{s3_dl_update,      s4_dl_update}),
+      .s_dl_slot_update              ('{s3_dl_slot_update, s4_dl_slot_update}),
+      .s_ul_toggle                   ('{s3_ul_toggle,      s4_ul_toggle}),
+      .s_dl_toggle                   ('{s3_dl_toggle,      s4_dl_toggle}),
+      // .s_ul_symbol_inc               ('{s3_ul_symbol_inc,  s4_ul_symbol_inc}),
+      // .s_dl_symbol_inc               ('{s3_dl_symbol_inc,  s4_dl_symbol_inc}),
+      .s_cc_enable                   ('{s3_cc_enable,      s4_cc_enable}),
+      .s_cc_reload                   ('{s3_cc_reload,      s4_cc_reload}),
       // CARRIER ports for the Framer, the datapath to the ethernet
       .m_fram_data_tdata             ('{m004_fram_data_tdata,  m005_fram_data_tdata}),
       .m_fram_data_tkeep             ('{m004_fram_data_tkeep,  m005_fram_data_tkeep}),
@@ -1385,8 +1386,8 @@ module lowphy1 (
       .defm_reset_active             (defm_reset_active),
       .fram0_reset_active            (fram0_reset_active),
       // Timer ports
-      .fram_radio_start_10ms         ('{fram_radio_start_10ms_cc3, fram_radio_start_10ms_cc4, fram_radio_start_10ms_cc5}),
-      .defm_radio_start_10ms         ('{defm_radio_start_10ms_cc3, defm_radio_start_10ms_cc4, defm_radio_start_10ms_cc5}),
+      .fram_radio_start_10ms         ('{fram_radio_start_10ms_cc3, fram_radio_start_10ms_cc4}),
+      .defm_radio_start_10ms         ('{defm_radio_start_10ms_cc3, defm_radio_start_10ms_cc4}),
       // SSB ports
       .s_ssb_data_tdata              (s_ssb_data_tdata),
       .s_ssb_data_tkeep              (s_ssb_data_tkeep),
@@ -1440,7 +1441,7 @@ module lowphy1 (
   );
 
   lowphy_band #(
-      .NUM_CC    (NumCc),
+      .NUM_CC    (NumCcBand12),
       .NUM_ANT   (NumAnt / 4),
       .CC_ID     (0),
       .ANT_ID    (2),
@@ -1514,20 +1515,20 @@ module lowphy1 (
       .s_prach_freqoffset            (s0_prach_freqoffset),
       // verilog_format: off
       // Timer ports
-      .s_ul_sym_num                  ('{s6_ul_sym_num,     s7_ul_sym_num,     s8_ul_sym_num}),
-      .s_ul_cta_sym_num              ('{s6_ul_cta_sym_num, s7_ul_cta_sym_num, s8_ul_cta_sym_num}),
-      .s_ul_update                   ('{s6_ul_update,      s7_ul_update,      s8_ul_update}),
-      .s_ul_slot_update              ('{s6_ul_slot_update, s7_ul_slot_update, s8_ul_slot_update}),
-      .s_dl_sym_num                  ('{s6_dl_sym_num,     s7_dl_sym_num,     s8_dl_sym_num}),
-      .s_dl_cta_sym_num              ('{s6_dl_cta_sym_num, s7_dl_cta_sym_num, s8_dl_cta_sym_num}),
-      .s_dl_update                   ('{s6_dl_update,      s7_dl_update,      s8_dl_update}),
-      .s_dl_slot_update              ('{s6_dl_slot_update, s7_dl_slot_update, s8_dl_slot_update}),
-      .s_ul_toggle                   ('{s6_ul_toggle,      s7_ul_toggle,      s8_ul_toggle}),
-      .s_dl_toggle                   ('{s6_dl_toggle,      s7_dl_toggle,      s8_dl_toggle}),
-      // .s_ul_symbol_inc               ('{s6_ul_symbol_inc,  s7_ul_symbol_inc,  s8_ul_symbol_inc}),
-      // .s_dl_symbol_inc               ('{s6_dl_symbol_inc,  s7_dl_symbol_inc,  s8_dl_symbol_inc}),
-      .s_cc_enable                   ('{s6_cc_enable,      s7_cc_enable,      s8_cc_enable}),
-      .s_cc_reload                   ('{s6_cc_reload,      s7_cc_reload,      s8_cc_reload}),
+      .s_ul_sym_num                  ('{s6_ul_sym_num,     s7_ul_sym_num}),
+      .s_ul_cta_sym_num              ('{s6_ul_cta_sym_num, s7_ul_cta_sym_num}),
+      .s_ul_update                   ('{s6_ul_update,      s7_ul_update}),
+      .s_ul_slot_update              ('{s6_ul_slot_update, s7_ul_slot_update}),
+      .s_dl_sym_num                  ('{s6_dl_sym_num,     s7_dl_sym_num}),
+      .s_dl_cta_sym_num              ('{s6_dl_cta_sym_num, s7_dl_cta_sym_num}),
+      .s_dl_update                   ('{s6_dl_update,      s7_dl_update}),
+      .s_dl_slot_update              ('{s6_dl_slot_update, s7_dl_slot_update}),
+      .s_ul_toggle                   ('{s6_ul_toggle,      s7_ul_toggle}),
+      .s_dl_toggle                   ('{s6_dl_toggle,      s7_dl_toggle}),
+      // .s_ul_symbol_inc               ('{s6_ul_symbol_inc,  s7_ul_symbol_inc}),
+      // .s_dl_symbol_inc               ('{s6_dl_symbol_inc,  s7_dl_symbol_inc}),
+      .s_cc_enable                   ('{s6_cc_enable,      s7_cc_enable}),
+      .s_cc_reload                   ('{s6_cc_reload,      s7_cc_reload}),
       // CARRIER ports for the Framer, the datapath to the ethernet
       .m_fram_data_tdata             ('{m006_fram_data_tdata,  m007_fram_data_tdata}),
       .m_fram_data_tkeep             ('{m006_fram_data_tkeep,  m007_fram_data_tkeep}),
@@ -1655,8 +1656,8 @@ module lowphy1 (
       .defm_reset_active             (defm_reset_active),
       .fram0_reset_active            (fram0_reset_active),
       // Timer ports
-      .fram_radio_start_10ms         ('{fram_radio_start_10ms_cc6, fram_radio_start_10ms_cc7, fram_radio_start_10ms_cc8}),
-      .defm_radio_start_10ms         ('{defm_radio_start_10ms_cc6, defm_radio_start_10ms_cc7, defm_radio_start_10ms_cc8}),
+      .fram_radio_start_10ms         ('{fram_radio_start_10ms_cc6, fram_radio_start_10ms_cc7}),
+      .defm_radio_start_10ms         ('{defm_radio_start_10ms_cc6, defm_radio_start_10ms_cc7}),
       // SSB ports
       .s_ssb_data_tdata              (s_ssb_data_tdata),
       .s_ssb_data_tkeep              (s_ssb_data_tkeep),
@@ -1721,7 +1722,7 @@ module lowphy1 (
           assign s0_axis_tlast[cc][ant] = s_ul_axis_tlast;
           assign s0_axis_tvalid[cc][ant] = s_ul_axis_tvalid;
 
-        end else if (ant < 6) begin : gen_band1_ant
+        end else if (cc < NumCcBand12 && ant < 6) begin : gen_band1_ant
 
           assign m_dl_axis_tdata[(cc*NumAnt+ant)*32+31-:32] = m1_axis_tdata[cc][ant-4];
           assign m1_axis_tready[cc][ant-4] = m_dl_axis_tready;
@@ -1730,7 +1731,7 @@ module lowphy1 (
           assign s1_axis_tlast[cc][ant-4] = s_ul_axis_tlast;
           assign s1_axis_tvalid[cc][ant-4] = s_ul_axis_tvalid;
 
-        end else if (ant < 8) begin : gen_band2_ant
+        end else if (cc < NumCcBand12 && ant < 8) begin : gen_band2_ant
 
           assign m_dl_axis_tdata[(cc*NumAnt+ant)*32+31-:32] = m2_axis_tdata[cc][ant-6];
           assign m2_axis_tready[cc][ant-6] = m_dl_axis_tready;
