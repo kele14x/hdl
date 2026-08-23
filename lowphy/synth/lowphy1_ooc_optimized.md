@@ -1,6 +1,6 @@
 # lowphy1 Vivado OOC resource result (final configuration)
 
-- Date: 2026-08-23
+- Date: 2026-08-24 (re-verified at `a2ef997` baseline, OOC 20260824)
 - Tool: Vivado 2026.1, build 6511674
 - Top: `lowphy1_wrapper`
 - Device: `xcku5p-ffvb676-2-i`
@@ -23,7 +23,7 @@
 
 | Resource | Used | Available | Utilization |
 | --- | ---: | ---: | ---: |
-| CLB LUTs | 115,851 | 216,960 | 53.40% |
+| CLB LUTs | 115,859 | 216,960 | 53.40% |
 | CLB registers / FFs | 131,217 | 433,920 | 30.24% |
 | Block RAM Tile | 409.5 | 480 | 85.31% |
 | UltraRAM | 6 | 64 | 9.38% |
@@ -37,7 +37,7 @@ full-FFT band 0.
 
 | Instance | LUT | FF | RAMB36 | RAMB18 | URAM | DSP |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `u_b0` (3 CC / 4 ant, full FFT) | 51,752 | 59,144 | 187 | 85 | 6 | 369 |
+| `u_b0` (3 CC / 4 ant, full FFT) | 51,760 | 59,144 | 187 | 85 | 6 | 369 |
 | `u_b1` (2 CC / 2 ant, half FFT) | 31,990 | 35,980 | 66 | 48 | 0 | 246 |
 | `u_b2` (2 CC / 2 ant, half FFT) | 31,992 | 35,983 | 66 | 48 | 0 | 246 |
 
@@ -45,12 +45,12 @@ full-FFT band 0.
 
 | Resource | 2-CC, band0 half FFT | Final (band0 full FFT) | Δ |
 | --- | ---: | ---: | ---: |
-| LUT | 114,361 | 115,851 | +1.30% |
+| LUT | 114,361 | 115,859 | +1.31% |
 | FF | 129,027 | 131,217 | +1.70% |
 | BRAM Tile | 406.5 | 409.5 | +0.74% |
 | URAM | 0 | 6 | +6 |
 | DSP | 861 | 861 | 0.00% |
 
 Reports and checkpoint are under
-`sim_build/vivado_ooc_lowphy1_20260806/` (the previous 3-CC run is preserved as
-`lowphy1_utilization_old3cc.rpt`).
+`sim_build/vivado_ooc_lowphy1_20260824/` (the previous 3-CC run is preserved as
+`sim_build/vivado_ooc_lowphy1_20260806/lowphy1_utilization_old3cc.rpt`).
