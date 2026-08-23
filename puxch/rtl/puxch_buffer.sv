@@ -94,6 +94,7 @@ module puxch_buffer #(
   logic        fifo_m_axis_tuser;
   logic        reg_m_axis_tuser;
 
+  localparam int CcIndexWidth = (NUM_CC <= 1) ? 1 : $clog2(NUM_CC);
 
   // CDC for control signals
 
@@ -332,7 +333,11 @@ module puxch_buffer #(
   // Use ORAN-IP counted symbol number as bank
   always_ff @(posedge clk_eth_xran) begin
     if (fifo_req_valid && fifo_req_ready) begin
-      rd_bank <= s_ul_sym_num[fifo_req_cc[1:0]][0];
+      if (fifo_req_cc < 4'(NUM_CC)) begin
+        rd_bank <= s_ul_sym_num[fifo_req_cc[CcIndexWidth-1:0]][0];
+      end else begin
+        rd_bank <= 1'b0;
+      end
     end
   end
 
