@@ -219,8 +219,9 @@ module puxch_bfp_buffer #(
   endgenerate
 
   // Four independent memory lanes per carrier: even/odd IQ and the matching
-  // six-bit exponent/guard metadata.  The IQ lanes are explicitly block RAM;
-  // the metadata is small enough to remain distributed/LUT RAM.
+  // six-bit exponent/guard metadata.  Both IQ and metadata go to block RAM:
+  // a 3584-deep distributed RAM would cost ~450 LUTs per instance, which is
+  // a poor trade on a LUT-starved part.
   logic [17:0] iq_dout   [NUM_CC][2];
   logic [ 5:0] meta_dout [NUM_CC][2];
 
@@ -260,7 +261,7 @@ module puxch_bfp_buffer #(
             .READ_LATENCY(2),
             .DEPTH       (MemDepth),
             .INIT_FILE   ("NONE"),
-            .RAM_STYLE   ("DISTRIBUTED")
+            .RAM_STYLE   ("BLOCK")
         ) u_meta_ram (
             .clka (clk),
             .wea  (wr_we_d[cc] && (wr_nat[cc] < ACTIVE_RE_COUNT) &&
