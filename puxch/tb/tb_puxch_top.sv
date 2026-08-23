@@ -190,7 +190,6 @@ module tb_puxch_top;
   puxch_top #(
     .NUM_CC(NUM_CC),
     .NUM_ANT(NUM_ANT),
-    .HAS_BFP(0),
     .HALF_BLOCK(0),
     .HALF_FFT(0)
   ) dut (

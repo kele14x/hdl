@@ -103,10 +103,12 @@ async def test_top_zero_symbol_to_framer_request(dut):
         if words and words[-1][2]:
             break
 
-    assert len(words) == 6
-    assert [word[0] for word in words] == [0] * 6
-    assert [word[1] for word in words] == [0xFF] * 6
-    assert [word[2] for word in words] == [0, 0, 0, 0, 0, 1]
+    assert words == [
+        (8, 0xFF, 0),
+        (0, 0xFF, 0),
+        (0, 0xFF, 0),
+        (0, 0x0F, 1),
+    ]
     for antenna in range(1, NUM_ANT):
         assert int(dut.m_fram_data_tvalid[antenna].value) == 0
 
@@ -118,7 +120,6 @@ def test_puxch_top_runner():
         parameters={
             "NUM_CC": NUM_CC,
             "NUM_ANT": NUM_ANT,
-            "HAS_BFP": 0,
             "HALF_BLOCK": 1,
             "HALF_FFT": 1,
         },

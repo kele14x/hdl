@@ -13,6 +13,7 @@ a previous carrier request.
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 import cocotb
@@ -20,8 +21,11 @@ import numpy as np
 import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, Combine, RisingEdge, Timer, with_timeout
-from puxch_reference import puxch_reference, raw_readout_words
+from puxch_reference import puxch_reference
 from puxch_test_utils import run_cocotb
+
+sys.path.insert(0, str(Path(__file__).parents[2] / "common" / "tests"))
+from libbfp import compress_section
 
 from hdl_tools.axi4lite import AxiLiteAgent, AxiLiteAgentConfig
 from hdl_tools.axis import (
@@ -102,14 +106,48 @@ def _source_frame(
     return AxisFrame(beats), real, imag
 
 
+def _bit_reverse(value: int, width: int) -> int:
+    return int(f"{value:0{width}b}"[::-1], 2)
+
+
+def bfp_readout_words(
+    reference, *, start_prb: int, num_prb: int, fs_offset: int = 0
+) -> list[tuple[int, int, bool]]:
+    """Pack natural-order FFT REs using the mandatory BFP9 readout format."""
+
+    fft_size = len(reference.stream_real)
+    fft_width = fft_size.bit_length() - 1
+    iq = []
+    first_re = int(start_prb) * 12
+    for natural_re in range(first_re, first_re + int(num_prb) * 12):
+        stream_re = _bit_reverse(natural_re, fft_width)
+        iq.extend(
+            (
+                int(reference.stream_real[stream_re]),
+                int(reference.stream_imag[stream_re]),
+            )
+        )
+
+    compressed = compress_section(iq, width=9, fs_offset=fs_offset)
+    words = []
+    for start in range(0, len(compressed), 8):
+        data = sum(
+            int(byte) << (8 * lane)
+            for lane, byte in enumerate(compressed[start : start + 8])
+        )
+        final = start + 8 >= len(compressed)
+        keep = 0xFF if start + 8 <= len(compressed) else 0x0F
+        words.append((data, keep, final))
+    return words
+
+
 async def _configure(axi: AxiLiteAgent):
     assert await axi.read(0x00) == 0x20250106
     await axi.write(UL_EN, ALL_ANTENNAS_ALL_CC)
     await axi.write(UL_RAT, NR_30_KHZ_ALL_CC)
     await axi.write(UL_BIST, 0)
     await axi.write(UL_BW, BW_100_MHZ_ALL_CC)
-    # Disable the optional final BFP compressor so the checker can compare all
-    # raw IQ values directly.  The bfp_comp block has its own cocotb suite.
+    # Select the fixed BFP9 user-plane format implemented by PUXCH.
     await axi.write(UL_UD, 0x090)
 
     for cc in range(NUM_CC):
@@ -283,10 +321,10 @@ async def test_puxch_end_to_end_data_path(dut):
             )
         )
 
+    await _reset(dut, axi, sources, sinks)
     await axi.start()
     for sink in sinks:
         await sink.start()
-    await _reset(dut, axi, sources, sinks)
     await _configure(axi)
 
     rng = np.random.default_rng(0x50555843 + TEST_CC)
@@ -347,16 +385,14 @@ async def test_puxch_end_to_end_data_path(dut):
             frame = await _receive_request(
                 sinks[antenna], dut, antenna, start_prb, num_prb
             )
-            expected = raw_readout_words(
+            expected = bfp_readout_words(
                 reference,
                 start_prb=start_prb,
                 num_prb=num_prb,
             )
-            assert len(frame) == num_prb * 6
-            assert [beat.keep for beat in frame] == [0xFF] * len(frame)
-            assert [beat.last for beat in frame] == [False] * (len(frame) - 1) + [True]
-            assert [beat.data for beat in frame] == expected, (
-                f"raw PUXCH mismatch for carrier {TEST_CC}, antenna {antenna}, "
+            actual = [(beat.data, beat.keep, beat.last) for beat in frame]
+            assert actual == expected, (
+                f"BFP9 PUXCH mismatch for carrier {TEST_CC}, antenna {antenna}, "
                 f"PRBs {start_prb}:{start_prb + num_prb}"
             )
             await ClockCycles(dut.clk_eth_xran, 32)
@@ -377,7 +413,6 @@ def _run_puxch(test_cc, monkeypatch):
         parameters={
             "NUM_CC": NUM_CC,
             "NUM_ANT": NUM_ANT,
-            "HAS_BFP": 0,
             "HALF_BLOCK": 0,
             "HALF_FFT": 0,
         },

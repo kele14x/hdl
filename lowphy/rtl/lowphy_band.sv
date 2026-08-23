@@ -7,7 +7,6 @@ module lowphy_band #(
     parameter int NUM_ANT    = 4,
     parameter int CC_ID      = 0,
     parameter int ANT_ID     = 0,
-    parameter int HAS_BFP    = 1,
     parameter int HALF_BLOCK = 0,
     parameter int HALF_FFT   = 0
 ) (
@@ -638,7 +637,6 @@ module lowphy_band #(
   puxch_top #(
       .NUM_CC    (NUM_CC),
       .NUM_ANT   (NUM_ANT),
-      .HAS_BFP   (HAS_BFP),
       .HALF_BLOCK(HALF_BLOCK),
       .HALF_FFT  (HALF_FFT)
   ) u_puxch (
