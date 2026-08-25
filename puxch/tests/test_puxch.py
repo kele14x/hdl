@@ -145,14 +145,17 @@ async def _reset(dut, axi: AxiLiteAgent, sources, sinks):
     for sink in sinks:
         sink.driver.idle()
 
-    await ClockCycles(dut.s_axi_aclk, 8)
-    await ClockCycles(dut.clk, 8)
-    await ClockCycles(dut.clk_eth_xran, 8)
+    # Keep the design in reset for 100 cycles of every clock domain so all
+    # flops have settled from their power-on X state, then wait another 100
+    # cycles after release before driving stimulus.
+    await ClockCycles(dut.s_axi_aclk, 100)
+    await ClockCycles(dut.clk, 100)
+    await ClockCycles(dut.clk_eth_xran, 100)
     dut.s_axi_aresetn.value = 1
     dut.rst.value = 0
     dut.rst_eth_xran.value = 0
-    await ClockCycles(dut.s_axi_aclk, 8)
-    await ClockCycles(dut.clk, 32)
+    await ClockCycles(dut.s_axi_aclk, 100)
+    await ClockCycles(dut.clk, 100)
 
 
 async def _capture_first_symbol(dut):
@@ -283,10 +286,13 @@ async def test_puxch_end_to_end_data_path(dut):
             )
         )
 
+    # Hold reset for 100 cycles of every clock domain and wait another 100
+    # after release, BEFORE starting any agent: monitors that start at 0 ns
+    # otherwise sample the power-on X state on their first clock edge.
+    await _reset(dut, axi, sources, sinks)
     await axi.start()
     for sink in sinks:
         await sink.start()
-    await _reset(dut, axi, sources, sinks)
     await _configure(axi)
 
     rng = np.random.default_rng(0x50555843 + TEST_CC)

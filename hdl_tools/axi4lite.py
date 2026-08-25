@@ -490,6 +490,11 @@ class AxiLiteMasterDriver(_AxiLiteComponent):
         )
 
     async def _send_aw(self, transaction):
+        # Align to a clock edge first: writes to valid/payload only land a
+        # delta after the current edge, so asserting in the same delta as an
+        # edge would miss the DUT's sampling window entirely (valid falls
+        # before the next edge and the handshake never latches).
+        await RisingEdge(self.clock)
         self._sig("awaddr").value = transaction.address
         prot = self._optional("awprot")
         if prot is not None:
@@ -499,6 +504,7 @@ class AxiLiteMasterDriver(_AxiLiteComponent):
         self._sig("awvalid").value = 0
 
     async def _send_w(self, transaction):
+        await RisingEdge(self.clock)
         strobe = transaction.strobe
         if strobe is None:
             strobe = (1 << len(self._sig("wstrb"))) - 1
@@ -509,6 +515,7 @@ class AxiLiteMasterDriver(_AxiLiteComponent):
         self._sig("wvalid").value = 0
 
     async def _recv_b(self):
+        await RisingEdge(self.clock)
         self._sig("bready").value = 1
         await self._handshake(self._sig("bvalid"), "B")
         response = int(self._sig("bresp").value)
@@ -516,6 +523,7 @@ class AxiLiteMasterDriver(_AxiLiteComponent):
         return response
 
     async def _send_ar(self, transaction):
+        await RisingEdge(self.clock)
         self._sig("araddr").value = transaction.address
         prot = self._optional("arprot")
         if prot is not None:
@@ -525,6 +533,7 @@ class AxiLiteMasterDriver(_AxiLiteComponent):
         self._sig("arvalid").value = 0
 
     async def _recv_r(self):
+        await RisingEdge(self.clock)
         self._sig("rready").value = 1
         await self._handshake(self._sig("rvalid"), "R")
         data = int(self._sig("rdata").value)
