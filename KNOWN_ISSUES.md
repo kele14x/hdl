@@ -79,3 +79,27 @@ AGENTS.md requires the language-agnostic `sources=` argument. `axis_reg` and
 - power_meter/tests/test_power_meter.py
 - pulse_delay/tests/test_pulse_delay.py
 - timer/tests/test_timer.py
+
+## 5. puxch_buffer — stall-based readout vs. ping-pong bank overwrite (open)
+
+Introduced by replacing the 2048-deep store-and-forward output FIFO with a
+stall-based readout (branch `puxch-buffer-stall-readout`). The readout now
+paces the BRAM reads with the downstream `tready`, so the read bank stays
+occupied for the whole burst duration instead of being drained into the FIFO
+within ~1650 cycles.
+
+If downstream backpressure holds longer than ~2 symbol boundaries, the write
+side (fixed rate, not backpressurable) toggles `wr_bank` back to the bank
+still being read and overwrites it, so the buffer silently ships mixed
+old/new data. Queued requests in the request FIFO go stale the same way.
+Budget: worst-case burst 275 PRB x 6 = 1650 words (~5.4 us at ~307 MHz);
+hazard opens at sustained `tready` duty below ~15% (30 kHz SCS, ~35.7 us
+symbols) or ~8% (15 kHz SCS).
+
+Candidate fix: watchdog using `s_ul_sym_num` (already in the `clk_eth_xran`
+domain) — abort the burst if still `rd_busy` 2 symbol ticks after accept,
+plus an error counter. Open question: abort semantics. The downstream
+(AMD ORAN IF IP) requires an AXIS packet response for every uplink request
+per its document, and it is unknown how it handles a truncated or dropped
+response, so the abort behavior (forced `tlast` truncation vs. discard) is
+deferred until that is clarified.

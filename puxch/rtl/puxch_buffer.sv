@@ -409,6 +409,8 @@ module puxch_buffer #(
   // The readout implements backpressure by freezing the whole read pipeline
   // instead of buffering into a deep FIFO. ram_out_v is the write strobe
   // aligned with rd_data_c, 2 cycles after the RAM output register enable.
+  // Note: backpressure longer than ~2 symbol boundaries lets the write side
+  // overwrite the bank still being read (KNOWN_ISSUES.md, section 5).
   assign out_stall = (out_cnt >= 5'(OutFifoAlmostFull));
 
   assign out_wren = ram_out_v;
