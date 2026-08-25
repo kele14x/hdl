@@ -52,7 +52,6 @@ module puxch_buffer #(
   logic [20:0] fifo_dout;
   logic        fifo_empty;
   logic        fifo_full;
-  logic        fifo_err_discard;
 
   logic        fifo_req_valid;
   logic [ 8:0] fifo_req_startprb;
@@ -70,31 +69,45 @@ module puxch_buffer #(
   logic [31:0] wr_din            [NUM_CC];
 
   logic        rd_busy;
+  logic        rd_issue;
   logic        rd_bank;
   logic [10:0] rd_cnt;
   logic [11:0] rd_addr;
   logic        rd_en             [NUM_CC];
   logic        rd_en_d           [NUM_CC];
   logic        rd_en_dd          [NUM_CC];
+  logic [NUM_CC-1:0] rd_pipe_en;
   logic [63:0] rd_dout           [NUM_CC];
   logic [63:0] rd_data_c;
-  logic [63:0] rd_data;
   logic        rd_last;
+  logic        last_d1;
+  logic        last_d2;
+
+  logic        ram_out_v;
+  logic [ 4:0] out_cnt;
+  logic        out_stall;
+  logic        out_wren;
+  logic        out_rden;
+  logic        out_empty;
+  logic        out_full;
+  logic [64:0] out_dout;
 
   logic [63:0] s0_axis_tdata;
-  logic [ 7:0] s0_axis_tkeep;
-  logic        s0_axis_tlast;
-  logic        s0_axis_tvalid;
 
   logic [63:0] s1_axis_tdata;
   logic [ 7:0] s1_axis_tkeep;
   logic        s1_axis_tlast;
   logic        s1_axis_tvalid;
   logic        s1_axis_tready;
-  logic        fifo_m_axis_tuser;
   logic        reg_m_axis_tuser;
 
   localparam int CcIndexWidth = (NUM_CC <= 1) ? 1 : $clog2(NUM_CC);
+
+  // Small output FIFO replacing the store-and-forward packet FIFO. The read
+  // pipeline has 3 cycles of latency from issue to FIFO write, so the stall
+  // threshold must keep at least 3 words of headroom.
+  localparam int OutFifoDepth      = 16;
+  localparam int OutFifoAlmostFull = OutFifoDepth - 3;
 
   // CDC for control signals
 
@@ -239,8 +252,12 @@ module puxch_buffer #(
         assign rd_en_s   = rd_en[cc] && ~rd_addr[10];
 
         always_ff @(posedge clk_eth_xran) begin
-          rd_en_s_d <= rd_en_s;
+          if (!out_stall) begin
+            rd_en_s_d <= rd_en_s;
+          end
         end
+
+        assign rd_pipe_en[cc] = rd_en_s_d;
 
         // wr_addr: [12]: bank, [11]: null, [10:0]: address
         // rd_addr: [11]: bank, [10]: null, [9:0]: address
@@ -262,12 +279,14 @@ module puxch_buffer #(
             //
             .clkb (clk_eth_xran),
             .rstb (1'b0),
-            .enb  ({rd_en_s_d, rd_en_s}),
+            .enb  ({rd_en_s_d & ~out_stall, rd_en_s & ~out_stall}),
             .addrb(rd_addr_s),
             .doutb(rd_dout[cc])
         );
 
       end else begin : g_full
+
+        assign rd_pipe_en[cc] = rd_en_d[cc];
 
         // The ping-pong buffer, write side is 8192 x 32-bit
         // The read side is 4096 x 64-bit
@@ -286,7 +305,7 @@ module puxch_buffer #(
             //
             .clkb (clk_eth_xran),
             .rstb (1'b0),
-            .enb  ({rd_en_d[cc], rd_en[cc]}),
+            .enb  ({rd_en_d[cc] & ~out_stall, rd_en[cc] & ~out_stall}),
             .addrb(rd_addr),
             .doutb(rd_dout[cc])
         );
@@ -305,14 +324,16 @@ module puxch_buffer #(
           rd_en[cc] <= 1'b0;
         end else if (fifo_req_valid && fifo_req_ready && (fifo_req_cc == cc)) begin
           rd_en[cc] <= 1'b1;
-        end else if (&rd_cnt || (rd_cnt == fifo_req_endprb)) begin
+        end else if (rd_issue && (&rd_cnt || (rd_cnt == fifo_req_endprb))) begin
           rd_en[cc] <= 1'b0;
         end
       end
 
       always_ff @(posedge clk_eth_xran) begin
-        rd_en_d[cc]  <= rd_en[cc];
-        rd_en_dd[cc] <= rd_en_d[cc];
+        if (!out_stall) begin
+          rd_en_d[cc]  <= rd_en[cc];
+          rd_en_dd[cc] <= rd_en_d[cc];
+        end
       end
 
     end
@@ -323,12 +344,15 @@ module puxch_buffer #(
       rd_busy <= 1'b0;
     end else if (fifo_req_valid && fifo_req_ready && (fifo_req_cc < 4'(NUM_CC))) begin
       rd_busy <= 1'b1;
-    end else if (&rd_cnt || (rd_cnt == fifo_req_endprb)) begin
+    end else if (rd_issue && (&rd_cnt || (rd_cnt == fifo_req_endprb))) begin
       rd_busy <= 1'b0;
     end
   end
 
   assign fifo_req_ready = ~rd_busy;
+
+  // A read beat enters the RAM pipeline this cycle
+  assign rd_issue = rd_busy && ~out_stall;
 
   // Use ORAN-IP counted symbol number as bank
   always_ff @(posedge clk_eth_xran) begin
@@ -344,9 +368,9 @@ module puxch_buffer #(
   always_ff @(posedge clk_eth_xran) begin
     if (fifo_req_valid && fifo_req_ready) begin
       rd_cnt <= fifo_req_startprb * 6;
-    end else if (rd_busy) begin
+    end else if (rd_issue) begin
       rd_cnt <= rd_cnt + 1'b1;
-    end else begin
+    end else if (!rd_busy) begin
       rd_cnt <= '0;
     end
   end
@@ -360,82 +384,73 @@ module puxch_buffer #(
     end
   end
 
-  always_ff @(posedge clk_eth_xran) begin
-    rd_data <= rd_data_c;
-  end
-
   assign rd_last = &rd_cnt || (rd_cnt == fifo_req_endprb);
+
+  always_ff @(posedge clk_eth_xran) begin
+    if (!out_stall) begin
+      last_d1 <= rd_last;
+      last_d2 <= last_d1;
+    end
+  end
 
   // Output
 
   assign s0_axis_tdata = {
-    rd_data[55:48],  //  Q1[7:0]
-    rd_data[63:56],  //  Q1[15:8]
-    rd_data[39:32],  //  I1[7:0]
-    rd_data[47:40],  //  I1[15:8]
-    rd_data[23:16],  //  Q0[7:0]
-    rd_data[31:24],  //  Q0[15:8]
-    rd_data[7:0],  //  I0[7:0]
-    rd_data[15:8]  //  I0[15:8]
+    rd_data_c[55:48],  //  Q1[7:0]
+    rd_data_c[63:56],  //  Q1[15:8]
+    rd_data_c[39:32],  //  I1[7:0]
+    rd_data_c[47:40],  //  I1[15:8]
+    rd_data_c[23:16],  //  Q0[7:0]
+    rd_data_c[31:24],  //  Q0[15:8]
+    rd_data_c[7:0],  //  I0[7:0]
+    rd_data_c[15:8]  //  I0[15:8]
   };
 
-  assign s0_axis_tkeep = 8'hFF;
+  // The readout implements backpressure by freezing the whole read pipeline
+  // instead of buffering into a deep FIFO. ram_out_v is the write strobe
+  // aligned with rd_data_c, 2 cycles after the RAM output register enable.
+  assign out_stall = (out_cnt >= 5'(OutFifoAlmostFull));
 
-  delay #(
-      .WIDTH(1),
-      .DEPTH(3),
-      .INIT (0)
-  ) u_delay_valid (
-      .clk (clk_eth_xran),
-      .rst (1'b0),
-      .cen (1'b1),
-      //
-      .din (rd_busy),
-      .dout(s0_axis_tvalid)
+  assign out_wren = ram_out_v;
+  assign out_rden = ~out_empty && s1_axis_tready;
+
+  always_ff @(posedge clk_eth_xran) begin
+    if (rst_eth_xran) begin
+      ram_out_v <= 1'b0;
+    end else begin
+      ram_out_v <= (|rd_pipe_en) && ~out_stall;
+    end
+  end
+
+  always_ff @(posedge clk_eth_xran) begin
+    if (rst_eth_xran) begin
+      out_cnt <= '0;
+    end else begin
+      out_cnt <= out_cnt + 5'(out_wren) - 5'(out_rden);
+    end
+  end
+
+  fifo_srl #(
+      .FIFO_DEPTH(OutFifoDepth),
+      .DATA_WIDTH(65)
+  ) u_out_fifo (
+      .clk  (clk_eth_xran),
+      .rst  (rst_eth_xran),
+      // Write interface
+      .wren (out_wren),
+      .din  ({last_d2, s0_axis_tdata}),
+      .full (out_full),
+      // Read interface
+      .rden (out_rden),
+      .dout (out_dout),
+      .empty(out_empty)
   );
 
-  delay #(
-      .WIDTH(1),
-      .DEPTH(3),
-      .INIT (0)
-  ) u_delay_last (
-      .clk (clk_eth_xran),
-      .rst (1'b0),
-      .cen (1'b1),
-      //
-      .din (rd_last),
-      .dout(s0_axis_tlast)
-  );
+  wire unused_out_fifo = &{1'b0, out_full};
 
-  // TODO: we can remove this FIFO and implement the back pressure by our self
-  // to save RAM resource
-  axis_fifo_alt #(
-      .ASYNC_MODE  (0),
-      .FIFO_DEPTH  (2048),
-      .FIFO_LATENCY(2),
-      .DATA_WIDTH  (64),
-      .USER_WIDTH  (1)
-  ) u_fifo (
-      .s_axis_aclk   (clk_eth_xran),
-      .s_axis_aresetn(~rst_eth_xran),
-      //
-      .s_axis_tdata  (s0_axis_tdata),
-      .s_axis_tkeep  (s0_axis_tkeep),
-      .s_axis_tlast  (s0_axis_tlast),
-      .s_axis_tuser  ('0),
-      .s_axis_tvalid (s0_axis_tvalid),
-      //
-      .m_axis_aclk   (clk_eth_xran),
-      //
-      .m_axis_tdata  (s1_axis_tdata),
-      .m_axis_tkeep  (s1_axis_tkeep),
-      .m_axis_tlast  (s1_axis_tlast),
-      .m_axis_tuser  (fifo_m_axis_tuser),
-      .m_axis_tvalid (s1_axis_tvalid),
-      .m_axis_tready (s1_axis_tready),
-      .err_discard   (fifo_err_discard)
-      //
-  );
+  assign {s1_axis_tlast, s1_axis_tdata} = out_dout;
+  assign s1_axis_tkeep  = 8'hFF;
+  assign s1_axis_tvalid = ~out_empty;
 
   // Add axis_reg to improve timing
   axis_reg #(

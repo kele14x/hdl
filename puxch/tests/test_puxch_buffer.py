@@ -1,3 +1,4 @@
+import random
 from pathlib import Path
 
 import cocotb
@@ -107,6 +108,52 @@ async def test_buffer_read_request_data_and_backpressure(dut):
     assert [word[0] for word in words] == [EXPECTED_WORD] * 6
     assert [word[1] for word in words] == [0xFF] * 6
     assert [word[2] for word in words] == [0, 0, 0, 0, 0, 1]
+
+
+@cocotb.test()
+async def test_buffer_read_stall_and_toggle_tready(dut):
+    cocotb.start_soon(Clock(dut.clk, 2, unit="ns").start())
+    cocotb.start_soon(Clock(dut.clk_eth_xran, 3, unit="ns").start())
+    await reset_dut(dut)
+    await fill_cc1_bank_zero(dut)
+
+    num_prb = 4
+    await sample_after_rising(dut.clk_eth_xran)
+    dut.m_fram_data_req.value = (1 << 24) | (1 << 15) | (num_prb << 7) | 1
+    await sample_after_rising(dut.clk_eth_xran)
+    dut.m_fram_data_req.value = 0
+
+    # Hold tready low long enough to fill the output FIFO and stall the
+    # read pipeline mid-burst
+    dut.m_axis_tready.value = 0
+    await ClockCycles(dut.clk_eth_xran, 32)
+
+    rng = random.Random(24)
+    words = []
+    prev_valid = 0
+    prev_ready = 0
+    prev_word = (0, 0, 0)
+    for _ in range(512):
+        # The beat sampled last cycle transfers now if it was valid and the
+        # tready driven last cycle was high
+        if prev_valid and prev_ready:
+            words.append(prev_word)
+            if prev_word[2]:
+                break
+        prev_valid = int(dut.m_axis_tvalid.value)
+        prev_word = (
+            int(dut.m_axis_tdata.value),
+            int(dut.m_axis_tkeep.value),
+            int(dut.m_axis_tlast.value),
+        )
+        prev_ready = rng.randint(0, 1)
+        dut.m_axis_tready.value = prev_ready
+        await sample_after_rising(dut.clk_eth_xran)
+
+    assert len(words) == num_prb * 6
+    assert [word[0] for word in words] == [EXPECTED_WORD] * (num_prb * 6)
+    assert [word[1] for word in words] == [0xFF] * (num_prb * 6)
+    assert [word[2] for word in words] == [0] * (num_prb * 6 - 1) + [1]
 
 
 def test_puxch_buffer_runner():
