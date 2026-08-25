@@ -170,7 +170,7 @@ The shared `lowphy_band` module is parameterized by:
 - `NUM_ANT`: number of antennas, currently checked to be 1, 2, or 4
 - `CC_ID`: carrier-group base identifier for a band instance
 - `ANT_ID`: antenna-group base identifier for a band instance
-- `HAS_BFP`: enable or disable block floating-point related behavior in submodules
+- `HAS_BFP`: retained for interface compatibility only; the PRACH and PUXCH blocks now always include their BFP compressors (compression itself is enabled or disabled at runtime through the `ud_comp_meth` registers)
 - `HALF_BLOCK`: packaging-related mode used by the composed datapaths
 
 ### 4.4 Block diagram and connectivity
@@ -711,19 +711,18 @@ The emitted 64-bit stream corresponds to two complex samples packed for framer-s
 
 The output reorder logic explicitly swaps byte positions so the outgoing word order matches the expected framer-side format.
 
-#### Stage 9: Stream pipeline and optional BFP compression
+#### Stage 9: Stream pipeline and BFP compression
 
 Still inside `puxch_buffer`, the raw readout stream passes through:
 
-- an internal FIFO `axis_fifo_alt`
+- a small FWFT output FIFO (`fifo_srl`); downstream backpressure freezes the whole read pipeline instead of buffering into a deep FIFO (see KNOWN_ISSUES.md, section 5, for the long-backpressure limitation)
 - an output timing register stage `axis_reg`
 
 This produces one antenna-local stream `s0_axis_*` in the O-RAN clock domain.
 
-Then `puxch_top` performs one of two final actions per antenna:
+Then `puxch_top` performs the final action per antenna:
 
-- if `HAS_BFP` is enabled, `bfp_comp` compresses the 64-bit stream using `ctrl_ud_comp_meth`, `ctrl_ud_iq_width`, and `ctrl_fs_offset`
-- if `HAS_BFP` is disabled, the stream is passed directly to `m_fram_data_*`
+- `bfp_comp` compresses the 64-bit stream using `ctrl_ud_comp_meth`, `ctrl_ud_iq_width`, and `ctrl_fs_offset`; with compression disabled (`ctrl_ud_comp_meth != 1`) the data passes through unchanged apart from added latency
 
 This stage forms the final U-Plane payload forwarded toward the framer.
 
@@ -932,12 +931,11 @@ Observed framer-buffer behavior:
 
 This stage packages FFT outputs into a structure ready for PRACH U-Plane transport.
 
-#### Stage 8: Optional BFP compression and async transfer
+#### Stage 8: BFP compression and async transfer
 
 Still inside `prach_framer`:
 
-- if `HAS_BFP` is enabled, the `prach_framer_buffer` output is compressed by `bfp_comp`
-- if `HAS_BFP` is disabled, the raw stream is passed through unchanged
+- the `prach_framer_buffer` output is always compressed by `prach_bfp_compress`
 - the resulting PRACH stream is then transferred from `clk` into `clk_eth_xran` using `axis_fifo_alt` in asynchronous mode
 
 This stage creates the final per-CC PRACH U-Plane stream in the O-RAN clock domain.

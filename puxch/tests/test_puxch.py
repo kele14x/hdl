@@ -108,8 +108,9 @@ async def _configure(axi: AxiLiteAgent):
     await axi.write(UL_RAT, NR_30_KHZ_ALL_CC)
     await axi.write(UL_BIST, 0)
     await axi.write(UL_BW, BW_100_MHZ_ALL_CC)
-    # Disable the optional final BFP compressor so the checker can compare all
-    # raw IQ values directly.  The bfp_comp block has its own cocotb suite.
+    # Disable the final BFP compression (comp_meth = 0) so the checker can
+    # compare all raw IQ values directly: in passthrough mode bfp_comp is a
+    # net identity on the data.  The bfp_comp block has its own cocotb suite.
     await axi.write(UL_UD, 0x090)
 
     for cc in range(NUM_CC):
@@ -281,8 +282,9 @@ async def test_puxch_end_to_end_data_path(dut):
                     timeout_cycles=10000,
                     role=AxisRole.SINK,
                 ),
-                # Exercise the AXI-Stream hold-under-backpressure behavior.
-                ready_policy=lambda cycle: cycle % 11 not in (0, 1),
+                # bfp_comp cannot be backpressured, so the framer stream must
+                # stay always-ready; the buffer's hold-under-backpressure
+                # behavior is covered by test_puxch_buffer instead.
             )
         )
 
@@ -383,7 +385,6 @@ def _run_puxch(test_cc, monkeypatch):
         parameters={
             "NUM_CC": NUM_CC,
             "NUM_ANT": NUM_ANT,
-            "HAS_BFP": 0,
             "HALF_BLOCK": 0,
             "HALF_FFT": 0,
         },

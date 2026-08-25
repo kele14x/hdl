@@ -5,7 +5,6 @@
 module puxch_top #(
     parameter int NUM_CC     = 3,
     parameter int NUM_ANT    = 4,
-    parameter int HAS_BFP    = 1,
     parameter int HALF_BLOCK = 0,
     parameter int HALF_FFT   = 0
 ) (
@@ -175,44 +174,31 @@ module puxch_top #(
           .ctrl_bw        (ctrl_bw)
       );
 
-      if (HAS_BFP != 0) begin : g_bfp
+      bfp_comp #(
+          .BYTE_REVERSE(1)
+      ) u_bfp_comp (
+          .clk              (clk_eth_xran),
+          .rst              (rst_eth_xran),
+          //
+          .s_axis_tdata     (s0_axis_tdata[ant]),
+          .s_axis_tkeep     (s0_axis_tkeep[ant]),
+          .s_axis_tvalid    (s0_axis_tvalid[ant]),
+          .s_axis_tlast     (s0_axis_tlast[ant]),
+          .s_axis_tuser     ('0),
+          //
+          .m_axis_tdata     (m_fram_data_tdata[ant]),
+          .m_axis_tkeep     (m_fram_data_tkeep[ant]),
+          .m_axis_tvalid    (m_fram_data_tvalid[ant]),
+          .m_axis_tlast     (m_fram_data_tlast[ant]),
+          .m_axis_tuser     (bfp_m_axis_tuser[ant]),
+          // Control
+          //--------
+          .ctrl_ud_comp_meth(ctrl_ud_comp_meth),
+          .ctrl_ud_iq_width (ctrl_ud_iq_width),
+          .ctrl_fs_offset   (ctrl_fs_offset)
+      );
 
-        bfp_comp #(
-            .BYTE_REVERSE(1)
-        ) u_bfp_comp (
-            .clk              (clk_eth_xran),
-            .rst              (rst_eth_xran),
-            //
-            .s_axis_tdata     (s0_axis_tdata[ant]),
-            .s_axis_tkeep     (s0_axis_tkeep[ant]),
-            .s_axis_tvalid    (s0_axis_tvalid[ant]),
-            .s_axis_tlast     (s0_axis_tlast[ant]),
-            .s_axis_tuser     ('0),
-            //
-            .m_axis_tdata     (m_fram_data_tdata[ant]),
-            .m_axis_tkeep     (m_fram_data_tkeep[ant]),
-            .m_axis_tvalid    (m_fram_data_tvalid[ant]),
-            .m_axis_tlast     (m_fram_data_tlast[ant]),
-            .m_axis_tuser     (bfp_m_axis_tuser[ant]),
-            // Control
-            //--------
-            .ctrl_ud_comp_meth(ctrl_ud_comp_meth),
-            .ctrl_ud_iq_width (ctrl_ud_iq_width),
-            .ctrl_fs_offset   (ctrl_fs_offset)
-        );
-
-        assign s0_axis_tready[ant] = m_fram_data_tready[ant];
-
-      end else begin : g_no_bfp
-
-        assign m_fram_data_tdata[ant] = s0_axis_tdata[ant];
-        assign m_fram_data_tkeep[ant] = s0_axis_tkeep[ant];
-        assign m_fram_data_tvalid[ant] = s0_axis_tvalid[ant];
-        assign m_fram_data_tlast[ant] = s0_axis_tlast[ant];
-
-        assign s0_axis_tready[ant] = m_fram_data_tready[ant];
-
-      end
+      assign s0_axis_tready[ant] = m_fram_data_tready[ant];
     end
   endgenerate
 
