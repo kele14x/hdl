@@ -2,7 +2,7 @@
 
 import register_map as reg
 
-from common.tb.registers import (
+from hdl_tools.registers import (
     AxiLiteRegisterAdapter,
     FieldSpec,
     RegisterAccess,

@@ -701,37 +701,28 @@ class AxiLiteAgent:
         return await self.driver.read(*args, **kwargs)
 
 
-class AxiLiteMaster(AxiLiteMasterDriver):
-    """Compatibility constructor for the previous standalone master class."""
-
-    def __init__(
-        self,
+def _axi_lite_master(dut, prefix, clock):
+    master = AxiLiteMasterDriver(
         dut,
-        prefix="s_axi",
-        clock="s_axi_aclk",
-        timeout_cycles=100,
-    ):
-        super().__init__(
-            dut,
-            AxiLiteAgentConfig(
-                prefix=prefix,
-                clock=clock if isinstance(clock, str) else "s_axi_aclk",
-                timeout_cycles=timeout_cycles,
-            ),
-        )
-        if not isinstance(clock, str):
-            self.clock = clock
+        AxiLiteAgentConfig(
+            prefix=prefix,
+            clock=clock if isinstance(clock, str) else "s_axi_aclk",
+        ),
+    )
+    if not isinstance(clock, str):
+        master.clock = clock
+    return master
 
 
 async def axi_reset(dut, prefix="s_axi", clock="s_axi_aclk"):
-    await AxiLiteMaster(dut, prefix, clock).reset()
+    await _axi_lite_master(dut, prefix, clock).reset()
 
 
 async def axi_write(
     dut, address, data, strobe=None, prefix="s_axi", clock="s_axi_aclk"
 ):
-    return await AxiLiteMaster(dut, prefix, clock).write(address, data, strobe)
+    return await _axi_lite_master(dut, prefix, clock).write(address, data, strobe)
 
 
 async def axi_read(dut, address, prefix="s_axi", clock="s_axi_aclk"):
-    return await AxiLiteMaster(dut, prefix, clock).read(address)
+    return await _axi_lite_master(dut, prefix, clock).read(address)

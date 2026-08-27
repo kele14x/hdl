@@ -1,1 +1,1 @@
-"""Shared RTL and verification support."""
+"""Shared RTL support."""

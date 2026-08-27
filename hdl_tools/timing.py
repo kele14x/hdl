@@ -5,9 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import cocotb
-from cocotb.triggers import ClockCycles, FallingEdge, First, Lock, ReadOnly, RisingEdge
+from cocotb.triggers import ClockCycles, First, Lock, RisingEdge
 
-from .base import AgentMode, AnalysisPort
+from .tb_base import AgentMode, AnalysisPort
 
 __all__ = [
     "RadioTimingAgent",
@@ -101,10 +101,9 @@ class RadioTimingDriver(_RadioTimingComponent):
             self.idle()
             if delay_cycles:
                 await ClockCycles(self.clock, delay_cycles)
-            await FallingEdge(self.clock)
+            await RisingEdge(self.clock)
             self.sync_signal.value = 1
             await ClockCycles(self.clock, high_cycles)
-            await FallingEdge(self.clock)
             self.sync_signal.value = 0
 
 
@@ -127,7 +126,7 @@ class RadioTimingMonitor(_RadioTimingComponent):
 
     def stop(self):
         if self._task is not None:
-            self._task.kill()
+            self._task.cancel()
             self._task = None
 
     async def run(self):
@@ -141,7 +140,6 @@ class RadioTimingMonitor(_RadioTimingComponent):
 
         while True:
             await RisingEdge(self.clock)
-            await ReadOnly()
             cycle += 1
             if self._in_reset():
                 frame = -1
@@ -218,7 +216,7 @@ class RadioTimingAgent:
         task = cocotb.start_soon(port.get())
         await First(task, ClockCycles(self.monitor.clock, timeout_cycles))
         if not task.done():
-            task.kill()
+            task.cancel()
             raise RadioTimingError(
                 f"radio timing event timed out after {timeout_cycles} cycles"
             )

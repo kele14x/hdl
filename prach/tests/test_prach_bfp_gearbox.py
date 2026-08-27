@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import random
-import sys
 from pathlib import Path
 
 import cocotb
@@ -14,11 +13,9 @@ from cocotb.queue import Queue
 from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
-PRJ_PATH = Path(__file__).resolve().parent.parent
-REPO_PATH = PRJ_PATH.parent
-sys.path.insert(0, str(REPO_PATH / "common" / "tests"))
+from hdl_tools import bfp
 
-import libbfp
+PRJ_PATH = Path(__file__).resolve().parent.parent
 
 SIM = os.environ.get("SIM")
 if not SIM:
@@ -34,7 +31,7 @@ def _make_memories(num_prb, seed):
     data_words = []
     exponents = []
     for prb in range(num_prb):
-        packed = libbfp.compress_prb(iq[24 * prb : 24 * (prb + 1)])
+        packed = bfp.compress_prb(iq[24 * prb : 24 * (prb + 1)])
         exponents.append(packed[0])
         mantissas = int.from_bytes(packed[1:], byteorder="big")
         data_words.extend(
@@ -112,7 +109,7 @@ async def test_prach_bfp_gearbox(dut):
         tuser = 0x5A000000 | num_prb
         await _run_packet(dut, num_prb, data_words, exponents, tuser)
         packet, keeps, users = await packet_queue.get()
-        expected = libbfp.compress_section(iq)
+        expected = bfp.compress_section(iq)
 
         assert packet == expected
         assert len(keeps) == (num_prb * 28 + 7) // 8

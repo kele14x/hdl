@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from hdl_tools.axis import AxisAgent, AxisBeat, AxisFrame
-
-from .base import AnalysisPort
+from .axis import AxisAgent, AxisBeat, AxisFrame
+from .tb_base import AnalysisPort
 
 __all__ = [
     "AxisCodecAgent",

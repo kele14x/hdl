@@ -11,7 +11,7 @@ of the design:
    400 MHz internal-bus, and approximately 491.52 MHz radio clocks, sequences every reset,
    initializes all inputs, and leaves output streams ready.
 3. Future datapath scenarios should use the same `LowphyTB` environment and
-   the shared UVM-style agents in `common/tb`. Keep numerical models outside
+   the shared cocotb agents in `hdl_tools`. Keep numerical models outside
    the driver, and compare monitor transactions in a scoreboard rather than
    cycle by cycle; the integrated datapath contains buffering and clock
    crossings.

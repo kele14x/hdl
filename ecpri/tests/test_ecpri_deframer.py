@@ -6,11 +6,16 @@ import numpy as np
 import pytest
 from cocotb.clock import Clock
 from cocotb.queue import Queue
-from cocotb_tools.runner import get_runner
-from hdl_tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
-from libecpri import EcpriPacket, EthernetPacket, EcpriOdmMessage, EcpriIqMessage
+from cocotb_tools.runner import get_runner
 
+from hdl_tools.flt_tool import resolve_flt
+from hdl_tools.packets import (
+    EcpriIqMessage,
+    EcpriOdmMessage,
+    EcpriPacket,
+    EthernetPacket,
+)
 
 # MARK: Env
 
@@ -26,7 +31,7 @@ SIM = os.environ.get("SIM")
 if not SIM:
     raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 
-TEST_NUM_PACKETS = int(os.environ.get("TEST_NUM_PACKETS", 100))
+TEST_NUM_PACKETS = int(os.environ.get("TEST_NUM_PACKETS", "100"))
 
 
 # MARK: Helper
@@ -311,14 +316,14 @@ def test_ecpri_deframer_runner():
     hdl_toplevel = "ecpri_deframer"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = resolve_flt(prj_path / "ecpri.flt")
+    sources = resolve_flt(prj_path / "ecpri.flt")
 
     parameters = {}
 
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel=hdl_toplevel,
-        verilog_sources=verilog_sources,
+        sources=sources,
         parameters=parameters,
         waves=True,
         always=True,

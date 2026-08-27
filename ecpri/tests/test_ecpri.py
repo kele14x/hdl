@@ -8,10 +8,11 @@ import numpy as np
 import pytest
 from cocotb.clock import Clock
 from cocotb.queue import Queue
-from cocotb_tools.runner import get_runner
-from hdl_tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
-from libaxi4l import axi_reset, axi_read, axi_write
+from cocotb_tools.runner import get_runner
+
+from hdl_tools.axi4lite import axi_read, axi_reset, axi_write
+from hdl_tools.flt_tool import resolve_flt
 
 # MARK: Env
 
@@ -51,16 +52,13 @@ async def reset(dut):
     dut.s_axis_tkeep.value = 0
     dut.s_axis_tlast.value = 0
     dut.s_axis_tvalid.value = 0
-    #
     dut.s_trans_payloadsize.value = 0
     dut.s_trans_rtc_pc_id.value = 0
 
     # Ethernet interface
     dut.m_eth_fram_tready.value = 0
-    #
     dut.rx_ptp_timestamp.value = 0
     dut.rx_ptp_timestamp_valid.value = 0
-    #
     dut.tx_ptp_timestamp.value = 0
     dut.tx_ptp_timestamp_tag.value = 0
     dut.tx_ptp_timestamp_valid.value = 0
@@ -181,14 +179,14 @@ def test_ecpri_runner():
     hdl_toplevel = "ecpri"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = resolve_flt(prj_path / "ecpri.flt")
+    sources = resolve_flt(prj_path / "ecpri.flt")
 
     parameters = {}
 
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel=hdl_toplevel,
-        verilog_sources=verilog_sources,
+        sources=sources,
         parameters=parameters,
         waves=True,
         always=True,

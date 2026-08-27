@@ -1,1 +1,1 @@
-"""Repository command-line utilities and their reusable helpers."""
+"""Repository HDL utilities and reusable cocotb helpers."""

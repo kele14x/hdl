@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import random
-import sys
 from pathlib import Path
 
 import cocotb
@@ -14,11 +13,9 @@ from cocotb.queue import Queue
 from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
-PRJ_PATH = Path(__file__).resolve().parent.parent
-REPO_PATH = PRJ_PATH.parent
-sys.path.insert(0, str(REPO_PATH / "common" / "tests"))
+from hdl_tools import bfp
 
-import libbfp
+PRJ_PATH = Path(__file__).resolve().parent.parent
 
 SIM = os.environ.get("SIM")
 if not SIM:
@@ -31,7 +28,7 @@ MASK36 = (1 << 36) - 1
 
 
 def _prb_words(iq, fs_offset):
-    packed = libbfp.compress_prb(iq, fs_offset=fs_offset)
+    packed = bfp.compress_prb(iq, fs_offset=fs_offset)
     mantissas = int.from_bytes(packed[1:], byteorder="big")
     words = [(mantissas >> (36 * (5 - index))) & MASK36 for index in range(6)]
     return packed[0], words

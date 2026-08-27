@@ -11,7 +11,7 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, Lock, RisingEdge, with_timeout
 
-from .base import AgentMode, AnalysisPort
+from .tb_base import AgentMode, AnalysisPort
 
 __all__ = [
     "FifoError",
@@ -224,7 +224,7 @@ class _FifoMonitor:
 
     def stop(self):
         if self._task is not None:
-            self._task.kill()
+            self._task.cancel()
             self._task = None
 
     def _publish(self, data, cycle):

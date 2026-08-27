@@ -3,15 +3,15 @@
 import os
 from pathlib import Path
 
-import pytest
 import cocotb
 import numpy as np
+import pytest
 from cocotb.clock import Clock
-from cocotb.queue import Queue
-from cocotb_tools.runner import get_runner
-from hdl_tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
-from libaxi4l import axi_reset, axi_read, axi_write
+from cocotb_tools.runner import get_runner
+
+from hdl_tools.axi4lite import axi_read, axi_reset, axi_write
+from hdl_tools.flt_tool import resolve_flt
 
 # MARK: Env
 
@@ -89,12 +89,9 @@ async def reset(dut):
     dut.s_eth_rx_tkeep.value = 0
     dut.s_eth_rx_tlast.value = 0
     dut.s_eth_rx_tvalid.value = 0
-    #
     dut.m_eth_tx_tready.value = 1
-    #
     dut.rx_ptp_timestamp.value = 0
     dut.rx_ptp_timestamp_valid.value = 0
-    #
     dut.tx_ptp_timestamp.value = 0
     dut.tx_ptp_timestamp_tag.value = 0
     dut.tx_ptp_timestamp_valid.value = 0
@@ -106,7 +103,6 @@ async def reset(dut):
     dut.s_message_tkeep.value = 0
     dut.s_message_tlast.value = 0
     dut.s_message_tvalid.value = 0
-    #
     dut.m_message_tready.value = 1
 
     # Radio interface
@@ -114,7 +110,6 @@ async def reset(dut):
     dut.s_axis_tx_tuser.value = 0
     dut.s_axis_tx_tlast.value = 0
     dut.s_axis_tx_tvalid.value = 0
-    #
     dut.m_axis_rx_tready.value = 1
 
     await ClockCycles(dut.clk, 100)
@@ -255,14 +250,14 @@ def test_coe_runner():
     hdl_toplevel = "coe"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = resolve_flt(prj_path / "coe.flt")
+    sources = resolve_flt(prj_path / "coe.flt")
 
     parameters = {}
 
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel=hdl_toplevel,
-        verilog_sources=verilog_sources,
+        sources=sources,
         parameters=parameters,
         waves=True,
         always=True,

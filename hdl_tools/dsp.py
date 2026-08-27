@@ -3,9 +3,9 @@
 from dataclasses import dataclass, field
 
 import cocotb
-from cocotb.triggers import ClockCycles, FallingEdge, First, Lock, ReadOnly, RisingEdge
+from cocotb.triggers import ClockCycles, First, Lock, RisingEdge
 
-from .base import AgentMode, AnalysisPort
+from .tb_base import AgentMode, AnalysisPort
 
 __all__ = [
     "DspSample",
@@ -185,7 +185,7 @@ class DspSampleMonitor(_DspSampleComponent):
 
     def stop(self):
         if self._task is not None:
-            self._task.kill()
+            self._task.cancel()
             self._task = None
 
     def _sample_value(self, name, *, signed=False, default=0):
@@ -198,8 +198,7 @@ class DspSampleMonitor(_DspSampleComponent):
         cycle = 0
         ready = self._optional(self.signals.ready)
         while True:
-            await FallingEdge(self.clock)
-            await ReadOnly()
+            await RisingEdge(self.clock)
             cycle += 1
             if self._in_reset():
                 continue
@@ -258,7 +257,7 @@ class DspSampleAgent:
         task = cocotb.start_soon(self.monitor.samples.get())
         await First(task, ClockCycles(self.monitor.clock, timeout_cycles))
         if not task.done():
-            task.kill()
+            task.cancel()
             raise DspSampleError(
                 f"DSP sample monitor timed out after {timeout_cycles} cycles"
             )

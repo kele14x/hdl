@@ -8,14 +8,14 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 from cocotb_tools.runner import get_runner
 
-from common.tb import AgentMode
-from common.tb.dsp import (
+from hdl_tools.dsp import (
     DspSample,
     DspSampleAgent,
     DspSampleAgentConfig,
     DspSampleSignals,
 )
 from hdl_tools.flt_tool import resolve_flt
+from hdl_tools.tb_base import AgentMode
 
 prj_path = Path(__file__).resolve().parent.parent
 rng = np.random.default_rng(12345)

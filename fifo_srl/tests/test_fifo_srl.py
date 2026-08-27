@@ -8,7 +8,7 @@ import cocotb
 import pytest
 from cocotb_tools.runner import get_runner
 
-from common.tb.fifo import (
+from hdl_tools.fifo import (
     FifoReadBus,
     FifoTestbench,
     FifoWriteBus,

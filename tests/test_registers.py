@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from common.tb.registers import (
+from hdl_tools.registers import (
     FieldSpec,
     RegisterAccess,
     RegisterAdapter,

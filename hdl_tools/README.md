@@ -1,18 +1,11 @@
 # Cocotb verification agents
 
-Reusable protocol components organized like lightweight UVM agents, split
-across two packages:
+Reusable cocotb protocol agents, transaction models, and reference helpers
+live in the installed `hdl_tools` package. `common` contains synthesizable RTL
+and its module tests only.
 
-- `hdl_tools` (installed package, importable anywhere): the protocol
-  foundation — valid/ready handshake primitives (`hdl_tools.handshake`),
-  AXI-Stream agents (`hdl_tools.axis`), and AXI4-Lite channel and
-  transaction-level agents (`hdl_tools.axi4lite`).
-- `common.tb`: domain components (register model, FIFO, memory, radio timing,
-  packet codecs). It also re-exports the AXI4-Lite and AXI-Stream names from
-  `hdl_tools` for compatibility, so `from common.tb import AxiLiteAgent`
-  keeps working.
-
-Neither package attempts to reproduce the UVM factory or phase system.
+The helpers use a small set of UVM-like concepts without a factory or phase
+system.
 
 | UVM concept | cocotb component |
 | --- | --- |
@@ -92,7 +85,7 @@ adapter performs frontdoor accesses, while `RegisterPredictor` subscribes to
 the bus monitor and updates mirrors for accesses made outside the model.
 
 ```python
-from common.tb.registers import AxiLiteRegisterAdapter, RegisterPredictor
+from hdl_tools.registers import AxiLiteRegisterAdapter, RegisterPredictor
 
 registers.bind(AxiLiteRegisterAdapter(axi_agent))
 predictor = RegisterPredictor(registers, axi_agent.monitor.transactions)
@@ -113,7 +106,7 @@ clock domains. Drivers add randomized enable gaps, while passive monitors
 publish every accepted `FifoTransfer` through an analysis port.
 
 ```python
-from common.tb.fifo import FifoReadAgent, FifoReadBus, FifoWriteAgent, FifoWriteBus
+from hdl_tools.fifo import FifoReadAgent, FifoReadBus, FifoWriteAgent, FifoWriteBus
 
 writer = FifoWriteAgent(FifoWriteBus(dut.wr_clk, dut.wr_en, dut.din, dut.full))
 reader = FifoReadAgent(FifoReadBus(dut.rd_clk, dut.rd_en, dut.dout, dut.empty))
@@ -121,29 +114,8 @@ await writer.start()
 await reader.start()
 ```
 
-`FifoTestbench`, `directed_sequences`, and `random_sequences` remain as a
-compatibility facade for existing FIFO regression tests.
-
-## Native memory / BRAM
-
-`MemoryAgent` maps a transaction-level read/write API onto one native RAM
-port. Compose one agent for `ram_sp`, two differently configured agents for
-`ram_sdp`, or one per port for `ram_tdp`.
-
-```python
-from common.tb.memory import MemoryAgent, MemoryAgentConfig, MemoryPortBus
-
-reader = MemoryAgent(
-    MemoryPortBus(dut.clkb, dut.enb, dut.addrb, read_data=dut.doutb),
-    MemoryAgentConfig(read_latency=3),
-)
-await reader.start()
-values = await reader.read_burst([0, 5, 2, 7])
-```
-
-The driver supports pipelined bursts and selectively advances each read
-pipeline stage. The monitor publishes accepted `MemoryTransaction` commands
-and latency-matched `MemoryReadResponse` objects.
+`FifoTestbench`, `directed_sequences`, and `random_sequences` provide the
+shared environment used by the FIFO regression tests.
 
 ## Radio timing
 
@@ -152,7 +124,7 @@ into hierarchical `RadioTimingEvent` transactions. Its active mode can also
 drive an external synchronization pulse.
 
 ```python
-from common.tb.timing import RadioTimingAgent, RadioTimingAgentConfig
+from hdl_tools.timing import RadioTimingAgent, RadioTimingAgentConfig
 
 timing = RadioTimingAgent(
     dut,
@@ -174,7 +146,7 @@ The AXIS layer owns handshake/backpressure, while `EthernetCodec` and
 `EcpriCodec` own header serialization and parsing.
 
 ```python
-from common.tb.packets import AxisCodecAgent, EcpriCodec
+from hdl_tools.packets import AxisCodecAgent, EcpriCodec
 
 packets = AxisCodecAgent(axis_agent, EcpriCodec())
 await packets.start()

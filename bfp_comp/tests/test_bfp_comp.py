@@ -1,27 +1,24 @@
 import os
 import random
 from pathlib import Path
-import sys
 
 import cocotb
 import numpy as np
 import pytest
 from cocotb.clock import Clock
 from cocotb.queue import Queue
-from cocotb_tools.runner import get_runner
-from hdl_tools.flt_tool import resolve_flt
 from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb_tools.runner import get_runner
+
+from hdl_tools import bfp
+from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
-repo_path = prj_path.parent
-sys.path.insert(0, str(repo_path / "common" / "tests"))
 
-import libbfp  # noqa: E402
-
-UD_COMP_METH = int(os.environ.get("UD_COMP_WIDTH", 1))
-UD_IQ_WIDTH = int(os.environ.get("UD_IQ_WIDTH", 9))
-FS_OFFSET = int(os.environ.get("FS_OFFSET", 0))
-USER_WIDTH = int(os.environ.get("USER_WIDTH", 17))
+UD_COMP_METH = int(os.environ.get("UD_COMP_WIDTH", "1"))
+UD_IQ_WIDTH = int(os.environ.get("UD_IQ_WIDTH", "9"))
+FS_OFFSET = int(os.environ.get("FS_OFFSET", "0"))
+USER_WIDTH = int(os.environ.get("USER_WIDTH", "17"))
 CONTINUOUS_INPUT = os.environ.get("CONTINUOUS_INPUT", "false").lower() == "true"
 
 
@@ -35,7 +32,7 @@ output_queue = Queue()
 
 
 def generate_section(num_prb):
-    section = [np.random.randint(-(2**15), 2**15) for _ in range(0, num_prb * 24)]
+    section = [np.random.randint(-(2**15), 2**15) for _ in range(num_prb * 24)]
     return section
 
 
@@ -59,7 +56,7 @@ async def reset(dut):
 
 async def drive(dut):
     await RisingEdge(dut.clk)
-    for _ in range(0, 100):
+    for _ in range(100):
         num_prb = random.randint(1, 100)
         section = generate_section(num_prb)
         num_words = len(section) / 4
@@ -135,7 +132,7 @@ async def checker():
     while True:
         input, input_tuser = await input_queue.get()
         output, output_tuser = await output_queue.get()
-        output_ref = libbfp.compress_section(input)
+        output_ref = bfp.compress_section(input)
 
         n += 1
         cocotb.log.info(f"Processing packet #{n}")
@@ -179,14 +176,14 @@ def test_bfp_comp_runner():
     hdl_toplevel = "bfp_comp"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = resolve_flt(prj_path / "bfp_comp.flt")
+    sources = resolve_flt(prj_path / "bfp_comp.flt")
 
     parameters = {"USER_WIDTH": USER_WIDTH}
 
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel=hdl_toplevel,
-        verilog_sources=verilog_sources,
+        sources=sources,
         parameters=parameters,
         build_args=["-suppress", "2892"] if SIM == "questa" else [],
         waves=True,

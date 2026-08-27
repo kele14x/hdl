@@ -4,17 +4,18 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
+from cocotb.triggers import ClockCycles
 from cocotb_tools.runner import get_runner
+
+from hdl_tools.axi4lite import axi_read, axi_reset, axi_write
 from hdl_tools.flt_tool import resolve_flt
-from cocotb.triggers import ClockCycles, RisingEdge
-from libaxi4l import axi_reset, axi_read, axi_write
 
 # MARK: Env
 
 prj_path = Path(__file__).resolve().parent.parent
 
 
-SIM_SPEED_UP = int(os.environ.get("SIM_SPEED_UP", 1))
+SIM_SPEED_UP = int(os.environ.get("SIM_SPEED_UP", "1"))
 NS_PER_SECOND = 100_000 if SIM_SPEED_UP else 1_000_000_000
 
 GUI = os.environ.get("GUI", "false").lower() == "true"
@@ -153,7 +154,7 @@ def test_timer_runner():
     hdl_toplevel = "timer"
     hdl_toplevel_lang = "verilog"
 
-    verilog_sources = resolve_flt(prj_path / "timer.flt")
+    sources = resolve_flt(prj_path / "timer.flt")
 
     parameters = {
         "SIM_SPEED_UP": SIM_SPEED_UP,
@@ -162,7 +163,7 @@ def test_timer_runner():
     runner = get_runner(SIM)
     runner.build(
         hdl_toplevel=hdl_toplevel,
-        verilog_sources=verilog_sources,
+        sources=sources,
         parameters=parameters,
         build_args=[],
         waves=True,

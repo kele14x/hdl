@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import random
-import sys
 from pathlib import Path
 
 import cocotb
@@ -14,11 +13,10 @@ from cocotb.queue import Queue
 from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
+from hdl_tools import bfp
+
 PRJ_PATH = Path(__file__).resolve().parent.parent
 REPO_PATH = PRJ_PATH.parent
-sys.path.insert(0, str(REPO_PATH / "common" / "tests"))
-
-import libbfp
 
 SIM = os.environ.get("SIM")
 if not SIM:
@@ -137,7 +135,7 @@ async def test_prach_framer_buffer(dut):
         captured_iq = [
             sample for re_value in re_values[:CAPTURE_RE] for sample in re_value
         ]
-        expected = libbfp.compress_section(captured_iq, fs_offset=fs_offset)
+        expected = bfp.compress_section(captured_iq, fs_offset=fs_offset)
         expected_tuser = (CC_ID << 20) | (ANT_ID << 12) | section_id
 
         assert packet == expected
