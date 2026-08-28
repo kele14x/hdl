@@ -1,3 +1,4 @@
+import os
 import random
 from pathlib import Path
 
@@ -11,6 +12,53 @@ NUM_CC = 2
 BUFFER_ID = 2
 FFT_SAMPLES = 1024
 EXPECTED_WORD = 0xCDAB3412CDAB3412
+HALF_BLOCK = int(os.environ.get("HALF_BLOCK", "0"))
+
+
+def _signed(value, width):
+    value &= (1 << width) - 1
+    return value - (1 << width) if value & (1 << (width - 1)) else value
+
+
+def _msb_position(value):
+    value &= 0xFFFF
+    for index in range(15, 0, -1):
+        if ((value >> index) ^ (value >> (index - 1))) & 1:
+            return index
+    return 0
+
+
+def _internal_bfp9_roundtrip(real, imag):
+    msb = max(_msb_position(real), _msb_position(imag))
+    shift = min(15 - msb, 7)
+    exponent = 15 - shift
+
+    def roundtrip_component(value):
+        rounded = ((value & 0xFFFF) << shift) & 0xFFFF
+        rounded |= 0x003F
+        if rounded != 0x7FFF:
+            rounded = (rounded + 1) & 0xFFFF
+        mantissa = _signed(rounded >> 7, 9)
+        return (mantissa << (exponent - 8)) & 0xFFFF
+
+    return roundtrip_component(real), roundtrip_component(imag)
+
+
+def _network_iq_word(real, imag):
+    lane = (
+        ((real >> 8) & 0xFF)
+        | ((real & 0xFF) << 8)
+        | (((imag >> 8) & 0xFF) << 16)
+        | ((imag & 0xFF) << 24)
+    )
+    return lane | (lane << 32)
+
+
+def expected_word():
+    if HALF_BLOCK:
+        return EXPECTED_WORD
+    real, imag = _internal_bfp9_roundtrip(0x1234, 0xABCD)
+    return _network_iq_word(real, imag)
 
 
 async def reset_dut(dut):
@@ -56,6 +104,49 @@ async def fill_cc1_bank_zero(dut):
     await sample_after_rising(dut.clk)
 
 
+async def fill_cc1_symbol(dut, *, first_symbol, real, imag, samples):
+    await sample_after_rising(dut.clk)
+    dut.din_sf[1].value = int(first_symbol)
+    dut.din_sy[1].value = 1
+    dut.din_chn[1].value = 0
+    await sample_after_rising(dut.clk)
+    dut.din_sf[1].value = 0
+    dut.din_sy[1].value = 0
+
+    for _ in range(samples):
+        await sample_after_rising(dut.clk)
+        dut.din_dr[1].value = real
+        dut.din_di[1].value = imag
+        dut.din_chn[1].value = BUFFER_ID
+        dut.din_dv[1].value = 1
+
+    await sample_after_rising(dut.clk)
+    dut.din_dv[1].value = 0
+    await sample_after_rising(dut.clk)
+
+
+async def request_words(dut, *, start_prb, num_prb, cc=1):
+    await sample_after_rising(dut.clk_eth_xran)
+    dut.m_fram_data_req.value = (1 << 24) | (start_prb << 15) | (num_prb << 7) | cc
+    await sample_after_rising(dut.clk_eth_xran)
+    dut.m_fram_data_req.value = 0
+
+    words = []
+    for _ in range(256):
+        await sample_after_rising(dut.clk_eth_xran)
+        if int(dut.m_axis_tvalid.value):
+            words.append(
+                (
+                    int(dut.m_axis_tdata.value),
+                    int(dut.m_axis_tkeep.value),
+                    int(dut.m_axis_tlast.value),
+                )
+            )
+        if words and words[-1][2]:
+            break
+    return words
+
+
 @cocotb.test()
 async def test_buffer_read_request_data_and_backpressure(dut):
     cocotb.start_soon(Clock(dut.clk, 2, unit="ns").start())
@@ -79,7 +170,7 @@ async def test_buffer_read_request_data_and_backpressure(dut):
             )
             break
     assert held is not None
-    assert held == (EXPECTED_WORD, 0xFF, 0)
+    assert held == (expected_word(), 0xFF, 0)
 
     for _ in range(4):
         await sample_after_rising(dut.clk_eth_xran)
@@ -105,7 +196,7 @@ async def test_buffer_read_request_data_and_backpressure(dut):
             break
 
     assert len(words) == 6
-    assert [word[0] for word in words] == [EXPECTED_WORD] * 6
+    assert [word[0] for word in words] == [expected_word()] * 6
     assert [word[1] for word in words] == [0xFF] * 6
     assert [word[2] for word in words] == [0, 0, 0, 0, 0, 1]
 
@@ -151,16 +242,57 @@ async def test_buffer_read_stall_and_toggle_tready(dut):
         await sample_after_rising(dut.clk_eth_xran)
 
     assert len(words) == num_prb * 6
-    assert [word[0] for word in words] == [EXPECTED_WORD] * (num_prb * 6)
+    assert [word[0] for word in words] == [expected_word()] * (num_prb * 6)
     assert [word[1] for word in words] == [0xFF] * (num_prb * 6)
     assert [word[2] for word in words] == [0] * (num_prb * 6 - 1) + [1]
 
 
-def test_puxch_buffer_runner():
+@cocotb.test()
+async def test_full_block_last_prb_in_second_bank(dut):
+    if HALF_BLOCK:
+        return
+
+    cocotb.start_soon(Clock(dut.clk, 2, unit="ns").start())
+    cocotb.start_soon(Clock(dut.clk_eth_xran, 3, unit="ns").start())
+    await reset_dut(dut)
+
+    dut.ctrl_bw[1].value = 4
+    await fill_cc1_symbol(
+        dut,
+        first_symbol=True,
+        real=0x1111,
+        imag=0xEEEE,
+        samples=4096,
+    )
+    await fill_cc1_symbol(
+        dut,
+        first_symbol=False,
+        real=0x0183,
+        imag=0xF234,
+        samples=4096,
+    )
+
+    dut.s_ul_sym_num[1].value = 1
+    dut.m_axis_tready.value = 1
+    words = await request_words(dut, start_prb=274, num_prb=1)
+
+    real, imag = _internal_bfp9_roundtrip(0x0183, 0xF234)
+    expected = _network_iq_word(real, imag)
+    assert len(words) == 6
+    assert [word[0] for word in words] == [expected] * 6
+    assert [word[1] for word in words] == [0xFF] * 6
+    assert [word[2] for word in words] == [0, 0, 0, 0, 0, 1]
+
+
+@pytest.mark.parametrize("half_block", [0, 1])
+def test_puxch_buffer_runner(half_block, monkeypatch):
+    monkeypatch.setenv("HALF_BLOCK", str(half_block))
     run_cocotb(
         "puxch_buffer",
         Path(__file__).stem,
-        parameters={"ID": BUFFER_ID, "NUM_CC": NUM_CC, "HALF_BLOCK": 1},
+        parameters={"ID": BUFFER_ID, "NUM_CC": NUM_CC, "HALF_BLOCK": half_block},
+        build_name=f"{Path(__file__).stem}_half_block_{half_block}",
+        extra_env={"HALF_BLOCK": str(half_block)},
     )
 
 

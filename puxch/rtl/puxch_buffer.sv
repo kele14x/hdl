@@ -37,77 +37,132 @@ module puxch_buffer #(
 
   // Signals
 
-  logic [ 1:0] ctrl_rat_s        [NUM_CC];
-  logic [ 3:0] ctrl_bw_s         [NUM_CC];
+  logic [       1:0] ctrl_rat_s        [NUM_CC];
+  logic [       3:0] ctrl_bw_s         [NUM_CC];
 
-  logic [ 3:0] fft_size          [NUM_CC];
+  logic [       3:0] fft_size          [NUM_CC];
 
-  logic        req_valid;
-  logic [ 8:0] req_startprb;
-  logic [ 7:0] req_numprb;
-  logic [ 3:0] req_cc;
-  logic [20:0] req_data;
+  logic              req_valid;
+  logic [       8:0] req_startprb;
+  logic [       7:0] req_numprb;
+  logic [       3:0] req_cc;
+  logic [      20:0] req_data;
 
-  logic        fifo_rden;
-  logic [20:0] fifo_dout;
-  logic        fifo_empty;
-  logic        fifo_full;
+  logic              fifo_rden;
+  logic [      20:0] fifo_dout;
+  logic              fifo_empty;
+  logic              fifo_full;
 
-  logic        fifo_req_valid;
-  logic [ 8:0] fifo_req_startprb;
-  logic [ 7:0] fifo_req_numprb;
-  logic [ 3:0] fifo_req_cc;
-  logic        fifo_req_ready;
+  logic              fifo_req_valid;
+  logic [       8:0] fifo_req_startprb;
+  logic [       7:0] fifo_req_numprb;
+  logic [       3:0] fifo_req_cc;
+  logic              fifo_req_ready;
 
-  logic [10:0] fifo_req_endprb;
+  logic [      10:0] fifo_req_endprb;
 
-  logic        wr_bank           [NUM_CC];
-  logic [11:0] wr_cnt            [NUM_CC];
-  logic [11:0] wr_cnt_rev        [NUM_CC];
-  logic [12:0] wr_addr           [NUM_CC];
-  logic        wr_we             [NUM_CC];
-  logic [31:0] wr_din            [NUM_CC];
+  logic              wr_bank           [NUM_CC];
+  logic [      11:0] wr_cnt            [NUM_CC];
+  logic [      11:0] wr_cnt_rev        [NUM_CC];
+  logic [      12:0] wr_addr           [NUM_CC];
+  logic              wr_we             [NUM_CC];
 
-  logic        rd_busy;
-  logic        rd_issue;
-  logic        rd_bank;
-  logic [10:0] rd_cnt;
-  logic [11:0] rd_addr;
-  logic        rd_en             [NUM_CC];
-  logic        rd_en_d           [NUM_CC];
-  logic        rd_en_dd          [NUM_CC];
+  logic              rd_busy;
+  logic              rd_issue;
+  logic              rd_bank;
+  logic [      10:0] rd_cnt;
+  logic [      11:0] rd_addr;
+  logic              rd_en             [NUM_CC];
+  logic              rd_en_d           [NUM_CC];
+  logic              rd_en_dd          [NUM_CC];
   logic [NUM_CC-1:0] rd_pipe_en;
-  logic [63:0] rd_dout           [NUM_CC];
-  logic [63:0] rd_data_c;
-  logic        rd_last;
-  logic        last_d1;
-  logic        last_d2;
+  logic [      63:0] rd_dout           [NUM_CC];
+  logic [      63:0] rd_data_c;
+  logic              rd_last;
+  logic              last_d1;
+  logic              last_d2;
 
-  logic        ram_out_v;
-  logic [ 4:0] out_cnt;
-  logic        out_stall;
-  logic        out_wren;
-  logic        out_rden;
-  logic        out_empty;
-  logic        out_full;
-  logic [64:0] out_dout;
+  logic              ram_out_v;
+  logic [       4:0] out_cnt;
+  logic              out_stall;
+  logic              out_wren;
+  logic              out_rden;
+  logic              out_empty;
+  logic              out_full;
+  logic [      64:0] out_dout;
 
-  logic [63:0] s0_axis_tdata;
+  logic [      63:0] s0_axis_tdata;
 
-  logic [63:0] s1_axis_tdata;
-  logic [ 7:0] s1_axis_tkeep;
-  logic        s1_axis_tlast;
-  logic        s1_axis_tvalid;
-  logic        s1_axis_tready;
-  logic        reg_m_axis_tuser;
+  logic [      63:0] s1_axis_tdata;
+  logic [       7:0] s1_axis_tkeep;
+  logic              s1_axis_tlast;
+  logic              s1_axis_tvalid;
+  logic              s1_axis_tready;
+  logic              reg_m_axis_tuser;
 
   localparam int CcIndexWidth = (NUM_CC <= 1) ? 1 : $clog2(NUM_CC);
+
+  localparam int FullMaxPrb = 275;
+  localparam int FullMaxRe = FullMaxPrb * 12;
+  localparam int FullIqBankDepth = 1792;
+  localparam int FullNarrowBankDepth = FullIqBankDepth * 2;
+  localparam int FullNarrowDepth = FullNarrowBankDepth * 2;
 
   // Small output FIFO replacing the store-and-forward packet FIFO. The read
   // pipeline has 3 cycles of latency from issue to FIFO write, so the stall
   // threshold must keep at least 3 words of headroom.
-  localparam int OutFifoDepth      = 16;
+  localparam int OutFifoDepth = 16;
   localparam int OutFifoAlmostFull = OutFifoDepth - 3;
+
+  initial begin : drc_check
+    assert (NUM_CC >= 1 && NUM_CC <= 16)
+    else $error("[%m]: NUM_CC (%0d) must be in the range 1 to 16.", NUM_CC);
+
+    assert (ID >= 0 && ID < 16)
+    else $error("[%m]: ID (%0d) must fit in din_chn.", ID);
+  end
+
+  function automatic logic [3:0] msb_position(input logic [15:0] data);
+    for (int i = 15; i > 0; i--) begin
+      if (data[i] ^ data[i-1]) return i[3:0];
+    end
+    return 0;
+  endfunction
+
+  function automatic logic [3:0] bfp9_re_exp(input logic [15:0] data_i, input logic [15:0] data_q);
+    logic [3:0] msb_i;
+    logic [3:0] msb_q;
+    logic [3:0] msb;
+    logic [3:0] shift;
+
+    msb_i = msb_position(data_i);
+    msb_q = msb_position(data_q);
+    msb = (msb_i >= msb_q) ? msb_i : msb_q;
+    shift = 15 - msb;
+    shift = (shift >= 7) ? 7 : shift;
+    bfp9_re_exp = 15 - shift;
+  endfunction
+
+  function automatic logic [8:0] bfp9_re_compress(input logic [15:0] data, input logic [3:0] exp);
+    logic [15:0] rounded;
+    logic [ 3:0] shift;
+
+    shift   = 15 - exp;
+    rounded = data << shift;
+    rounded = rounded | 16'h003F;
+    if (rounded != 16'h7FFF) begin
+      rounded = rounded + 1'b1;
+    end
+    bfp9_re_compress = rounded[15:7];
+  endfunction
+
+  function automatic logic [15:0] bfp9_re_decompress(input logic [8:0] data, input logic [3:0] exp);
+    logic signed [16:0] expanded;
+
+    expanded = $signed(data);
+    expanded = expanded <<< (exp - 8);
+    bfp9_re_decompress = expanded[15:0];
+  endfunction
 
   // CDC for control signals
 
@@ -225,10 +280,6 @@ module puxch_buffer #(
         wr_we[cc] <= din_dv[cc] && (din_chn[cc] == 4'(ID));
       end
 
-      always_ff @(posedge clk) begin
-        wr_din[cc] <= {din_di[cc], din_dr[cc]};
-      end
-
     end
   endgenerate
 
@@ -240,6 +291,7 @@ module puxch_buffer #(
 
         logic [11:0] wr_addr_s;
         logic        wr_we_s;
+        logic [31:0] wr_din_s;
 
         logic [10:0] rd_addr_s;
         logic        rd_en_s;
@@ -247,6 +299,10 @@ module puxch_buffer #(
 
         assign wr_addr_s = {wr_addr[cc][12], wr_addr[cc][10:0]};
         assign wr_we_s   = wr_we[cc] && ~wr_addr[cc][11];
+
+        always_ff @(posedge clk) begin
+          wr_din_s <= {din_di[cc], din_dr[cc]};
+        end
 
         assign rd_addr_s = {rd_addr[11], rd_addr[9:0]};
         assign rd_en_s   = rd_en[cc] && ~rd_addr[10];
@@ -275,7 +331,7 @@ module puxch_buffer #(
             .clka (clk),
             .wea  (wr_we_s),
             .addra(wr_addr_s),
-            .dina (wr_din[cc]),
+            .dina (wr_din_s),
             //
             .clkb (clk_eth_xran),
             .rstb (1'b0),
@@ -286,29 +342,88 @@ module puxch_buffer #(
 
       end else begin : g_full
 
+        logic [12:0] wr_comp_addr;
+        logic        wr_comp_en;
+        logic [17:0] wr_iq_din;
+        logic [ 3:0] wr_exp_c;
+        logic [ 3:0] wr_exp_din;
+        logic [11:0] rd_comp_addr;
+        logic [35:0] rd_iq_data;
+        logic [ 7:0] rd_exp_data;
+        logic [15:0] rd_i0;
+        logic [15:0] rd_q0;
+        logic [15:0] rd_i1;
+        logic [15:0] rd_q1;
+
         assign rd_pipe_en[cc] = rd_en_d[cc];
 
-        // The ping-pong buffer, write side is 8192 x 32-bit
-        // The read side is 4096 x 64-bit
-        ram_sdp_asym #(
-            .ADDR_WIDTH_A  (13),
-            .DATA_WIDTH_A  (32),
-            .ADDR_WIDTH_B  (12),
-            .DATA_WIDTH_B  (64),
-            .READ_LATENCY_B(2),
-            .INIT_FILE     ("NONE")
-        ) u_ram (
+        // The frequency converter places the occupied REs at the beginning of
+        // natural FFT order. Discard the unused tail and place the two banks
+        // in padded 3584-RE address ranges. The padding lets the read side use
+        // a 1792-word bank stride while retaining the exact 3.5-BRAM layout.
+        assign wr_comp_addr = (wr_bank[cc] ? 13'(FullNarrowBankDepth) : 13'd0) +
+            13'(wr_cnt_rev[cc]);
+        assign wr_comp_en = wr_we[cc] && (wr_cnt_rev[cc] < 12'(FullMaxRe));
+
+        assign rd_comp_addr = (rd_bank ? 12'(FullIqBankDepth) : 12'd0) + 12'(rd_cnt);
+
+        assign wr_exp_c = bfp9_re_exp(din_dr[cc], din_di[cc]);
+
+        always_ff @(posedge clk) begin
+          wr_exp_din <= wr_exp_c;
+          wr_iq_din <= {
+            bfp9_re_compress(din_di[cc], wr_exp_c), bfp9_re_compress(din_dr[cc], wr_exp_c)
+          };
+        end
+
+        // IQ RAM: 7168 x 18-bit write, 3584 x 36-bit read. The segmented
+        // wrapper maps this to three RAMB36 primitives and one RAMB18 tail.
+        puxch_iq_ram #(
+            .READ_LATENCY(2)
+        ) u_iq_ram (
             .clka (clk),
-            .wea  (wr_we[cc]),
-            .addra(wr_addr[cc]),
-            .dina (wr_din[cc]),
+            .wea  (wr_comp_en),
+            .addra(wr_comp_addr),
+            .dina (wr_iq_din),
             //
             .clkb (clk_eth_xran),
             .rstb (1'b0),
             .enb  ({rd_en_d[cc] & ~out_stall, rd_en[cc] & ~out_stall}),
-            .addrb(rd_addr),
-            .doutb(rd_dout[cc])
+            .addrb(rd_comp_addr),
+            .doutb(rd_iq_data)
         );
+
+        // One exponent belongs to each complex RE. The asymmetric read port
+        // returns the two exponents corresponding to the 36-bit IQ word.
+        ram_sdp_asym #(
+            .ADDR_WIDTH_A  (13),
+            .DATA_WIDTH_A  (4),
+            .ADDR_WIDTH_B  (12),
+            .DATA_WIDTH_B  (8),
+            .READ_LATENCY_B(2),
+            .DEPTH         (FullNarrowDepth),
+            .INIT_FILE     ("NONE"),
+            .RAM_STYLE     ("BLOCK")
+        ) u_exp_ram (
+            .clka (clk),
+            .wea  (wr_comp_en),
+            .addra(wr_comp_addr),
+            .dina (wr_exp_din),
+            //
+            .clkb (clk_eth_xran),
+            .rstb (1'b0),
+            .enb  ({rd_en_d[cc] & ~out_stall, rd_en[cc] & ~out_stall}),
+            .addrb(rd_comp_addr),
+            .doutb(rd_exp_data)
+        );
+
+        always_comb begin
+          rd_i0 = bfp9_re_decompress(rd_iq_data[8:0], rd_exp_data[3:0]);
+          rd_q0 = bfp9_re_decompress(rd_iq_data[17:9], rd_exp_data[3:0]);
+          rd_i1 = bfp9_re_decompress(rd_iq_data[26:18], rd_exp_data[7:4]);
+          rd_q1 = bfp9_re_decompress(rd_iq_data[35:27], rd_exp_data[7:4]);
+          rd_dout[cc] = {rd_q1, rd_i1, rd_q0, rd_i0};
+        end
 
       end
     end
@@ -350,6 +465,17 @@ module puxch_buffer #(
   end
 
   assign fifo_req_ready = ~rd_busy;
+
+  generate
+    if (HALF_BLOCK == 0) begin : g_full_request_guard
+      assert property (@(posedge clk_eth_xran) disable iff (rst_eth_xran)
+                       !(fifo_req_valid && fifo_req_ready) ||
+                       (fifo_req_cc >= 4'(NUM_CC)) ||
+                       ((fifo_req_numprb != 0) &&
+                        (11'(fifo_req_startprb) + 11'(fifo_req_numprb) <= 11'(FullMaxPrb))))
+      else $error("[%m]: full-block request exceeds the %0d-PRB buffer.", FullMaxPrb);
+    end
+  endgenerate
 
   // A read beat enters the RAM pipeline this cycle
   assign rd_issue = rd_busy && ~out_stall;
@@ -451,7 +577,7 @@ module puxch_buffer #(
   wire unused_out_fifo = &{1'b0, out_full};
 
   assign {s1_axis_tlast, s1_axis_tdata} = out_dout;
-  assign s1_axis_tkeep  = 8'hFF;
+  assign s1_axis_tkeep = 8'hFF;
   assign s1_axis_tvalid = ~out_empty;
 
   // Add axis_reg to improve timing

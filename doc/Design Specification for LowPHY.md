@@ -687,8 +687,12 @@ Main observed write-side behavior:
 - each CC keeps a write bank and write counter
 - bank toggling occurs on symbol boundaries
 - write addresses are bit-reversed before RAM storage
-- the buffer stores 32-bit `{Q, I}` words written in the radio clock domain
-- the memory is implemented as ping-pong RAM, with full-block or half-block variants depending on `HALF_BLOCK`
+- in full-block mode, each complex RE is internally compressed to a 9-bit I mantissa, a 9-bit Q mantissa, and a shared per-RE 4-bit exponent
+- the full-block IQ memory uses an 18-bit write port and a 36-bit read port, packing two compressed REs per framer-side address
+- full-block exponent storage uses a corresponding 4-bit write port and 8-bit read port
+- FFT bins above the 275-PRB full-block capacity are not written
+- the 3584x36 full-block IQ memory is segmented into three RAMB36-sized regions and one RAMB18-sized tail to avoid rounding the inferred memory up to four RAMB36 tiles
+- half-block mode retains the original raw 32-bit `{Q, I}` ping-pong RAM
 
 This stage collects FFT-domain output into antenna-local storage so that the O-RAN framer can read requested PRB ranges later.
 
@@ -707,7 +711,7 @@ Observed read-side behavior from the RTL:
 - readout ends at `(start_prb + num_prb) * 6 - 1`
 - read data from the selected CC RAM is OR-combined onto one antenna-local output bus
 
-The emitted 64-bit stream corresponds to two complex samples packed for framer-side transport.
+In full-block mode, the two compressed REs and their individual exponents are reconstructed to 16-bit IQ values after the RAM read. The emitted 64-bit stream then corresponds to two complex samples packed for framer-side transport. This internal BFP9 stage is lossy even when the final U-Plane compression is disabled.
 
 The output reorder logic explicitly swaps byte positions so the outgoing word order matches the expected framer-side format.
 

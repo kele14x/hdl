@@ -156,7 +156,11 @@ def puxch_reference(
 
 
 def raw_readout_words(
-    reference: PuxchReference, *, start_prb: int, num_prb: int
+    reference: PuxchReference,
+    *,
+    start_prb: int,
+    num_prb: int,
+    internal_bfp9: bool = False,
 ) -> list[int]:
     """Pack the words emitted by ``puxch_buffer`` for one read request."""
 
@@ -171,9 +175,11 @@ def raw_readout_words(
         for pair in range(2):
             physical_address = 2 * (first_beat + beat) + pair
             stream_index = int(reverse[physical_address])
-            values.append(
-                (int(stream_real[stream_index]), int(stream_imag[stream_index]))
-            )
+            real = int(stream_real[stream_index])
+            imag = int(stream_imag[stream_index])
+            if internal_bfp9:
+                real, imag = internal_bfp9_roundtrip(real, imag)
+            values.append((real, imag))
         (real0, imag0), (real1, imag1) = values
         # The PUXCH buffer emits network-byte-order IQ pairs.  This is the
         # inverse of {rd_data[55:48], ..., rd_data[7:0]} in puxch_buffer.sv.
@@ -194,3 +200,30 @@ def raw_readout_words(
             )
         )
     return words
+
+
+def internal_bfp9_roundtrip(real: int, imag: int) -> tuple[int, int]:
+    """Model the per-RE BFP9 storage format used by the full PUXCH buffer."""
+
+    def msb_position(value: int) -> int:
+        value &= 0xFFFF
+        for index in range(15, 0, -1):
+            if ((value >> index) ^ (value >> (index - 1))) & 1:
+                return index
+        return 0
+
+    msb = max(msb_position(real), msb_position(imag))
+    shift = min(15 - msb, 7)
+    exponent = 15 - shift
+
+    def roundtrip_component(value: int) -> int:
+        rounded = ((value & 0xFFFF) << shift) & 0xFFFF
+        rounded |= 0x003F
+        if rounded != 0x7FFF:
+            rounded = (rounded + 1) & 0xFFFF
+        mantissa = rounded >> 7
+        if mantissa & 0x100:
+            mantissa -= 0x200
+        return int(np.int16(mantissa << (exponent - 8)))
+
+    return roundtrip_component(real), roundtrip_component(imag)

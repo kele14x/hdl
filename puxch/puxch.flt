@@ -14,6 +14,7 @@
 ../phase_comp/phase_comp.flt
 rtl/puxch.sv
 rtl/puxch_buffer.sv
+rtl/puxch_iq_ram.sv
 rtl/puxch_channel.sv
 rtl/puxch_conv.sv
 rtl/puxch_regs.v

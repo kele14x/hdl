@@ -359,6 +359,7 @@ async def test_puxch_end_to_end_data_path(dut):
                 reference,
                 start_prb=start_prb,
                 num_prb=num_prb,
+                internal_bfp9=True,
             )
             assert len(frame) == num_prb * 6
             assert [beat.keep for beat in frame] == [0xFF] * len(frame)

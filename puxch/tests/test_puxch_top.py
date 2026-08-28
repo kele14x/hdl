@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import cocotb
@@ -8,6 +9,8 @@ from puxch_test_utils import run_cocotb, sample_after_rising
 
 NUM_CC = 1
 NUM_ANT = 4
+HALF_BLOCK = int(os.environ.get("HALF_BLOCK", "1"))
+FINAL_BFP9 = int(os.environ.get("FINAL_BFP9", "0"))
 
 
 async def reset_dut(dut):
@@ -15,7 +18,7 @@ async def reset_dut(dut):
     dut.rst_eth_xran.value = 1
     dut.ctrl_rst.value = 1
     dut.sync_in.value = 0
-    dut.ctrl_ud_comp_meth.value = 0
+    dut.ctrl_ud_comp_meth.value = FINAL_BFP9
     dut.ctrl_ud_iq_width.value = 9
     dut.ctrl_fs_offset.value = 0
     dut.ctrl_phase_comp_addr.value = 0
@@ -103,23 +106,43 @@ async def test_top_zero_symbol_to_framer_request(dut):
         if words and words[-1][2]:
             break
 
-    assert len(words) == 6
-    assert [word[0] for word in words] == [0] * 6
-    assert [word[1] for word in words] == [0xFF] * 6
-    assert [word[2] for word in words] == [0, 0, 0, 0, 0, 1]
+    if FINAL_BFP9:
+        assert len(words) == 4
+        assert [word[0] for word in words] == [0x08, 0, 0, 0]
+        assert [word[1] for word in words] == [0xFF, 0xFF, 0xFF, 0x0F]
+        assert [word[2] for word in words] == [0, 0, 0, 1]
+    else:
+        assert len(words) == 6
+        assert [word[0] for word in words] == [0] * 6
+        assert [word[1] for word in words] == [0xFF] * 6
+        assert [word[2] for word in words] == [0, 0, 0, 0, 0, 1]
     for antenna in range(1, NUM_ANT):
         assert int(dut.m_fram_data_tvalid[antenna].value) == 0
 
 
-def test_puxch_top_runner():
+CASES = [
+    {"name": "half_raw", "half_block": 1, "final_bfp9": 0},
+    {"name": "full_bfp9", "half_block": 0, "final_bfp9": 1},
+]
+
+
+@pytest.mark.parametrize("case", CASES, ids=[case["name"] for case in CASES])
+def test_puxch_top_runner(case, monkeypatch):
+    monkeypatch.setenv("HALF_BLOCK", str(case["half_block"]))
+    monkeypatch.setenv("FINAL_BFP9", str(case["final_bfp9"]))
     run_cocotb(
         "puxch_top",
         Path(__file__).stem,
         parameters={
             "NUM_CC": NUM_CC,
             "NUM_ANT": NUM_ANT,
-            "HALF_BLOCK": 1,
+            "HALF_BLOCK": case["half_block"],
             "HALF_FFT": 1,
+        },
+        build_name=f"{Path(__file__).stem}_{case['name']}",
+        extra_env={
+            "HALF_BLOCK": str(case["half_block"]),
+            "FINAL_BFP9": str(case["final_bfp9"]),
         },
     )
 
