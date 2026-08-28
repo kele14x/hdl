@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from fft.tests.fft_fixed_model import FftConfig, bit_reverse_indices, fft_fixed
+from hdl_tools import bfp
 
 
 @dataclass(frozen=True)
@@ -202,8 +203,42 @@ def raw_readout_words(
     return words
 
 
+def bfp9_readout_words(
+    reference: PuxchReference,
+    *,
+    start_prb: int,
+    num_prb: int,
+    fs_offset: int = 0,
+) -> tuple[list[int], list[int]]:
+    """Pack mandatory BFP9 output words and their AXI-Stream keep values."""
+
+    stream_real = reference.stream_real
+    stream_imag = reference.stream_imag
+    reverse = bit_reverse_indices(len(stream_real))
+    packed_bytes: list[int] = []
+    first_re = int(start_prb) * 12
+    for prb in range(int(num_prb)):
+        iq: list[int] = []
+        for re_index in range(12):
+            physical_address = first_re + prb * 12 + re_index
+            stream_index = int(reverse[physical_address])
+            real, imag = internal_bfp9_roundtrip(
+                int(stream_real[stream_index]), int(stream_imag[stream_index])
+            )
+            iq.extend((real, imag))
+        packed_bytes.extend(bfp.compress_prb(iq, width=9, fs_offset=fs_offset))
+
+    words = []
+    keeps = []
+    for offset in range(0, len(packed_bytes), 8):
+        chunk = packed_bytes[offset : offset + 8]
+        words.append(sum(byte << (8 * lane) for lane, byte in enumerate(chunk)))
+        keeps.append((1 << len(chunk)) - 1)
+    return words, keeps
+
+
 def internal_bfp9_roundtrip(real: int, imag: int) -> tuple[int, int]:
-    """Model the per-RE BFP9 storage format used by the full PUXCH buffer."""
+    """Model the per-RE BFP9 storage format used by the PUXCH buffer."""
 
     def msb_position(value: int) -> int:
         value &= 0xFFFF

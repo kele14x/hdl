@@ -15,7 +15,7 @@ from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 
-UD_COMP_METH = int(os.environ.get("UD_COMP_WIDTH", "1"))
+UD_COMP_METH = int(os.environ.get("UD_COMP_METH", "0"))
 UD_IQ_WIDTH = int(os.environ.get("UD_IQ_WIDTH", "9"))
 FS_OFFSET = int(os.environ.get("FS_OFFSET", "0"))
 USER_WIDTH = int(os.environ.get("USER_WIDTH", "17"))
@@ -34,6 +34,39 @@ output_queue = Queue()
 def generate_section(num_prb):
     section = [np.random.randint(-(2**15), 2**15) for _ in range(num_prb * 24)]
     return section
+
+
+def signed(value, width):
+    value &= (1 << width) - 1
+    return value - (1 << width) if value & (1 << (width - 1)) else value
+
+
+def msb_position(value):
+    value &= 0xFFFF
+    for index in range(15, 0, -1):
+        if ((value >> index) ^ (value >> (index - 1))) & 1:
+            return index
+    return 0
+
+
+def internal_bfp9(real, imag):
+    shift = min(15 - max(msb_position(real), msb_position(imag)), 7)
+    exponent = 15 - shift
+
+    def compress(value):
+        rounded = ((value & 0xFFFF) << shift) & 0xFFFF
+        rounded |= 0x003F
+        if rounded != 0x7FFF:
+            rounded = (rounded + 1) & 0xFFFF
+        return (rounded >> 7) & 0x1FF
+
+    return compress(real), compress(imag), exponent
+
+
+def pack_internal_pair(values):
+    i0, q0, exp0 = internal_bfp9(values[0], values[1])
+    i1, q1, exp1 = internal_bfp9(values[2], values[3])
+    return i0 | (q0 << 9) | (i1 << 18) | (q1 << 27) | (exp0 << 36) | (exp1 << 40)
 
 
 async def reset(dut):
@@ -59,7 +92,7 @@ async def drive(dut):
     for _ in range(100):
         num_prb = random.randint(1, 100)
         section = generate_section(num_prb)
-        num_words = len(section) / 4
+        num_words = len(section) // 4
         tuser = random.randrange(1 << USER_WIDTH)
         # Send one section. CONTINUOUS_INPUT exposes the no-backpressure
         # requirement by removing every bubble and inter-packet gap.
@@ -69,14 +102,7 @@ async def drive(dut):
             if insert_null:
                 dut.s_axis_tvalid.value = 0
             else:
-                data = (section[i * 4] & 0xFF00) >> 8
-                data |= (section[i * 4] & 0xFF) << 8
-                data |= (section[i * 4 + 1] & 0xFF00) << 8
-                data |= (section[i * 4 + 1] & 0xFF) << 24
-                data |= (section[i * 4 + 2] & 0xFF00) << 24
-                data |= (section[i * 4 + 2] & 0xFF) << 40
-                data |= (section[i * 4 + 3] & 0xFF00) << 40
-                data |= (section[i * 4 + 3] & 0xFF) << 56
+                data = pack_internal_pair(section[i * 4 : i * 4 + 4])
                 dut.s_axis_tdata.value = data
                 dut.s_axis_tkeep.value = 255
                 dut.s_axis_tvalid.value = 1
@@ -99,10 +125,16 @@ async def input_monitor(dut):
             if not input:
                 tuser = dut.s_axis_tuser.value.integer
             data = dut.s_axis_tdata.value.integer
-            for i in range(4):
-                d = (((data >> 16 * i) & 0xFF) << 8) + ((data >> (16 * i + 8)) & 0xFF)
-                d = d if d <= 2**15 - 1 else d - 2**16
-                input.append(d)
+            exp0 = (data >> 36) & 0xF
+            exp1 = (data >> 40) & 0xF
+            input.extend(
+                [
+                    signed(data, 9) << (exp0 - 8),
+                    signed(data >> 9, 9) << (exp0 - 8),
+                    signed(data >> 18, 9) << (exp1 - 8),
+                    signed(data >> 27, 9) << (exp1 - 8),
+                ]
+            )
             if dut.s_axis_tlast.value:
                 input_queue.put_nowait((input, tuser))
                 input = []
@@ -132,7 +164,7 @@ async def checker():
     while True:
         input, input_tuser = await input_queue.get()
         output, output_tuser = await output_queue.get()
-        output_ref = bfp.compress_section(input)
+        output_ref = bfp.compress_section(input, fs_offset=FS_OFFSET)
 
         n += 1
         cocotb.log.info(f"Processing packet #{n}")

@@ -64,7 +64,6 @@ module puxch_buffer #(
   logic              wr_bank           [NUM_CC];
   logic [      11:0] wr_cnt            [NUM_CC];
   logic [      11:0] wr_cnt_rev        [NUM_CC];
-  logic [      12:0] wr_addr           [NUM_CC];
   logic              wr_we             [NUM_CC];
 
   logic              rd_busy;
@@ -102,11 +101,11 @@ module puxch_buffer #(
 
   localparam int CcIndexWidth = (NUM_CC <= 1) ? 1 : $clog2(NUM_CC);
 
-  localparam int FullMaxPrb = 275;
-  localparam int FullMaxRe = FullMaxPrb * 12;
-  localparam int FullIqBankDepth = 1792;
-  localparam int FullNarrowBankDepth = FullIqBankDepth * 2;
-  localparam int FullNarrowDepth = FullNarrowBankDepth * 2;
+  localparam int MaxPrb = (HALF_BLOCK != 0) ? 160 : 275;
+  localparam int MaxRe = MaxPrb * 12;
+  localparam int NarrowBankDepth = (HALF_BLOCK != 0) ? 1920 : 3584;
+  localparam int IqBankDepth = NarrowBankDepth / 2;
+  localparam int NarrowDepth = NarrowBankDepth * 2;
 
   // Small output FIFO replacing the store-and-forward packet FIFO. The read
   // pipeline has 3 cycles of latency from issue to FIFO write, so the stall
@@ -154,14 +153,6 @@ module puxch_buffer #(
       rounded = rounded + 1'b1;
     end
     bfp9_re_compress = rounded[15:7];
-  endfunction
-
-  function automatic logic [15:0] bfp9_re_decompress(input logic [8:0] data, input logic [3:0] exp);
-    logic signed [16:0] expanded;
-
-    expanded = $signed(data);
-    expanded = expanded <<< (exp - 8);
-    bfp9_re_decompress = expanded[15:0];
   endfunction
 
   // CDC for control signals
@@ -274,8 +265,6 @@ module puxch_buffer #(
         end
       end
 
-      assign wr_addr[cc] = {wr_bank[cc], wr_cnt_rev[cc]};
-
       always_ff @(posedge clk) begin
         wr_we[cc] <= din_dv[cc] && (din_chn[cc] == 4'(ID));
       end
@@ -287,145 +276,77 @@ module puxch_buffer #(
 
   generate
     for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_ram
-      if (HALF_BLOCK != 0) begin : g_half
+      logic [12:0] wr_comp_addr;
+      logic        wr_comp_en;
+      logic [17:0] wr_iq_din;
+      logic [ 3:0] wr_exp_c;
+      logic [ 3:0] wr_exp_din;
+      logic [11:0] rd_comp_addr;
+      logic [35:0] rd_iq_data;
+      logic [ 7:0] rd_exp_data;
 
-        logic [11:0] wr_addr_s;
-        logic        wr_we_s;
-        logic [31:0] wr_din_s;
+      assign rd_pipe_en[cc] = rd_en_d[cc];
 
-        logic [10:0] rd_addr_s;
-        logic        rd_en_s;
-        logic        rd_en_s_d;
+      // The frequency converter places occupied REs at the beginning of
+      // natural FFT order. Discard the unused FFT tail and place ping/pong in
+      // fixed logical ranges: 1920 RE for half block, 3584 RE for full block.
+      assign wr_comp_addr = (wr_bank[cc] ? 13'(NarrowBankDepth) : 13'd0) + 13'(wr_cnt_rev[cc]);
+      assign wr_comp_en = wr_we[cc] && (wr_cnt_rev[cc] < 12'(MaxRe));
 
-        assign wr_addr_s = {wr_addr[cc][12], wr_addr[cc][10:0]};
-        assign wr_we_s   = wr_we[cc] && ~wr_addr[cc][11];
+      assign rd_comp_addr = (rd_bank ? 12'(IqBankDepth) : 12'd0) + 12'(rd_cnt);
 
-        always_ff @(posedge clk) begin
-          wr_din_s <= {din_di[cc], din_dr[cc]};
-        end
+      assign wr_exp_c = bfp9_re_exp(din_dr[cc], din_di[cc]);
 
-        assign rd_addr_s = {rd_addr[11], rd_addr[9:0]};
-        assign rd_en_s   = rd_en[cc] && ~rd_addr[10];
-
-        always_ff @(posedge clk_eth_xran) begin
-          if (!out_stall) begin
-            rd_en_s_d <= rd_en_s;
-          end
-        end
-
-        assign rd_pipe_en[cc] = rd_en_s_d;
-
-        // wr_addr: [12]: bank, [11]: null, [10:0]: address
-        // rd_addr: [11]: bank, [10]: null, [9:0]: address
-
-        // The ping-pong buffer, write side is 4096 x 32-bit
-        // The read side is 2048 x 64-bit
-        ram_sdp_asym #(
-            .ADDR_WIDTH_A  (12),
-            .DATA_WIDTH_A  (32),
-            .ADDR_WIDTH_B  (11),
-            .DATA_WIDTH_B  (64),
-            .READ_LATENCY_B(2),
-            .INIT_FILE     ("NONE")
-        ) u_ram (
-            .clka (clk),
-            .wea  (wr_we_s),
-            .addra(wr_addr_s),
-            .dina (wr_din_s),
-            //
-            .clkb (clk_eth_xran),
-            .rstb (1'b0),
-            .enb  ({rd_en_s_d & ~out_stall, rd_en_s & ~out_stall}),
-            .addrb(rd_addr_s),
-            .doutb(rd_dout[cc])
-        );
-
-      end else begin : g_full
-
-        logic [12:0] wr_comp_addr;
-        logic        wr_comp_en;
-        logic [17:0] wr_iq_din;
-        logic [ 3:0] wr_exp_c;
-        logic [ 3:0] wr_exp_din;
-        logic [11:0] rd_comp_addr;
-        logic [35:0] rd_iq_data;
-        logic [ 7:0] rd_exp_data;
-        logic [15:0] rd_i0;
-        logic [15:0] rd_q0;
-        logic [15:0] rd_i1;
-        logic [15:0] rd_q1;
-
-        assign rd_pipe_en[cc] = rd_en_d[cc];
-
-        // The frequency converter places the occupied REs at the beginning of
-        // natural FFT order. Discard the unused tail and place the two banks
-        // in padded 3584-RE address ranges. The padding lets the read side use
-        // a 1792-word bank stride while retaining the exact 3.5-BRAM layout.
-        assign wr_comp_addr = (wr_bank[cc] ? 13'(FullNarrowBankDepth) : 13'd0) +
-            13'(wr_cnt_rev[cc]);
-        assign wr_comp_en = wr_we[cc] && (wr_cnt_rev[cc] < 12'(FullMaxRe));
-
-        assign rd_comp_addr = (rd_bank ? 12'(FullIqBankDepth) : 12'd0) + 12'(rd_cnt);
-
-        assign wr_exp_c = bfp9_re_exp(din_dr[cc], din_di[cc]);
-
-        always_ff @(posedge clk) begin
-          wr_exp_din <= wr_exp_c;
-          wr_iq_din <= {
-            bfp9_re_compress(din_di[cc], wr_exp_c), bfp9_re_compress(din_dr[cc], wr_exp_c)
-          };
-        end
-
-        // IQ RAM: 7168 x 18-bit write, 3584 x 36-bit read. The segmented
-        // wrapper maps this to three RAMB36 primitives and one RAMB18 tail.
-        puxch_iq_ram #(
-            .READ_LATENCY(2)
-        ) u_iq_ram (
-            .clka (clk),
-            .wea  (wr_comp_en),
-            .addra(wr_comp_addr),
-            .dina (wr_iq_din),
-            //
-            .clkb (clk_eth_xran),
-            .rstb (1'b0),
-            .enb  ({rd_en_d[cc] & ~out_stall, rd_en[cc] & ~out_stall}),
-            .addrb(rd_comp_addr),
-            .doutb(rd_iq_data)
-        );
-
-        // One exponent belongs to each complex RE. The asymmetric read port
-        // returns the two exponents corresponding to the 36-bit IQ word.
-        ram_sdp_asym #(
-            .ADDR_WIDTH_A  (13),
-            .DATA_WIDTH_A  (4),
-            .ADDR_WIDTH_B  (12),
-            .DATA_WIDTH_B  (8),
-            .READ_LATENCY_B(2),
-            .DEPTH         (FullNarrowDepth),
-            .INIT_FILE     ("NONE"),
-            .RAM_STYLE     ("BLOCK")
-        ) u_exp_ram (
-            .clka (clk),
-            .wea  (wr_comp_en),
-            .addra(wr_comp_addr),
-            .dina (wr_exp_din),
-            //
-            .clkb (clk_eth_xran),
-            .rstb (1'b0),
-            .enb  ({rd_en_d[cc] & ~out_stall, rd_en[cc] & ~out_stall}),
-            .addrb(rd_comp_addr),
-            .doutb(rd_exp_data)
-        );
-
-        always_comb begin
-          rd_i0 = bfp9_re_decompress(rd_iq_data[8:0], rd_exp_data[3:0]);
-          rd_q0 = bfp9_re_decompress(rd_iq_data[17:9], rd_exp_data[3:0]);
-          rd_i1 = bfp9_re_decompress(rd_iq_data[26:18], rd_exp_data[7:4]);
-          rd_q1 = bfp9_re_decompress(rd_iq_data[35:27], rd_exp_data[7:4]);
-          rd_dout[cc] = {rd_q1, rd_i1, rd_q0, rd_i0};
-        end
-
+      always_ff @(posedge clk) begin
+        wr_exp_din <= wr_exp_c;
+        wr_iq_din <= {
+          bfp9_re_compress(din_di[cc], wr_exp_c), bfp9_re_compress(din_dr[cc], wr_exp_c)
+        };
       end
+
+      // Full block maps to 3 RAMB36 + 1 RAMB18. Half block maps its two
+      // 1920-RE banks to one RAMB36 each.
+      puxch_iq_ram #(
+          .HALF_BLOCK  (HALF_BLOCK),
+          .READ_LATENCY(2)
+      ) u_iq_ram (
+          .clka (clk),
+          .wea  (wr_comp_en),
+          .addra(wr_comp_addr),
+          .dina (wr_iq_din),
+          //
+          .clkb (clk_eth_xran),
+          .rstb (1'b0),
+          .enb  ({rd_en_d[cc] & ~out_stall, rd_en[cc] & ~out_stall}),
+          .addrb(rd_comp_addr),
+          .doutb(rd_iq_data)
+      );
+
+      // One exponent belongs to each complex RE. The asymmetric read port
+      // returns the two exponents corresponding to the 36-bit IQ word.
+      ram_sdp_asym #(
+          .ADDR_WIDTH_A  (13),
+          .DATA_WIDTH_A  (4),
+          .ADDR_WIDTH_B  (12),
+          .DATA_WIDTH_B  (8),
+          .READ_LATENCY_B(2),
+          .DEPTH         (NarrowDepth),
+          .INIT_FILE     ("NONE"),
+          .RAM_STYLE     ("BLOCK")
+      ) u_exp_ram (
+          .clka (clk),
+          .wea  (wr_comp_en),
+          .addra(wr_comp_addr),
+          .dina (wr_exp_din),
+          //
+          .clkb (clk_eth_xran),
+          .rstb (1'b0),
+          .enb  ({rd_en_d[cc] & ~out_stall, rd_en[cc] & ~out_stall}),
+          .addrb(rd_comp_addr),
+          .doutb(rd_exp_data)
+      );
+
+      assign rd_dout[cc] = {20'b0, rd_exp_data, rd_iq_data};
     end
   endgenerate
 
@@ -466,16 +387,12 @@ module puxch_buffer #(
 
   assign fifo_req_ready = ~rd_busy;
 
-  generate
-    if (HALF_BLOCK == 0) begin : g_full_request_guard
-      assert property (@(posedge clk_eth_xran) disable iff (rst_eth_xran)
-                       !(fifo_req_valid && fifo_req_ready) ||
-                       (fifo_req_cc >= 4'(NUM_CC)) ||
-                       ((fifo_req_numprb != 0) &&
-                        (11'(fifo_req_startprb) + 11'(fifo_req_numprb) <= 11'(FullMaxPrb))))
-      else $error("[%m]: full-block request exceeds the %0d-PRB buffer.", FullMaxPrb);
-    end
-  endgenerate
+  assert property (@(posedge clk_eth_xran) disable iff (rst_eth_xran)
+                   !(fifo_req_valid && fifo_req_ready) ||
+                   (fifo_req_cc >= 4'(NUM_CC)) ||
+                   ((fifo_req_numprb != 0) &&
+                    (11'(fifo_req_startprb) + 11'(fifo_req_numprb) <= 11'(MaxPrb))))
+  else $error("[%m]: request exceeds the %0d-PRB buffer.", MaxPrb);
 
   // A read beat enters the RAM pipeline this cycle
   assign rd_issue = rd_busy && ~out_stall;
@@ -521,16 +438,10 @@ module puxch_buffer #(
 
   // Output
 
-  assign s0_axis_tdata = {
-    rd_data_c[55:48],  //  Q1[7:0]
-    rd_data_c[63:56],  //  Q1[15:8]
-    rd_data_c[39:32],  //  I1[7:0]
-    rd_data_c[47:40],  //  I1[15:8]
-    rd_data_c[23:16],  //  Q0[7:0]
-    rd_data_c[31:24],  //  Q0[15:8]
-    rd_data_c[7:0],  //  I0[7:0]
-    rd_data_c[15:8]  //  I0[15:8]
-  };
+  // Internal BFP9 stream consumed directly by bfp_comp in both modes:
+  // [43:40] exp1, [39:36] exp0, [35:27] Q1, [26:18] I1,
+  // [17:9] Q0, [8:0] I0.
+  assign s0_axis_tdata = rd_data_c;
 
   // The readout implements backpressure by freezing the whole read pipeline
   // instead of buffering into a deep FIFO. ram_out_v is the write strobe

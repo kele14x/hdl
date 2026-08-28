@@ -687,12 +687,12 @@ Main observed write-side behavior:
 - each CC keeps a write bank and write counter
 - bank toggling occurs on symbol boundaries
 - write addresses are bit-reversed before RAM storage
-- in full-block mode, each complex RE is internally compressed to a 9-bit I mantissa, a 9-bit Q mantissa, and a shared per-RE 4-bit exponent
-- the full-block IQ memory uses an 18-bit write port and a 36-bit read port, packing two compressed REs per framer-side address
-- full-block exponent storage uses a corresponding 4-bit write port and 8-bit read port
+- in both half- and full-block modes, each complex RE is internally compressed to a 9-bit I mantissa, a 9-bit Q mantissa, and a shared per-RE 4-bit exponent
+- the IQ memory uses an 18-bit write port and a 36-bit read port, packing two compressed REs per framer-side address
+- exponent storage uses a corresponding 4-bit write port and 8-bit read port
 - FFT bins above the 275-PRB full-block capacity are not written
 - the 3584x36 full-block IQ memory is segmented into three RAMB36-sized regions and one RAMB18-sized tail to avoid rounding the inferred memory up to four RAMB36 tiles
-- half-block mode retains the original raw 32-bit `{Q, I}` ping-pong RAM
+- half-block mode supports 160 PRBs (1920 REs) per ping/pong bank; its two 1920x18 IQ banks map to two RAMB36 primitives, while the combined 3840x4 exponent memory maps to one RAMB18 primitive
 
 This stage collects FFT-domain output into antenna-local storage so that the O-RAN framer can read requested PRB ranges later.
 
@@ -711,9 +711,7 @@ Observed read-side behavior from the RTL:
 - readout ends at `(start_prb + num_prb) * 6 - 1`
 - read data from the selected CC RAM is OR-combined onto one antenna-local output bus
 
-In full-block mode, the two compressed REs and their individual exponents are reconstructed to 16-bit IQ values after the RAM read. The emitted 64-bit stream then corresponds to two complex samples packed for framer-side transport. This internal BFP9 stage is lossy even when the final U-Plane compression is disabled.
-
-The output reorder logic explicitly swaps byte positions so the outgoing word order matches the expected framer-side format.
+In both modes, the buffer emits two compressed REs and their individual exponents in a 44-bit internal BFP9 payload. It does not reconstruct 16-bit IQ values after the RAM read.
 
 #### Stage 9: Stream pipeline and BFP compression
 
@@ -722,7 +720,9 @@ Still inside `puxch_buffer`, the raw readout stream passes through:
 - a small FWFT output FIFO (`fifo_srl`); downstream backpressure freezes the whole read pipeline instead of buffering into a deep FIFO (see KNOWN_ISSUES.md, section 5, for the long-backpressure limitation)
 - an output timing register stage `axis_reg`
 
-This produces one antenna-local stream `s0_axis_*` in the O-RAN clock domain.
+This produces one antenna-local internal-BFP9 stream `s0_axis_*` in the O-RAN clock domain.
+
+`bfp_comp` then finds the largest of the 12 per-RE exponents in each PRB and right-shifts the stored 9-bit mantissas directly to that shared exponent. This is bit-exact with the former decompress-to-16-bit then recompress path, but removes both wide arithmetic stages. Final BFP9 output is mandatory; the legacy compression-method and IQ-width controls remain only for register-map compatibility. `ctrl_fs_offset` still adjusts the reported exponent.
 
 Then `puxch_top` performs the final action per antenna:
 

@@ -20,7 +20,7 @@ import numpy as np
 import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, Combine, RisingEdge, Timer, with_timeout
-from puxch_reference import puxch_reference, raw_readout_words
+from puxch_reference import bfp9_readout_words, puxch_reference
 from puxch_test_utils import run_cocotb
 
 from hdl_tools.axi4lite import AxiLiteAgent, AxiLiteAgentConfig
@@ -108,9 +108,8 @@ async def _configure(axi: AxiLiteAgent):
     await axi.write(UL_RAT, NR_30_KHZ_ALL_CC)
     await axi.write(UL_BIST, 0)
     await axi.write(UL_BW, BW_100_MHZ_ALL_CC)
-    # Disable the final BFP compression (comp_meth = 0) so the checker can
-    # compare all raw IQ values directly: in passthrough mode bfp_comp is a
-    # net identity on the data.  The bfp_comp block has its own cocotb suite.
+    # BFP9 output is mandatory. Keep the legacy comp_meth field at zero to
+    # verify that it no longer enables a raw-data bypass.
     await axi.write(UL_UD, 0x090)
 
     for cc in range(NUM_CC):
@@ -355,17 +354,16 @@ async def test_puxch_end_to_end_data_path(dut):
             frame = await _receive_request(
                 sinks[antenna], dut, antenna, start_prb, num_prb
             )
-            expected = raw_readout_words(
+            expected, expected_keep = bfp9_readout_words(
                 reference,
                 start_prb=start_prb,
                 num_prb=num_prb,
-                internal_bfp9=True,
             )
-            assert len(frame) == num_prb * 6
-            assert [beat.keep for beat in frame] == [0xFF] * len(frame)
+            assert len(frame) == len(expected)
+            assert [beat.keep for beat in frame] == expected_keep
             assert [beat.last for beat in frame] == [False] * (len(frame) - 1) + [True]
             assert [beat.data for beat in frame] == expected, (
-                f"raw PUXCH mismatch for carrier {TEST_CC}, antenna {antenna}, "
+                f"BFP9 PUXCH mismatch for carrier {TEST_CC}, antenna {antenna}, "
                 f"PRBs {start_prb}:{start_prb + num_prb}"
             )
             await ClockCycles(dut.clk_eth_xran, 32)

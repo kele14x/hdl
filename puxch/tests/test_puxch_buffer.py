@@ -11,13 +11,7 @@ from puxch_test_utils import run_cocotb, sample_after_rising
 NUM_CC = 2
 BUFFER_ID = 2
 FFT_SAMPLES = 1024
-EXPECTED_WORD = 0xCDAB3412CDAB3412
 HALF_BLOCK = int(os.environ.get("HALF_BLOCK", "0"))
-
-
-def _signed(value, width):
-    value &= (1 << width) - 1
-    return value - (1 << width) if value & (1 << (width - 1)) else value
 
 
 def _msb_position(value):
@@ -28,37 +22,30 @@ def _msb_position(value):
     return 0
 
 
-def _internal_bfp9_roundtrip(real, imag):
+def _internal_bfp9(real, imag):
     msb = max(_msb_position(real), _msb_position(imag))
     shift = min(15 - msb, 7)
     exponent = 15 - shift
 
-    def roundtrip_component(value):
+    def compress_component(value):
         rounded = ((value & 0xFFFF) << shift) & 0xFFFF
         rounded |= 0x003F
         if rounded != 0x7FFF:
             rounded = (rounded + 1) & 0xFFFF
-        mantissa = _signed(rounded >> 7, 9)
-        return (mantissa << (exponent - 8)) & 0xFFFF
+        return (rounded >> 7) & 0x1FF
 
-    return roundtrip_component(real), roundtrip_component(imag)
+    return compress_component(real), compress_component(imag), exponent
 
 
-def _network_iq_word(real, imag):
-    lane = (
-        ((real >> 8) & 0xFF)
-        | ((real & 0xFF) << 8)
-        | (((imag >> 8) & 0xFF) << 16)
-        | ((imag & 0xFF) << 24)
-    )
-    return lane | (lane << 32)
+def _packed_bfp9_word(real, imag):
+    real_m, imag_m, exponent = _internal_bfp9(real, imag)
+    iq = real_m | (imag_m << 9) | (real_m << 18) | (imag_m << 27)
+    exponents = exponent | (exponent << 4)
+    return iq | (exponents << 36)
 
 
 def expected_word():
-    if HALF_BLOCK:
-        return EXPECTED_WORD
-    real, imag = _internal_bfp9_roundtrip(0x1234, 0xABCD)
-    return _network_iq_word(real, imag)
+    return _packed_bfp9_word(0x1234, 0xABCD)
 
 
 async def reset_dut(dut):
@@ -248,36 +235,35 @@ async def test_buffer_read_stall_and_toggle_tready(dut):
 
 
 @cocotb.test()
-async def test_full_block_last_prb_in_second_bank(dut):
-    if HALF_BLOCK:
-        return
-
+async def test_last_prb_in_second_bank(dut):
     cocotb.start_soon(Clock(dut.clk, 2, unit="ns").start())
     cocotb.start_soon(Clock(dut.clk_eth_xran, 3, unit="ns").start())
     await reset_dut(dut)
 
-    dut.ctrl_bw[1].value = 4
+    max_prb = 160 if HALF_BLOCK else 275
+    samples = 2048 if HALF_BLOCK else 4096
+    dut.ctrl_rat[1].value = 1 if HALF_BLOCK else 2
+    dut.ctrl_bw[1].value = 0 if HALF_BLOCK else 4
     await fill_cc1_symbol(
         dut,
         first_symbol=True,
         real=0x1111,
         imag=0xEEEE,
-        samples=4096,
+        samples=samples,
     )
     await fill_cc1_symbol(
         dut,
         first_symbol=False,
         real=0x0183,
         imag=0xF234,
-        samples=4096,
+        samples=samples,
     )
 
     dut.s_ul_sym_num[1].value = 1
     dut.m_axis_tready.value = 1
-    words = await request_words(dut, start_prb=274, num_prb=1)
+    words = await request_words(dut, start_prb=max_prb - 1, num_prb=1)
 
-    real, imag = _internal_bfp9_roundtrip(0x0183, 0xF234)
-    expected = _network_iq_word(real, imag)
+    expected = _packed_bfp9_word(0x0183, 0xF234)
     assert len(words) == 6
     assert [word[0] for word in words] == [expected] * 6
     assert [word[1] for word in words] == [0xFF] * 6
