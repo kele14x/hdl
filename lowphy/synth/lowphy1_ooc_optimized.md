@@ -1,8 +1,8 @@
 # lowphy1 Vivado OOC result after mandatory PUXCH BFP9 optimization
 
 - Date: 2026-08-28
-- Repository HEAD: `d975c3b` plus the uncommitted half-block/direct-merger changes
-- Comparison baseline: `master` HEAD `78ea372` and its saved 2026-08-24 OOC report
+- Design revision: local `master` through `2d78597` (`optimize puxch bfp9 path`)
+- Comparison baseline: previous `master` HEAD `78ea372` and its saved 2026-08-24 OOC report
 - Tool: Vivado 2026.1, build 6511674
 - Top: `lowphy1_wrapper`
 - Device: `xcku5p-ffvb676-2-i`
