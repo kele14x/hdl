@@ -3,7 +3,6 @@
 ../cdc/cdc.flt
 ../common/common.flt
 ../mult/mult.flt
-../bfp_comp/bfp_comp.flt
 ../dds_lut/dds_lut.flt
 ../fifo_srl/fifo_srl.flt
 ../axis_reg/axis_reg.flt
@@ -13,6 +12,7 @@
 ../fft/fft.flt
 ../phase_comp/phase_comp.flt
 rtl/puxch.sv
+rtl/puxch_bfp_comp.sv
 rtl/puxch_buffer.sv
 rtl/puxch_iq_ram.sv
 rtl/puxch_channel.sv

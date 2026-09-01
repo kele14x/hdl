@@ -8,7 +8,7 @@
 //   [17:9] Q0, [8:0] I0.
 // Output compression is mandatory; the legacy method and IQ-width controls
 // remain in the interface only for register-map compatibility.
-module bfp_comp #(
+module puxch_bfp_comp #(
     parameter int BYTE_REVERSE = 1,
     parameter int USER_WIDTH   = 32
 ) (
@@ -71,7 +71,9 @@ module bfp_comp #(
   wire [3:0] completed_exp = (input_state == 0 || input_pair_exp >= input_max_exp) ?
       input_pair_exp : input_max_exp;
   wire input_prb_complete = s_axis_tvalid && (input_state == 5);
-  wire [7:0] unused_legacy_control = s_axis_tkeep ^ {ctrl_ud_comp_meth, ctrl_ud_iq_width};
+  wire [35:0] unused_legacy_control = {
+    s_axis_tdata[63:44], s_axis_tkeep, ctrl_ud_comp_meth, ctrl_ud_iq_width
+  };
 
   initial begin : drc_check
     assert (USER_WIDTH >= 1)
@@ -102,7 +104,7 @@ module bfp_comp #(
     logic signed [10:0] value;
 
     shift = target_exp - source_exp;
-    value = $signed(mantissa);
+    value = {{2{mantissa[8]}}, mantissa};
     if (shift != 0) begin
       value = value + (11'sd1 <<< (shift - 1'b1));
       value = value >>> shift;

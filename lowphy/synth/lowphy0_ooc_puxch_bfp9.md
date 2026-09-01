@@ -55,7 +55,7 @@ use 12 `RAMB36E2` plus 3 `RAMB18E2`, or 13.5 BRAM tiles per antenna.
 ## Direct per-RE exponent merger
 
 `puxch_buffer` now sends the stored 9+9-bit mantissas and per-RE exponents
-directly to `bfp_comp`. The latter selects the maximum exponent for each PRB
+directly to `puxch_bfp_comp`. The latter selects the maximum exponent for each PRB
 and aligns the 9-bit mantissas without reconstructing 16-bit IQ first. Against
 the immediately preceding decompress/recompress OOC run:
 
@@ -63,10 +63,10 @@ the immediately preceding decompress/recompress OOC run:
 | --- | ---: | ---: | ---: |
 | PUXCH CLB LUTs | 18,681 | 16,603 | -2,078 (-11.12%) |
 | PUXCH FFs | 18,092 | 15,044 | -3,048 (-16.85%) |
-| One `bfp_comp` LUTs | 608 | 438 | -170 (-27.96%) |
-| One `bfp_comp` FFs | 993 | 271 | -722 (-72.71%) |
+| One `puxch_bfp_comp` LUTs | 608 | 438 | -170 (-27.96%) |
+| One `puxch_bfp_comp` FFs | 993 | 271 | -722 (-72.71%) |
 
-Each direct `bfp_comp` uses 406 logic LUTs plus 32 LUTRAMs for its six-beat
+Each direct `puxch_bfp_comp` uses 406 logic LUTs plus 32 LUTRAMs for its six-beat
 PRB cache. The old block used 607 logic LUTs and no LUTRAMs.
 
 ## `lowphy0_wrapper` total

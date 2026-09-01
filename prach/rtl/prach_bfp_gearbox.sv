@@ -146,7 +146,8 @@ module prach_bfp_gearbox #(
   end
 
   // The input words use the same 0..11 count and residue handling as the r6
-  // stage in bfp_comp. The seven output words therefore match W0..W6 exactly.
+  // stage in the BFP compression path. The seven output words therefore match
+  // W0..W6 exactly.
   always_ff @(posedge clk) begin
     if (rst || start) begin
       t6_cnt <= '0;

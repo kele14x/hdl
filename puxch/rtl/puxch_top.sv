@@ -174,9 +174,9 @@ module puxch_top #(
           .ctrl_bw        (ctrl_bw)
       );
 
-      bfp_comp #(
+      puxch_bfp_comp #(
           .BYTE_REVERSE(1)
-      ) u_bfp_comp (
+      ) u_puxch_bfp_comp (
           .clk              (clk_eth_xran),
           .rst              (rst_eth_xran),
           //

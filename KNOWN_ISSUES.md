@@ -63,7 +63,6 @@ AGENTS.md requires the language-agnostic `sources=` argument. `axis_reg` and
 `skid_buffer` are clean; the following 17 test files still pass
 `verilog_sources=` to `runner.build()` and each emits a `DeprecationWarning`:
 
-- bfp_comp/tests/test_bfp_comp.py
 - cdc/tests/test_cdc.py
 - cdc/tests/test_cdc_handshake_corner.py
 - cdc/tests/test_cdc_pulse_reset_corner.py

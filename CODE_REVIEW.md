@@ -44,7 +44,7 @@ assertions). No X-assignments, latches, or combinational loops found.
    `common/tests/libbfp.py` (4).
 
 6. Deprecated/banned cocotb API beyond the documented `verilog_sources=`:
-   - 6 files use `units=` instead of `unit=` (coe, power_meter, bfp_comp,
+   - 5 files use `units=` instead of `unit=` (coe, power_meter,
      pdxch_fdv_buffer_write, ecpri x2).
    - 20 files use `FallingEdge` / `ReadOnly` / `ReadWrite` (banned) — ram x8,
      axi4l_bram, ecpri_framer_trans, eth_pkt_fifo, fft x2, pps_top x2,
@@ -70,7 +70,7 @@ assertions). No X-assignments, latches, or combinational loops found.
 9. Build-dir conventions:
    - `puxch` / `lowphy` build into `sim_build/<SIM>/<...>` vs the
      `sim_build/<case>/` convention.
-   - Several runners (mixer, ecpri, timer, nco, bfp_comp, power_meter,
+   - Several runners (mixer, ecpri, timer, nco, power_meter,
      pulse_delay, phase_comp, coe, fh) omit `build_dir` / `test_dir` entirely.
 
 10. `fh/fh.flt` references `../ecpri/rtl/ecpri_pkg.sv` directly instead of the

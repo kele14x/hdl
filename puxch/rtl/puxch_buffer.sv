@@ -438,7 +438,7 @@ module puxch_buffer #(
 
   // Output
 
-  // Internal BFP9 stream consumed directly by bfp_comp in both modes:
+  // Internal BFP9 stream consumed directly by puxch_bfp_comp in both modes:
   // [43:40] exp1, [39:36] exp0, [35:27] Q1, [26:18] I1,
   // [17:9] Q0, [8:0] I0.
   assign s0_axis_tdata = rd_data_c;

@@ -281,7 +281,7 @@ async def test_puxch_end_to_end_data_path(dut):
                     timeout_cycles=10000,
                     role=AxisRole.SINK,
                 ),
-                # bfp_comp cannot be backpressured, so the framer stream must
+                # puxch_bfp_comp cannot be backpressured, so the framer stream must
                 # stay always-ready; the buffer's hold-under-backpressure
                 # behavior is covered by test_puxch_buffer instead.
             )

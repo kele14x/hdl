@@ -186,9 +186,9 @@ async def checker():
 
 
 @cocotb.test()
-async def test_bfp_comp_top(dut):
+async def test_puxch_bfp_comp_top(dut):
     # Generate clocks
-    cocotb.start_soon(Clock(dut.clk, period=10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk, period=10, unit="ns").start())
     # Reset DUT
     await reset(dut)
 
@@ -204,11 +204,12 @@ async def test_bfp_comp_top(dut):
     await ClockCycles(dut.clk, 100)
 
 
-def test_bfp_comp_runner():
-    hdl_toplevel = "bfp_comp"
+def test_puxch_bfp_comp_runner():
+    hdl_toplevel = "puxch_bfp_comp"
     hdl_toplevel_lang = "verilog"
 
-    sources = resolve_flt(prj_path / "bfp_comp.flt")
+    sources = resolve_flt(prj_path / "puxch.flt")
+    build_dir = prj_path / "sim_build" / SIM / Path(__file__).stem
 
     parameters = {"USER_WIDTH": USER_WIDTH}
 
@@ -218,6 +219,7 @@ def test_bfp_comp_runner():
         sources=sources,
         parameters=parameters,
         build_args=["-suppress", "2892"] if SIM == "questa" else [],
+        build_dir=build_dir,
         waves=True,
         always=True,
     )
@@ -225,8 +227,9 @@ def test_bfp_comp_runner():
     runner.test(
         hdl_toplevel=hdl_toplevel,
         hdl_toplevel_lang=hdl_toplevel_lang,
-        test_module="test_bfp_comp",
+        test_module="test_puxch_bfp_comp",
         test_args=["-suppress", "7061"] if SIM == "questa" else [],
+        test_dir=build_dir,
         waves=True,
         gui=False,
     )

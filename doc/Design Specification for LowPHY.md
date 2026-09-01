@@ -722,11 +722,11 @@ Still inside `puxch_buffer`, the raw readout stream passes through:
 
 This produces one antenna-local internal-BFP9 stream `s0_axis_*` in the O-RAN clock domain.
 
-`bfp_comp` then finds the largest of the 12 per-RE exponents in each PRB and right-shifts the stored 9-bit mantissas directly to that shared exponent. This is bit-exact with the former decompress-to-16-bit then recompress path, but removes both wide arithmetic stages. Final BFP9 output is mandatory; the legacy compression-method and IQ-width controls remain only for register-map compatibility. `ctrl_fs_offset` still adjusts the reported exponent.
+`puxch_bfp_comp` then finds the largest of the 12 per-RE exponents in each PRB and right-shifts the stored 9-bit mantissas directly to that shared exponent. This is bit-exact with the former decompress-to-16-bit then recompress path, but removes both wide arithmetic stages. Final BFP9 output is mandatory; the legacy compression-method and IQ-width controls remain only for register-map compatibility. `ctrl_fs_offset` still adjusts the reported exponent.
 
 Then `puxch_top` performs the final action per antenna:
 
-- `bfp_comp` compresses the 64-bit stream using `ctrl_ud_comp_meth`, `ctrl_ud_iq_width`, and `ctrl_fs_offset`; with compression disabled (`ctrl_ud_comp_meth != 1`) the data passes through unchanged apart from added latency
+- `puxch_bfp_comp` compresses the 64-bit stream using `ctrl_ud_comp_meth`, `ctrl_ud_iq_width`, and `ctrl_fs_offset`; with compression disabled (`ctrl_ud_comp_meth != 1`) the data passes through unchanged apart from added latency
 
 This stage forms the final U-Plane payload forwarded toward the framer.
 
