@@ -1,4 +1,4 @@
-# Vivado 2026.1 out-of-context synthesis for the full-block PUXCH BFP9 buffer.
+# Out-of-context synthesis for the full-block PUXCH BFP9 buffer.
 
 set repo_root [file normalize [file join [file dirname [info script]] .. ..]]
 set build_dir [file normalize [file join $repo_root sim_build vivado_ooc_lowphy0_puxch_bfp9_20260827]]

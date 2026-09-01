@@ -1,7 +1,7 @@
 # lowphy0 Vivado OOC resource result after PDXCH FDV optimization
 
 - Date: 2026-08-24 (re-verified at `a2ef997` baseline, OOC 20260824)
-- Tool: Vivado 2026.1, build 6511674
+- Tool: Vivado (single consistent release for this comparison)
 - Top: `lowphy0_wrapper`
 - Device: `xcku5p-ffvb676-2-i`
 - RAM implementation: `RAM_USE_XPM`

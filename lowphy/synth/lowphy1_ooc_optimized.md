@@ -3,7 +3,7 @@
 - Date: 2026-08-28
 - Design revision: local `master` through `2d78597` (`optimize puxch bfp9 path`)
 - Comparison baseline: previous `master` HEAD `78ea372` and its saved 2026-08-24 OOC report
-- Tool: Vivado 2026.1, build 6511674
+- Tool: Vivado (single consistent release for this comparison)
 - Top: `lowphy1_wrapper`
 - Device: `xcku5p-ffvb676-2-i`
 - RAM implementation: `RAM_USE_XPM`

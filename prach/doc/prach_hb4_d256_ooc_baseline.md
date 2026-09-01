@@ -8,7 +8,7 @@ script and synthesis options for all before/after comparisons.
 ## Configuration
 
 - Date: 2026-08-08
-- Tool: Vivado 2026.1, build 6511674
+- Tool: Vivado (single consistent release for each comparison)
 - Device: `xcku5p-ffva676-2-i`
 - Top: `prach_hb4`
 - Parameter: `DELAY_BASE=256`
@@ -140,7 +140,7 @@ until enough new valid events have been written.
 
 ## OOC comparison after optimization
 
-The optimized result uses the same Vivado version, part, OOC mode, and
+The optimized result uses the same Vivado release, part, OOC mode, and
 `-flatten_hierarchy none` setting as the baseline.
 
 | Resource | Original `prach_hb4` | Sparse event history | Change |
@@ -174,7 +174,7 @@ the clock interval between those events. The isolated result below predates
 the small output-valid phase gate described above; the final integrated
 resource result is recorded in the next section.
 
-The D128 comparison also uses Vivado 2026.1, the same part, OOC mode, and
+The D128 comparison also uses the same Vivado release, the same part, OOC mode, and
 `-flatten_hierarchy none`:
 
 | Resource | Original D128 | Sparse D128 | Change |
@@ -208,7 +208,7 @@ in `prach_ddc` continue to instantiate the public `prach_hb4` module name.
 
 ## Complete `prach_channel` OOC comparison
 
-The complete before/after synthesis uses Vivado 2026.1, device
+The complete before/after synthesis uses the same Vivado release, device
 `xcku5p-ffva676-2-i`, OOC mode, and `-flatten_hierarchy none`. The baseline
 uses the original clock-delay implementation for both stages; the optimized
 build uses the sparse event-history implementation for both stages. The

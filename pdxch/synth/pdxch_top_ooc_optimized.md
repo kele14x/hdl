@@ -1,7 +1,7 @@
 # PDXCH mandatory-BFP Vivado OOC resource result
 
 - Date: 2026-08-06
-- Tool: Vivado 2026.1, build 6511674
+- Tool: Vivado (single consistent release for this comparison)
 - Top: `pdxch_top`
 - Device: `xcku5p-ffvb676-2-i`
 - Parameters: `NUM_CC=3`, `NUM_ANT=4`, `HALF_BLOCK=0`

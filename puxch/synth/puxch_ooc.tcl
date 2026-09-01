@@ -1,14 +1,14 @@
-# Out-of-context synthesis for the mandatory-BFP PDXCH wrapper.
+# Out-of-context synthesis for the mandatory-BFP PUXCH wrapper.
 #
 # Parameter overrides (defaults = max spec, full block + 4k FFT):
 #   tclargs: <half_block> <half_fft>
-#   half_block=0/1 -> fdv_buffer IQ depth full/half
+#   half_block=0/1 -> puxch_buffer IQ depth full/half
 #   half_fft=0/1   -> FFT 4k/2k
 
 set script_dir [file dirname [file normalize [info script]]]
 set repo_root [file normalize [file join $script_dir .. ..]]
 set part xcku5p-ffvb676-2-i
-set top pdxch
+set top puxch
 
 # Parameter override via -tclargs (default 0 0 = max spec)
 if {[llength $argv] > 2} {
@@ -30,9 +30,9 @@ if {![string is integer -strict $half_block] || ($half_block != 0 && $half_block
 if {![string is integer -strict $half_fft] || ($half_fft != 0 && $half_fft != 1)} {
   error "HALF_FFT must be 0 or 1"
 }
-puts "INFO: pdxch OOC params: HALF_BLOCK=$half_block HALF_FFT=$half_fft"
-set build_dir [file normalize [file join $repo_root pdxch vivado_ooc \
-    pdxch_20260901_hb${half_block}_hf${half_fft}]]
+puts "INFO: puxch OOC params: HALF_BLOCK=$half_block HALF_FFT=$half_fft"
+set build_dir [file normalize [file join $repo_root puxch vivado_ooc \
+    puxch_20260901_hb${half_block}_hf${half_fft}]]
 
 file mkdir $build_dir
 cd $build_dir
@@ -72,7 +72,7 @@ proc add_flt {path} {
   }
 }
 
-add_flt [file join $repo_root pdxch pdxch.flt]
+add_flt [file join $repo_root puxch puxch.flt]
 puts "INFO: resolved [llength $sources] unique RTL sources"
 foreach source $sources {
   puts "INFO: source $source"
@@ -80,17 +80,17 @@ foreach source $sources {
 
 read_verilog -sv {*}$sources
 
-# OOC clock constraints: clk 491.52 MHz, clk_eth_xran 400 MHz
-read_xdc -mode out_of_context [file join $script_dir pdxch_top_ooc.xdc]
+# OOC clock constraints: s_axi_aclk 100 MHz, clk 491.52 MHz, clk_eth_xran 400 MHz
+read_xdc -mode out_of_context [file join $script_dir puxch_ooc.xdc]
 
 synth_design -top $top -part $part -mode out_of_context -flatten_hierarchy rebuilt \
     -verilog_define {RAM_USE_XPM} \
     -generic HALF_BLOCK=$half_block -generic HALF_FFT=$half_fft
 
-report_utilization -file [file join $build_dir pdxch_utilization.rpt]
-report_utilization -hierarchical -file [file join $build_dir pdxch_utilization_hierarchical.rpt]
-report_timing_summary -file [file join $build_dir pdxch_timing_summary.rpt]
-write_checkpoint -force [file join $build_dir pdxch_ooc.dcp]
+report_utilization -file [file join $build_dir puxch_utilization.rpt]
+report_utilization -hierarchical -file [file join $build_dir puxch_utilization_hierarchical.rpt]
+report_timing_summary -file [file join $build_dir puxch_timing_summary.rpt]
+write_checkpoint -force [file join $build_dir puxch_ooc.dcp]
 
-puts "INFO: pdxch OOC synthesis completed"
-puts "INFO: utilization report: [file join $build_dir pdxch_utilization.rpt]"
+puts "INFO: puxch OOC synthesis completed"
+puts "INFO: utilization report: [file join $build_dir puxch_utilization.rpt]"

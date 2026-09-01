@@ -14,6 +14,9 @@ __pycache__/
 sim_build/
 results.xml
 
+# Vivado OOC runs (per-module)
+**/vivado_ooc/
+
 # Questa
 modelsim.ini
 transcript

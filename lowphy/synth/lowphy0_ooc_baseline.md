@@ -1,7 +1,7 @@
 # lowphy0 Vivado OOC resource baseline
 
 - Date: 2026-08-05
-- Tool: Vivado 2026.1, build 6511674
+- Tool: Vivado (single consistent release for this comparison)
 - Top: `lowphy0_wrapper`
 - RTL list: `lowphy/lowphy.flt` (91 unique RTL sources)
 - Parameters: `lowphy0` with `NUM_CC=3`, `NUM_ANT=4`, `HAS_BFP=1`, `HALF_BLOCK=0`

@@ -1,9 +1,10 @@
-# Vivado 2026.1 out-of-context synthesis for the HALF_BLOCK=1 lowphy variant.
+# Out-of-context synthesis for the HALF_BLOCK=1 lowphy variant.
 # The lowphy1 RTL fixes HALF_BLOCK to 1 and is used to check the reduced-depth
 # FDV buffer configuration on the same KU5P comparison device as lowphy0.
 
-set repo_root [file normalize [file join [file dirname [info script]] .. ..]]
-set build_dir [file normalize [file join $repo_root sim_build vivado_ooc_lowphy1_20260806]]
+set script_dir [file dirname [file normalize [info script]]]
+set repo_root [file normalize [file join $script_dir .. ..]]
+set build_dir [file normalize [file join $repo_root lowphy vivado_ooc lowphy1_20260901]]
 set part xcku5p-ffvb676-2-i
 set top lowphy1_wrapper
 
@@ -52,6 +53,10 @@ foreach source $sources {
 }
 
 read_verilog -sv {*}$sources
+
+# OOC clock constraints: s_axi_aclk 100 MHz, clk 491.52 MHz, internal_bus_clk 400 MHz
+read_xdc -mode out_of_context [file join $script_dir lowphy1_ooc.xdc]
+
 synth_design -top $top -part $part -mode out_of_context -flatten_hierarchy rebuilt \
     -verilog_define {RAM_USE_XPM}
 

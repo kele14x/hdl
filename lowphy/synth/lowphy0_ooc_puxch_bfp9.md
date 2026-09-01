@@ -2,7 +2,7 @@
 
 - Date: 2026-08-28
 - Repository HEAD: `d975c3b` plus the uncommitted direct-merger changes
-- Tool: Vivado 2026.1, build 6511674
+- Tool: Vivado (single consistent release for this comparison)
 - Top: `lowphy0_wrapper`
 - Configuration: `NUM_CC=3`, `NUM_ANT=4`, `HALF_BLOCK=0`
 - Device: `xcku5p-ffvb676-2-i`

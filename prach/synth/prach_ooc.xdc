@@ -1,5 +1,5 @@
-# Out-of-context clock constraints for pdxch (tool-version agnostic)
-#   pdxch wrapper: AXI/CSR (s_axi_aclk) + radio (clk) + O-RAN (clk_eth_xran)
+# Out-of-context clock constraints for prach (tool-version agnostic)
+#   prach wrapper: AXI/CSR (s_axi_aclk) + radio (clk) + O-RAN (clk_eth_xran)
 #   s_axi_aclk    100.00 MHz  -> period 10.000000 ns (AXI4-Lite / CSR, feeds ctrl_clk)
 #   clk           491.52 MHz  -> period 2.034505 ns  (radio/FFT domain)
 #   clk_eth_xran  400.00 MHz  -> period 2.500000 ns  (O-RAN eCPRI domain)
