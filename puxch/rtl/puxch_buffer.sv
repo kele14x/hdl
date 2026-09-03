@@ -107,6 +107,11 @@ module puxch_buffer #(
   localparam int IqBankDepth = NarrowBankDepth / 2;
   localparam int NarrowDepth = NarrowBankDepth * 2;
 
+  // The exponent RAM holds NarrowDepth 4-bit words read back as NarrowBankDepth
+  // 8-bit words, so its address ports are exactly that wide.
+  localparam int ExpAddrWidthA = $clog2(NarrowDepth);
+  localparam int ExpAddrWidthB = $clog2(NarrowBankDepth);
+
   // Small output FIFO replacing the store-and-forward packet FIFO. The read
   // pipeline has 3 cycles of latency from issue to FIFO write, so the stall
   // threshold must keep at least 3 words of headroom.
@@ -325,9 +330,9 @@ module puxch_buffer #(
       // One exponent belongs to each complex RE. The asymmetric read port
       // returns the two exponents corresponding to the 36-bit IQ word.
       ram_sdp_asym #(
-          .ADDR_WIDTH_A  (13),
+          .ADDR_WIDTH_A  (ExpAddrWidthA),
           .DATA_WIDTH_A  (4),
-          .ADDR_WIDTH_B  (12),
+          .ADDR_WIDTH_B  (ExpAddrWidthB),
           .DATA_WIDTH_B  (8),
           .READ_LATENCY_B(2),
           .DEPTH         (NarrowDepth),
@@ -336,13 +341,13 @@ module puxch_buffer #(
       ) u_exp_ram (
           .clka (clk),
           .wea  (wr_comp_en),
-          .addra(wr_comp_addr),
+          .addra(wr_comp_addr[ExpAddrWidthA-1:0]),
           .dina (wr_exp_din),
           //
           .clkb (clk_eth_xran),
           .rstb (1'b0),
           .enb  ({rd_en_d[cc] & ~out_stall, rd_en[cc] & ~out_stall}),
-          .addrb(rd_comp_addr),
+          .addrb(rd_comp_addr[ExpAddrWidthB-1:0]),
           .doutb(rd_exp_data)
       );
 
