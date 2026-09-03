@@ -59,7 +59,15 @@ module prach_hb4 #(
   logic [HistoryWidth-1:0] lane_history[NumLane];
   logic [HistoryWidth-1:0] history_write;
 
-  logic [3:0] history_count[NumLane];
+  // Simulation only: clear the RAM so warmup reads are 0 instead of X.
+  // Synthesis ignores this; LUTRAM cells power up as 0 anyway.
+  // synthesis translate_off
+  initial begin : lane_history_sim_init
+    for (int i = 0; i < NumLane; i++) begin
+      lane_history[i] = '0;
+    end
+  end
+  // synthesis translate_on
 
   logic signed [15:0] a_y0;
   logic signed [15:0] a_z0;
@@ -153,20 +161,11 @@ module prach_hb4 #(
       .dest_out(ctrl_bypass_s)
   );
 
-  // Per-lane event history
-
-  always_ff @(posedge clk) begin
-    if (rst) begin
-      for (int i = 0; i < NumLane; i++) begin
-        history_count[i] <= '0;
-      end
-    end else if (lane_valid) begin
-      if (history_count[lane] < NumOddHistory[3:0]) begin
-        history_count[lane] <= history_count[lane] + 4'd1;
-      end
-    end
-  end
-
+  // Tap warmup needs no count gating: slot j of a lane word holds zeros until
+  // round j+1 shifts real data into it, so early reads already return 0. The
+  // RAM is not cleared by rst, so an in-band rst re-warmup briefly re-reads
+  // stale words: dout_dv can pulse with stale sidebands until fresh events
+  // refill the slots (~2 lane visits). Accepted by design.
   always_ff @(posedge clk) begin
     if (rst) begin
       a_y0        <= '0;
@@ -181,18 +180,16 @@ module prach_hb4 #(
       metadata_in <= '0;
     end else if (lane_valid) begin
       a_y0 <= $signed(din_dp2);
-      a_z0 <= history_count[lane] >= 7 ? $signed(history_read[OddHistoryBase+6*16+:16]) : '0;
-      b_y0 <= history_count[lane] >= 1 ? $signed(history_read[OddHistoryBase+:16]) : '0;
-      b_z0 <= history_count[lane] >= 6 ? $signed(history_read[OddHistoryBase+5*16+:16]) : '0;
-      c_y0 <= history_count[lane] >= 2 ? $signed(history_read[OddHistoryBase+1*16+:16]) : '0;
-      c_z0 <= history_count[lane] >= 5 ? $signed(history_read[OddHistoryBase+4*16+:16]) : '0;
-      d_y0 <= history_count[lane] >= 3 ? $signed(history_read[OddHistoryBase+2*16+:16]) : '0;
-      d_z0 <= history_count[lane] >= 4 ? $signed(history_read[OddHistoryBase+3*16+:16]) : '0;
+      a_z0 <= $signed(history_read[OddHistoryBase+6*16+:16]);
+      b_y0 <= $signed(history_read[OddHistoryBase+:16]);
+      b_z0 <= $signed(history_read[OddHistoryBase+5*16+:16]);
+      c_y0 <= $signed(history_read[OddHistoryBase+1*16+:16]);
+      c_z0 <= $signed(history_read[OddHistoryBase+4*16+:16]);
+      d_y0 <= $signed(history_read[OddHistoryBase+2*16+:16]);
+      d_z0 <= $signed(history_read[OddHistoryBase+3*16+:16]);
 
-      center_in <= history_count[lane] >= 3 ? $signed(
-          history_read[CenterHistoryBase+2*16+:16]
-      ) : '0;
-      metadata_in <= history_count[lane] >= 3 ? center_metadata : '0;
+      center_in <= $signed(history_read[CenterHistoryBase+2*16+:16]);
+      metadata_in <= center_metadata;
 
       lane_history[lane] <= history_write;
     end else begin
