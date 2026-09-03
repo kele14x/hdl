@@ -6,7 +6,12 @@ no surviving `sim_build/` reports — so **Phase 0 is a blocking measurement
 step**. Do not skip it: two of the three findings below are unverified
 inferences, and one of them may be worth 7x more than the other two combined.
 
-Baseline revision: `d3f9f62` (`update lowphy1 ooc result`).
+Baseline revision: `ceb4a0e` (`default pdxch/puxch half block/fft to 0`).
+
+That commit changed only the `HALF_BLOCK`/`HALF_FFT` *defaults* inside
+`pdxch.sv` and `puxch.sv`. `lowphy1.sv:909/1179/1449` still passes them
+explicitly (band 0 `HALF_FFT=0`, bands 1 and 2 `HALF_FFT=1`), so the per-band
+FFT sizes and delay depths derived in section 3.1 are unaffected.
 
 ## Contents
 
@@ -68,14 +73,28 @@ event-history scheme already proven in `prach_hb4` (~4-5k).
 Existing OOC entry points:
 
 ```text
-lowphy/synth/lowphy1_ooc.tcl   -> sim_build/vivado_ooc_lowphy1_20260806/
-lowphy/synth/lowphy0_ooc.tcl   -> sim_build/vivado_ooc_lowphy0_.../
+lowphy/synth/lowphy1_ooc.tcl + lowphy1_ooc.xdc -> lowphy/vivado_ooc/lowphy1_20260901/
+lowphy/synth/lowphy0_ooc.tcl + lowphy0_ooc.xdc -> lowphy/vivado_ooc/lowphy0_.../
 ```
 
 Both use `synth_design -mode out_of_context -flatten_hierarchy rebuilt
 -verilog_define {RAM_USE_XPM}`. Keep every option identical across
 before/after runs. `-flatten_hierarchy rebuilt` preserves hierarchy, so
 per-instance queries work.
+
+Since `c010681` the scripts also `read_xdc -mode out_of_context`, so **OOC
+synthesis is now clock-constrained** and `report_timing_summary` is meaningful:
+
+| Clock | Frequency | Period | Domain |
+|---|---:|---:|---|
+| `s_axi_aclk` | 100 MHz | 10.000 ns | AXI4-Lite / CSR |
+| `clk` | 491.52 MHz | **2.0345 ns** | radio / FFT |
+| `internal_bus_clk` | 400 MHz | 2.500 ns | O-RAN eCPRI |
+
+The three groups are declared asynchronous to each other. The FFT delay lines
+live in the 2.0345 ns `clk` domain — that budget is what makes the
+asynchronous-read timing question in Phase 3 a real one rather than a
+theoretical one.
 
 ---
 
@@ -269,7 +288,7 @@ representative `fft` instance in each of band 0 and band 1.
 Run against the checkpoint:
 
 ```tcl
-open_checkpoint sim_build/vivado_ooc_lowphy1_20260806/lowphy1_ooc.dcp
+open_checkpoint lowphy/vivado_ooc/lowphy1_20260901/lowphy1_ooc.dcp
 
 set fh [open fft_delay_census.txt w]
 
@@ -311,7 +330,7 @@ Two independent checks.
 
 ```bash
 grep -inE "MEMORY_PRIMITIVE|xpm_memory|invalid.*primitive" \
-    sim_build/vivado_ooc_lowphy1_20260806/*.log \
+    lowphy/vivado_ooc/lowphy1_20260901/*.log \
     vivado.log 2>/dev/null
 ```
 
@@ -631,7 +650,10 @@ Option 1 needs `delay_lutram`'s `DRC` upper bound and the `AddrWidth`
 arithmetic re-checked at `MemDepth = 255` and `511` (both still one below a
 power of two, so `RAM256X1S`/two-deep cascades stay efficient), plus a fresh
 timing check — a 511-entry distributed RAM has a longer asynchronous read path
-than a 127-entry one, and the read feeds the next stage's adder.
+than a 127-entry one, and the read feeds the next stage's adder. The whole path
+has to fit the `clk` budget of **2.0345 ns** (491.52 MHz), so compare
+`report_timing_summary` WNS against the Phase 0 baseline rather than eyeballing
+the utilization delta alone.
 
 ---
 
@@ -694,6 +716,11 @@ report. Also re-run the Phase 0 step 3 census and confirm the SRL count under
 `i_delay` dropped by the predicted amount and that `RAM32X1S`/`RAM64X1S`/
 `RAM128X1S` appeared.
 
+Both scripts also emit `report_timing_summary` under the `lowphy*_ooc.xdc`
+constraints, so diff WNS/TNS in the `clk` domain against the Phase 0 baseline as
+well — the new asynchronous read path is the one thing in Phase 2 that could
+move it.
+
 ---
 
 ## 10. Acceptance criteria
@@ -721,6 +748,9 @@ Also required:
 - Every regression above passes with no new warnings.
 - FFT latency unchanged: the model-comparison tests pass without touching
   `fft.sv:239-259`.
+- `clk`-domain WNS does not regress by more than 50 ps versus the Phase 0
+  baseline. A larger drop means the asynchronous read is on the critical path;
+  keep depth 128 on SRL and re-measure before going further.
 
 Abort and report if any of BRAM/URAM/DSP moves, or if LUT moves by less than
 1,000 — the latter means the density assumption in 3.6 does not hold for this
@@ -735,7 +765,7 @@ tool version and the whole approach needs re-derivation.
 | Gate A fails: delays are not SRL today | medium | Phase 2 saving evaporates | Phase 0 step 3 is cheap; run it first |
 | Vivado infers dual-port and keeps 32 bit/LUT | medium | no saving, no harm | verify via primitive census; force with `ram_style` / check that only one address net reaches the memory |
 | Regression depends on clear-on-reset | low | needs warm-up mask, saving drops to ~20/FFT | see 7.6; `shift_ram` precedent suggests it will not |
-| Asynchronous read path hurts timing | low at depth 128, real at 512 | timing closure | OOC timing here is unconstrained and not a signoff result; run a constrained implementation before trusting Phase 3 |
+| Asynchronous read path hurts timing | low at depth 128, real at 512 | timing closure | OOC now reads `lowphy1_ooc.xdc`, so `clk` is constrained at 2.0345 ns and WNS is comparable against the Phase 0 baseline; it is still OOC (no I/O or placement context), so confirm in a full implementation before trusting Phase 3 |
 | Phase 1 relocates memories and overflows BRAM | medium if gate B is yes | build failure | treat Phase 1 as a measurement change; re-tune `RAM_STYLE` per site afterwards |
 
 Rollback for each phase is a single-file revert:
@@ -787,6 +817,8 @@ Gate B - RAM_STYLE case:
 Gate C - what depth 256 / 512 map to today:
   -> Phase 3 worth pursuing? (Y/N)
 
+Baseline clk-domain WNS (report_timing_summary):
+
 ## Phase 2
 
 Files changed:
@@ -797,6 +829,7 @@ lowphy1 after: LUT / FF / BRAM / URAM / DSP =
 lowphy0 after: LUT / FF / BRAM / URAM / DSP =
 LUT as Shift Register delta:
 LUT as Distributed RAM delta:
+clk-domain WNS after (and delta vs baseline):
 Acceptance criteria met (Y/N), with explanation for any miss:
 
 ## Phase 1 / Phase 3
