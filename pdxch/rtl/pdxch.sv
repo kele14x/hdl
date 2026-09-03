@@ -5,8 +5,8 @@
 module pdxch #(
     parameter int NUM_CC     = 3,
     parameter int NUM_ANT    = 4,
-    parameter int HALF_BLOCK = 1,
-    parameter int HALF_FFT   = 1
+    parameter int HALF_BLOCK = 0,
+    parameter int HALF_FFT   = 0
 ) (
     input var         s_axi_aclk,
     input var         s_axi_aresetn,

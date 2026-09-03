@@ -1,6 +1,6 @@
 # Out-of-context synthesis for the mandatory-BFP PDXCH wrapper.
 #
-# Parameter overrides (defaults = max spec, full block + 4k FFT):
+# Parameter overrides (defaults = HALF_BLOCK=0, HALF_FFT=0: full block + 4k FFT):
 #   tclargs: <half_block> <half_fft>
 #   half_block=0/1 -> fdv_buffer IQ depth full/half
 #   half_fft=0/1   -> FFT 4k/2k
@@ -10,7 +10,7 @@ set repo_root [file normalize [file join $script_dir .. ..]]
 set part xcku5p-ffvb676-2-i
 set top pdxch
 
-# Parameter override via -tclargs (default 0 0 = max spec)
+# Parameter override via -tclargs (default HALF_BLOCK=0 HALF_FFT=0)
 if {[llength $argv] > 2} {
   error "usage: <half_block> <half_fft>"
 }

@@ -1,4 +1,5 @@
 # Out-of-context synthesis for the mandatory-BFP PRACH wrapper.
+# PRACH uses a fixed 1536-point FFT; HALF_BLOCK/HALF_FFT are not applicable.
 #
 # Parameter overrides (default = antenna 0):
 #   tclargs: <ant_id>

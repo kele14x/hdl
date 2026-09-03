@@ -9,7 +9,7 @@ from puxch_test_utils import run_cocotb, sample_after_rising
 
 NUM_CC = 1
 NUM_ANT = 4
-HALF_BLOCK = int(os.environ.get("HALF_BLOCK", "1"))
+HALF_BLOCK = int(os.environ.get("HALF_BLOCK", "0"))
 
 
 async def reset_dut(dut):
