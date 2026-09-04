@@ -98,7 +98,7 @@ def model(din, in_w, out_w, trunc, round_, saturate):
 
 
 @cocotb.test()
-async def test_type_case(dut):
+async def test_type_cast(dut):
     in_w = int(os.environ.get("IN_WIDTH", "16"))
     out_w = int(os.environ.get("OUT_WIDTH", "16"))
     trunc = int(os.environ.get("TRUNC", "0"))
@@ -127,12 +127,12 @@ async def test_type_case(dut):
 
 
 @pytest.mark.parametrize("case", CASES, ids=lambda case: case["name"])
-def test_type_case_runner(case):
+def test_type_cast_runner(case):
     parameters = case["params"]
     run_dir = prj_path / "sim_build" / case["name"]
     runner = get_runner(SIM)
     runner.build(
-        hdl_toplevel="type_case",
+        hdl_toplevel="type_cast",
         sources=resolve_flt(prj_path / "common.flt"),
         parameters=parameters,
         always=True,
@@ -140,9 +140,9 @@ def test_type_case_runner(case):
         build_dir=run_dir,
     )
     runner.test(
-        hdl_toplevel="type_case",
+        hdl_toplevel="type_cast",
         hdl_toplevel_lang="verilog",
-        test_module="test_type_case",
+        test_module="test_type_cast",
         waves=True,
         gui=GUI,
         test_dir=run_dir,

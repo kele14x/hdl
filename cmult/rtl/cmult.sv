@@ -221,7 +221,7 @@ module cmult #(
   wire pi_ovf_s;
   logic ovf_r;
 
-  type_case #(
+  type_cast #(
       .IN_WIDTH (FullWidth),
       .OUT_WIDTH(P_WIDTH),
       .TRUNC    (SHIFT),
@@ -233,7 +233,7 @@ module cmult #(
       .ovf (pr_ovf_s)
   );
 
-  type_case #(
+  type_cast #(
       .IN_WIDTH (FullWidth),
       .OUT_WIDTH(P_WIDTH),
       .TRUNC    (SHIFT),

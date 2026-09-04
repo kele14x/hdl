@@ -1,6 +1,6 @@
 rtl/delay.sv
 rtl/delay_lutram.sv
 rtl/srl.sv
-rtl/type_case.sv
+rtl/type_cast.sv
 rtl/util_clk_fwd.sv
 rtl/util_gpio_gw.sv

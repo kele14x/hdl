@@ -33,7 +33,7 @@
 //
 `default_nettype none
 
-module type_case #(
+module type_cast #(
     parameter int IN_WIDTH  = 16,
     parameter int OUT_WIDTH = 16,
     //

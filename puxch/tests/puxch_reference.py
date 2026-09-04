@@ -33,7 +33,7 @@ def _saturate_signed(values: np.ndarray, width: int) -> np.ndarray:
 
 
 def _round_shift(values: np.ndarray, shift: int) -> np.ndarray:
-    """Match ``type_case`` ROUND=1 for a signed integer value."""
+    """Match ``type_cast`` ROUND=1 for a signed integer value."""
 
     values = np.asarray(values, dtype=np.int64)
     quotient = values >> shift

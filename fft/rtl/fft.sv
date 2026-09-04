@@ -106,7 +106,7 @@ module fft #(
   wire                         sext_ovf_di;
   wire                         unused_sext_ovf = &{1'b0, sext_ovf_dr, sext_ovf_di, 1'b0};
 
-  type_case #(
+  type_cast #(
       .IN_WIDTH (DATA_WIDTH),
       .OUT_WIDTH(DataWidthInt),
       .TRUNC    (0)
@@ -116,7 +116,7 @@ module fft #(
       .ovf (sext_ovf_dr)
   );
 
-  type_case #(
+  type_cast #(
       .IN_WIDTH (DATA_WIDTH),
       .OUT_WIDTH(DataWidthInt),
       .TRUNC    (0)
@@ -129,7 +129,7 @@ module fft #(
   assign data_dv_s[0] = data_dv;
 
   // Saturate the FFT output back to the output width.
-  type_case #(
+  type_cast #(
       .IN_WIDTH (DataWidthInt),
       .OUT_WIDTH(DATA_WIDTH),
       .TRUNC    (0),
@@ -140,7 +140,7 @@ module fft #(
       .ovf (sat_ovf_dr)
   );
 
-  type_case #(
+  type_cast #(
       .IN_WIDTH (DataWidthInt),
       .OUT_WIDTH(DATA_WIDTH),
       .TRUNC    (0),

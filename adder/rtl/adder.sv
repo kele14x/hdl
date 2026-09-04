@@ -78,13 +78,13 @@ module adder #(
 
   assign p_full = sub ? (a_full - b_full) : (a_full + b_full);
 
-  type_case #(
+  type_cast #(
       .IN_WIDTH (FullWidth),
       .OUT_WIDTH(P_WIDTH),
       .TRUNC    (SHIFT),
       .ROUND    (ROUND),
       .SATURATE (SATURATE)
-  ) i_type_case (
+  ) i_type_cast (
       .din (p_full),
       .dout(p_sat),
       .ovf (ovf_s)
