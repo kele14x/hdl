@@ -28,11 +28,14 @@ re-linting with the change stashed).
 | puxch/rtl/puxch_resync.sv | 16 | `s_axis_tvalid` |
 | puxch/rtl/puxch_resync.sv | 42 | `ctrl_bist_s` |
 | puxch/rtl/puxch_resync.sv | 45 | `stat_resync` |
-| ram/rtl/ram_sdp_uram_8k36.sv | 25 | `physical_dina` |
-| ram/rtl/ram_sdp_uram_8k36.sv | 26 | `physical_wea` |
 
-Note: the last two are in the shared `ram` primitive, so they surface in any
-module that instantiates `ram_sdp_uram_8k36`.
+Note: two of the 16 came from the shared `ram` primitive rather than `puxch`
+itself, so they surfaced in any module that instantiated it. Those are
+resolved: `ram/rtl/ram_sdp_uram_8k36.sv` has been replaced by the single-port
+`ram/rtl/ram_sp_uram_8k36.sv`, whose non-XPM branch mirrors the byte-lane
+write, so `physical_din` and `physical_we` are no longer XPM-only. Verified
+with Verilator 5.050 (2026-09-04): `ram_sp_uram_8k36` lints clean as its own
+top module, and `make lint` passes in `shift_ram/` and `fft/`.
 
 ## 2. puxch — `test_puxch_buffer` build error (`WIDTHTRUNC`)
 

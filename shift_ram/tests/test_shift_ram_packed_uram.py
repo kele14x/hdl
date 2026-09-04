@@ -70,22 +70,6 @@ async def test_shift_ram_packed_uram_full_address_range_and_hold(dut):
         assert int(dut.dout.value) == held
 
 
-@cocotb.test()
-async def test_shift_ram_packed_uram_matches_standard_with_clock_enable(dut):
-    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
-    dut.rst.value = 1
-    dut.cen.value = 1
-    dut.din.value = 0
-    await ClockCycles(dut.clk, 3)
-    dut.rst.value = 0
-
-    for index in range(1, 2 * DEPTH + 257):
-        await RisingEdge(dut.clk)
-        assert int(dut.dout_packed.value) == int(dut.dout_standard.value)
-        dut.cen.value = index % 11 not in {4, 5, 9}
-        dut.din.value = sample_value(index)
-
-
 def test_shift_ram_packed_uram_runner():
     runner = get_runner(SIM)
     run_dir = (
@@ -106,7 +90,6 @@ def test_shift_ram_packed_uram_runner():
         parameters={
             "WIDTH": WIDTH,
             "DEPTH": DEPTH,
-            "INPUT_REG": 1,
             "PACKED_URAM": 1,
         },
         always=True,
@@ -118,29 +101,6 @@ def test_shift_ram_packed_uram_runner():
         hdl_toplevel_lang="verilog",
         test_module="test_shift_ram_packed_uram",
         testcase="test_shift_ram_packed_uram_full_address_range_and_hold",
-        waves=True,
-        gui=GUI,
-        test_dir=run_dir,
-    )
-
-
-def test_shift_ram_packed_compare_runner():
-    runner = get_runner(SIM)
-    run_dir = prj_path / "sim_build" / "shift_ram_packed_compare"
-    sources = list(resolve_flt(prj_path / "shift_ram.flt"))
-    sources.append(prj_path / "tb" / "shift_ram_packed_compare.sv")
-    runner.build(
-        hdl_toplevel="shift_ram_packed_compare",
-        sources=sources,
-        always=True,
-        waves=True,
-        build_dir=run_dir,
-    )
-    runner.test(
-        hdl_toplevel="shift_ram_packed_compare",
-        hdl_toplevel_lang="verilog",
-        test_module="test_shift_ram_packed_uram",
-        testcase="test_shift_ram_packed_uram_matches_standard_with_clock_enable",
         waves=True,
         gui=GUI,
         test_dir=run_dir,

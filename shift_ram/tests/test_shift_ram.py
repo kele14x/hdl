@@ -10,7 +10,6 @@ from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
 
-
 prj_path = Path(__file__).resolve().parent.parent
 
 WIDTH = 8
@@ -87,7 +86,7 @@ def test_shift_ram_runner():
     runner.build(
         hdl_toplevel="shift_ram",
         sources=resolve_flt(prj_path / "shift_ram.flt"),
-        parameters={"WIDTH": WIDTH, "DEPTH": DEPTH, "INPUT_REG": 0},
+        parameters={"WIDTH": WIDTH, "DEPTH": DEPTH},
         always=True,
         waves=True,
         build_dir=run_dir,

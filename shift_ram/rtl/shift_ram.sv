@@ -5,7 +5,6 @@
 module shift_ram #(
     parameter int WIDTH       = 8,
     parameter int DEPTH       = 8,
-    parameter int INPUT_REG   = 0,
     parameter int PACKED_URAM = 0,
     parameter     RAM_STYLE   = "AUTO"
 ) (
@@ -19,107 +18,82 @@ module shift_ram #(
 
   // Local parameters
 
-  // Memory write and read address has minimal gap of 1 to avoid collision,
-  // which means maximum delay taps 2 ** (AddrWidth) - 1. Additional
-  // RAM is configured to have latency of 3, result maximum depth is
-  // 2 ** (AddrWidth) + 2.
-  localparam int AddrWidth = $clog2(DEPTH - 2 - (INPUT_REG != 0 ? 1 : 0));
-
-  localparam int MinDepth = INPUT_REG != 0 ? 5 : 4;
-  localparam int RamReadLatency = PACKED_URAM != 0 ? 3 : 2;
-  localparam int ReadAddrOffset = 2 + RamReadLatency - DEPTH + (INPUT_REG != 0 ? 1 : 0);
-  localparam int ResetAddrOffset = ReadAddrOffset - 1;
+  // One input register, two RAM read stages, and one output register account
+  // for four cycles of the requested delay. The remaining delay is stored in
+  // a read-first circular RAM.
+  localparam int RamDepth = DEPTH - 4;
+  localparam int AddrWidth = RamDepth > 1 ? $clog2(RamDepth) : 1;
+  localparam int RamReadLatency = 2;
 
   // Check parameters
 
   initial begin : drc_check
-    assert (DEPTH >= MinDepth && DEPTH <= 16384)
-    else $error("[%m]: DEPTH (%0d) must be within the range %0d to 16384.", DEPTH, MinDepth);
+    assert (DEPTH >= 5 && DEPTH <= 16384)
+    else $error("[%m]: DEPTH (%0d) must be within the range 5 to 16384.", DEPTH);
 
     assert (PACKED_URAM == 0 || PACKED_URAM == 1)
     else $error("[%m]: PACKED_URAM (%0d) must be 0 or 1.", PACKED_URAM);
 
-    assert (PACKED_URAM == 0 || (WIDTH == 36 && DEPTH == 8192 && INPUT_REG != 0))
-    else $error("[%m]: PACKED_URAM requires WIDTH=36, DEPTH=8192, and INPUT_REG=1.");
+    assert (PACKED_URAM == 0 || (WIDTH == 36 && DEPTH == 8192))
+    else $error("[%m]: PACKED_URAM requires WIDTH=36 and DEPTH=8192.");
   end
 
   // Signals
 
-  logic [     AddrWidth-1:0] addra;
-  logic [     AddrWidth-1:0] addrb;
-
+  logic [     AddrWidth-1:0] addr;
   logic [         WIDTH-1:0] dina;
-
-  logic [         WIDTH-1:0] doutb;
+  logic [         WIDTH-1:0] ram_dout;
   logic [RamReadLatency-1:0] vld;
 
-  // Write & read address
+  // Shared read/write address. Count down so the non-power-of-two wrap detects
+  // zero rather than comparing against a wide terminal-count constant.
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      addra <= {AddrWidth{1'b0}};
+      addr <= {AddrWidth{1'b0}};
     end else if (cen) begin
-      addra <= addra + 1'd1;
+      if (addr == {AddrWidth{1'b0}}) begin
+        addr <= AddrWidth'(RamDepth - 1);
+      end else begin
+        addr <= addr - 1'b1;
+      end
     end
   end
 
-  generate
-    if (INPUT_REG != 0) begin : g_ireg
-      always_ff @(posedge clk) begin
-        if (cen) begin
-          dina <= din;
-        end
-      end
-    end else begin : g_no_ireg
-      always_comb begin
-        dina = din;
-      end
-    end
-  endgenerate
-
-  // Compensate the RAM pipeline so the externally visible delay stays DEPTH.
+  // Register data before it reaches the RAM input.
   always_ff @(posedge clk) begin
-    if (rst) begin
-      addrb <= ResetAddrOffset[AddrWidth-1:0];
-    end else if (cen) begin
-      addrb <= addra + ReadAddrOffset[AddrWidth-1:0];
+    if (cen) begin
+      dina <= din;
     end
   end
 
   generate
     if (PACKED_URAM != 0) begin : g_packed_uram
-      ram_sdp_uram_8k36 i_ram_sdp (
-          // Port A, write port
-          .clka (clk),
-          .wea  (cen),
-          .addra(addra),
-          .dina (dina),
-          // Port B, read port
-          .clkb (clk),
-          .rstb (1'b0),
-          .enb  ({3{cen}}),
-          .addrb(addrb),
-          .doutb(doutb)
+      ram_sp_uram_8k36 i_ram_sp (
+          .clk (clk),
+          .en  ({RamReadLatency{cen}}),
+          .we  (cen),
+          .addr(addr),
+          .din (dina),
+          .dout(ram_dout)
       );
     end else begin : g_standard_ram
-      ram_sdp #(
+      ram_sp #(
           .ADDR_WIDTH  (AddrWidth),
           .DATA_WIDTH  (WIDTH),
-          .READ_LATENCY(2),
+          .WRITE_MODE  ("READ_FIRST"),
+          .READ_LATENCY(RamReadLatency),
+          .DEPTH       (RamDepth),
           .INIT_FILE   ("NONE"),
           .RAM_STYLE   (RAM_STYLE)
-      ) i_ram_sdp (
-          // Port A, write port
-          .clka (clk),
-          .wea  (cen),
-          .addra(addra),
-          .dina (dina),
-          // Port B, read port
-          .clkb (clk),
-          .rstb (1'b0),
-          .enb  ({2{cen}}),
-          .addrb(addrb),
-          .doutb(doutb)
+      ) i_ram_sp (
+          .clk (clk),
+          .rst (1'b0),
+          .en  ({RamReadLatency{cen}}),
+          .we  (cen),
+          .addr(addr),
+          .din (dina),
+          .dout(ram_dout)
       );
     end
   endgenerate
@@ -140,7 +114,7 @@ module shift_ram #(
     if (rst) begin
       dout <= {WIDTH{1'b0}};
     end else if (cen && vld[RamReadLatency-1]) begin
-      dout <= doutb;
+      dout <= ram_dout;
     end
   end
 

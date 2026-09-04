@@ -1,5 +1,5 @@
 rtl/ram_sdp.sv
-rtl/ram_sdp_uram_8k36.sv
+rtl/ram_sp_uram_8k36.sv
 rtl/ram_sdp_asym.sv
 rtl/ram_sdp_pipe.sv
 rtl/ram_sp.sv

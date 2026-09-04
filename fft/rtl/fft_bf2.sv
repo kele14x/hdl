@@ -239,9 +239,9 @@ module fft_bf2 #(
     if (DelayDepth <= 16) begin : g_srl
 
       delay #(
-          .WIDTH(DelayWidth),
-          .DEPTH(DelayDepth),
-          .INIT (0),
+          .WIDTH (DelayWidth),
+          .DEPTH (DelayDepth),
+          .INIT   (0),
           .USE_REG((DelayDepth <= 8) ? 1 : 0)
       ) i_delay (
           .clk (clk),
@@ -269,7 +269,6 @@ module fft_bf2 #(
       shift_ram #(
           .WIDTH      (DelayWidth),
           .DEPTH      (DelayDepth),
-          .INPUT_REG  (1),
           .PACKED_URAM((DelayDepth == 8192 && DelayWidth == 36) ? 1 : 0),
           .RAM_STYLE  (DelayDepth >= 8192 ? "ULTRA" : (DelayDepth >= 1024 ? "BLOCK" : "AUTO"))
       ) i_delay (

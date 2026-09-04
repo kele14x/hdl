@@ -159,9 +159,8 @@ module prach_fft_ditfft2_bf #(
     end else begin : g_shift_ram
 
       shift_ram #(
-          .WIDTH    (DelayWidth),
-          .DEPTH    (DelayDepth),
-          .INPUT_REG(1)
+          .WIDTH(DelayWidth),
+          .DEPTH(DelayDepth)
       ) i_delay (
           .clk (clk),
           .rst (1'b0),

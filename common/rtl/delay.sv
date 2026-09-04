@@ -51,7 +51,9 @@ module delay #(
         end
       end
 
-      always_ff @(posedge clk) begin : p_shift
+      // Plain always, not always_ff: dregs is also driven by p_init above,
+      // which Questa rejects for always_ff (vopt-7061).
+      always @(posedge clk) begin : p_shift
         integer i;
         if (rst) begin
           for (i = 0; i < DEPTH; i = i + 1) begin
@@ -85,7 +87,9 @@ module delay #(
         end
       end
 
-      always_ff @(posedge clk) begin : p_shift
+      // Plain always, not always_ff: dregs is also driven by p_init above,
+      // which Questa rejects for always_ff (vopt-7061).
+      always @(posedge clk) begin : p_shift
         integer i;
         if (cen) begin
           dregs[0] <= din;

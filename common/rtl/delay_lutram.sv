@@ -62,7 +62,9 @@ module delay_lutram #(
     end
   end
 
-  always_ff @(posedge clk) begin
+  // Plain always, not always_ff: mem is also driven by p_init above, which
+  // Questa rejects for always_ff (vopt-7061).
+  always @(posedge clk) begin
     if (!rst && cen) begin
       mem[addr] <= din;
     end
