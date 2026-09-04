@@ -3,10 +3,10 @@
 `default_nettype none
 
 module delay #(
-    parameter int DATA_WIDTH = 8,
-    parameter int WIDTH      = DATA_WIDTH,
-    parameter int DEPTH      = 8,
-    parameter int INIT       = 0
+    parameter int WIDTH   = 8,
+    parameter int DEPTH   = 8,
+    parameter int INIT    = 0,
+    parameter int USE_REG = 0
 ) (
     input var              clk,
     input var              rst,
@@ -24,6 +24,9 @@ module delay #(
 
     assert (WIDTH >= 1 && WIDTH <= 1024)
     else $error("[%m]: WIDTH (%d) must be within the range 1 to 1024.", WIDTH);
+
+    assert (USE_REG == 0 || USE_REG == 1)
+    else $error("[%m]: USE_REG (%d) must be 0 or 1.", USE_REG);
   end
 
   generate
@@ -33,8 +36,44 @@ module delay #(
 
       assign dout = din;
 
-    end else begin : g_regs
+    end else if (USE_REG != 0) begin : g_register
 
+      // Keep this pipeline as ordinary flip-flops. Without this attribute,
+      // Vivado may extract the regular shift pattern back into SRLs.
+      (* shreg_extract = "no" *) logic [WIDTH-1:0] dregs[0:DEPTH-1];
+
+      initial begin : p_init
+        integer i;
+        if (INIT != 0) begin
+          for (i = 0; i < DEPTH; i = i + 1) begin
+            dregs[i] = 'b0;
+          end
+        end
+      end
+
+      always_ff @(posedge clk) begin : p_shift
+        integer i;
+        if (rst) begin
+          for (i = 0; i < DEPTH; i = i + 1) begin
+            dregs[i] <= 'b0;
+          end
+        end else if (cen) begin
+          dregs[0] <= din;
+          for (i = 1; i < DEPTH; i = i + 1) begin
+            dregs[i] <= dregs[i-1];
+          end
+        end
+      end
+
+      assign dout = dregs[DEPTH-1];
+
+    end else begin : g_srl
+
+      // SRL primitives have no reset input. Initialization is controlled by
+      // INIT; rst is intentionally unused in this implementation.
+      wire unused = &{1'b0, rst};
+
+      (* shreg_extract = "yes" *)
       logic [WIDTH-1:0] dregs[0:DEPTH-1];
 
       initial begin : p_init
@@ -46,13 +85,9 @@ module delay #(
         end
       end
 
-      always @(posedge clk) begin : p_shift
+      always_ff @(posedge clk) begin : p_shift
         integer i;
-        if (rst) begin
-          for (i = 0; i < DEPTH; i = i + 1) begin
-            dregs[i] <= 'b0;
-          end
-        end else if (cen) begin
+        if (cen) begin
           dregs[0] <= din;
           for (i = 1; i < DEPTH; i = i + 1) begin
             dregs[i] <= dregs[i-1];

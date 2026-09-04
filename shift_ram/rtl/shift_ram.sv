@@ -27,6 +27,8 @@ module shift_ram #(
 
   localparam int MinDepth = INPUT_REG != 0 ? 5 : 4;
   localparam int RamReadLatency = PACKED_URAM != 0 ? 3 : 2;
+  localparam int ReadAddrOffset = 2 + RamReadLatency - DEPTH + (INPUT_REG != 0 ? 1 : 0);
+  localparam int ResetAddrOffset = ReadAddrOffset - 1;
 
   // Check parameters
 
@@ -50,10 +52,6 @@ module shift_ram #(
 
   logic [         WIDTH-1:0] doutb;
   logic [RamReadLatency-1:0] vld;
-
-  function automatic [AddrWidth-1:0] addr_cast(input integer value);
-    addr_cast = value[AddrWidth-1:0] ^ {AddrWidth{|value[31:AddrWidth] & 1'b0}};
-  endfunction
 
   // Write & read address
 
@@ -82,9 +80,9 @@ module shift_ram #(
   // Compensate the RAM pipeline so the externally visible delay stays DEPTH.
   always_ff @(posedge clk) begin
     if (rst) begin
-      addrb <= addr_cast(-DEPTH + 1 + RamReadLatency + (INPUT_REG != 0 ? 1 : 0));
+      addrb <= ResetAddrOffset[AddrWidth-1:0];
     end else if (cen) begin
-      addrb <= addr_cast(integer'(addra) + 2 + RamReadLatency - DEPTH + (INPUT_REG != 0 ? 1 : 0));
+      addrb <= addra + ReadAddrOffset[AddrWidth-1:0];
     end
   end
 
@@ -134,11 +132,15 @@ module shift_ram #(
     end
   end
 
+  // vld only clears on reset and fills monotonically while cen is active.
+  // Holding the reset value until the first valid word is equivalent to the
+  // previous width-wide output mask, while allowing the data register CE to
+  // absorb the valid control.
   always_ff @(posedge clk) begin
     if (rst) begin
       dout <= {WIDTH{1'b0}};
-    end else if (cen) begin
-      dout <= doutb & {WIDTH{vld[RamReadLatency-1]}};
+    end else if (cen && vld[RamReadLatency-1]) begin
+      dout <= doutb;
     end
   end
 
