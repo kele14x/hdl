@@ -5,7 +5,6 @@
 module delay #(
     parameter int WIDTH   = 8,
     parameter int DEPTH   = 8,
-    parameter int INIT    = 0,
     parameter int USE_REG = 0
 ) (
     input var              clk,
@@ -42,12 +41,12 @@ module delay #(
       // Vivado may extract the regular shift pattern back into SRLs.
       (* shreg_extract = "no" *) logic [WIDTH-1:0] dregs[0:DEPTH-1];
 
+      // Initialize the taps to 0 for simulation, matching the deterministic
+      // power-on state of the hardware and avoiding warmup X-propagation.
       initial begin : p_init
         integer i;
-        if (INIT != 0) begin
-          for (i = 0; i < DEPTH; i = i + 1) begin
-            dregs[i] = 'b0;
-          end
+        for (i = 0; i < DEPTH; i = i + 1) begin
+          dregs[i] = 'b0;
         end
       end
 
@@ -71,8 +70,8 @@ module delay #(
 
     end else begin : g_srl
 
-      // SRL primitives have no reset input. Initialization is controlled by
-      // INIT; rst is intentionally unused in this implementation.
+      // SRL primitives have no reset input. The taps are initialized to 0 for
+      // simulation below; rst is intentionally unused in this implementation.
       wire unused = &{1'b0, rst};
 
       (* shreg_extract = "yes" *)
@@ -80,10 +79,8 @@ module delay #(
 
       initial begin : p_init
         integer i;
-        if (INIT != 0) begin
-          for (i = 0; i < DEPTH; i = i + 1) begin
-            dregs[i] = 'b0;
-          end
+        for (i = 0; i < DEPTH; i = i + 1) begin
+          dregs[i] = 'b0;
         end
       end
 

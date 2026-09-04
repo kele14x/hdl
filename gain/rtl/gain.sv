@@ -205,8 +205,7 @@ module gain #(
 
   delay #(
       .WIDTH(9),
-      .DEPTH(Latency),
-      .INIT (0)
+      .DEPTH(Latency)
   ) i_delay (
       .clk (clk),
       .rst (1'b0),

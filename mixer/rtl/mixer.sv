@@ -205,8 +205,7 @@ module mixer #(
 
   delay #(
       .WIDTH(16),
-      .DEPTH(6),
-      .INIT (0)
+      .DEPTH(6)
   ) i_delay_dr (
       .clk (clk),
       .rst (1'b0),
@@ -218,8 +217,7 @@ module mixer #(
 
   delay #(
       .WIDTH(16),
-      .DEPTH(6),
-      .INIT (0)
+      .DEPTH(6)
   ) i_delay_di (
       .clk (clk),
       .rst (1'b0),
@@ -258,8 +256,7 @@ module mixer #(
 
   delay #(
       .WIDTH(5),
-      .DEPTH(Latency),
-      .INIT (0)
+      .DEPTH(Latency)
   ) i_delay_dv (
       .clk (clk),
       .rst (1'b0),
@@ -271,8 +268,7 @@ module mixer #(
 
   delay #(
       .WIDTH(4),
-      .DEPTH(Latency),
-      .INIT (0)
+      .DEPTH(Latency)
   ) i_delay_chn (
       .clk (clk),
       .rst (1'b0),

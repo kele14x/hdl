@@ -324,8 +324,7 @@ module coe_framer_data (
 
   delay #(
       .DEPTH(2),
-      .WIDTH(1),
-      .INIT (0)
+      .WIDTH(1)
   ) i_delay_s0_axis_tlast (
       .clk (clk),
       .rst (rst),
@@ -336,8 +335,7 @@ module coe_framer_data (
 
   delay #(
       .DEPTH(2),
-      .WIDTH(1),
-      .INIT (0)
+      .WIDTH(1)
   ) i_delay_s0_axis_tvalid (
       .clk (clk),
       .rst (rst),

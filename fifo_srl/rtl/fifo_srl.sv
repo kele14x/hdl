@@ -146,8 +146,7 @@ module fifo_srl #(
   srl #(
       .ADDR_WIDTH(AddrWidth),
       .DATA_WIDTH(DATA_WIDTH),
-      .OUTPUT_REG(0),
-      .INIT      (1)
+      .OUTPUT_REG(0)
   ) i_srl (
       // Read Interface
       .clk (clk),

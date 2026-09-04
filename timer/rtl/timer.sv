@@ -176,8 +176,7 @@ module timer #(
 
   delay #(
       .WIDTH(80),
-      .DEPTH(2),
-      .INIT (0)
+      .DEPTH(2)
   ) i_delay_tod (
       .clk (clk),
       .rst (rst),

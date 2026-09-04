@@ -89,8 +89,7 @@ module prach_conv_nco (
 
   delay #(
       .WIDTH(1),
-      .DEPTH(Latency),
-      .INIT (0)
+      .DEPTH(Latency)
   ) u_delay_sync (
       .clk (clk),
       .cen (1'b1),
@@ -101,8 +100,7 @@ module prach_conv_nco (
 
   delay #(
       .WIDTH(8),
-      .DEPTH(Latency - 1),
-      .INIT (0)
+      .DEPTH(Latency - 1)
   ) u_delay_chn (
       .clk (clk),
       .cen (1'b1),

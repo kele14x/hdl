@@ -50,8 +50,7 @@ module prach_conv (
 
   delay #(
       .WIDTH(32),
-      .DEPTH(4),
-      .INIT (0)
+      .DEPTH(4)
   ) u_dq_delay (
       .clk (clk),
       .cen (1'b1),
@@ -86,8 +85,7 @@ module prach_conv (
 
   delay #(
       .WIDTH(13),
-      .DEPTH(Latency),
-      .INIT (0)
+      .DEPTH(Latency)
   ) u_delay (
       .clk (clk),
       .cen (1'b1),

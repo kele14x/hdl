@@ -148,8 +148,7 @@ module prach_hb2 #(
 
   delay #(
       .WIDTH(13),
-      .DEPTH(ImpulseLatency),
-      .INIT (0)
+      .DEPTH(ImpulseLatency)
   ) u_delay (
       .clk (clk),
       .cen (1'b1),

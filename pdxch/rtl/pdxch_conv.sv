@@ -235,8 +235,7 @@ module pdxch_conv #(
   // Match NCO latency: 1 + 4 + 3
   delay #(
       .WIDTH(32),
-      .DEPTH(8),
-      .INIT (0)
+      .DEPTH(8)
   ) u_dq_delay (
       .clk (clk),
       .rst (1'b0),
@@ -269,8 +268,7 @@ module pdxch_conv #(
 
   delay #(
       .WIDTH(9),
-      .DEPTH(Latency),
-      .INIT (0)
+      .DEPTH(Latency)
   ) u_delay (
       .clk (clk),
       .rst (1'b0),

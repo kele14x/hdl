@@ -148,8 +148,7 @@ module prach_ddc #(
   // Mixer does only has 4-bit CHN port, so matched delay is done here
   delay #(
       .WIDTH(8),
-      .DEPTH(13),
-      .INIT (0)
+      .DEPTH(13)
   ) u_delay_chn (
       .clk (clk),
       .rst (1'b0),

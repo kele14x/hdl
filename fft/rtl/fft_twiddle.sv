@@ -110,8 +110,7 @@ module fft_twiddle #(
 
   delay #(
       .WIDTH(DATA_WIDTH * 2),
-      .DEPTH(4),
-      .INIT (0)
+      .DEPTH(4)
   ) i_data_delay (
       .clk (clk),
       .rst (1'b0),
@@ -123,8 +122,7 @@ module fft_twiddle #(
 
   delay #(
       .WIDTH(1),
-      .DEPTH(Latency),
-      .INIT (0)
+      .DEPTH(Latency)
   ) i_valid_delay (
       .clk (clk),
       .rst (1'b0),

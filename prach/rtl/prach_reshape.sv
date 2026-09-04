@@ -46,8 +46,7 @@ module prach_reshape #(
 
   delay #(
       .WIDTH(16),
-      .DEPTH(SIZE / 2),
-      .INIT (0)
+      .DEPTH(SIZE / 2)
   ) u_delay_dq2 (
       .clk (clk),
       .cen (1'b1),
@@ -58,8 +57,7 @@ module prach_reshape #(
 
   delay #(
       .WIDTH(16),
-      .DEPTH(SIZE / 2),
-      .INIT (0)
+      .DEPTH(SIZE / 2)
   ) u_delay_dx (
       .clk (clk),
       .cen (1'b1),
@@ -90,8 +88,7 @@ module prach_reshape #(
 
   delay #(
       .WIDTH(13),
-      .DEPTH(Latency),
-      .INIT (0)
+      .DEPTH(Latency)
   ) u_delay_sync (
       .clk (clk),
       .cen (1'b1),

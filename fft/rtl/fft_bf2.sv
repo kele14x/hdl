@@ -241,7 +241,6 @@ module fft_bf2 #(
       delay #(
           .WIDTH (DelayWidth),
           .DEPTH (DelayDepth),
-          .INIT   (0),
           .USE_REG((DelayDepth <= 8) ? 1 : 0)
       ) i_delay (
           .clk (clk),

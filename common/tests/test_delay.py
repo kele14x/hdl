@@ -33,9 +33,10 @@ async def test_delay_reset_data_delay_and_clock_enable(dut):
     await ClockCycles(dut.clk, 3)
     dut.rst.value = 0
 
-    # Enable the delay line and feed one value per clock. INIT=1 provides the
-    # leading zeros for both implementations; the SRL implementation
-    # intentionally does not use rst because SRLs have no reset input.
+    # Enable the delay line and feed one value per clock. The taps are always
+    # initialized to 0, providing the leading zeros for both implementations;
+    # the SRL implementation intentionally does not use rst because SRLs have
+    # no reset input.
     dut.cen.value = 1
     values = [3, 7, 11, 19, 23, 29]
     stream = values + [0] * DEPTH
@@ -67,7 +68,6 @@ def test_delay_runner(case):
         parameters={
             "WIDTH": WIDTH,
             "DEPTH": DEPTH,
-            "INIT": 1,
             "USE_REG": case["use_reg"],
         },
         always=True,

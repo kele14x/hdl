@@ -321,8 +321,7 @@ module prach_hb4 #(
 
   delay #(
       .WIDTH(13),
-      .DEPTH(9),
-      .INIT (1)
+      .DEPTH(9)
   ) u_delay (
       .clk (clk),
       .cen (1'b1),

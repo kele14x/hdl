@@ -201,8 +201,7 @@ module prach_stream2block #(
 
   delay #(
       .WIDTH(45),
-      .DEPTH(2),
-      .INIT (1)
+      .DEPTH(2)
   ) u_delay_signals (
       .clk (clk),
       .rst (1'b0),
@@ -432,8 +431,7 @@ module prach_stream2block #(
 
   delay #(
       .WIDTH(5),
-      .DEPTH(3),
-      .INIT (0)
+      .DEPTH(3)
   ) u_delay_ctrl (
       .clk (clk),
       .rst (1'b0),

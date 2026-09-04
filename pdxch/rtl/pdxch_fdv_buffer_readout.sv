@@ -588,8 +588,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(4),
-      .DEPTH(6),
-      .INIT (0)
+      .DEPTH(6)
   ) u_delay_chn (
       .clk (clk),
       .rst (1'b0),
@@ -600,8 +599,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(1),
-      .DEPTH(6),
-      .INIT (0)
+      .DEPTH(6)
   ) u_delay_dv (
       .clk (clk),
       .rst (1'b0),
@@ -612,8 +610,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(1),
-      .DEPTH(6),
-      .INIT (0)
+      .DEPTH(6)
   ) u_delay_last (
       .clk (clk),
       .rst (1'b0),

@@ -146,8 +146,7 @@ module prach_fft_ditfft2_bf #(
 
       delay #(
           .WIDTH(DelayWidth),
-          .DEPTH(DelayDepth),
-          .INIT (0)
+          .DEPTH(DelayDepth)
       ) u_delay_data (
           .clk (clk),
           .rst (1'b0),

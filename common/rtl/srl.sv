@@ -7,7 +7,6 @@
  * - ADDR_WIDTH: Width of the address input (default: 4)
  * - DATA_WIDTH: Width of input and output data (default: 8)
  * - OUTPUT_REG: Enable output register (0: disabled, 1: enabled, default: 1)
- * - INIT: Zero-initialize the shift register in simulation (default: 1)
  *
  * Ports:
  * - clk: Clock input
@@ -34,8 +33,7 @@ module srl #(
     parameter int ADDR_WIDTH = 4,
     parameter int DATA_WIDTH = 8,
     //
-    parameter int OUTPUT_REG = 1,
-    parameter int INIT       = 1
+    parameter int OUTPUT_REG = 1
 ) (
     // Read Interface
     input var                   clk,
@@ -51,11 +49,12 @@ module srl #(
 
   logic [DATA_WIDTH-1:0] dout_s;
 
+  // Zero-initialize the shift register for simulation, matching the
+  // deterministic power-on state of the hardware and avoiding warmup
+  // X-propagation.
   initial begin
-    if (INIT != 0) begin
-      for (int i = 0; i < 2 ** ADDR_WIDTH; i = i + 1) begin
-        dsrl[i] = 'b0;
-      end
+    for (int i = 0; i < 2 ** ADDR_WIDTH; i = i + 1) begin
+      dsrl[i] = 'b0;
     end
   end
 

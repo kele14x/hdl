@@ -133,8 +133,7 @@ module prach_fft #(
 
   delay #(
       .WIDTH(2),
-      .DEPTH(Latency),
-      .INIT (0)
+      .DEPTH(Latency)
   ) u_delay_chn (
       .clk (clk),
       .rst (1'b0),
