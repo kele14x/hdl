@@ -27,16 +27,9 @@ Each IP follows `<block>/{rtl|src}/*.sv|*.v`, `<block>/tests/` (cocotb `.py` tes
 - A reset is usually synchronized and active high. Use `cdc_async_rst` when deriving a reset for another clock domain.
 - Verilator lint pragmas (e.g. `/* verilator lint_off UNUSEDPARAM */`) are used where needed.
 
-## Conventions
-
-- **Control plane**: AXI4-Lite register modules named `*_regs.v`, instantiated by `*_top.sv` / `*_wrapper.v`.
-- **Data plane**: AXI-Stream (`*_tdata`, `*_tkeep`, `*_tvalid`, `*_tlast`, `*_tready`) with explicit clock/reset domains.
-
 ## Testing
 
-All cocotb tests use the **pytest + cocotb runner** pattern in `<module>/tests/test_*.py`. Run with `python <module>/tests/test_<name>.py` or `pytest <module>/tests/test_<name>.py`. The `SIM` env var must be set explicitly (e.g. `SIM=verilator` or `SIM=questa`); there is no default. Parameters are passed via the `parameters={}` dict to `runner.build()`; parametrized build cases are listed inline as a `CASES` list in the test file and fed to `@pytest.mark.parametrize` (no external case files). Build and run artifacts go under `<module>/sim_build/` (alongside the `.flt` file) so they stay available for debugging — new tests must not use temp directories for `build_dir`/`test_dir`.
-
-Test helper modules (e.g. `libaxi4l.py`, `libecpri.py`) live alongside the tests in `tests/`.
+All cocotb tests use the **pytest + cocotb runner** pattern in `<module>/tests/test_*.py`. Run with `python <module>/tests/test_<name>.py` or `pytest <module>/tests/test_<name>.py`. The `SIM` env var must be set explicitly (e.g. `SIM=verilator` or `SIM=questa`); there is no default. Parameters are passed via the `parameters={}` dict to `runner.build()`; parametrized build cases are listed inline as a `CASES` list in the test file and fed to `@pytest.mark.parametrize` (no external case files). Build and run artifacts go under `<module>/sim_build/` (alongside the `.flt` file) so they stay available for debugging.
 
 In cocotb tests, drive and sample signals on the **RisingEdge** of the relevant clock in almost all cases: set inputs right after `await RisingEdge(...)` (the DUT captures them on the next edge) and sample outputs after `await RisingEdge()` on the edge of 1 clock afterward where they are expected. In some cases, sampling after `await ValueChange(...)` on a none-clock signal to model a combinational delay. Never use `FallingEdge`, `ReadWrite` or `ReadOnly` for driving or sampling — they are banned.
 
@@ -58,6 +51,12 @@ Traditional SystemVerilog testbenches (`tb_*.sv`) live in `<module>/tb/`.
 - `uv run ruff check` and `uv run ruff format` on changed Python files.
 - After touching shared libraries (`hdl_tools`, `common`), re-run the regressions of modules that use them.
 - Directed corner cases (e.g. forcing a FIFO full) belong in the suite as deterministic scenarios, not one-off scripts.
+
+## Scope
+
+- Stay inside the module the user named. Do not extend a fix, refactor, or cleanup to other modules without explicit authorization.
+- Investigating other modules to attribute a root cause is fine, but stop at the finding: report it and let the user decide. Do not edit, revert, or delete outside the requested scope.
+- Wider regressions implied by a shared-library change (`hdl_tools`, `common`) may surface failures elsewhere — name the affected modules and ask before touching them.
 
 ## Git
 
