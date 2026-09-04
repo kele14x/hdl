@@ -63,7 +63,12 @@ module cdc_handshake_f #(
   logic             dest_hsdata_ff_en;
   logic             dest_valid_ext_ff;
   logic             dest_valid_nxt;
+  // Callers may drive dest_ready from an inverted reset (e.g. ~rst) whose net
+  // also asserts async resets elsewhere in the hierarchy. In this module it
+  // is consumed only as synchronous handshake data.
+  /* verilator lint_off SYNCASYNCNET */
   logic             dest_ready_in;
+  /* verilator lint_on SYNCASYNCNET */
   logic             dest_ready_nxt;
   logic             dest_count_nxt;
   logic             dest_count_eq;

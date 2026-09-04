@@ -58,7 +58,7 @@ read_verilog -sv {*}$sources
 # OOC clock constraints: s_axi_aclk 100 MHz, clk 491.52 MHz, internal_bus_clk 400 MHz
 read_xdc -mode out_of_context [file join $script_dir lowphy0_ooc.xdc]
 
-synth_design -top $top -part $part -mode out_of_context -flatten_hierarchy rebuilt \
+synth_design -top $top -part $part -mode out_of_context -flatten_hierarchy none \
     -verilog_define {RAM_USE_XPM}
 
 report_utilization -file [file join $build_dir lowphy0_utilization.rpt]

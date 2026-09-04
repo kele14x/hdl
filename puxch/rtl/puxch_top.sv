@@ -82,6 +82,10 @@ module puxch_top #(
   wire         s0_axis_tready      [NUM_ANT];
   wire  [31:0] bfp_m_axis_tuser    [NUM_ANT];
 
+  // Per-CC last flags and the framer tuser are produced but not consumed at
+  // this level.
+  wire         unused_last_tuser = &{1'b0, dout_last, bfp_m_axis_tuser};
+
   generate
     for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_cc
 

@@ -835,24 +835,63 @@ module lowphy1 (
 
         assign unused_s0_ready = &{1'b0, s0_axis_tready[unused_cc][unused_ant0]};
       end
+    end
 
+    for (genvar unused_cc12 = 0; unused_cc12 < NumCcBand12; unused_cc12++) begin : gen_unused_cc12
       for (genvar unused_ant = 0; unused_ant < 2; unused_ant++) begin : gen_unused_ant12
         wire unused_secondary_axis;
 
         assign unused_secondary_axis = &{
             1'b0,
-            m1_axis_tuser[unused_cc][unused_ant],
-            m1_axis_tlast[unused_cc][unused_ant],
-            m1_axis_tvalid[unused_cc][unused_ant],
-            s1_axis_tready[unused_cc][unused_ant],
-            m2_axis_tuser[unused_cc][unused_ant],
-            m2_axis_tlast[unused_cc][unused_ant],
-            m2_axis_tvalid[unused_cc][unused_ant],
-            s2_axis_tready[unused_cc][unused_ant]
+            m1_axis_tuser[unused_cc12][unused_ant],
+            m1_axis_tlast[unused_cc12][unused_ant],
+            m1_axis_tvalid[unused_cc12][unused_ant],
+            s1_axis_tready[unused_cc12][unused_ant],
+            m2_axis_tuser[unused_cc12][unused_ant],
+            m2_axis_tlast[unused_cc12][unused_ant],
+            m2_axis_tvalid[unused_cc12][unused_ant],
+            s2_axis_tready[unused_cc12][unused_ant]
         };
       end
     end
   endgenerate
+
+  // Nine timer slots are exposed but only seven carriers are instantiated:
+  // band 0 takes slots 0-2, band 1 takes 3-4 and band 2 takes 6-7, leaving
+  // slots 5 and 8 unconnected.
+  wire unused_timer_slot = &{
+      1'b0,
+      s5_ul_sym_num,
+      s5_ul_cta_sym_num,
+      s5_ul_update,
+      s5_ul_slot_update,
+      s5_dl_sym_num,
+      s5_dl_cta_sym_num,
+      s5_dl_update,
+      s5_dl_slot_update,
+      s5_ul_toggle,
+      s5_dl_toggle,
+      s5_cc_enable,
+      s5_cc_reload,
+      s8_ul_sym_num,
+      s8_ul_cta_sym_num,
+      s8_ul_update,
+      s8_ul_slot_update,
+      s8_dl_sym_num,
+      s8_dl_cta_sym_num,
+      s8_dl_update,
+      s8_dl_slot_update,
+      s8_ul_toggle,
+      s8_dl_toggle,
+      s8_cc_enable,
+      s8_cc_reload
+  };
+
+  // The 10 ms strobes of the two unpopulated carrier slots stay low.
+  assign fram_radio_start_10ms_cc5 = 1'b0;
+  assign defm_radio_start_10ms_cc5 = 1'b0;
+  assign fram_radio_start_10ms_cc8 = 1'b0;
+  assign defm_radio_start_10ms_cc8 = 1'b0;
 
   // Unsol
 
@@ -901,6 +940,40 @@ module lowphy1 (
   wire [31:0] s2_fram_prach_tuser;
 
   // Main
+
+  // lowphy_band ties these ready outputs high, so all three bands would drive
+  // the same shared net. Only u_b0 keeps the connection; the duplicates are
+  // collected here.
+
+  wire b1_s_defm_ebid_tready;
+  wire b1_s_fram_ebid_tready;
+  wire b1_s_prach_tready;
+  wire b1_s_ssb_data_tready;
+  wire b1_s_ssb_ebid_tready;
+  wire b1_s_ssb_bid_tready;
+
+  wire b2_s_defm_ebid_tready;
+  wire b2_s_fram_ebid_tready;
+  wire b2_s_prach_tready;
+  wire b2_s_ssb_data_tready;
+  wire b2_s_ssb_ebid_tready;
+  wire b2_s_ssb_bid_tready;
+
+  wire unused_band_tready = &{
+      1'b0,
+      b1_s_defm_ebid_tready,
+      b1_s_fram_ebid_tready,
+      b1_s_prach_tready,
+      b1_s_ssb_data_tready,
+      b1_s_ssb_ebid_tready,
+      b1_s_ssb_bid_tready,
+      b2_s_defm_ebid_tready,
+      b2_s_fram_ebid_tready,
+      b2_s_prach_tready,
+      b2_s_ssb_data_tready,
+      b2_s_ssb_ebid_tready,
+      b2_s_ssb_bid_tready
+  };
 
   lowphy_band #(
       .NUM_CC    (NumCc),
@@ -1212,15 +1285,15 @@ module lowphy1 (
       .s_defm_ebid_tdata             (s00_defm_ebid_tdata),
       .s_defm_ebid_tvalid            (s00_defm_ebid_tvalid),
       .s_defm_ebid_tlast             (s00_defm_ebid_tlast),
-      .s_defm_ebid_tready            (s00_defm_ebid_tready),
+      .s_defm_ebid_tready            (b1_s_defm_ebid_tready),
       //
       .s_fram_ebid_tdata             (s00_fram_ebid_tdata),
       .s_fram_ebid_tvalid            (s00_fram_ebid_tvalid),
       .s_fram_ebid_tlast             (s00_fram_ebid_tlast),
-      .s_fram_ebid_tready            (s00_fram_ebid_tready),
+      .s_fram_ebid_tready            (b1_s_fram_ebid_tready),
       // PRACH C plane messages
       .s_prach_tvalid                (s0_prach_tvalid),
-      .s_prach_tready                (s0_prach_tready),
+      .s_prach_tready                (b1_s_prach_tready),
       .s_prach_rtc_pc_id             (s0_prach_rtc_pc_id),
       .s_prach_cc                    (s0_prach_cc),
       .s_prach_ss                    (s0_prach_ss),
@@ -1393,17 +1466,17 @@ module lowphy1 (
       .s_ssb_data_tkeep              (s_ssb_data_tkeep),
       .s_ssb_data_tvalid             (s_ssb_data_tvalid),
       .s_ssb_data_tlast              (s_ssb_data_tlast),
-      .s_ssb_data_tready             (s_ssb_data_tready),
+      .s_ssb_data_tready             (b1_s_ssb_data_tready),
       .s_ssb_data_tuser              (s_ssb_data_tuser),
       // Early BeamID generation
       .s_ssb_ebid_tdata              (s_ssb_ebid_tdata),
       .s_ssb_ebid_tvalid             (s_ssb_ebid_tvalid),
       .s_ssb_ebid_tlast              (s_ssb_ebid_tlast),
-      .s_ssb_ebid_tready             (s_ssb_ebid_tready),
+      .s_ssb_ebid_tready             (b1_s_ssb_ebid_tready),
       // Outputs to beamid fwd interface
       .s_ssb_bid_tvalid              (s_ssb_bid_tvalid),
       .s_ssb_bid_tlast               (s_ssb_bid_tlast),
-      .s_ssb_bid_tready              (s_ssb_bid_tready),
+      .s_ssb_bid_tready              (b1_s_ssb_bid_tready),
       .s_ssb_bid_off                 (s_ssb_bid_off),
       .s_ssb_bid_beamid15            (s_ssb_bid_beamid15),
       .s_ssb_bid_remask              (s_ssb_bid_remask),
@@ -1482,15 +1555,15 @@ module lowphy1 (
       .s_defm_ebid_tdata             (s00_defm_ebid_tdata),
       .s_defm_ebid_tvalid            (s00_defm_ebid_tvalid),
       .s_defm_ebid_tlast             (s00_defm_ebid_tlast),
-      .s_defm_ebid_tready            (s00_defm_ebid_tready),
+      .s_defm_ebid_tready            (b2_s_defm_ebid_tready),
       //
       .s_fram_ebid_tdata             (s00_fram_ebid_tdata),
       .s_fram_ebid_tvalid            (s00_fram_ebid_tvalid),
       .s_fram_ebid_tlast             (s00_fram_ebid_tlast),
-      .s_fram_ebid_tready            (s00_fram_ebid_tready),
+      .s_fram_ebid_tready            (b2_s_fram_ebid_tready),
       // PRACH C plane messages
       .s_prach_tvalid                (s0_prach_tvalid),
-      .s_prach_tready                (s0_prach_tready),
+      .s_prach_tready                (b2_s_prach_tready),
       .s_prach_rtc_pc_id             (s0_prach_rtc_pc_id),
       .s_prach_cc                    (s0_prach_cc),
       .s_prach_ss                    (s0_prach_ss),
@@ -1663,17 +1736,17 @@ module lowphy1 (
       .s_ssb_data_tkeep              (s_ssb_data_tkeep),
       .s_ssb_data_tvalid             (s_ssb_data_tvalid),
       .s_ssb_data_tlast              (s_ssb_data_tlast),
-      .s_ssb_data_tready             (s_ssb_data_tready),
+      .s_ssb_data_tready             (b2_s_ssb_data_tready),
       .s_ssb_data_tuser              (s_ssb_data_tuser),
       // Early BeamID generation
       .s_ssb_ebid_tdata              (s_ssb_ebid_tdata),
       .s_ssb_ebid_tvalid             (s_ssb_ebid_tvalid),
       .s_ssb_ebid_tlast              (s_ssb_ebid_tlast),
-      .s_ssb_ebid_tready             (s_ssb_ebid_tready),
+      .s_ssb_ebid_tready             (b2_s_ssb_ebid_tready),
       // Outputs to beamid fwd interface
       .s_ssb_bid_tvalid              (s_ssb_bid_tvalid),
       .s_ssb_bid_tlast               (s_ssb_bid_tlast),
-      .s_ssb_bid_tready              (s_ssb_bid_tready),
+      .s_ssb_bid_tready              (b2_s_ssb_bid_tready),
       .s_ssb_bid_off                 (s_ssb_bid_off),
       .s_ssb_bid_beamid15            (s_ssb_bid_beamid15),
       .s_ssb_bid_remask              (s_ssb_bid_remask),
@@ -1739,6 +1812,15 @@ module lowphy1 (
           assign s2_axis_tuser[cc][ant-6] = s_ul_axis_tuser;
           assign s2_axis_tlast[cc][ant-6] = s_ul_axis_tlast;
           assign s2_axis_tvalid[cc][ant-6] = s_ul_axis_tvalid;
+
+        end else begin : gen_unused_lane
+
+          // The secondary bands hold fewer CCs than band 0, so their upper
+          // antenna lanes have no counterpart in the shared radio bus.
+          wire unused_ul_lane;
+
+          assign m_dl_axis_tdata[(cc*NumAnt+ant)*32+31-:32] = '0;
+          assign unused_ul_lane = &{1'b0, s_ul_axis_tdata[(cc*NumAnt+ant)*32+31-:32]};
 
         end
       end

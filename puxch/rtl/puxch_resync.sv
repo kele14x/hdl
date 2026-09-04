@@ -190,6 +190,12 @@ module puxch_resync #(
       .stat_resync    (stat_resync)
   );
 
+  // Intentionally unconsumed: tready is tied high and the internal poll
+  // counter paces the output, BIST is not implemented here, and the resync
+  // status is only observable via CSR.
+  wire unused_inputs = &{1'b0, s_axis_tuser, s_axis_tlast, s_axis_tvalid, ctrl_bist_s,
+                         stat_resync};
+
 endmodule
 
 `default_nettype wire

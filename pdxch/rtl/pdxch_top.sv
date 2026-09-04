@@ -70,6 +70,7 @@ module pdxch_top #(
   logic        ctrl_phase_comp_we_s                                          [ NUM_CC];
   logic        ctrl_phase_comp_en_d;
   wire         unused_ctrl_ud = &{1'b0, ctrl_ud_comp_meth, ctrl_ud_iq_width};
+  wire         unused_defm_tdest = &{1'b0, s_defm_data_tdest};
 
   logic [35:0] s0_axis_tdata                                                 [NUM_ANT];
   logic [ 3:0] s0_axis_exp                                                   [NUM_ANT];

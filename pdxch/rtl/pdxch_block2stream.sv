@@ -34,6 +34,11 @@ module pdxch_block2stream #(
   end
 
   // Signals
+
+  // din_sl/din_last do not pace the block readout, and the antenna streams
+  // are emitted free-running (m_axis_tready is ignored).
+  wire unused_inputs = &{1'b0, din_sl, din_last, m_axis_tready};
+
   logic [         15:0] din_dr_d;
   logic [         15:0] din_di_d;
   logic [          3:0] din_chn_d;

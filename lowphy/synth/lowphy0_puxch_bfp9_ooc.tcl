@@ -47,7 +47,7 @@ add_flt [file join $repo_root lowphy lowphy.flt]
 puts "INFO: resolved [llength $sources] unique RTL sources"
 
 read_verilog -sv {*}$sources
-synth_design -top $top -part $part -mode out_of_context -flatten_hierarchy rebuilt \
+synth_design -top $top -part $part -mode out_of_context -flatten_hierarchy none \
     -verilog_define {RAM_USE_XPM}
 
 report_utilization -file [file join $build_dir lowphy0_utilization.rpt]

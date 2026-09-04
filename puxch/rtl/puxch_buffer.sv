@@ -70,7 +70,6 @@ module puxch_buffer #(
   logic              rd_issue;
   logic              rd_bank;
   logic [      10:0] rd_cnt;
-  logic [      11:0] rd_addr;
   logic              rd_en             [NUM_CC];
   logic              rd_en_d           [NUM_CC];
   logic              rd_en_dd          [NUM_CC];
@@ -423,8 +422,6 @@ module puxch_buffer #(
     end
   end
 
-  assign rd_addr = {rd_bank, rd_cnt};
-
   always_comb begin
     rd_data_c = '0;
     for (int i = 0; i < NUM_CC; i++) begin
@@ -491,6 +488,12 @@ module puxch_buffer #(
   );
 
   wire unused_out_fifo = &{1'b0, out_full};
+
+  // Intentionally unconsumed: the radio-domain rst (no logic in this block
+  // uses it), din_sl, the reserved m_fram_data_req fields, and the fifo_full
+  // and reg_m_axis_tuser status outputs.
+  wire unused_buffer = &{1'b0, rst, din_sl, m_fram_data_req[32:25], m_fram_data_req[6:4],
+                         fifo_full, reg_m_axis_tuser};
 
   assign {s1_axis_tlast, s1_axis_tdata} = out_dout;
   assign s1_axis_tkeep = 8'hFF;

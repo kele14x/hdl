@@ -83,7 +83,7 @@ read_verilog -sv {*}$sources
 # OOC clock constraints: s_axi_aclk 100 MHz, clk 491.52 MHz, clk_eth_xran 400 MHz
 read_xdc -mode out_of_context [file join $script_dir puxch_ooc.xdc]
 
-synth_design -top $top -part $part -mode out_of_context -flatten_hierarchy rebuilt \
+synth_design -top $top -part $part -mode out_of_context -flatten_hierarchy none \
     -verilog_define {RAM_USE_XPM} \
     -generic HALF_BLOCK=$half_block -generic HALF_FFT=$half_fft
 

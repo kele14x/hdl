@@ -337,6 +337,8 @@ module lowphy_band #(
   logic [ 3:0] ctrl_prach_ud_iq_width;
   logic [ 3:0] ctrl_prach_ud_fs_offset;
 
+  wire         unused_prach_ud = &{1'b0, ctrl_prach_ud_comp_meth, ctrl_prach_ud_iq_width};
+
   logic [ 3:0] ctrl_prach_cfg0_subframe_inc   [NUM_CC];
   logic [ 3:0] ctrl_prach_cfg0_subframe_id    [NUM_CC];
   logic [ 5:0] ctrl_prach_cfg0_slot_id        [NUM_CC];
@@ -804,6 +806,153 @@ module lowphy_band #(
 
   // Main
 
+  // Register-facing copies of the per-CC arrays. `lowphy_regs` has a fixed
+  // three-CC register map, while a band may be built with fewer CCs. Wiring the
+  // upper register slots straight into the NUM_CC-sized datapath arrays would
+  // index out of range and alias onto element 0.
+
+  localparam int NUM_CC_REG = 3;
+
+  logic [ 3:0] reg_ctrl_dl_en                    [NUM_CC_REG];
+  logic [ 1:0] reg_ctrl_dl_rat                   [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_dl_bist                  [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_dl_bw                    [NUM_CC_REG];
+  logic [ 8:0] reg_ctrl_dl_nprb                  [NUM_CC_REG];
+  logic [22:0] reg_ctrl_dl_rfs_offset            [NUM_CC_REG];
+  logic [16:0] reg_ctrl_dl_gain                  [NUM_CC_REG][4];
+  logic [ 3:0] reg_ctrl_ul_en                    [NUM_CC_REG];
+  logic [ 1:0] reg_ctrl_ul_rat                   [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_ul_bist                  [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_ul_bw                    [NUM_CC_REG];
+  logic [ 8:0] reg_ctrl_ul_nprb                  [NUM_CC_REG];
+  logic [22:0] reg_ctrl_ul_rfs_offset            [NUM_CC_REG];
+  logic [16:0] reg_ctrl_ul_gain                  [NUM_CC_REG][4];
+  logic [ 3:0] reg_ctrl_prach_en                 [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_format             [NUM_CC_REG];
+  logic [ 1:0] reg_ctrl_prach_rat                [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_bist_bist          [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_bist_static_c      [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_bw                 [NUM_CC_REG];
+  logic [22:0] reg_ctrl_prach_rfs_offset         [NUM_CC_REG];
+  logic [22:0] reg_ctrl_prach_ta3_offset         [NUM_CC_REG];
+  logic [ 5:0] reg_ctrl_prach_cfg0_symbol_id     [NUM_CC_REG];
+  logic [ 5:0] reg_ctrl_prach_cfg0_slot_id       [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_cfg0_subframe_id   [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_cfg0_subframe_inc  [NUM_CC_REG];
+  logic [15:0] reg_ctrl_prach_cfg1_time_offset   [NUM_CC_REG];
+  logic [15:0] reg_ctrl_prach_cfg1_cp_length     [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_cfg2_num_symbol    [NUM_CC_REG];
+  logic [23:0] reg_ctrl_prach_cfg2_freq_offset   [NUM_CC_REG];
+  logic [15:0] reg_ctrl_prach_cfg3_sampling_offset[NUM_CC_REG];
+
+  logic [ 3:0] reg_stat_prach_msg0_subframe_id   [NUM_CC_REG];
+  logic [ 5:0] reg_stat_prach_msg0_slot_id       [NUM_CC_REG];
+  logic [ 5:0] reg_stat_prach_msg0_symbol_id     [NUM_CC_REG];
+  logic [15:0] reg_stat_prach_msg1_time_offset   [NUM_CC_REG];
+  logic [15:0] reg_stat_prach_msg1_cp_length     [NUM_CC_REG];
+  logic [ 3:0] reg_stat_prach_msg2_num_symbol    [NUM_CC_REG];
+  logic [23:0] reg_stat_prach_msg2_freq_offset   [NUM_CC_REG];
+
+  generate
+    for (genvar cc = 0; cc < NUM_CC_REG; cc++) begin : gen_cc_map
+      if (cc < NUM_CC) begin : gen_active_cc
+        assign ctrl_dl_en[cc]                     = reg_ctrl_dl_en[cc];
+        assign ctrl_dl_rat[cc]                    = reg_ctrl_dl_rat[cc];
+        assign ctrl_dl_bist[cc]                   = reg_ctrl_dl_bist[cc];
+        assign ctrl_dl_bw[cc]                     = reg_ctrl_dl_bw[cc];
+        assign ctrl_dl_nprb[cc]                   = reg_ctrl_dl_nprb[cc];
+        assign ctrl_dl_rfs_offset[cc]             = reg_ctrl_dl_rfs_offset[cc];
+        assign ctrl_ul_en[cc]                     = reg_ctrl_ul_en[cc];
+        assign ctrl_ul_rat[cc]                    = reg_ctrl_ul_rat[cc];
+        assign ctrl_ul_bist[cc]                   = reg_ctrl_ul_bist[cc];
+        assign ctrl_ul_bw[cc]                     = reg_ctrl_ul_bw[cc];
+        assign ctrl_ul_nprb[cc]                   = reg_ctrl_ul_nprb[cc];
+        assign ctrl_ul_rfs_offset[cc]             = reg_ctrl_ul_rfs_offset[cc];
+        assign ctrl_prach_en[cc]                  = reg_ctrl_prach_en[cc];
+        assign ctrl_prach_format[cc]              = reg_ctrl_prach_format[cc];
+        assign ctrl_prach_rat[cc]                 = reg_ctrl_prach_rat[cc];
+        assign ctrl_prach_bist_bist[cc]           = reg_ctrl_prach_bist_bist[cc];
+        assign ctrl_prach_bist_static_c[cc]       = reg_ctrl_prach_bist_static_c[cc];
+        assign ctrl_prach_bw[cc]                  = reg_ctrl_prach_bw[cc];
+        assign ctrl_prach_rfs_offset[cc]          = reg_ctrl_prach_rfs_offset[cc];
+        assign ctrl_prach_ta3_offset[cc]          = reg_ctrl_prach_ta3_offset[cc];
+        assign ctrl_prach_cfg0_symbol_id[cc]      = reg_ctrl_prach_cfg0_symbol_id[cc];
+        assign ctrl_prach_cfg0_slot_id[cc]        = reg_ctrl_prach_cfg0_slot_id[cc];
+        assign ctrl_prach_cfg0_subframe_id[cc]    = reg_ctrl_prach_cfg0_subframe_id[cc];
+        assign ctrl_prach_cfg0_subframe_inc[cc]   = reg_ctrl_prach_cfg0_subframe_inc[cc];
+        assign ctrl_prach_cfg1_time_offset[cc]    = reg_ctrl_prach_cfg1_time_offset[cc];
+        assign ctrl_prach_cfg1_cp_length[cc]      = reg_ctrl_prach_cfg1_cp_length[cc];
+        assign ctrl_prach_cfg2_num_symbol[cc]     = reg_ctrl_prach_cfg2_num_symbol[cc];
+        assign ctrl_prach_cfg2_freq_offset[cc]    = reg_ctrl_prach_cfg2_freq_offset[cc];
+        assign ctrl_prach_cfg3_sampling_offset[cc] = reg_ctrl_prach_cfg3_sampling_offset[cc];
+
+        for (genvar ant = 0; ant < 4; ant++) begin : gen_gain_ant
+          assign ctrl_dl_gain_reg[cc][ant] = reg_ctrl_dl_gain[cc][ant];
+          assign ctrl_ul_gain_reg[cc][ant] = reg_ctrl_ul_gain[cc][ant];
+        end
+
+        assign reg_stat_prach_msg0_subframe_id[cc]      = stat_prach_msg0_subframe_id[cc];
+        assign reg_stat_prach_msg0_slot_id[cc]          = stat_prach_msg0_slot_id[cc];
+        assign reg_stat_prach_msg0_symbol_id[cc]        = stat_prach_msg0_symbol_id[cc];
+        assign reg_stat_prach_msg1_time_offset[cc]      = stat_prach_msg1_time_offset[cc];
+        assign reg_stat_prach_msg1_cp_length[cc]        = stat_prach_msg1_cp_length[cc];
+        assign reg_stat_prach_msg2_num_symbol[cc]       = stat_prach_msg2_num_symbol[cc];
+        assign reg_stat_prach_msg2_freq_offset[cc]      = stat_prach_msg2_freq_offset[cc];
+      end else begin : gen_inactive_cc
+        // The register slots above this band's CC count stay readable but
+        // drive nothing, and their status inputs read back as zero.
+        wire unused_reg_cc = &{
+            1'b0,
+            reg_ctrl_dl_en[cc],
+            reg_ctrl_dl_rat[cc],
+            reg_ctrl_dl_bist[cc],
+            reg_ctrl_dl_bw[cc],
+            reg_ctrl_dl_nprb[cc],
+            reg_ctrl_dl_rfs_offset[cc],
+            reg_ctrl_dl_gain[cc][0],
+            reg_ctrl_dl_gain[cc][1],
+            reg_ctrl_dl_gain[cc][2],
+            reg_ctrl_dl_gain[cc][3],
+            reg_ctrl_ul_en[cc],
+            reg_ctrl_ul_rat[cc],
+            reg_ctrl_ul_bist[cc],
+            reg_ctrl_ul_bw[cc],
+            reg_ctrl_ul_nprb[cc],
+            reg_ctrl_ul_rfs_offset[cc],
+            reg_ctrl_ul_gain[cc][0],
+            reg_ctrl_ul_gain[cc][1],
+            reg_ctrl_ul_gain[cc][2],
+            reg_ctrl_ul_gain[cc][3],
+            reg_ctrl_prach_en[cc],
+            reg_ctrl_prach_format[cc],
+            reg_ctrl_prach_rat[cc],
+            reg_ctrl_prach_bist_bist[cc],
+            reg_ctrl_prach_bist_static_c[cc],
+            reg_ctrl_prach_bw[cc],
+            reg_ctrl_prach_rfs_offset[cc],
+            reg_ctrl_prach_ta3_offset[cc],
+            reg_ctrl_prach_cfg0_symbol_id[cc],
+            reg_ctrl_prach_cfg0_slot_id[cc],
+            reg_ctrl_prach_cfg0_subframe_id[cc],
+            reg_ctrl_prach_cfg0_subframe_inc[cc],
+            reg_ctrl_prach_cfg1_time_offset[cc],
+            reg_ctrl_prach_cfg1_cp_length[cc],
+            reg_ctrl_prach_cfg2_num_symbol[cc],
+            reg_ctrl_prach_cfg2_freq_offset[cc],
+            reg_ctrl_prach_cfg3_sampling_offset[cc]
+        };
+
+        assign reg_stat_prach_msg0_subframe_id[cc]      = '0;
+        assign reg_stat_prach_msg0_slot_id[cc]          = '0;
+        assign reg_stat_prach_msg0_symbol_id[cc]        = '0;
+        assign reg_stat_prach_msg1_time_offset[cc]      = '0;
+        assign reg_stat_prach_msg1_cp_length[cc]        = '0;
+        assign reg_stat_prach_msg2_num_symbol[cc]       = '0;
+        assign reg_stat_prach_msg2_freq_offset[cc]      = '0;
+      end
+    end
+  endgenerate
+
   lowphy_regs u_regs (
       .s_axi_aclk                      (s_axi_aclk),
       .s_axi_aresetn                   (s_axi_aresetn),
@@ -832,41 +981,41 @@ module lowphy_band #(
       .s_axi_rvalid                    (s_axi_rvalid),
       .s_axi_rready                    (s_axi_rready),
       // dl_en.cc0,
-      .dl_en_cc0_out                   (ctrl_dl_en[0]),
+      .dl_en_cc0_out                   (reg_ctrl_dl_en[0]),
       // dl_en.cc1,
-      .dl_en_cc1_out                   (ctrl_dl_en[1]),
+      .dl_en_cc1_out                   (reg_ctrl_dl_en[1]),
       // dl_en.cc2,
-      .dl_en_cc2_out                   (ctrl_dl_en[2]),
+      .dl_en_cc2_out                   (reg_ctrl_dl_en[2]),
       // dl_rat.cc0,
-      .dl_rat_cc0_out                  (ctrl_dl_rat[0]),
+      .dl_rat_cc0_out                  (reg_ctrl_dl_rat[0]),
       // dl_rat.cc1,
-      .dl_rat_cc1_out                  (ctrl_dl_rat[1]),
+      .dl_rat_cc1_out                  (reg_ctrl_dl_rat[1]),
       // dl_rat.cc2,
-      .dl_rat_cc2_out                  (ctrl_dl_rat[2]),
+      .dl_rat_cc2_out                  (reg_ctrl_dl_rat[2]),
       // dl_bist.cc0,
-      .dl_bist_cc0_out                 (ctrl_dl_bist[0]),
+      .dl_bist_cc0_out                 (reg_ctrl_dl_bist[0]),
       // dl_bist.cc1,
-      .dl_bist_cc1_out                 (ctrl_dl_bist[1]),
+      .dl_bist_cc1_out                 (reg_ctrl_dl_bist[1]),
       // dl_bist.cc2,
-      .dl_bist_cc2_out                 (ctrl_dl_bist[2]),
+      .dl_bist_cc2_out                 (reg_ctrl_dl_bist[2]),
       // dl_bw.cc0,
-      .dl_bw_cc0_out                   (ctrl_dl_bw[0]),
+      .dl_bw_cc0_out                   (reg_ctrl_dl_bw[0]),
       // dl_bw.cc1,
-      .dl_bw_cc1_out                   (ctrl_dl_bw[1]),
+      .dl_bw_cc1_out                   (reg_ctrl_dl_bw[1]),
       // dl_bw.cc2,
-      .dl_bw_cc2_out                   (ctrl_dl_bw[2]),
+      .dl_bw_cc2_out                   (reg_ctrl_dl_bw[2]),
       // dl_nprb_0.val,
-      .dl_nprb_0_val_out               (ctrl_dl_nprb[0]),
+      .dl_nprb_0_val_out               (reg_ctrl_dl_nprb[0]),
       // dl_nprb_1.val,
-      .dl_nprb_1_val_out               (ctrl_dl_nprb[1]),
+      .dl_nprb_1_val_out               (reg_ctrl_dl_nprb[1]),
       // dl_nprb_2.val,
-      .dl_nprb_2_val_out               (ctrl_dl_nprb[2]),
+      .dl_nprb_2_val_out               (reg_ctrl_dl_nprb[2]),
       // dl_rfs_offset_0.val,
-      .dl_rfs_offset_0_val_out         (ctrl_dl_rfs_offset[0]),
+      .dl_rfs_offset_0_val_out         (reg_ctrl_dl_rfs_offset[0]),
       // dl_rfs_offset_1.val,
-      .dl_rfs_offset_1_val_out         (ctrl_dl_rfs_offset[1]),
+      .dl_rfs_offset_1_val_out         (reg_ctrl_dl_rfs_offset[1]),
       // dl_rfs_offset_2.val,
-      .dl_rfs_offset_2_val_out         (ctrl_dl_rfs_offset[2]),
+      .dl_rfs_offset_2_val_out         (reg_ctrl_dl_rfs_offset[2]),
       // dl_ud.comp_meth,
       .dl_ud_comp_meth_out             (ctrl_dl_ud_comp_meth),
       // dl_ud.iq_width,
@@ -874,65 +1023,65 @@ module lowphy_band #(
       // dl_ud.fs_offset,
       .dl_ud_fs_offset_out             (ctrl_dl_fs_offset),
       // dl_gain_0_0.val,
-      .dl_gain_0_0_val_out             (ctrl_dl_gain_reg[0][0]),
+      .dl_gain_0_0_val_out             (reg_ctrl_dl_gain[0][0]),
       // dl_gain_0_1.val,
-      .dl_gain_0_1_val_out             (ctrl_dl_gain_reg[0][1]),
+      .dl_gain_0_1_val_out             (reg_ctrl_dl_gain[0][1]),
       // dl_gain_0_2.val,
-      .dl_gain_0_2_val_out             (ctrl_dl_gain_reg[0][2]),
+      .dl_gain_0_2_val_out             (reg_ctrl_dl_gain[0][2]),
       // dl_gain_0_3.val,
-      .dl_gain_0_3_val_out             (ctrl_dl_gain_reg[0][3]),
+      .dl_gain_0_3_val_out             (reg_ctrl_dl_gain[0][3]),
       // dl_gain_1_0.val,
-      .dl_gain_1_0_val_out             (ctrl_dl_gain_reg[1][0]),
+      .dl_gain_1_0_val_out             (reg_ctrl_dl_gain[1][0]),
       // dl_gain_1_1.val,
-      .dl_gain_1_1_val_out             (ctrl_dl_gain_reg[1][1]),
+      .dl_gain_1_1_val_out             (reg_ctrl_dl_gain[1][1]),
       // dl_gain_1_2.val,
-      .dl_gain_1_2_val_out             (ctrl_dl_gain_reg[1][2]),
+      .dl_gain_1_2_val_out             (reg_ctrl_dl_gain[1][2]),
       // dl_gain_1_3.val,
-      .dl_gain_1_3_val_out             (ctrl_dl_gain_reg[1][3]),
+      .dl_gain_1_3_val_out             (reg_ctrl_dl_gain[1][3]),
       // dl_gain_2_0.val,
-      .dl_gain_2_0_val_out             (ctrl_dl_gain_reg[2][0]),
+      .dl_gain_2_0_val_out             (reg_ctrl_dl_gain[2][0]),
       // dl_gain_2_1.val,
-      .dl_gain_2_1_val_out             (ctrl_dl_gain_reg[2][1]),
+      .dl_gain_2_1_val_out             (reg_ctrl_dl_gain[2][1]),
       // dl_gain_2_2.val,
-      .dl_gain_2_2_val_out             (ctrl_dl_gain_reg[2][2]),
+      .dl_gain_2_2_val_out             (reg_ctrl_dl_gain[2][2]),
       // dl_gain_2_3.val,
-      .dl_gain_2_3_val_out             (ctrl_dl_gain_reg[2][3]),
+      .dl_gain_2_3_val_out             (reg_ctrl_dl_gain[2][3]),
       // ul_en.cc0,
-      .ul_en_cc0_out                   (ctrl_ul_en[0]),
+      .ul_en_cc0_out                   (reg_ctrl_ul_en[0]),
       // ul_en.cc1,
-      .ul_en_cc1_out                   (ctrl_ul_en[1]),
+      .ul_en_cc1_out                   (reg_ctrl_ul_en[1]),
       // ul_en.cc2,
-      .ul_en_cc2_out                   (ctrl_ul_en[2]),
+      .ul_en_cc2_out                   (reg_ctrl_ul_en[2]),
       // ul_rat.cc0,
-      .ul_rat_cc0_out                  (ctrl_ul_rat[0]),
+      .ul_rat_cc0_out                  (reg_ctrl_ul_rat[0]),
       // ul_rat.cc1,
-      .ul_rat_cc1_out                  (ctrl_ul_rat[1]),
+      .ul_rat_cc1_out                  (reg_ctrl_ul_rat[1]),
       // ul_rat.cc2,
-      .ul_rat_cc2_out                  (ctrl_ul_rat[2]),
+      .ul_rat_cc2_out                  (reg_ctrl_ul_rat[2]),
       // ul_bist.bist_cc0,
-      .ul_bist_bist_cc0_out            (ctrl_ul_bist[0]),
+      .ul_bist_bist_cc0_out            (reg_ctrl_ul_bist[0]),
       // ul_bist.bist_cc1,
-      .ul_bist_bist_cc1_out            (ctrl_ul_bist[1]),
+      .ul_bist_bist_cc1_out            (reg_ctrl_ul_bist[1]),
       // ul_bist.bist_cc2,
-      .ul_bist_bist_cc2_out            (ctrl_ul_bist[2]),
+      .ul_bist_bist_cc2_out            (reg_ctrl_ul_bist[2]),
       // ul_bw.cc0,
-      .ul_bw_cc0_out                   (ctrl_ul_bw[0]),
+      .ul_bw_cc0_out                   (reg_ctrl_ul_bw[0]),
       // ul_bw.cc1,
-      .ul_bw_cc1_out                   (ctrl_ul_bw[1]),
+      .ul_bw_cc1_out                   (reg_ctrl_ul_bw[1]),
       // ul_bw.cc2,
-      .ul_bw_cc2_out                   (ctrl_ul_bw[2]),
+      .ul_bw_cc2_out                   (reg_ctrl_ul_bw[2]),
       // ul_nprb_0.val,
-      .ul_nprb_0_val_out               (ctrl_ul_nprb[0]),
+      .ul_nprb_0_val_out               (reg_ctrl_ul_nprb[0]),
       // ul_nprb_1.val,
-      .ul_nprb_1_val_out               (ctrl_ul_nprb[1]),
+      .ul_nprb_1_val_out               (reg_ctrl_ul_nprb[1]),
       // ul_nprb_2.val,
-      .ul_nprb_2_val_out               (ctrl_ul_nprb[2]),
+      .ul_nprb_2_val_out               (reg_ctrl_ul_nprb[2]),
       // ul_rfs_offset_0.val,
-      .ul_rfs_offset_0_val_out         (ctrl_ul_rfs_offset[0]),
+      .ul_rfs_offset_0_val_out         (reg_ctrl_ul_rfs_offset[0]),
       // ul_rfs_offset_1.val,
-      .ul_rfs_offset_1_val_out         (ctrl_ul_rfs_offset[1]),
+      .ul_rfs_offset_1_val_out         (reg_ctrl_ul_rfs_offset[1]),
       // ul_rfs_offset_2.val,
-      .ul_rfs_offset_2_val_out         (ctrl_ul_rfs_offset[2]),
+      .ul_rfs_offset_2_val_out         (reg_ctrl_ul_rfs_offset[2]),
       // ul_ud.comp_meth,
       .ul_ud_comp_meth_out             (ctrl_ul_ud_comp_meth),
       // ul_ud.iq_width,
@@ -940,77 +1089,77 @@ module lowphy_band #(
       // ul_ud.fs_offset,
       .ul_ud_fs_offset_out             (ctrl_ul_fs_offset),
       // ul_gain_0_0.val,
-      .ul_gain_0_0_val_out             (ctrl_ul_gain_reg[0][0]),
+      .ul_gain_0_0_val_out             (reg_ctrl_ul_gain[0][0]),
       // ul_gain_0_1.val,
-      .ul_gain_0_1_val_out             (ctrl_ul_gain_reg[0][1]),
+      .ul_gain_0_1_val_out             (reg_ctrl_ul_gain[0][1]),
       // ul_gain_0_2.val,
-      .ul_gain_0_2_val_out             (ctrl_ul_gain_reg[0][2]),
+      .ul_gain_0_2_val_out             (reg_ctrl_ul_gain[0][2]),
       // ul_gain_0_3.val,
-      .ul_gain_0_3_val_out             (ctrl_ul_gain_reg[0][3]),
+      .ul_gain_0_3_val_out             (reg_ctrl_ul_gain[0][3]),
       // ul_gain_1_0.val,
-      .ul_gain_1_0_val_out             (ctrl_ul_gain_reg[1][0]),
+      .ul_gain_1_0_val_out             (reg_ctrl_ul_gain[1][0]),
       // ul_gain_1_1.val,
-      .ul_gain_1_1_val_out             (ctrl_ul_gain_reg[1][1]),
+      .ul_gain_1_1_val_out             (reg_ctrl_ul_gain[1][1]),
       // ul_gain_1_2.val,
-      .ul_gain_1_2_val_out             (ctrl_ul_gain_reg[1][2]),
+      .ul_gain_1_2_val_out             (reg_ctrl_ul_gain[1][2]),
       // ul_gain_1_3.val,
-      .ul_gain_1_3_val_out             (ctrl_ul_gain_reg[1][3]),
+      .ul_gain_1_3_val_out             (reg_ctrl_ul_gain[1][3]),
       // ul_gain_2_0.val,
-      .ul_gain_2_0_val_out             (ctrl_ul_gain_reg[2][0]),
+      .ul_gain_2_0_val_out             (reg_ctrl_ul_gain[2][0]),
       // ul_gain_2_1.val,
-      .ul_gain_2_1_val_out             (ctrl_ul_gain_reg[2][1]),
+      .ul_gain_2_1_val_out             (reg_ctrl_ul_gain[2][1]),
       // ul_gain_2_2.val,
-      .ul_gain_2_2_val_out             (ctrl_ul_gain_reg[2][2]),
+      .ul_gain_2_2_val_out             (reg_ctrl_ul_gain[2][2]),
       // ul_gain_2_3.val,
-      .ul_gain_2_3_val_out             (ctrl_ul_gain_reg[2][3]),
+      .ul_gain_2_3_val_out             (reg_ctrl_ul_gain[2][3]),
       // prach_en.cc0,
-      .prach_en_cc0_out                (ctrl_prach_en[0]),
+      .prach_en_cc0_out                (reg_ctrl_prach_en[0]),
       // prach_en.cc1,
-      .prach_en_cc1_out                (ctrl_prach_en[1]),
+      .prach_en_cc1_out                (reg_ctrl_prach_en[1]),
       // prach_en.cc2,
-      .prach_en_cc2_out                (ctrl_prach_en[2]),
+      .prach_en_cc2_out                (reg_ctrl_prach_en[2]),
       // prach_format.cc0,
-      .prach_format_cc0_out            (ctrl_prach_format[0]),
+      .prach_format_cc0_out            (reg_ctrl_prach_format[0]),
       // prach_format.cc1,
-      .prach_format_cc1_out            (ctrl_prach_format[1]),
+      .prach_format_cc1_out            (reg_ctrl_prach_format[1]),
       // prach_format.cc2,
-      .prach_format_cc2_out            (ctrl_prach_format[2]),
+      .prach_format_cc2_out            (reg_ctrl_prach_format[2]),
       // prach_rat.cc0,
-      .prach_rat_cc0_out               (ctrl_prach_rat[0]),
+      .prach_rat_cc0_out               (reg_ctrl_prach_rat[0]),
       // prach_rat.cc1,
-      .prach_rat_cc1_out               (ctrl_prach_rat[1]),
+      .prach_rat_cc1_out               (reg_ctrl_prach_rat[1]),
       // prach_rat.cc2,
-      .prach_rat_cc2_out               (ctrl_prach_rat[2]),
+      .prach_rat_cc2_out               (reg_ctrl_prach_rat[2]),
       // prach_bist.bist_cc0,
-      .prach_bist_bist_cc0_out         (ctrl_prach_bist_bist[0]),
+      .prach_bist_bist_cc0_out         (reg_ctrl_prach_bist_bist[0]),
       // prach_bist.bist_cc1,
-      .prach_bist_bist_cc1_out         (ctrl_prach_bist_bist[1]),
+      .prach_bist_bist_cc1_out         (reg_ctrl_prach_bist_bist[1]),
       // prach_bist.bist_cc2,
-      .prach_bist_bist_cc2_out         (ctrl_prach_bist_bist[2]),
+      .prach_bist_bist_cc2_out         (reg_ctrl_prach_bist_bist[2]),
       // prach_bist.static_c_cc0,
-      .prach_bist_static_c_cc0_out     (ctrl_prach_bist_static_c[0]),
+      .prach_bist_static_c_cc0_out     (reg_ctrl_prach_bist_static_c[0]),
       // prach_bist.static_c_cc1,
-      .prach_bist_static_c_cc1_out     (ctrl_prach_bist_static_c[1]),
+      .prach_bist_static_c_cc1_out     (reg_ctrl_prach_bist_static_c[1]),
       // prach_bist.static_c_cc2,
-      .prach_bist_static_c_cc2_out     (ctrl_prach_bist_static_c[2]),
+      .prach_bist_static_c_cc2_out     (reg_ctrl_prach_bist_static_c[2]),
       // prach_bw.cc0,
-      .prach_bw_cc0_out                (ctrl_prach_bw[0]),
+      .prach_bw_cc0_out                (reg_ctrl_prach_bw[0]),
       // prach_bw.cc1,
-      .prach_bw_cc1_out                (ctrl_prach_bw[1]),
+      .prach_bw_cc1_out                (reg_ctrl_prach_bw[1]),
       // prach_bw.cc2,
-      .prach_bw_cc2_out                (ctrl_prach_bw[2]),
+      .prach_bw_cc2_out                (reg_ctrl_prach_bw[2]),
       // prach_rfs_offset_0.val,
-      .prach_rfs_offset_0_val_out      (ctrl_prach_rfs_offset[0]),
+      .prach_rfs_offset_0_val_out      (reg_ctrl_prach_rfs_offset[0]),
       // prach_rfs_offset_1.val,
-      .prach_rfs_offset_1_val_out      (ctrl_prach_rfs_offset[1]),
+      .prach_rfs_offset_1_val_out      (reg_ctrl_prach_rfs_offset[1]),
       // prach_rfs_offset_2.val,
-      .prach_rfs_offset_2_val_out      (ctrl_prach_rfs_offset[2]),
+      .prach_rfs_offset_2_val_out      (reg_ctrl_prach_rfs_offset[2]),
       // prach_ta3_offset_0.val,
-      .prach_ta3_offset_0_val_out      (ctrl_prach_ta3_offset[0]),
+      .prach_ta3_offset_0_val_out      (reg_ctrl_prach_ta3_offset[0]),
       // prach_ta3_offset_1.val,
-      .prach_ta3_offset_1_val_out      (ctrl_prach_ta3_offset[1]),
+      .prach_ta3_offset_1_val_out      (reg_ctrl_prach_ta3_offset[1]),
       // prach_ta3_offset_2.val,
-      .prach_ta3_offset_2_val_out      (ctrl_prach_ta3_offset[2]),
+      .prach_ta3_offset_2_val_out      (reg_ctrl_prach_ta3_offset[2]),
       // prach_ud.comp_meth,
       .prach_ud_comp_meth_out          (ctrl_prach_ud_comp_meth),
       // prach_ud.iq_width,
@@ -1018,101 +1167,101 @@ module lowphy_band #(
       // prach_ud.fs_offset,
       .prach_ud_fs_offset_out          (ctrl_prach_ud_fs_offset),
       // prach_cfg0_0.symbol_id,
-      .prach_cfg0_0_symbol_id_out      (ctrl_prach_cfg0_symbol_id[0]),
+      .prach_cfg0_0_symbol_id_out      (reg_ctrl_prach_cfg0_symbol_id[0]),
       // prach_cfg0_0.slot_id,
-      .prach_cfg0_0_slot_id_out        (ctrl_prach_cfg0_slot_id[0]),
+      .prach_cfg0_0_slot_id_out        (reg_ctrl_prach_cfg0_slot_id[0]),
       // prach_cfg0_0.subframe_id,
-      .prach_cfg0_0_subframe_id_out    (ctrl_prach_cfg0_subframe_id[0]),
+      .prach_cfg0_0_subframe_id_out    (reg_ctrl_prach_cfg0_subframe_id[0]),
       // prach_cfg0_0.subframe_inc,
-      .prach_cfg0_0_subframe_inc_out   (ctrl_prach_cfg0_subframe_inc[0]),
+      .prach_cfg0_0_subframe_inc_out   (reg_ctrl_prach_cfg0_subframe_inc[0]),
       // prach_cfg0_1.symbol_id,
-      .prach_cfg0_1_symbol_id_out      (ctrl_prach_cfg0_symbol_id[1]),
+      .prach_cfg0_1_symbol_id_out      (reg_ctrl_prach_cfg0_symbol_id[1]),
       // prach_cfg0_1.slot_id,
-      .prach_cfg0_1_slot_id_out        (ctrl_prach_cfg0_slot_id[1]),
+      .prach_cfg0_1_slot_id_out        (reg_ctrl_prach_cfg0_slot_id[1]),
       // prach_cfg0_1.subframe_id,
-      .prach_cfg0_1_subframe_id_out    (ctrl_prach_cfg0_subframe_id[1]),
+      .prach_cfg0_1_subframe_id_out    (reg_ctrl_prach_cfg0_subframe_id[1]),
       // prach_cfg0_1.subframe_inc,
-      .prach_cfg0_1_subframe_inc_out   (ctrl_prach_cfg0_subframe_inc[1]),
+      .prach_cfg0_1_subframe_inc_out   (reg_ctrl_prach_cfg0_subframe_inc[1]),
       // prach_cfg0_2.symbol_id,
-      .prach_cfg0_2_symbol_id_out      (ctrl_prach_cfg0_symbol_id[2]),
+      .prach_cfg0_2_symbol_id_out      (reg_ctrl_prach_cfg0_symbol_id[2]),
       // prach_cfg0_2.slot_id,
-      .prach_cfg0_2_slot_id_out        (ctrl_prach_cfg0_slot_id[2]),
+      .prach_cfg0_2_slot_id_out        (reg_ctrl_prach_cfg0_slot_id[2]),
       // prach_cfg0_2.subframe_id,
-      .prach_cfg0_2_subframe_id_out    (ctrl_prach_cfg0_subframe_id[2]),
+      .prach_cfg0_2_subframe_id_out    (reg_ctrl_prach_cfg0_subframe_id[2]),
       // prach_cfg0_2.subframe_inc,
-      .prach_cfg0_2_subframe_inc_out   (ctrl_prach_cfg0_subframe_inc[2]),
+      .prach_cfg0_2_subframe_inc_out   (reg_ctrl_prach_cfg0_subframe_inc[2]),
       // prach_cfg1_0.time_offset,
-      .prach_cfg1_0_time_offset_out    (ctrl_prach_cfg1_time_offset[0]),
+      .prach_cfg1_0_time_offset_out    (reg_ctrl_prach_cfg1_time_offset[0]),
       // prach_cfg1_0.cp_length,
-      .prach_cfg1_0_cp_length_out      (ctrl_prach_cfg1_cp_length[0]),
+      .prach_cfg1_0_cp_length_out      (reg_ctrl_prach_cfg1_cp_length[0]),
       // prach_cfg1_1.time_offset,
-      .prach_cfg1_1_time_offset_out    (ctrl_prach_cfg1_time_offset[1]),
+      .prach_cfg1_1_time_offset_out    (reg_ctrl_prach_cfg1_time_offset[1]),
       // prach_cfg1_1.cp_length,
-      .prach_cfg1_1_cp_length_out      (ctrl_prach_cfg1_cp_length[1]),
+      .prach_cfg1_1_cp_length_out      (reg_ctrl_prach_cfg1_cp_length[1]),
       // prach_cfg1_2.time_offset,
-      .prach_cfg1_2_time_offset_out    (ctrl_prach_cfg1_time_offset[2]),
+      .prach_cfg1_2_time_offset_out    (reg_ctrl_prach_cfg1_time_offset[2]),
       // prach_cfg1_2.cp_length,
-      .prach_cfg1_2_cp_length_out      (ctrl_prach_cfg1_cp_length[2]),
+      .prach_cfg1_2_cp_length_out      (reg_ctrl_prach_cfg1_cp_length[2]),
       // prach_cfg2_0.num_symbol,
-      .prach_cfg2_0_num_symbol_out     (ctrl_prach_cfg2_num_symbol[0]),
+      .prach_cfg2_0_num_symbol_out     (reg_ctrl_prach_cfg2_num_symbol[0]),
       // prach_cfg2_0.freq_offset,
-      .prach_cfg2_0_freq_offset_out    (ctrl_prach_cfg2_freq_offset[0]),
+      .prach_cfg2_0_freq_offset_out    (reg_ctrl_prach_cfg2_freq_offset[0]),
       // prach_cfg2_1.num_symbol,
-      .prach_cfg2_1_num_symbol_out     (ctrl_prach_cfg2_num_symbol[1]),
+      .prach_cfg2_1_num_symbol_out     (reg_ctrl_prach_cfg2_num_symbol[1]),
       // prach_cfg2_1.freq_offset,
-      .prach_cfg2_1_freq_offset_out    (ctrl_prach_cfg2_freq_offset[1]),
+      .prach_cfg2_1_freq_offset_out    (reg_ctrl_prach_cfg2_freq_offset[1]),
       // prach_cfg2_2.num_symbol,
-      .prach_cfg2_2_num_symbol_out     (ctrl_prach_cfg2_num_symbol[2]),
+      .prach_cfg2_2_num_symbol_out     (reg_ctrl_prach_cfg2_num_symbol[2]),
       // prach_cfg2_2.freq_offset,
-      .prach_cfg2_2_freq_offset_out    (ctrl_prach_cfg2_freq_offset[2]),
+      .prach_cfg2_2_freq_offset_out    (reg_ctrl_prach_cfg2_freq_offset[2]),
       // prach_cfg3_0.sampling_offset,
-      .prach_cfg3_0_sampling_offset_out(ctrl_prach_cfg3_sampling_offset[0]),
+      .prach_cfg3_0_sampling_offset_out(reg_ctrl_prach_cfg3_sampling_offset[0]),
       // prach_cfg3_1.sampling_offset,
-      .prach_cfg3_1_sampling_offset_out(ctrl_prach_cfg3_sampling_offset[1]),
+      .prach_cfg3_1_sampling_offset_out(reg_ctrl_prach_cfg3_sampling_offset[1]),
       // prach_cfg3_2.sampling_offset,
-      .prach_cfg3_2_sampling_offset_out(ctrl_prach_cfg3_sampling_offset[2]),
+      .prach_cfg3_2_sampling_offset_out(reg_ctrl_prach_cfg3_sampling_offset[2]),
       // prach_msg0_0.symbol_id,
-      .prach_msg0_0_symbol_id_in       (stat_prach_msg0_symbol_id[0]),
+      .prach_msg0_0_symbol_id_in       (reg_stat_prach_msg0_symbol_id[0]),
       // prach_msg0_0.slot_id,
-      .prach_msg0_0_slot_id_in         (stat_prach_msg0_slot_id[0]),
+      .prach_msg0_0_slot_id_in         (reg_stat_prach_msg0_slot_id[0]),
       // prach_msg0_0.subframe_id,
-      .prach_msg0_0_subframe_id_in     (stat_prach_msg0_subframe_id[0]),
+      .prach_msg0_0_subframe_id_in     (reg_stat_prach_msg0_subframe_id[0]),
       // prach_msg0_1.symbol_id,
-      .prach_msg0_1_symbol_id_in       (stat_prach_msg0_symbol_id[1]),
+      .prach_msg0_1_symbol_id_in       (reg_stat_prach_msg0_symbol_id[1]),
       // prach_msg0_1.slot_id,
-      .prach_msg0_1_slot_id_in         (stat_prach_msg0_slot_id[1]),
+      .prach_msg0_1_slot_id_in         (reg_stat_prach_msg0_slot_id[1]),
       // prach_msg0_1.subframe_id,
-      .prach_msg0_1_subframe_id_in     (stat_prach_msg0_subframe_id[1]),
+      .prach_msg0_1_subframe_id_in     (reg_stat_prach_msg0_subframe_id[1]),
       // prach_msg0_2.symbol_id,
-      .prach_msg0_2_symbol_id_in       (stat_prach_msg0_symbol_id[2]),
+      .prach_msg0_2_symbol_id_in       (reg_stat_prach_msg0_symbol_id[2]),
       // prach_msg0_2.slot_id,
-      .prach_msg0_2_slot_id_in         (stat_prach_msg0_slot_id[2]),
+      .prach_msg0_2_slot_id_in         (reg_stat_prach_msg0_slot_id[2]),
       // prach_msg0_2.subframe_id,
-      .prach_msg0_2_subframe_id_in     (stat_prach_msg0_subframe_id[2]),
+      .prach_msg0_2_subframe_id_in     (reg_stat_prach_msg0_subframe_id[2]),
       // prach_msg1_0.time_offset,
-      .prach_msg1_0_time_offset_in     (stat_prach_msg1_time_offset[0]),
+      .prach_msg1_0_time_offset_in     (reg_stat_prach_msg1_time_offset[0]),
       // prach_msg1_0.cp_length,
-      .prach_msg1_0_cp_length_in       (stat_prach_msg1_cp_length[0]),
+      .prach_msg1_0_cp_length_in       (reg_stat_prach_msg1_cp_length[0]),
       // prach_msg1_1.time_offset,
-      .prach_msg1_1_time_offset_in     (stat_prach_msg1_time_offset[1]),
+      .prach_msg1_1_time_offset_in     (reg_stat_prach_msg1_time_offset[1]),
       // prach_msg1_1.cp_length,
-      .prach_msg1_1_cp_length_in       (stat_prach_msg1_cp_length[1]),
+      .prach_msg1_1_cp_length_in       (reg_stat_prach_msg1_cp_length[1]),
       // prach_msg1_2.time_offset,
-      .prach_msg1_2_time_offset_in     (stat_prach_msg1_time_offset[2]),
+      .prach_msg1_2_time_offset_in     (reg_stat_prach_msg1_time_offset[2]),
       // prach_msg1_2.cp_length,
-      .prach_msg1_2_cp_length_in       (stat_prach_msg1_cp_length[2]),
+      .prach_msg1_2_cp_length_in       (reg_stat_prach_msg1_cp_length[2]),
       // prach_msg2_0.num_symbol,
-      .prach_msg2_0_num_symbol_in      (stat_prach_msg2_num_symbol[0]),
+      .prach_msg2_0_num_symbol_in      (reg_stat_prach_msg2_num_symbol[0]),
       // prach_msg2_0.freq_offset,
-      .prach_msg2_0_freq_offset_in     (stat_prach_msg2_freq_offset[0]),
+      .prach_msg2_0_freq_offset_in     (reg_stat_prach_msg2_freq_offset[0]),
       // prach_msg2_1.num_symbol,
-      .prach_msg2_1_num_symbol_in      (stat_prach_msg2_num_symbol[1]),
+      .prach_msg2_1_num_symbol_in      (reg_stat_prach_msg2_num_symbol[1]),
       // prach_msg2_1.freq_offset,
-      .prach_msg2_1_freq_offset_in     (stat_prach_msg2_freq_offset[1]),
+      .prach_msg2_1_freq_offset_in     (reg_stat_prach_msg2_freq_offset[1]),
       // prach_msg2_2.num_symbol,
-      .prach_msg2_2_num_symbol_in      (stat_prach_msg2_num_symbol[2]),
+      .prach_msg2_2_num_symbol_in      (reg_stat_prach_msg2_num_symbol[2]),
       // prach_msg2_2.freq_offset,
-      .prach_msg2_2_freq_offset_in     (stat_prach_msg2_freq_offset[2]),
+      .prach_msg2_2_freq_offset_in     (reg_stat_prach_msg2_freq_offset[2]),
       // dl_phase_comp,
       .dl_phase_comp_addr              (ctrl_dl_phase_comp_addr),
       .dl_phase_comp_en                (ctrl_dl_phase_comp_en),

@@ -24,7 +24,11 @@ module axis_fifo_alt #(
     parameter int USER_WIDTH   = 1
 ) (
     input var                                          s_axis_aclk,
+    // In ASYNC_MODE this net feeds both the wr_rstn register (sync data) and
+    // cdc_async_rst (async assert); see the header note on reset handling.
+    /* verilator lint_off SYNCASYNCNET */
     input var                                          s_axis_aresetn,
+    /* verilator lint_on SYNCASYNCNET */
     //
     input var  [                       DATA_WIDTH-1:0] s_axis_tdata,
     input var  [                     DATA_WIDTH/8-1:0] s_axis_tkeep,
