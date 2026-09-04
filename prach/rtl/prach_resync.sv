@@ -212,8 +212,8 @@ module prach_resync #(
   // Intentionally unconsumed: tready is tied high and the internal poll
   // counter paces the output, BIST is not implemented here, and PRACH always
   // counts 15 kHz SCS symbols (start_of_symbol[0]).
-  wire unused_inputs = &{1'b0, s_axis_tuser, s_axis_tlast, s_axis_tvalid, ctrl_bist_s,
-                         stat_resync, start_of_symbol[1]};
+//  wire unused_inputs = &{1'b0, s_axis_tuser, s_axis_tlast, s_axis_tvalid, ctrl_bist_s,
+//                         stat_resync, start_of_symbol[1]};
 
 endmodule
 

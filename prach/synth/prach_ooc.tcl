@@ -84,5 +84,16 @@ report_utilization -hierarchical -file [file join $build_dir prach_utilization_h
 report_timing_summary -file [file join $build_dir prach_timing_summary.rpt]
 write_checkpoint -force [file join $build_dir prach_ooc.dcp]
 
-puts "INFO: prach OOC synthesis completed"
-puts "INFO: utilization report: [file join $build_dir prach_utilization.rpt]"
+# Implementation: place and route to get post-route resource/timing reports
+opt_design
+place_design
+phys_opt_design
+route_design
+
+report_utilization -file [file join $build_dir prach_impl_utilization.rpt]
+report_utilization -hierarchical -file [file join $build_dir prach_impl_utilization_hierarchical.rpt]
+report_timing_summary -file [file join $build_dir prach_impl_timing_summary.rpt]
+write_checkpoint -force [file join $build_dir prach_impl.dcp]
+
+puts "INFO: prach OOC synthesis + implementation completed"
+puts "INFO: resource report: [file join $build_dir prach_impl_utilization.rpt]"

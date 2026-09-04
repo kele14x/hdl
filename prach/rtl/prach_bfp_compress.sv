@@ -57,10 +57,27 @@ module prach_bfp_compress #(
   logic [15:0] process_q0;
   logic [15:0] process_i1;
   logic [15:0] process_q1;
+  logic [15:0] shifted_i0_r;
+  logic [15:0] shifted_q0_r;
+  logic [15:0] shifted_i1_r;
+  logic [15:0] shifted_q1_r;
   logic [15:0] rounded_i0;
   logic [15:0] rounded_q0;
   logic [15:0] rounded_i1;
   logic [15:0] rounded_q1;
+
+  logic [NUM_ANT-1:0] wr_we_c;
+  logic [        8:0] wr_addr_c;
+  logic [NUM_ANT-1:0] exp_we_c;
+  logic [        6:0] exp_addr_c;
+  logic [        3:0] exp_wdata_c;
+  logic [NUM_ANT-1:0] section_done_c;
+  logic               process_valid_d;
+  logic [        2:0] process_word_idx_d;
+  logic [        6:0] process_prb_idx_d;
+  logic [        3:0] process_msb_d;
+  logic [        3:0] process_exp_d;
+  logic [        1:0] process_ant_d;
 
   //
   // This function get MSB position of input data without the redundant
@@ -103,20 +120,17 @@ module prach_bfp_compress #(
   endfunction
 
   //
-  // This function perform shift and rounding (compress) process
+  // This function performs rounding on an already-shifted 16-bit sample:
+  // force the six low bits to 1, then add 1, keeping 0x7FFF unchanged so the
+  // rounded result does not wrap into the negative range.
   //
-  function automatic logic [15:0] shift_and_round(input logic [15:0] din, input logic [3:0] shift,
-                                                  input logic en);
-    if (en) begin
-      shift_and_round = din << shift;
-      shift_and_round = shift_and_round | 16'h003F;
-      if (shift_and_round == 16'h7FFF) begin
-        shift_and_round = shift_and_round;
-      end else begin
-        shift_and_round = (shift_and_round + 1'b1);
-      end
+  function automatic logic [15:0] round_sample(input logic [15:0] din);
+    logic [15:0] rounded;
+    rounded = din | 16'h003F;
+    if (rounded == 16'h7FFF) begin
+      round_sample = rounded;
     end else begin
-      shift_and_round = din;
+      round_sample = rounded + 1'b1;
     end
   endfunction
 
@@ -133,33 +147,99 @@ module prach_bfp_compress #(
     process_q0 = capture_data[process_bank][2*process_word_idx][15:0];
     process_i1 = capture_data[process_bank][2*process_word_idx+1][31:16];
     process_q1 = capture_data[process_bank][2*process_word_idx+1][15:0];
-    rounded_i0 = shift_and_round(process_i0, process_shift, 1'b1);
-    rounded_q0 = shift_and_round(process_q0, process_shift, 1'b1);
-    rounded_i1 = shift_and_round(process_i1, process_shift, 1'b1);
-    rounded_q1 = shift_and_round(process_q1, process_shift, 1'b1);
+  end
+
+  // Pipeline stage 1: variable barrel shift. The process-control snapshot is
+  // registered in lockstep with the shifted samples, so the write address,
+  // enables and shifted data all come from the same cycle. This splits the
+  // shift+round chain that was the critical timing path to the RAM write port
+  // (shift is limited to [0, 7] by get_shift, so no truncation).
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      shifted_i0_r <= '0;
+      shifted_q0_r <= '0;
+      shifted_i1_r <= '0;
+      shifted_q1_r <= '0;
+      process_valid_d    <= 1'b0;
+      process_word_idx_d <= '0;
+      process_prb_idx_d  <= '0;
+      process_msb_d      <= '0;
+      process_exp_d      <= '0;
+      process_ant_d      <= '0;
+    end else begin
+      shifted_i0_r <= process_i0 << process_shift;
+      shifted_q0_r <= process_q0 << process_shift;
+      shifted_i1_r <= process_i1 << process_shift;
+      shifted_q1_r <= process_q1 << process_shift;
+      process_valid_d    <= process_valid;
+      process_word_idx_d <= process_word_idx;
+      process_prb_idx_d  <= process_prb_idx;
+      process_msb_d      <= process_msb;
+      process_exp_d      <= process_exp;
+      process_ant_d      <= process_ant;
+    end
   end
 
   always_comb begin
-    wr_we = '0;
-    exp_we = '0;
-    section_done = '0;
-    wr_addr = 9'(process_prb_idx * 6 + process_word_idx);
-    wr_data = {rounded_i0[15:7], rounded_q0[15:7], rounded_i1[15:7], rounded_q1[15:7]};
-    exp_addr = process_prb_idx;
-    exp_wdata = process_exp;
+    rounded_i0 = round_sample(shifted_i0_r);
+    rounded_q0 = round_sample(shifted_q0_r);
+    rounded_i1 = round_sample(shifted_i1_r);
+    rounded_q1 = round_sample(shifted_q1_r);
+  end
 
-    if (process_valid) begin
+  // Pipeline stage 2: register the assembled write word one cycle after the
+  // control snapshot, so data reaches the RAM write port with the same
+  // alignment as we/addr. The uniform shift keeps RAM contents unchanged.
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      wr_data <= '0;
+    end else begin
+      wr_data <= {rounded_i0[15:7], rounded_q0[15:7], rounded_i1[15:7], rounded_q1[15:7]};
+    end
+  end
+
+  always_comb begin
+    wr_we_c = '0;
+    exp_we_c = '0;
+    section_done_c = '0;
+    wr_addr_c = 9'(process_prb_idx_d * 6 + process_word_idx_d);
+    exp_addr_c = process_prb_idx_d;
+    exp_wdata_c = process_exp_d;
+
+    if (process_valid_d) begin
       for (int ant = 0; ant < NUM_ANT; ant++) begin
-        if (process_ant == 2'(ant)) begin
-          wr_we[ant] = 1'b1;
-          if (process_word_idx == 0) begin
-            exp_we[ant] = 1'b1;
+        if (process_ant_d == 2'(ant)) begin
+          wr_we_c[ant] = 1'b1;
+          if (process_word_idx_d == 0) begin
+            exp_we_c[ant] = 1'b1;
           end
-          if ((process_prb_idx == 71) && (process_word_idx == 5)) begin
-            section_done[ant] = 1'b1;
+          if ((process_prb_idx_d == 71) && (process_word_idx_d == 5)) begin
+            section_done_c[ant] = 1'b1;
           end
         end
       end
+    end
+  end
+
+  // Pipeline stage 3: register the write interface so the rounding and
+  // word-assembly logic feeds a register instead of the RAM write ports. All
+  // outputs are taken from the same delayed control snapshot, so the write
+  // timing shift applies uniformly and RAM contents stay unchanged.
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      wr_we        <= '0;
+      wr_addr      <= '0;
+      exp_we       <= '0;
+      exp_addr     <= '0;
+      exp_wdata    <= '0;
+      section_done <= '0;
+    end else begin
+      wr_we        <= wr_we_c;
+      wr_addr      <= wr_addr_c;
+      exp_we       <= exp_we_c;
+      exp_addr     <= exp_addr_c;
+      exp_wdata    <= exp_wdata_c;
+      section_done <= section_done_c;
     end
   end
 
