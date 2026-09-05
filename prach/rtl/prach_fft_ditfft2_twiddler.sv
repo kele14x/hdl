@@ -99,8 +99,9 @@ module prach_fft_ditfft2_twiddler #(
   );
 
   delay #(
-      .WIDTH(DATA_WIDTH * 2),
-      .DEPTH(3)
+      .WIDTH  (DATA_WIDTH * 2),
+      .DEPTH  (3),
+      .USE_REG(1)
   ) u_delay_data (
       .clk (clk),
       .rst (1'b0),
@@ -135,8 +136,9 @@ module prach_fft_ditfft2_twiddler #(
   );
 
   delay #(
-      .WIDTH(1),
-      .DEPTH(Latency - 1)
+      .WIDTH  (1),
+      .DEPTH  (Latency - 1),
+      .USE_REG(1)
   ) u_delay (
       .clk (clk),
       .rst (1'b0),

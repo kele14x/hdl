@@ -142,7 +142,24 @@ module prach_fft_ditfft2_bf #(
   assign {x1i, x1r} = delay_out;
 
   generate
-    if (DelayDepth <= 128) begin : g_srl
+    // Keep the shortest delays as flip-flops, use SRLs for the next short
+    // range, use single-port LUTRAM for the medium depths, and use the
+    // RAM-backed implementation for the long delays.
+    if (DelayDepth <= 8) begin : g_reg
+
+      delay #(
+          .WIDTH  (DelayWidth),
+          .DEPTH  (DelayDepth),
+          .USE_REG(1)
+      ) u_delay_data (
+          .clk (clk),
+          .rst (1'b0),
+          .cen (1'b1),
+          .din (delay_in),
+          .dout(delay_out)
+      );
+
+    end else if (DelayDepth <= 16) begin : g_srl
 
       delay #(
           .WIDTH(DelayWidth),
@@ -155,6 +172,19 @@ module prach_fft_ditfft2_bf #(
           .dout(delay_out)
       );
 
+    end else if (DelayDepth <= 128) begin : g_lutram
+
+      delay_lutram #(
+          .WIDTH(DelayWidth),
+          .DEPTH(DelayDepth)
+      ) u_delay_data (
+          .clk (clk),
+          .rst (rst),
+          .cen (1'b1),
+          .din (delay_in),
+          .dout(delay_out)
+      );
+
     end else begin : g_shift_ram
 
       shift_ram #(
@@ -162,7 +192,7 @@ module prach_fft_ditfft2_bf #(
           .DEPTH(DelayDepth)
       ) i_delay (
           .clk (clk),
-          .rst (1'b0),
+          .rst (rst),
           .cen (1'b1),
           .din (delay_in),
           .dout(delay_out)

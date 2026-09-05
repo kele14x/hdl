@@ -106,8 +106,9 @@ module prach_fft_ditfft3_bf1 #(
   assign ovf     = ovf_r;
 
   delay #(
-      .WIDTH(1),
-      .DEPTH(1)
+      .WIDTH  (1),
+      .DEPTH  (1),
+      .USE_REG(1)
   ) u_delay (
       .clk (clk),
       .rst (1'b0),
