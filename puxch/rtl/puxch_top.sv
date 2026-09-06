@@ -71,7 +71,9 @@ module puxch_top #(
   logic        dout_sy             [ NUM_CC];
   logic [ 3:0] dout_chn            [ NUM_CC];
   logic        dout_dv             [ NUM_CC];
+  /* verilator lint_off UNUSED */
   logic        dout_last           [ NUM_CC];
+  /* verilator lint_on UNUSED */
 
   logic        ctrl_phase_comp_we_s[ NUM_CC];
 
@@ -80,11 +82,12 @@ module puxch_top #(
   wire         s0_axis_tvalid      [NUM_ANT];
   wire         s0_axis_tlast       [NUM_ANT];
   wire         s0_axis_tready      [NUM_ANT];
+  /* verilator lint_off UNUSED */
   wire  [31:0] bfp_m_axis_tuser    [NUM_ANT];
+  /* verilator lint_on UNUSED */
 
   // Per-CC last flags and the framer tuser are produced but not consumed at
   // this level.
-  wire         unused_last_tuser = &{1'b0, dout_last, bfp_m_axis_tuser};
 
   generate
     for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_cc

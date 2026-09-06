@@ -9,7 +9,9 @@ module timer #(
     input var         s_axi_aclk,
     input var         s_axi_aresetn,
     //
+    /* verilator lint_off UNUSED */
     input var  [15:0] s_axi_awaddr,
+    /* verilator lint_on UNUSED */
     input var  [ 2:0] s_axi_awprot,
     input var         s_axi_awvalid,
     output var        s_axi_awready,
@@ -23,7 +25,9 @@ module timer #(
     output var        s_axi_bvalid,
     input var         s_axi_bready,
     //
+    /* verilator lint_off UNUSED */
     input var  [15:0] s_axi_araddr,
+    /* verilator lint_on UNUSED */
     input var  [ 2:0] s_axi_arprot,
     input var         s_axi_arvalid,
     output var        s_axi_arready,
@@ -64,8 +68,6 @@ module timer #(
 
   wire [47:0] tod_sec_s;
   wire [31:0] tod_ns_s;
-
-  wire        unused_axi_addr_msb = &{1'b0, s_axi_awaddr[15:9], s_axi_araddr[15:9], 1'b0};
 
   timer_regs i_regs (
       .s_axi_aclk              (s_axi_aclk),

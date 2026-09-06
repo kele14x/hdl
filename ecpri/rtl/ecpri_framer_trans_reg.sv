@@ -50,9 +50,9 @@ module ecpri_framer_trans_reg (
   logic        s_axis_tlast_d;
 
   logic [15:0] s_axis_tdata_dd;
+  /* verilator lint_off UNUSED */
   logic [ 3:0] s_axis_tkeep_dd;
-
-  wire         unused_tkeep_dd = &{1'b0, s_axis_tkeep_dd[1:0]};
+  /* verilator lint_on UNUSED */
 
   // FSM
 

@@ -11,7 +11,9 @@ module oran_framer_ul_ss_comp_exp (
     //
     input var  [63:0] din_data,
     input var         din_valid,
+    /* verilator lint_off UNUSED */
     input var         din_sync,
+    /* verilator lint_on UNUSED */
     input var         din_last,
     //
     output var [63:0] dout_data,
@@ -23,8 +25,6 @@ module oran_framer_ul_ss_comp_exp (
     //--------
     input var  [ 3:0] ud_iq_width
 );
-
-  wire unused_din_sync = &{1'b0, din_sync};
 
 
   //
@@ -341,12 +341,12 @@ module oran_framer_ul_ss_comp_exp (
   logic       exp_fifo_wr;
   logic [7:0] exp_fifo_dout;
   logic       exp_fifo_rd;
+  /* verilator lint_off UNUSED */
   logic       exp_fifo_full;
 
   logic       data_fifo_full;
   logic       data_fifo_empty;
-
-  wire        unused_fifo_status = &{1'b0, exp_fifo_full, data_fifo_full, data_fifo_empty};
+  /* verilator lint_on UNUSED */
 
   assign exp_fifo_din = {shift2, exp2};
   assign exp_fifo_wr = valid2 && (state2 == 5 || last2);

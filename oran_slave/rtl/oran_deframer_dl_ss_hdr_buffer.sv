@@ -42,8 +42,10 @@ module oran_deframer_dl_ss_hdr_buffer #(
 
   logic                 rd_dv       [BUFFER_SYMBOL];
 
+  /* verilator lint_off UNUSED */
   logic                 ram_dbiterrb[BUFFER_SYMBOL];
   logic                 ram_sbiterrb[BUFFER_SYMBOL];
+  /* verilator lint_on UNUSED */
 
   logic                 valid_flag  [BUFFER_SYMBOL] [2**AddrWidth];
 
@@ -168,8 +170,6 @@ module oran_deframer_dl_ss_hdr_buffer #(
       assign ram_dbiterrb[i] = 1'b0;
       assign ram_sbiterrb[i] = 1'b0;
 `endif
-
-      wire unused_ram_status = &{1'b0, ram_dbiterrb[i], ram_sbiterrb[i]};
 
       // Valid flag
       always_ff @(posedge clk) begin

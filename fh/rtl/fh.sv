@@ -8,7 +8,9 @@ module fh (
     input var         s_axi_aclk,
     input var         s_axi_aresetn,
     //
+    /* verilator lint_off UNUSED */
     input var  [31:0] s_axi_awaddr,
+    /* verilator lint_on UNUSED */
     input var  [ 2:0] s_axi_awprot,
     input var         s_axi_awvalid,
     output var        s_axi_awready,
@@ -22,7 +24,9 @@ module fh (
     output var        s_axi_bvalid,
     input var         s_axi_bready,
     //
+    /* verilator lint_off UNUSED */
     input var  [31:0] s_axi_araddr,
+    /* verilator lint_on UNUSED */
     input var  [ 2:0] s_axi_arprot,
     input var         s_axi_arvalid,
     output var        s_axi_arready,
@@ -128,11 +132,11 @@ module fh (
   wire tx_ptp_tvalid;
   wire tx_ptp_tready;
 
+  /* verilator lint_off UNUSED */
   wire [31:0] stat_rx_resync_cnt;
   wire [31:0] stat_tx_resync_cnt;
   wire tx_ptp_timestamp_ready;
-  wire unused_axi_addr = &{1'b0, s_axi_awaddr[31:10], s_axi_araddr[31:10]};
-  wire unused_status = &{1'b0, stat_rx_resync_cnt, stat_tx_resync_cnt, tx_ptp_timestamp_ready};
+  /* verilator lint_on UNUSED */
 
   fh_regs i_regs (
       .s_axi_aclk                       (s_axi_aclk),

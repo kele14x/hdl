@@ -9,7 +9,9 @@ module oran_deframer_eth_odm (
     input var         rst,
     //
     input var  [63:0] s_axis_tdata,
+    /* verilator lint_off UNUSED */
     input var  [ 7:0] s_axis_tkeep,
+    /* verilator lint_on UNUSED */
     input var         s_axis_tvalid,
     input var         s_axis_tlast,
     input var  [79:0] s_axis_tuser,
@@ -26,8 +28,6 @@ module oran_deframer_eth_odm (
 
 
   import oran_pkg::*;
-
-  wire unused_tkeep = &{1'b0, s_axis_tkeep};
 
   // FSM
 

@@ -23,7 +23,9 @@ module ecpri_framer_buffer #(
     output var                                         s_axis_tready,
     // Ethernet clock domain
     input var                                          tx_eth_clk,
+    /* verilator lint_off UNUSED */
     input var                                          tx_eth_rst,
+    /* verilator lint_on UNUSED */
     //
     output var [                                 31:0] m_axis_tdata,
     output var [                                  3:0] m_axis_tkeep,
@@ -32,8 +34,6 @@ module ecpri_framer_buffer #(
     output var                                         m_axis_tvalid,
     input var                                          m_axis_tready
 );
-
-  wire unused_tx_eth_rst = tx_eth_rst;
 
   // The FIFO
 

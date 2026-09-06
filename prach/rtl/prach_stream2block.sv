@@ -32,7 +32,9 @@ module prach_stream2block #(
     //----
     input var  [        8:0] ctrl_start_symbol0,
     input var  [        8:0] ctrl_start_symbol1,
+    /* verilator lint_off UNUSED */
     input var  [       18:0] ctrl_start_sample,
+    /* verilator lint_on UNUSED */
     input var  [        3:0] ctrl_num_symbol
 );
 
@@ -71,12 +73,16 @@ module prach_stream2block #(
 
   logic [         15:0] din_dr_d;
   logic [         15:0] din_di_d;
+  /* verilator lint_off UNUSED */
   logic                 din_sf_d;
   logic                 din_sl_d;
   logic                 din_sy_d;
+  /* verilator lint_on UNUSED */
   logic [          7:0] din_chn_d;
   logic                 din_dv_d;
+  /* verilator lint_off UNUSED */
   logic                 din_last_d;
+  /* verilator lint_on UNUSED */
 
   logic                 wr_bank;
   logic [         10:0] wr_cnt;
@@ -442,8 +448,6 @@ module prach_stream2block #(
 
   assign dout_sf = 1'b0;
   assign dout_sl = 1'b0;
-
-  wire unused_stream2block = &{1'b0, ctrl_start_sample[3:0], din_sf_d, din_sl_d, din_sy_d, din_last_d};
 
 endmodule
 

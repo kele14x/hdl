@@ -110,8 +110,10 @@ module oran_top #(
   (* max_fanout=500 *)
   logic        local_resetn;
 
+  /* verilator lint_off UNUSED */
   logic        unused_fram_ready;
   logic        unused_defm_ready;
+  /* verilator lint_on UNUSED */
 
   logic        rx_eth_clk                   [ NumEth];
   logic        rx_eth_rst                   [ NumEth];
@@ -156,6 +158,7 @@ module oran_top #(
 
   logic [ 7:0] m_app_frameid_s              [ANT_NUM] [NumCc];
 
+  /* verilator lint_off UNUSED */
   logic        unused_m_mac_header_valid    [ NumEth];
   logic [47:0] unused_m_mac_dest_mac        [ NumEth];
   logic [47:0] unused_m_mac_source_mac      [ NumEth];
@@ -200,6 +203,7 @@ module oran_top #(
   logic        unused_m_section_ef          [ANT_NUM] [NumCc];
   logic [14:0] unused_m_section_beamid      [ANT_NUM] [NumCc];
   logic [23:0] unused_m_section_freqoffset  [ANT_NUM] [NumCc];
+  /* verilator lint_on UNUSED */
 
 
   // Main

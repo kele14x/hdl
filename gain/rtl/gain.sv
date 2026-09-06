@@ -31,11 +31,15 @@ module gain #(
     // CSR
     //----
     input var  [GAIN_WIDTH-1:0] ctrl_gain_dr[NUM_ANT],
+    /* verilator lint_off UNUSED */
     input var  [GAIN_WIDTH-1:0] ctrl_gain_di[NUM_ANT]
+    /* verilator lint_on UNUSED */
 );
 
   logic [GAIN_WIDTH-1:0] ctrl_gain_dr_s[NUM_ANT];
+  /* verilator lint_off UNUSED */
   logic [GAIN_WIDTH-1:0] ctrl_gain_di_s[NUM_ANT];
+  /* verilator lint_on UNUSED */
 
   localparam int Latency = (COMPLEX != 0) ? 6 : 5;
   localparam int AntAddrWidth = $clog2(NUM_ANT);
@@ -44,19 +48,15 @@ module gain #(
   logic [          15:0] din_di_d;
 
   logic [GAIN_WIDTH-1:0] ctrl_gain_dr_ch;
+  /* verilator lint_off UNUSED */
   logic [GAIN_WIDTH-1:0] ctrl_gain_di_ch;
+  /* verilator lint_on UNUSED */
 
+  /* verilator lint_off UNUSED */
   logic                  unused_cmult_ovf;
   logic                  unused_mult_dr_ovf;
   logic                  unused_mult_di_ovf;
-
-  generate
-    if (COMPLEX == 0) begin : g_unused_real_gain_di
-      for (genvar i = 0; i < NUM_ANT; i++) begin : g_ant
-        wire unused = &{1'b0, ctrl_gain_di[i], ctrl_gain_di_s[i], ctrl_gain_di_ch};
-      end
-    end
-  endgenerate
+  /* verilator lint_on UNUSED */
 
   generate
     if (HAS_CDC != 0) begin : g_dr_cdc

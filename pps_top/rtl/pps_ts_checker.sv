@@ -36,8 +36,10 @@ module pps_ts_checker (
   logic               offset_acc_send;
   logic               offset_acc_rcv;
 
+  /* verilator lint_off UNUSED */
   wire                unused_ts_cnt_req;
   wire                unused_offset_acc_req;
+  /* verilator lint_on UNUSED */
 
 
 

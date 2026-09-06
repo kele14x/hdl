@@ -26,7 +26,9 @@ module oran_deframer_eth #(
     // Internal I/F
     //-------------
     input var         internal_bus_clk,
+    /* verilator lint_off UNUSED */
     input var         defm_reset,
+    /* verilator lint_on UNUSED */
     //
     output var [63:0] m_axis_tdata,
     output var [ 7:0] m_axis_tkeep,
@@ -62,8 +64,6 @@ module oran_deframer_eth #(
     output var [ 6:0] m_trans_subseqid
 );
 
-  wire unused_defm_reset = &{1'b0, defm_reset};
-
   // Signals
   //--------
 
@@ -86,6 +86,7 @@ module oran_deframer_eth #(
   logic s2_axis_tlast;
   logic [1:0] s2_axis_tdest;
 
+  /* verilator lint_off UNUSED */
   logic [$clog2(FIFO_DEPTH):0] fifo_wr_data_count;
   logic [$clog2(FIFO_DEPTH):0] fifo_rd_data_count;
   logic fifo_s_axis_tready;
@@ -98,22 +99,7 @@ module oran_deframer_eth #(
   logic fifo_prog_empty;
   logic fifo_sbiterr;
   logic fifo_dbiterr;
-
-  wire unused_fifo_outputs = &{
-    1'b0,
-    fifo_wr_data_count,
-    fifo_rd_data_count,
-    fifo_s_axis_tready,
-    fifo_almost_full,
-    fifo_prog_full,
-    fifo_m_axis_tid,
-    fifo_m_axis_tstrb,
-    fifo_m_axis_tuser,
-    fifo_almost_empty,
-    fifo_prog_empty,
-    fifo_sbiterr,
-    fifo_dbiterr
-  };
+  /* verilator lint_on UNUSED */
 
   // Main
   //-----

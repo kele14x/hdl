@@ -42,12 +42,13 @@ module pdxch_fdv_buffer_readout #(
 
   wire  [ 3:0] ctrl_en_s;
   wire  [ 1:0] ctrl_rat_s;
+  /* verilator lint_off UNUSED */
   wire  [ 3:0] ctrl_bist_s;
+  /* verilator lint_on UNUSED */
   wire  [ 3:0] ctrl_bw_s;
   wire  [ 8:0] ctrl_nprb_s;
 
   wire  [ 3:0] ctrl_fs_offset_s;
-  wire         unused_ctrl_bist = &{1'b0, ctrl_bist_s[3:2]};
 
   // Internal signals
 
@@ -74,8 +75,9 @@ module pdxch_fdv_buffer_readout #(
 
   // BIST data
 
+  /* verilator lint_off UNUSED */
   logic [23:0] lfsr;
-  wire         unused_lfsr = &{1'b0, lfsr[23:2]};
+  /* verilator lint_on UNUSED */
 
   logic        bist_en_c                                    [NUM_ANT];
   logic        bist_en_r                                    [NUM_ANT];

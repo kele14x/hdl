@@ -26,14 +26,17 @@ module fh_deframer_64to32 #(
 
   logic sync_n;
 
+  /* verilator lint_off UNUSED */
   wire axis_fifo_tuser;
   wire axis_fifo_err_discard;
   wire tuser_fifo_full;
   wire tuser_fifo_empty;
-  wire        unused_fifo_status = &{1'b0, axis_fifo_tuser, axis_fifo_err_discard, tuser_fifo_full, tuser_fifo_empty};
+  /* verilator lint_on UNUSED */
 
+  /* verilator lint_off UNUSED */
   wire [63:0] s0_axis_tdata;
   wire [7:0] s0_axis_tkeep;
+  /* verilator lint_on UNUSED */
   wire s0_axis_tlast;
   wire s0_axis_tvalid;
   wire s0_axis_tready;
@@ -81,8 +84,6 @@ module fh_deframer_64to32 #(
   assign m_axis_tkeep   = s0_axis_tkeep[3:0];
   assign m_axis_tlast   = s0_axis_tlast;
   assign m_axis_tvalid  = s0_axis_tvalid;
-
-  wire [35:0] unused_upper_axis = {s0_axis_tdata[63:32], s0_axis_tkeep[7:4]};
 
   fifo_sync #(
       .FIFO_DEPTH  (FIFO_DEPTH / 8),

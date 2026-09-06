@@ -100,15 +100,15 @@ module oran_deframer_dl_ss #(
   logic                             s1_axis_tvalid;
   logic                             s1_axis_tlast;
   logic                             s1_axis_tready;
+  /* verilator lint_off UNUSED */
   logic [                     39:0] s1_axis_tuser;
+  /* verilator lint_on UNUSED */
 
   logic [                     63:0] s2_axis_tdata;
   logic [                      7:0] s2_axis_tkeep;
   logic                             s2_axis_tvalid;
   logic                             s2_axis_tlast;
   logic [                     31:0] s2_axis_tuser;
-
-  wire                              unused_s1_axis_tuser = &{1'b0, s1_axis_tuser[39:32]};
 
 
   oran_deframer_dl_ss_symnum i_symnum (

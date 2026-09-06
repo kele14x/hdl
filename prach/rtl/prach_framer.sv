@@ -23,7 +23,9 @@ module prach_framer #(
     // ORAN I/F
     //---------
     input var         clk_eth_xran,
+    /* verilator lint_off UNUSED */
     input var         rst_eth_xran,
+    /* verilator lint_on UNUSED */
     // U-Plane
     output var [63:0] m_axis_tdata,
     output var [ 7:0] m_axis_tkeep,
@@ -44,7 +46,9 @@ module prach_framer #(
   logic [31:0] s0_axis_tuser;
   logic        s0_axis_tvalid;
 
+  /* verilator lint_off UNUSED */
   logic        fifo_err_discard;
+  /* verilator lint_on UNUSED */
 
   // Main
 
@@ -102,8 +106,6 @@ module prach_framer #(
       .err_discard   (fifo_err_discard)
       //
   );
-
-  wire unused_framer = &{1'b0, rst_eth_xran, fifo_err_discard};
 
 endmodule
 

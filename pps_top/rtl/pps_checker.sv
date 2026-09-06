@@ -29,7 +29,9 @@ module pps_checker (
   logic [31:0] stat_pps_offset_in;
   logic        stat_pps_offset_send;
   logic        stat_pps_offset_rcv;
+  /* verilator lint_off UNUSED */
   wire         unused_stat_pps_offset_req;
+  /* verilator lint_on UNUSED */
 
 
   // Clear 1PPS glitch

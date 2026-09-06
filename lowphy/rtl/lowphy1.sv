@@ -192,6 +192,7 @@ module lowphy1 (
     input var          s4_cc_enable,
     input var          s4_cc_reload,
     //
+    /* verilator lint_off UNUSED */
     input var  [ 11:0] s5_ul_sym_num,
     input var  [ 11:0] s5_ul_cta_sym_num,
     input var          s5_ul_update,
@@ -206,6 +207,7 @@ module lowphy1 (
     // input  wire         s5_dl_symbol_inc,
     input var          s5_cc_enable,
     input var          s5_cc_reload,
+    /* verilator lint_on UNUSED */
     //
     input var  [ 11:0] s6_ul_sym_num,
     input var  [ 11:0] s6_ul_cta_sym_num,
@@ -237,6 +239,7 @@ module lowphy1 (
     input var          s7_cc_enable,
     input var          s7_cc_reload,
     //
+    /* verilator lint_off UNUSED */
     input var  [ 11:0] s8_ul_sym_num,
     input var  [ 11:0] s8_ul_cta_sym_num,
     input var          s8_ul_update,
@@ -251,6 +254,7 @@ module lowphy1 (
     // input  wire         s8_dl_symbol_inc,
     input var          s8_cc_enable,
     input var          s8_cc_reload,
+    /* verilator lint_on UNUSED */
     // CARRIER ports for the Framer, the datapath to the ethernet
     output var [ 63:0] m000_fram_data_tdata,
     output var [  7:0] m000_fram_data_tkeep,
@@ -775,7 +779,9 @@ module lowphy1 (
     output var         m_dl_axis_tvalid,
     input var          m_dl_axis_tready,
     //
+    /* verilator lint_off UNUSED */
     input var  [767:0] s_ul_axis_tdata,
+    /* verilator lint_on UNUSED */
     input var  [  7:0] s_ul_axis_tuser,
     input var          s_ul_axis_tlast,
     input var          s_ul_axis_tvalid,
@@ -801,91 +807,46 @@ module lowphy1 (
   logic [ 7:0] s0_axis_tuser [NumCc][4];
   logic        s0_axis_tlast [NumCc][4];
   logic        s0_axis_tvalid[NumCc][4];
+  /* verilator lint_off UNUSED */
   logic        s0_axis_tready[NumCc][4];
+  /* verilator lint_on UNUSED */
 
 
   logic [31:0] m1_axis_tdata [NumCcBand12][2];
+  /* verilator lint_off UNUSED */
   logic [ 7:0] m1_axis_tuser [NumCcBand12][2];
   logic        m1_axis_tlast [NumCcBand12][2];
   logic        m1_axis_tvalid[NumCcBand12][2];
+  /* verilator lint_on UNUSED */
   logic        m1_axis_tready[NumCcBand12][2];
 
   logic [31:0] s1_axis_tdata [NumCcBand12][2];
   logic [ 7:0] s1_axis_tuser [NumCcBand12][2];
   logic        s1_axis_tlast [NumCcBand12][2];
   logic        s1_axis_tvalid[NumCcBand12][2];
+  /* verilator lint_off UNUSED */
   logic        s1_axis_tready[NumCcBand12][2];
+  /* verilator lint_on UNUSED */
 
   logic [31:0] m2_axis_tdata [NumCcBand12][2];
+  /* verilator lint_off UNUSED */
   logic [ 7:0] m2_axis_tuser [NumCcBand12][2];
   logic        m2_axis_tlast [NumCcBand12][2];
   logic        m2_axis_tvalid[NumCcBand12][2];
+  /* verilator lint_on UNUSED */
   logic        m2_axis_tready[NumCcBand12][2];
 
   logic [31:0] s2_axis_tdata [NumCcBand12][2];
   logic [ 7:0] s2_axis_tuser [NumCcBand12][2];
   logic        s2_axis_tlast [NumCcBand12][2];
   logic        s2_axis_tvalid[NumCcBand12][2];
+  /* verilator lint_off UNUSED */
   logic        s2_axis_tready[NumCcBand12][2];
-
-  generate
-    for (genvar unused_cc = 0; unused_cc < NumCc; unused_cc++) begin : gen_unused_cc
-      for (genvar unused_ant0 = 0; unused_ant0 < 4; unused_ant0++) begin : gen_unused_ant0
-        wire unused_s0_ready;
-
-        assign unused_s0_ready = &{1'b0, s0_axis_tready[unused_cc][unused_ant0]};
-      end
-    end
-
-    for (genvar unused_cc12 = 0; unused_cc12 < NumCcBand12; unused_cc12++) begin : gen_unused_cc12
-      for (genvar unused_ant = 0; unused_ant < 2; unused_ant++) begin : gen_unused_ant12
-        wire unused_secondary_axis;
-
-        assign unused_secondary_axis = &{
-            1'b0,
-            m1_axis_tuser[unused_cc12][unused_ant],
-            m1_axis_tlast[unused_cc12][unused_ant],
-            m1_axis_tvalid[unused_cc12][unused_ant],
-            s1_axis_tready[unused_cc12][unused_ant],
-            m2_axis_tuser[unused_cc12][unused_ant],
-            m2_axis_tlast[unused_cc12][unused_ant],
-            m2_axis_tvalid[unused_cc12][unused_ant],
-            s2_axis_tready[unused_cc12][unused_ant]
-        };
-      end
-    end
-  endgenerate
+  /* verilator lint_on UNUSED */
 
   // Nine timer slots are exposed but only seven carriers are instantiated:
   // band 0 takes slots 0-2, band 1 takes 3-4 and band 2 takes 6-7, leaving
   // slots 5 and 8 unconnected.
-  wire unused_timer_slot = &{
-      1'b0,
-      s5_ul_sym_num,
-      s5_ul_cta_sym_num,
-      s5_ul_update,
-      s5_ul_slot_update,
-      s5_dl_sym_num,
-      s5_dl_cta_sym_num,
-      s5_dl_update,
-      s5_dl_slot_update,
-      s5_ul_toggle,
-      s5_dl_toggle,
-      s5_cc_enable,
-      s5_cc_reload,
-      s8_ul_sym_num,
-      s8_ul_cta_sym_num,
-      s8_ul_update,
-      s8_ul_slot_update,
-      s8_dl_sym_num,
-      s8_dl_cta_sym_num,
-      s8_dl_update,
-      s8_dl_slot_update,
-      s8_ul_toggle,
-      s8_dl_toggle,
-      s8_cc_enable,
-      s8_cc_reload
-  };
 
   // The 10 ms strobes of the two unpopulated carrier slots stay low.
   assign fram_radio_start_10ms_cc5 = 1'b0;
@@ -945,35 +906,23 @@ module lowphy1 (
   // the same shared net. Only u_b0 keeps the connection; the duplicates are
   // collected here.
 
+  /* verilator lint_off UNUSED */
   wire b1_s_defm_ebid_tready;
   wire b1_s_fram_ebid_tready;
   wire b1_s_prach_tready;
   wire b1_s_ssb_data_tready;
   wire b1_s_ssb_ebid_tready;
   wire b1_s_ssb_bid_tready;
+  /* verilator lint_on UNUSED */
 
+  /* verilator lint_off UNUSED */
   wire b2_s_defm_ebid_tready;
   wire b2_s_fram_ebid_tready;
   wire b2_s_prach_tready;
   wire b2_s_ssb_data_tready;
   wire b2_s_ssb_ebid_tready;
   wire b2_s_ssb_bid_tready;
-
-  wire unused_band_tready = &{
-      1'b0,
-      b1_s_defm_ebid_tready,
-      b1_s_fram_ebid_tready,
-      b1_s_prach_tready,
-      b1_s_ssb_data_tready,
-      b1_s_ssb_ebid_tready,
-      b1_s_ssb_bid_tready,
-      b2_s_defm_ebid_tready,
-      b2_s_fram_ebid_tready,
-      b2_s_prach_tready,
-      b2_s_ssb_data_tready,
-      b2_s_ssb_ebid_tready,
-      b2_s_ssb_bid_tready
-  };
+  /* verilator lint_on UNUSED */
 
   lowphy_band #(
       .NUM_CC    (NumCc),
@@ -1817,10 +1766,8 @@ module lowphy1 (
 
           // The secondary bands hold fewer CCs than band 0, so their upper
           // antenna lanes have no counterpart in the shared radio bus.
-          wire unused_ul_lane;
 
           assign m_dl_axis_tdata[(cc*NumAnt+ant)*32+31-:32] = '0;
-          assign unused_ul_lane = &{1'b0, s_ul_axis_tdata[(cc*NumAnt+ant)*32+31-:32]};
 
         end
       end

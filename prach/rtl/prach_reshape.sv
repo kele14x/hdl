@@ -6,7 +6,9 @@ module prach_reshape #(
     parameter int SIZE = 8
 ) (
     input var         clk,
+    /* verilator lint_off UNUSED */
     input var         rst,
+    /* verilator lint_on UNUSED */
     //
     input var  [15:0] din_dp1,
     input var  [15:0] din_dp2,
@@ -96,8 +98,6 @@ module prach_reshape #(
       .din ({din_last, din_dv, din_chn, din_sy, din_sl, din_sf}),
       .dout({dout_last, dout_dv, dout_chn, dout_sy, dout_sl, dout_sf})
   );
-
-  wire unused_reshape = &{1'b0, rst};
 
 endmodule
 

@@ -84,10 +84,14 @@ module mixer #(
   logic [AntSelWidth-1:0] din_chn_sel;
 
   logic [            7:0] lfsr_round;
+  /* verilator lint_off UNUSED */
   logic [           11:0] unused_lfsr_tail;
+  /* verilator lint_on UNUSED */
 
   logic [           11:0] phase_lut;
+  /* verilator lint_off UNUSED */
   logic                   unused_cmult_ovf;
+  /* verilator lint_on UNUSED */
 
   // Main
 

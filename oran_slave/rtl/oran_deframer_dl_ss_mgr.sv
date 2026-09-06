@@ -16,7 +16,9 @@ module oran_deframer_dl_ss_mgr #(
     input var                              timer_sos,
     //
     input var  [                     63:0] s_axis_tdata,
+    /* verilator lint_off UNUSED */
     input var  [                      7:0] s_axis_tkeep,
+    /* verilator lint_on UNUSED */
     input var                              s_axis_tvalid,
     input var                              s_axis_tlast,
     input var  [                      8:0] s_axis_tuser,
@@ -106,7 +108,9 @@ module oran_deframer_dl_ss_mgr #(
   // Application common header (32-bit)
 
   logic        app_datadirection;
+  /* verilator lint_off UNUSED */
   logic [ 2:0] app_payloadversion;
+  /* verilator lint_on UNUSED */
   logic [ 3:0] app_filterindex;
   logic [ 7:0] app_frameid;
   logic [ 3:0] app_subframeid;
@@ -129,7 +133,9 @@ module oran_deframer_dl_ss_mgr #(
   logic [ 9:0] section_startprb;
   logic [ 7:0] section_numprb;
   logic [ 7:0] section_udcomphdr;
+  /* verilator lint_off UNUSED */
   logic [ 7:0] section_reserved;
+  /* verilator lint_on UNUSED */
 
   logic [47:0] section_header;
 
@@ -154,8 +160,6 @@ module oran_deframer_dl_ss_mgr #(
   logic        section_extra_last_c;
   logic        section_extra_last;
   logic        section_extra_last_d;
-
-  wire         unused_mgr_inputs = &{1'b0, s_axis_tkeep, app_payloadversion, section_reserved};
 
   always_comb begin
     m_app_numsections    = '0;

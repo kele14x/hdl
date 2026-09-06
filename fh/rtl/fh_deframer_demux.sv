@@ -15,7 +15,9 @@ module fh_deframer_demux (
     input var         s_axis_tvalid,
     //
     input var  [79:0] rx_ptp_timestamp,
+    /* verilator lint_off UNUSED */
     input var         rx_ptp_timestamp_valid,
+    /* verilator lint_on UNUSED */
     // Internal clock domain
     //----------------------
     input var         clk,
@@ -70,9 +72,10 @@ module fh_deframer_demux (
 
   // Signals
 
+  /* verilator lint_off UNUSED */
   wire  [             63:0] s_axis_tdata_reversed;
   wire                      fifo_wr_full;
-  wire                      unused_inputs;
+  /* verilator lint_on UNUSED */
 
   wire  [             15:0] mac_ethertype0;
   wire  [             15:0] mac_ethertype1;
@@ -114,8 +117,6 @@ module fh_deframer_demux (
 
   // Byte reverse AXIS data, this looks more clear
   assign s_axis_tdata_reversed = byte_reverse64(s_axis_tdata);
-  assign unused_inputs = &{1'b0, rx_ptp_timestamp_valid, s_axis_tdata_reversed[47:32],
-    s_axis_tdata_reversed[15:0], fifo_wr_full};
 
   assign mac_ethertype0 = s_axis_tdata_reversed[31:16];
   assign mac_ethertype1 = s_axis_tdata_reversed[63:48];

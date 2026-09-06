@@ -12,7 +12,9 @@ module ptp_ctrl #(
     input var  [ 3:0] s_msg_message_type,
     input var  [15:0] s_msg_sequence_id,
     input var  [79:0] s_msg_timestamp,
+    /* verilator lint_off UNUSED */
     input var  [79:0] s_msg_origin_timestamp,
+    /* verilator lint_on UNUSED */
     input var  [79:0] s_msg_source_port_identity,
     // Tx framer
     output var        ap_valid,
@@ -44,8 +46,6 @@ module ptp_ctrl #(
   localparam int CounterWidth = $clog2(CLK_FREQ);
   localparam [CounterWidth-1:0] ClkFreq = CLK_FREQ[CounterWidth-1:0];
   localparam [CounterWidth-1:0] OneCount = {{(CounterWidth - 1) {1'b0}}, 1'b1};
-
-  wire                     unused_origin_timestamp = |s_msg_origin_timestamp;
 
   // Signals
 

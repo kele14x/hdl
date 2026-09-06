@@ -27,7 +27,9 @@ module prach_fft_ditfft2_bf #(
   localparam int DelayWidth = DATA_WIDTH * 2;
   localparam int DelayDepth = FFT_SIZE / 2;
 
+  /* verilator lint_off UNUSED */
   localparam int Latency = DelayDepth + 1;
+  /* verilator lint_on UNUSED */
   localparam logic [CounterWidth-1:0] LastCount = CounterWidth'(FFT_SIZE - 1);
   localparam logic [CounterWidth-1:0] HalfCount = CounterWidth'(FFT_SIZE / 2);
 
@@ -45,8 +47,10 @@ module prach_fft_ditfft2_bf #(
   logic                           dv;
   logic                           ovf_r;
 
+  /* verilator lint_off UNUSED */
   logic signed [    DATA_WIDTH:0] x1r_s;
   logic signed [    DATA_WIDTH:0] x1i_s;
+  /* verilator lint_on UNUSED */
 
   logic signed [  DATA_WIDTH-1:0] x1r;
   logic signed [  DATA_WIDTH-1:0] x1i;
@@ -212,8 +216,6 @@ module prach_fft_ditfft2_bf #(
   assign dout_di = x2i;
   assign dout_dv = dv;
   assign ovf     = ovf_r;
-
-  wire unused_ditfft2_bf = &{1'b0, 32'(Latency), x1r_s[DATA_WIDTH], x1i_s[DATA_WIDTH]};
 
 endmodule
 

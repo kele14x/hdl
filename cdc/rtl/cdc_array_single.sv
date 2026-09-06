@@ -9,7 +9,9 @@ module cdc_array_single #(
     parameter int SRC_INPUT_REG = 1,
     parameter int WIDTH         = 2
 ) (
+    /* verilator lint_off UNUSED */
     input var              src_clk,
+    /* verilator lint_on UNUSED */
     input var  [WIDTH-1:0] src_in,
     //
     input var              dest_clk,
@@ -62,7 +64,6 @@ module cdc_array_single #(
 
       assign src_inqual = src_ff;
     end else begin : g_no_inreg
-      wire unused_src_clk = src_clk;
 
       assign src_inqual = src_in;
     end

@@ -8,7 +8,9 @@ module coe (
     input var          s_axi_aclk,
     input var          s_axi_aresetn,
     //
+    /* verilator lint_off UNUSED */
     input var  [ 31:0] s_axi_awaddr,
+    /* verilator lint_on UNUSED */
     input var  [  2:0] s_axi_awprot,
     input var          s_axi_awvalid,
     output var         s_axi_awready,
@@ -22,7 +24,9 @@ module coe (
     output var         s_axi_bvalid,
     input var          s_axi_bready,
     //
+    /* verilator lint_off UNUSED */
     input var  [ 31:0] s_axi_araddr,
+    /* verilator lint_on UNUSED */
     input var  [  2:0] s_axi_arprot,
     input var          s_axi_arvalid,
     output var         s_axi_arready,
@@ -152,10 +156,12 @@ module coe (
   wire ctrl_fram_has_vlan;
   wire [15:0] ctrl_fram_vlan_tag;
 
+  /* verilator lint_off UNUSED */
   wire [31:0] stat_fram_total_pkt_cnt;
   wire [31:0] stat_fram_ecpri_pkt_cnt;
   wire [31:0] stat_fram_trans_pkt_cnt;
   wire [31:0] stat_fram_odm_pkt_cnt;
+  /* verilator lint_on UNUSED */
 
   // ODM signals
 
@@ -181,6 +187,7 @@ module coe (
   wire m0_axis_tlast;
   wire m0_axis_tvalid;
   //
+  /* verilator lint_off UNUSED */
   wire m0_mac_header_valid;
   wire [47:0] m0_mac_dest_mac;
   wire [47:0] m0_mac_source_mac;
@@ -192,6 +199,7 @@ module coe (
   wire m0_ecpri_concat;
   wire [7:0] m0_ecpri_messagetype;
   wire [15:0] m0_ecpri_payloadsize;
+  /* verilator lint_on UNUSED */
   //
   wire m0_trans_header_valid;
   wire [15:0] m0_trans_rtc_pc_id;
@@ -199,12 +207,14 @@ module coe (
   wire m0_trans_ebit;
   wire [6:0] m0_trans_subseqid;
   //
+  /* verilator lint_off UNUSED */
   wire m0_odm_header_valid;
   wire [7:0] m0_odm_measurementid;
   wire [7:0] m0_odm_actiontype;
   wire [79:0] m0_odm_timestamp;
   wire [63:0] m0_odm_compensation;
   wire [79:0] m0_odm_timestamp2;
+  /* verilator lint_on UNUSED */
 
   wire [31:0] s0_axis_tdata;
   wire [3:0] s0_axis_tkeep;
@@ -216,15 +226,6 @@ module coe (
   wire [15:0] s0_trans_payloadsize;
   wire [15:0] s0_trans_rtc_pc_id;
 
-  wire unused_axi_addr = &{1'b0, s_axi_awaddr[31:10], s_axi_araddr[31:10],
-    stat_fram_total_pkt_cnt, stat_fram_ecpri_pkt_cnt, stat_fram_trans_pkt_cnt,
-    stat_fram_odm_pkt_cnt,
-    m0_mac_header_valid, m0_mac_dest_mac, m0_mac_source_mac, m0_mac_with_vlan,
-    m0_mac_vlan_tag, m0_mac_ethertype, m0_ecpri_header_valid, m0_ecpri_concat,
-    m0_ecpri_messagetype, m0_ecpri_payloadsize, m0_odm_header_valid,
-    m0_odm_measurementid, m0_odm_actiontype, m0_odm_timestamp,
-    m0_odm_compensation, m0_odm_timestamp2};
-
   assign ctrl_defm_reset = 1'b0;
   assign ctrl_fram_reset = 1'b0;
   assign ctrl_defm_has_vlan = 1'b0;
@@ -233,12 +234,14 @@ module coe (
   assign ctrl_defm_vlan_flt_en = 1'b0;
   assign ctrl_defm_vlan_flt_mask = 16'd0;
 
+  /* verilator lint_off UNUSED */
   wire [31:0] unused_ptp_tdata;
   wire [ 3:0] unused_ptp_tkeep;
   wire        unused_ptp_tlast;
   wire [79:0] unused_ptp_tuser;
   wire        unused_ptp_tvalid;
   wire        unused_s_ptp_tready;
+  /* verilator lint_on UNUSED */
 
   // Main
 

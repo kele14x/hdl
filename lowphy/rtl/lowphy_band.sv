@@ -46,14 +46,18 @@ module lowphy_band #(
     // ORAN-IF Interfaces
     //-------------------
     // Early BID ports
+    /* verilator lint_off UNUSED */
     input var  [ 47:0] s_defm_ebid_tdata,
     input var          s_defm_ebid_tvalid,
     input var          s_defm_ebid_tlast,
+    /* verilator lint_on UNUSED */
     output var         s_defm_ebid_tready,
     //
+    /* verilator lint_off UNUSED */
     input var  [ 47:0] s_fram_ebid_tdata,
     input var          s_fram_ebid_tvalid,
     input var          s_fram_ebid_tlast,
+    /* verilator lint_on UNUSED */
     output var         s_fram_ebid_tready,
     // PRACH C plane messages
     input var          s_prach_tvalid,
@@ -82,19 +86,25 @@ module lowphy_band #(
     input var  [ 23:0] s_prach_freqoffset,
     // Timer ports
     input var  [ 11:0] s_ul_sym_num               [ NUM_CC],
+    /* verilator lint_off UNUSED */
     input var  [ 11:0] s_ul_cta_sym_num           [ NUM_CC],
     input var          s_ul_update                [ NUM_CC],
     input var          s_ul_slot_update           [ NUM_CC],
+    /* verilator lint_on UNUSED */
     input var  [ 11:0] s_dl_sym_num               [ NUM_CC],
+    /* verilator lint_off UNUSED */
     input var  [ 11:0] s_dl_cta_sym_num           [ NUM_CC],
     input var          s_dl_update                [ NUM_CC],
     input var          s_dl_slot_update           [ NUM_CC],
     input var          s_ul_toggle                [ NUM_CC],
     input var          s_dl_toggle                [ NUM_CC],
+    /* verilator lint_on UNUSED */
     // output wire         s_ul_symbol_inc               [NUM_CC],
     // output wire         s_dl_symbol_inc               [NUM_CC],
+    /* verilator lint_off UNUSED */
     input var          s_cc_enable                [ NUM_CC],
     input var          s_cc_reload                [ NUM_CC],
+    /* verilator lint_on UNUSED */
     // CARRIER ports for the Framer, the datapath to the ethernet
     output var [ 63:0] m_fram_data_tdata          [NUM_ANT],
     output var [  7:0] m_fram_data_tkeep          [NUM_ANT],
@@ -103,10 +113,13 @@ module lowphy_band #(
     input var          m_fram_data_tready         [NUM_ANT],
     input var  [ 32:0] m_fram_data_req            [NUM_ANT],
     //
+    /* verilator lint_off UNUSED */
     input var  [107:0] s_fram_bid_debug           [NUM_ANT],
     input var          s_fram_bid_valid           [NUM_ANT],
     input var          s_fram_bid_tlast           [NUM_ANT],
+    /* verilator lint_on UNUSED */
     output var         s_fram_bid_ready           [NUM_ANT],
+    /* verilator lint_off UNUSED */
     input var          s_fram_bid_off             [NUM_ANT],
     input var  [ 14:0] s_fram_bid_beamid15        [NUM_ANT],
     input var  [ 11:0] s_fram_bid_remask          [NUM_ANT],
@@ -119,12 +132,15 @@ module lowphy_band #(
     input var  [ 15:0] s_fram_bid_time_offset     [NUM_ANT],
     input var  [  7:0] s_fram_bid_frame_structure [NUM_ANT],
     input var  [ 15:0] s_fram_bid_cp_length       [NUM_ANT],
+    /* verilator lint_on UNUSED */
     //
     output var [ 63:0] m_fram_unsol_tdata,
     output var [  7:0] m_fram_unsol_tkeep,
     output var         m_fram_unsol_tvalid,
     output var         m_fram_unsol_tlast,
+    /* verilator lint_off UNUSED */
     input var          m_fram_unsol_tready,
+    /* verilator lint_on UNUSED */
     output var [ 31:0] m_fram_unsol_tuser,
     //
     output var [ 63:0] m_fram_prach_tdata,
@@ -142,9 +158,12 @@ module lowphy_band #(
     input var  [ 90:0] s_defm_data_tuser          [NUM_ANT],
     input var  [  4:0] s_defm_data_tdest          [NUM_ANT],
     //
+    /* verilator lint_off UNUSED */
     input var          s_defm_bid_valid           [NUM_ANT],
     input var          s_defm_bid_tlast           [NUM_ANT],
+    /* verilator lint_on UNUSED */
     output var         s_defm_bid_ready           [NUM_ANT],
+    /* verilator lint_off UNUSED */
     input var          s_defm_bid_off             [NUM_ANT],
     input var  [ 14:0] s_defm_bid_beamid15        [NUM_ANT],
     input var  [ 11:0] s_defm_bid_remask          [NUM_ANT],
@@ -157,7 +176,9 @@ module lowphy_band #(
     input var  [ 15:0] s_defm_bid_time_offset     [NUM_ANT],
     input var  [  7:0] s_defm_bid_frame_structure [NUM_ANT],
     input var  [ 15:0] s_defm_bid_cp_length       [NUM_ANT],
+    /* verilator lint_on UNUSED */
     // ORAN prase ports
+    /* verilator lint_off UNUSED */
     input var  [127:0] s_ep_debug,
     input var          s_t_header_offset_valid,
     input var          s_runt_packet_len,
@@ -170,7 +191,9 @@ module lowphy_band #(
     input var  [ 15:0] s_payloadsize,
     input var          s_packet_in_window,
     input var  [ 11:0] s_offset_in_symbol,
+    /* verilator lint_on UNUSED */
     //
+    /* verilator lint_off UNUSED */
     input var          s_radio_app_head_valid,
     input var          s_datadirection,
     input var  [  7:0] s_numsections,
@@ -184,7 +207,9 @@ module lowphy_band #(
     input var  [ 15:0] s_timeoffset,
     input var  [  7:0] s_framestructure,
     input var  [ 15:0] s_cplength,
+    /* verilator lint_on UNUSED */
     //
+    /* verilator lint_off UNUSED */
     input var          s_section_header_valid,
     input var  [  3:0] s_numsymbol,
     input var  [  7:0] s_numprbc,
@@ -194,50 +219,68 @@ module lowphy_band #(
     input var  [ 11:0] s_remask,
     input var  [ 14:0] s_beamid15,
     input var  [ 23:0] s_freqoffset,
+    /* verilator lint_on UNUSED */
     //
+    /* verilator lint_off UNUSED */
     input var  [ 63:0] s_beamweights_tdata,
     input var          s_beamweights_tvalid,
     input var          s_beamweights_tlast,
     input var  [  3:0] s_beamweights_tuser,
+    /* verilator lint_on UNUSED */
     //
+    /* verilator lint_off UNUSED */
     input var  [ 63:0] s_raw_cplane_tdata,
     input var          s_raw_cplane_tvalid,
     input var          s_raw_cplane_tuser,
     input var          s_raw_cplane_tlast,
     input var  [  7:0] s_raw_cplane_tkeep,
+    /* verilator lint_on UNUSED */
     //
+    /* verilator lint_off UNUSED */
     input var  [ 26:0] s_unsupport_ext_tuser,
     input var  [ 63:0] s_unsupport_ext_tdata,
     input var          s_unsupport_ext_tvalid,
     input var  [  7:0] s_unsupport_ext_tkeep,
     input var          s_unsupport_ext_tlast,
+    /* verilator lint_on UNUSED */
     // Clocks
     input var          internal_bus_clk,
     //
     input var          defm_reset,
     input var          fram_reset,
     //
+    /* verilator lint_off UNUSED */
     input var          defm_reset_active,
     input var          fram0_reset_active,
+    /* verilator lint_on UNUSED */
     // Timer ports
     output var         fram_radio_start_10ms      [ NUM_CC],
     output var         defm_radio_start_10ms      [ NUM_CC],
     // SSB ports
+    /* verilator lint_off UNUSED */
     input var  [ 63:0] s_ssb_data_tdata,
     input var  [  7:0] s_ssb_data_tkeep,
     input var          s_ssb_data_tvalid,
     input var          s_ssb_data_tlast,
+    /* verilator lint_on UNUSED */
     output var         s_ssb_data_tready,
+    /* verilator lint_off UNUSED */
     input var  [ 90:0] s_ssb_data_tuser,
+    /* verilator lint_on UNUSED */
     // Early BeamID generation
+    /* verilator lint_off UNUSED */
     input var  [ 47:0] s_ssb_ebid_tdata,
     input var          s_ssb_ebid_tvalid,
     input var          s_ssb_ebid_tlast,
+    /* verilator lint_on UNUSED */
     output var         s_ssb_ebid_tready,
     // Outputs to beamid fwd interface
+    /* verilator lint_off UNUSED */
     input var          s_ssb_bid_tvalid,
     input var          s_ssb_bid_tlast,
+    /* verilator lint_on UNUSED */
     output var         s_ssb_bid_tready,
+    /* verilator lint_off UNUSED */
     input var          s_ssb_bid_off,
     input var  [ 14:0] s_ssb_bid_beamid15,
     input var  [ 11:0] s_ssb_bid_remask,
@@ -250,9 +293,12 @@ module lowphy_band #(
     input var  [ 15:0] s_ssb_bid_time_offset,
     input var  [  7:0] s_ssb_bid_frame_structure,
     input var  [ 15:0] s_ssb_bid_cp_length,
+    /* verilator lint_on UNUSED */
     // Ready status
+    /* verilator lint_off UNUSED */
     input var          fram_ready,
     input var          defm_ready,
+    /* verilator lint_on UNUSED */
     // Mandatory 10 MHz strobe
     input var          fram_rfs_in,
     input var          defm_rfs_in,
@@ -303,7 +349,9 @@ module lowphy_band #(
   logic [ 3:0] ctrl_dl_fs_offset;
 
   logic [16:0] ctrl_dl_gain                   [NUM_CC] [NUM_ANT];
+  /* verilator lint_off UNUSED */
   logic [16:0] ctrl_dl_gain_reg               [NUM_CC] [      4];
+  /* verilator lint_on UNUSED */
 
   // UL control signals
 
@@ -319,25 +367,29 @@ module lowphy_band #(
   logic [ 3:0] ctrl_ul_fs_offset;
 
   logic [16:0] ctrl_ul_gain                   [NUM_CC] [NUM_ANT];
+  /* verilator lint_off UNUSED */
   logic [16:0] ctrl_ul_gain_reg               [NUM_CC] [      4];
+  /* verilator lint_on UNUSED */
 
   // PRACH control signals
 
   logic [ 3:0] ctrl_prach_bist_bist           [NUM_CC];
   logic [ 3:0] ctrl_prach_en                  [NUM_CC];
   logic [ 1:0] ctrl_prach_rat                 [NUM_CC];
+  /* verilator lint_off UNUSED */
   logic [ 3:0] ctrl_prach_format              [NUM_CC];
+  /* verilator lint_on UNUSED */
   logic [ 3:0] ctrl_prach_bw                  [NUM_CC];
   logic [22:0] ctrl_prach_rfs_offset          [NUM_CC];
   logic [22:0] ctrl_prach_ta3_offset          [NUM_CC];
   //
   logic [ 3:0] ctrl_prach_bist_static_c       [NUM_CC];
 
+  /* verilator lint_off UNUSED */
   logic [ 3:0] ctrl_prach_ud_comp_meth;
   logic [ 3:0] ctrl_prach_ud_iq_width;
+  /* verilator lint_on UNUSED */
   logic [ 3:0] ctrl_prach_ud_fs_offset;
-
-  wire         unused_prach_ud = &{1'b0, ctrl_prach_ud_comp_meth, ctrl_prach_ud_iq_width};
 
   logic [ 3:0] ctrl_prach_cfg0_subframe_inc   [NUM_CC];
   logic [ 3:0] ctrl_prach_cfg0_subframe_id    [NUM_CC];
@@ -380,159 +432,12 @@ module lowphy_band #(
   logic        defm_reset_s;
   logic        fram_reset_s;
 
-  wire         unused_inputs;
-
-  assign unused_inputs = &{
-      1'b0,
-      s_defm_ebid_tdata,
-      s_defm_ebid_tvalid,
-      s_defm_ebid_tlast,
-      s_fram_ebid_tdata,
-      s_fram_ebid_tvalid,
-      s_fram_ebid_tlast,
-      m_fram_unsol_tready,
-      s_ep_debug,
-      s_t_header_offset_valid,
-      s_runt_packet_len,
-      s_rtc_pc_id,
-      s_concat,
-      s_messagetype,
-      s_seqid,
-      s_subseqid,
-      s_ebit,
-      s_payloadsize,
-      s_packet_in_window,
-      s_offset_in_symbol,
-      s_radio_app_head_valid,
-      s_datadirection,
-      s_numsections,
-      s_sectiontype,
-      s_filterindex,
-      s_frameid,
-      s_subframeid,
-      s_slotid,
-      s_symbolid,
-      s_udcomphdr,
-      s_timeoffset,
-      s_framestructure,
-      s_cplength,
-      s_section_header_valid,
-      s_numsymbol,
-      s_numprbc,
-      s_startprbc,
-      s_sectionid,
-      s_rb,
-      s_remask,
-      s_beamid15,
-      s_freqoffset,
-      s_beamweights_tdata,
-      s_beamweights_tvalid,
-      s_beamweights_tlast,
-      s_beamweights_tuser,
-      s_raw_cplane_tdata,
-      s_raw_cplane_tvalid,
-      s_raw_cplane_tuser,
-      s_raw_cplane_tlast,
-      s_raw_cplane_tkeep,
-      s_unsupport_ext_tuser,
-      s_unsupport_ext_tdata,
-      s_unsupport_ext_tvalid,
-      s_unsupport_ext_tkeep,
-      s_unsupport_ext_tlast,
-      defm_reset_active,
-      fram0_reset_active,
-      s_ssb_data_tdata,
-      s_ssb_data_tkeep,
-      s_ssb_data_tvalid,
-      s_ssb_data_tlast,
-      s_ssb_data_tuser,
-      s_ssb_ebid_tdata,
-      s_ssb_ebid_tvalid,
-      s_ssb_ebid_tlast,
-      s_ssb_bid_tvalid,
-      s_ssb_bid_tlast,
-      s_ssb_bid_off,
-      s_ssb_bid_beamid15,
-      s_ssb_bid_remask,
-      s_ssb_bid_rb,
-      s_ssb_bid_start_prbc,
-      s_ssb_bid_num_prbc,
-      s_ssb_bid_num_symbol,
-      s_ssb_bid_cc_id,
-      s_ssb_bid_frequency_offset,
-      s_ssb_bid_time_offset,
-      s_ssb_bid_frame_structure,
-      s_ssb_bid_cp_length,
-      fram_ready,
-      defm_ready
-  };
-
   generate
-    for (genvar cc = 0; cc < NUM_CC; cc++) begin : gen_unused_cc
-      wire unused_cc_inputs;
-
-      assign unused_cc_inputs = &{
-          1'b0,
-          s_ul_cta_sym_num[cc],
-          s_ul_update[cc],
-          s_ul_slot_update[cc],
-          s_dl_cta_sym_num[cc],
-          s_dl_update[cc],
-          s_dl_slot_update[cc],
-          s_ul_toggle[cc],
-          s_dl_toggle[cc],
-          s_cc_enable[cc],
-          s_cc_reload[cc],
-          ctrl_prach_format[cc]
-      };
-    end
-
-    for (genvar ant = 0; ant < NUM_ANT; ant++) begin : gen_unused_ant
-      wire unused_ant_inputs;
-
-      assign unused_ant_inputs = &{
-          1'b0,
-          s_fram_bid_debug[ant],
-          s_fram_bid_valid[ant],
-          s_fram_bid_tlast[ant],
-          s_fram_bid_off[ant],
-          s_fram_bid_beamid15[ant],
-          s_fram_bid_remask[ant],
-          s_fram_bid_rb[ant],
-          s_fram_bid_start_prbc[ant],
-          s_fram_bid_num_prbc[ant],
-          s_fram_bid_num_symbol[ant],
-          s_fram_bid_cc_id[ant],
-          s_fram_bid_frequency_offset[ant],
-          s_fram_bid_time_offset[ant],
-          s_fram_bid_frame_structure[ant],
-          s_fram_bid_cp_length[ant],
-          s_defm_bid_valid[ant],
-          s_defm_bid_tlast[ant],
-          s_defm_bid_off[ant],
-          s_defm_bid_beamid15[ant],
-          s_defm_bid_remask[ant],
-          s_defm_bid_rb[ant],
-          s_defm_bid_start_prbc[ant],
-          s_defm_bid_num_prbc[ant],
-          s_defm_bid_num_symbol[ant],
-          s_defm_bid_cc_id[ant],
-          s_defm_bid_frequency_offset[ant],
-          s_defm_bid_time_offset[ant],
-          s_defm_bid_frame_structure[ant],
-          s_defm_bid_cp_length[ant]
-      };
-    end
-
     for (genvar cc = 0; cc < NUM_CC; cc++) begin : gen_gain_cc
       for (genvar ant = 0; ant < 4; ant++) begin : gen_gain_ant
         if (ant < NUM_ANT) begin : gen_active_gain
           assign ctrl_dl_gain[cc][ant] = ctrl_dl_gain_reg[cc][ant];
           assign ctrl_ul_gain[cc][ant] = ctrl_ul_gain_reg[cc][ant];
-        end else begin : gen_inactive_gain
-          wire unused_gain_inputs;
-
-          assign unused_gain_inputs = &{1'b0, ctrl_dl_gain_reg[cc][ant], ctrl_ul_gain_reg[cc][ant]};
         end
       end
     end
@@ -813,6 +718,7 @@ module lowphy_band #(
 
   localparam int NUM_CC_REG = 3;
 
+  /* verilator lint_off UNUSED */
   logic [ 3:0] reg_ctrl_dl_en                    [NUM_CC_REG];
   logic [ 1:0] reg_ctrl_dl_rat                   [NUM_CC_REG];
   logic [ 3:0] reg_ctrl_dl_bist                  [NUM_CC_REG];
@@ -844,6 +750,7 @@ module lowphy_band #(
   logic [ 3:0] reg_ctrl_prach_cfg2_num_symbol    [NUM_CC_REG];
   logic [23:0] reg_ctrl_prach_cfg2_freq_offset   [NUM_CC_REG];
   logic [15:0] reg_ctrl_prach_cfg3_sampling_offset[NUM_CC_REG];
+  /* verilator lint_on UNUSED */
 
   logic [ 3:0] reg_stat_prach_msg0_subframe_id   [NUM_CC_REG];
   logic [ 5:0] reg_stat_prach_msg0_slot_id       [NUM_CC_REG];
@@ -901,47 +808,6 @@ module lowphy_band #(
       end else begin : gen_inactive_cc
         // The register slots above this band's CC count stay readable but
         // drive nothing, and their status inputs read back as zero.
-        wire unused_reg_cc = &{
-            1'b0,
-            reg_ctrl_dl_en[cc],
-            reg_ctrl_dl_rat[cc],
-            reg_ctrl_dl_bist[cc],
-            reg_ctrl_dl_bw[cc],
-            reg_ctrl_dl_nprb[cc],
-            reg_ctrl_dl_rfs_offset[cc],
-            reg_ctrl_dl_gain[cc][0],
-            reg_ctrl_dl_gain[cc][1],
-            reg_ctrl_dl_gain[cc][2],
-            reg_ctrl_dl_gain[cc][3],
-            reg_ctrl_ul_en[cc],
-            reg_ctrl_ul_rat[cc],
-            reg_ctrl_ul_bist[cc],
-            reg_ctrl_ul_bw[cc],
-            reg_ctrl_ul_nprb[cc],
-            reg_ctrl_ul_rfs_offset[cc],
-            reg_ctrl_ul_gain[cc][0],
-            reg_ctrl_ul_gain[cc][1],
-            reg_ctrl_ul_gain[cc][2],
-            reg_ctrl_ul_gain[cc][3],
-            reg_ctrl_prach_en[cc],
-            reg_ctrl_prach_format[cc],
-            reg_ctrl_prach_rat[cc],
-            reg_ctrl_prach_bist_bist[cc],
-            reg_ctrl_prach_bist_static_c[cc],
-            reg_ctrl_prach_bw[cc],
-            reg_ctrl_prach_rfs_offset[cc],
-            reg_ctrl_prach_ta3_offset[cc],
-            reg_ctrl_prach_cfg0_symbol_id[cc],
-            reg_ctrl_prach_cfg0_slot_id[cc],
-            reg_ctrl_prach_cfg0_subframe_id[cc],
-            reg_ctrl_prach_cfg0_subframe_inc[cc],
-            reg_ctrl_prach_cfg1_time_offset[cc],
-            reg_ctrl_prach_cfg1_cp_length[cc],
-            reg_ctrl_prach_cfg2_num_symbol[cc],
-            reg_ctrl_prach_cfg2_freq_offset[cc],
-            reg_ctrl_prach_cfg3_sampling_offset[cc]
-        };
-
         assign reg_stat_prach_msg0_subframe_id[cc]      = '0;
         assign reg_stat_prach_msg0_slot_id[cc]          = '0;
         assign reg_stat_prach_msg0_symbol_id[cc]        = '0;

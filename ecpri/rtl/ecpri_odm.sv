@@ -15,7 +15,9 @@ module ecpri_odm (
     input var  [ 7:0] s_odm_measurementid,
     input var  [ 7:0] s_odm_actiontype,
     input var  [79:0] s_odm_timestamp,
+    /* verilator lint_off UNUSED */
     input var  [63:0] s_odm_compensation,
+    /* verilator lint_on UNUSED */
     input var  [79:0] s_odm_timestamp2,
     // Transmit I/F
     output var        m_axis_tvalid,
@@ -27,7 +29,9 @@ module ecpri_odm (
     output var [63:0] m_odm_compensation,
     //
     input var         ctrl_clk,
+    /* verilator lint_off UNUSED */
     input var         ctrl_rst,
+    /* verilator lint_on UNUSED */
     //
     input var         ctrl_en,
     input var  [31:0] ctrl_meas_interval,
@@ -38,8 +42,6 @@ module ecpri_odm (
     output var [31:0] stat_ts_diff_egress_ns,
     output var [47:0] stat_ts_diff_egress_sec
 );
-
-  wire unused_inputs = &{1'b0, s_odm_compensation, ctrl_rst};
 
   // Note
 
@@ -88,8 +90,10 @@ module ecpri_odm (
 
   wire         ctrl_en_s;
   wire  [31:0] ctrl_meas_interval_s;
+  /* verilator lint_off UNUSED */
   wire  [ 1:0] unused_stat_src_ready;
   wire  [ 1:0] unused_stat_dest_valid;
+  /* verilator lint_on UNUSED */
 
   logic [31:0] timer;
   logic        timer_tick;

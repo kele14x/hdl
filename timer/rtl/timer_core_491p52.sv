@@ -8,7 +8,9 @@ module timer_core_491p52 #(
     input var         clk,
     input var         rst,
     //
+    /* verilator lint_off UNUSED */
     input var         pps_in,
+    /* verilator lint_on UNUSED */
     output var        pps_out,
     //
     output var [47:0] tod_sec,
@@ -44,8 +46,6 @@ module timer_core_491p52 #(
 
   localparam [31:0] NsPerSecond = ((SIM_SPEED_UP != 0) ? 32'd100_000 : 32'd1_000_000_000);
 
-  wire unused_pps_in = pps_in;
-
   // The nanosecond counter value that is about to wrap
   localparam [31:0] IntTimerNsWrapConst = NsPerSecond - 3;
 
@@ -76,6 +76,7 @@ module timer_core_491p52 #(
   wire [31:0] rtc_offset_ns;
   wire [47:0] rtc_offset_sec;
 
+  /* verilator lint_off UNUSED */
   wire cdc_rtc_current_ns_src_ready;
   wire cdc_rtc_current_ns_dest_valid;
   wire cdc_rtc_current_sec_src_ready;
@@ -84,7 +85,7 @@ module timer_core_491p52 #(
   wire cdc_rtc_offset_ns_dest_valid;
   wire cdc_rtc_offset_sec_src_ready;
   wire cdc_rtc_offset_sec_dest_valid;
-  wire unused_cdc_outputs = &{1'b0, unused_pps_in, cdc_rtc_current_ns_src_ready, cdc_rtc_current_ns_dest_valid, cdc_rtc_current_sec_src_ready, cdc_rtc_current_sec_dest_valid, cdc_rtc_offset_ns_src_ready, cdc_rtc_offset_ns_dest_valid, cdc_rtc_offset_sec_src_ready, cdc_rtc_offset_sec_dest_valid, 1'b0};
+  /* verilator lint_on UNUSED */
 
   // Internal second and nanosecond counter
   // Which is free running, predictable counter

@@ -15,7 +15,9 @@ module puxch_conv #(
     input var         din_sy,
     input var  [ 3:0] din_chn,
     input var         din_dv,
+    /* verilator lint_off UNUSED */
     input var         din_last,
+    /* verilator lint_on UNUSED */
     //
     output var [15:0] dout_dr,
     output var [15:0] dout_di,
@@ -91,8 +93,10 @@ module puxch_conv #(
 
   logic signed [15:0] din_dr_d;
   logic signed [15:0] din_di_d;
+  /* verilator lint_off UNUSED */
   logic               mult_ovf;
   logic               cmult_ovf;
+  /* verilator lint_on UNUSED */
 
 
   // CDC for control signals
@@ -326,8 +330,6 @@ module puxch_conv #(
       .dout({dout_last, dout_dv})
   );
 
-  wire unused_conv = &{1'b0, din_last, mult_ovf, cmult_ovf};
-
-endmodule
+  endmodule
 
 `default_nettype wire

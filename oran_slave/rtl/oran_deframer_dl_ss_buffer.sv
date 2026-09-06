@@ -54,10 +54,10 @@ module oran_deframer_dl_ss_buffer #(
   logic r0_rd_en_d;
   logic [DataWidth-1:0] r0_rd_dout;
 
+  /* verilator lint_off UNUSED */
   logic ram_dbiterrb;
   logic ram_sbiterrb;
-
-  wire unused_ram_status = &{1'b0, ram_dbiterrb, ram_sbiterrb};
+  /* verilator lint_on UNUSED */
 
 
   // Write side

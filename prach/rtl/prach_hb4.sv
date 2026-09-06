@@ -115,7 +115,9 @@ module prach_hb4 #(
   logic signed [34:0] dmult;
   logic signed [37:0] dresult;
 
+  /* verilator lint_off UNUSED */
   logic signed [38:0] dq;
+  /* verilator lint_on UNUSED */
 
   wire [2:0] lane = din_chn[2:0];
   // D128 sees the retained phase at chn 0..7 and the adjacent phase at
@@ -329,8 +331,6 @@ module prach_hb4 #(
       .din (metadata_in),
       .dout({dout_last, dout_dv, dout_chn, dout_sy, dout_sl, dout_sf})
   );
-
-  wire unused_sparse = &{1'b0, dq[38:33], dq[16:0]};
 
 endmodule
 

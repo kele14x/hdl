@@ -25,7 +25,9 @@ module oran_deframer_dl_ss_readout (
     output var [63:0] m_axis_tdata,
     output var [ 7:0] m_axis_tkeep,
     output var        m_axis_tvalid,
+    /* verilator lint_off UNUSED */
     input var         m_axis_tready,
+    /* verilator lint_on UNUSED */
     output var        m_axis_tlast,
     output var [39:0] m_axis_tuser,
     //
@@ -42,8 +44,6 @@ module oran_deframer_dl_ss_readout (
   logic buffer_rd_en_d4;
 
   logic m_axis_tvalid_s;
-
-  wire  unused_m_axis_tready = &{1'b0, m_axis_tready};
 
   typedef enum int {
     S_RST,     // Under reset

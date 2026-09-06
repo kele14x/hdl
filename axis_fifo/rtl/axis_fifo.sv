@@ -32,7 +32,9 @@ module axis_fifo #(
     input var  [                       DATA_WIDTH-1:0] s_axis_tdata,
     input var  [                     DATA_WIDTH/8-1:0] s_axis_tkeep,
     input var                                          s_axis_tlast,
+    /* verilator lint_off UNUSED */
     input var  [(USER_WIDTH > 0 ? USER_WIDTH : 1)-1:0] s_axis_tuser,
+    /* verilator lint_on UNUSED */
     input var                                          s_axis_tvalid,
     output var                                         s_axis_tready,
     //
@@ -178,7 +180,6 @@ module axis_fifo #(
     if (USER_WIDTH > 0) begin : g_wr_din_user
       assign wr_din = {s_axis_tuser, s_axis_tlast, s_axis_tkeep, s_axis_tdata};
     end else begin : g_wr_din_no_user
-      wire unused_s_axis_tuser = &{1'b0, s_axis_tuser};
       assign wr_din = {s_axis_tlast, s_axis_tkeep, s_axis_tdata};
     end
   endgenerate

@@ -11,17 +11,23 @@ module pdxch_block2stream #(
     input var  [15:0] din_dr,
     input var  [15:0] din_di,
     input var         din_sf,
+    /* verilator lint_off UNUSED */
     input var         din_sl,
+    /* verilator lint_on UNUSED */
     input var         din_sy,
     input var  [ 3:0] din_chn,
     input var         din_dv,
+    /* verilator lint_off UNUSED */
     input var         din_last,
+    /* verilator lint_on UNUSED */
     //
     output var [31:0] m_axis_tdata [NUM_ANT],
     output var [ 7:0] m_axis_tuser [NUM_ANT],
     output var        m_axis_tlast [NUM_ANT],
     output var        m_axis_tvalid[NUM_ANT],
+    /* verilator lint_off UNUSED */
     input var         m_axis_tready[NUM_ANT]
+    /* verilator lint_on UNUSED */
 );
 
   localparam int AddrWidth = 9;
@@ -37,7 +43,6 @@ module pdxch_block2stream #(
 
   // din_sl/din_last do not pace the block readout, and the antenna streams
   // are emitted free-running (m_axis_tready is ignored).
-  wire unused_inputs = &{1'b0, din_sl, din_last, m_axis_tready};
 
   logic [         15:0] din_dr_d;
   logic [         15:0] din_di_d;

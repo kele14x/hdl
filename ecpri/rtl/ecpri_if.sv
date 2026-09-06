@@ -112,25 +112,33 @@ module ecpri_if #(
     input var         ctrl_clk,
     input var         ctrl_rst,
     //
+    /* verilator lint_off UNUSED */
     input var         ctrl_defm_reset,
     input var         ctrl_fram_reset,
+    /* verilator lint_on UNUSED */
     //
+    /* verilator lint_off UNUSED */
     input var         ctrl_defm_en,
     input var         ctrl_fram_en,
+    /* verilator lint_on UNUSED */
     //
     input var         ctrl_tick_snap,
     input var         ctrl_tick_clear,
     //
+    /* verilator lint_off UNUSED */
     input var  [47:0] ctrl_defm_dest_mac,
     input var  [47:0] ctrl_defm_src_mac,
     input var         ctrl_defm_has_vlan,
     input var  [15:0] ctrl_defm_vlan_tag,
+    /* verilator lint_on UNUSED */
     //
+    /* verilator lint_off UNUSED */
     input var         ctrl_defm_dest_mac_flt_en,
     input var         ctrl_defm_src_mac_flt_en,
     input var  [47:0] ctrl_defm_src_mac_flt_mask,
     input var         ctrl_defm_vlan_flt_en,
     input var  [15:0] ctrl_defm_vlan_flt_mask,
+    /* verilator lint_on UNUSED */
     //
     input var  [47:0] ctrl_fram_dest_mac,
     input var  [47:0] ctrl_fram_src_mac,
@@ -161,17 +169,12 @@ module ecpri_if #(
     output var [15:0] stat_topology_id
 );
 
-  wire unused_control_inputs = &{1'b0,
-    ctrl_defm_reset, ctrl_fram_reset, ctrl_defm_en, ctrl_fram_en,
-    ctrl_defm_dest_mac, ctrl_defm_src_mac, ctrl_defm_has_vlan, ctrl_defm_vlan_tag,
-    ctrl_defm_dest_mac_flt_en, ctrl_defm_src_mac_flt_en, ctrl_defm_src_mac_flt_mask,
-    ctrl_defm_vlan_flt_en, ctrl_defm_vlan_flt_mask
-  };
-
   wire [79:0] tx_ptp_timestamp_s;
   wire [15:0] tx_ptp_timestamp_tag_s;
   wire tx_ptp_timestamp_valid_s;
+  /* verilator lint_off UNUSED */
   wire unused_tx_ptp_timestamp_ready;
+  /* verilator lint_on UNUSED */
 
   wire [15:0] stat_topology_id_s;
 

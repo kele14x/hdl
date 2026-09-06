@@ -47,11 +47,15 @@ module prach_fft_ditfft3_bf2 #(
 
   logic signed [ DATA_WIDTH-1:0] ay1;
   logic signed [DATA_WIDTH+17:0] amult;
+  /* verilator lint_off UNUSED */
   logic signed [DATA_WIDTH+17:0] aresult;
+  /* verilator lint_on UNUSED */
 
   logic signed [ DATA_WIDTH-1:0] by1;
   logic signed [DATA_WIDTH+17:0] bmult;
+  /* verilator lint_off UNUSED */
   logic signed [DATA_WIDTH+17:0] bresult;
+  /* verilator lint_on UNUSED */
 
   function automatic logic signed [DATA_WIDTH:0] op1(input logic signed [DATA_WIDTH-1:0] a,
                                                      input logic signed [DATA_WIDTH-1:0] b);
@@ -186,8 +190,6 @@ module prach_fft_ditfft3_bf2 #(
       .din (dv),
       .dout(dout_dv)
   );
-
-  wire unused_bf2 = &{1'b0, aresult[DATA_WIDTH+17], aresult[15:0], bresult[DATA_WIDTH+17], bresult[15:0]};
 
 endmodule
 

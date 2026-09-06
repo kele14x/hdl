@@ -67,7 +67,9 @@ module pdxch_fdv_buffer #(
   logic        rd_en_d                   [NUM_ANT];
   logic [35:0] rd_iq_data                [NUM_ANT];
   logic [ 3:0] rd_exp_data               [NUM_ANT];
+  /* verilator lint_off UNUSED */
   logic        unused_stat_resync;
+  /* verilator lint_on UNUSED */
 
   // Main
 

@@ -12,12 +12,16 @@ module prach_framer_buffer #(
     //
     input var  [15:0] din_dr,
     input var  [15:0] din_di,
+    /* verilator lint_off UNUSED */
     input var         din_sf,
     input var         din_sl,
+    /* verilator lint_on UNUSED */
     input var         din_sy,
     input var  [ 1:0] din_chn,
     input var         din_dv,
+    /* verilator lint_off UNUSED */
     input var         din_last,
+    /* verilator lint_on UNUSED */
     //
     input var  [11:0] rd_section_id,
     input var  [ 3:0] ctrl_fs_offset,
@@ -43,7 +47,9 @@ module prach_framer_buffer #(
   logic [NUM_ANT-1:0] ap_ack;
   logic               gearbox_start;
   logic               gearbox_busy;
+  /* verilator lint_off UNUSED */
   logic               gearbox_done;
+  /* verilator lint_on UNUSED */
   logic [        1:0] read_ant;
   logic [       31:0] gearbox_tuser;
 
@@ -199,8 +205,6 @@ module prach_framer_buffer #(
       .m_axis_tuser (m_axis_tuser),
       .m_axis_tvalid(m_axis_tvalid)
   );
-
-  wire unused_framer_buffer = &{1'b0, din_sf, din_sl, din_last, gearbox_done};
 
 endmodule
 

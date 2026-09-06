@@ -22,14 +22,18 @@ module oran_deframer_dl_ss_symnum (
 
   logic wait_app_header_n;
 
+  /* verilator lint_off UNUSED */
   logic [63:0] s_axis_tdata_reversed;
+  /* verilator lint_on UNUSED */
 
   // Application common header (32-bit)
 
+  /* verilator lint_off UNUSED */
   logic app_datadirection;
   logic [2:0] app_payloadversion;
   logic [3:0] app_filterindex;
   logic [7:0] app_frameid;
+  /* verilator lint_on UNUSED */
   logic [3:0] app_subframeid;
   logic [5:0] app_slotid;
   logic [5:0] app_symbolid;
@@ -37,15 +41,6 @@ module oran_deframer_dl_ss_symnum (
   logic [8:0] app_symbol_num;
 
   logic [31:0] app_header;
-
-  wire unused_app_fields = &{
-    1'b0,
-    s_axis_tdata_reversed[31:0],
-    app_datadirection,
-    app_payloadversion,
-    app_filterindex,
-    app_frameid
-  };
 
   //
   // This function reverse byte order of 64-bit data

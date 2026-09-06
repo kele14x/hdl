@@ -18,7 +18,9 @@ module oran_deframer_dl_ss_adaptor #(
     input var  [32:0] timer_frac,
     // Defm data
     input var  [63:0] s_axis_tdata,
+    /* verilator lint_off UNUSED */
     input var  [ 7:0] s_axis_tkeep,
+    /* verilator lint_on UNUSED */
     input var         s_axis_tvalid,
     input var         s_axis_tlast,
     input var  [31:0] s_axis_tuser,       // section header
@@ -39,11 +41,15 @@ module oran_deframer_dl_ss_adaptor #(
   // Signals
   //--------
 
+  /* verilator lint_off UNUSED */
   logic [11:0] section_sectionid;
   logic section_rb;
   logic section_syminc;
+  /* verilator lint_on UNUSED */
   logic [9:0] section_startprbu;
+  /* verilator lint_off UNUSED */
   logic [7:0] section_numprbu;
+  /* verilator lint_on UNUSED */
 
   logic [7:0] current_frame;
   logic [32:0] current_frac;
@@ -64,31 +70,15 @@ module oran_deframer_dl_ss_adaptor #(
   logic syml_rd_en_d;
   logic [31:0] syml_rd_data;
 
+  /* verilator lint_off UNUSED */
   logic [63:0] ram_douta;
   logic ram_dbiterra;
   logic ram_sbiterra;
   logic ram_dbiterrb;
   logic ram_sbiterrb;
-
-  wire unused_ram_outputs = &{
-    1'b0,
-    ram_douta,
-    ram_dbiterra,
-    ram_sbiterra,
-    ram_dbiterrb,
-    ram_sbiterrb
-  };
+  /* verilator lint_on UNUSED */
 
   logic synced;
-
-  wire unused_section_fields = &{
-    1'b0,
-    s_axis_tkeep,
-    section_sectionid,
-    section_rb,
-    section_syminc,
-    section_numprbu
-  };
 
 
   // Main

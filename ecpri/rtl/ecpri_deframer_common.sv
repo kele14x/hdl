@@ -50,8 +50,10 @@ module ecpri_deframer_common (
 
   // eCPRI Common Header & Payload
 
+  /* verilator lint_off UNUSED */
   wire  [ 3:0] ecpri_version;  // !no output
   wire  [ 2:0] ecpri_reserved;  // !no output
+  /* verilator lint_on UNUSED */
   wire         ecpri_concat;  // eCPRI concatenation indicator
   wire  [ 7:0] ecpri_messagetype;  // 0 = IQ, 2 = IQC, 5 = Delay measure
   wire  [15:0] ecpri_payloadsize;
@@ -59,9 +61,6 @@ module ecpri_deframer_common (
   logic [15:0] payload_counter;  // Received message bytes counter
 
   wire         payload_end;
-  wire         unused_header_fields;
-
-  assign unused_header_fields = &{1'b0, ecpri_version, ecpri_reserved};
 
   integer state, state_next;
 

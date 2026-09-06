@@ -86,13 +86,17 @@ module prach #(
 
   // Signals
 
+  /* verilator lint_off UNUSED */
   logic [ 3:0] ctrl_ud_comp_meth;
   logic [ 3:0] ctrl_ud_iq_width;
+  /* verilator lint_on UNUSED */
   logic [ 3:0] ctrl_fs_offset;
   //
   logic [ 3:0] ctrl_bist           [NUM_CC];
   logic [ 3:0] ctrl_en             [NUM_CC];
+  /* verilator lint_off UNUSED */
   logic [ 3:0] ctrl_format         [NUM_CC];
+  /* verilator lint_on UNUSED */
   logic [ 1:0] ctrl_rat            [NUM_CC];
   logic [ 3:0] ctrl_bw             [NUM_CC];
   logic [22:0] ctrl_rfs_offset     [NUM_CC];
@@ -398,15 +402,6 @@ module prach #(
       .stat_num_symbol        (stat_num_symbol),
       .stat_freq_offset       (stat_freq_offset)
   );
-
-  wire unused_prach = &{
-    1'b0,
-    ctrl_format[0],
-    ctrl_format[1],
-    ctrl_format[2],
-    ctrl_ud_comp_meth,
-    ctrl_ud_iq_width
-  };
 
 endmodule
 

@@ -8,12 +8,16 @@ module puxch_buffer #(
     parameter int HALF_BLOCK = 0
 ) (
     input var         clk,
+    /* verilator lint_off UNUSED */
     input var         rst,
+    /* verilator lint_on UNUSED */
     //
     input var  [15:0] din_dr         [NUM_CC],
     input var  [15:0] din_di         [NUM_CC],
     input var         din_sf         [NUM_CC],
+    /* verilator lint_off UNUSED */
     input var         din_sl         [NUM_CC],
+    /* verilator lint_on UNUSED */
     input var         din_sy         [NUM_CC],
     input var  [ 3:0] din_chn        [NUM_CC],
     input var         din_dv         [NUM_CC],
@@ -29,7 +33,9 @@ module puxch_buffer #(
     output var        m_axis_tvalid,
     input var         m_axis_tready,
     //
+    /* verilator lint_off UNUSED */
     input var  [32:0] m_fram_data_req,
+    /* verilator lint_on UNUSED */
     //
     input var  [ 1:0] ctrl_rat       [NUM_CC],
     input var  [ 3:0] ctrl_bw        [NUM_CC]
@@ -51,7 +57,9 @@ module puxch_buffer #(
   logic              fifo_rden;
   logic [      20:0] fifo_dout;
   logic              fifo_empty;
+  /* verilator lint_off UNUSED */
   logic              fifo_full;
+  /* verilator lint_on UNUSED */
 
   logic              fifo_req_valid;
   logic [       8:0] fifo_req_startprb;
@@ -86,7 +94,9 @@ module puxch_buffer #(
   logic              out_wren;
   logic              out_rden;
   logic              out_empty;
+  /* verilator lint_off UNUSED */
   logic              out_full;
+  /* verilator lint_on UNUSED */
   logic [      64:0] out_dout;
 
   logic [      63:0] s0_axis_tdata;
@@ -96,7 +106,9 @@ module puxch_buffer #(
   logic              s1_axis_tlast;
   logic              s1_axis_tvalid;
   logic              s1_axis_tready;
+  /* verilator lint_off UNUSED */
   logic              reg_m_axis_tuser;
+  /* verilator lint_on UNUSED */
 
   localparam int CcIndexWidth = (NUM_CC <= 1) ? 1 : $clog2(NUM_CC);
 
@@ -487,13 +499,9 @@ module puxch_buffer #(
       .empty(out_empty)
   );
 
-  wire unused_out_fifo = &{1'b0, out_full};
-
   // Intentionally unconsumed: the radio-domain rst (no logic in this block
   // uses it), din_sl, the reserved m_fram_data_req fields, and the fifo_full
   // and reg_m_axis_tuser status outputs.
-  wire unused_buffer = &{1'b0, rst, din_sl, m_fram_data_req[32:25], m_fram_data_req[6:4],
-                         fifo_full, reg_m_axis_tuser};
 
   assign {s1_axis_tlast, s1_axis_tdata} = out_dout;
   assign s1_axis_tkeep = 8'hFF;

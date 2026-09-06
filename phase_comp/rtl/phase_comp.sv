@@ -28,7 +28,9 @@ module phase_comp #(
     output var        dout_last,
     //----
     input var         ctrl_clk,
+    /* verilator lint_off UNUSED */
     input var         ctrl_rst,
+    /* verilator lint_on UNUSED */
     //
     input var  [ 1:0] ctrl_rat,
     //
@@ -49,7 +51,6 @@ module phase_comp #(
 
   logic        [            1:0] ctrl_rat_s;
   logic        [AntSelWidth-1:0] din_chn_sel;
-  wire                           unused_ctrl_rst = ctrl_rst;
 
   logic        [  AddrWidth-1:0] din_sym                    [NUM_ANT];
   logic        [  AddrWidth-1:0] din_sym_next;
@@ -64,7 +65,9 @@ module phase_comp #(
   logic signed [           15:0] din_dr_d;
   logic signed [           15:0] din_di_d;
 
+  /* verilator lint_off UNUSED */
   logic                          unused_cmult_ovf;
+  /* verilator lint_on UNUSED */
 
   // Main
 

@@ -17,7 +17,9 @@ module fft #(
     input var                          din_sf,
     input var                          din_sl,
     input var                          din_sy,
+    /* verilator lint_off UNUSED */
     input var         [           3:0] din_chn,
+    /* verilator lint_on UNUSED */
     input var                          din_dv,
     input var                          din_last,
     // Data output
@@ -94,17 +96,16 @@ module fft #(
 
   genvar i;
 
-  wire                         unused_din_chn = &{1'b0, din_chn, 1'b0};
-
   wire signed [DATA_WIDTH-1:0] sat_dr;
   wire signed [DATA_WIDTH-1:0] sat_di;
   wire                         sat_ovf_dr;
   wire                         sat_ovf_di;
 
   // Sign-extend the input to the internal stage width.
+  /* verilator lint_off UNUSED */
   wire                         sext_ovf_dr;
   wire                         sext_ovf_di;
-  wire                         unused_sext_ovf = &{1'b0, sext_ovf_dr, sext_ovf_di, 1'b0};
+  /* verilator lint_on UNUSED */
 
   type_cast #(
       .IN_WIDTH (DATA_WIDTH),

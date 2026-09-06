@@ -15,8 +15,10 @@ module puxch_bfp_comp #(
     input var                   clk,
     input var                   rst,
     //
+    /* verilator lint_off UNUSED */
     input var  [          63:0] s_axis_tdata,
     input var  [           7:0] s_axis_tkeep,
+    /* verilator lint_on UNUSED */
     input var                   s_axis_tvalid,
     input var                   s_axis_tlast,
     input var  [USER_WIDTH-1:0] s_axis_tuser,
@@ -27,8 +29,10 @@ module puxch_bfp_comp #(
     output var                  m_axis_tlast,
     output var [USER_WIDTH-1:0] m_axis_tuser,
     // Control
+    /* verilator lint_off UNUSED */
     input var  [           3:0] ctrl_ud_comp_meth,
     input var  [           3:0] ctrl_ud_iq_width,
+    /* verilator lint_on UNUSED */
     input var  [           3:0] ctrl_fs_offset
 );
 
@@ -71,9 +75,6 @@ module puxch_bfp_comp #(
   wire [3:0] completed_exp = (input_state == 0 || input_pair_exp >= input_max_exp) ?
       input_pair_exp : input_max_exp;
   wire input_prb_complete = s_axis_tvalid && (input_state == 5);
-  wire [35:0] unused_legacy_control = {
-    s_axis_tdata[63:44], s_axis_tkeep, ctrl_ud_comp_meth, ctrl_ud_iq_width
-  };
 
   initial begin : drc_check
     assert (USER_WIDTH >= 1)
@@ -310,8 +311,6 @@ module puxch_bfp_comp #(
       m_axis_tvalid <= 1'b0;
     end
   end
-
-  wire unused_ok = &{1'b0, unused_legacy_control};
 
 endmodule
 

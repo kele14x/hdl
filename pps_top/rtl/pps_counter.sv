@@ -31,7 +31,9 @@ module pps_counter (
   logic        ctrl_freq_send;
   logic        ctrl_freq_rcv;
   logic [31:0] ctrl_freq_cdc;
+  /* verilator lint_off UNUSED */
   wire         unused_ctrl_freq_req;
+  /* verilator lint_on UNUSED */
 
   logic [31:0] sample_cnt;
   logic [32:0] sample_cnt_adder;

@@ -105,10 +105,12 @@ module ecpri_deframer (
   wire [79:0] s2_axis_tuser;
   wire        s2_axis_tvalid;
 
+  /* verilator lint_off UNUSED */
   wire        unused_stat_corrupt_pkt;
   wire        unused_ptp_err_discard;
   wire        unused_message_err_discard;
   wire        unused_message_tuser;
+  /* verilator lint_on UNUSED */
 
   // Main
 

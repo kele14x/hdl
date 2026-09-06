@@ -40,16 +40,11 @@ module oran_deframer_dl_ss_decomp (
   logic fifo_rd_pre;
   logic fifo_rd;
 
+  /* verilator lint_off UNUSED */
   logic gearbox_err_unexpected_tlast;
   logic user_fifo_full;
   logic user_fifo_empty;
-
-  wire unused_decomp_outputs = &{
-    1'b0,
-    gearbox_err_unexpected_tlast,
-    user_fifo_full,
-    user_fifo_empty
-  };
+  /* verilator lint_on UNUSED */
 
 
   always_ff @(posedge clk) begin

@@ -19,8 +19,10 @@ module prach_fft_ditfft3 #(
     output var                         ovf
 );
 
+  /* verilator lint_off UNUSED */
   localparam int FftSize = 3;
   localparam int Latency = 9;  // 2 + 5 + 2
+  /* verilator lint_on UNUSED */
 
   logic signed [DATA_WIDTH-1:0] s0_dr;
   logic signed [DATA_WIDTH-1:0] s0_di;
@@ -92,8 +94,6 @@ module prach_fft_ditfft3 #(
   assign dout_di = s2_di;
   assign dout_dv = s2_dv;
   assign ovf     = s0_ovf | s1_ovf | s2_ovf;
-
-  wire unused_ditfft3 = &{1'b0, 32'(FftSize), 32'(Latency)};
 
 endmodule
 

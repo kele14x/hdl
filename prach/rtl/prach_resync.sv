@@ -11,9 +11,11 @@ module prach_resync #(
     input var         sync_in,
     //
     input var  [31:0] s_axis_tdata [NUM_ANT],
+    /* verilator lint_off UNUSED */
     input var  [ 7:0] s_axis_tuser [NUM_ANT],
     input var         s_axis_tlast [NUM_ANT],
     input var         s_axis_tvalid[NUM_ANT],
+    /* verilator lint_on UNUSED */
     output var        s_axis_tready[NUM_ANT],
     //
     output var [15:0] dout_dr,
@@ -40,17 +42,23 @@ module prach_resync #(
   // Signals
 
   logic [                3:0] ctrl_en_s;
+  /* verilator lint_off UNUSED */
   logic [                3:0] ctrl_bist_s;
+  /* verilator lint_on UNUSED */
   logic [                3:0] ctrl_bw_s;
 
   logic [CtrlSignalWidth-1:0] ctrl_combined;
   logic [CtrlSignalWidth-1:0] ctrl_combined_s;
 
+  /* verilator lint_off UNUSED */
   logic                       stat_resync;
+  /* verilator lint_on UNUSED */
 
   logic                       start_of_frame;
   logic                       start_of_slot;
+  /* verilator lint_off UNUSED */
   logic [                1:0] start_of_symbol;
+  /* verilator lint_on UNUSED */
 
   logic                       start_of_frame_d;
   logic                       start_of_slot_d;
@@ -212,8 +220,6 @@ module prach_resync #(
   // Intentionally unconsumed: tready is tied high and the internal poll
   // counter paces the output, BIST is not implemented here, and PRACH always
   // counts 15 kHz SCS symbols (start_of_symbol[0]).
-//  wire unused_inputs = &{1'b0, s_axis_tuser, s_axis_tlast, s_axis_tvalid, ctrl_bist_s,
-//                         stat_resync, start_of_symbol[1]};
 
 endmodule
 

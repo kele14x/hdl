@@ -32,9 +32,11 @@ module prach_conv (
 
   logic        [15:0] din_dr_d;
   logic        [15:0] din_di_d;
+  /* verilator lint_off UNUSED */
   logic        [ 7:0] nco_dout_chn;
   logic               nco_sync_out;
   logic               cmult_ovf;
+  /* verilator lint_on UNUSED */
 
   prach_conv_nco u_nco (
       .clk     (clk),
@@ -93,8 +95,6 @@ module prach_conv (
       .din ({din_last, din_dv, din_chn, din_sy, din_sl, din_sf}),
       .dout({dout_last, dout_dv, dout_chn, dout_sy, dout_sl, dout_sf})
   );
-
-  wire unused_conv = &{1'b0, nco_dout_chn, nco_sync_out, cmult_ovf};
 
 endmodule
 

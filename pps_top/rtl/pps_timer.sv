@@ -73,9 +73,10 @@ module pps_timer (
   logic [ 1:0] ns_frac;
 
   logic [39:0] counter_ns;
+  /* verilator lint_off UNUSED */
   logic [39:0] counter_ns_pre;
+  /* verilator lint_on UNUSED */
   logic [39:0] counter_ns_adder;
-  wire         unused_counter_ns_pre_frac = |counter_ns_pre[7:0];
 
   // logic        ns_wrap1;
   // logic        ns_wrap2;
@@ -92,9 +93,11 @@ module pps_timer (
   logic        ctrl_adj_valid_cdc;
   logic [31:0] ctrl_adj_ns_cdc;
 
+  /* verilator lint_off UNUSED */
   wire         unused_ctrl_get_req;
   wire         unused_ctrl_set_rcv;
   wire         unused_ctrl_adj_rcv;
+  /* verilator lint_on UNUSED */
 
 
   // System Timer

@@ -15,11 +15,15 @@ module cdc_pulse #(
     parameter int RST_USED     = 1
 ) (
     input var  src_clk,
+    /* verilator lint_off UNUSED */
     input var  src_rst,
+    /* verilator lint_on UNUSED */
     input var  src_pulse,
     //
     input var  dest_clk,
+    /* verilator lint_off UNUSED */
     input var  dest_rst,
+    /* verilator lint_on UNUSED */
     output var dest_pulse
 );
 
@@ -97,8 +101,6 @@ module cdc_pulse #(
         end
       end
     end else begin : g_rst_no_used
-      wire unused_src_rst = src_rst;
-      wire unused_dest_rst = dest_rst;
 
       always_ff @(posedge src_clk) begin
         src_in_ff <= src_pulse;

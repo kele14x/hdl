@@ -23,7 +23,9 @@ module prach_ctrl #(
     // ORAN C-Plane
     //-------------
     input var                clk_eth_xran,
+    /* verilator lint_off UNUSED */
     input var                rst_eth_xran,
+    /* verilator lint_on UNUSED */
     //
     input var                s_prach_tvalid,
     input var  [       15:0] s_prach_rtc_pc_id,
@@ -51,7 +53,9 @@ module prach_ctrl #(
     // CSR
     //----
     input var                ctrl_clk,
+    /* verilator lint_off UNUSED */
     input var                ctrl_rst,
+    /* verilator lint_on UNUSED */
     //
     input var  [        1:0] ctrl_rat,
     //
@@ -113,14 +117,18 @@ module prach_ctrl #(
   logic [  CtrlSignalWidth-1:0] ctrl_combined;
   logic [  CtrlSignalWidth-1:0] ctrl_combined_s;
 
+  /* verilator lint_off UNUSED */
   logic [                  1:0] ctrl_rat_s;
+  /* verilator lint_on UNUSED */
   //
   logic [                  3:0] ctrl_static_c_s;
   //
   logic [                  3:0] ctrl_subframe_inc_s;
   logic [                  3:0] ctrl_subframe_id_s;
+  /* verilator lint_off UNUSED */
   logic [                  5:0] ctrl_slot_id_s;
   logic [                  5:0] ctrl_symbol_id_s;
+  /* verilator lint_on UNUSED */
   //
   logic [                 15:0] ctrl_time_offset_s;
   logic [                 15:0] ctrl_cp_length_s;
@@ -149,27 +157,37 @@ module prach_ctrl #(
   logic [StatusSignalWidth-1:0] stat_combined_r;
   logic [StatusSignalWidth-1:0] stat_combined;
 
+  /* verilator lint_off UNUSED */
   logic [                 15:0] s_prach_rtc_pc_id_s;
+  /* verilator lint_on UNUSED */
   logic [                  3:0] s_prach_cc_s;
   logic [                  7:0] s_prach_ss_s;
   logic [                 11:0] s_prach_section_id_s;
+  /* verilator lint_off UNUSED */
   logic [                  3:0] s_prach_return_port_s;
   logic [                  3:0] s_prach_filter_index_s;
   logic [                  7:0] s_prach_f_s;
+  /* verilator lint_on UNUSED */
   logic [                  3:0] s_prach_sf_s;
   logic [                  5:0] s_prach_sl_s;
   logic [                  5:0] s_prach_sy_s;
   logic [                 15:0] s_prach_time_offset_s;
+  /* verilator lint_off UNUSED */
   logic [                  7:0] s_prach_frame_structure_s;
+  /* verilator lint_on UNUSED */
   logic [                 15:0] s_prach_cp_length_s;
+  /* verilator lint_off UNUSED */
   logic [                  7:0] s_prach_udcomphdr_s;
   logic                         s_prach_rb_s;
   logic                         s_prach_syminc_s;
   logic [                  9:0] s_prach_start_prbc_s;
   logic [                  7:0] s_prach_num_prbc_s;
   logic [                 11:0] s_prach_remask_s;
+  /* verilator lint_on UNUSED */
   logic [                  3:0] s_prach_num_symbol_s;
+  /* verilator lint_off UNUSED */
   logic [                 14:0] s_prach_beamid_s;
+  /* verilator lint_on UNUSED */
   logic [                 23:0] s_prach_freqoffset_s;
 
   // Calculated values
@@ -180,13 +198,13 @@ module prach_ctrl #(
   logic [                 17:0] c_fcw;
 
   logic                         c_plane_match;
+  /* verilator lint_off UNUSED */
   logic                         prach_src_ready;
+  /* verilator lint_on UNUSED */
   logic                         static_c_en;
   logic [                  8:0] static_symbol_base;
   logic [                 18:0] static_sample_offset;
   logic [                 18:0] prach_sample_offset;
-  logic [                  1:0] unused_ctrl_rat_lsb;
-  logic [                  5:0] unused_ctrl_slot_id_msb;
 
   // Control CDC
 
@@ -320,8 +338,6 @@ module prach_ctrl #(
   assign static_symbol_base = 9'(ctrl_subframe_id_s) + 9'(ctrl_subframe_inc_s);
   assign prach_sample_offset = 19'(s_prach_time_offset_s) - 19'(ctrl_sampling_offset_s);
   assign static_sample_offset = 19'(ctrl_time_offset_s) - 19'(ctrl_sampling_offset_s);
-  assign unused_ctrl_rat_lsb = {ctrl_rat_s[0], 1'b0};
-  assign unused_ctrl_slot_id_msb = {ctrl_slot_id_s[5:1], 1'b0};
 
   // Start Symbol ID from C-Plane
 
@@ -522,28 +538,6 @@ module prach_ctrl #(
     stat_slot_id     ,
     stat_subframe_id
   } = stat_combined;
-
-  wire unused_ctrl = &{
-    1'b0,
-    rst_eth_xran,
-    ctrl_rst,
-    ctrl_symbol_id_s,
-    s_prach_rtc_pc_id_s,
-    s_prach_return_port_s,
-    s_prach_filter_index_s,
-    s_prach_f_s,
-    s_prach_frame_structure_s,
-    s_prach_udcomphdr_s,
-    s_prach_rb_s,
-    s_prach_syminc_s,
-    s_prach_start_prbc_s,
-    s_prach_num_prbc_s,
-    s_prach_remask_s,
-    s_prach_beamid_s,
-    unused_ctrl_rat_lsb,
-    unused_ctrl_slot_id_msb,
-    prach_src_ready
-  };
 
 endmodule
 

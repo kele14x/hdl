@@ -23,7 +23,9 @@ module oran_framer_ul_ss_section (
     //
     input var         ctrl_has_udcomphdr,
     input var  [ 3:0] ctrl_ud_comp_meth,
+    /* verilator lint_off UNUSED */
     input var  [ 3:0] ctrl_ud_iq_width
+    /* verilator lint_on UNUSED */
 );
 
   import oran_pkg::*;
@@ -32,28 +34,21 @@ module oran_framer_ul_ss_section (
   logic extra_last;
 
   // Section Header (32-bit)
+  /* verilator lint_off UNUSED */
   logic [11:0] section_sectionid;
   logic section_rb;
   logic section_syminc;
   logic [9:0] section_startprbu;
+  /* verilator lint_on UNUSED */
   logic [7:0] section_numprbu;
 
   logic [31:0] section_header;
 
   logic [63:0] s_axis_tdata_rev;
+  /* verilator lint_off UNUSED */
   logic [63:0] s_axis_tdata_d;
   logic [7:0] s_axis_tkeep_d;
-
-  wire unused_section_header_fields = &{
-    1'b0,
-    ctrl_ud_iq_width,
-    section_sectionid,
-    section_rb,
-    section_syminc,
-    section_startprbu,
-    s_axis_tdata_d[63:48],
-    s_axis_tkeep_d[1:0]
-  };
+  /* verilator lint_on UNUSED */
 
 
   // Main

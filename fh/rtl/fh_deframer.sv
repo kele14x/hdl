@@ -59,9 +59,10 @@ module fh_deframer (
   wire        s0_message_tlast;
   wire        s0_message_tvalid;
 
+  /* verilator lint_off UNUSED */
   wire        stat_corrupt_pkt;
   wire        message_tuser_unused;
-  wire        unused_outputs = &{1'b0, stat_corrupt_pkt, message_tuser_unused};
+  /* verilator lint_on UNUSED */
 
   fh_deframer_demux i_demux (
       // Ethernet clock domain

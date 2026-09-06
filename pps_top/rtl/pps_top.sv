@@ -14,7 +14,9 @@ module pps_top #(
     input var         s_axi_aclk,
     input var         s_axi_aresetn,
     //
+    /* verilator lint_off UNUSED */
     input var  [31:0] s_axi_awaddr,
+    /* verilator lint_on UNUSED */
     input var  [ 2:0] s_axi_awprot,
     input var         s_axi_awvalid,
     output var        s_axi_awready,
@@ -28,7 +30,9 @@ module pps_top #(
     output var        s_axi_bvalid,
     input var         s_axi_bready,
     //
+    /* verilator lint_off UNUSED */
     input var  [31:0] s_axi_araddr,
+    /* verilator lint_on UNUSED */
     input var  [ 2:0] s_axi_arprot,
     input var         s_axi_arvalid,
     output var        s_axi_arready,
@@ -93,8 +97,6 @@ module pps_top #(
 
   logic [22:0] ctrl_dl_offset;
   logic [22:0] ctrl_ul_offset;
-
-  wire         unused_axi_addr = |{s_axi_awaddr[31:7], s_axi_araddr[31:7]};
 
   logic [31:0] stat_pps_offset;
 

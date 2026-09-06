@@ -3,7 +3,9 @@
 `default_nettype none
 
 module oran_deframer #(
+    /* verilator lint_off UNUSED */
     parameter int FREQUENCY         = 1,
+    /* verilator lint_on UNUSED */
     //
     // Number of Ethernet ports
     parameter int NUM_ETHERNET_PORT = 1,
@@ -116,8 +118,6 @@ module oran_deframer #(
   localparam int NumDest = NUM_ANTENNA_PORT * NUM_CC;
 
   assign defm_ready = 1'b1;
-
-  wire                unused_frequency = &{1'b0, 32'(FREQUENCY)};
 
   // AXIS signal
 

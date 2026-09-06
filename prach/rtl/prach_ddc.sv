@@ -45,7 +45,9 @@ module prach_ddc #(
   logic                 mixer_dout_sl;
   logic                 mixer_dout_sy;
   logic [          7:0] mixer_dout_chn;
+  /* verilator lint_off UNUSED */
   logic [          3:0] mixer_dout_chn_unused;
+  /* verilator lint_on UNUSED */
   logic                 mixer_dout_dv;
   logic                 mixer_dout_last;
 
@@ -438,8 +440,6 @@ module prach_ddc #(
     dout_dv   <= conv_dout_dv && (conv_dout_chn < 8'(NUM_ANT));
     dout_last <= conv_dout_last;
   end
-
-  wire unused_ddc = &{1'b0, mixer_dout_chn_unused};
 
 endmodule
 

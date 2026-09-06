@@ -49,7 +49,9 @@ module power_meter #(
   logic        [ 1:0] data_chn;
   logic        [ 8:0] data_sym;
   logic               data_dv;
+  /* verilator lint_off UNUSED */
   logic               unused_data_sync;
+  /* verilator lint_on UNUSED */
 
   logic        [ 4:0] data_slot;
   logic        [ 4:0] data_slot_d;

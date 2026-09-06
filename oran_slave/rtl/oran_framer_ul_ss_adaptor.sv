@@ -105,20 +105,13 @@ module oran_framer_ul_ss_adaptor #(
 
   logic [AddrWidth-2:0] syml_rd_addr_max;
 
+  /* verilator lint_off UNUSED */
   logic [31:0] ram_douta;
   logic ram_dbiterra;
   logic ram_sbiterra;
   logic ram_dbiterrb;
   logic ram_sbiterrb;
-
-  wire unused_ram_outputs = &{
-    1'b0,
-    ram_douta,
-    ram_dbiterra,
-    ram_sbiterra,
-    ram_dbiterrb,
-    ram_sbiterrb
-  };
+  /* verilator lint_on UNUSED */
 
   logic m_axis_tlast_pre;
 

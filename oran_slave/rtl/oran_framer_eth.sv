@@ -12,7 +12,9 @@ module oran_framer_eth #(
     // Tx Ethernet ports
     //------------------
     input var         tx_eth_clk,
+    /* verilator lint_off UNUSED */
     input var         tx_eth_rst,
+    /* verilator lint_on UNUSED */
     // Tx data
     output var [63:0] m_eth_fram_tdata,
     output var [ 7:0] m_eth_fram_tkeep,
@@ -43,10 +45,10 @@ module oran_framer_eth #(
 
   logic [63:0] s_axis_tdata_reversed;
 
+  /* verilator lint_off UNUSED */
   logic [63:0] s_axis_tdata_d;
   logic [7:0] s_axis_tkeep_d;
-
-  wire unused_framer_eth_inputs = &{1'b0, tx_eth_rst, s_axis_tdata_d[63:48], s_axis_tkeep_d[1:0]};
+  /* verilator lint_on UNUSED */
 
   typedef enum int {
     S_RST,          // Under reset
@@ -70,6 +72,7 @@ module oran_framer_eth #(
   logic m0_axis_tlast;
   logic m0_axis_tready;
 
+  /* verilator lint_off UNUSED */
   logic [$clog2(FIFO_DEPTH):0] fifo_wr_data_count;
   logic [$clog2(FIFO_DEPTH):0] fifo_rd_data_count;
   logic fifo_almost_full;
@@ -82,22 +85,7 @@ module oran_framer_eth #(
   logic fifo_prog_empty;
   logic fifo_sbiterr;
   logic fifo_dbiterr;
-
-  wire unused_fifo_outputs = &{
-    1'b0,
-    fifo_wr_data_count,
-    fifo_rd_data_count,
-    fifo_almost_full,
-    fifo_prog_full,
-    fifo_m_axis_tdest,
-    fifo_m_axis_tid,
-    fifo_m_axis_tstrb,
-    fifo_m_axis_tuser,
-    fifo_almost_empty,
-    fifo_prog_empty,
-    fifo_sbiterr,
-    fifo_dbiterr
-  };
+  /* verilator lint_on UNUSED */
 
   logic [15:0] mac_vlan_type = 16'h8100;
   logic [15:0] mac_ethertype = 16'hAEFE;

@@ -10,28 +10,38 @@ module coe_deframer_data (
     input var          sync,
     //
     input var  [ 31:0] s_axis_tdata,
+    /* verilator lint_off UNUSED */
     input var  [  3:0] s_axis_tkeep,
     input var          s_axis_tlast,
+    /* verilator lint_on UNUSED */
     input var          s_axis_tvalid,
     //
+    /* verilator lint_off UNUSED */
     input var          s_trans_header_valid,
     input var  [ 15:0] s_trans_rtc_pc_id,
     input var  [  7:0] s_trans_seqid,
     input var          s_trans_ebit,
     input var  [  6:0] s_trans_subseqid,
+    /* verilator lint_on UNUSED */
     //
     input var          s_app_valid,
+    /* verilator lint_off UNUSED */
     input var  [ 18:0] s_app_ts,
+    /* verilator lint_on UNUSED */
     // Radio I/F
     output var [767:0] m_axis_rx_tdata,
     output var [  7:0] m_axis_rx_tuser,
     output var         m_axis_rx_tlast,
     output var         m_axis_rx_tvalid,
+    /* verilator lint_off UNUSED */
     input var          m_axis_rx_tready,
+    /* verilator lint_on UNUSED */
     // CSR
     //----
     input var          ctrl_clk,
+    /* verilator lint_off UNUSED */
     input var          ctrl_rst,
+    /* verilator lint_on UNUSED */
     //
     input var          ctrl_en,
     input var  [ 15:0] ctrl_seq_en,
@@ -136,25 +146,12 @@ module coe_deframer_data (
   wire [95:0] ctrl_seq_id_s;
   wire [5:0] ctrl_seq_id_ch[0:MaxSeqLen-1];
 
+  /* verilator lint_off UNUSED */
   logic [4:0] ctrl_seq_n_valid;
+  /* verilator lint_on UNUSED */
   logic [3:0] ctrl_ch_delay[0:NumChannel-1];
 
   wire [8:0] ctrl_ts_offset_s;
-
-  wire                 unused_inputs = &{
-    1'b0,
-    s_axis_tkeep,
-    s_axis_tlast,
-    s_trans_header_valid,
-    s_trans_rtc_pc_id,
-    s_trans_seqid,
-    s_trans_ebit,
-    s_trans_subseqid,
-    s_app_ts[18:9],
-    m_axis_rx_tready,
-    ctrl_rst,
-    ctrl_seq_n_valid[4]
-  };
 
   // Write side signals
 

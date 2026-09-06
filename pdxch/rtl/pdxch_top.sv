@@ -34,14 +34,18 @@ module pdxch_top #(
     input var         s_defm_data_tlast    [NUM_ANT],
     output var        s_defm_data_tready   [NUM_ANT],
     input var  [90:0] s_defm_data_tuser    [NUM_ANT],
+    /* verilator lint_off UNUSED */
     input var  [ 4:0] s_defm_data_tdest    [NUM_ANT],
+    /* verilator lint_on UNUSED */
     // CSR
     //----
     input var         ctrl_clk,
     input var         ctrl_rst,
     //
+    /* verilator lint_off UNUSED */
     input var  [ 3:0] ctrl_ud_comp_meth,
     input var  [ 3:0] ctrl_ud_iq_width,
+    /* verilator lint_on UNUSED */
     input var  [ 3:0] ctrl_fs_offset,
     // 0 = disable, 1 = enable
     input var  [ 3:0] ctrl_en              [ NUM_CC],
@@ -69,8 +73,6 @@ module pdxch_top #(
 
   logic        ctrl_phase_comp_we_s                                          [ NUM_CC];
   logic        ctrl_phase_comp_en_d;
-  wire         unused_ctrl_ud = &{1'b0, ctrl_ud_comp_meth, ctrl_ud_iq_width};
-  wire         unused_defm_tdest = &{1'b0, s_defm_data_tdest};
 
   logic [35:0] s0_axis_tdata                                                 [NUM_ANT];
   logic [ 3:0] s0_axis_exp                                                   [NUM_ANT];

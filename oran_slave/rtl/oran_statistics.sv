@@ -10,48 +10,63 @@ module oran_statistics #(
     parameter int NUM_CC = 1
 ) (
     input var         rx_eth_clk            [NUM_ETHERNET_PORT],
+    /* verilator lint_off UNUSED */
     input var         rx_eth_rst            [NUM_ETHERNET_PORT],
+    /* verilator lint_on UNUSED */
     //
     input var         clk,
+    /* verilator lint_off UNUSED */
     input var         rst,
+    /* verilator lint_on UNUSED */
     // Timer
     input var         defm_radio_start_10ms,
     // O-RAN Parse Ports
     //------------------
     input var         m_mac_header_valid    [NUM_ETHERNET_PORT],
+    /* verilator lint_off UNUSED */
     input var  [47:0] m_mac_dest_mac        [NUM_ETHERNET_PORT],
     input var  [47:0] m_mac_source_mac      [NUM_ETHERNET_PORT],
     input var         m_mac_with_vlan       [NUM_ETHERNET_PORT],
     input var  [15:0] m_mac_vlan_tag        [NUM_ETHERNET_PORT],
     input var  [15:0] m_mac_ethertype       [NUM_ETHERNET_PORT],
+    /* verilator lint_on UNUSED */
     //
+    /* verilator lint_off UNUSED */
     input var         m_ecpri_header_valid  [NUM_ETHERNET_PORT],
     input var         m_ecpri_concat        [NUM_ETHERNET_PORT],
     input var  [ 7:0] m_ecpri_messagetype   [NUM_ETHERNET_PORT],
     input var  [15:0] m_ecpri_payloadsize   [NUM_ETHERNET_PORT],
+    /* verilator lint_on UNUSED */
     //
     input var         m_trans_header_valid  [NUM_ETHERNET_PORT],
+    /* verilator lint_off UNUSED */
     input var  [15:0] m_trans_rtc_pc_id     [NUM_ETHERNET_PORT],
     input var  [ 7:0] m_trans_seqid         [NUM_ETHERNET_PORT],
     input var         m_trans_ebit          [NUM_ETHERNET_PORT],
     input var  [ 6:0] m_trans_subseqid      [NUM_ETHERNET_PORT],
+    /* verilator lint_on UNUSED */
     //
     input var         m_app_header_valid    [ NUM_ANTENNA_PORT][NUM_CC],
+    /* verilator lint_off UNUSED */
     input var         m_app_datadirection   [ NUM_ANTENNA_PORT][NUM_CC],
     input var  [ 3:0] m_app_filterindex     [ NUM_ANTENNA_PORT][NUM_CC],
     input var  [ 7:0] m_app_frameid         [ NUM_ANTENNA_PORT][NUM_CC],
     input var  [ 3:0] m_app_subframeid      [ NUM_ANTENNA_PORT][NUM_CC],
     input var  [ 5:0] m_app_slotid          [ NUM_ANTENNA_PORT][NUM_CC],
     input var  [ 5:0] m_app_symbolid        [ NUM_ANTENNA_PORT][NUM_CC],
+    /* verilator lint_on UNUSED */
     input var         m_app_packet_in_window[ NUM_ANTENNA_PORT][NUM_CC],
     input var  [ 8:0] m_app_offset_in_symbol[ NUM_ANTENNA_PORT][NUM_CC],
+    /* verilator lint_off UNUSED */
     input var  [ 7:0] m_app_numsections     [ NUM_ANTENNA_PORT][NUM_CC],
     input var  [ 2:0] m_app_sectiontype     [ NUM_ANTENNA_PORT][NUM_CC],
     input var  [ 7:0] m_app_udcomphdr       [ NUM_ANTENNA_PORT][NUM_CC],
     input var  [15:0] m_app_timeoffset      [ NUM_ANTENNA_PORT][NUM_CC],
     input var  [ 7:0] m_app_framestructure  [ NUM_ANTENNA_PORT][NUM_CC],
     input var  [15:0] m_app_cplength        [ NUM_ANTENNA_PORT][NUM_CC],
+    /* verilator lint_on UNUSED */
     //
+    /* verilator lint_off UNUSED */
     input var         m_section_header_valid[ NUM_ANTENNA_PORT][NUM_CC],
     input var  [11:0] m_section_sectionid   [ NUM_ANTENNA_PORT][NUM_CC],
     input var         m_section_rb          [ NUM_ANTENNA_PORT][NUM_CC],
@@ -63,10 +78,13 @@ module oran_statistics #(
     input var         m_section_ef          [ NUM_ANTENNA_PORT][NUM_CC],
     input var  [14:0] m_section_beamid      [ NUM_ANTENNA_PORT][NUM_CC],
     input var  [23:0] m_section_freqoffset  [ NUM_ANTENNA_PORT][NUM_CC],
+    /* verilator lint_on UNUSED */
     // Control & Status
     //-----------------
+    /* verilator lint_off UNUSED */
     input var         ctrl_tick_snap,
     input var         ctrl_tick_clear,
+    /* verilator lint_on UNUSED */
     //
     output var [47:0] stat_total_pkt_cnt,
     output var [47:0] stat_oran_pkt_cnt,
@@ -90,50 +108,6 @@ module oran_statistics #(
 
   logic [8:0] earliest_u_pkt_per[NUM_ANTENNA_PORT][NUM_CC];
   logic [8:0] latest_u_pkt_per[NUM_ANTENNA_PORT][NUM_CC];
-
-  wire unused_statistics_inputs = &{
-    1'b0,
-    rx_eth_rst,
-    rst,
-    m_mac_dest_mac,
-    m_mac_source_mac,
-    m_mac_with_vlan,
-    m_mac_vlan_tag,
-    m_mac_ethertype,
-    m_ecpri_header_valid,
-    m_ecpri_concat,
-    m_ecpri_messagetype,
-    m_ecpri_payloadsize,
-    m_trans_rtc_pc_id,
-    m_trans_seqid,
-    m_trans_ebit,
-    m_trans_subseqid,
-    m_app_datadirection,
-    m_app_filterindex,
-    m_app_frameid,
-    m_app_subframeid,
-    m_app_slotid,
-    m_app_symbolid,
-    m_app_numsections,
-    m_app_sectiontype,
-    m_app_udcomphdr,
-    m_app_timeoffset,
-    m_app_framestructure,
-    m_app_cplength,
-    m_section_header_valid,
-    m_section_sectionid,
-    m_section_rb,
-    m_section_syminc,
-    m_section_startprb,
-    m_section_numprb,
-    m_section_remask,
-    m_section_numsymbol,
-    m_section_ef,
-    m_section_beamid,
-    m_section_freqoffset,
-    ctrl_tick_snap,
-    ctrl_tick_clear
-  };
 
   // Use a local version for timing
   always_ff @(posedge clk) begin

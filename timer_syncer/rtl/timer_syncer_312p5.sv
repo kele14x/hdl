@@ -6,7 +6,9 @@ module timer_syncer_312p5 #(
     parameter int SIM_SPEEDUP = 0
 ) (
     input var         clk,
+    /* verilator lint_off UNUSED */
     input var         rst,
+    /* verilator lint_on UNUSED */
     //
     input var         pps_in,
     //
@@ -17,7 +19,9 @@ module timer_syncer_312p5 #(
     input var         eth_rst,
     //
     input var         ctrl_clk,
+    /* verilator lint_off UNUSED */
     input var         ctrl_rst,
+    /* verilator lint_on UNUSED */
     //
     output var [79:0] ctl_systemtimer,
     //
@@ -50,8 +54,9 @@ module timer_syncer_312p5 #(
 
   logic [31:0] stat_resync_cnt_r;
 
+  /* verilator lint_off UNUSED */
   wire         cdc_pps_sync_rx_src_ready;
-  wire         unused_inputs = &{1'b0, rst, ctrl_rst, cdc_pps_sync_rx_src_ready, 1'b0};
+  /* verilator lint_on UNUSED */
 
   // Main
 

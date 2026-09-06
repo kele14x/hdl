@@ -9,7 +9,9 @@ module pdxch_regs (
     input  wire        s_axi_aresetn,
     //
     input  wire [11:0] s_axi_awaddr,
+    /* verilator lint_off UNUSED */
     input  wire [ 2:0] s_axi_awprot,
+    /* verilator lint_on UNUSED */
     input  wire        s_axi_awvalid,
     output wire        s_axi_awready,
     //
@@ -23,7 +25,9 @@ module pdxch_regs (
     input  wire        s_axi_bready,
     //
     input  wire [11:0] s_axi_araddr,
+    /* verilator lint_off UNUSED */
     input  wire [ 2:0] s_axi_arprot,
+    /* verilator lint_on UNUSED */
     input  wire        s_axi_arvalid,
     output wire        s_axi_arready,
     //
@@ -147,11 +151,14 @@ module pdxch_regs (
     reg         int_rd_err_reg;
     reg  [31:0] int_rd_data_reg;
 
+    /* verilator lint_off UNUSED */
     reg  [11:0] int_addr;
+    /* verilator lint_on UNUSED */
     reg  [31:0] int_wr_data;
+    /* verilator lint_off UNUSED */
     reg  [ 3:0] int_wr_strb;
+    /* verilator lint_on UNUSED */
 
-    wire unused_axi_prot = &{1'b0, s_axi_awprot, s_axi_arprot, int_addr[1:0], int_wr_strb};
     reg         int_wr_en;
     reg         int_rd_en;
 

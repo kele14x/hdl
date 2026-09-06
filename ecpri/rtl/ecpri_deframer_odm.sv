@@ -8,7 +8,9 @@ module ecpri_deframer_odm (
     input var         rst,
     //
     input var  [31:0] s_axis_tdata,
+    /* verilator lint_off UNUSED */
     input var  [ 3:0] s_axis_tkeep,
+    /* verilator lint_on UNUSED */
     input var         s_axis_tlast,
     input var         s_axis_tvalid,
     input var  [79:0] s_axis_tuser,
@@ -39,7 +41,6 @@ module ecpri_deframer_odm (
   integer state, state_next;
 
   wire [31:0] s_axis_tdata_reversed;
-  wire        unused_tkeep = &{1'b0, s_axis_tkeep};
 
   wire [ 7:0] odm_measurementid;
   wire [ 7:0] odm_actiontype;

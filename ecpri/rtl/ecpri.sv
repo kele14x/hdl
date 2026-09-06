@@ -8,7 +8,9 @@ module ecpri (
     input var         s_axi_aclk,
     input var         s_axi_aresetn,
     //
+    /* verilator lint_off UNUSED */
     input var  [31:0] s_axi_awaddr,
+    /* verilator lint_on UNUSED */
     input var  [ 2:0] s_axi_awprot,
     input var         s_axi_awvalid,
     output var        s_axi_awready,
@@ -22,7 +24,9 @@ module ecpri (
     output var        s_axi_bvalid,
     input var         s_axi_bready,
     //
+    /* verilator lint_off UNUSED */
     input var  [31:0] s_axi_araddr,
+    /* verilator lint_on UNUSED */
     input var  [ 2:0] s_axi_arprot,
     input var         s_axi_arvalid,
     output var        s_axi_arready,
@@ -171,10 +175,12 @@ module ecpri (
   wire [31:0] stat_defm_trans_pkt_cnt;
   wire [31:0] stat_defm_odm_pkt_cnt;
 
+  /* verilator lint_off UNUSED */
   wire [31:0] stat_fram_total_pkt_cnt;
   wire [31:0] stat_fram_ecpri_pkt_cnt;
   wire [31:0] stat_fram_trans_pkt_cnt;
   wire [31:0] stat_fram_odm_pkt_cnt;
+  /* verilator lint_on UNUSED */
 
   wire [31:0] stat_ts_diff_ingress_ns;
   wire [47:0] stat_ts_diff_ingress_sec;
@@ -184,6 +190,7 @@ module ecpri (
 
   wire [15:0] stat_topology_id;
   wire [15:0] stat_lp_topology_id;
+  /* verilator lint_off UNUSED */
   wire [31:0] unused_stat_rx_resync_cnt;
   wire [31:0] unused_stat_tx_resync_cnt;
   wire        unused_m_odm_header_valid;
@@ -192,16 +199,13 @@ module ecpri (
   wire [79:0] unused_m_odm_timestamp;
   wire [63:0] unused_m_odm_compensation;
   wire [79:0] unused_m_odm_timestamp2;
+  /* verilator lint_on UNUSED */
 
   assign ctrl_defm_has_vlan = 1'b0;
   assign ctrl_defm_vlan_tag = 16'd0;
   assign ctrl_defm_src_mac_flt_mask = 48'd0;
   assign ctrl_defm_vlan_flt_en = 1'b0;
   assign ctrl_defm_vlan_flt_mask = 16'd0;
-
-  wire unused_axi_addr = &{1'b0, s_axi_awaddr[31:10], s_axi_araddr[31:10],
-    stat_fram_total_pkt_cnt, stat_fram_ecpri_pkt_cnt, stat_fram_trans_pkt_cnt,
-    stat_fram_odm_pkt_cnt};
 
   // Main
 

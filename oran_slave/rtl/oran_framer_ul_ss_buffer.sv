@@ -26,6 +26,7 @@ module oran_framer_ul_ss_buffer #(
 
   localparam int FifoDepth = BUFFER_SIZE;
 
+  /* verilator lint_off UNUSED */
   logic [$clog2(FifoDepth):0] fifo_wr_data_count;
   logic [$clog2(FifoDepth):0] fifo_rd_data_count;
   logic fifo_s_axis_tready;
@@ -39,23 +40,7 @@ module oran_framer_ul_ss_buffer #(
   logic fifo_prog_empty;
   logic fifo_sbiterr;
   logic fifo_dbiterr;
-
-  wire unused_fifo_outputs = &{
-    1'b0,
-    fifo_wr_data_count,
-    fifo_rd_data_count,
-    fifo_s_axis_tready,
-    fifo_almost_full,
-    fifo_prog_full,
-    fifo_m_axis_tdest,
-    fifo_m_axis_tid,
-    fifo_m_axis_tstrb,
-    fifo_m_axis_tuser,
-    fifo_almost_empty,
-    fifo_prog_empty,
-    fifo_sbiterr,
-    fifo_dbiterr
-  };
+  /* verilator lint_on UNUSED */
 
 `ifdef XILINX
   xpm_fifo_axis #(

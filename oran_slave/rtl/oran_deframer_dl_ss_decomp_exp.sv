@@ -7,12 +7,16 @@
 
 module oran_deframer_dl_ss_decomp_exp (
     input var         clk,
+    /* verilator lint_off UNUSED */
     input var         rst,
+    /* verilator lint_on UNUSED */
     //
     input var  [63:0] din_data,
     input var  [ 3:0] din_state,
     input var         din_valid,
+    /* verilator lint_off UNUSED */
     input var         din_sync,
+    /* verilator lint_on UNUSED */
     input var         din_last,
     //
     output var [63:0] m_axis_tdata,
@@ -35,8 +39,6 @@ module oran_deframer_dl_ss_decomp_exp (
 
   logic        din_valid_d                                       [3];
   logic        din_last_d                                        [3];
-
-  wire         unused_decomp_exp_inputs = &{1'b0, rst, din_sync};
 
   //
   // This function saturate signed 31-bit to 16-bit
@@ -80,14 +82,14 @@ module oran_deframer_dl_ss_decomp_exp (
   //
   function static logic [15:0] bit_extract(input int i, input logic [3:0] width,
                                            input logic [63:0] din);
+    /* verilator lint_off UNUSED */
     logic [63:0] temp;
-    logic        unused_temp_bits;
+    /* verilator lint_on UNUSED */
     if (width == 0) begin
       temp = (din << (64 - 16 * (4 - i)));
     end else begin
       temp = (din << (64 - width * (4 - i)));
     end
-    unused_temp_bits = &{1'b0, temp[47:0]};
     bit_extract = temp[63:48] & bit_mask(width);
   endfunction
 

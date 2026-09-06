@@ -7,7 +7,9 @@ module coe_deframer_hdr (
     input var         clk,
     input var         rst,
     //
+    /* verilator lint_off UNUSED */
     input var         sync,
+    /* verilator lint_on UNUSED */
     //
     input var  [31:0] s_axis_tdata,
     input var  [ 3:0] s_axis_tkeep,
@@ -33,8 +35,9 @@ module coe_deframer_hdr (
 
   logic        init_n;
 
+  /* verilator lint_off UNUSED */
   wire  [31:0] s_axis_tdata_reversed;
-  wire         unused_inputs = &{1'b0, sync, s_axis_tdata_reversed[31:19]};
+  /* verilator lint_on UNUSED */
 
   assign s_axis_tdata_reversed = byte_reverse(s_axis_tdata);
 

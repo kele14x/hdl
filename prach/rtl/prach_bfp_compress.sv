@@ -61,10 +61,12 @@ module prach_bfp_compress #(
   logic [15:0] shifted_q0_r;
   logic [15:0] shifted_i1_r;
   logic [15:0] shifted_q1_r;
+  /* verilator lint_off UNUSED */
   logic [15:0] rounded_i0;
   logic [15:0] rounded_q0;
   logic [15:0] rounded_i1;
   logic [15:0] rounded_q1;
+  /* verilator lint_on UNUSED */
 
   logic [NUM_ANT-1:0] wr_we_c;
   logic [        8:0] wr_addr_c;
@@ -75,7 +77,9 @@ module prach_bfp_compress #(
   logic               process_valid_d;
   logic [        2:0] process_word_idx_d;
   logic [        6:0] process_prb_idx_d;
+  /* verilator lint_off UNUSED */
   logic [        3:0] process_msb_d;
+  /* verilator lint_on UNUSED */
   logic [        3:0] process_exp_d;
   logic [        1:0] process_ant_d;
 
@@ -357,10 +361,6 @@ module prach_bfp_compress #(
 `endif
     end
   end
-
-  wire unused_bfp_compress = &{
-    1'b0, rounded_i0[6:0], rounded_q0[6:0], rounded_i1[6:0], rounded_q1[6:0]
-  };
 
 endmodule
 

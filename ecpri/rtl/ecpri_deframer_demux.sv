@@ -25,7 +25,9 @@ module ecpri_deframer_demux (
     input var         s_axis_tvalid,
     //
     input var  [79:0] rx_ptp_timestamp,
+    /* verilator lint_off UNUSED */
     input var         rx_ptp_timestamp_valid,
+    /* verilator lint_on UNUSED */
     // Internal clock domain
     //----------------------
     input var         clk,
@@ -81,7 +83,9 @@ module ecpri_deframer_demux (
 
   // Signals
 
+  /* verilator lint_off UNUSED */
   wire  [31:0] s_axis_tdata_reversed;
+  /* verilator lint_on UNUSED */
 
   wire  [15:0] mac_ethertype;
   logic        rx_eth_rst_sync;
@@ -89,10 +93,6 @@ module ecpri_deframer_demux (
   always_ff @(posedge rx_eth_clk) begin
     rx_eth_rst_sync <= rx_eth_rst;
   end
-
-  wire unused_inputs;
-
-  assign unused_inputs = &{1'b0, rx_ptp_timestamp_valid, s_axis_tdata_reversed[15:0]};
 
   wire                      wr_en;
   logic [    AddrWidth-1:0] wr_addr;
@@ -118,7 +118,9 @@ module ecpri_deframer_demux (
   wire                      fifo_rd_en;
   wire  [FiFoDataWidth-1:0] fifo_rd_dout;
   wire                      fifo_rd_empty;
+  /* verilator lint_off UNUSED */
   wire                      unused_fifo_wr_full;
+  /* verilator lint_on UNUSED */
 
   wire                      packet_valid_s;
   wire  [             15:0] packet_ethertype_s;

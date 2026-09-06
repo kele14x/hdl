@@ -31,14 +31,6 @@ module ptp_framer (
 
   import ptp_pkg::*;
 
-  wire unused_ptp_pkg_params = |{
-    PTP_MESSAGE_TYPE_PDELAY_REQ,
-    PTP_MESSAGE_TYPE_PDELAY_RESP,
-    PTP_MESSAGE_TYPE_PDELAY_RESP_FUP,
-    PTP_MESSAGE_TYPE_SIGNALING,
-    PTP_MULTICAST_MAC_PDELAY
-  };
-
   localparam int S_RST = 0;
   localparam int S_IDLE = 1;
   //

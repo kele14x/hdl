@@ -26,11 +26,12 @@ module fh_deframer_buffer #(
 
   logic sync_n;
 
+  /* verilator lint_off UNUSED */
   wire axis_fifo_tuser;
   wire axis_fifo_err_discard;
   wire tuser_fifo_full;
   wire tuser_fifo_empty;
-  wire        unused_fifo_status = &{1'b0, axis_fifo_tuser, axis_fifo_err_discard, tuser_fifo_full, tuser_fifo_empty};
+  /* verilator lint_on UNUSED */
 
   always_ff @(posedge clk) begin
     if (rst) begin

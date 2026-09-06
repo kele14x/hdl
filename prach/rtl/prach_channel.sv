@@ -66,7 +66,9 @@ module prach_channel #(
     input var  [ 3:0] ctrl_bist,
     input var  [ 3:0] ctrl_bw,
     input var  [22:0] ctrl_rfs_offset,
+    /* verilator lint_off UNUSED */
     input var  [22:0] ctrl_ta3_offset,
+    /* verilator lint_on UNUSED */
     //
     input var  [ 3:0] ctrl_static_c,
     //
@@ -144,7 +146,9 @@ module prach_channel #(
   logic [        1:0] fft_dout_chn;
   logic               fft_dout_dv;
   logic               fft_dout_last;
+  /* verilator lint_off UNUSED */
   logic               fft_ovf;
+  /* verilator lint_on UNUSED */
 
   // Main
 
@@ -415,8 +419,6 @@ module prach_channel #(
       // CSR
       .ctrl_fs_offset(ctrl_fs_offset)
   );
-
-  wire unused_channel = &{1'b0, ctrl_ta3_offset, fft_ovf};
 
 endmodule
 

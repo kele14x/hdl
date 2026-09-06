@@ -28,6 +28,7 @@ module oran_framer_ul_ss_app (
   logic extra_last;
 
   // Application Header (32-bit)
+  /* verilator lint_off UNUSED */
   logic app_datadirection;  // 0 for UL, 1 for DL
   logic [2:0] app_payloadversion;
   logic [3:0] app_filterindex;
@@ -35,25 +36,15 @@ module oran_framer_ul_ss_app (
   logic [3:0] app_subframeid;
   logic [5:0] app_slotid;
   logic [5:0] app_symbolid;
+  /* verilator lint_on UNUSED */
 
   logic [31:0] app_header;
 
   logic [63:0] s_axis_tdata_rev;
+  /* verilator lint_off UNUSED */
   logic [63:0] s_axis_tdata_d;
   logic [7:0] s_axis_tkeep_d;
-
-  wire unused_app_header_fields = &{
-    1'b0,
-    app_datadirection,
-    app_payloadversion,
-    app_filterindex,
-    app_frameid,
-    app_subframeid,
-    app_slotid,
-    app_symbolid,
-    s_axis_tdata_d[63:32],
-    s_axis_tkeep_d[3:0]
-  };
+  /* verilator lint_on UNUSED */
 
 
   // Main

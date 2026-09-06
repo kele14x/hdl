@@ -7,7 +7,9 @@ module prach_hb2 #(
     parameter signed [17:0] UNIQ_COE  [2] = '{-18'sd4105, 18'sd36873}
 ) (
     input var         clk,
+    /* verilator lint_off UNUSED */
     input var         rst,
+    /* verilator lint_on UNUSED */
     //
     input var  [15:0] din_dp1,
     input var  [15:0] din_dp2,
@@ -61,7 +63,9 @@ module prach_hb2 #(
   logic signed [34:0] bmult;
   logic signed [35:0] bresult;
 
+  /* verilator lint_off UNUSED */
   logic signed [36:0] dq;
+  /* verilator lint_on UNUSED */
 
   // Control CDC
 
@@ -156,8 +160,6 @@ module prach_hb2 #(
       .din ({din_last, din_dv, din_chn, din_sy, din_sl, din_sf}),
       .dout({dout_last, dout_dv, dout_chn, dout_sy, dout_sl, dout_sf})
   );
-
-  wire unused_hb2 = &{1'b0, rst, dq[36:33], dq[16:0]};
 
 endmodule
 

@@ -24,7 +24,9 @@ module oran_if #(
     input var         s_axi_aclk,
     input var         s_axi_aresetn,
     //
+    /* verilator lint_off UNUSED */
     input var  [31:0] s_axi_awaddr,
+    /* verilator lint_on UNUSED */
     input var  [ 2:0] s_axi_awprot,
     input var         s_axi_awvalid,
     output var        s_axi_awready,
@@ -38,7 +40,9 @@ module oran_if #(
     output var        s_axi_bvalid,
     input var         s_axi_bready,
     //
+    /* verilator lint_off UNUSED */
     input var  [31:0] s_axi_araddr,
+    /* verilator lint_on UNUSED */
     input var  [ 2:0] s_axi_arprot,
     input var         s_axi_arvalid,
     output var        s_axi_arready,
@@ -171,15 +175,19 @@ module oran_if #(
 
   logic [15:0] defm_buffer_addr_offset_val_out[ DefmBufferSymbol];
 
+  /* verilator lint_off UNUSED */
   logic [31:0] fram_dest_mac_l_val_out;
   logic [15:0] fram_dest_mac_h_val_out;
+  /* verilator lint_on UNUSED */
   logic [31:0] fram_src_mac_l_val_out;
   logic [15:0] fram_src_mac_h_val_out;
   logic        fram_vlan_ctrl_has_vlan_out;
   logic [15:0] fram_vlan_ctrl_vlan_tag_out;
 
+  /* verilator lint_off UNUSED */
   logic        ctrl_defm_ctrl_en;
   logic        ctrl_fram_ctrl_en;
+  /* verilator lint_on UNUSED */
 
   logic        ctrl_tick_snap;
   logic        ctrl_tick_clear;
@@ -225,16 +233,6 @@ module oran_if #(
   logic [ 8:0] stat_latest_u_pkt;
 
   assign irq = 1'b0;
-
-  wire unused_oran_if_signals = &{
-    1'b0,
-    s_axi_awaddr[31:11],
-    s_axi_araddr[31:11],
-    fram_dest_mac_l_val_out,
-    fram_dest_mac_h_val_out,
-    ctrl_defm_ctrl_en,
-    ctrl_fram_ctrl_en
-  };
 
 
   oran_slave_regs i_regs (

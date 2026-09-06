@@ -15,13 +15,17 @@ module pdxch_fdv_buffer_write #(
     input var         clk,
     input var         rst,
     //
+    /* verilator lint_off UNUSED */
     input var  [11:0] s_dl_sym_num,
+    /* verilator lint_on UNUSED */
     // Compressed BFP9 stream
     input var  [35:0] s_axis_tdata,
     input var  [ 3:0] s_axis_exp,
     input var         s_axis_tvalid,
     input var         s_axis_tlast,
+    /* verilator lint_off UNUSED */
     input var  [90:0] s_axis_tuser,
+    /* verilator lint_on UNUSED */
     // IQ RAM write port
     output var [11:0] wr_iq_addr,
     output var        wr_iq_en,
@@ -53,7 +57,6 @@ module pdxch_fdv_buffer_write #(
   wire [3:0] rx_u_cc = s_axis_tuser[30:27];
   wire [9:0] rx_u_startPrb = s_axis_tuser[9:0];
   wire packet_match = packet_first ? (rx_u_cc == 4'(CC_ID)) : packet_match_r;
-  wire unused_inputs = &{1'b0, s_dl_sym_num[11:1], s_axis_tuser[90:31], s_axis_tuser[26:10]};
 
   wire [11:0] iq_start_addr =
       (s_dl_sym_num[0] ? 12'(IQ_BANK_DEPTH) : 12'd0) + (rx_u_startPrb * 12'd6);

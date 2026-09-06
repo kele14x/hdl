@@ -9,9 +9,11 @@ module coe_framer_data (
     input var          sync,
     //
     input var  [767:0] s_axis_tdata,
+    /* verilator lint_off UNUSED */
     input var  [  7:0] s_axis_tuser,
     input var          s_axis_tlast,
     input var          s_axis_tvalid,
+    /* verilator lint_on UNUSED */
     output var         s_axis_tready,
     //
     output var [ 31:0] m_axis_tdata,
@@ -100,9 +102,10 @@ module coe_framer_data (
 
   genvar gen_i;
 
-  wire unused_inputs = &{1'b0, s_axis_tuser, s_axis_tlast, s_axis_tvalid};
+  /* verilator lint_off UNUSED */
   wire unused_fifo_tuser;
   wire unused_fifo_err_discard;
+  /* verilator lint_on UNUSED */
 
   // Main
 

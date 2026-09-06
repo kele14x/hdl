@@ -5,7 +5,9 @@
 module pdxch_channel #(
     parameter int HAS_CDC    = 1,
     parameter int NUM_ANT    = 4,
+    /* verilator lint_off UNUSED */
     parameter int HALF_BLOCK = 0,
+    /* verilator lint_on UNUSED */
     parameter int HALF_FFT   = 0
 ) (
     // Clock & Reset
@@ -45,7 +47,6 @@ module pdxch_channel #(
   localparam int CtrlFftCfgWidth = 4;
 
   // HALF_BLOCK is retained for compatibility with existing instantiations.
-  wire                        unused_half_block = &{1'b0, HALF_BLOCK};
 
   // Signals
 
@@ -97,7 +98,9 @@ module pdxch_channel #(
   wire                        ctrl_fft_cfg_dest_valid;
   logic [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_pending;
   logic                       din_sy_d;
+  /* verilator lint_off UNUSED */
   logic                       unused_fft_stat_ovf;
+  /* verilator lint_on UNUSED */
 
   // Main
 

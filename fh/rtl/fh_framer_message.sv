@@ -37,8 +37,9 @@ module fh_framer_message (
   wire        int_tvalid;
   wire        int_tlast;
   wire        int_tready;
+  /* verilator lint_off UNUSED */
   wire        int_tuser;
-  wire        unused_tuser = &{1'b0, int_tuser};
+  /* verilator lint_on UNUSED */
 
   // Main
 

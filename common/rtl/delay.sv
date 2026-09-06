@@ -7,9 +7,11 @@ module delay #(
     parameter int DEPTH   = 8,
     parameter int USE_REG = 0
 ) (
+    /* verilator lint_off UNUSED */
     input var              clk,
     input var              rst,
     input var              cen,
+    /* verilator lint_on UNUSED */
     //
     input var  [WIDTH-1:0] din,
     output var [WIDTH-1:0] dout
@@ -30,8 +32,6 @@ module delay #(
 
   generate
     if (DEPTH == 0) begin : g_no_reg
-
-      wire unused = &{1'b0, clk, rst, cen};
 
       assign dout = din;
 
@@ -72,7 +72,6 @@ module delay #(
 
       // SRL primitives have no reset input. The taps are initialized to 0 for
       // simulation below; rst is intentionally unused in this implementation.
-      wire unused = &{1'b0, rst};
 
       (* shreg_extract = "yes" *)
       logic [WIDTH-1:0] dregs[0:DEPTH-1];

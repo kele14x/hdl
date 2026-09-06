@@ -7,7 +7,9 @@ module oran_framer_ul_ss_comp (
     input var         rst,
     //
     input var  [63:0] s_axis_tdata,
+    /* verilator lint_off UNUSED */
     input var  [ 7:0] s_axis_tkeep,
+    /* verilator lint_on UNUSED */
     input var         s_axis_tvalid,
     input var         s_axis_tlast,
     input var  [63:0] s_axis_tuser,
@@ -24,8 +26,6 @@ module oran_framer_ul_ss_comp (
 );
 
   import oran_pkg::*;
-
-  wire         unused_s_axis_tkeep = &{1'b0, s_axis_tkeep};
 
   logic [63:0] s_axis_tdata_reversed;
 
@@ -48,10 +48,10 @@ module oran_framer_ul_ss_comp (
   logic [63:0] fifo_dout;
   logic        fifo_rd;
 
+  /* verilator lint_off UNUSED */
   logic        user_fifo_full;
   logic        user_fifo_empty;
-
-  wire         unused_fifo_status = &{1'b0, user_fifo_full, user_fifo_empty};
+  /* verilator lint_on UNUSED */
 
 
   // Register input

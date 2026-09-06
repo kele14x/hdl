@@ -40,11 +40,13 @@ module oran_deframer_eth_filter (
   localparam bit [15:0] EthertypeEcpri = 16'hAEFE;
 
   logic [63:0] s_axis_tdata_reversed;
+  /* verilator lint_off UNUSED */
   logic [63:0] s_axis_tdata_d;  // also byte reversed
+  /* verilator lint_on UNUSED */
 
+  /* verilator lint_off UNUSED */
   logic [ 7:0] s_axis_tkeep_d;
-
-  wire         unused_delayed_axis = &{1'b0, s_axis_tdata_d[63:48], s_axis_tkeep_d[1:0]};
+  /* verilator lint_on UNUSED */
 
   logic [47:0] mac_dest_mac;
   logic [47:0] mac_source_mac;

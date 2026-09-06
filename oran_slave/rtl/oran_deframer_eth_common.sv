@@ -46,12 +46,16 @@ module oran_deframer_eth_common (
   logic [ 63:0] s_axis_tdata_d;
   logic [127:0] s_axis_tdata_c;
 
+  /* verilator lint_off UNUSED */
   logic [  7:0] s_axis_tkeep_d;
+  /* verilator lint_on UNUSED */
 
   // eCPRI Common Header & Payload
 
+  /* verilator lint_off UNUSED */
   logic [  3:0] ecpri_version;  // !no output
   logic [  2:0] ecpri_reserved;  // !no output
+  /* verilator lint_on UNUSED */
   logic         ecpri_concat;  // eCPRI concatenation indicator
   logic [  7:0] ecpri_messagetype;  // 0 = IQ, 2 = IQC, 5 = Delay measure
   logic [ 15:0] ecpri_payloadsize;
@@ -77,8 +81,6 @@ module oran_deframer_eth_common (
 
   logic         stat_last;  // in-phase last word
   logic         extra_last;
-
-  wire          unused_common_fields = &{1'b0, s_axis_tkeep_d, ecpri_version, ecpri_reserved};
 
 
   // Get the TKEEP pattern based on the byte ending position

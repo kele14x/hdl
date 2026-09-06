@@ -86,8 +86,10 @@ module pdxch_conv #(
 
   logic signed [15:0] din_dr_d;
   logic signed [15:0] din_di_d;
+  /* verilator lint_off UNUSED */
   logic               unused_mult_ovf;
   logic               unused_cmult_ovf;
+  /* verilator lint_on UNUSED */
 
   // Main
 

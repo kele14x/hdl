@@ -117,8 +117,10 @@ module ecpri_framer (
   wire        s4_axis_tvalid;
   wire        s4_axis_tready;
 
+  /* verilator lint_off UNUSED */
   wire        unused_s0_axis_tuser;
   wire        unused_s3_axis_tuser;
+  /* verilator lint_on UNUSED */
 
   // Control CDC
 

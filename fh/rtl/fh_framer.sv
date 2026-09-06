@@ -68,10 +68,11 @@ module fh_framer (
   wire        s3_axis_tvalid;
   wire        s3_axis_tready;
 
+  /* verilator lint_off UNUSED */
   wire        fh_fifo_tuser;
   wire        fh_fifo_err_discard;
   wire [17:0] message_tuser_unused;
-  wire        unused_outputs = &{1'b0, fh_fifo_tuser, fh_fifo_err_discard, message_tuser_unused};
+  /* verilator lint_on UNUSED */
 
   axis_fifo_alt #(
       .ASYNC_MODE  (1),

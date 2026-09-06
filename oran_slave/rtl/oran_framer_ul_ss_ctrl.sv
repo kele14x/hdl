@@ -21,7 +21,9 @@ module oran_framer_ul_ss_ctrl (
     // Control & Status
     //-----------------
     input var         ctrl_clk,
+    /* verilator lint_off UNUSED */
     input var         ctrl_rst,
+    /* verilator lint_on UNUSED */
     //
     input var  [ 3:0] ctrl_buf_wr_addr,
     input var         ctrl_buf_wr_en,
@@ -32,7 +34,9 @@ module oran_framer_ul_ss_ctrl (
     input var  [ 4:0] ctrl_mask_wr_addr,
     input var         ctrl_mask_wr_en,
     input var         ctrl_mask_wr_we,
+    /* verilator lint_off UNUSED */
     input var  [31:0] ctrl_mask_wr_din,
+    /* verilator lint_on UNUSED */
     output var [31:0] ctrl_mask_wr_dout
 );
 
@@ -40,9 +44,11 @@ module oran_framer_ul_ss_ctrl (
   localparam int BufferWidth = 33;  // 32-bit section data + 1-bit valid flag
 
   logic                           section_header_valid;
+  /* verilator lint_off UNUSED */
   logic [                   11:0] section_sectionid;
   logic                           section_rb;
   logic                           section_syminc;
+  /* verilator lint_on UNUSED */
   logic [                    9:0] section_startprbu;
   logic [                    7:0] section_numprbu;
 
@@ -70,15 +76,6 @@ module oran_framer_ul_ss_ctrl (
   } state_t;
 
   state_t state, state_next;
-
-  wire unused_ctrl_fields = &{
-    1'b0,
-    ctrl_rst,
-    ctrl_mask_wr_din[31:14],
-    section_sectionid,
-    section_rb,
-    section_syminc
-  };
 
   //
   // This function helps you build a line of section control message in

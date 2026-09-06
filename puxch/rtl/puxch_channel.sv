@@ -4,7 +4,9 @@
 
 module puxch_channel #(
     parameter int NUM_ANT    = 4,
+    /* verilator lint_off UNUSED */
     parameter int HALF_BLOCK = 0,
+    /* verilator lint_on UNUSED */
     parameter int HALF_FFT   = 0
 ) (
     // Internal I/F
@@ -56,7 +58,6 @@ module puxch_channel #(
   localparam int LogFftSize = (HALF_FFT != 0) ? 11 : 12;
 
   // HALF_BLOCK is retained for compatibility with existing instantiations.
-  wire unused_half_block = &{1'b0, HALF_BLOCK};
 
   logic [ 1:0] ctrl_rat_s;
   logic [22:0] ctrl_rfs_offset_s;
@@ -95,7 +96,9 @@ module puxch_channel #(
 
   logic [15:0] fft_dout_dr;
   logic [15:0] fft_dout_di;
+  /* verilator lint_off UNUSED */
   logic        fft_stat_ovf;
+  /* verilator lint_on UNUSED */
   logic        fft_dout_sf;
   logic        fft_dout_sl;
   logic        fft_dout_sy;
@@ -393,8 +396,6 @@ module puxch_channel #(
   assign dout_chn  = phase_comp_dout_chn;
   assign dout_dv   = phase_comp_dout_dv;
   assign dout_last = phase_comp_dout_last;
-
-  wire unused_channel = &{1'b0, fft_stat_ovf};
 
 endmodule
 

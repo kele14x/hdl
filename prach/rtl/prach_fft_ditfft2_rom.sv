@@ -9,7 +9,9 @@ module prach_fft_ditfft2_rom #(
     parameter     RAM_STYLE  = "BLOCK"
 ) (
     input var                          clk,
+    /* verilator lint_off UNUSED */
     input var                          rst,
+    /* verilator lint_on UNUSED */
     //
     input var         [ADDR_WIDTH-1:0] addr,
     //
@@ -19,9 +21,11 @@ module prach_fft_ditfft2_rom #(
 
   // Parameters
 
+  /* verilator lint_off UNUSED */
   localparam int Latency = 2;
   localparam real Pi = 3.1415926535;
   localparam bit RamStyleKnown = (RAM_STYLE == "BLOCK") || (RAM_STYLE == "DISTRIBUTED");
+  /* verilator lint_on UNUSED */
 
   // Signals
 
@@ -70,8 +74,6 @@ module prach_fft_ditfft2_rom #(
   end
 
   assign {ti, tr} = dout_dd;
-
-  wire unused_ditfft2_rom = &{1'b0, rst, 32'(Latency), Pi != 0.0, RamStyleKnown};
 
 endmodule
 
