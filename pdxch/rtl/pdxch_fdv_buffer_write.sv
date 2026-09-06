@@ -41,7 +41,8 @@ module pdxch_fdv_buffer_write #(
 
   logic packet_active;
   logic packet_match_r;
-  // The bank is folded into the address at packet start; no separate state is needed.
+  // Keep the bounds tied to the same bank as the packet's starting address.
+  logic packet_bank_r;
   logic [11:0] iq_addr_r;
   logic [11:0] exp_addr_r;
   logic [11:0] word_count_r;
@@ -57,14 +58,15 @@ module pdxch_fdv_buffer_write #(
   wire [3:0] rx_u_cc = s_axis_tuser[30:27];
   wire [9:0] rx_u_startPrb = s_axis_tuser[9:0];
   wire packet_match = packet_first ? (rx_u_cc == 4'(CC_ID)) : packet_match_r;
+  wire packet_bank = packet_first ? s_dl_sym_num[0] : packet_bank_r;
 
   wire [11:0] iq_start_addr =
       (s_dl_sym_num[0] ? 12'(IQ_BANK_DEPTH) : 12'd0) + (rx_u_startPrb * 12'd6);
   wire [11:0] exp_start_addr =
       (s_dl_sym_num[0] ? 12'(EXP_BANK_DEPTH) : 12'd0) + (rx_u_startPrb * 12'd3);
 
-  wire [11:0] iq_bank_limit = s_dl_sym_num[0] ? 12'(2 * IQ_BANK_DEPTH) : 12'(IQ_BANK_DEPTH);
-  wire [11:0] exp_bank_limit = s_dl_sym_num[0] ? 12'(2 * EXP_BANK_DEPTH) : 12'(EXP_BANK_DEPTH);
+  wire [11:0] iq_bank_limit = packet_bank ? 12'(2 * IQ_BANK_DEPTH) : 12'(IQ_BANK_DEPTH);
+  wire [11:0] exp_bank_limit = packet_bank ? 12'(2 * EXP_BANK_DEPTH) : 12'(EXP_BANK_DEPTH);
   wire bank_overflow = (wr_iq_addr_c >= iq_bank_limit) || (wr_exp_addr_c >= exp_bank_limit);
 
   assign wr_iq_addr_c = packet_first ? iq_start_addr : iq_addr_r;
@@ -104,6 +106,7 @@ module pdxch_fdv_buffer_write #(
     if (rst) begin
       packet_active  <= 1'b0;
       packet_match_r <= 1'b0;
+      packet_bank_r  <= 1'b0;
       iq_addr_r      <= '0;
       exp_addr_r     <= '0;
       word_count_r   <= '0;
@@ -112,6 +115,7 @@ module pdxch_fdv_buffer_write #(
 
       if (packet_first) begin
         packet_match_r <= (rx_u_cc == 4'(CC_ID));
+        packet_bank_r <= s_dl_sym_num[0];
         if (bank_overflow) begin
           iq_addr_r    <= iq_start_addr;
           exp_addr_r   <= exp_start_addr;

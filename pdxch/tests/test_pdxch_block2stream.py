@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Unit tests for the PDXCH block-to-stream ping-pong buffer."""
 
 from __future__ import annotations
@@ -141,6 +142,36 @@ async def test_direct_path_and_memory_playback(dut):
         user is not None and user & 1
         for _, user, _, _ in [outputs[0] for outputs in observed]
     )
+
+
+@cocotb.test()
+async def test_frame_marker_matches_first_parallel_sample(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await _reset(dut)
+    observed = []
+    first_words = [(0x2000 + ant) << 16 | (0x1000 + ant) for ant in range(NUM_ANT)]
+    for sample in range(4):
+        for ant in range(NUM_ANT):
+            observed.append(
+                await _clock_with_input(
+                    dut,
+                    chn=ant,
+                    real=0x1000 + ant + sample * 16,
+                    imag=0x2000 + ant + sample * 16,
+                    sf=int(sample == 0),
+                    dv=1,
+                )
+            )
+    for _ in range(12):
+        observed.append(await _clock_with_input(dut))
+    marker_cycles = []
+    for ant in range(NUM_ANT):
+        cycles = [i for i, outputs in enumerate(observed) if outputs[ant][1] == 1]
+        assert len(cycles) == 1
+        cycle = cycles[0]
+        assert observed[cycle][ant][0] == first_words[ant]
+        marker_cycles.append(cycle)
+    assert len(set(marker_cycles)) == 1
 
 
 @pytest.mark.parametrize("num_ant", CASES, ids=lambda value: f"num_ant_{value}")

@@ -180,20 +180,28 @@ module pdxch_channel #(
       .dest_ready(~rst)
   );
 
+  // This shadow has the same lifetime as the resetless CDC mailbox. A
+  // radio-only reset must not discard an already acknowledged configuration:
+  // the source sends again only when its configuration changes.
+  initial begin : p_init_fft_cfg
+    ctrl_fft_cfg_pending = {2'b01, 2'b00};
+  end
+
+  always @(posedge clk) begin
+    if (!rst && ctrl_fft_cfg_dest_valid) begin
+      ctrl_fft_cfg_pending <= ctrl_fft_cfg_cdc;
+    end
+  end
+
   // Apply the coherent FFT configuration only between symbols. din_sy may
   // span multiple antenna cycles, so use its rising edge as the boundary.
   always_ff @(posedge clk) begin
     if (rst) begin
-      ctrl_fft_cfg_pending <= {2'b01, 2'b00};
       ctrl_size            <= 2'b01;
       ctrl_itlv            <= 2'b00;
       din_sy_d             <= 1'b0;
     end else begin
       din_sy_d <= din_sy;
-
-      if (ctrl_fft_cfg_dest_valid) begin
-        ctrl_fft_cfg_pending <= ctrl_fft_cfg_cdc;
-      end
 
       if (din_sy && !din_sy_d) begin
         if (ctrl_fft_cfg_dest_valid) begin

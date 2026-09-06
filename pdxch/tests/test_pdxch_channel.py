@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Unit tests for PDXCH channel control decoding and stream framing."""
 
 from __future__ import annotations
@@ -154,6 +155,29 @@ async def test_fft_config_cdc_is_atomic_and_latest_value_wins(dut):
     assert (int(dut.ctrl_size.value), int(dut.ctrl_itlv.value)) == (1, 0)
     await _pulse_symbol_boundary(dut)
     assert (int(dut.ctrl_size.value), int(dut.ctrl_itlv.value)) == final_expected
+
+
+@cocotb.test()
+async def test_fft_config_survives_radio_only_reset(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    cocotb.start_soon(Clock(dut.ctrl_clk, 14, unit="ns").start())
+    await _reset(dut)
+    for rat, bw, expected in [(2, 4, (2, 2)), (2, 2, (0, 0)), (1, 3, (2, 1))]:
+        await _write_fft_config(dut, rat=rat, bw=bw)
+        await _wait_pending_fft_config(
+            dut, expected_size=expected[0], expected_itlv=expected[1]
+        )
+        await _pulse_symbol_boundary(dut)
+        assert (int(dut.ctrl_size.value), int(dut.ctrl_itlv.value)) == expected
+        # Let the acknowledgement return so no transfer remains outstanding.
+        await ClockCycles(dut.ctrl_clk, 24)
+        await RisingEdge(dut.clk)
+        dut.rst.value = 1
+        await ClockCycles(dut.clk, 5)
+        dut.rst.value = 0
+        await ClockCycles(dut.clk, 24)
+        await _pulse_symbol_boundary(dut)
+        assert (int(dut.ctrl_size.value), int(dut.ctrl_itlv.value)) == expected
 
 
 def test_pdxch_channel_runner():

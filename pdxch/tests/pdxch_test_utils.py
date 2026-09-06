@@ -50,6 +50,7 @@ def run_test(
     sources: Iterable[Path],
     parameters: dict[str, int | bool] | None = None,
     build_name: str | None = None,
+    extra_env: dict[str, str] | None = None,
 ) -> None:
     """Build and run a test in the persistent PDXCH sim_build directory."""
 
@@ -71,4 +72,5 @@ def run_test(
         waves=waves,
         gui=os.environ.get("GUI", "false").lower() == "true",
         test_dir=run_dir,
+        extra_env=extra_env or {},
     )

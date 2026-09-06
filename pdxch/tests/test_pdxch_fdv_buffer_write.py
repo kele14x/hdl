@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 
 import cocotb
@@ -8,6 +9,7 @@ from pdxch_test_utils import PRJ_PATH, run_test
 
 half_block = int(os.environ.get("HALF_BLOCK", "0"))
 cc_id = 3
+CASES = [0, 1]
 
 
 def packet_user(start_prb, cc=cc_id):
@@ -31,13 +33,15 @@ async def reset(dut):
     await ClockCycles(dut.clk, 1)
 
 
-async def send_packet(dut, start_prb, bank, words, cc=cc_id):
+async def send_packet(dut, start_prb, bank, words, cc=cc_id, flip_bank_at=None):
     iq_bank_depth, exp_bank_depth = bank_depths()
     iq_start = bank * iq_bank_depth + start_prb * 6
     exp_start = bank * exp_bank_depth + start_prb * 3
 
     dut.s_dl_sym_num.value = bank
     for index, (data, exponent) in enumerate(words):
+        if index == flip_bank_at:
+            dut.s_dl_sym_num.value = bank ^ 1
         dut.s_axis_tdata.value = data
         dut.s_axis_exp.value = exponent
         dut.s_axis_tlast.value = int(index == len(words) - 1)
@@ -50,11 +54,16 @@ async def send_packet(dut, start_prb, bank, words, cc=cc_id):
         expected_iq_addr = iq_start + index
         expected_exp_addr = exp_start + index // 2
         expected_exp_en = index % 2 == 0
-        expected_en = cc == cc_id
-        assert int(dut.wr_iq_addr.value) == expected_iq_addr
+        expected_en = (
+            cc == cc_id
+            and expected_iq_addr < (bank + 1) * iq_bank_depth
+            and expected_exp_addr < (bank + 1) * exp_bank_depth
+        )
+        if expected_en:
+            assert int(dut.wr_iq_addr.value) == expected_iq_addr
+            assert int(dut.wr_exp_addr.value) == expected_exp_addr
         assert int(dut.wr_iq_en.value) == expected_en
         assert int(dut.wr_iq_data.value) == data
-        assert int(dut.wr_exp_addr.value) == expected_exp_addr
         assert int(dut.wr_exp_en.value) == (expected_en and expected_exp_en)
         assert int(dut.wr_exp_data.value) == exponent
 
@@ -68,7 +77,7 @@ async def send_packet(dut, start_prb, bank, words, cc=cc_id):
 
 @cocotb.test()
 async def test_fdv_buffer_write(dut):
-    cocotb.start_soon(Clock(dut.clk, period=10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk, period=10, unit="ns").start())
     await reset(dut)
 
     # The first packet has an odd number of words.  The next packet therefore
@@ -96,13 +105,32 @@ async def test_fdv_buffer_write(dut):
     )
 
 
-def test_fdv_buffer_write_runner():
+@cocotb.test()
+async def test_packet_bank_is_stable_through_symbol_rollover(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await reset(dut)
+    for bank in (0, 1):
+        for start_prb in (7, bank_depths()[1] // 3 - 1):
+            await send_packet(
+                dut,
+                start_prb=start_prb,
+                bank=bank,
+                words=[(0x400 + index, 3) for index in range(12)],
+                flip_bank_at=2,
+            )
+        # A fresh packet must select the new bank after the previous TLAST.
+        await send_packet(dut, 0, bank ^ 1, [(0x500 + i, 4) for i in range(6)])
+
+
+@pytest.mark.parametrize("half_block_case", CASES)
+def test_fdv_buffer_write_runner(half_block_case):
     run_test(
         hdl_toplevel="pdxch_fdv_buffer_write",
         test_module="test_pdxch_fdv_buffer_write",
         sources=[PRJ_PATH / "rtl" / "pdxch_fdv_buffer_write.sv"],
-        parameters={"CC_ID": cc_id, "HALF_BLOCK": half_block},
-        build_name="fdv_buffer_write",
+        parameters={"CC_ID": cc_id, "HALF_BLOCK": half_block_case},
+        extra_env={"HALF_BLOCK": str(half_block_case)},
+        build_name=f"fdv_buffer_write_hb{half_block_case}",
     )
 
 

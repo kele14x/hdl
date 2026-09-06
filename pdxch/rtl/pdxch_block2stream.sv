@@ -195,7 +195,9 @@ module pdxch_block2stream #(
 
       delay #(
           .WIDTH(1),
-          .DEPTH(6 - i)
+          // Data takes three input-delay cycles plus the dout register;
+          // sync already accounts for one of those four cycles.
+          .DEPTH(NUM_ANT + 2 - i)
       ) u_delay_tuser (
           .clk (clk),
           .rst (1'b0),
