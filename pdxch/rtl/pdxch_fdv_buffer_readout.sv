@@ -3,8 +3,10 @@
 `default_nettype none
 
 module pdxch_fdv_buffer_readout #(
-    parameter int NUM_ANT    = 4,
-    parameter int HALF_BLOCK = 0
+    parameter int NUM_ANT        = 4,
+    parameter int HALF_BLOCK     = 0,
+    parameter int IQ_ADDR_WIDTH  = (HALF_BLOCK != 0) ? 11 : 12,
+    parameter int EXP_ADDR_WIDTH = (HALF_BLOCK != 0) ? 10 : 11
 ) (
     input var         clk,
     input var         rst,
@@ -13,8 +15,8 @@ module pdxch_fdv_buffer_readout #(
     input var         start_of_slot,
     input var  [ 1:0] start_of_symbol,
     //
-    output var [11:0] rd_iq_addr     [NUM_ANT],
-    output var [11:0] rd_exp_addr    [NUM_ANT],
+    output var [IQ_ADDR_WIDTH-1:0] rd_iq_addr     [NUM_ANT],
+    output var [EXP_ADDR_WIDTH-1:0] rd_exp_addr    [NUM_ANT],
     output var        rd_en          [NUM_ANT],
     input var  [35:0] rd_iq_data     [NUM_ANT],
     input var  [ 3:0] rd_exp_data    [NUM_ANT],
@@ -90,8 +92,8 @@ module pdxch_fdv_buffer_readout #(
 
   logic        rd_dv;
 
-  logic [11:0] rd_iq_addr_r;
-  logic [11:0] rd_exp_addr_r;
+  logic [IQ_ADDR_WIDTH-1:0] rd_iq_addr_r;
+  logic [EXP_ADDR_WIDTH-1:0] rd_exp_addr_r;
   logic        rd_half_r;
   logic        rd_half_d;
   logic        rd_half_dd;
@@ -110,8 +112,8 @@ module pdxch_fdv_buffer_readout #(
   logic [31:0] bist_data_d;  // BIST pattern aligned with the mult pipeline
   logic [31:0] rd_data_r;
 
-  logic [11:0] iq_addr_mapped;
-  logic [11:0] exp_addr_mapped;
+  logic [IQ_ADDR_WIDTH-1:0] iq_addr_mapped;
+  logic [EXP_ADDR_WIDTH-1:0] exp_addr_mapped;
   logic        iq_half_mapped;
 
   logic        start_of_symbol_sel;
@@ -205,7 +207,9 @@ module pdxch_fdv_buffer_readout #(
   );
 
   pdxch_fdv_buffer_map #(
-      .HALF_BLOCK(HALF_BLOCK)
+      .HALF_BLOCK    (HALF_BLOCK),
+      .IQ_ADDR_WIDTH (IQ_ADDR_WIDTH),
+      .EXP_ADDR_WIDTH(EXP_ADDR_WIDTH)
   ) u_fdv_buffer_map (
       .bank      (bank),
       .logical_re(index_mapped),

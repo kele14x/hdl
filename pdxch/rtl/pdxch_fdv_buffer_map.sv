@@ -8,18 +8,20 @@
 // shared by four complex REs, so one PRB occupies three exponent words. The
 // two ping-pong banks are placed in consecutive address ranges.
 module pdxch_fdv_buffer_map #(
-    parameter int HALF_BLOCK = 0
+    parameter int HALF_BLOCK     = 0,
+    parameter int IQ_ADDR_WIDTH  = (HALF_BLOCK != 0) ? 11 : 12,
+    parameter int EXP_ADDR_WIDTH = (HALF_BLOCK != 0) ? 10 : 11
 ) (
     input var         bank,
     input var  [11:0] logical_re,
-    output var [11:0] iq_addr,
-    output var [11:0] exp_addr,
+    output var [IQ_ADDR_WIDTH-1:0] iq_addr,
+    output var [EXP_ADDR_WIDTH-1:0] exp_addr,
     output var        iq_half
 );
 
-  localparam int IQ_BANK_DEPTH = (HALF_BLOCK != 0) ? 1024 : 1792;
-  localparam int EXP_BANK_DEPTH = (HALF_BLOCK != 0) ? 480 : 825;
-  localparam int MAX_PRB = (HALF_BLOCK != 0) ? 160 : 275;
+  localparam int IQ_BANK_DEPTH  = (HALF_BLOCK != 0) ? 1024 : 1792;
+  localparam int EXP_BANK_DEPTH = (HALF_BLOCK != 0) ? 512 : 1024;
+  localparam int MAX_PRB        = (HALF_BLOCK != 0) ? 160 : 275;
 
   initial begin : drc_check
     assert (IQ_BANK_DEPTH > 0 && EXP_BANK_DEPTH > 0)
@@ -35,11 +37,11 @@ module pdxch_fdv_buffer_map #(
   assign iq_half = logical_re[0];
 
   always_comb begin
-    iq_addr  = logical_re >> 1;
-    exp_addr = logical_re >> 2;
+    iq_addr  = IQ_ADDR_WIDTH'(logical_re >> 1);
+    exp_addr = EXP_ADDR_WIDTH'(logical_re >> 2);
     if (bank) begin
-      iq_addr  = iq_addr + 12'(IQ_BANK_DEPTH);
-      exp_addr = exp_addr + 12'(EXP_BANK_DEPTH);
+      iq_addr  = iq_addr + IQ_ADDR_WIDTH'(IQ_BANK_DEPTH);
+      exp_addr = exp_addr + EXP_ADDR_WIDTH'(EXP_BANK_DEPTH);
     end
   end
 

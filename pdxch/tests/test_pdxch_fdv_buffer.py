@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import cocotb
 import pytest
 from cocotb.clock import Clock
@@ -9,6 +11,8 @@ from cocotb.triggers import ClockCycles, RisingEdge, Timer
 from pdxch_test_utils import PRJ_PATH, pdxch_sources, run_test
 
 NUM_ANT = 4
+HALF_BLOCK = int(os.environ.get("HALF_BLOCK", "1"))
+CASES = [0, 1]
 
 
 def _iq_word(real, imag):
@@ -154,13 +158,17 @@ async def test_real_ram_read_address_alignment(dut):
 
 
 @cocotb.test()
-async def test_write_drops_packet_at_half_block_boundary(dut):
+async def test_write_drops_packet_at_bank_boundary(dut):
     cocotb.start_soon(Clock(dut.clk_eth_xran, 8, unit="ns").start())
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     await _reset(dut)
 
-    start_prb = 159
-    packet_words = 4 * 6
+    iq_bank_depth = 1024 if HALF_BLOCK else 1792
+    exp_bank_depth = 512 if HALF_BLOCK else 1024
+    start_prb = 159 if HALF_BLOCK else 274
+    valid_words = iq_bank_depth - start_prb * 6
+    packet_words = valid_words + 2
+    assert start_prb * 3 + valid_words // 2 <= exp_bank_depth
     observed_iq_addresses = []
     observed_exp_addresses = []
 
@@ -180,21 +188,23 @@ async def test_write_drops_packet_at_half_block_boundary(dut):
         if iq_en:
             iq_addr = int(dut.wr_iq_addr[0].value)
             observed_iq_addresses.append(iq_addr)
-            assert iq_addr < 1024
+            assert iq_addr < iq_bank_depth
         if exp_en:
             exp_addr = int(dut.wr_exp_addr[0].value)
             observed_exp_addresses.append(exp_addr)
-            assert exp_addr < 480
+            assert exp_addr < exp_bank_depth
 
-        assert iq_en == int(index < 6)
-        assert exp_en == int(index < 6 and index % 2 == 0)
+        assert iq_en == int(index < valid_words)
+        assert exp_en == int(index < valid_words and index % 2 == 0)
 
     await RisingEdge(dut.clk_eth_xran)
     dut.s_axis_tvalid[0].value = 0
     dut.s_axis_tlast[0].value = 0
 
-    assert observed_iq_addresses == list(range(159 * 6, 160 * 6))
-    assert observed_exp_addresses == list(range(159 * 3, 160 * 3))
+    assert observed_iq_addresses == list(range(start_prb * 6, iq_bank_depth))
+    assert observed_exp_addresses == list(
+        range(start_prb * 3, start_prb * 3 + valid_words // 2)
+    )
 
 
 @cocotb.test()
@@ -250,7 +260,9 @@ async def test_real_ram_multi_antenna_data_matches_channel_tag(dut):
     assert checked_channels == set(range(NUM_ANT))
 
 
-def test_pdxch_fdv_buffer_runner():
+@pytest.mark.parametrize("half_block_case", CASES)
+def test_pdxch_fdv_buffer_runner(half_block_case, monkeypatch):
+    monkeypatch.setenv("HALF_BLOCK", str(half_block_case))
     sources = [
         PRJ_PATH / "rtl" / "pdxch_fdv_buffer.sv",
         PRJ_PATH / "rtl" / "pdxch_fdv_buffer_map.sv",
@@ -270,8 +282,9 @@ def test_pdxch_fdv_buffer_runner():
         hdl_toplevel="pdxch_fdv_buffer",
         test_module="test_pdxch_fdv_buffer",
         sources=sources,
-        parameters={"CC_ID": 0, "NUM_ANT": NUM_ANT, "HALF_BLOCK": 1},
-        build_name="fdv_buffer",
+        parameters={"CC_ID": 0, "NUM_ANT": NUM_ANT, "HALF_BLOCK": half_block_case},
+        extra_env={"HALF_BLOCK": str(half_block_case)},
+        build_name=f"fdv_buffer_hb{half_block_case}",
     )
 
 

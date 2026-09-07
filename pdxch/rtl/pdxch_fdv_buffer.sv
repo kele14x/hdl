@@ -43,6 +43,13 @@ module pdxch_fdv_buffer #(
     input var  [ 3:0] ctrl_fs_offset
 );
 
+  localparam int IQ_BANK_DEPTH  = (HALF_BLOCK != 0) ? 1024 : 1792;
+  localparam int EXP_BANK_DEPTH = (HALF_BLOCK != 0) ? 512 : 1024;
+  localparam int IQ_DEPTH       = 2 * IQ_BANK_DEPTH;
+  localparam int EXP_DEPTH      = 2 * EXP_BANK_DEPTH;
+  localparam int IQ_ADDR_WIDTH  = $clog2(IQ_DEPTH);
+  localparam int EXP_ADDR_WIDTH = $clog2(EXP_DEPTH);
+
   // Signals
 
   logic [22:0] ctrl_rfs_offset_s;
@@ -54,15 +61,15 @@ module pdxch_fdv_buffer #(
   logic        start_of_slot;
   logic [ 1:0] start_of_symbol;
 
-  logic [11:0] wr_iq_addr                [NUM_ANT];
+  logic [IQ_ADDR_WIDTH-1:0] wr_iq_addr    [NUM_ANT];
   logic        wr_iq_en                  [NUM_ANT];
   logic [35:0] wr_iq_data                [NUM_ANT];
-  logic [11:0] wr_exp_addr               [NUM_ANT];
+  logic [EXP_ADDR_WIDTH-1:0] wr_exp_addr  [NUM_ANT];
   logic        wr_exp_en                 [NUM_ANT];
   logic [ 3:0] wr_exp_data               [NUM_ANT];
 
-  logic [11:0] rd_iq_addr                [NUM_ANT];
-  logic [11:0] rd_exp_addr               [NUM_ANT];
+  logic [IQ_ADDR_WIDTH-1:0] rd_iq_addr    [NUM_ANT];
+  logic [EXP_ADDR_WIDTH-1:0] rd_exp_addr  [NUM_ANT];
   logic        rd_en                     [NUM_ANT];
   logic        rd_en_d                   [NUM_ANT];
   logic [35:0] rd_iq_data                [NUM_ANT];
@@ -158,8 +165,10 @@ module pdxch_fdv_buffer #(
       end
 
       pdxch_fdv_buffer_write #(
-          .CC_ID     (CC_ID),
-          .HALF_BLOCK(HALF_BLOCK)
+          .CC_ID         (CC_ID),
+          .HALF_BLOCK    (HALF_BLOCK),
+          .IQ_ADDR_WIDTH (IQ_ADDR_WIDTH),
+          .EXP_ADDR_WIDTH(EXP_ADDR_WIDTH)
       ) u_write (
           .clk          (clk_eth_xran),
           .rst          (rst_eth_xran),
@@ -180,11 +189,8 @@ module pdxch_fdv_buffer #(
           .wr_exp_data  (wr_exp_data[ant])
       );
 
-      localparam int IQ_DEPTH = (HALF_BLOCK != 0) ? 2048 : 3584;
-      localparam int EXP_DEPTH = (HALF_BLOCK != 0) ? 960 : 1650;
-
       ram_sdp #(
-          .ADDR_WIDTH  (12),
+          .ADDR_WIDTH  (IQ_ADDR_WIDTH),
           .DATA_WIDTH  (36),
           .DEPTH       (IQ_DEPTH),
           .READ_LATENCY(2),
@@ -204,7 +210,7 @@ module pdxch_fdv_buffer #(
       );
 
       ram_sdp #(
-          .ADDR_WIDTH  (12),
+          .ADDR_WIDTH  (EXP_ADDR_WIDTH),
           .DATA_WIDTH  (4),
           .DEPTH       (EXP_DEPTH),
           .READ_LATENCY(2),
@@ -226,8 +232,10 @@ module pdxch_fdv_buffer #(
   endgenerate
 
   pdxch_fdv_buffer_readout #(
-      .NUM_ANT   (NUM_ANT),
-      .HALF_BLOCK(HALF_BLOCK)
+      .NUM_ANT       (NUM_ANT),
+      .HALF_BLOCK    (HALF_BLOCK),
+      .IQ_ADDR_WIDTH (IQ_ADDR_WIDTH),
+      .EXP_ADDR_WIDTH(EXP_ADDR_WIDTH)
   ) u_readout (
       .clk            (clk),
       .rst            (rst),

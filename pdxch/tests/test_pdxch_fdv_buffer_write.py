@@ -17,7 +17,7 @@ def packet_user(start_prb, cc=cc_id):
 
 
 def bank_depths():
-    return (1024, 480) if half_block else (1792, 825)
+    return (1024, 512) if half_block else (1792, 1024)
 
 
 async def reset(dut):
