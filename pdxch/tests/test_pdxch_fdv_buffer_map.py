@@ -10,7 +10,7 @@ half_block = int(os.environ.get("HALF_BLOCK", "0"))
 
 def expected_addresses(bank, logical_re):
     iq_bank_depth = 1024 if half_block else 1792
-    exp_bank_depth = 480 if half_block else 825
+    exp_bank_depth = 512 if half_block else 1024
     iq_addr = (logical_re >> 1) + (iq_bank_depth if bank else 0)
     exp_addr = (logical_re >> 2) + (exp_bank_depth if bank else 0)
     return iq_addr, exp_addr, logical_re & 1

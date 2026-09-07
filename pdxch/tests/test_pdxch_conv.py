@@ -166,6 +166,56 @@ async def test_nonzero_data_and_sideband_alignment(dut):
         current = vector
 
 
+@cocotb.test()
+async def test_active_phase_wraps_without_saturation(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+
+    dut.rst.value = 1
+    dut.ctrl_rat.value = 2
+    dut.ctrl_bw.value = 4
+    _set_input(dut)
+    await ClockCycles(dut.clk, 4)
+    dut.rst.value = 0
+
+    # With this configuration fft_size=1.  The first group starts the
+    # converter with phase increment -11; the second group advances each
+    # antenna to bit-reversed index 1 (2048), whose phase is still 0 modulo
+    # 128.  This exercises products that overflow the 7-bit phase result.
+    total = 2 * NUM_ANT
+    expected = [[] for _ in range(NUM_ANT)]
+    actual = [[] for _ in range(NUM_ANT)]
+    drive_index = 0
+
+    for _ in range(total + 32):
+        await RisingEdge(dut.clk)
+        await Timer(1, unit="ps")
+
+        if int(dut.dout_dv.value):
+            channel = int(dut.dout_chn.value)
+            actual[channel].append(
+                (dut.dout_dr.value.to_signed(), dut.dout_di.value.to_signed())
+            )
+
+        if drive_index < total:
+            channel = drive_index % NUM_ANT
+            _set_input(
+                dut,
+                real=4096,
+                sf=int(drive_index == 0),
+                sl=int(drive_index < NUM_ANT),
+                sy=int(drive_index < NUM_ANT),
+                chn=channel,
+                dv=1,
+                last=int(drive_index == total - 1),
+            )
+            expected[channel].append((4096, 0))
+            drive_index += 1
+        else:
+            _set_input(dut)
+
+    assert actual == expected
+
+
 @pytest.mark.parametrize("num_ant", CASES, ids=lambda value: f"num_ant_{value}")
 def test_pdxch_conv_runner(num_ant, monkeypatch):
     monkeypatch.setenv("NUM_ANT", str(num_ant))
