@@ -103,12 +103,11 @@ module pdxch_fdv_buffer_readout #(
   logic [35:0] rd_iq_data_c;
   logic [ 3:0] rd_exp_data_c;
   logic [17:0] rd_pair_c;
-  logic [30:0] rd_expanded_dr_c;
-  logic [30:0] rd_expanded_di_c;
-  logic [30:0] rd_expanded_dr_r;
-  logic [30:0] rd_expanded_di_r;
+  logic [ 4:0] rd_shift_c;   // exp + fs_offset, saturated at 15
+  logic [16:0] rd_scale_c;   // 2^rd_shift_c, the 9x17 multiplier operand
   logic [15:0] rd_decoded_dr_c;
   logic [15:0] rd_decoded_di_c;
+  logic [31:0] bist_data_d;  // BIST pattern aligned with the mult pipeline
   logic [31:0] rd_data_r;
 
   logic [11:0] iq_addr_mapped;
@@ -204,34 +203,6 @@ module pdxch_fdv_buffer_readout #(
       .dest_clk(clk),
       .dest_out(ctrl_fs_offset_s)
   );
-
-  function automatic logic [30:0] bfp9_decompress_s1(input logic [8:0] data, input logic [3:0] exp);
-    logic signed [30:0] expanded;
-
-    expanded = $signed({data, 22'b0});
-    expanded = expanded >>> (15 - int'(exp));
-    bfp9_decompress_s1 = expanded;
-  endfunction
-
-  function automatic logic [15:0] bfp9_decompress_s2(input logic [30:0] expanded,
-                                                     input logic [3:0] fs_offset);
-    logic        sign;
-    logic [16:0] temp;
-    logic [31:0] expanded_g;
-
-    // Full-scale alignment and saturation are the same as the former
-    // bfp_decomp implementation, but only the BFP9 path remains here.
-    expanded_g = {expanded, 1'b0};
-    sign       = expanded[30];
-    temp       = expanded_g[31-fs_offset-:17];
-    for (int i = 0; i < 15; i++) begin
-      if (i < fs_offset && (sign ^ expanded[29-i])) begin
-        temp = sign ? 17'h10000 : 17'h0FFFF;
-      end
-    end
-    temp = temp == 17'h0FFFF ? temp : temp + 1'b1;
-    bfp9_decompress_s2 = temp[16:1];
-  endfunction
 
   pdxch_fdv_buffer_map #(
       .HALF_BLOCK(HALF_BLOCK)
@@ -445,6 +416,20 @@ module pdxch_fdv_buffer_readout #(
     end
   end
 
+  // The BIST pattern bypasses the decompressor pipeline; delay it by the
+  // mult latency delta (three cycles) so the merge at rd_data_r stays
+  // aligned with the decoded stream.
+  delay #(
+      .WIDTH(32),
+      .DEPTH(3)
+  ) u_delay_bist (
+      .clk (clk),
+      .rst (1'b0),
+      .cen (1'b1),
+      .din ({bist_data_di, bist_data_dr}),
+      .dout(bist_data_d)
+  );
+
   // RAM data
 
   always_comb begin
@@ -515,22 +500,55 @@ module pdxch_fdv_buffer_readout #(
 
   always_comb begin
     rd_pair_c = rd_half_dd ? rd_iq_data_c[17:0] : rd_iq_data_c[35:18];
-    rd_expanded_dr_c = bfp9_decompress_s1(rd_pair_c[17:9], rd_exp_data_c);
-    rd_expanded_di_c = bfp9_decompress_s1(rd_pair_c[8:0], rd_exp_data_c);
   end
 
-  always_ff @(posedge clk) begin
-    rd_expanded_dr_r <= rd_expanded_dr_c;
-    rd_expanded_di_r <= rd_expanded_di_c;
-  end
-
+  // Decompression: out = (mantissa << (exp + fs_offset))[23:8], the 16-bit
+  // window over the 24-bit mantissa product. The shift sum is saturated at
+  // 15 -- past that point the window leaves the mantissa range (undefined by
+  // the protocol), and clamping keeps the 9x17 multiply in a single DSP with
+  // the output inside the signed 16-bit range by construction. The fixed
+  // >>8, round-to-nearest (ties to even) and the (never-firing) saturation
+  // live in the mult instances, which add three cycles over the former
+  // single register stage.
   always_comb begin
-    rd_decoded_dr_c = bfp9_decompress_s2(rd_expanded_dr_r, ctrl_fs_offset_s);
-    rd_decoded_di_c = bfp9_decompress_s2(rd_expanded_di_r, ctrl_fs_offset_s);
+    rd_shift_c = {1'b0, rd_exp_data_c} + {1'b0, ctrl_fs_offset_s};
+    rd_scale_c = 17'b1 << (rd_shift_c[4] ? 4'hF : rd_shift_c[3:0]);
   end
 
+  mult #(
+      .A_WIDTH (9),
+      .B_WIDTH (17),
+      .P_WIDTH (16),
+      .SHIFT   (8),
+      .ROUND   (1),
+      .SATURATE(1)
+  ) i_mul_dr (
+      .clk (clk),
+      .rst (rst),
+      .a   ($signed(rd_pair_c[17:9])),
+      .b   ($signed(rd_scale_c)),
+      .p   (rd_decoded_dr_c),
+      .ovf ()
+  );
+
+  mult #(
+      .A_WIDTH (9),
+      .B_WIDTH (17),
+      .P_WIDTH (16),
+      .SHIFT   (8),
+      .ROUND   (1),
+      .SATURATE(1)
+  ) i_mul_di (
+      .clk (clk),
+      .rst (rst),
+      .a   ($signed(rd_pair_c[8:0])),
+      .b   ($signed(rd_scale_c)),
+      .p   (rd_decoded_di_c),
+      .ovf ()
+  );
+
   always_ff @(posedge clk) begin
-    rd_data_r <= {rd_decoded_di_c, rd_decoded_dr_c} | {bist_data_di, bist_data_dr};
+    rd_data_r <= {rd_decoded_di_c, rd_decoded_dr_c} | bist_data_d;
   end
 
   //! Vivado simulator has strange bug here that display 'X'
@@ -543,7 +561,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(3),
-      .DEPTH(6)
+      .DEPTH(9)
   ) u_delay_sf (
       .clk (clk),
       .rst (1'b0),
@@ -590,7 +608,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(4),
-      .DEPTH(6)
+      .DEPTH(9)
   ) u_delay_chn (
       .clk (clk),
       .rst (1'b0),
@@ -601,7 +619,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(1),
-      .DEPTH(6)
+      .DEPTH(9)
   ) u_delay_dv (
       .clk (clk),
       .rst (1'b0),
@@ -612,7 +630,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(1),
-      .DEPTH(6)
+      .DEPTH(9)
   ) u_delay_last (
       .clk (clk),
       .rst (1'b0),

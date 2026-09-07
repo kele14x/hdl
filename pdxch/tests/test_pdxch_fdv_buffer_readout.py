@@ -133,18 +133,30 @@ async def test_memory_readout_and_bist(dut):
 
 
 @cocotb.test()
-async def test_fs_offset_alignment_and_saturation(dut):
+async def test_fs_offset_alignment_clamp_and_truncation(dut):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
+    # out = round_ties_even((mantissa << min(exp + fs_offset, 15)) >> 8).
+    # fs_offset shifts the 16-bit window over the 24-bit mantissa product
+    # left; once the sum would leave the mantissa range the shift clamps at
+    # 15 (protocol leaves that region undefined, so the decoded value is the
+    # full-scale window rather than a clipped one). The final multiplier
+    # rounding is round-to-nearest, ties to even.
     vectors = [
-        (1, 0x080, 14, 0x4000, "normal"),
-        (1, 0x0FF, 15, 0x7FFF, "saturation"),
-        (8, 0x001, 0, 0x0001, "normal"),
-        (8, 0x001, 15, 0x7FFF, "saturation"),
-        (14, 0x001, 0, 0x0040, "normal"),
-        (14, 0x0FF, 15, 0x7FFF, "saturation"),
-        (15, 0x001, 0, 0x0080, "normal"),
-        (15, 0x0FF, 15, 0x7FFF, "saturation"),
+        (1, 0x080, 14, 0x4000, "window, shift=15"),
+        (0, 0x0FF, 15, 0x7F80, "full-scale positive"),
+        (1, 0x0FF, 15, 0x7F80, "clamped, fs=1"),
+        (8, 0x001, 0, 0x0001, "window, shift=8"),
+        (8, 0x001, 15, 0x0080, "clamped, fs=8"),
+        (14, 0x001, 0, 0x0040, "window, shift=14"),
+        (14, 0x0FF, 15, 0x7F80, "clamped, fs=14"),
+        (15, 0x001, 0, 0x0080, "window, shift=15"),
+        (15, 0x0FF, 15, 0x7F80, "clamped, fs=15"),
+        (15, 0x100, 15, 0x8000, "clamped negative boundary"),
+        (5, 0x00F, 0, 0x0002, "rounded positive 480/256=1.875"),
+        (5, 0x1F1, 0, 0xFFFE, "rounded negative -480/256=-1.875"),
+        (7, 0x001, 0, 0x0000, "round half to even 0.5->0"),
+        (7, 0x003, 0, 0x0002, "round half to even 1.5->2"),
     ]
 
     for fs_offset, mantissa, exponent, expected, case_name in vectors:
@@ -226,6 +238,7 @@ def test_pdxch_fdv_buffer_readout_runner():
         "../common/common.flt",
         "../cdc/cdc.flt",
         "../lfsr/lfsr.flt",
+        "../mult/mult.flt",
     )
     run_test(
         hdl_toplevel="pdxch_fdv_buffer_readout",

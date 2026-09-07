@@ -143,7 +143,9 @@ async def test_real_ram_read_address_alignment(dut):
             addr = int(dut.rd_iq_addr[0].value)
             assert addr in expected_by_addr
             requested_addresses.append(addr)
-            pending[cycle + 4] = expected_by_addr[addr]
+            # rd_en (cycle N) -> RAM return gated by rd_en_dd (N+2) -> mult
+            # pipeline (4 stages) -> rd_data_r: data appears at cycle N+7.
+            pending[cycle + 7] = expected_by_addr[addr]
 
         if len(set(requested_addresses)) >= 3 and not pending:
             break
@@ -259,6 +261,7 @@ def test_pdxch_fdv_buffer_runner():
         "../common/common.flt",
         "../cdc/cdc.flt",
         "../lfsr/lfsr.flt",
+        "../mult/mult.flt",
         "../pulse_delay/pulse_delay.flt",
         "../symbol_timer/symbol_timer.flt",
         "../ram/ram.flt",
