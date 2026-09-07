@@ -11,7 +11,7 @@ records the symptom, the evidence gathered so far, and the next step.
 
 ### Symptom
 
-With Questa Altera Starter FPGA Edition 2025.3 + cocotb 5.x
+With Questa Altera Starter FPGA Edition 2025.3 + cocotb 2.0.1
 (`SIM=questa pytest pdxch/tests/` → 21 passed, 7 failed), these tests fail:
 
 - `test_pdxch.test_nr100m_4channel_3cc_waveform_and_spectrum`

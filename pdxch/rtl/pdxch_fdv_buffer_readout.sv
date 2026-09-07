@@ -528,7 +528,9 @@ module pdxch_fdv_buffer_readout #(
       .a   ($signed(rd_pair_c[17:9])),
       .b   ($signed(rd_scale_c)),
       .p   (rd_decoded_dr_c),
+      /* verilator lint_off PINCONNECTEMPTY */
       .ovf ()
+      /* verilator lint_on PINCONNECTEMPTY */
   );
 
   mult #(
@@ -544,7 +546,9 @@ module pdxch_fdv_buffer_readout #(
       .a   ($signed(rd_pair_c[8:0])),
       .b   ($signed(rd_scale_c)),
       .p   (rd_decoded_di_c),
+      /* verilator lint_off PINCONNECTEMPTY */
       .ovf ()
+      /* verilator lint_on PINCONNECTEMPTY */
   );
 
   always_ff @(posedge clk) begin
