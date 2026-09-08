@@ -119,7 +119,7 @@ module pdxch_fdv_buffer #(
       .pulse_in (defm_radio_start_10ms),
       .pulse_out(defm_radio_start_10ms_s),
       //
-      .delay    (4000)
+      .delay    (23'd4000)
   );
 
   // Trigger the symbol timer
