@@ -52,30 +52,30 @@ module pdxch_fdv_buffer #(
 
   // Signals
 
-  logic [22:0] ctrl_rfs_offset_s;
+  logic [              22:0] ctrl_rfs_offset_s;
 
-  logic        defm_radio_start_10ms_s;
-  logic        defm_radio_start_10ms_cdc;
+  logic                      defm_radio_start_10ms_s;
+  logic                      defm_radio_start_10ms_cdc;
 
-  logic        start_of_frame;
-  logic        start_of_slot;
-  logic [ 1:0] start_of_symbol;
+  logic                      start_of_frame;
+  logic                      start_of_slot;
+  logic [               1:0] start_of_symbol;
 
-  logic [IQ_ADDR_WIDTH-1:0] wr_iq_addr    [NUM_ANT];
-  logic        wr_iq_en                  [NUM_ANT];
-  logic [35:0] wr_iq_data                [NUM_ANT];
-  logic [EXP_ADDR_WIDTH-1:0] wr_exp_addr  [NUM_ANT];
-  logic        wr_exp_en                 [NUM_ANT];
-  logic [ 3:0] wr_exp_data               [NUM_ANT];
+  logic [ IQ_ADDR_WIDTH-1:0] wr_iq_addr                [NUM_ANT];
+  logic                      wr_iq_en                  [NUM_ANT];
+  logic [              35:0] wr_iq_data                [NUM_ANT];
+  logic [EXP_ADDR_WIDTH-1:0] wr_exp_addr               [NUM_ANT];
+  logic                      wr_exp_en                 [NUM_ANT];
+  logic [               3:0] wr_exp_data               [NUM_ANT];
 
-  logic [IQ_ADDR_WIDTH-1:0] rd_iq_addr    [NUM_ANT];
-  logic [EXP_ADDR_WIDTH-1:0] rd_exp_addr  [NUM_ANT];
-  logic        rd_en                     [NUM_ANT];
-  logic        rd_en_d                   [NUM_ANT];
-  logic [35:0] rd_iq_data                [NUM_ANT];
-  logic [ 3:0] rd_exp_data               [NUM_ANT];
+  logic [ IQ_ADDR_WIDTH-1:0] rd_iq_addr                [NUM_ANT];
+  logic [EXP_ADDR_WIDTH-1:0] rd_exp_addr               [NUM_ANT];
+  logic                      rd_en                     [NUM_ANT];
+  logic                      rd_en_d                   [NUM_ANT];
+  logic [              35:0] rd_iq_data                [NUM_ANT];
+  logic [               3:0] rd_exp_data               [NUM_ANT];
   /* verilator lint_off UNUSED */
-  logic        unused_stat_resync;
+  logic                      unused_stat_resync;
   /* verilator lint_on UNUSED */
 
   // Main

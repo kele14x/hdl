@@ -71,23 +71,23 @@ module pdxch_top #(
 
   // Signals
 
-  logic        ctrl_phase_comp_we_s                                          [ NUM_CC];
+  logic        ctrl_phase_comp_we_s [ NUM_CC];
   logic        ctrl_phase_comp_en_d;
 
-  logic [35:0] s0_axis_tdata                                                 [NUM_ANT];
-  logic [ 3:0] s0_axis_exp                                                   [NUM_ANT];
-  logic        s0_axis_tvalid                                                [NUM_ANT];
-  logic        s0_axis_tlast                                                 [NUM_ANT];
-  logic [90:0] s0_axis_tuser                                                 [NUM_ANT];
+  logic [35:0] s0_axis_tdata        [NUM_ANT];
+  logic [ 3:0] s0_axis_exp          [NUM_ANT];
+  logic        s0_axis_tvalid       [NUM_ANT];
+  logic        s0_axis_tlast        [NUM_ANT];
+  logic [90:0] s0_axis_tuser        [NUM_ANT];
 
-  logic [15:0] fdv_dout_dr                                                   [ NUM_CC];
-  logic [15:0] fdv_dout_di                                                   [ NUM_CC];
-  logic        fdv_dout_sf                                                   [ NUM_CC];
-  logic        fdv_dout_sl                                                   [ NUM_CC];
-  logic        fdv_dout_sy                                                   [ NUM_CC];
-  logic [ 3:0] fdv_dout_chn                                                  [ NUM_CC];
-  logic        fdv_dout_dv                                                   [ NUM_CC];
-  logic        fdv_dout_last                                                 [ NUM_CC];
+  logic [15:0] fdv_dout_dr          [ NUM_CC];
+  logic [15:0] fdv_dout_di          [ NUM_CC];
+  logic        fdv_dout_sf          [ NUM_CC];
+  logic        fdv_dout_sl          [ NUM_CC];
+  logic        fdv_dout_sy          [ NUM_CC];
+  logic [ 3:0] fdv_dout_chn         [ NUM_CC];
+  logic        fdv_dout_dv          [ NUM_CC];
+  logic        fdv_dout_last        [ NUM_CC];
 
   // Main
 

@@ -215,7 +215,7 @@ module pdxch_conv #(
       .A_WIDTH(12),
       .B_WIDTH(7),
       .P_WIDTH(7),
-      .SHIFT  (0),
+      .SHIFT(0),
       // Phase is a modulo-128 LUT address; overflow must wrap, not saturate.
       .SATURATE(0)
   ) u_mult (

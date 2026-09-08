@@ -14,33 +14,33 @@ module pdxch_fdv_buffer_write #(
     parameter int IQ_ADDR_WIDTH  = (HALF_BLOCK != 0) ? 11 : 12,
     parameter int EXP_ADDR_WIDTH = (HALF_BLOCK != 0) ? 10 : 11
 ) (
-    input var         clk,
-    input var         rst,
+    input var                       clk,
+    input var                       rst,
     //
     /* verilator lint_off UNUSED */
-    input var  [11:0] s_dl_sym_num,
+    input var  [              11:0] s_dl_sym_num,
     /* verilator lint_on UNUSED */
     // Compressed BFP9 stream
-    input var  [35:0] s_axis_tdata,
-    input var  [ 3:0] s_axis_exp,
-    input var         s_axis_tvalid,
-    input var         s_axis_tlast,
+    input var  [              35:0] s_axis_tdata,
+    input var  [               3:0] s_axis_exp,
+    input var                       s_axis_tvalid,
+    input var                       s_axis_tlast,
     /* verilator lint_off UNUSED */
-    input var  [90:0] s_axis_tuser,
+    input var  [              90:0] s_axis_tuser,
     /* verilator lint_on UNUSED */
     // IQ RAM write port
-    output var [IQ_ADDR_WIDTH-1:0] wr_iq_addr,
-    output var        wr_iq_en,
-    output var [35:0] wr_iq_data,
+    output var [ IQ_ADDR_WIDTH-1:0] wr_iq_addr,
+    output var                      wr_iq_en,
+    output var [              35:0] wr_iq_data,
     // Exponent RAM write port
     output var [EXP_ADDR_WIDTH-1:0] wr_exp_addr,
-    output var        wr_exp_en,
-    output var [ 3:0] wr_exp_data
+    output var                      wr_exp_en,
+    output var [               3:0] wr_exp_data
 );
 
-  localparam int IQ_BANK_DEPTH  = (HALF_BLOCK != 0) ? 1024 : 1792;
+  localparam int IQ_BANK_DEPTH = (HALF_BLOCK != 0) ? 1024 : 1792;
   localparam int EXP_BANK_DEPTH = (HALF_BLOCK != 0) ? 512 : 1024;
-  localparam int IQ_STATE_WIDTH  = IQ_ADDR_WIDTH + 1;
+  localparam int IQ_STATE_WIDTH = IQ_ADDR_WIDTH + 1;
   localparam int EXP_STATE_WIDTH = EXP_ADDR_WIDTH + 1;
 
   localparam logic [IQ_STATE_WIDTH-1:0] IQ_BANK_LIMIT = IQ_STATE_WIDTH'(IQ_BANK_DEPTH);
@@ -126,7 +126,7 @@ module pdxch_fdv_buffer_write #(
 
       if (packet_first) begin
         packet_match_r <= (rx_u_cc == 4'(CC_ID));
-        packet_bank_r <= s_dl_sym_num[0];
+        packet_bank_r  <= s_dl_sym_num[0];
         if (bank_overflow) begin
           iq_addr_r    <= iq_start_addr;
           exp_addr_r   <= exp_start_addr;

@@ -12,11 +12,11 @@ module pdxch_fdv_buffer_map #(
     parameter int IQ_ADDR_WIDTH  = (HALF_BLOCK != 0) ? 11 : 12,
     parameter int EXP_ADDR_WIDTH = (HALF_BLOCK != 0) ? 10 : 11
 ) (
-    input var         bank,
-    input var  [11:0] logical_re,
-    output var [IQ_ADDR_WIDTH-1:0] iq_addr,
+    input var                       bank,
+    input var  [              11:0] logical_re,
+    output var [ IQ_ADDR_WIDTH-1:0] iq_addr,
     output var [EXP_ADDR_WIDTH-1:0] exp_addr,
-    output var        iq_half
+    output var                      iq_half
 );
 
   localparam int IQ_BANK_DEPTH  = (HALF_BLOCK != 0) ? 1024 : 1792;
