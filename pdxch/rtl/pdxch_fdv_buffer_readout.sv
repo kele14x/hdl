@@ -8,123 +8,126 @@ module pdxch_fdv_buffer_readout #(
     parameter int IQ_ADDR_WIDTH  = (HALF_BLOCK != 0) ? 11 : 12,
     parameter int EXP_ADDR_WIDTH = (HALF_BLOCK != 0) ? 10 : 11
 ) (
-    input var         clk,
-    input var         rst,
+    input var                       clk,
+    input var                       rst,
     // Timer
-    input var         start_of_frame,
-    input var         start_of_slot,
-    input var  [ 1:0] start_of_symbol,
+    input var                       start_of_frame,
+    input var                       start_of_slot,
+    input var  [               1:0] start_of_symbol,
     //
-    output var [IQ_ADDR_WIDTH-1:0] rd_iq_addr     [NUM_ANT],
+    output var [ IQ_ADDR_WIDTH-1:0] rd_iq_addr     [NUM_ANT],
     output var [EXP_ADDR_WIDTH-1:0] rd_exp_addr    [NUM_ANT],
-    output var        rd_en          [NUM_ANT],
-    input var  [35:0] rd_iq_data     [NUM_ANT],
-    input var  [ 3:0] rd_exp_data    [NUM_ANT],
+    output var                      rd_en          [NUM_ANT],
+    input var  [              35:0] rd_iq_data     [NUM_ANT],
+    input var  [               3:0] rd_exp_data    [NUM_ANT],
     // Block data output
-    output var [15:0] dout_dr,
-    output var [15:0] dout_di,
-    output var        dout_sf,
-    output var        dout_sl,
-    output var        dout_sy,
-    output var [ 3:0] dout_chn,
-    output var        dout_dv,
-    output var        dout_last,
+    output var [              15:0] dout_dr,
+    output var [              15:0] dout_di,
+    output var                      dout_sf,
+    output var                      dout_sl,
+    output var                      dout_sy,
+    output var [               3:0] dout_chn,
+    output var                      dout_dv,
+    output var                      dout_last,
     //
-    input var  [ 3:0] ctrl_en,
-    input var  [ 1:0] ctrl_rat,
-    input var  [ 3:0] ctrl_bist,
-    input var  [ 3:0] ctrl_bw,
-    input var  [ 8:0] ctrl_nprb,
-    input var  [ 3:0] ctrl_fs_offset
+    input var  [               3:0] ctrl_en,
+    input var  [               1:0] ctrl_rat,
+    input var  [               3:0] ctrl_bist,
+    input var  [               3:0] ctrl_bw,
+    input var  [               8:0] ctrl_nprb,
+    input var  [               3:0] ctrl_fs_offset
 );
 
   localparam int MAX_PRB = (HALF_BLOCK != 0) ? 160 : 275;
 
   // Control signals
 
-  wire  [ 3:0] ctrl_en_s;
-  wire  [ 1:0] ctrl_rat_s;
+  wire  [               3:0] ctrl_en_s;
+  wire  [               1:0] ctrl_rat_s;
   /* verilator lint_off UNUSED */
-  wire  [ 3:0] ctrl_bist_s;
+  wire  [               3:0] ctrl_bist_s;
   /* verilator lint_on UNUSED */
-  wire  [ 3:0] ctrl_bw_s;
-  wire  [ 8:0] ctrl_nprb_s;
+  wire  [               3:0] ctrl_bw_s;
+  wire  [               8:0] ctrl_nprb_s;
 
-  wire  [ 3:0] ctrl_fs_offset_s;
+  wire  [               3:0] ctrl_fs_offset_s;
 
   // Internal signals
 
-  logic        init_n;
+  logic                      init_n;
 
   // Count the clock ticks in symbol
-  logic [15:0] counter;
+  logic [              15:0] counter;
 
-  logic        run;
-  logic        done;
+  logic                      run;
+  logic                      done;
 
-  logic [ 3:0] phase;
-  logic [11:0] index;
-  logic [11:0] index_rev;
+  logic [               3:0] phase;
+  logic [              11:0] index;
+  logic [              11:0] index_rev;
 
-  logic [11:0] mask;
-  logic [11:0] mask_rev;
+  logic [              11:0] mask;
+  logic [              11:0] mask_rev;
 
-  logic        last;
+  logic                      last;
 
-  logic        bank;
+  logic                      bank;
 
-  logic [11:0] index_mapped;
+  logic [              11:0] index_mapped;
 
   // BIST data
 
   /* verilator lint_off UNUSED */
-  logic [23:0] lfsr;
+  logic [              23:0] lfsr;
   /* verilator lint_on UNUSED */
 
-  logic        bist_en_c                                    [NUM_ANT];
-  logic        bist_en_r                                    [NUM_ANT];
-  logic        bist_en_any;
-  logic        bist_en_any_d;
-  logic        bist_en_any_dd;
+  logic                      bist_en_c                                                   [NUM_ANT];
+  logic                      bist_en_r                                                   [NUM_ANT];
+  logic                      bist_en_any;
+  logic                      bist_en_any_d;
+  logic                      bist_en_any_dd;
 
-  logic [15:0] bist_data_dr;
-  logic [15:0] bist_data_di;
+  logic [              15:0] bist_data_dr;
+  logic [              15:0] bist_data_di;
 
-  logic        rd_dv;
+  logic                      rd_dv;
 
-  logic [IQ_ADDR_WIDTH-1:0] rd_iq_addr_r;
+  logic [ IQ_ADDR_WIDTH-1:0] rd_iq_addr_r;
   logic [EXP_ADDR_WIDTH-1:0] rd_exp_addr_r;
-  logic        rd_half_r;
-  logic        rd_half_d;
-  logic        rd_half_dd;
-  logic        rd_en_c                                      [NUM_ANT];
-  logic        rd_en_r                                      [NUM_ANT];
-  logic        rd_en_d                                      [NUM_ANT];
-  logic        rd_en_dd                                     [NUM_ANT];
+  logic                      rd_half_r;
+  logic                      rd_half_d;
+  logic                      rd_half_dd;
+  logic                      rd_half_ddd;
+  logic                      rd_en_c                                                     [NUM_ANT];
+  logic                      rd_en_r                                                     [NUM_ANT];
+  logic                      rd_en_d                                                     [NUM_ANT];
+  logic                      rd_en_dd                                                    [NUM_ANT];
 
-  logic [35:0] rd_iq_data_c;
-  logic [ 3:0] rd_exp_data_c;
-  logic [17:0] rd_pair_c;
-  logic [ 4:0] rd_shift_c;   // exp + fs_offset, saturated at 15
-  logic [16:0] rd_scale_c;   // 2^rd_shift_c, the 9x17 multiplier operand
-  logic [15:0] rd_decoded_dr_c;
-  logic [15:0] rd_decoded_di_c;
-  logic [31:0] bist_data_d;  // BIST pattern aligned with the mult pipeline
-  logic [31:0] rd_data_r;
+  logic [              35:0] rd_iq_data_d                                                [NUM_ANT];
+  logic [               3:0] rd_exp_data_d                                               [NUM_ANT];
+  logic [              35:0] rd_iq_data_c;
+  logic [               3:0] rd_exp_data_c;
+  logic [              17:0] rd_pair_c;
+  logic [               4:0] rd_shift_c;  // exp + fs_offset, saturated at 15
+  logic [              16:0] rd_scale_c;  // 2^rd_shift_c, the 9x17 multiplier operand
+  logic [              15:0] rd_decoded_dr_c;
+  logic [              15:0] rd_decoded_di_c;
+  logic [              31:0] bist_data_d;  // BIST pattern aligned with the mult pipeline
+  logic [              31:0] rd_data_r;
 
-  logic [IQ_ADDR_WIDTH-1:0] iq_addr_mapped;
+  logic [ IQ_ADDR_WIDTH-1:0] iq_addr_mapped;
   logic [EXP_ADDR_WIDTH-1:0] exp_addr_mapped;
-  logic        iq_half_mapped;
+  logic                      iq_half_mapped;
 
-  logic        start_of_symbol_sel;
+  logic                      start_of_symbol_sel;
 
-  logic        dout_sf_req;
-  logic        dout_sl_req;
-  logic        dout_sy_req;
+  logic                      dout_sf_req;
+  logic                      dout_sl_req;
+  logic                      dout_sy_req;
 
-  logic        dout_sf_r;
-  logic        dout_sl_r;
-  logic        dout_sy_r;
+  logic                      dout_sf_r;
+  logic                      dout_sl_r;
+  logic                      dout_sy_r;
 
   //  Control CDC
 
@@ -236,7 +239,8 @@ module pdxch_fdv_buffer_readout #(
   //                 -> phase
   //                 -> index
   //                 -> rd_dv     -> rd_en_c      -> rd_en_r
-  //                 -> index_rev -> index_mapped -> rd_addr_r  ->  ... -> rd_data_c -> rd_data_r
+  //                 -> index_rev -> index_mapped -> rd_addr_r  ->  ... -> rd_data_c
+  //                 -> rd_data_d -> rd_data_r
   //                              -> bank
 
   always_ff @(posedge clk) begin
@@ -420,12 +424,12 @@ module pdxch_fdv_buffer_readout #(
     end
   end
 
-  // The BIST pattern bypasses the decompressor pipeline; delay it by the
-  // mult latency delta (three cycles) so the merge at rd_data_r stays
-  // aligned with the decoded stream.
+  // The BIST pattern bypasses the RAM and decompressor input pipeline; delay
+  // it by the mult latency delta plus the RAM output pipeline (four cycles)
+  // so the merge at rd_data_r stays aligned with the decoded stream.
   delay #(
       .WIDTH(32),
-      .DEPTH(3)
+      .DEPTH(4)
   ) u_delay_bist (
       .clk (clk),
       .rst (1'b0),
@@ -474,8 +478,6 @@ module pdxch_fdv_buffer_readout #(
       always_ff @(posedge clk) begin
         rd_en_c[ant] <= run && ctrl_en_s[ant] && ~ctrl_bist_s[ant] && (phase == 4'(ant))
             && ~(ctrl_rat_s == 0 && (index_rev == 0));
-        //        rd_en_c[ant] <= run && ctrl_en[ant] && (phase == 4'(ant))
-        //            && ~(ctrl_rat_s == 0 && (index_rev == 0));
       end
 
       always_ff @(posedge clk) begin
@@ -487,23 +489,45 @@ module pdxch_fdv_buffer_readout #(
         rd_en_dd[ant] <= rd_en_d[ant];
       end
 
+      // Add a fabric register after the BRAM output. Clear the register when
+      // this antenna is not selected so the following reduction is only an
+      // OR, without a per-antenna enable mux.
+      always_ff @(posedge clk) begin
+        if (rst || !rd_en_dd[ant]) begin
+          rd_iq_data_d[ant]  <= '0;
+          rd_exp_data_d[ant] <= '0;
+        end else begin
+          rd_iq_data_d[ant]  <= rd_iq_data[ant];
+          rd_exp_data_d[ant] <= rd_exp_data[ant];
+        end
+      end
+
       assign rd_en[ant] = rd_en_r[ant];
 
     end
   endgenerate
 
-  // OR them together to get data from correct channel
+  // Each unselected antenna is zeroed in the preceding pipeline stage.
+  // Therefore only the OR needed to select the active channel remains here.
   always_comb begin
-    rd_iq_data_c  = '0;
-    rd_exp_data_c = '0;
-    for (int ant = 0; ant < NUM_ANT; ant++) begin
-      rd_iq_data_c  = rd_iq_data_c | (rd_en_dd[ant] ? rd_iq_data[ant] : 36'b0);
-      rd_exp_data_c = rd_exp_data_c | (rd_en_dd[ant] ? rd_exp_data[ant] : 4'b0);
+    rd_iq_data_c  = rd_iq_data_d[0];
+    rd_exp_data_c = rd_exp_data_d[0];
+    for (int ant = 1; ant < NUM_ANT; ant++) begin
+      rd_iq_data_c  = rd_iq_data_c | rd_iq_data_d[ant];
+      rd_exp_data_c = rd_exp_data_c | rd_exp_data_d[ant];
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      rd_half_ddd <= 1'b0;
+    end else begin
+      rd_half_ddd <= rd_half_dd;
     end
   end
 
   always_comb begin
-    rd_pair_c = rd_half_dd ? rd_iq_data_c[17:0] : rd_iq_data_c[35:18];
+    rd_pair_c = rd_half_ddd ? rd_iq_data_c[17:0] : rd_iq_data_c[35:18];
   end
 
   // Decompression: out = (mantissa << (exp + fs_offset))[23:8], the 16-bit
@@ -511,9 +535,9 @@ module pdxch_fdv_buffer_readout #(
   // 15 -- past that point the window leaves the mantissa range (undefined by
   // the protocol), and clamping keeps the 9x17 multiply in a single DSP with
   // the output inside the signed 16-bit range by construction. The fixed
-  // >>8, round-to-nearest (ties to even) and the (never-firing) saturation
-  // live in the mult instances, which add three cycles over the former
-  // single register stage.
+  // >>8, round-to-nearest (ties away from zero) lives in the mult instances.
+  // The BRAM output and fabric data registers precede the four-stage mult
+  // pipeline.
   always_comb begin
     rd_shift_c = {1'b0, rd_exp_data_c} + {1'b0, ctrl_fs_offset_s};
     rd_scale_c = 17'b1 << (rd_shift_c[4] ? 4'hF : rd_shift_c[3:0]);
@@ -525,15 +549,15 @@ module pdxch_fdv_buffer_readout #(
       .P_WIDTH (16),
       .SHIFT   (8),
       .ROUND   (1),
-      .SATURATE(1)
+      .SATURATE(0)
   ) i_mul_dr (
-      .clk (clk),
-      .rst (rst),
-      .a   ($signed(rd_pair_c[17:9])),
-      .b   ($signed(rd_scale_c)),
-      .p   (rd_decoded_dr_c),
+      .clk(clk),
+      .rst(rst),
+      .a  ($signed(rd_pair_c[17:9])),
+      .b  ($signed(rd_scale_c)),
+      .p  (rd_decoded_dr_c),
       /* verilator lint_off PINCONNECTEMPTY */
-      .ovf ()
+      .ovf()
       /* verilator lint_on PINCONNECTEMPTY */
   );
 
@@ -543,15 +567,15 @@ module pdxch_fdv_buffer_readout #(
       .P_WIDTH (16),
       .SHIFT   (8),
       .ROUND   (1),
-      .SATURATE(1)
+      .SATURATE(0)
   ) i_mul_di (
-      .clk (clk),
-      .rst (rst),
-      .a   ($signed(rd_pair_c[8:0])),
-      .b   ($signed(rd_scale_c)),
-      .p   (rd_decoded_di_c),
+      .clk(clk),
+      .rst(rst),
+      .a  ($signed(rd_pair_c[8:0])),
+      .b  ($signed(rd_scale_c)),
+      .p  (rd_decoded_di_c),
       /* verilator lint_off PINCONNECTEMPTY */
-      .ovf ()
+      .ovf()
       /* verilator lint_on PINCONNECTEMPTY */
   );
 
@@ -569,7 +593,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(3),
-      .DEPTH(9)
+      .DEPTH(10)
   ) u_delay_sf (
       .clk (clk),
       .rst (1'b0),
@@ -616,7 +640,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(4),
-      .DEPTH(9)
+      .DEPTH(10)
   ) u_delay_chn (
       .clk (clk),
       .rst (1'b0),
@@ -627,7 +651,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(1),
-      .DEPTH(9)
+      .DEPTH(10)
   ) u_delay_dv (
       .clk (clk),
       .rst (1'b0),
@@ -638,7 +662,7 @@ module pdxch_fdv_buffer_readout #(
 
   delay #(
       .WIDTH(1),
-      .DEPTH(9)
+      .DEPTH(10)
   ) u_delay_last (
       .clk (clk),
       .rst (1'b0),

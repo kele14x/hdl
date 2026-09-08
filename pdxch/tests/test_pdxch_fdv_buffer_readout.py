@@ -136,12 +136,12 @@ async def test_memory_readout_and_bist(dut):
 async def test_fs_offset_alignment_clamp_and_truncation(dut):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
-    # out = round_ties_even((mantissa << min(exp + fs_offset, 15)) >> 8).
+    # out = round_ties_away_from_zero((mantissa << min(exp + fs_offset, 15)) >> 8).
     # fs_offset shifts the 16-bit window over the 24-bit mantissa product
     # left; once the sum would leave the mantissa range the shift clamps at
     # 15 (protocol leaves that region undefined, so the decoded value is the
     # full-scale window rather than a clipped one). The final multiplier
-    # rounding is round-to-nearest, ties to even.
+    # rounding is round-to-nearest, ties away from zero.
     vectors = [
         (1, 0x080, 14, 0x4000, "window, shift=15"),
         (0, 0x0FF, 15, 0x7F80, "full-scale positive"),
@@ -155,8 +155,8 @@ async def test_fs_offset_alignment_clamp_and_truncation(dut):
         (15, 0x100, 15, 0x8000, "clamped negative boundary"),
         (5, 0x00F, 0, 0x0002, "rounded positive 480/256=1.875"),
         (5, 0x1F1, 0, 0xFFFE, "rounded negative -480/256=-1.875"),
-        (7, 0x001, 0, 0x0000, "round half to even 0.5->0"),
-        (7, 0x003, 0, 0x0002, "round half to even 1.5->2"),
+        (7, 0x001, 0, 0x0001, "round half away from zero 0.5->1"),
+        (7, 0x003, 0, 0x0002, "round half away from zero 1.5->2"),
     ]
 
     for fs_offset, mantissa, exponent, expected, case_name in vectors:
