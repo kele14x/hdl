@@ -1,5 +1,8 @@
 # PDXCH Known Issues
 
+- Date: 2026-09-08
+- Source commit: `786f998`
+
 ## ISSUE-01 · P1：停用或复位后可能持续输出非零旧样本
 
 **位置**：[pdxch_block2stream.sv](../rtl/pdxch_block2stream.sv)，基线第 177–183、213 行；[pdxch_fdv_buffer_readout.sv](../rtl/pdxch_fdv_buffer_readout.sv)，第 439–443 行。
