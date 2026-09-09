@@ -139,7 +139,8 @@ module prach_stream2block #(
   // Sample counter
 
   always_ff @(posedge clk) begin
-    sample_cnt_inc <= (din_chn == '0);
+    // Count captured samples, not idle clock cycles.
+    sample_cnt_inc <= din_dv && (din_chn == '0);
   end
 
   always_ff @(posedge clk) begin
