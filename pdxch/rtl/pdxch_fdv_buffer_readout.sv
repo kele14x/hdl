@@ -428,8 +428,9 @@ module pdxch_fdv_buffer_readout #(
   // it by the mult latency delta plus the RAM output pipeline (four cycles)
   // so the merge at rd_data_r stays aligned with the decoded stream.
   delay #(
-      .WIDTH(32),
-      .DEPTH(4)
+      .WIDTH  (32),
+      .DEPTH  (4),
+      .USE_REG(1)
   ) u_delay_bist (
       .clk (clk),
       .rst (1'b0),

@@ -204,8 +204,9 @@ module gain #(
   endgenerate
 
   delay #(
-      .WIDTH(9),
-      .DEPTH(Latency)
+      .WIDTH  (9),
+      .DEPTH  (Latency),
+      .USE_REG(1)
   ) i_delay (
       .clk (clk),
       .rst (1'b0),

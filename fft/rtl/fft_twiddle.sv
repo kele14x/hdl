@@ -109,8 +109,9 @@ module fft_twiddle #(
   // Delay the input data and valid signal
 
   delay #(
-      .WIDTH(DATA_WIDTH * 2),
-      .DEPTH(4)
+      .WIDTH  (DATA_WIDTH * 2),
+      .DEPTH  (4),
+      .USE_REG(1)
   ) i_data_delay (
       .clk (clk),
       .rst (1'b0),
