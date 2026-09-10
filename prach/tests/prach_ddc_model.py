@@ -12,6 +12,7 @@ HB2_COEFFICIENTS = (
 )
 HB4_COEFFICIENTS = (-669, 3099, -9939, 40231)
 SIDEBAND_FIELDS = ("sf", "sl", "sy", "chn", "dv", "last")
+NUM_COMPLEX_LANES = 4
 
 
 def signed16(value: int) -> int:
@@ -160,6 +161,15 @@ def model_decimation_chain(
     dp1 = list(mixer_real)
     dp2 = list(mixer_imag)
     metadata = {field: list(sideband[field]) for field in SIDEBAND_FIELDS}
+
+    # The first RTL reshape converts four parallel complex lanes into eight
+    # real lanes. Extend valid onto the four delayed Q slots before modeling
+    # that reshape.
+    complex_valid = list(metadata["dv"])
+    metadata["dv"] = [
+        int(valid or _sample(complex_valid, index - NUM_COMPLEX_LANES))
+        for index, valid in enumerate(complex_valid)
+    ]
 
     for stage in range(6):
         delay_base = 8 << stage

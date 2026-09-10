@@ -27,12 +27,14 @@ Checks:
     mirror the message fields.
 3.  The ``sync_in`` pulse reaches the resynchronizer and starts the radio
     frame / symbol timing (start-of-frame / start-of-symbol observed).
-4.  The deterministic per-antenna radio tone survives ``prach_resync``
-    bit-exactly: on every valid output slot the resynchronizer reproduces
-    the driven I/Q word.
+4.  The generated LTE F0 waveform survives ``prach_resync`` bit-exactly on
+    the active antenna, with four valid complex lanes per 16-clock loop.
 5.  The DDC rotates the four antenna channels at the 1.92 Msps cadence.
 6.  An F0 preamble runs for one nominal 1 ms interval and produces one
     complete U-plane packet through stream2block -> FFT -> framer.
+7.  The FFT contains exactly 13 left guard REs, 839 occupied REs, and 12
+    right guard REs in the 864-RE window consumed by the framer, and the ZC
+    sequence has approximately constant magnitude.
 """
 
 from __future__ import annotations
@@ -47,9 +49,9 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
 from cocotb_tools.runner import get_runner
-
 from hdl_tools.axi4lite import AxiLiteAgent, AxiLiteAgentConfig
 from hdl_tools.flt_tool import resolve_flt
+from prach_waveform import DEFAULT_WAVEFORM_PATH, read_iq_hex
 
 PRJ_PATH = Path(__file__).resolve().parent.parent
 
@@ -67,11 +69,12 @@ TEST_ANT = 0
 # packing and CDC corruption while keeping the F0 timing fields production-valid.
 CPLANE_SUBFRAME = 0x0
 CPLANE_SLOT = 0x0
-CPLANE_SYMBOL = 0x2A
+CPLANE_SYMBOL = 0x0
 CPLANE_TIME_OFFSET = 0x0
 CPLANE_CP_LENGTH = 0x0
 CPLANE_NUM_SYMBOL = 0x1
-CPLANE_FREQ_OFFSET = 0x1234
+# Lowest RE of the 864-RE LTE PRACH occasion: -9 MHz / 0.625 kHz.
+CPLANE_FREQ_OFFSET = (-14_400) & 0xFFFFFF
 
 # Radio system clock / sample-rate configuration (production values): the
 # radio clock runs at 491.52 MHz and each antenna is captured at 30.72 Msps,
@@ -108,26 +111,15 @@ RAT_LTE = 0x0
 BW_30MHZ_ALL_CC = 0x222
 UD_BFP9 = 0x00000091  # comp_meth=1, iq_width=9, fs_offset=0
 
-# One low-frequency complex tone per antenna, so the decimated DDC stream is
-# non-silent and carries well-defined data.
-TONE_GROUPS_PER_CYCLE = 16
-
-
-def _pack_iq(real: int, imag: int) -> int:
-    return ((int(imag) & 0xFFFF) << 16) | (int(real) & 0xFFFF)
-
-
-def _tone_group(group: int) -> tuple[int, int, int]:
-    phase = 2 * np.pi * (group % TONE_GROUPS_PER_CYCLE) / TONE_GROUPS_PER_CYCLE
-    real = round(12000 * np.cos(phase))
-    imag = round(12000 * np.sin(phase))
-    return real, imag, _pack_iq(real, imag)
-
-
-def _tone_word(group: int, antenna: int) -> int:
-    """Return a low-frequency tone with a distinct DC offset per antenna."""
-    real, imag, _word = _tone_group(group)
-    return _pack_iq(real + 1000 * antenna, imag - 700 * antenna)
+FFT_SIZE = 1536
+CAPTURE_RE = 864
+LEFT_GUARD_RE = 13
+ACTIVE_RE = 839
+RIGHT_GUARD_RE = 12
+# The fixed-point RTL guard/noise floor is near -55 dB, while the corrected
+# active ZC bins remain within 1 dB of the peak.
+OCCUPIED_THRESHOLD_DB = -50.0
+MAX_ACTIVE_RIPPLE_DB = 1.0
 
 
 def _set_cplane(dut, **overrides):
@@ -158,6 +150,11 @@ def _set_cplane(dut, **overrides):
     fields.update(overrides)
     for name, value in fields.items():
         getattr(dut, name).value = value
+
+
+def _signed16(value: int) -> int:
+    value &= 0xFFFF
+    return value - (1 << 16) if value & (1 << 15) else value
 
 
 async def _reset(dut, axi: AxiLiteAgent):
@@ -231,18 +228,18 @@ async def _pulse_sync(dut):
     dut.sync_in.value = 0
 
 
-def _set_radio_tone(dut, group: int):
-    """Drive one tone group; each group holds 16 radio clocks."""
+def _set_radio_sample(dut, word: int):
+    """Drive one 30.72 Msps sample on the active antenna lane."""
     for cc in range(NUM_CC):
         for antenna in range(NUM_ANT):
-            dut.s_axis_tdata[cc][antenna].value = _tone_word(group, antenna)
+            dut.s_axis_tdata[cc][antenna].value = word if antenna == TEST_ANT else 0
 
 
-async def _drive_radio_groups(dut, first_group: int, last_group: int):
+async def _drive_radio_samples(dut, waveform, first_sample: int, last_sample: int):
     """Drive production-rate samples without waking Python every radio edge."""
     group_period_ps = RADIO_CLOCK_PS * RADIO_SAMPLES_PER_CLK
-    for group in range(first_group, last_group):
-        _set_radio_tone(dut, group)
+    for sample in range(first_sample, last_sample):
+        _set_radio_sample(dut, int(waveform[sample]))
         # The extra picosecond leaves the input update after the following
         # 16th rising edge, avoiding a same-timestamp race with the DUT.
         await Timer(group_period_ps + 1, unit="ps")
@@ -262,6 +259,42 @@ async def _monitor_uplane(dut, words):
                     int(dut.m_fram_prach_tuser.value),
                 )
             )
+
+
+async def _monitor_fft(dut, fft, samples):
+    """Capture one valid 1536-point FFT output block from the active channel."""
+    await RisingEdge(fft.dout_dv)
+    await Timer(1, unit="ps")
+    while len(samples) < FFT_SIZE:
+        if int(fft.dout_dv.value):
+            samples.append(
+                (
+                    int(fft.dout_chn.value),
+                    _signed16(int(fft.dout_dr.value)),
+                    _signed16(int(fft.dout_di.value)),
+                )
+            )
+        if len(samples) == FFT_SIZE:
+            break
+        await RisingEdge(dut.clk)
+        await Timer(1, unit="ps")
+
+
+async def _monitor_valid_samples(dut, stream, samples, limit=32):
+    """Capture a small number of valid samples from a streaming block."""
+    while len(samples) < limit:
+        await RisingEdge(stream.dout_dv)
+        await Timer(1, unit="ps")
+        while int(stream.dout_dv.value) and len(samples) < limit:
+            samples.append(
+                (
+                    int(stream.dout_chn.value),
+                    _signed16(int(stream.dout_dr.value)),
+                    _signed16(int(stream.dout_di.value)),
+                )
+            )
+            await RisingEdge(dut.clk)
+            await Timer(1, unit="ps")
 
 
 @cocotb.test()
@@ -289,6 +322,11 @@ async def test_prach_f0_1ms_e2e(dut):
     channel = dut.i_prach_top.g_cc[TEST_CC].u_channel
     ctrl = channel.u_ctrl
     resync = channel.u_resync
+    ddc = channel.u_ddc
+    stream2block = channel.u_stream2block
+    fft = channel.u_fft
+    waveform = read_iq_hex(DEFAULT_WAVEFORM_PATH)
+    assert waveform.size * RADIO_SAMPLES_PER_CLK == F0_RADIO_CYCLES
 
     # ---- C-plane -> prach_ctrl -> CSR status registers -----------------
     await _send_cplane(dut)
@@ -313,21 +351,33 @@ async def test_prach_f0_1ms_e2e(dut):
 
     uplane_words = []
     uplane_monitor = cocotb.start_soon(_monitor_uplane(dut, uplane_words))
+    fft_samples = []
+    fft_monitor = cocotb.start_soon(_monitor_fft(dut, fft, fft_samples))
+    ddc_samples = []
+    ddc_monitor = cocotb.start_soon(
+        _monitor_valid_samples(dut, ddc, ddc_samples, limit=32)
+    )
+    stream2block_samples = []
+    stream2block_monitor = cocotb.start_soon(
+        _monitor_valid_samples(dut, stream2block, stream2block_samples, limit=FFT_SIZE)
+    )
 
-    # ---- Front end: tone through resync, DDC cadence --------------------
+    # ---- Front end: F0 waveform through resync, DDC cadence -------------
     # Check the first short prefix cycle by cycle, then drive the remainder
     # in 16-clock groups. Inputs are changed only immediately after a clock
     # edge, so every valid resync sample has an unambiguous expected word.
-    _set_radio_tone(dut, 0)
+    _set_radio_sample(dut, int(waveform[0]))
     seen_sf = False
     seen_sy = False
     resync_hits = 0
     resync_misses = 0
+    resync_valid_phases = set()
     ddc_valid = 0
     ddc_ant0 = 0
     ddc_channels = set()
     for cycle in range(FRONTEND_CHECK_CYCLES):
-        expected_antenna = int(resync.chn.value) % NUM_ANT
+        resync_phase = int(resync.chn.value)
+        expected_antenna = resync_phase % NUM_ANT
         await RisingEdge(dut.clk)
         await Timer(1, unit="ps")
         if int(resync.dout_sf.value):
@@ -335,7 +385,12 @@ async def test_prach_f0_1ms_e2e(dut):
         if int(resync.dout_sy.value):
             seen_sy = True
         if int(resync.dout_dv.value):
-            expected = _tone_word(cycle // RADIO_SAMPLES_PER_CLK, expected_antenna)
+            resync_valid_phases.add(resync_phase)
+            expected = (
+                int(waveform[cycle // RADIO_SAMPLES_PER_CLK])
+                if resync_phase < NUM_ANT and expected_antenna == TEST_ANT
+                else 0
+            )
             actual = (int(resync.dout_di.value) << 16) | int(resync.dout_dr.value)
             if actual == expected:
                 resync_hits += 1
@@ -350,19 +405,23 @@ async def test_prach_f0_1ms_e2e(dut):
         if (
             cycle + 1
         ) % RADIO_SAMPLES_PER_CLK == 0 and cycle + 1 < FRONTEND_CHECK_CYCLES:
-            _set_radio_tone(dut, (cycle + 1) // RADIO_SAMPLES_PER_CLK)
+            _set_radio_sample(dut, int(waveform[(cycle + 1) // RADIO_SAMPLES_PER_CLK]))
 
-    first_remaining_group = FRONTEND_CHECK_CYCLES // RADIO_SAMPLES_PER_CLK
-    last_group = F0_RADIO_CYCLES // RADIO_SAMPLES_PER_CLK
-    await _drive_radio_groups(dut, first_remaining_group, last_group)
+    first_remaining_sample = FRONTEND_CHECK_CYCLES // RADIO_SAMPLES_PER_CLK
+    await _drive_radio_samples(dut, waveform, first_remaining_sample, waveform.size)
 
     # Allow the stream2block, FFT, framer buffer, and Ethernet FIFO to drain.
     await ClockCycles(dut.clk_eth_xran, U_PLANE_DRAIN_ETH_CYCLES)
     uplane_monitor.cancel()
+    fft_monitor.cancel()
+    ddc_monitor.cancel()
+    stream2block_monitor.cancel()
 
     dut._log.info(
         "F0 front end: cycles=%s resync hits/misses=%s/%s sf=%s sy=%s "
-        "ddc_valid=%s ant0=%s channels=%s U-plane words=%s",
+        "ddc_valid=%s ant0=%s channels=%s DDC samples=%s "
+        "stream2block samples=%s FFT samples=%s U-plane words=%s "
+        "DDC maxabs=%s stream2block maxabs=%s",
         F0_RADIO_CYCLES,
         resync_hits,
         resync_misses,
@@ -371,19 +430,89 @@ async def test_prach_f0_1ms_e2e(dut):
         ddc_valid,
         ddc_ant0,
         sorted(ddc_channels),
+        ddc_samples[:4],
+        stream2block_samples[:4],
+        len(fft_samples),
         len(uplane_words),
+        max((max(abs(real), abs(imag)) for _, real, imag in ddc_samples), default=0),
+        max(
+            (max(abs(real), abs(imag)) for _, real, imag in stream2block_samples),
+            default=0,
+        ),
+    )
+
+    fft_complex = np.asarray(
+        [complex(real, imag) for _, real, imag in fft_samples], dtype=np.complex128
+    )
+    fft_magnitude = np.abs(fft_complex)
+    fft_db = 20 * np.log10(
+        np.maximum(fft_magnitude, 1e-12) / np.maximum(fft_magnitude.max(), 1e-12)
+    )
+    active_start = LEFT_GUARD_RE
+    active_stop = active_start + ACTIVE_RE
+    capture_stop = active_stop + RIGHT_GUARD_RE
+    assert capture_stop == CAPTURE_RE
+    left_guard_db = float(np.median(fft_db[:active_start]))
+    active_db = float(np.median(fft_db[active_start:active_stop]))
+    right_guard_db = float(np.median(fft_db[active_stop:capture_stop]))
+    unused_db = float(np.median(fft_db[capture_stop:]))
+    active_ripple_db = float(np.ptp(fft_db[active_start:active_stop]))
+    occupied_re = np.flatnonzero(fft_db > OCCUPIED_THRESHOLD_DB)
+    expected_occupied_re = np.arange(active_start, active_stop)
+    dut._log.info(
+        "FFT regions dB: left=%s active=%s right=%s tail=%s "
+        "active ripple=%s ctrl_fcw=%s",
+        left_guard_db,
+        active_db,
+        right_guard_db,
+        unused_db,
+        active_ripple_db,
+        int(ctrl.rd_fcw.value),
     )
 
     assert seen_sf, "resynchronizer never asserted start-of-frame after sync"
     assert seen_sy, "resynchronizer never asserted start-of-symbol"
     assert resync_hits > 0 and resync_misses == 0, (
-        f"resync antenna0 tone mismatches={resync_misses}, "
+        f"resync antenna0 waveform mismatches={resync_misses}, "
         f"checked={resync_hits + resync_misses}"
+    )
+    assert resync_valid_phases == set(range(NUM_ANT)), (
+        f"expected four complex antenna phases, got {sorted(resync_valid_phases)}"
     )
     assert ddc_valid > 0 and sorted(ddc_channels) == [0, 1, 2, 3], (
         f"DDC channels not rotating through 0..3: {sorted(ddc_channels)}"
     )
     assert ddc_ant0 >= 4, f"DDC antenna0 output too sparse: {ddc_ant0}"
+    assert any(real or imag for _, real, imag in ddc_samples), (
+        "DDC payload is entirely zero"
+    )
+    assert any(real or imag for _, real, imag in stream2block_samples), (
+        "stream2block payload is entirely zero"
+    )
+    assert len(fft_samples) == FFT_SIZE, (
+        f"expected one {FFT_SIZE}-sample FFT block, got {len(fft_samples)} samples"
+    )
+    assert {channel for channel, _, _ in fft_samples} == {TEST_ANT}
+    assert any(real or imag for _, real, imag in fft_samples), (
+        "FFT payload is entirely zero"
+    )
+    assert active_db > -12.0, f"839 active REs are too weak: median={active_db:.1f} dB"
+    assert active_ripple_db < MAX_ACTIVE_RIPPLE_DB, (
+        f"ZC magnitude ripple is too large: {active_ripple_db:.3f} dB"
+    )
+    assert left_guard_db < active_db - 35.0, (
+        f"13 left guard REs are not clear: {left_guard_db:.1f} dB"
+    )
+    assert right_guard_db < active_db - 35.0, (
+        f"12 right guard REs are not clear: {right_guard_db:.1f} dB"
+    )
+    assert unused_db < active_db - 35.0, (
+        f"unused FFT bins are not clear: {unused_db:.1f} dB"
+    )
+    assert np.array_equal(occupied_re, expected_occupied_re), (
+        f"expected occupied FFT REs {active_start}..{active_stop - 1}, "
+        f"got {occupied_re.tolist()}"
+    )
     assert len(uplane_words) == 252, (
         f"expected one 252-word F0 U-plane packet, got {len(uplane_words)} words"
     )
@@ -397,12 +526,13 @@ async def test_prach_f0_1ms_e2e(dut):
 def test_prach_e2e_runner():
     run_dir = PRJ_PATH / "sim_build" / "prach_top_e2e"
     runner = get_runner(SIM)
+    waves = bool(int(os.environ.get("WAVES", "0")))
     runner.build(
         hdl_toplevel="prach",
         sources=resolve_flt(PRJ_PATH / "prach.flt"),
         parameters={"NUM_CC": NUM_CC, "NUM_ANT": NUM_ANT},
         always=True,
-        waves=True,
+        waves=waves,
         build_dir=run_dir,
     )
     # The FFT twiddle ROMs are loaded with $readmemh relative to the simulator
@@ -413,7 +543,7 @@ def test_prach_e2e_runner():
         hdl_toplevel="prach",
         hdl_toplevel_lang="verilog",
         test_module="test_prach",
-        waves=True,
+        waves=waves,
         gui=os.environ.get("GUI", "false").lower() == "true",
         test_dir=run_dir,
     )

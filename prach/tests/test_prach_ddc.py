@@ -12,6 +12,7 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
 from cocotb_tools.runner import get_runner
+from hdl_tools.flt_tool import resolve_flt
 from prach_ddc_model import (
     SIDEBAND_FIELDS,
     halfband4,
@@ -19,8 +20,6 @@ from prach_ddc_model import (
     signed16,
     unsigned16,
 )
-
-from hdl_tools.flt_tool import resolve_flt
 
 PRJ_PATH = Path(__file__).resolve().parent.parent
 NUM_ANT = 4
@@ -101,11 +100,11 @@ async def _reset_and_flush(dut):
 def _make_vector(index: int, rng) -> dict[str, int]:
     phase = index & 0xFF
     phase_lane = phase & 0x7F
-    valid = int(phase_lane < NUM_REAL_LANES)
-    event = (index // 128) * NUM_REAL_LANES + min(phase_lane, NUM_REAL_LANES - 1)
+    valid = int(phase_lane < NUM_ANT)
+    event = (index // 128) * NUM_ANT + min(phase_lane, NUM_ANT - 1)
     return {
-        "real": int(rng.integers(-24000, 24001)),
-        "imag": int(rng.integers(-24000, 24001)),
+        "real": int(rng.integers(-24000, 24001)) if valid else 0,
+        "imag": int(rng.integers(-24000, 24001)) if valid else 0,
         "sf": 1,
         "sl": ((event >> 0) & 1) if valid else 0,
         "sy": ((event >> 1) & 1) if valid else 0,
@@ -115,8 +114,11 @@ def _make_vector(index: int, rng) -> dict[str, int]:
     }
 
 
-def _assert_eight_lane_bursts(
-    sideband: dict[str, list[int]], name: str, channel_bases: set[int]
+def _assert_lane_bursts(
+    sideband: dict[str, list[int]],
+    name: str,
+    channel_bases: set[int],
+    num_lanes: int,
 ):
     valid_samples = [
         (cycle, sideband["chn"][cycle])
@@ -124,18 +126,18 @@ def _assert_eight_lane_bursts(
         if valid
     ]
     assert valid_samples, f"{name}: no valid samples observed"
-    assert len(valid_samples) % NUM_REAL_LANES == 0
+    assert len(valid_samples) % num_lanes == 0
 
-    for offset in range(0, len(valid_samples), NUM_REAL_LANES):
-        burst = valid_samples[offset : offset + NUM_REAL_LANES]
+    for offset in range(0, len(valid_samples), num_lanes):
+        burst = valid_samples[offset : offset + num_lanes]
         first_cycle = burst[0][0]
         channel_base = burst[0][1]
         assert channel_base in channel_bases, (
             f"{name}: unexpected channel base {channel_base} at cycle {first_cycle}"
         )
         assert burst == [
-            (first_cycle + lane, channel_base + lane) for lane in range(NUM_REAL_LANES)
-        ], f"{name}: malformed eight-lane burst at cycle {first_cycle}: {burst}"
+            (first_cycle + lane, channel_base + lane) for lane in range(num_lanes)
+        ], f"{name}: malformed {num_lanes}-lane burst at cycle {first_cycle}: {burst}"
 
 
 @cocotb.test()
@@ -306,8 +308,8 @@ async def test_six_stage_chain_matches_cycle_accurate_model(dut):
 
     assert checked >= 32, f"too few valid DDC outputs were checked: {checked}"
 
-    _assert_eight_lane_bursts(mixer_sideband, "mixer output", {0, 128})
-    _assert_eight_lane_bursts(conv_input_sideband, "HB chain output", {0})
+    _assert_lane_bursts(mixer_sideband, "mixer output", {0, 128}, NUM_ANT)
+    _assert_lane_bursts(conv_input_sideband, "HB chain output", {0}, NUM_REAL_LANES)
 
     # The final DDC register gates invalid channels but otherwise delays the
     # conversion output by exactly one clock.
