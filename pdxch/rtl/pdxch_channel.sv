@@ -197,9 +197,9 @@ module pdxch_channel #(
   // span multiple antenna cycles, so use its rising edge as the boundary.
   always_ff @(posedge clk) begin
     if (rst) begin
-      ctrl_size            <= 2'b01;
-      ctrl_itlv            <= 2'b00;
-      din_sy_d             <= 1'b0;
+      ctrl_size <= 2'b01;
+      ctrl_itlv <= 2'b00;
+      din_sy_d  <= 1'b0;
     end else begin
       din_sy_d <= din_sy;
 

@@ -1,4 +1,5 @@
-# Out-of-context synthesis for the mandatory-BFP PDXCH wrapper.
+# Out-of-context synthesis and implementation for the mandatory-BFP PDXCH
+# wrapper.
 #
 # Parameter overrides (defaults = HALF_BLOCK=0, HALF_FFT=0: full block + 4k FFT):
 #   tclargs: <half_block> <half_fft>
@@ -32,7 +33,7 @@ if {![string is integer -strict $half_fft] || ($half_fft != 0 && $half_fft != 1)
 }
 puts "INFO: pdxch OOC params: HALF_BLOCK=$half_block HALF_FFT=$half_fft"
 set build_dir [file normalize [file join $repo_root pdxch vivado_ooc \
-    pdxch_20260901_hb${half_block}_hf${half_fft}]]
+    pdxch_20260908_hb${half_block}_hf${half_fft}]]
 
 file mkdir $build_dir
 cd $build_dir
@@ -90,7 +91,26 @@ synth_design -top $top -part $part -mode out_of_context -flatten_hierarchy none 
 report_utilization -file [file join $build_dir pdxch_utilization.rpt]
 report_utilization -hierarchical -file [file join $build_dir pdxch_utilization_hierarchical.rpt]
 report_timing_summary -file [file join $build_dir pdxch_timing_summary.rpt]
-write_checkpoint -force [file join $build_dir pdxch_ooc.dcp]
+set syn_dcp [file join $build_dir pdxch_ooc.dcp]
+write_checkpoint -force $syn_dcp
 
 puts "INFO: pdxch OOC synthesis completed"
 puts "INFO: utilization report: [file join $build_dir pdxch_utilization.rpt]"
+
+# Continue from the synthesized netlist through implementation. The
+# synthesis checkpoint above is kept so the two design states can be inspected
+# independently from the same run directory.
+opt_design
+place_design
+phys_opt_design
+route_design
+
+report_utilization -file [file join $build_dir pdxch_impl_utilization.rpt]
+report_utilization -hierarchical -file [file join $build_dir pdxch_impl_utilization_hierarchical.rpt]
+report_timing_summary -file [file join $build_dir pdxch_impl_timing_summary.rpt]
+report_route_status -file [file join $build_dir pdxch_impl_route_status.rpt]
+set impl_dcp [file join $build_dir pdxch_impl.dcp]
+write_checkpoint -force $impl_dcp
+
+puts "INFO: pdxch OOC implementation completed"
+puts "INFO: implementation utilization report: [file join $build_dir pdxch_impl_utilization.rpt]"

@@ -159,8 +159,9 @@ module phase_comp #(
   end
 
   delay #(
-      .WIDTH(32),
-      .DEPTH(3)
+      .WIDTH  (32),
+      .DEPTH  (3),
+      .USE_REG(1)
   ) i_dq_delay (
       .clk (clk),
       .rst (1'b0),

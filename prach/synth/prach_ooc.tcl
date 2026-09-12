@@ -82,9 +82,15 @@ synth_design -top $top -part $part -mode out_of_context -flatten_hierarchy none 
 report_utilization -file [file join $build_dir prach_utilization.rpt]
 report_utilization -hierarchical -file [file join $build_dir prach_utilization_hierarchical.rpt]
 report_timing_summary -file [file join $build_dir prach_timing_summary.rpt]
-write_checkpoint -force [file join $build_dir prach_ooc.dcp]
+set syn_dcp [file join $build_dir prach_ooc.dcp]
+write_checkpoint -force $syn_dcp
 
-# Implementation: place and route to get post-route resource/timing reports
+puts "INFO: prach OOC synthesis completed"
+puts "INFO: utilization report: [file join $build_dir prach_utilization.rpt]"
+
+# Continue from the synthesized netlist through implementation. The
+# synthesis checkpoint above is kept so the two design states can be inspected
+# independently from the same run directory.
 opt_design
 place_design
 phys_opt_design
@@ -93,7 +99,9 @@ route_design
 report_utilization -file [file join $build_dir prach_impl_utilization.rpt]
 report_utilization -hierarchical -file [file join $build_dir prach_impl_utilization_hierarchical.rpt]
 report_timing_summary -file [file join $build_dir prach_impl_timing_summary.rpt]
-write_checkpoint -force [file join $build_dir prach_impl.dcp]
+report_route_status -file [file join $build_dir prach_impl_route_status.rpt]
+set impl_dcp [file join $build_dir prach_impl.dcp]
+write_checkpoint -force $impl_dcp
 
-puts "INFO: prach OOC synthesis + implementation completed"
-puts "INFO: resource report: [file join $build_dir prach_impl_utilization.rpt]"
+puts "INFO: prach OOC implementation completed"
+puts "INFO: implementation utilization report: [file join $build_dir prach_impl_utilization.rpt]"

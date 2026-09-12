@@ -25,7 +25,11 @@ module prach_conv (
     output var        dout_last
 );
 
-  parameter int Latency = 11;
+  // The data path is four cycles into the complex multiplier, whose
+  // registered output is seven cycles later.  The sideband must therefore be
+  // delayed by nine cycles; eleven cycles tags the payload two channels late
+  // in the PRACH interleaved stream.
+  parameter int Latency = 9;
 
   logic signed [15:0] cos;
   logic signed [15:0] sin;

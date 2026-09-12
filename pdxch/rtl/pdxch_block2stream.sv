@@ -115,8 +115,9 @@ module pdxch_block2stream #(
   end
 
   delay #(
-      .WIDTH(37),
-      .DEPTH(3)
+      .WIDTH  (37),
+      .DEPTH  (3),
+      .USE_REG(1)
   ) u_delay_din (
       .clk (clk),
       .rst (1'b0),
@@ -183,8 +184,9 @@ module pdxch_block2stream #(
       end
 
       delay #(
-          .WIDTH(32),
-          .DEPTH(NUM_ANT - i - 1)
+          .WIDTH  (32),
+          .DEPTH  (NUM_ANT - i - 1),
+          .USE_REG(((NUM_ANT - i - 1) < 8) ? 1 : 0)
       ) u_delay_tdata (
           .clk (clk),
           .rst (1'b0),
@@ -194,10 +196,11 @@ module pdxch_block2stream #(
       );
 
       delay #(
-          .WIDTH(1),
+          .WIDTH  (1),
           // Data takes three input-delay cycles plus the dout register;
           // sync already accounts for one of those four cycles.
-          .DEPTH(NUM_ANT + 2 - i)
+          .DEPTH  (NUM_ANT + 2 - i),
+          .USE_REG(((NUM_ANT + 2 - i) < 8) ? 1 : 0)
       ) u_delay_tuser (
           .clk (clk),
           .rst (1'b0),

@@ -49,6 +49,7 @@ module prach_ddc #(
   logic [          3:0] mixer_dout_chn_unused;
   /* verilator lint_on UNUSED */
   logic                 mixer_dout_dv;
+  logic                 mixer_dout_dv_q;
   logic                 mixer_dout_last;
 
   // 8/16/32/64/128/256
@@ -159,13 +160,27 @@ module prach_ddc #(
       .dout(mixer_dout_chn)
   );
 
+  // The resynchronizer presents four valid complex antenna lanes.  The first
+  // reshape serializes their I and Q components into eight real lanes; extend
+  // valid by four clocks so the delayed Q half is retained inside the DDC.
+  delay #(
+      .WIDTH(1),
+      .DEPTH(NUM_ANT)
+  ) u_delay_dv_q (
+      .clk (clk),
+      .rst (rst),
+      .cen (1'b1),
+      .din (mixer_dout_dv),
+      .dout(mixer_dout_dv_q)
+  );
+
   assign s0_dp1[0]  = mixer_dout_dr;
   assign s0_dp2[0]  = mixer_dout_di;
   assign s0_sf[0]   = mixer_dout_sf;
   assign s0_sl[0]   = mixer_dout_sl;
   assign s0_sy[0]   = mixer_dout_sy;
   assign s0_chn[0]  = mixer_dout_chn;
-  assign s0_dv[0]   = mixer_dout_dv;
+  assign s0_dv[0]   = mixer_dout_dv || mixer_dout_dv_q;
   assign s0_last[0] = mixer_dout_last;
 
   generate

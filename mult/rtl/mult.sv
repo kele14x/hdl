@@ -26,6 +26,16 @@ module mult #(
   localparam int Latency = 4;
   /* verilator lint_on UNUSEDPARAM */
   localparam int FullWidth = A_WIDTH + B_WIDTH;
+  localparam int RoundShift = (SHIFT > 0) ? SHIFT - 1 : 0;
+  localparam int SignExp = P_WIDTH + SHIFT - FullWidth;
+
+  // Symmetric round-to-nearest, with ties away from zero, can be written as
+  // product + (2**(SHIFT-1) - 1) + product_nonnegative.  The final term is
+  // a one-bit carry-in, allowing Vivado to keep the rounding add in the
+  // DSP48 M-to-P path.
+  localparam logic signed [FullWidth-1:0] RoundBias =
+      ((ROUND != 0) && (SHIFT > 0)) ?
+          (({{(FullWidth - 1) {1'b0}}, 1'b1} << RoundShift) - 1) : '0;
 
   initial begin : drc_check
     assert (A_WIDTH >= 1)
@@ -70,12 +80,17 @@ module mult #(
   logic signed [FullWidth-1:0] m;
   (* USE_DSP = "YES" *)
   logic signed [FullWidth-1:0] p_full;
+  logic                        product_nonnegative;
+  logic                        product_nonnegative_d;
 
+  wire signed  [  P_WIDTH-1:0] p_ext;
   wire signed  [  P_WIDTH-1:0] p_sat;
   logic signed [  P_WIDTH-1:0] p_reg;
 
   wire                         ovf_s;
   logic                        ovf_r;
+  wire                         overflow;
+  wire                         underflow;
 
   always_ff @(posedge clk) begin
     a_d <= a;
@@ -86,24 +101,46 @@ module mult #(
   end
 
   always_ff @(posedge clk) begin
+    product_nonnegative <= ~(a[A_WIDTH-1] ^ b[B_WIDTH-1]);
+  end
+
+  always_ff @(posedge clk) begin
     m <= a_d * b_d;
   end
 
   always_ff @(posedge clk) begin
-    p_full <= m;
+    product_nonnegative_d <= product_nonnegative;
   end
 
-  type_cast #(
-      .IN_WIDTH (FullWidth),
-      .OUT_WIDTH(P_WIDTH),
-      .TRUNC    (SHIFT),
-      .ROUND    (ROUND),
-      .SATURATE (SATURATE)
-  ) i_type_cast (
-      .din (p_full),
-      .dout(p_sat),
-      .ovf (ovf_s)
-  );
+  always_ff @(posedge clk) begin
+    /* verilator lint_off WIDTHEXPAND */
+    p_full <= m + RoundBias + (((ROUND != 0) && (SHIFT > 0)) ? product_nonnegative_d : 1'b0);
+    /* verilator lint_on WIDTHEXPAND */
+  end
+
+  generate
+    if (SignExp > 0) begin : g_p_ext_sext
+      assign p_ext = {{SignExp {p_full[FullWidth-1]}}, p_full[FullWidth-1:SHIFT]};
+    end else begin : g_p_ext_trunc
+      assign p_ext = p_full[P_WIDTH+SHIFT-1:SHIFT];
+    end
+  endgenerate
+
+  generate
+    if (SignExp >= 0) begin : g_no_ovf
+      assign ovf_s    = 1'b0;
+      assign overflow = 1'b0;
+      assign underflow = 1'b0;
+    end else begin : g_ovf
+      assign ovf_s = ~(&p_full[FullWidth-1:P_WIDTH+SHIFT-1] ||
+                       ~|p_full[FullWidth-1:P_WIDTH+SHIFT-1]);
+      assign overflow = ovf_s & ~p_full[FullWidth-1];
+      assign underflow = ovf_s & p_full[FullWidth-1];
+    end
+  endgenerate
+
+  assign p_sat = ((SATURATE != 0) && overflow) ? {1'b0, {(P_WIDTH - 1) {1'b1}}} :
+                 ((SATURATE != 0) && underflow) ? {1'b1, {(P_WIDTH - 1) {1'b0}}} : p_ext;
 
   always_ff @(posedge clk) begin
     if (rst) begin

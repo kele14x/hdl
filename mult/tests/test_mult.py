@@ -48,7 +48,9 @@ def model(a, b, cfg):
     p = a * b
     if shift > 0:
         if rnd:
-            p += 2 ** (shift - 1) - 1 + ((p >> shift) & 1)
+            # Symmetric round-to-nearest, with ties away from zero.
+            half_lsb = 2 ** (shift - 1)
+            p += half_lsb if p >= 0 else half_lsb - 1
         p >>= shift
 
     ovf = p > 2 ** (p_width - 1) - 1 or p < -(2 ** (p_width - 1))
@@ -187,6 +189,9 @@ CASES = [
     },
     {"A_WIDTH": 8, "B_WIDTH": 8, "P_WIDTH": 8, "SHIFT": 4, "ROUND": 1, "SATURATE": 0},
     {"A_WIDTH": 8, "B_WIDTH": 8, "P_WIDTH": 6, "SHIFT": 8, "ROUND": 0, "SATURATE": 1},
+    {"A_WIDTH": 4, "B_WIDTH": 4, "P_WIDTH": 8, "SHIFT": 2, "ROUND": 1, "SATURATE": 1},
+    {"A_WIDTH": 4, "B_WIDTH": 4, "P_WIDTH": 6, "SHIFT": 2, "ROUND": 1, "SATURATE": 1},
+    {"A_WIDTH": 4, "B_WIDTH": 4, "P_WIDTH": 4, "SHIFT": 0, "ROUND": 0, "SATURATE": 1},
 ]
 
 
