@@ -206,8 +206,8 @@ module prach_fft_ditfft2_bf #(
   endgenerate
 
   always_ff @(posedge clk) begin
-    ovf_r <= ~(x2r_s[DATA_WIDTH-:2] == 2'b00 || x2r_s[DATA_WIDTH-:2] == 2'b11) ||
-             ~(x2i_s[DATA_WIDTH-:2] == 2'b00 || x2i_s[DATA_WIDTH-:2] == 2'b11) ||
+    ovf_r <= ~(x1r_s[DATA_WIDTH-:2] == 2'b00 || x1r_s[DATA_WIDTH-:2] == 2'b11) ||
+             ~(x1i_s[DATA_WIDTH-:2] == 2'b00 || x1i_s[DATA_WIDTH-:2] == 2'b11) ||
              ~(x2r_s[DATA_WIDTH-:2] == 2'b00 || x2r_s[DATA_WIDTH-:2] == 2'b11) ||
              ~(x2i_s[DATA_WIDTH-:2] == 2'b00 || x2i_s[DATA_WIDTH-:2] == 2'b11);
   end
