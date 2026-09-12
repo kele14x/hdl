@@ -461,11 +461,17 @@ module prach_ctrl #(
     end
   end
 
+  // The section ID must follow the section this instance actually captures, so
+  // it may only be loaded by a C-Plane message for this CC (c_plane_match).
+  // Messages for other CCs share the s_prach_* bus and would otherwise relabel
+  // a section that is still in flight to the output packet.
   always_ff @(posedge clk) begin
-    if (static_c_en) begin
-      rd_section_id <= 12'd2048;
-    end else begin
-      rd_section_id <= s_prach_section_id_s;
+    if (c_plane_match) begin
+      if (static_c_en) begin
+        rd_section_id <= 12'd2048;
+      end else begin
+        rd_section_id <= s_prach_section_id_s;
+      end
     end
   end
 

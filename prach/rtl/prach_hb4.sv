@@ -61,13 +61,11 @@ module prach_hb4 #(
 
   // Simulation only: clear the RAM so warmup reads are 0 instead of X.
   // Synthesis ignores this; LUTRAM cells power up as 0 anyway.
-  // synthesis translate_off
   initial begin : lane_history_sim_init
     for (int i = 0; i < NumLane; i++) begin
       lane_history[i] = '0;
     end
   end
-  // synthesis translate_on
 
   logic signed [15:0] a_y0;
   logic signed [15:0] a_z0;
@@ -168,7 +166,10 @@ module prach_hb4 #(
   // RAM is not cleared by rst, so an in-band rst re-warmup briefly re-reads
   // stale words: dout_dv can pulse with stale sidebands until fresh events
   // refill the slots (~2 lane visits). Accepted by design.
-  always_ff @(posedge clk) begin
+  // A plain always block, not always_ff: lane_history is a memory written here
+  // and cleared by the simulation init block above, and Questa rejects a
+  // variable written from an always_ff being driven by another process.
+  always @(posedge clk) begin
     if (rst) begin
       a_y0        <= '0;
       a_z0        <= '0;
