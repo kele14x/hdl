@@ -15,13 +15,19 @@ from cocotb_tools.runner import get_runner
 from hdl_tools.flt_tool import resolve_flt
 
 PRJ_PATH = Path(__file__).resolve().parent.parent
-NUM_ANT = 4
+NUM_ANT = int(os.environ.get("PRACH_STREAM2BLOCK_NUM_ANT", "4"))
 SEQ_LEN = 1536
 CP_SAMPLES = 8
 START_SAMPLE = CP_SAMPLES << 4
 RAM_BANKS = 3
 RAM_BANK_ADDR_WIDTH = 10
 READ_GAP = SEQ_LEN + 64
+
+CASES = [
+    pytest.param(1, id="one-antenna"),
+    pytest.param(2, id="two-antennas"),
+    pytest.param(4, id="four-antennas"),
+]
 
 SIM = os.environ.get("SIM")
 if not SIM:
@@ -94,11 +100,9 @@ async def _send_two_sequence_occasion(dut, requested_sequence=0):
         if sequence == 1:
             # Let the first read finish before the second sequence is written.
             # Holding the input on a non-zero channel freezes sample_cnt.
-            if requested_sequence == 1:
-                dut.rd_channel_req.value = 1
             for gap_cycle in range(READ_GAP):
-                if requested_sequence == 0 and gap_cycle == 8:
-                    dut.rd_channel_req.value = 0
+                if gap_cycle == 8:
+                    dut.rd_channel_req.value = int(requested_sequence == 1)
                 await _send_word(dut, chn=1, dv=0)
         for sample in range(SEQ_LEN):
             for chn in range(NUM_ANT):
@@ -168,7 +172,7 @@ async def test_readback_preserves_bit_reverse_order_across_all_memory_banks(dut)
         await _reset(dut, start_clock=requested_sequence == 0)
         received = []
 
-        async def monitor_readback():
+        async def monitor_readback(received=received):
             while True:
                 await RisingEdge(dut.clk)
                 await ReadOnly()
@@ -198,8 +202,9 @@ async def test_readback_preserves_bit_reverse_order_across_all_memory_banks(dut)
         received_by_sequence.append(received)
         memory_by_sequence.append(memory)
 
+    received_lengths = [len(received) for received in received_by_sequence]
     for received in received_by_sequence:
-        assert len(received) == SEQ_LEN
+        assert len(received) == SEQ_LEN, f"received block lengths: {received_lengths}"
         assert {channel for channel, _, _ in received} == {0}
 
     expected = []
@@ -225,13 +230,14 @@ async def test_readback_preserves_bit_reverse_order_across_all_memory_banks(dut)
         assert [real | (imag << 16) for _, real, imag in received] == expected_words
 
 
-def test_prach_stream2block_runner():
+@pytest.mark.parametrize("num_ant", CASES)
+def test_prach_stream2block_runner(num_ant):
     runner = get_runner(SIM)
-    run_dir = PRJ_PATH / "sim_build" / "prach_stream2block"
+    run_dir = PRJ_PATH / "sim_build" / f"prach_stream2block_ant{num_ant}"
     runner.build(
         hdl_toplevel="prach_stream2block",
         sources=resolve_flt(PRJ_PATH / "prach.flt"),
-        parameters={"NUM_ANT": NUM_ANT},
+        parameters={"NUM_ANT": num_ant},
         always=True,
         waves=True,
         build_dir=run_dir,
@@ -242,6 +248,7 @@ def test_prach_stream2block_runner():
         test_module="test_prach_stream2block",
         waves=True,
         gui=os.environ.get("GUI", "false").lower() == "true",
+        extra_env={"PRACH_STREAM2BLOCK_NUM_ANT": str(num_ant)},
         test_dir=run_dir,
     )
 

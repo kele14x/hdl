@@ -53,6 +53,11 @@ module prach_stream2block #(
   localparam int RamDepth = 1024;
   localparam int RamAddrWidth = $clog2(RamDepth);
 
+  initial begin : drc_check
+    assert (1 <= NUM_ANT && NUM_ANT <= 4)
+    else $error("[%m]: NUM_ANT (%0d) must be between 1 and 4.", NUM_ANT);
+  end
+
   // Signals
 
   typedef enum int {
@@ -329,7 +334,7 @@ module prach_stream2block #(
   // Read
 
   always_ff @(posedge clk) begin
-    for (int i = 0; i < 4; i++) begin
+    for (int i = 0; i < NUM_ANT; i++) begin
       if (ap_ack[i]) begin
         rd_bank <= ap_bank[i];
       end
@@ -365,7 +370,7 @@ module prach_stream2block #(
 
   always_comb begin
     rd_data_c = '0;
-    for (int i = 0; i < 4; i++) begin
+    for (int i = 0; i < NUM_ANT; i++) begin
       if (rd_en_dd[i]) begin
         for (int j = 0; j < NumRamBank; j++) begin
           if (rd_addr_bank_dd == 2'(j)) begin
@@ -387,7 +392,7 @@ module prach_stream2block #(
     if (rst) begin
       chn <= '0;
     end else begin
-      for (int i = 0; i < 4; i++) begin
+      for (int i = 0; i < NUM_ANT; i++) begin
         if (ap_ack[i]) begin
           chn <= 2'(i);
         end
@@ -397,7 +402,7 @@ module prach_stream2block #(
 
   always_ff @(posedge clk) begin
     sync <= 1'b0;
-    for (int i = 0; i < 4; i++) begin
+    for (int i = 0; i < NUM_ANT; i++) begin
       if (ap_ack[i]) begin
         sync <= 1'b1;
       end
