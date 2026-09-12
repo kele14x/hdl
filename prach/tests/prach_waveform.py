@@ -6,9 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-DEFAULT_WAVEFORM_PATH = (
-    Path(__file__).resolve().parent.parent / "doc" / "tb_prach_top_input.txt"
-)
+DEFAULT_WAVEFORM_PATH = Path(__file__).resolve().parent / "tb_prach_top_input.txt"
 
 
 def generate_lte_f0_iq(
