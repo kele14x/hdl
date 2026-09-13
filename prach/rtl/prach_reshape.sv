@@ -82,7 +82,7 @@ module prach_reshape #(
       ) u_delay_dq2 (
           .clk (clk),
           .cen (1'b1),
-          .rst (1'b0),
+          .rst (rst),
           .din (din_dp2),
           .dout(din_dp2_d)
       );
@@ -111,7 +111,7 @@ module prach_reshape #(
       ) u_delay_dx (
           .clk (clk),
           .cen (1'b1),
-          .rst (1'b0),
+          .rst (rst),
           .din (delay_in),
           .dout(delay_out)
       );
