@@ -1,4 +1,8 @@
-"""Cocotb integration regression for the six-stage PRACH DDC."""
+"""Cocotb integration regression for the six-stage PRACH DDC.
+
+Runs once per supported input mode: 30.72 Msps (stages 0,1 bypassed),
+61.44 Msps (stage 0 bypassed) and 122.88 Msps (no bypass).
+"""
 
 from __future__ import annotations
 
@@ -14,6 +18,7 @@ from cocotb.triggers import ClockCycles, RisingEdge, Timer
 from cocotb_tools.runner import get_runner
 from prach_ddc_model import (
     SIDEBAND_FIELDS,
+    bypass_for_ctrl_bw,
     halfband4,
     model_decimation_chain,
     signed16,
@@ -28,12 +33,14 @@ NUM_REAL_LANES = 2 * NUM_ANT
 ACTIVE_CYCLES = 32 * 256
 TAIL_CYCLES = 1700
 
-# Operating mode under test: 122.88 Msps.  Four antenna lanes are interleaved one
-# per clock, so every chn cycle is valid (`prach_resync` chn_max = 3 makes
-# dout_dv high on all four phases), and no DDC stage is bypassed (`prach_ddc`
-# ctrl_bw default -> ctrl_bypass = 0).  This is the only mode that uses all six
-# HB stages.  See prach/README.md for the mode table.
-CTRL_BW = 0xF
+# Operating mode under test, selected by the parametrized runner below.  Each
+# mode is a (ctrl_bw, valid_period) pair: four antenna lanes are interleaved one
+# per valid clock, so `prach_resync` makes dout_dv high on NUM_ANT of every
+# valid_period clocks, and `prach_ddc` decodes ctrl_bw into the matching
+# ctrl_bypass.  See prach/README.md for the mode table and prach_ddc_model for
+# the model side.
+CTRL_BW = int(os.environ.get("PRACH_DDC_CTRL_BW", "0xF"), 0)
+VALID_PERIOD = int(os.environ.get("PRACH_DDC_VALID_PERIOD", "4"))
 
 SIM = os.environ.get("SIM")
 if not SIM:
@@ -106,17 +113,18 @@ async def _reset_and_flush(dut):
 
 
 def _make_vector(index: int, rng) -> dict[str, int]:
-    # 122.88 Msps mode: a valid lane every clock, and chn is the resynchronizer's
-    # free-running counter, so it advances by one each cycle.
+    # chn is the resynchronizer's free-running counter, so it advances by one
+    # every cycle; only the mode's NUM_ANT lanes per VALID_PERIOD are valid.
+    valid = int((index % VALID_PERIOD) < NUM_ANT)
     return {
-        "real": int(rng.integers(-24000, 24001)),
-        "imag": int(rng.integers(-24000, 24001)),
+        "real": int(rng.integers(-24000, 24001)) if valid else 0,
+        "imag": int(rng.integers(-24000, 24001)) if valid else 0,
         "sf": 1,
-        "sl": (index >> 0) & 1,
-        "sy": (index >> 1) & 1,
+        "sl": ((index >> 0) & 1) if valid else 0,
+        "sy": ((index >> 1) & 1) if valid else 0,
         "chn": index & 0xFF,
-        "dv": 1,
-        "last": (index >> 2) & 1,
+        "dv": valid,
+        "last": ((index >> 2) & 1) if valid else 0,
     }
 
 
@@ -214,7 +222,11 @@ async def test_six_stage_chain_matches_cycle_accurate_model(dut):
 
     model_trace = {}
     expected_real, expected_imag, expected_sideband = model_decimation_chain(
-        mixer_real, mixer_imag, mixer_sideband, trace=model_trace
+        mixer_real,
+        mixer_imag,
+        mixer_sideband,
+        trace=model_trace,
+        bypass=bypass_for_ctrl_bw(CTRL_BW),
     )
 
     for name in ("hb4", "hb5"):
@@ -319,16 +331,25 @@ async def test_six_stage_chain_matches_cycle_accurate_model(dut):
 
     assert checked >= 32, f"too few valid DDC outputs were checked: {checked}"
 
-    # 122.88 Msps mode: every chn cycle carries a lane, so the mixer output stays
-    # valid for the whole active window and chn advances by one per clock.  The
-    # lane-burst helper does not apply to a fully valid stream.
+    # The mixer output must present the mode's lane occupancy: NUM_ANT valid
+    # lanes at the start of every VALID_PERIOD-clock chn cycle, idle after that,
+    # with chn advancing by one every clock throughout.
     mixer_valid = [cycle for cycle, valid in enumerate(mixer_sideband["dv"]) if valid]
     assert mixer_valid, "mixer output: no valid samples observed"
-    active_mixer = list(range(mixer_valid[0], ACTIVE_CYCLES))
-    assert all(mixer_sideband["dv"][cycle] for cycle in active_mixer), (
-        "122.88 Msps mode: mixer output must be valid on every clock while active"
-    )
-    for cycle in active_mixer[1:]:
+    first_valid = mixer_valid[0]
+    windows = 0
+    for base in range(first_valid, ACTIVE_CYCLES - VALID_PERIOD, VALID_PERIOD):
+        for lane in range(NUM_ANT):
+            assert mixer_sideband["dv"][base + lane], (
+                f"mixer output cycle {base + lane}: missing valid lane"
+            )
+        for idle in range(NUM_ANT, VALID_PERIOD):
+            assert not mixer_sideband["dv"][base + idle], (
+                f"mixer output cycle {base + idle}: unexpected valid lane"
+            )
+        windows += 1
+    assert windows > 0, "mixer output: no complete chn cycle was observed"
+    for cycle in range(first_valid + 1, ACTIVE_CYCLES):
         assert (
             mixer_sideband["chn"][cycle]
             == (mixer_sideband["chn"][cycle - 1] + 1) & 0xFF
@@ -349,9 +370,24 @@ async def test_six_stage_chain_matches_cycle_accurate_model(dut):
             assert actual_sideband[field] == previous_sideband[field]
 
 
-def test_prach_ddc_runner():
+# One entry per supported input mode: (ctrl_bw, valid_period).  ctrl_bw follows
+# prach_resync/prach_ddc: 0x0-0x2 -> 30.72 Msps (stages 0,1 bypassed), 0x3 ->
+# 61.44 Msps (stage 0 bypassed), 0xF -> 122.88 Msps (no bypass).
+MODES = [
+    pytest.param(0x2, 16, id="30.72msps"),
+    pytest.param(0x3, 8, id="61.44msps"),
+    pytest.param(0xF, 4, id="122.88msps"),
+]
+
+
+@pytest.mark.parametrize(("ctrl_bw", "valid_period"), MODES)
+def test_prach_ddc_runner(ctrl_bw, valid_period, monkeypatch):
+    # The cocotb test runs in its own process supplied by the runner, so the mode
+    # reaches it through the environment (same pattern as test_prach_hb4).
+    monkeypatch.setenv("PRACH_DDC_CTRL_BW", str(ctrl_bw))
+    monkeypatch.setenv("PRACH_DDC_VALID_PERIOD", str(valid_period))
     runner = get_runner(SIM)
-    run_dir = PRJ_PATH / "sim_build" / "prach_ddc"
+    run_dir = PRJ_PATH / "sim_build" / f"prach_ddc_bw{ctrl_bw:x}_p{valid_period}"
     runner.build(
         hdl_toplevel="prach_ddc",
         sources=resolve_flt(PRJ_PATH / "prach.flt"),

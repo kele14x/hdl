@@ -151,13 +151,50 @@ def halfband4(
     return output, shift_sideband(sideband, latency)
 
 
+def bypass_stage(
+    dp1: Sequence[int],
+    sideband: dict[str, list[int]],
+    delay_base: int,
+) -> tuple[list[int], dict[str, list[int]]]:
+    """Cycle-accurate model of an HB stage with ``ctrl_bypass`` asserted.
+
+    A bypassed stage does not filter: it passes ``dp1`` through its delay line.
+    Measured on the RTL, the bypass path of ``prach_hb2`` has the same latency as
+    its filter path (``delay_base + 8``) for both data and sideband.  Bypass never
+    reaches ``prach_hb4`` in any supported mode (the ``ctrl_bypass`` patterns are
+    0b000011 and 0b000001), so only the hb2 form is modelled.
+    """
+    length = len(dp1)
+    latency = delay_base + 8
+    output = [0] * length
+    for index in range(length - latency):
+        output[index + latency] = dp1[index]
+    return output, shift_sideband(sideband, latency)
+
+
+def bypass_for_ctrl_bw(ctrl_bw: int) -> int:
+    """Mirror ``prach_ddc``'s ``ctrl_bypass`` decode: bit N set bypasses stage N."""
+    if ctrl_bw in (0x0, 0x1, 0x2):
+        return 0b000011
+    if ctrl_bw == 0x3:
+        return 0b000001
+    return 0b000000
+
+
 def model_decimation_chain(
     mixer_real: Sequence[int],
     mixer_imag: Sequence[int],
     sideband: dict[str, list[int]],
     trace: dict[str, tuple[list[int], list[int], dict[str, list[int]]]] | None = None,
+    bypass: int = 0,
 ) -> tuple[list[int], list[int], dict[str, list[int]]]:
-    """Model the six reshape/HB stages and the final IQ reshape in ``prach_ddc``."""
+    """Model the six reshape/HB stages and the final IQ reshape in ``prach_ddc``.
+
+    *bypass* is ``prach_ddc``'s ``ctrl_bypass`` value: bit N set makes stage N a
+    pass-through rather than a filter.  Use :func:`bypass_for_ctrl_bw` to derive
+    it from ``ctrl_bw``.  Stage data/sideband latency is unchanged by bypass, so
+    the chain's total latency is the same in every mode.
+    """
     dp1 = list(mixer_real)
     dp2 = list(mixer_imag)
     metadata = {field: list(sideband[field]) for field in SIDEBAND_FIELDS}
@@ -176,7 +213,9 @@ def model_decimation_chain(
         dp1, dp2, metadata = reshape(dp1, dp2, metadata, delay_base)
         if trace is not None and stage >= 4:
             trace[f"hb{stage}_in"] = (dp1, dp2, metadata)
-        if stage < 4:
+        if bypass & (1 << stage):
+            dp1, metadata = bypass_stage(dp1, metadata, delay_base)
+        elif stage < 4:
             dp1, metadata = halfband2(
                 dp1,
                 dp2,

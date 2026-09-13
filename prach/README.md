@@ -60,10 +60,10 @@ Conformance of the existing tests:
   `BW_30MHZ_ALL_CC = 0x222` so `ctrl_bw = 2` (30.72 Msps input, stages 0–1
   bypassed) and drives one complex word per antenna every
   `RADIO_SAMPLES_PER_CLK = 16` clocks, i.e. 4 valid complex lanes per 16 clocks.
-- `tests/test_prach_ddc.py` — **conformant.** It drives the 122.88 Msps mode:
-  `CTRL_BW = 0xF` selects no bypass, and every clock carries a valid lane, so
-  `chn` advances by one per cycle. The no-bypass mode is deliberate: it keeps the
-  chain comparable against `model_decimation_chain`, which does not model bypass.
+- `tests/test_prach_ddc.py` — **conformant**, and parametrized over all three
+  modes: `ctrl_bw` 0x2/0x3/0xF with 4 valid lanes per 16/8/4 clocks. Each mode
+  asserts the mixer occupancy it implies and matches the chain against
+  `model_decimation_chain` with the matching bypass.
 - `tests/test_prach_hb4.py` — unit test for `prach_hb4` alone. Its 8-lane bursts
   repeating every `DELAY_BASE` (128 / 256) **are** the real interface: measured at
   the hb4/hb5 inputs in all three modes, `lane_valid` (`chn[6:3] == 0`, plus
@@ -71,9 +71,13 @@ Conformance of the existing tests:
   `DELAY_BASE`.
 
 `tests/prach_ddc_model.py` is the cycle-accurate reference model for the chain
-(`reshape`, `halfband2`, `halfband4`, `model_decimation_chain`). It is the
-authority for expected values; its stage loop does not model bypass, so callers
-driving a bypassed mode must account for that.
+(`reshape`, `halfband2`, `halfband4`, `bypass_stage`, `model_decimation_chain`).
+It is the authority for expected values. `model_decimation_chain` takes the
+`ctrl_bypass` value via its `bypass` argument (`bypass_for_ctrl_bw` mirrors
+`prach_ddc`'s decode); a bypassed stage is a pure delay of `DELAY_BASE + 8` for
+both data and sideband, which is the same latency as the hb2 filter path — so the
+chain latency is mode-independent. Bypass never reaches `prach_hb4` in any
+supported mode, so only the hb2 form is modelled.
 
 ## Lane cadence and the halfband delay lines
 
