@@ -44,9 +44,18 @@ def _round_shift(values: np.ndarray, shift: int) -> np.ndarray:
     return quotient + round_up.astype(np.int64)
 
 
+def _round_shift_away(values: np.ndarray, shift: int) -> np.ndarray:
+    """Match ``mult`` ROUND=1 (nearest, ties away from zero)."""
+
+    values = np.asarray(values, dtype=np.int64)
+    bias = (1 << (shift - 1)) - 1
+    nonnegative = (values >= 0).astype(np.int64)
+    return (values + bias + nonnegative) >> shift
+
+
 def _real_multiply(values: np.ndarray, gain: int) -> np.ndarray:
     product = np.asarray(values, dtype=np.int64) * int(gain)
-    return _saturate_signed(_round_shift(product, 14), 16)
+    return _saturate_signed(_round_shift_away(product, 14), 16)
 
 
 def _dds_coefficients(phase: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
