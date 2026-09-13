@@ -399,7 +399,9 @@ module prach_ctrl #(
   //   |  PRACH  |
 
   always_ff @(posedge clk) begin
-    if (c_plane_match) begin
+    if (rst) begin
+      c_fcw <= '0;
+    end else if (c_plane_match) begin
       c_fcw <= get_fcw(s_prach_freqoffset_s);
     end
   end
@@ -454,7 +456,9 @@ module prach_ctrl #(
   end
 
   always_ff @(posedge clk) begin
-    if (static_c_en) begin
+    if (rst) begin
+      rd_fcw <= '0;
+    end else if (static_c_en) begin
       rd_fcw <= get_fcw(ctrl_freq_offset_s);
     end else begin
       rd_fcw <= c_fcw;
