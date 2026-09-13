@@ -10,8 +10,53 @@ Layout:
 - `tests/` — cocotb regression tests and cycle-accurate Python models
 - `tb/` — traditional SystemVerilog testbench helpers
 - `doc/` — design notes and OOC synthesis results
-- `synth/` — Vivado OOC scripts and utilization comparison tooling
+- `synth/` — Vivado OOC script (`prach_ooc.tcl`)
 - `prach.flt` — RTL filelist (no testbench files)
+
+## Resource and integration context
+
+Read any PRACH area number in context before drawing conclusions:
+
+- The committed OOC flow (`synth/prach_ooc.tcl`, part `xcku5p-ffvb676-2-i`) uses a
+  **stand-in part**. The production device is a **ZU19EG**.
+- Production instantiates **one `lowphy0` and one `lowphy1`, each containing
+  several PRACH instances**. A single-`prach` OOC run therefore says nothing about
+  project-level utilisation: do not turn a prach percentage into a project
+  percentage by dividing by the device, and do not assume the stand-in part's
+  spare capacity is available to PRACH.
+- What *does* transfer between the two views is the **per-instance delta** — e.g.
+  "this edit saves N LUTs in `u_ddc`, x3 per prach, xK prach instances". Decide on
+  post-implementation numbers from a labelled baseline-vs-variant OOC run, never
+  on synthesis estimates.
+- Latest single-`prach` OOC baseline (Vivado 2024.2, `ANT_ID=0`): 17,597 CLB LUTs
+  = 13,163 logic + **4,434 LUT-as-memory**, 25,755 FF, 63/480 BRAM, 183 DSP,
+  `clk` WNS +0.117 ns. A quarter of the LUT budget is LUT-based storage, so
+  moving storage between LUT / FF / BRAM is a live lever — but weigh each option's
+  real exchange rate (an SRL holds 32 bits per LUT, a flip-flop holds 1 bit, a
+  BRAM tile holds 36 Kb) against the project's actual resource pressure rather
+  than assuming any one resource is free. For reference, in the committed
+  `lowphy/synth/lowphy0_ooc_puxch_bfp9.md` result on the same stand-in part, BRAM
+  was the most-utilised resource (241/480 = 50 % vs 24 % LUT), so "just move it to
+  BRAM" needs a project-level check.
+
+### FFT channel-sharing headroom (known; deliberately not implemented)
+
+The DDC decimates each channel to 1.92 Msps, the stream is compacted in a RAM
+buffer, and the four antennas then take turns through the FFT — so the FFT
+processes already-packed data.
+
+At a 491.52 MHz clock and 1.92 Msps per channel, **one FFT could serve up to 256
+channels** (491.52 / 1.92). The largest configuration is one PRACH with 3 CC x
+4 antennas = **12 channels**, about 5 % of a single FFT's capacity, yet the design
+instantiates one FFT per CC (three in total). Sharing one FFT across the CCs is
+the largest LUT lever in the block by a wide margin, but it is an architectural
+change — per-stream pipeline state, arbitration, latency re-derivation — that was
+consciously skipped for design-complexity reasons. It is recorded here so it does
+not have to be re-derived, not as a pending task.
+
+Only the FFT and the stages after it have this headroom. In the 122.88 Msps mode
+the resync/DDC input carries a valid complex word every clock, so those stages are
+fully occupied and cannot be shared.
 
 ## DDC clock and input modes
 
