@@ -12,7 +12,6 @@ import pytest
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, Timer
 from cocotb_tools.runner import get_runner
-from hdl_tools.flt_tool import resolve_flt
 from prach_ddc_model import (
     SIDEBAND_FIELDS,
     halfband4,
@@ -21,11 +20,20 @@ from prach_ddc_model import (
     unsigned16,
 )
 
+from hdl_tools.flt_tool import resolve_flt
+
 PRJ_PATH = Path(__file__).resolve().parent.parent
 NUM_ANT = 4
 NUM_REAL_LANES = 2 * NUM_ANT
 ACTIVE_CYCLES = 32 * 256
 TAIL_CYCLES = 1700
+
+# Operating mode under test: 122.88 Msps.  Four antenna lanes are interleaved one
+# per clock, so every chn cycle is valid (`prach_resync` chn_max = 3 makes
+# dout_dv high on all four phases), and no DDC stage is bypassed (`prach_ddc`
+# ctrl_bw default -> ctrl_bypass = 0).  This is the only mode that uses all six
+# HB stages.  See prach/README.md for the mode table.
+CTRL_BW = 0xF
 
 SIM = os.environ.get("SIM")
 if not SIM:
@@ -84,7 +92,7 @@ async def _reset_and_flush(dut):
     cocotb.start_soon(Clock(dut.clk, 2, unit="ns").start())
     dut.rst.value = 1
     dut.ctrl_fcw.value = 0
-    dut.ctrl_bw.value = 0xF
+    dut.ctrl_bw.value = CTRL_BW
     _set_input(dut)
     await ClockCycles(dut.clk, 16)
     dut.rst.value = 0
@@ -98,19 +106,17 @@ async def _reset_and_flush(dut):
 
 
 def _make_vector(index: int, rng) -> dict[str, int]:
-    phase = index & 0xFF
-    phase_lane = phase & 0x7F
-    valid = int(phase_lane < NUM_ANT)
-    event = (index // 128) * NUM_ANT + min(phase_lane, NUM_ANT - 1)
+    # 122.88 Msps mode: a valid lane every clock, and chn is the resynchronizer's
+    # free-running counter, so it advances by one each cycle.
     return {
-        "real": int(rng.integers(-24000, 24001)) if valid else 0,
-        "imag": int(rng.integers(-24000, 24001)) if valid else 0,
+        "real": int(rng.integers(-24000, 24001)),
+        "imag": int(rng.integers(-24000, 24001)),
         "sf": 1,
-        "sl": ((event >> 0) & 1) if valid else 0,
-        "sy": ((event >> 1) & 1) if valid else 0,
-        "chn": phase,
-        "dv": valid,
-        "last": ((event >> 2) & 1) if valid else 0,
+        "sl": (index >> 0) & 1,
+        "sy": (index >> 1) & 1,
+        "chn": index & 0xFF,
+        "dv": 1,
+        "last": (index >> 2) & 1,
     }
 
 
@@ -253,10 +259,15 @@ async def test_six_stage_chain_matches_cycle_accurate_model(dut):
             trace["din_sideband"],
             delay_base,
         )
+        # Compare only while active input is still present.  The finite-vector
+        # tail lacks future lane events, so it has no equivalent in the
+        # continuous radio stream (same rationale as the chain check below).
         expected_stage_cycles = [
-            cycle for cycle, valid in enumerate(expected_stage_sideband["dv"]) if valid
+            cycle
+            for cycle, valid in enumerate(expected_stage_sideband["dv"])
+            if valid and cycle < ACTIVE_CYCLES
         ]
-        for cycle in expected_stage_cycles[: -3 * NUM_REAL_LANES]:
+        for cycle in expected_stage_cycles:
             assert trace["dout_dq"][cycle] == expected_dq[cycle], (
                 f"{name} cycle {cycle}: data mismatch; "
                 f"actual={trace['dout_dq'][cycle]}, expected={expected_dq[cycle]}"
@@ -308,7 +319,21 @@ async def test_six_stage_chain_matches_cycle_accurate_model(dut):
 
     assert checked >= 32, f"too few valid DDC outputs were checked: {checked}"
 
-    _assert_lane_bursts(mixer_sideband, "mixer output", {0, 128}, NUM_ANT)
+    # 122.88 Msps mode: every chn cycle carries a lane, so the mixer output stays
+    # valid for the whole active window and chn advances by one per clock.  The
+    # lane-burst helper does not apply to a fully valid stream.
+    mixer_valid = [cycle for cycle, valid in enumerate(mixer_sideband["dv"]) if valid]
+    assert mixer_valid, "mixer output: no valid samples observed"
+    active_mixer = list(range(mixer_valid[0], ACTIVE_CYCLES))
+    assert all(mixer_sideband["dv"][cycle] for cycle in active_mixer), (
+        "122.88 Msps mode: mixer output must be valid on every clock while active"
+    )
+    for cycle in active_mixer[1:]:
+        assert (
+            mixer_sideband["chn"][cycle]
+            == (mixer_sideband["chn"][cycle - 1] + 1) & 0xFF
+        ), f"mixer output cycle {cycle}: chn did not advance by one"
+
     _assert_lane_bursts(conv_input_sideband, "HB chain output", {0}, NUM_REAL_LANES)
 
     # The final DDC register gates invalid channels but otherwise delays the

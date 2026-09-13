@@ -60,15 +60,15 @@ Conformance of the existing tests:
   `BW_30MHZ_ALL_CC = 0x222` so `ctrl_bw = 2` (30.72 Msps input, stages 0–1
   bypassed) and drives one complex word per antenna every
   `RADIO_SAMPLES_PER_CLK = 16` clocks, i.e. 4 valid complex lanes per 16 clocks.
-- `tests/test_prach_ddc.py` — **does not conform.** It sets `ctrl_bw = 0xF`
-  (122.88 Msps, no bypass) but `_make_vector` marks only 4 valid complex lanes
-  per **128** clocks. The 122.88 mode requires 4 of 4; 4 of 128 corresponds to no
-  supported mode. Fix by driving 4-of-4 (`ctrl_bw = 0xF`), 4-of-8
-  (`ctrl_bw = 0x3`) or 4-of-16 (`ctrl_bw = 0x0`–`0x2`) and keeping the bypass
-  consistent with the chosen mode.
-- `tests/test_prach_hb4.py` — unit test for `prach_hb4` alone. It drives 8-lane
-  bursts repeating every `DELAY_BASE` (128 / 256). This is a synthetic pattern,
-  not a full-DDC mode; do not use it to reason about the production lane cadence.
+- `tests/test_prach_ddc.py` — **conformant.** It drives the 122.88 Msps mode:
+  `CTRL_BW = 0xF` selects no bypass, and every clock carries a valid lane, so
+  `chn` advances by one per cycle. The no-bypass mode is deliberate: it keeps the
+  chain comparable against `model_decimation_chain`, which does not model bypass.
+- `tests/test_prach_hb4.py` — unit test for `prach_hb4` alone. Its 8-lane bursts
+  repeating every `DELAY_BASE` (128 / 256) **are** the real interface: measured at
+  the hb4/hb5 inputs in all three modes, `lane_valid` (`chn[6:3] == 0`, plus
+  `chn[7] == 0` for D256) fires in bursts of 8 with a period of exactly
+  `DELAY_BASE`.
 
 `tests/prach_ddc_model.py` is the cycle-accurate reference model for the chain
 (`reshape`, `halfband2`, `halfband4`, `model_decimation_chain`). It is the
@@ -97,6 +97,12 @@ the bypassed stages are exactly the ones whose `DELAY_BASE` is too small:
 Measured against `prach_ddc_model` (tap-validity check per stage): in the
 16-clock mode `B=32` is exactly tap-aligned (3968/3968 outputs) while `B=8` is
 not (0/4064) — and `B=8` is bypassed in that mode, so it never filters.
+
+For the hb4/hb5 stages the equivalent measurement is `lane_valid`
+(`din_dv && chn[6:3] == 0`, plus `chn[7] == 0` for D256): at the hb4 input it
+fires in bursts of 8 with a period of exactly `DELAY_BASE`, and at the hb5 input
+likewise, in all three modes. That equality — visit period == `DELAY_BASE` — is
+what lets one lane-addressed word hold every age that stage needs.
 
 Consequence for `prach_hb2`: under the supported modes its taps are lane-aligned
 wherever it filters, so the structure is *possible* there too — but it is **not
