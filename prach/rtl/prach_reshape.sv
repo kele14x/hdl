@@ -37,6 +37,19 @@ module prach_reshape #(
 
   localparam int Latency = SIZE / 2 + 1;
 
+  // Delay implementation is chosen by depth, following the policy used by the
+  // FFT butterfly (prach_fft_ditfft2_bf.sv): flip-flops for the shortest depths,
+  // SRLs for the next range, and single-port LUTRAM beyond that.  The two data
+  // delays are 16-bit; the sideband delay carries control information, which
+  // never leaves LUT-based storage, so it only chooses between flip-flops and
+  // SRLs.  There is deliberately no block-RAM branch: the widest delay here is
+  // 16 x 129 bits, far too small to be worth a RAMB tile.
+  localparam int DataDepth = SIZE / 2;
+  localparam int DataRegMax = 8;
+  localparam int DataSrlMax = 32;
+  localparam int SyncDepth = Latency;
+  localparam int SyncRegMax = 8;
+
   logic        swap_n;
 
   logic [15:0] din_dp2_d;
@@ -46,27 +59,65 @@ module prach_reshape #(
 
   assign swap_n = din_chn[$clog2(SIZE/2)];
 
-  delay #(
-      .WIDTH(16),
-      .DEPTH(SIZE / 2)
-  ) u_delay_dq2 (
-      .clk (clk),
-      .cen (1'b1),
-      .rst (1'b0),
-      .din ({din_dp2}),
-      .dout({din_dp2_d})
-  );
+  generate
+    if (DataDepth <= DataSrlMax) begin : g_dq2
 
-  delay #(
-      .WIDTH(16),
-      .DEPTH(SIZE / 2)
-  ) u_delay_dx (
-      .clk (clk),
-      .cen (1'b1),
-      .rst (1'b0),
-      .din (delay_in),
-      .dout(delay_out)
-  );
+      delay #(
+          .WIDTH  (16),
+          .DEPTH  (DataDepth),
+          .USE_REG((DataDepth <= DataRegMax) ? 1 : 0)
+      ) u_delay_dq2 (
+          .clk (clk),
+          .cen (1'b1),
+          .rst (1'b0),
+          .din (din_dp2),
+          .dout(din_dp2_d)
+      );
+
+    end else begin : g_dq2_lutram
+
+      delay_lutram #(
+          .WIDTH(16),
+          .DEPTH(DataDepth)
+      ) u_delay_dq2 (
+          .clk (clk),
+          .cen (1'b1),
+          .rst (1'b0),
+          .din (din_dp2),
+          .dout(din_dp2_d)
+      );
+
+    end
+
+    if (DataDepth <= DataSrlMax) begin : g_dx
+
+      delay #(
+          .WIDTH  (16),
+          .DEPTH  (DataDepth),
+          .USE_REG((DataDepth <= DataRegMax) ? 1 : 0)
+      ) u_delay_dx (
+          .clk (clk),
+          .cen (1'b1),
+          .rst (1'b0),
+          .din (delay_in),
+          .dout(delay_out)
+      );
+
+    end else begin : g_dx_lutram
+
+      delay_lutram #(
+          .WIDTH(16),
+          .DEPTH(DataDepth)
+      ) u_delay_dx (
+          .clk (clk),
+          .cen (1'b1),
+          .rst (1'b0),
+          .din (delay_in),
+          .dout(delay_out)
+      );
+
+    end
+  endgenerate
 
   always_ff @(posedge clk) begin
     dout_dq1 <= delay_out;
@@ -89,8 +140,9 @@ module prach_reshape #(
   end
 
   delay #(
-      .WIDTH(13),
-      .DEPTH(Latency)
+      .WIDTH  (13),
+      .DEPTH  (SyncDepth),
+      .USE_REG((SyncDepth <= SyncRegMax) ? 1 : 0)
   ) u_delay_sync (
       .clk (clk),
       .cen (1'b1),
