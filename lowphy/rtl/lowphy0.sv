@@ -431,13 +431,11 @@ module lowphy0 (
     output var [  7:0] m_dl_axis_tuser,
     output var         m_dl_axis_tlast,
     output var         m_dl_axis_tvalid,
-    input var          m_dl_axis_tready,
     //
     input var  [383:0] s_ul_axis_tdata,
     input var  [  7:0] s_ul_axis_tuser,
     input var          s_ul_axis_tlast,
-    input var          s_ul_axis_tvalid,
-    output var         s_ul_axis_tready
+    input var          s_ul_axis_tvalid
 );
 
   // Parameters
@@ -452,13 +450,11 @@ module lowphy0 (
   logic [ 7:0] m_axis_tuser [NumCc][NumAnt];
   logic        m_axis_tlast [NumCc][NumAnt];
   logic        m_axis_tvalid[NumCc][NumAnt];
-  logic        m_axis_tready[NumCc][NumAnt];
 
   logic [31:0] s_axis_tdata [NumCc][NumAnt];
   logic [ 7:0] s_axis_tuser [NumCc][NumAnt];
   logic        s_axis_tlast [NumCc][NumAnt];
   logic        s_axis_tvalid[NumCc][NumAnt];
-  logic        s_axis_tready[NumCc][NumAnt];
 
   // Main
 
@@ -721,13 +717,11 @@ module lowphy0 (
       .m_axis_tuser                  (m_axis_tuser),
       .m_axis_tlast                  (m_axis_tlast),
       .m_axis_tvalid                 (m_axis_tvalid),
-      .m_axis_tready                 (m_axis_tready),
       //
       .s_axis_tdata                  (s_axis_tdata),
       .s_axis_tuser                  (s_axis_tuser),
       .s_axis_tlast                  (s_axis_tlast),
-      .s_axis_tvalid                 (s_axis_tvalid),
-      .s_axis_tready                 (s_axis_tready)
+      .s_axis_tvalid                 (s_axis_tvalid)
   );
 
   generate
@@ -735,8 +729,6 @@ module lowphy0 (
       for (genvar ant = 0; ant < NumAnt; ant++) begin : gen_ant
 
         assign m_dl_axis_tdata[(cc*NumAnt+ant)*32+31-:32] = m_axis_tdata[cc][ant];
-
-        assign m_axis_tready[cc][ant] = m_dl_axis_tready;
 
         assign s_axis_tdata[cc][ant] = s_ul_axis_tdata[(cc*NumAnt+ant)*32+31-:32];
         assign s_axis_tuser[cc][ant] = s_ul_axis_tuser;
@@ -751,8 +743,6 @@ module lowphy0 (
   assign m_dl_axis_tuser  = m_axis_tuser[0][0];
   assign m_dl_axis_tlast  = m_axis_tlast[0][0];
   assign m_dl_axis_tvalid = m_axis_tvalid[0][0];
-
-  assign s_ul_axis_tready = s_axis_tready[0][0];
 
 endmodule
 

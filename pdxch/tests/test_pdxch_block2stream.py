@@ -55,8 +55,6 @@ def _read_outputs(dut):
 
 async def _reset(dut):
     dut.rst.value = 1
-    for ant in range(NUM_ANT):
-        dut.m_axis_tready[ant].value = 1
     _set_input(dut)
     await ClockCycles(dut.clk, 4)
     dut.rst.value = 0

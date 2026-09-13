@@ -311,13 +311,11 @@ module lowphy_band #(
     output var [  7:0] m_axis_tuser               [ NUM_CC][NUM_ANT],
     output var         m_axis_tlast               [ NUM_CC][NUM_ANT],
     output var         m_axis_tvalid              [ NUM_CC][NUM_ANT],
-    input var          m_axis_tready              [ NUM_CC][NUM_ANT],
     //
     input var  [ 31:0] s_axis_tdata               [ NUM_CC][NUM_ANT],
     input var  [  7:0] s_axis_tuser               [ NUM_CC][NUM_ANT],
     input var          s_axis_tlast               [ NUM_CC][NUM_ANT],
-    input var          s_axis_tvalid              [ NUM_CC][NUM_ANT],
-    output var         s_axis_tready              [ NUM_CC][NUM_ANT]
+    input var          s_axis_tvalid              [ NUM_CC][NUM_ANT]
 );
 
   // Parmaeters
@@ -502,7 +500,6 @@ module lowphy_band #(
       .m_axis_tuser         (m_axis_tuser),
       .m_axis_tlast         (m_axis_tlast),
       .m_axis_tvalid        (m_axis_tvalid),
-      .m_axis_tready        (m_axis_tready),
       // O-RAN
       //------
       .clk_eth_xran         (internal_bus_clk),
@@ -561,7 +558,6 @@ module lowphy_band #(
       .s_axis_tuser         (s_axis_tuser),
       .s_axis_tlast         (s_axis_tlast),
       .s_axis_tvalid        (s_axis_tvalid),
-      .s_axis_tready        (s_axis_tready),
       // O-RAN U-Plane
       //--------------
       .clk_eth_xran         (internal_bus_clk),
@@ -617,7 +613,6 @@ module lowphy_band #(
       .s_axis_tlast           (s_axis_tlast),
       .s_axis_tuser           (s_axis_tuser),
       .s_axis_tvalid          (s_axis_tvalid),
-      .s_axis_tready          (s_axis_tready),
       // ORAN
       //--------
       .clk_eth_xran           (internal_bus_clk),

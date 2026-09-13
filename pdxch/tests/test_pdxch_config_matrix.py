@@ -180,7 +180,6 @@ async def test_configured_chain_matches_reference(dut):
     dut.ctrl_phase_comp_din.value = 0x4000
     for antenna in range(NUM_ANT):
         dut.ctrl_gain[0][antenna].value = 0x4000
-        dut.m_axis_tready[0][antenna].value = 1
 
     sources = _axis_sources(dut)
     for source in sources:

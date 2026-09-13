@@ -1436,8 +1436,6 @@ module lowphy1_wrapper (
     output wire         m_dl_axis_tlast,
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_DL_AXIS TVALID" *)
     output wire         m_dl_axis_tvalid,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 M_DL_AXIS TREADY" *)
-    input  wire         m_dl_axis_tready,
     //
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_UL_AXIS TDATA" *)
     input  wire [767:0] s_ul_axis_tdata,
@@ -1446,9 +1444,7 @@ module lowphy1_wrapper (
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_UL_AXIS TLAST" *)
     input  wire         s_ul_axis_tlast,
     (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_UL_AXIS TVALID" *)
-    input  wire         s_ul_axis_tvalid,
-    (* X_INTERFACE_INFO = "xilinx.com:interface:axis:1.0 S_UL_AXIS TREADY" *)
-    output wire         s_ul_axis_tready
+    input  wire         s_ul_axis_tvalid
 );
 // verilog_format: on
 
@@ -2229,13 +2225,11 @@ module lowphy1_wrapper (
       .m_dl_axis_tuser               (m_dl_axis_tuser),
       .m_dl_axis_tlast               (m_dl_axis_tlast),
       .m_dl_axis_tvalid              (m_dl_axis_tvalid),
-      .m_dl_axis_tready              (m_dl_axis_tready),
       //
       .s_ul_axis_tdata               (s_ul_axis_tdata),
       .s_ul_axis_tuser               (s_ul_axis_tuser),
       .s_ul_axis_tlast               (s_ul_axis_tlast),
-      .s_ul_axis_tvalid              (s_ul_axis_tvalid),
-      .s_ul_axis_tready              (s_ul_axis_tready)
+      .s_ul_axis_tvalid              (s_ul_axis_tvalid)
   );
 
 endmodule

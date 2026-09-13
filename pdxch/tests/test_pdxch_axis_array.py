@@ -38,8 +38,6 @@ async def test_axis_driver_index_matches_rtl_generate_index(dut):
     dut.sync_in.value = 0
     for cc in range(3):
         dut.s_dl_sym_num[cc].value = 0
-        for antenna in range(NUM_ANT):
-            dut.m_axis_tready[cc][antenna].value = 1
 
     sources = []
     for antenna in range(NUM_ANT):

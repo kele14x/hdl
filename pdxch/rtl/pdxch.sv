@@ -43,7 +43,6 @@ module pdxch #(
     output var [ 7:0] m_axis_tuser         [ NUM_CC][NUM_ANT],
     output var        m_axis_tlast         [ NUM_CC][NUM_ANT],
     output var        m_axis_tvalid        [ NUM_CC][NUM_ANT],
-    input var         m_axis_tready        [ NUM_CC][NUM_ANT],
     // O-RAN
     //------
     input var         clk_eth_xran,
@@ -221,7 +220,6 @@ module pdxch #(
       .m_axis_tuser         (m_axis_tuser),
       .m_axis_tlast         (m_axis_tlast),
       .m_axis_tvalid        (m_axis_tvalid),
-      .m_axis_tready        (m_axis_tready),
       // O-RAN
       .clk_eth_xran         (clk_eth_xran),
       .rst_eth_xran         (rst_eth_xran),

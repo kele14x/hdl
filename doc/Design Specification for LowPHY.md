@@ -490,9 +490,9 @@ Current implementation details visible in the RTL:
 - `m_axis_tuser[i][0]` carries a delayed sync marker, while the rest of `tuser` is zero
 - `m_axis_tlast` is tied low in this block
 - `m_axis_tvalid` is tied high in this block
-- `m_axis_tready` is currently ignored by the implementation
+- the DL radio stream has no `m_axis_tready`: it is free-running, because the radio/DAC side consumes one sample per clock and cannot apply backpressure
 
-These handshake semantics should be reviewed carefully before treating the radio-side stream as a conventional backpressure-capable AXI-Stream interface.
+The radio-side sample streams are therefore deliberately not conventional backpressure-capable AXI-Stream interfaces.
 
 ### 6.7 Downlink control interaction summary
 
@@ -518,7 +518,7 @@ The following details are worth carrying as explicit implementation notes in the
 - `pdxch_fdv_buffer_readout` time-multiplexes antenna data through a shared downstream chain using the internal `phase` and `dout_chn` sequencing.
 - LTE-specific DC-null handling is explicitly implemented in the readout address mapping.
 - BIST generation is inserted in the FDV readout stage rather than later in the time-domain chain.
-- `pdxch_block2stream` currently does not honor `m_axis_tready`, which may be acceptable only if the radio-side consumer is always ready.
+- `pdxch_block2stream` emits the DL sample stream free-running; the `m_axis_tready` port has been removed from `pdxch_block2stream` through `pdxch`/`pdxch_top` and the LowPHY top, because the radio/DAC side always accepts one sample per clock.
 
 ## 7. Uplink Path
 
@@ -594,7 +594,7 @@ This stage creates the time-multiplexed complex stream used by the rest of the u
 
 Implementation note:
 
-- `s_axis_tready` is tied active in `puxch_resync`
+- the UL radio stream is free-running: `puxch_resync` has no `s_axis_tready`, since the radio/ADC side presents one sample per clock and cannot be back-pressured
 - `dout_last` is tied low in this block
 
 #### Stage 2: Uplink start alignment
@@ -754,7 +754,7 @@ The following details are worth carrying as explicit implementation notes in the
 - `puxch_buffer` is request-driven on the framer side; UL data is not simply streamed continuously out of the FFT path.
 - Ping-pong RAM banking is used to decouple radio-clock writes from O-RAN-clock reads.
 - The framer request queue is serialized through a FIFO, so only one queued request per antenna buffer is actively serviced at a time.
-- `puxch_resync` ties `s_axis_tready` high, which assumes the radio source can be accepted continuously.
+- The UL radio stream has no `s_axis_tready`: the radio/ADC source presents one sample per clock and is accepted continuously by construction.
 - `ctrl_bist` is carried into `puxch_resync`, but a deeper review is still needed to document whether the current UL BIST path is fully implemented or only partially wired.
 
 ## 8. PRACH Path
@@ -1058,8 +1058,8 @@ The LowPHY radio-domain interfaces are arrayed by component carrier and antenna.
 
 | Port group | Signals | Direction | Dimensionality | Function |
 | --- | --- | --- | --- | --- |
-| Radio DL output | `m_axis_tdata`, `m_axis_tuser`, `m_axis_tlast`, `m_axis_tvalid`, `m_axis_tready` | mostly output from LowPHY | `[NUM_CC][NUM_ANT]` | Downlink sample stream produced by `pdxch_top` toward radio |
-| Radio UL input | `s_axis_tdata`, `s_axis_tuser`, `s_axis_tlast`, `s_axis_tvalid`, `s_axis_tready` | mostly input to LowPHY | `[NUM_CC][NUM_ANT]` | Uplink sample stream consumed by `puxch_top` and `prach_top` |
+| Radio DL output | `m_axis_tdata`, `m_axis_tuser`, `m_axis_tlast`, `m_axis_tvalid` | output from LowPHY | `[NUM_CC][NUM_ANT]` | Downlink sample stream produced by `pdxch_top` toward radio; free-running (no tready) |
+| Radio UL input | `s_axis_tdata`, `s_axis_tuser`, `s_axis_tlast`, `s_axis_tvalid` | input to LowPHY | `[NUM_CC][NUM_ANT]` | Uplink sample stream consumed by `puxch_top` and `prach_top`; free-running (no tready) |
 | Radio clocking | `clk`, `rst` | input | scalar | Radio processing clock domain |
 
 ### 9.5 Clock, reset, and auxiliary interfaces

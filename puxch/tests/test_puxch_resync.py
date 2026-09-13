@@ -33,8 +33,6 @@ async def test_resync_schedules_antennas_and_markers(dut):
     cocotb.start_soon(Clock(dut.clk, 2, unit="ns").start())
     await reset_dut(dut)
 
-    assert [int(dut.s_axis_tready[i].value) for i in range(NUM_ANT)] == [1] * NUM_ANT
-
     await sample_after_rising(dut.clk)
     dut.sync_in.value = 1
     await sample_after_rising(dut.clk)

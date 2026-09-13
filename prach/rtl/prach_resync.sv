@@ -16,7 +16,6 @@ module prach_resync #(
     input var         s_axis_tlast [NUM_ANT],
     input var         s_axis_tvalid[NUM_ANT],
     /* verilator lint_on UNUSED */
-    output var        s_axis_tready[NUM_ANT],
     //
     output var [15:0] dout_dr,
     output var [15:0] dout_di,
@@ -99,8 +98,6 @@ module prach_resync #(
   assign {ctrl_en_s, ctrl_bist_s, ctrl_bw_s} = ctrl_combined_s;
 
   // Main
-
-  assign s_axis_tready = '{NUM_ANT{1'b1}};
 
   always_comb begin
     case (ctrl_bw_s)

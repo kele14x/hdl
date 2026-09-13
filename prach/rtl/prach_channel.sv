@@ -16,7 +16,6 @@ module prach_channel #(
     input var         s_axis_tlast           [NUM_ANT],
     input var  [ 7:0] s_axis_tuser           [NUM_ANT],
     input var         s_axis_tvalid          [NUM_ANT],
-    output var        s_axis_tready          [NUM_ANT],
     // ORAN C-Plane
     //-------------
     input var         clk_eth_xran,
@@ -282,7 +281,6 @@ module prach_channel #(
       .s_axis_tlast (s_axis_tlast),
       .s_axis_tuser (s_axis_tuser),
       .s_axis_tvalid(s_axis_tvalid),
-      .s_axis_tready(s_axis_tready),
       //
       .dout_dr      (resync_dout_dr),
       .dout_di      (resync_dout_di),

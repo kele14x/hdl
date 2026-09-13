@@ -13,7 +13,6 @@ module tb_puxch_top;
   logic [ 7:0]  s_axis_tuser  [NUM_CC][NUM_ANT];
   logic         s_axis_tlast  [NUM_CC][NUM_ANT];
   logic         s_axis_tvalid [NUM_CC][NUM_ANT];
-  logic         s_axis_tready [NUM_CC][NUM_ANT];
 
   logic         clk_eth_xran;
   logic         rst_eth_xran;
@@ -199,7 +198,6 @@ module tb_puxch_top;
     .s_axis_tuser(s_axis_tuser),
     .s_axis_tlast(s_axis_tlast),
     .s_axis_tvalid(s_axis_tvalid),
-    .s_axis_tready(s_axis_tready),
     .clk_eth_xran(clk_eth_xran),
     .rst_eth_xran(rst_eth_xran),
     .sync_in(sync_in),

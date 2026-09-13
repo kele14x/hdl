@@ -17,7 +17,6 @@ module pdxch_top #(
     output var [ 7:0] m_axis_tuser         [ NUM_CC][NUM_ANT],
     output var        m_axis_tlast         [ NUM_CC][NUM_ANT],
     output var        m_axis_tvalid        [ NUM_CC][NUM_ANT],
-    input var         m_axis_tready        [ NUM_CC][NUM_ANT],
     // O-RAN
     //------
     input var         clk_eth_xran,
@@ -183,7 +182,6 @@ module pdxch_top #(
           .m_axis_tuser        (m_axis_tuser[cc]),
           .m_axis_tlast        (m_axis_tlast[cc]),
           .m_axis_tvalid       (m_axis_tvalid[cc]),
-          .m_axis_tready       (m_axis_tready[cc]),
           // CSR
           .ctrl_clk            (ctrl_clk),
           .ctrl_rst            (ctrl_rst),

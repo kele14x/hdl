@@ -93,7 +93,6 @@ async def test_gearbox_fdv_ram_readout_keeps_antenna_identity(dut):
         dut.ctrl_rfs_offset[cc].value = 0
         for antenna in range(NUM_ANT):
             dut.ctrl_gain[cc][antenna].value = 0x4000
-            dut.m_axis_tready[cc][antenna].value = 1
 
     sources = []
     for antenna in range(NUM_ANT):

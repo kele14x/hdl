@@ -34,7 +34,6 @@ async def _reset(dut):
     _set_data_input(dut)
     for ant in range(NUM_ANT):
         dut.ctrl_gain[ant].value = 0x4000
-        dut.m_axis_tready[ant].value = 1
     await ClockCycles(dut.clk, 5)
     dut.rst.value = 0
     dut.ctrl_rst.value = 0

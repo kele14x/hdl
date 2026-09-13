@@ -147,8 +147,6 @@ async def _reset(dut, axi: AxiLiteMasterDriver, sources):
     dut.rst_eth_xran.value = 1
     for cc in range(NUM_CC):
         dut.s_dl_sym_num[cc].value = 0
-        for antenna in range(NUM_ANT):
-            dut.m_axis_tready[cc][antenna].value = 1
     for source in sources:
         source.idle()
 

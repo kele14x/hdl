@@ -777,15 +777,13 @@ module lowphy1 (
     output var [  7:0] m_dl_axis_tuser,
     output var         m_dl_axis_tlast,
     output var         m_dl_axis_tvalid,
-    input var          m_dl_axis_tready,
     //
     /* verilator lint_off UNUSED */
     input var  [767:0] s_ul_axis_tdata,
     /* verilator lint_on UNUSED */
     input var  [  7:0] s_ul_axis_tuser,
     input var          s_ul_axis_tlast,
-    input var          s_ul_axis_tvalid,
-    output var         s_ul_axis_tready
+    input var          s_ul_axis_tvalid
 );
 
   // Parameters
@@ -801,15 +799,11 @@ module lowphy1 (
   logic [ 7:0] m0_axis_tuser [NumCc][4];
   logic        m0_axis_tlast [NumCc][4];
   logic        m0_axis_tvalid[NumCc][4];
-  logic        m0_axis_tready[NumCc][4];
 
   logic [31:0] s0_axis_tdata [NumCc][4];
   logic [ 7:0] s0_axis_tuser [NumCc][4];
   logic        s0_axis_tlast [NumCc][4];
   logic        s0_axis_tvalid[NumCc][4];
-  /* verilator lint_off UNUSED */
-  logic        s0_axis_tready[NumCc][4];
-  /* verilator lint_on UNUSED */
 
 
   logic [31:0] m1_axis_tdata [NumCcBand12][2];
@@ -818,15 +812,11 @@ module lowphy1 (
   logic        m1_axis_tlast [NumCcBand12][2];
   logic        m1_axis_tvalid[NumCcBand12][2];
   /* verilator lint_on UNUSED */
-  logic        m1_axis_tready[NumCcBand12][2];
 
   logic [31:0] s1_axis_tdata [NumCcBand12][2];
   logic [ 7:0] s1_axis_tuser [NumCcBand12][2];
   logic        s1_axis_tlast [NumCcBand12][2];
   logic        s1_axis_tvalid[NumCcBand12][2];
-  /* verilator lint_off UNUSED */
-  logic        s1_axis_tready[NumCcBand12][2];
-  /* verilator lint_on UNUSED */
 
   logic [31:0] m2_axis_tdata [NumCcBand12][2];
   /* verilator lint_off UNUSED */
@@ -834,15 +824,11 @@ module lowphy1 (
   logic        m2_axis_tlast [NumCcBand12][2];
   logic        m2_axis_tvalid[NumCcBand12][2];
   /* verilator lint_on UNUSED */
-  logic        m2_axis_tready[NumCcBand12][2];
 
   logic [31:0] s2_axis_tdata [NumCcBand12][2];
   logic [ 7:0] s2_axis_tuser [NumCcBand12][2];
   logic        s2_axis_tlast [NumCcBand12][2];
   logic        s2_axis_tvalid[NumCcBand12][2];
-  /* verilator lint_off UNUSED */
-  logic        s2_axis_tready[NumCcBand12][2];
-  /* verilator lint_on UNUSED */
 
   // Nine timer slots are exposed but only seven carriers are instantiated:
   // band 0 takes slots 0-2, band 1 takes 3-4 and band 2 takes 6-7, leaving
@@ -1183,13 +1169,11 @@ module lowphy1 (
       .m_axis_tuser                  (m0_axis_tuser),
       .m_axis_tlast                  (m0_axis_tlast),
       .m_axis_tvalid                 (m0_axis_tvalid),
-      .m_axis_tready                 (m0_axis_tready),
       //
       .s_axis_tdata                  (s0_axis_tdata),
       .s_axis_tuser                  (s0_axis_tuser),
       .s_axis_tlast                  (s0_axis_tlast),
-      .s_axis_tvalid                 (s0_axis_tvalid),
-      .s_axis_tready                 (s0_axis_tready)
+      .s_axis_tvalid                 (s0_axis_tvalid)
   );
 
   lowphy_band #(
@@ -1453,13 +1437,11 @@ module lowphy1 (
       .m_axis_tuser                  (m1_axis_tuser),
       .m_axis_tlast                  (m1_axis_tlast),
       .m_axis_tvalid                 (m1_axis_tvalid),
-      .m_axis_tready                 (m1_axis_tready),
       //
       .s_axis_tdata                  (s1_axis_tdata),
       .s_axis_tuser                  (s1_axis_tuser),
       .s_axis_tlast                  (s1_axis_tlast),
-      .s_axis_tvalid                 (s1_axis_tvalid),
-      .s_axis_tready                 (s1_axis_tready)
+      .s_axis_tvalid                 (s1_axis_tvalid)
   );
 
   lowphy_band #(
@@ -1723,13 +1705,11 @@ module lowphy1 (
       .m_axis_tuser                  (m2_axis_tuser),
       .m_axis_tlast                  (m2_axis_tlast),
       .m_axis_tvalid                 (m2_axis_tvalid),
-      .m_axis_tready                 (m2_axis_tready),
       //
       .s_axis_tdata                  (s2_axis_tdata),
       .s_axis_tuser                  (s2_axis_tuser),
       .s_axis_tlast                  (s2_axis_tlast),
-      .s_axis_tvalid                 (s2_axis_tvalid),
-      .s_axis_tready                 (s2_axis_tready)
+      .s_axis_tvalid                 (s2_axis_tvalid)
   );
 
   generate
@@ -1738,7 +1718,6 @@ module lowphy1 (
         if (ant < 4) begin : gen_band0_ant
 
           assign m_dl_axis_tdata[(cc*NumAnt+ant)*32+31-:32] = m0_axis_tdata[cc][ant];
-          assign m0_axis_tready[cc][ant] = m_dl_axis_tready;
           assign s0_axis_tdata[cc][ant] = s_ul_axis_tdata[(cc*NumAnt+ant)*32+31-:32];
           assign s0_axis_tuser[cc][ant] = s_ul_axis_tuser;
           assign s0_axis_tlast[cc][ant] = s_ul_axis_tlast;
@@ -1747,7 +1726,6 @@ module lowphy1 (
         end else if (cc < NumCcBand12 && ant < 6) begin : gen_band1_ant
 
           assign m_dl_axis_tdata[(cc*NumAnt+ant)*32+31-:32] = m1_axis_tdata[cc][ant-4];
-          assign m1_axis_tready[cc][ant-4] = m_dl_axis_tready;
           assign s1_axis_tdata[cc][ant-4] = s_ul_axis_tdata[(cc*NumAnt+ant)*32+31-:32];
           assign s1_axis_tuser[cc][ant-4] = s_ul_axis_tuser;
           assign s1_axis_tlast[cc][ant-4] = s_ul_axis_tlast;
@@ -1756,7 +1734,6 @@ module lowphy1 (
         end else if (cc < NumCcBand12 && ant < 8) begin : gen_band2_ant
 
           assign m_dl_axis_tdata[(cc*NumAnt+ant)*32+31-:32] = m2_axis_tdata[cc][ant-6];
-          assign m2_axis_tready[cc][ant-6] = m_dl_axis_tready;
           assign s2_axis_tdata[cc][ant-6] = s_ul_axis_tdata[(cc*NumAnt+ant)*32+31-:32];
           assign s2_axis_tuser[cc][ant-6] = s_ul_axis_tuser;
           assign s2_axis_tlast[cc][ant-6] = s_ul_axis_tlast;
@@ -1778,8 +1755,6 @@ module lowphy1 (
   assign m_dl_axis_tuser  = m0_axis_tuser[0][0];
   assign m_dl_axis_tlast  = m0_axis_tlast[0][0];
   assign m_dl_axis_tvalid = m0_axis_tvalid[0][0];
-
-  assign s_ul_axis_tready = s0_axis_tready[0][0] & s1_axis_tready[0][0] & s2_axis_tready[0][0];
 
   // Unsol AXIS Switch
 

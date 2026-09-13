@@ -16,7 +16,6 @@ module puxch_resync #(
     input var         s_axis_tlast [NUM_ANT],
     input var         s_axis_tvalid[NUM_ANT],
     /* verilator lint_on UNUSED */
-    output var        s_axis_tready[NUM_ANT],
     //
     output var [15:0] dout_dr,
     output var [15:0] dout_di,
@@ -83,8 +82,6 @@ module puxch_resync #(
   );
 
   // Main
-
-  assign s_axis_tready = '{NUM_ANT{1'b1}};
 
   always_comb begin
     case (ctrl_bw_s)

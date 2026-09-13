@@ -18,7 +18,6 @@ module puxch_channel #(
     input var  [ 7:0] s_axis_tuser         [NUM_ANT],
     input var         s_axis_tlast         [NUM_ANT],
     input var         s_axis_tvalid        [NUM_ANT],
-    output var        s_axis_tready        [NUM_ANT],
     //
     output var [15:0] dout_dr,
     output var [15:0] dout_di,
@@ -242,7 +241,6 @@ module puxch_channel #(
       .s_axis_tuser (s_axis_tuser),
       .s_axis_tlast (s_axis_tlast),
       .s_axis_tvalid(s_axis_tvalid),
-      .s_axis_tready(s_axis_tready),
       //
       .dout_dr      (resync_dout_dr),
       .dout_di      (resync_dout_di),

@@ -24,10 +24,7 @@ module pdxch_block2stream #(
     output var [31:0] m_axis_tdata [NUM_ANT],
     output var [ 7:0] m_axis_tuser [NUM_ANT],
     output var        m_axis_tlast [NUM_ANT],
-    output var        m_axis_tvalid[NUM_ANT],
-    /* verilator lint_off UNUSED */
-    input var         m_axis_tready[NUM_ANT]
-    /* verilator lint_on UNUSED */
+    output var        m_axis_tvalid[NUM_ANT]
 );
 
   localparam int AddrWidth = 9;
@@ -42,7 +39,7 @@ module pdxch_block2stream #(
   // Signals
 
   // din_sl/din_last do not pace the block readout, and the antenna streams
-  // are emitted free-running (m_axis_tready is ignored).
+  // are emitted free-running.
 
   logic [         15:0] din_dr_d;
   logic [         15:0] din_di_d;
@@ -214,8 +211,6 @@ module pdxch_block2stream #(
       assign m_axis_tlast[i] = 1'b0;
 
       assign m_axis_tvalid[i] = 1'b1;
-
-      // ignore m_dl_axis_tready
 
     end
   endgenerate

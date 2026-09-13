@@ -81,7 +81,6 @@ async def test_channel_configuration_and_radio_start_delay(dut):
     assert sync_cycle is not None
     assert radio_cycle is not None
     assert radio_cycle - sync_cycle in range(27341, 27344)
-    assert [int(dut.s_axis_tready[i].value) for i in range(NUM_ANT)] == [1] * NUM_ANT
 
 
 def test_puxch_channel_runner():

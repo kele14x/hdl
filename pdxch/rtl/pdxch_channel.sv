@@ -28,7 +28,6 @@ module pdxch_channel #(
     output var [ 7:0] m_axis_tuser        [NUM_ANT],
     output var        m_axis_tlast        [NUM_ANT],
     output var        m_axis_tvalid       [NUM_ANT],
-    input var         m_axis_tready       [NUM_ANT],
     // CSR
     //----
     input var         ctrl_clk,
@@ -360,8 +359,7 @@ module pdxch_channel #(
       .m_axis_tdata (m_axis_tdata),
       .m_axis_tuser (m_axis_tuser),
       .m_axis_tlast (m_axis_tlast),
-      .m_axis_tvalid(m_axis_tvalid),
-      .m_axis_tready(m_axis_tready)
+      .m_axis_tvalid(m_axis_tvalid)
   );
 
 endmodule

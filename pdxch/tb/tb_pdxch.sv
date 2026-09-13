@@ -60,7 +60,6 @@ module tb_pdxch;
   logic   [ 7:0] m_axis_tuser         [ NUM_CC] [NUM_ANT];
   logic          m_axis_tlast         [ NUM_CC] [NUM_ANT];
   logic          m_axis_tvalid        [ NUM_CC] [NUM_ANT];
-  logic          m_axis_tready        [ NUM_CC] [NUM_ANT];
 
   // O-RAN U-Plane interface
   logic          clk_eth_xran;
@@ -294,7 +293,6 @@ module tb_pdxch;
     forever begin
       @(posedge clk);
       if (!rst && m_axis_tvalid[MONITOR_CC][MONITOR_ANT] &&
-          m_axis_tready[MONITOR_CC][MONITOR_ANT] &&
           m_axis_tuser[MONITOR_CC][MONITOR_ANT][0]) begin
         monitor_frame  = monitor_frame + 1;
         monitor_sample = 0;
@@ -305,8 +303,7 @@ module tb_pdxch;
     end
 
     forever begin
-      if (monitor_file != 0 && m_axis_tvalid[MONITOR_CC][MONITOR_ANT] &&
-          m_axis_tready[MONITOR_CC][MONITOR_ANT]) begin
+      if (monitor_file != 0 && m_axis_tvalid[MONITOR_CC][MONITOR_ANT]) begin
         monitor_i = $signed(
             {
               {16{m_axis_tdata[MONITOR_CC][MONITOR_ANT][15]}},
@@ -355,9 +352,6 @@ module tb_pdxch;
 
     for (int cc = 0; cc < NUM_CC; cc++) begin
       s_dl_sym_num[cc] = '0;
-      for (int antenna = 0; antenna < NUM_ANT; antenna++) begin
-        m_axis_tready[cc][antenna] = 1'b1;
-      end
     end
     for (int antenna = 0; antenna < NUM_ANT; antenna++) begin
       s_defm_data_tdata[antenna]  = '0;

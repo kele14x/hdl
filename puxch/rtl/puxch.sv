@@ -43,7 +43,6 @@ module puxch #(
     input var  [ 7:0] s_axis_tuser         [ NUM_CC][NUM_ANT],
     input var         s_axis_tlast         [ NUM_CC][NUM_ANT],
     input var         s_axis_tvalid        [ NUM_CC][NUM_ANT],
-    output var        s_axis_tready        [ NUM_CC][NUM_ANT],
     // O-RAN U-Plane
     //--------------
     input var         clk_eth_xran,
@@ -201,7 +200,6 @@ module puxch #(
       .s_axis_tuser         (s_axis_tuser),
       .s_axis_tlast         (s_axis_tlast),
       .s_axis_tvalid        (s_axis_tvalid),
-      .s_axis_tready        (s_axis_tready),
       // ORAN
       .clk_eth_xran         (clk_eth_xran),
       .rst_eth_xran         (rst_eth_xran),
