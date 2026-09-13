@@ -15,6 +15,9 @@ __pycache__/
 sim_build/
 results.xml
 
+# Top-level `make all` per-module logs
+.build_logs/
+
 # Vivado OOC runs (per-module)
 **/vivado_ooc/
 

@@ -100,11 +100,15 @@ def test_power_meter_runner():
     }
 
     runner = get_runner(SIM)
+    # NUM_CC=1/NUM_BAND=1 makes the 2-bit control selectors index a [0:0] array;
+    # Verilator flags the benign truncation, and its default is to fail the
+    # build on warnings.
+    build_args = ["-Wno-WIDTHTRUNC"] if SIM == "verilator" else []
     runner.build(
         hdl_toplevel=hdl_toplevel,
         verilog_sources=verilog_sources,
         parameters=parameters,
-        build_args=[],
+        build_args=build_args,
         waves=True,
         always=True,
     )

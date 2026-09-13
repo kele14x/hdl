@@ -10,7 +10,9 @@
 - Hierarchy: none (`-flatten_hierarchy none`)
 - Define: `RAM_USE_XPM`
 
-The OOC flow is defined in `pdxch/synth/pdxch_top_ooc.tcl`.
+The OOC flow is defined in `pdxch/synth/pdxch_top_ooc.tcl` (synthesis, used by
+`make ooc`) and `pdxch/synth/pdxch_top_impl.tcl` (opt/place/route, used by
+`make ooc-impl`); the impl script consumes the synthesis checkpoint.
 
 ## Resource result
 

@@ -8,6 +8,8 @@ MODULE := $(notdir $(CURDIR))
 FLT ?= $(MODULE).flt
 LINT_TOPS ?= cdc_array_single cdc_async_rst cdc_gray cdc_handshake_f cdc_pulse cdc_single cdc_sync_rst
 
+SIMULATORS ?= verilator questa
+
 RTL_SOURCES = $(shell $(PYTHON) $(REPO_ROOT)/hdl_tools/flt_tool.py $(FLT))
 
 .PHONY: lint test format
@@ -18,7 +20,14 @@ lint:
 	done
 
 test:
-	$(PYTEST) -q tests
+	@if [ ! -d tests ]; then \
+		echo "--- cocotb ($(MODULE)): no tests/ directory, skipped ---"; \
+		exit 0; \
+	fi; \
+	for sim in $(SIMULATORS); do \
+		echo "--- cocotb ($(MODULE)): $$sim ---"; \
+		SIM=$$sim $(PYTEST) -q tests || exit $$?; \
+	done
 
 format:
 	$(VERIBLE_VERILOG_FORMAT) --inplace $(wildcard rtl/*.sv)

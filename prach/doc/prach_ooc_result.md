@@ -177,8 +177,14 @@ must re-run implementation.
 ## Reproducing
 
 ```bash
+# From the repository root:
+make ooc OOC_MODULES=prach       # synthesis only -> prach/synth/prach_ooc.tcl
+make ooc-impl OOC_MODULES=prach  # opt/place/route -> prach/synth/prach_impl.tcl
+
+# Or directly (run the impl script after the synthesis script):
 vivado -mode batch -source prach/synth/prach_ooc.tcl          # defaults to ANT_ID=0
-# or: -source prach/synth/prach_ooc.tcl -tclargs 1
+vivado -mode batch -source prach/synth/prach_impl.tcl         # defaults to ANT_ID=0
+# or: -tclargs 1
 ```
 
 Reports land in `prach/vivado_ooc/prach_20260901_ant<ID>/` (git-ignored):

@@ -1,16 +1,20 @@
-# Out-of-context synthesis and implementation for the default FFT
-# configuration.
-# Arguments:
-#   1. source root containing fft/fft.flt
-#   2. output directory, normally fft/vivado_ooc/<run>
-
-if {[llength $argv] != 2} {
-  error "usage: vivado -mode batch -source fft_ooc.tcl -tclargs <source_root> <output_dir>"
-}
+# Out-of-context synthesis for the default FFT configuration.
+#
+# Writes the synthesis checkpoint that fft_impl.tcl consumes.  Implementation
+# (opt/place/route) lives in fft_impl.tcl so `make ooc` stays fast.
+#
+# tclargs (optional):
+#   1. output directory, default fft/vivado_ooc/fft_ooc
 
 set script_dir [file dirname [file normalize [info script]]]
-set source_root [file normalize [lindex $argv 0]]
-set build_dir [file normalize [lindex $argv 1]]
+set repo_root [file normalize [file join $script_dir .. ..]]
+set build_dir [file normalize [file join $repo_root fft vivado_ooc fft_ooc]]
+if {[llength $argv] > 1} {
+  error "usage: -source fft_ooc.tcl [-tclargs <output_dir>]"
+}
+if {[llength $argv] == 1} {
+  set build_dir [file normalize [lindex $argv 0]]
+}
 set part xcku5p-ffvb676-2-i
 set top fft
 
@@ -52,7 +56,7 @@ proc add_flt {path} {
   }
 }
 
-add_flt [file join $source_root fft fft.flt]
+add_flt [file join $repo_root fft fft.flt]
 puts "INFO: resolved [llength $sources] unique RTL sources"
 foreach source $sources {
   puts "INFO: source $source"
@@ -73,22 +77,6 @@ set syn_dcp [file join $build_dir fft_ooc.dcp]
 write_checkpoint -force $syn_dcp
 
 puts "INFO: FFT OOC synthesis completed"
+puts "INFO: synthesis checkpoint: $syn_dcp"
 puts "INFO: utilization report: [file join $build_dir fft_utilization.rpt]"
-
-# Continue from the synthesized netlist through implementation. The
-# synthesis checkpoint above is kept so the two design states can be inspected
-# independently from the same run directory.
-opt_design
-place_design
-phys_opt_design
-route_design
-
-report_utilization -file [file join $build_dir fft_impl_utilization.rpt]
-report_utilization -hierarchical -file [file join $build_dir fft_impl_utilization_hierarchical.rpt]
-report_timing_summary -file [file join $build_dir fft_impl_timing_summary.rpt]
-report_route_status -file [file join $build_dir fft_impl_route_status.rpt]
-set impl_dcp [file join $build_dir fft_impl.dcp]
-write_checkpoint -force $impl_dcp
-
-puts "INFO: FFT implementation completed"
-puts "INFO: implementation utilization report: [file join $build_dir fft_impl_utilization.rpt]"
+puts "INFO: run 'make ooc-impl' for opt/place/route"

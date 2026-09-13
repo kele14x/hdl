@@ -10,7 +10,7 @@ Layout:
 - `tests/` — cocotb regression tests and cycle-accurate Python models
 - `tb/` — traditional SystemVerilog testbench helpers
 - `doc/` — design notes and OOC synthesis results
-- `synth/` — Vivado OOC script (`prach_ooc.tcl`)
+- `synth/` — Vivado OOC scripts (`prach_ooc.tcl` synthesis, `prach_impl.tcl` implementation)
 - `prach.flt` — RTL filelist (no testbench files)
 
 ## Resource and integration context
