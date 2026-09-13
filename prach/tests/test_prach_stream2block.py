@@ -21,6 +21,11 @@ CP_SAMPLES = 8
 START_SAMPLE = CP_SAMPLES << 4
 RAM_BANKS = 3
 RAM_BANK_ADDR_WIDTH = 10
+# The antenna is folded into each bank's RAM address, so the physical address is
+# {antenna, bank-relative address}; the bank itself selects one of the three RAMs.
+# Mirrors AntWidth in prach_stream2block.sv.
+ANT_ADDR_WIDTH = max(1, (NUM_ANT - 1).bit_length())
+MERGED_ADDR_WIDTH = RAM_BANK_ADDR_WIDTH + ANT_ADDR_WIDTH
 READ_GAP = SEQ_LEN + 64
 
 # NUM_ANT=1 is not covered: with a single antenna the second sequence reads
@@ -130,9 +135,9 @@ def _physical_address(sequence, sample):
 async def test_three_explicit_banks_follow_the_existing_address_mapping(dut):
     await _reset(dut)
 
-    banks = [dut.g_ant[0].g_bank[index].u_ram for index in range(RAM_BANKS)]
+    banks = [dut.g_bank[index].u_ram for index in range(RAM_BANKS)]
     assert len(banks) == RAM_BANKS
-    assert all(len(bank.addra.value) == RAM_BANK_ADDR_WIDTH for bank in banks)
+    assert all(len(bank.addra.value) == MERGED_ADDR_WIDTH for bank in banks)
 
     observed_banks = set()
     observed_addresses = []
@@ -144,8 +149,7 @@ async def test_three_explicit_banks_follow_the_existing_address_mapping(dut):
         while not monitor_done:
             await RisingEdge(dut.clk)
             await Timer(1, unit="ps")
-            write_enable = int(dut.wr_we.value) & 1
-            if not write_enable:
+            if not int(dut.wr_we_any.value):
                 continue
 
             physical_address = int(dut.wr_addr.value)
@@ -153,12 +157,17 @@ async def test_three_explicit_banks_follow_the_existing_address_mapping(dut):
             assert sum(selected) == 1
             selected_bank = selected.index(1)
             assert selected_bank == physical_address >> RAM_BANK_ADDR_WIDTH
+            # Antenna in the address, bank as the RAM select.
             assert int(banks[selected_bank].addra.value) == (
-                physical_address & ((1 << RAM_BANK_ADDR_WIDTH) - 1)
+                (int(dut.wr_ant.value) << RAM_BANK_ADDR_WIDTH)
+                | (physical_address & ((1 << RAM_BANK_ADDR_WIDTH) - 1))
             )
             observed_banks.add(selected_bank)
-            observed_addresses.append(physical_address)
-            observed_writes += 1
+            # The contiguous 0..3071 order is checked for one antenna only; the
+            # other antennas share the same bank/address map.
+            if int(dut.wr_we.value) & 1:
+                observed_addresses.append(physical_address)
+                observed_writes += 1
 
     monitor = cocotb.start_soon(monitor_writes())
     await _send_two_sequence_occasion(dut)
@@ -197,7 +206,9 @@ async def test_readback_preserves_bit_reverse_order_across_all_memory_banks(dut)
         await ClockCycles(dut.clk, SEQ_LEN + 64)
         monitor.cancel()
 
-        banks = [dut.g_ant[0].g_bank[index].u_ram for index in range(RAM_BANKS)]
+        banks = [dut.g_bank[index].u_ram for index in range(RAM_BANKS)]
+        # The readback only ever requests antenna 0, whose words sit at
+        # {antenna = 0, bank-relative address}, i.e. the low part of the address.
         memory = {
             physical_address: int(
                 banks[physical_address >> RAM_BANK_ADDR_WIDTH]

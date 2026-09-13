@@ -53,6 +53,20 @@ module prach_stream2block #(
   localparam int RamDepth = 1024;
   localparam int RamAddrWidth = $clog2(RamDepth);
 
+  // One RAM per bank, addressed by {antenna, address}.  The antenna is part of
+  // the address instead of selecting one of NUM_ANT separate RAMs, so the read
+  // path collapses from a 12:1 mux to a 3:1 bank mux.  Only one antenna writes
+  // and one reads per cycle (see wr_we and the ap_ack arbiter), so a shared
+  // simple-dual-port RAM has no port conflict; the existing bank map (the
+  // wr_addr/rd_addr cases below) still keeps the symbol being read and the
+  // symbol being written in different bank halves.  The buffer holds the two
+  // 1536-sample symbols of an F1 occasion, see prach/README.md.
+  // AntWidth is clamped to at least 1 so the address concatenation stays legal
+  // for NUM_ANT = 1, which is an unsupported configuration (see the tests).
+  localparam int AntWidth = (NUM_ANT <= 1) ? 1 : $clog2(NUM_ANT);
+  localparam int RamWordAddrWidth = RamAddrWidth + AntWidth;
+  localparam int RamWordDepth = 1 << RamWordAddrWidth;
+
   initial begin : drc_check
     assert (1 <= NUM_ANT && NUM_ANT <= 4)
     else $error("[%m]: NUM_ANT (%0d) must be between 1 and 4.", NUM_ANT);
@@ -94,6 +108,9 @@ module prach_stream2block #(
 
   logic [AddrWidth-1:0] wr_addr;
   logic [  NUM_ANT-1:0] wr_we;
+  // Antenna of the word currently being written (aligned with wr_we/wr_data).
+  logic [ AntWidth-1:0] wr_ant;
+  logic                 wr_we_any;
   logic [         31:0] wr_data;
 
   logic                 busy;
@@ -114,8 +131,9 @@ module prach_stream2block #(
   logic [          1:0] rd_addr_bank_dd;
   logic [  NUM_ANT-1:0] rd_en;
   logic [  NUM_ANT-1:0] rd_en_d;
-  logic [  NUM_ANT-1:0] rd_en_dd;
-  logic [         31:0] rd_data          [NUM_ANT][NumRamBank];
+  logic                 rd_en_any;
+  logic                 rd_en_any_d;
+  logic [         31:0] rd_data          [NumRamBank];
   logic [         31:0] rd_data_c;
 
   logic [          1:0] chn;
@@ -263,6 +281,14 @@ module prach_stream2block #(
     wr_data <= {din_di_d, din_dr_d};
   end
 
+  // Antenna of the word being written, registered alongside wr_we and wr_data so
+  // it can be folded into the RAM write address.
+  always_ff @(posedge clk) begin
+    wr_ant <= din_chn_d[AntWidth-1:0];
+  end
+
+  assign wr_we_any = |wr_we;
+
   // Reader FSM
 
   generate
@@ -313,10 +339,14 @@ module prach_stream2block #(
 
   always_ff @(posedge clk) begin
     rd_en_d <= rd_en;
-    rd_en_dd <= rd_en_d;
     rd_addr_bank_d <= rd_addr[11:10];
     rd_addr_bank_dd <= rd_addr_bank_d;
   end
+
+  // Only one antenna can be granted a read at a time (see the ap_ack arbiter),
+  // so a single read-active flag replaces the per-antenna enables.
+  assign rd_en_any = |rd_en;
+  assign rd_en_any_d = |rd_en_d;
 
   assign ap_req_any = |ap_req;
 
@@ -369,15 +399,13 @@ module prach_stream2block #(
 
   assign rd_addr[8:0] = rd_cnt_rev[8:0];
 
+  // The antenna is already in the read address, so only the bank has to be
+  // selected, two cycles after its address was presented.
   always_comb begin
     rd_data_c = '0;
-    for (int i = 0; i < NUM_ANT; i++) begin
-      if (rd_en_dd[i]) begin
-        for (int j = 0; j < NumRamBank; j++) begin
-          if (rd_addr_bank_dd == 2'(j)) begin
-            rd_data_c = rd_data[i][j];
-          end
-        end
+    for (int j = 0; j < NumRamBank; j++) begin
+      if (rd_addr_bank_dd == 2'(j)) begin
+        rd_data_c = rd_data[j];
       end
     end
   end
@@ -411,32 +439,28 @@ module prach_stream2block #(
   end
 
   generate
-    for (genvar i = 0; i < NUM_ANT; i++) begin : g_ant
+    for (genvar j = 0; j < NumRamBank; j++) begin : g_bank
 
-      for (genvar j = 0; j < NumRamBank; j++) begin : g_bank
-
-        ram_sdp #(
-            .ADDR_WIDTH  (RamAddrWidth),
-            .DATA_WIDTH  (32),
-            .DEPTH       (RamDepth),
-            .READ_LATENCY(2),
-            .INIT_FILE   ("NONE"),
-            .RAM_STYLE   ("BLOCK")
-        ) u_ram (
-            // Port A
-            .clka(clk),
-            .wea(wr_we[i] && (wr_addr[11:10] == 2'(j))),
-            .addra(wr_addr[RamAddrWidth-1:0]),
-            .dina(wr_data),
-            // Port B
-            .clkb(clk),
-            .rstb(~(rd_en_d[i] && (rd_addr_bank_d == 2'(j)))),
-            .enb({rd_en_d[i] && (rd_addr_bank_d == 2'(j)), rd_en[i] && (rd_addr[11:10] == 2'(j))}),
-            .addrb(rd_addr[RamAddrWidth-1:0]),
-            .doutb(rd_data[i][j])
-        );
-
-      end
+      ram_sdp #(
+          .ADDR_WIDTH  (RamWordAddrWidth),
+          .DATA_WIDTH  (32),
+          .DEPTH       (RamWordDepth),
+          .READ_LATENCY(2),
+          .INIT_FILE   ("NONE"),
+          .RAM_STYLE   ("BLOCK")
+      ) u_ram (
+          // Port A
+          .clka(clk),
+          .wea(wr_we_any && (wr_addr[11:10] == 2'(j))),
+          .addra({wr_ant, wr_addr[RamAddrWidth-1:0]}),
+          .dina(wr_data),
+          // Port B
+          .clkb(clk),
+          .rstb(~(rd_en_any_d && (rd_addr_bank_d == 2'(j)))),
+          .enb({rd_en_any_d && (rd_addr_bank_d == 2'(j)), rd_en_any && (rd_addr[11:10] == 2'(j))}),
+          .addrb({chn[AntWidth-1:0], rd_addr[RamAddrWidth-1:0]}),
+          .doutb(rd_data[j])
+      );
 
     end
   endgenerate

@@ -124,6 +124,47 @@ both data and sideband, which is the same latency as the hb2 filter path — so 
 chain latency is mode-independent. Bypass never reaches `prach_hb4` in any
 supported mode, so only the hb2 form is modelled.
 
+## `prach_stream2block` buffer organisation
+
+The FFT input buffer is sized by the PRACH format that has to be supported, and
+the non-obvious address mapping follows from that.
+
+- An **F1** PRACH occasion carries **two consecutive 1536-sample symbols**
+  (`rtl/prach_ctrl.sv:384`, "Number of symbol, F0 = 1, F1 = 2"), so the block
+  buffers `2 x 1536 = 3072` words **per antenna**.
+- A 32-bit simple-dual-port RAMB36 is at most **1024 deep**, so 3072 words are
+  split into **3 banks of 1024** per antenna. With `NUM_ANT = 4` that is 12 RAMs,
+  and one 1024x32 exactly fills one RAMB36 tile.
+- Each symbol is cut into three 512-word chunks. The mapping from
+  `{wr_bank, wr_cnt[10:9]}` to `{bank, addr[9]}` (the two `case` statements in
+  `rtl/prach_stream2block.sv`) is deliberately **not linear**:
+
+  | `wr_bank` (symbol) | chunk `wr_cnt[10:9]` | bank | `addr[9]` |
+  |---:|---:|---:|---:|
+  | 0 | 0 | 0 | 0 |
+  | 0 | 1 | 0 | 1 |
+  | 0 | 2 | 1 | 0 |
+  | 1 | 0 | 1 | 1 |
+  | 1 | 1 | 2 | 0 |
+  | 1 | 2 | 2 | 1 |
+
+  With it, the two symbols of the occasion share bank 1 only through different
+  `addr[9]` halves, so the symbol that has finished can be read out while the
+  other one is still being written — no two concurrent accesses hit the same
+  bank half.
+
+- The block does **not** ping-pong whole occasions. Processing is fast enough that
+  an occasion is consumed before the next one needs the buffer, so only the two
+  symbols of the current F1 occasion are held.
+- The read side walks `rd_cnt` in bit-reversed order (`rd_cnt_rev`), which is the
+  order the FFT consumes.
+
+The C1 merge then folded the antenna into the address: one 4096x32 RAM per bank,
+addressed by `{antenna, bank-relative address}`, so the read path selects 3 banks
+instead of 12 antenna/bank combinations. The 4 antenna slots share each bank's
+depth, so the RAM count, the depth and the tile count are unchanged; see
+`doc/prach_ooc_result.md` for the measured effect.
+
 ## Lane cadence and the halfband delay lines
 
 This matters for the delay-line microarchitecture, so it is recorded here.
