@@ -345,10 +345,10 @@ module prach_stream2block #(
 
   // Only one antenna can be granted a read at a time (see the ap_ack arbiter),
   // so a single read-active flag replaces the per-antenna enables.
-  assign rd_en_any = |rd_en;
+  assign rd_en_any   = |rd_en;
   assign rd_en_any_d = |rd_en_d;
 
-  assign ap_req_any = |ap_req;
+  assign ap_req_any  = |ap_req;
 
   always_ff @(posedge clk) begin
     if (rst) begin

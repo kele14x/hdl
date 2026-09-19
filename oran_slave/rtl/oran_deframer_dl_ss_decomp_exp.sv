@@ -30,15 +30,15 @@ module oran_deframer_dl_ss_decomp_exp (
 
   logic [ 3:0] exp;
 
-  logic [15:0] data0                                             [4];
+  logic [15:0] data0      [4];
   logic [ 3:0] width0;
   logic [ 4:0] shift0;
 
-  logic [30:0] data1                                             [4];
-  logic [15:0] data2                                             [4];
+  logic [30:0] data1      [4];
+  logic [15:0] data2      [4];
 
-  logic        din_valid_d                                       [3];
-  logic        din_last_d                                        [3];
+  logic        din_valid_d[3];
+  logic        din_last_d [3];
 
   //
   // This function saturate signed 31-bit to 16-bit

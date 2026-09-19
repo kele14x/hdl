@@ -714,78 +714,78 @@ module lowphy_band #(
   localparam int NUM_CC_REG = 3;
 
   /* verilator lint_off UNUSED */
-  logic [ 3:0] reg_ctrl_dl_en                    [NUM_CC_REG];
-  logic [ 1:0] reg_ctrl_dl_rat                   [NUM_CC_REG];
-  logic [ 3:0] reg_ctrl_dl_bist                  [NUM_CC_REG];
-  logic [ 3:0] reg_ctrl_dl_bw                    [NUM_CC_REG];
-  logic [ 8:0] reg_ctrl_dl_nprb                  [NUM_CC_REG];
-  logic [22:0] reg_ctrl_dl_rfs_offset            [NUM_CC_REG];
-  logic [16:0] reg_ctrl_dl_gain                  [NUM_CC_REG][4];
-  logic [ 3:0] reg_ctrl_ul_en                    [NUM_CC_REG];
-  logic [ 1:0] reg_ctrl_ul_rat                   [NUM_CC_REG];
-  logic [ 3:0] reg_ctrl_ul_bist                  [NUM_CC_REG];
-  logic [ 3:0] reg_ctrl_ul_bw                    [NUM_CC_REG];
-  logic [ 8:0] reg_ctrl_ul_nprb                  [NUM_CC_REG];
-  logic [22:0] reg_ctrl_ul_rfs_offset            [NUM_CC_REG];
-  logic [16:0] reg_ctrl_ul_gain                  [NUM_CC_REG][4];
-  logic [ 3:0] reg_ctrl_prach_en                 [NUM_CC_REG];
-  logic [ 3:0] reg_ctrl_prach_format             [NUM_CC_REG];
-  logic [ 1:0] reg_ctrl_prach_rat                [NUM_CC_REG];
-  logic [ 3:0] reg_ctrl_prach_bist_bist          [NUM_CC_REG];
-  logic [ 3:0] reg_ctrl_prach_bist_static_c      [NUM_CC_REG];
-  logic [ 3:0] reg_ctrl_prach_bw                 [NUM_CC_REG];
-  logic [22:0] reg_ctrl_prach_rfs_offset         [NUM_CC_REG];
-  logic [22:0] reg_ctrl_prach_ta3_offset         [NUM_CC_REG];
-  logic [ 5:0] reg_ctrl_prach_cfg0_symbol_id     [NUM_CC_REG];
-  logic [ 5:0] reg_ctrl_prach_cfg0_slot_id       [NUM_CC_REG];
-  logic [ 3:0] reg_ctrl_prach_cfg0_subframe_id   [NUM_CC_REG];
-  logic [ 3:0] reg_ctrl_prach_cfg0_subframe_inc  [NUM_CC_REG];
-  logic [15:0] reg_ctrl_prach_cfg1_time_offset   [NUM_CC_REG];
-  logic [15:0] reg_ctrl_prach_cfg1_cp_length     [NUM_CC_REG];
-  logic [ 3:0] reg_ctrl_prach_cfg2_num_symbol    [NUM_CC_REG];
-  logic [23:0] reg_ctrl_prach_cfg2_freq_offset   [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_dl_en                     [NUM_CC_REG];
+  logic [ 1:0] reg_ctrl_dl_rat                    [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_dl_bist                   [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_dl_bw                     [NUM_CC_REG];
+  logic [ 8:0] reg_ctrl_dl_nprb                   [NUM_CC_REG];
+  logic [22:0] reg_ctrl_dl_rfs_offset             [NUM_CC_REG];
+  logic [16:0] reg_ctrl_dl_gain                   [NUM_CC_REG] [4];
+  logic [ 3:0] reg_ctrl_ul_en                     [NUM_CC_REG];
+  logic [ 1:0] reg_ctrl_ul_rat                    [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_ul_bist                   [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_ul_bw                     [NUM_CC_REG];
+  logic [ 8:0] reg_ctrl_ul_nprb                   [NUM_CC_REG];
+  logic [22:0] reg_ctrl_ul_rfs_offset             [NUM_CC_REG];
+  logic [16:0] reg_ctrl_ul_gain                   [NUM_CC_REG] [4];
+  logic [ 3:0] reg_ctrl_prach_en                  [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_format              [NUM_CC_REG];
+  logic [ 1:0] reg_ctrl_prach_rat                 [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_bist_bist           [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_bist_static_c       [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_bw                  [NUM_CC_REG];
+  logic [22:0] reg_ctrl_prach_rfs_offset          [NUM_CC_REG];
+  logic [22:0] reg_ctrl_prach_ta3_offset          [NUM_CC_REG];
+  logic [ 5:0] reg_ctrl_prach_cfg0_symbol_id      [NUM_CC_REG];
+  logic [ 5:0] reg_ctrl_prach_cfg0_slot_id        [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_cfg0_subframe_id    [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_cfg0_subframe_inc   [NUM_CC_REG];
+  logic [15:0] reg_ctrl_prach_cfg1_time_offset    [NUM_CC_REG];
+  logic [15:0] reg_ctrl_prach_cfg1_cp_length      [NUM_CC_REG];
+  logic [ 3:0] reg_ctrl_prach_cfg2_num_symbol     [NUM_CC_REG];
+  logic [23:0] reg_ctrl_prach_cfg2_freq_offset    [NUM_CC_REG];
   logic [15:0] reg_ctrl_prach_cfg3_sampling_offset[NUM_CC_REG];
   /* verilator lint_on UNUSED */
 
-  logic [ 3:0] reg_stat_prach_msg0_subframe_id   [NUM_CC_REG];
-  logic [ 5:0] reg_stat_prach_msg0_slot_id       [NUM_CC_REG];
-  logic [ 5:0] reg_stat_prach_msg0_symbol_id     [NUM_CC_REG];
-  logic [15:0] reg_stat_prach_msg1_time_offset   [NUM_CC_REG];
-  logic [15:0] reg_stat_prach_msg1_cp_length     [NUM_CC_REG];
-  logic [ 3:0] reg_stat_prach_msg2_num_symbol    [NUM_CC_REG];
-  logic [23:0] reg_stat_prach_msg2_freq_offset   [NUM_CC_REG];
+  logic [ 3:0] reg_stat_prach_msg0_subframe_id    [NUM_CC_REG];
+  logic [ 5:0] reg_stat_prach_msg0_slot_id        [NUM_CC_REG];
+  logic [ 5:0] reg_stat_prach_msg0_symbol_id      [NUM_CC_REG];
+  logic [15:0] reg_stat_prach_msg1_time_offset    [NUM_CC_REG];
+  logic [15:0] reg_stat_prach_msg1_cp_length      [NUM_CC_REG];
+  logic [ 3:0] reg_stat_prach_msg2_num_symbol     [NUM_CC_REG];
+  logic [23:0] reg_stat_prach_msg2_freq_offset    [NUM_CC_REG];
 
   generate
     for (genvar cc = 0; cc < NUM_CC_REG; cc++) begin : gen_cc_map
       if (cc < NUM_CC) begin : gen_active_cc
-        assign ctrl_dl_en[cc]                     = reg_ctrl_dl_en[cc];
-        assign ctrl_dl_rat[cc]                    = reg_ctrl_dl_rat[cc];
-        assign ctrl_dl_bist[cc]                   = reg_ctrl_dl_bist[cc];
-        assign ctrl_dl_bw[cc]                     = reg_ctrl_dl_bw[cc];
-        assign ctrl_dl_nprb[cc]                   = reg_ctrl_dl_nprb[cc];
-        assign ctrl_dl_rfs_offset[cc]             = reg_ctrl_dl_rfs_offset[cc];
-        assign ctrl_ul_en[cc]                     = reg_ctrl_ul_en[cc];
-        assign ctrl_ul_rat[cc]                    = reg_ctrl_ul_rat[cc];
-        assign ctrl_ul_bist[cc]                   = reg_ctrl_ul_bist[cc];
-        assign ctrl_ul_bw[cc]                     = reg_ctrl_ul_bw[cc];
-        assign ctrl_ul_nprb[cc]                   = reg_ctrl_ul_nprb[cc];
-        assign ctrl_ul_rfs_offset[cc]             = reg_ctrl_ul_rfs_offset[cc];
-        assign ctrl_prach_en[cc]                  = reg_ctrl_prach_en[cc];
-        assign ctrl_prach_format[cc]              = reg_ctrl_prach_format[cc];
-        assign ctrl_prach_rat[cc]                 = reg_ctrl_prach_rat[cc];
-        assign ctrl_prach_bist_bist[cc]           = reg_ctrl_prach_bist_bist[cc];
-        assign ctrl_prach_bist_static_c[cc]       = reg_ctrl_prach_bist_static_c[cc];
-        assign ctrl_prach_bw[cc]                  = reg_ctrl_prach_bw[cc];
-        assign ctrl_prach_rfs_offset[cc]          = reg_ctrl_prach_rfs_offset[cc];
-        assign ctrl_prach_ta3_offset[cc]          = reg_ctrl_prach_ta3_offset[cc];
-        assign ctrl_prach_cfg0_symbol_id[cc]      = reg_ctrl_prach_cfg0_symbol_id[cc];
-        assign ctrl_prach_cfg0_slot_id[cc]        = reg_ctrl_prach_cfg0_slot_id[cc];
-        assign ctrl_prach_cfg0_subframe_id[cc]    = reg_ctrl_prach_cfg0_subframe_id[cc];
-        assign ctrl_prach_cfg0_subframe_inc[cc]   = reg_ctrl_prach_cfg0_subframe_inc[cc];
-        assign ctrl_prach_cfg1_time_offset[cc]    = reg_ctrl_prach_cfg1_time_offset[cc];
-        assign ctrl_prach_cfg1_cp_length[cc]      = reg_ctrl_prach_cfg1_cp_length[cc];
-        assign ctrl_prach_cfg2_num_symbol[cc]     = reg_ctrl_prach_cfg2_num_symbol[cc];
-        assign ctrl_prach_cfg2_freq_offset[cc]    = reg_ctrl_prach_cfg2_freq_offset[cc];
+        assign ctrl_dl_en[cc]                      = reg_ctrl_dl_en[cc];
+        assign ctrl_dl_rat[cc]                     = reg_ctrl_dl_rat[cc];
+        assign ctrl_dl_bist[cc]                    = reg_ctrl_dl_bist[cc];
+        assign ctrl_dl_bw[cc]                      = reg_ctrl_dl_bw[cc];
+        assign ctrl_dl_nprb[cc]                    = reg_ctrl_dl_nprb[cc];
+        assign ctrl_dl_rfs_offset[cc]              = reg_ctrl_dl_rfs_offset[cc];
+        assign ctrl_ul_en[cc]                      = reg_ctrl_ul_en[cc];
+        assign ctrl_ul_rat[cc]                     = reg_ctrl_ul_rat[cc];
+        assign ctrl_ul_bist[cc]                    = reg_ctrl_ul_bist[cc];
+        assign ctrl_ul_bw[cc]                      = reg_ctrl_ul_bw[cc];
+        assign ctrl_ul_nprb[cc]                    = reg_ctrl_ul_nprb[cc];
+        assign ctrl_ul_rfs_offset[cc]              = reg_ctrl_ul_rfs_offset[cc];
+        assign ctrl_prach_en[cc]                   = reg_ctrl_prach_en[cc];
+        assign ctrl_prach_format[cc]               = reg_ctrl_prach_format[cc];
+        assign ctrl_prach_rat[cc]                  = reg_ctrl_prach_rat[cc];
+        assign ctrl_prach_bist_bist[cc]            = reg_ctrl_prach_bist_bist[cc];
+        assign ctrl_prach_bist_static_c[cc]        = reg_ctrl_prach_bist_static_c[cc];
+        assign ctrl_prach_bw[cc]                   = reg_ctrl_prach_bw[cc];
+        assign ctrl_prach_rfs_offset[cc]           = reg_ctrl_prach_rfs_offset[cc];
+        assign ctrl_prach_ta3_offset[cc]           = reg_ctrl_prach_ta3_offset[cc];
+        assign ctrl_prach_cfg0_symbol_id[cc]       = reg_ctrl_prach_cfg0_symbol_id[cc];
+        assign ctrl_prach_cfg0_slot_id[cc]         = reg_ctrl_prach_cfg0_slot_id[cc];
+        assign ctrl_prach_cfg0_subframe_id[cc]     = reg_ctrl_prach_cfg0_subframe_id[cc];
+        assign ctrl_prach_cfg0_subframe_inc[cc]    = reg_ctrl_prach_cfg0_subframe_inc[cc];
+        assign ctrl_prach_cfg1_time_offset[cc]     = reg_ctrl_prach_cfg1_time_offset[cc];
+        assign ctrl_prach_cfg1_cp_length[cc]       = reg_ctrl_prach_cfg1_cp_length[cc];
+        assign ctrl_prach_cfg2_num_symbol[cc]      = reg_ctrl_prach_cfg2_num_symbol[cc];
+        assign ctrl_prach_cfg2_freq_offset[cc]     = reg_ctrl_prach_cfg2_freq_offset[cc];
         assign ctrl_prach_cfg3_sampling_offset[cc] = reg_ctrl_prach_cfg3_sampling_offset[cc];
 
         for (genvar ant = 0; ant < 4; ant++) begin : gen_gain_ant
@@ -793,23 +793,23 @@ module lowphy_band #(
           assign ctrl_ul_gain_reg[cc][ant] = reg_ctrl_ul_gain[cc][ant];
         end
 
-        assign reg_stat_prach_msg0_subframe_id[cc]      = stat_prach_msg0_subframe_id[cc];
-        assign reg_stat_prach_msg0_slot_id[cc]          = stat_prach_msg0_slot_id[cc];
-        assign reg_stat_prach_msg0_symbol_id[cc]        = stat_prach_msg0_symbol_id[cc];
-        assign reg_stat_prach_msg1_time_offset[cc]      = stat_prach_msg1_time_offset[cc];
-        assign reg_stat_prach_msg1_cp_length[cc]        = stat_prach_msg1_cp_length[cc];
-        assign reg_stat_prach_msg2_num_symbol[cc]       = stat_prach_msg2_num_symbol[cc];
-        assign reg_stat_prach_msg2_freq_offset[cc]      = stat_prach_msg2_freq_offset[cc];
+        assign reg_stat_prach_msg0_subframe_id[cc] = stat_prach_msg0_subframe_id[cc];
+        assign reg_stat_prach_msg0_slot_id[cc]     = stat_prach_msg0_slot_id[cc];
+        assign reg_stat_prach_msg0_symbol_id[cc]   = stat_prach_msg0_symbol_id[cc];
+        assign reg_stat_prach_msg1_time_offset[cc] = stat_prach_msg1_time_offset[cc];
+        assign reg_stat_prach_msg1_cp_length[cc]   = stat_prach_msg1_cp_length[cc];
+        assign reg_stat_prach_msg2_num_symbol[cc]  = stat_prach_msg2_num_symbol[cc];
+        assign reg_stat_prach_msg2_freq_offset[cc] = stat_prach_msg2_freq_offset[cc];
       end else begin : gen_inactive_cc
         // The register slots above this band's CC count stay readable but
         // drive nothing, and their status inputs read back as zero.
-        assign reg_stat_prach_msg0_subframe_id[cc]      = '0;
-        assign reg_stat_prach_msg0_slot_id[cc]          = '0;
-        assign reg_stat_prach_msg0_symbol_id[cc]        = '0;
-        assign reg_stat_prach_msg1_time_offset[cc]      = '0;
-        assign reg_stat_prach_msg1_cp_length[cc]        = '0;
-        assign reg_stat_prach_msg2_num_symbol[cc]       = '0;
-        assign reg_stat_prach_msg2_freq_offset[cc]      = '0;
+        assign reg_stat_prach_msg0_subframe_id[cc] = '0;
+        assign reg_stat_prach_msg0_slot_id[cc]     = '0;
+        assign reg_stat_prach_msg0_symbol_id[cc]   = '0;
+        assign reg_stat_prach_msg1_time_offset[cc] = '0;
+        assign reg_stat_prach_msg1_cp_length[cc]   = '0;
+        assign reg_stat_prach_msg2_num_symbol[cc]  = '0;
+        assign reg_stat_prach_msg2_freq_offset[cc] = '0;
       end
     end
   endgenerate

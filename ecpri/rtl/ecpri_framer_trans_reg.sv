@@ -167,24 +167,24 @@ module ecpri_framer_trans_reg (
 
   // OOB signals register
 
-  always @(posedge clk) begin
+  always_ff @(posedge clk) begin
     if (rst) begin
       sync_n <= 1'b0;
       m_trans_messagetype <= '0;
       m_trans_payloadsize <= '0;
       m_trans_rtc_pc_id <= '0;
-    end else if (s_axis_tvalid && s_axis_tready) begin
-      sync_n <= 1'b0;
-    end else if (s_axis_tvalid) begin
-      sync_n <= 1'b1;
-    end
-  end
+    end else begin
+      if (s_axis_tvalid && s_axis_tready) begin
+        sync_n <= 1'b0;
+      end else if (s_axis_tvalid) begin
+        sync_n <= 1'b1;
+      end
 
-  always @(posedge clk) begin
-    if (~sync_n && s_axis_tvalid) begin
-      m_trans_messagetype <= s_trans_messagetype;
-      m_trans_payloadsize <= s_trans_payloadsize;
-      m_trans_rtc_pc_id   <= s_trans_rtc_pc_id;
+      if (!sync_n && s_axis_tvalid) begin
+        m_trans_messagetype <= s_trans_messagetype;
+        m_trans_payloadsize <= s_trans_payloadsize;
+        m_trans_rtc_pc_id   <= s_trans_rtc_pc_id;
+      end
     end
   end
 

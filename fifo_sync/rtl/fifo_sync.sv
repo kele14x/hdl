@@ -27,9 +27,9 @@ module fifo_sync #(
   // Local parameters
   //=================
 
-  localparam int AddrWidth = $clog2(FIFO_DEPTH);
+  localparam int AddrWidth  = $clog2(FIFO_DEPTH);
   localparam int RamLatency = FIFO_LATENCY >= 2 ? 2 : 1;
-  localparam bit FabricReg = FIFO_LATENCY >= 3;
+  localparam bit FabricReg  = FIFO_LATENCY >= 3;
 
 
   // DRC

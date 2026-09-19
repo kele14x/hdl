@@ -795,15 +795,15 @@ module lowphy1 (
 
   // Signals
 
-  logic [31:0] m0_axis_tdata [NumCc][4];
-  logic [ 7:0] m0_axis_tuser [NumCc][4];
-  logic        m0_axis_tlast [NumCc][4];
-  logic        m0_axis_tvalid[NumCc][4];
+  logic [31:0] m0_axis_tdata [      NumCc][4];
+  logic [ 7:0] m0_axis_tuser [      NumCc][4];
+  logic        m0_axis_tlast [      NumCc][4];
+  logic        m0_axis_tvalid[      NumCc][4];
 
-  logic [31:0] s0_axis_tdata [NumCc][4];
-  logic [ 7:0] s0_axis_tuser [NumCc][4];
-  logic        s0_axis_tlast [NumCc][4];
-  logic        s0_axis_tvalid[NumCc][4];
+  logic [31:0] s0_axis_tdata [      NumCc][4];
+  logic [ 7:0] s0_axis_tuser [      NumCc][4];
+  logic        s0_axis_tlast [      NumCc][4];
+  logic        s0_axis_tvalid[      NumCc][4];
 
 
   logic [31:0] m1_axis_tdata [NumCcBand12][2];
@@ -893,21 +893,21 @@ module lowphy1 (
   // collected here.
 
   /* verilator lint_off UNUSED */
-  wire b1_s_defm_ebid_tready;
-  wire b1_s_fram_ebid_tready;
-  wire b1_s_prach_tready;
-  wire b1_s_ssb_data_tready;
-  wire b1_s_ssb_ebid_tready;
-  wire b1_s_ssb_bid_tready;
+  wire        b1_s_defm_ebid_tready;
+  wire        b1_s_fram_ebid_tready;
+  wire        b1_s_prach_tready;
+  wire        b1_s_ssb_data_tready;
+  wire        b1_s_ssb_ebid_tready;
+  wire        b1_s_ssb_bid_tready;
   /* verilator lint_on UNUSED */
 
   /* verilator lint_off UNUSED */
-  wire b2_s_defm_ebid_tready;
-  wire b2_s_fram_ebid_tready;
-  wire b2_s_prach_tready;
-  wire b2_s_ssb_data_tready;
-  wire b2_s_ssb_ebid_tready;
-  wire b2_s_ssb_bid_tready;
+  wire        b2_s_defm_ebid_tready;
+  wire        b2_s_fram_ebid_tready;
+  wire        b2_s_prach_tready;
+  wire        b2_s_ssb_data_tready;
+  wire        b2_s_ssb_ebid_tready;
+  wire        b2_s_ssb_bid_tready;
   /* verilator lint_on UNUSED */
 
   lowphy_band #(

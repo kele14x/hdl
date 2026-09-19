@@ -4,10 +4,9 @@
  * This FIFO is used to store AXI-Stream packets in the pipeline. This FIFO has
  * backward pressure on the input slave AXI-Stream.
  *
- * Note: `s_axis_aresetn` must be synchronized to `s_axis_aclk` before it
- * enters this core; it is only registered here, not synchronized. In
- * ASYNC_MODE the read-domain reset is derived with an internal reset
- * synchronizer.
+ * Note: `s_axis_aresetn` must be synchronous to `s_axis_aclk` before it
+ * enters this core and is used directly in the write domain. In ASYNC_MODE
+ * the read-domain reset is derived with an internal reset synchronizer.
  *
  * Note: If the FIFO is configured in packet mode and the input packet exceeds
  * the FIFO depth, the packet is dropped; the remaining beats are absorbed
@@ -80,7 +79,11 @@ module axis_fifo #(
   // Signals
 
   logic                    wr_clk;
+  // Used synchronously by the write domain and as the asynchronous source
+  // for the read-domain reset synchronizer in ASYNC_MODE.
+  /* verilator lint_off SYNCASYNCNET */
   logic                    wr_rstn;
+  /* verilator lint_on SYNCASYNCNET */
 
   logic [     AddrWidth:0] wr_count;
   logic [     AddrWidth:0] wr_count_rd;
@@ -111,9 +114,7 @@ module axis_fifo #(
 
   assign wr_clk = s_axis_aclk;
 
-  always_ff @(posedge wr_clk) begin
-    wr_rstn <= s_axis_aresetn;
-  end
+  assign wr_rstn = s_axis_aresetn;
 
   always_ff @(posedge wr_clk) begin
     if (!wr_rstn) begin
@@ -348,7 +349,7 @@ module axis_fifo #(
           .INIT_SYNC_FF   (0),
           .RST_ACTIVE_HIGH(0)
       ) i_rd_rst (
-          .src_arst (s_axis_aresetn),
+          .src_arst (wr_rstn),
           .dest_clk (rd_clk),
           .dest_arst(rd_rstn)
       );

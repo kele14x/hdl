@@ -29,43 +29,43 @@ module prach_bfp_compress #(
     else $error("[%m]: NUM_ANT (%0d) must be between 1 and 4.", NUM_ANT);
   end
 
-  logic [31:0] capture_data      [2][12];
-  logic        capture_active;
-  logic        capture_bank;
-  logic [ 3:0] capture_re_idx;
-  logic [ 6:0] capture_prb_idx;
-  logic [ 9:0] capture_count;
-  logic [ 3:0] capture_max_msb;
-  logic [ 1:0] capture_ant;
-  logic        section_started;
-  logic        section_done_seen;
+  logic [       31:0] capture_data       [2][12];
+  logic               capture_active;
+  logic               capture_bank;
+  logic [        3:0] capture_re_idx;
+  logic [        6:0] capture_prb_idx;
+  logic [        9:0] capture_count;
+  logic [        3:0] capture_max_msb;
+  logic [        1:0] capture_ant;
+  logic               section_started;
+  logic               section_done_seen;
 
-  logic        process_valid;
-  logic        process_bank;
-  logic [ 2:0] process_word_idx;
-  logic [ 6:0] process_prb_idx;
-  logic [ 3:0] process_msb;
-  logic [ 3:0] process_exp;
-  logic [ 1:0] process_ant;
+  logic               process_valid;
+  logic               process_bank;
+  logic [        2:0] process_word_idx;
+  logic [        6:0] process_prb_idx;
+  logic [        3:0] process_msb;
+  logic [        3:0] process_exp;
+  logic [        1:0] process_ant;
 
-  logic [ 3:0] din_msb_i;
-  logic [ 3:0] din_msb_q;
-  logic [ 3:0] din_max_msb;
-  logic [ 3:0] capture_next_msb;
-  logic [ 3:0] process_shift;
-  logic [15:0] process_i0;
-  logic [15:0] process_q0;
-  logic [15:0] process_i1;
-  logic [15:0] process_q1;
-  logic [15:0] shifted_i0_r;
-  logic [15:0] shifted_q0_r;
-  logic [15:0] shifted_i1_r;
-  logic [15:0] shifted_q1_r;
+  logic [        3:0] din_msb_i;
+  logic [        3:0] din_msb_q;
+  logic [        3:0] din_max_msb;
+  logic [        3:0] capture_next_msb;
+  logic [        3:0] process_shift;
+  logic [       15:0] process_i0;
+  logic [       15:0] process_q0;
+  logic [       15:0] process_i1;
+  logic [       15:0] process_q1;
+  logic [       15:0] shifted_i0_r;
+  logic [       15:0] shifted_q0_r;
+  logic [       15:0] shifted_i1_r;
+  logic [       15:0] shifted_q1_r;
   /* verilator lint_off UNUSED */
-  logic [15:0] rounded_i0;
-  logic [15:0] rounded_q0;
-  logic [15:0] rounded_i1;
-  logic [15:0] rounded_q1;
+  logic [       15:0] rounded_i0;
+  logic [       15:0] rounded_q0;
+  logic [       15:0] rounded_i1;
+  logic [       15:0] rounded_q1;
   /* verilator lint_on UNUSED */
 
   logic [NUM_ANT-1:0] wr_we_c;
@@ -160,10 +160,10 @@ module prach_bfp_compress #(
   // (shift is limited to [0, 7] by get_shift, so no truncation).
   always_ff @(posedge clk) begin
     if (rst) begin
-      shifted_i0_r <= '0;
-      shifted_q0_r <= '0;
-      shifted_i1_r <= '0;
-      shifted_q1_r <= '0;
+      shifted_i0_r       <= '0;
+      shifted_q0_r       <= '0;
+      shifted_i1_r       <= '0;
+      shifted_q1_r       <= '0;
       process_valid_d    <= 1'b0;
       process_word_idx_d <= '0;
       process_prb_idx_d  <= '0;
@@ -171,10 +171,10 @@ module prach_bfp_compress #(
       process_exp_d      <= '0;
       process_ant_d      <= '0;
     end else begin
-      shifted_i0_r <= process_i0 << process_shift;
-      shifted_q0_r <= process_q0 << process_shift;
-      shifted_i1_r <= process_i1 << process_shift;
-      shifted_q1_r <= process_q1 << process_shift;
+      shifted_i0_r       <= process_i0 << process_shift;
+      shifted_q0_r       <= process_q0 << process_shift;
+      shifted_i1_r       <= process_i1 << process_shift;
+      shifted_q1_r       <= process_q1 << process_shift;
       process_valid_d    <= process_valid;
       process_word_idx_d <= process_word_idx;
       process_prb_idx_d  <= process_prb_idx;

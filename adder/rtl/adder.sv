@@ -23,7 +23,7 @@ module adder #(
 );
 
   /* verilator lint_off UNUSEDPARAM */
-  localparam int Latency = 1;
+  localparam int Latency   = 1;
   localparam int FullWidth = (A_WIDTH >= B_WIDTH) ? A_WIDTH + 1 : B_WIDTH + 1;
 
   initial begin : drc_check

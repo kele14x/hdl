@@ -37,7 +37,11 @@ module fifo_async #(
     parameter int DATA_WIDTH   = 16
 ) (
     // Common to write and read domain
+    // This asynchronous source reset is also used synchronously by some
+    // callers in its source clock domain.
+    /* verilator lint_off SYNCASYNCNET */
     input var                   rst,
+    /* verilator lint_on SYNCASYNCNET */
     // Write interface
     input var                   wr_clk,
     input var                   wr_en,
@@ -52,7 +56,7 @@ module fifo_async #(
 
   // Local parameters
 
-  localparam int AddrWidth = $clog2(FIFO_DEPTH);
+  localparam int   AddrWidth = $clog2(FIFO_DEPTH);
 
   localparam logic OutputReg = FIFO_LATENCY >= 2 ? 1 : 0;
 

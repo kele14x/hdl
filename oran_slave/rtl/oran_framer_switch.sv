@@ -27,7 +27,7 @@ module oran_framer_switch #(
 );
 
   // Number of source points, N
-  localparam int NumSrc = NUM_ANTENNA_PORT * NUM_CC;
+  localparam int NumSrc  = NUM_ANTENNA_PORT * NUM_CC;
   // Number of destination points, M
   localparam int NumDest = NUM_ETHERNET_PORT;
 

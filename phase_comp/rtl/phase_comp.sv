@@ -52,7 +52,7 @@ module phase_comp #(
   logic        [            1:0] ctrl_rat_s;
   logic        [AntSelWidth-1:0] din_chn_sel;
 
-  logic        [  AddrWidth-1:0] din_sym                    [NUM_ANT];
+  logic        [  AddrWidth-1:0] din_sym          [NUM_ANT];
   logic        [  AddrWidth-1:0] din_sym_next;
   logic        [  AddrWidth-1:0] din_sym_r;
 

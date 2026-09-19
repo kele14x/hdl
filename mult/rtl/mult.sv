@@ -120,7 +120,7 @@ module mult #(
 
   generate
     if (SignExp > 0) begin : g_p_ext_sext
-      assign p_ext = {{SignExp {p_full[FullWidth-1]}}, p_full[FullWidth-1:SHIFT]};
+      assign p_ext = {{SignExp{p_full[FullWidth-1]}}, p_full[FullWidth-1:SHIFT]};
     end else begin : g_p_ext_trunc
       assign p_ext = p_full[P_WIDTH+SHIFT-1:SHIFT];
     end

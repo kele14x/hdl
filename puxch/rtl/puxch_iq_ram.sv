@@ -25,7 +25,7 @@ module puxch_iq_ram #(
 );
 
   localparam int TotalWriteDepth = (HALF_BLOCK != 0) ? 3840 : 7168;
-  localparam int TotalReadDepth = TotalWriteDepth / 2;
+  localparam int TotalReadDepth  = TotalWriteDepth / 2;
 
   initial begin : drc_check
     assert (HALF_BLOCK == 0 || HALF_BLOCK == 1)

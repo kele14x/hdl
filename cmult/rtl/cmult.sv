@@ -27,7 +27,7 @@ module cmult #(
 );
 
   /* verilator lint_off UNUSEDPARAM */
-  localparam int Latency = (USE_3_MULT != 0) ? 7 : 5;
+  localparam int Latency   = (USE_3_MULT != 0) ? 7 : 5;
   /* verilator lint_on UNUSEDPARAM */
   localparam int FullWidth = A_WIDTH + B_WIDTH + 1;
 

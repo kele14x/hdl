@@ -36,7 +36,7 @@ module oran_deframer_eth_filter (
 
   import oran_pkg::*;
 
-  localparam bit [15:0] EthertypeVlan = 16'h8100;
+  localparam bit [15:0] EthertypeVlan  = 16'h8100;
   localparam bit [15:0] EthertypeEcpri = 16'hAEFE;
 
   logic [63:0] s_axis_tdata_reversed;

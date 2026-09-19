@@ -330,6 +330,6 @@ module puxch_conv #(
       .dout({dout_last, dout_dv})
   );
 
-  endmodule
+endmodule
 
 `default_nettype wire

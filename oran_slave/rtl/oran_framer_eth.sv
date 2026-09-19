@@ -47,7 +47,7 @@ module oran_framer_eth #(
 
   /* verilator lint_off UNUSED */
   logic [63:0] s_axis_tdata_d;
-  logic [7:0] s_axis_tkeep_d;
+  logic [ 7:0] s_axis_tkeep_d;
   /* verilator lint_on UNUSED */
 
   typedef enum int {
