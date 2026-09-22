@@ -21,8 +21,8 @@ The exception is `hdl_tools`, which is the shared Python module for helper / lib
 
 ## Python
 
-- Python 3.13, managed with `uv` (see `uv.lock`); run `uv sync` to set up the venv.
-- Dependencies: cocotb >=2.0, numpy, pytest.
+- Python 3.14, managed with `uv` (see `uv.lock`); run `uv sync` to set up the venv.
+- Dependencies: cocotb >=2.1, numpy, pytest.
 - Ruff is the formatter/linter.
 
 ## SystemVerilog style
