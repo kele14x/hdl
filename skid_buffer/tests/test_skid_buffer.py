@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Reusable cocotb verification environment for ``skid_buffer``.
 
 The tests at the end of this file are intentionally only vector construction.
@@ -8,23 +7,23 @@ and passing them to :meth:`TransferTestbench.run`.
 
 from __future__ import annotations
 
+import os
+import random
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-import os
-import random
 
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, ReadWrite, RisingEdge, with_timeout
+from cocotb.triggers import ClockCycles, RisingEdge, with_timeout
 from cocotb_tools.runner import get_runner
-from hdl_tools.flt_tool import resolve_flt
 
+from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
 
-DATA_WIDTH = int(os.environ.get("DATA_WIDTH", 8))
+DATA_WIDTH = int(os.environ.get("DATA_WIDTH", "8"))
 
 SIM = os.environ.get("SIM")
 if not SIM:
@@ -159,19 +158,15 @@ class MAgent:
         self.observed: list[MTransaction] = []
 
     async def _wait_for_m_vld(self) -> None:
-        """Wait for M_VLD, including the delta cycle in which it asserts."""
-
-        if not int(self.dut.m_vld_o.value):
-            await RisingEdge(self.dut.m_vld_o)
-            await ReadWrite()
+        while True:
+            await RisingEdge(self.dut.clk)
+            if int(self.dut.m_vld_o.value):
+                return
 
     async def _wait_for_handshake(self) -> None:
-        """Wait for a sampled M_VLD/M_RDY handshake and settle the DUT."""
-
         while True:
             await RisingEdge(self.dut.clk)
             if int(self.dut.m_vld_o.value) and int(self.dut.m_rdy_i.value):
-                await ReadWrite()
                 return
 
     async def drive(self, sequence: MSequence) -> None:
@@ -187,8 +182,6 @@ class MAgent:
                     await ClockCycles(self.dut.clk, transaction.idle_cycles)
                 self.dut.m_rdy_i.value = 1
 
-            # For idle_cycles == 0, M_RDY was driven in the same delta cycle
-            # as M_VLD's transition, so the following clock is the handshake.
             await self._wait_for_handshake()
             self.dut.m_rdy_i.value = 0
 

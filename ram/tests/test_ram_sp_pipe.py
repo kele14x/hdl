@@ -6,7 +6,7 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
@@ -68,87 +68,70 @@ async def test_ram_sp_pipe_scalar_enable_and_reset(dut):
 
     memory = {}
     for address in range(depth):
-        await FallingEdge(dut.clk)
+        await RisingEdge(dut.clk)
         dut.en.value = 1
         dut.we.value = 1
         dut.addr.value = address
         dut.din.value = 0x10 + address
-        await RisingEdge(dut.clk)
         memory[address] = 0x10 + address
-    await FallingEdge(dut.clk)
+    await RisingEdge(dut.clk)
     dut.en.value = 0
     dut.we.value = 0
-    await RisingEdge(dut.clk)
     await ClockCycles(dut.clk, read_latency)
 
-    # Back-to-back reads with the scalar enable appear one per cycle once the
-    # control pipeline is full.
+    # Observe each read one edge after its registered latency.
     addresses = [1, 4, 3, 0, 2, 1]
     for i, address in enumerate(addresses):
-        await FallingEdge(dut.clk)
         dut.en.value = 1
         dut.addr.value = address
         await RisingEdge(dut.clk)
-        await ReadOnly()
-        if i >= read_latency - 1:
-            assert int(dut.dout.value) == memory[addresses[i - (read_latency - 1)]]
+        if i >= read_latency:
+            assert int(dut.dout.value) == memory[addresses[i - read_latency]]
 
-    # Deasserting the scalar enable drains the pipeline and then holds it.
-    await FallingEdge(dut.clk)
+    # Deasserting the scalar enable drains every pending result, then holds.
     dut.en.value = 0
-    await ClockCycles(dut.clk, read_latency)
-    await ReadOnly()
+    for i in range(read_latency):
+        await RisingEdge(dut.clk)
+        assert (
+            int(dut.dout.value) == memory[addresses[len(addresses) - read_latency + i]]
+        )
     held = int(dut.dout.value)
     assert held == memory[addresses[-1]]
     await ClockCycles(dut.clk, 3)
-    await ReadOnly()
     assert int(dut.dout.value) == held
 
-    # Reset travels through the control pipeline before clearing the visible
-    # output stage.
-    await FallingEdge(dut.clk)
+    # Observe reset one edge after it reaches the final stage through the control pipeline.
     dut.rst.value = 1
     await RisingEdge(dut.clk)
-    await FallingEdge(dut.clk)
     dut.rst.value = 0
     await ClockCycles(dut.clk, read_latency)
-    await ReadOnly()
     assert int(dut.dout.value) == 0
 
     # The first reads after reset expose the cleared final stage, then valid
     # data once the enables propagate.
     resume = [4, 2, 1]
     for i, address in enumerate(resume):
-        await FallingEdge(dut.clk)
         dut.en.value = 1
         dut.addr.value = address
         await RisingEdge(dut.clk)
-        await ReadOnly()
-        if i < read_latency - 1:
+        if i < read_latency:
             assert int(dut.dout.value) == 0
         else:
-            assert int(dut.dout.value) == memory[resume[i - (read_latency - 1)]]
+            assert int(dut.dout.value) == memory[resume[i - read_latency]]
 
-    # Out-of-range reads are undefined: X on four-state simulators, zero on
-    # two-state Verilator.
-    await FallingEdge(dut.clk)
+    # Check the valid pipeline tail before the following out-of-range reads produce X.
     dut.addr.value = depth
-    await RisingEdge(dut.clk)
-    await ReadOnly()
-    for _ in range(read_latency - 1):
-        await FallingEdge(dut.clk)
+    for i in range(read_latency):
         await RisingEdge(dut.clk)
-        await ReadOnly()
+        assert int(dut.dout.value) == memory[resume[len(resume) - read_latency + i]]
+    dut.en.value = 0
+    await RisingEdge(dut.clk)
     assert_x_or_zero(SIM, dut.dout.value)
 
-    await FallingEdge(dut.clk)
-    dut.en.value = 0
     dut.rst.value = 1
     await RisingEdge(dut.clk)
-    await FallingEdge(dut.clk)
     dut.rst.value = 0
     await ClockCycles(dut.clk, read_latency)
-    await ReadOnly()
     assert int(dut.dout.value) == 0
 
 

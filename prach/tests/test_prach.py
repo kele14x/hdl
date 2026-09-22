@@ -47,11 +47,12 @@ import cocotb
 import numpy as np
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
+from prach_waveform import DEFAULT_WAVEFORM_PATH, read_iq_hex
+
 from hdl_tools.axi4lite import AxiLiteAgent, AxiLiteAgentConfig
 from hdl_tools.flt_tool import resolve_flt
-from prach_waveform import DEFAULT_WAVEFORM_PATH, read_iq_hex
 
 PRJ_PATH = Path(__file__).resolve().parent.parent
 
@@ -178,8 +179,11 @@ async def _reset(dut, axi: AxiLiteAgent):
     await ClockCycles(dut.s_axi_aclk, 100)
     await ClockCycles(dut.clk, 100)
     await ClockCycles(dut.clk_eth_xran, 100)
+    await RisingEdge(dut.s_axi_aclk)
     dut.s_axi_aresetn.value = 1
+    await RisingEdge(dut.clk)
     dut.rst.value = 0
+    await RisingEdge(dut.clk_eth_xran)
     dut.rst_eth_xran.value = 0
     await ClockCycles(dut.s_axi_aclk, 100)
     await ClockCycles(dut.clk, 100)
@@ -210,13 +214,13 @@ async def _configure(axi: AxiLiteAgent):
 
 async def _send_cplane(dut):
     """Send one C-plane message using the source-side ready/valid handshake."""
+    await RisingEdge(dut.clk_eth_xran)
     _set_cplane(dut)
     dut.s_prach_tvalid.value = 1
     while True:
         await RisingEdge(dut.clk_eth_xran)
         if int(dut.s_prach_tready.value):
             break
-    await Timer(1, unit="ps")
     dut.s_prach_tvalid.value = 0
 
 
@@ -224,7 +228,6 @@ async def _pulse_sync(dut):
     await RisingEdge(dut.clk_eth_xran)
     dut.sync_in.value = 1
     await RisingEdge(dut.clk_eth_xran)
-    await Timer(1, unit="ps")
     dut.sync_in.value = 0
 
 
@@ -236,20 +239,17 @@ def _set_radio_sample(dut, word: int):
 
 
 async def _drive_radio_samples(dut, waveform, first_sample: int, last_sample: int):
-    """Drive production-rate samples without waking Python every radio edge."""
-    group_period_ps = RADIO_CLOCK_PS * RADIO_SAMPLES_PER_CLK
+    """Hold each sample for exactly sixteen radio-clock capture edges."""
+    await RisingEdge(dut.clk)
     for sample in range(first_sample, last_sample):
         _set_radio_sample(dut, int(waveform[sample]))
-        # The extra picosecond leaves the input update after the following
-        # 16th rising edge, avoiding a same-timestamp race with the DUT.
-        await Timer(group_period_ps + 1, unit="ps")
+        await ClockCycles(dut.clk, RADIO_SAMPLES_PER_CLK)
 
 
 async def _monitor_uplane(dut, words):
     """Capture U-plane transfers at the Ethernet clock boundary."""
     while True:
         await RisingEdge(dut.clk_eth_xran)
-        await Timer(1, unit="ps")
         if int(dut.m_fram_prach_tvalid.value):
             words.append(
                 (
@@ -263,29 +263,14 @@ async def _monitor_uplane(dut, words):
 
 async def _monitor_fft(dut, fft, samples):
     """Capture one valid 1536-point FFT output block from the active channel."""
-    await RisingEdge(fft.dout_dv)
-    await Timer(1, unit="ps")
-    while len(samples) < FFT_SIZE:
-        if int(fft.dout_dv.value):
-            samples.append(
-                (
-                    int(fft.dout_chn.value),
-                    _signed16(int(fft.dout_dr.value)),
-                    _signed16(int(fft.dout_di.value)),
-                )
-            )
-        if len(samples) == FFT_SIZE:
-            break
-        await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
+    await _monitor_valid_samples(dut, fft, samples, limit=FFT_SIZE)
 
 
 async def _monitor_valid_samples(dut, stream, samples, limit=32):
-    """Capture a small number of valid samples from a streaming block."""
+    """Capture each valid beat once, including the first/last beat of a burst."""
     while len(samples) < limit:
-        await RisingEdge(stream.dout_dv)
-        await Timer(1, unit="ps")
-        while int(stream.dout_dv.value) and len(samples) < limit:
+        await RisingEdge(dut.clk)
+        if int(stream.dout_dv.value):
             samples.append(
                 (
                     int(stream.dout_chn.value),
@@ -293,8 +278,6 @@ async def _monitor_valid_samples(dut, stream, samples, limit=32):
                     _signed16(int(stream.dout_di.value)),
                 )
             )
-            await RisingEdge(dut.clk)
-            await Timer(1, unit="ps")
 
 
 @cocotb.test()
@@ -341,6 +324,7 @@ async def test_prach_f0_1ms_e2e(dut):
     assert (msg1 >> 16) & 0xFFFF == CPLANE_CP_LENGTH, "CP length mismatch"
     assert msg2 & 0xF == CPLANE_NUM_SYMBOL, "num_symbol mismatch"
     assert (msg2 >> 4) & 0xFFFFFF == CPLANE_FREQ_OFFSET, "frequency offset mismatch"
+    await RisingEdge(dut.clk)
     assert int(ctrl.rd_section_id.value) == SECTION_ID, "section id mismatch"
     dut._log.info("C-plane status registers verified")
 
@@ -363,10 +347,11 @@ async def test_prach_f0_1ms_e2e(dut):
     )
 
     # ---- Front end: F0 waveform through resync, DDC cadence -------------
-    # Check the first short prefix cycle by cycle, then drive the remainder
-    # in 16-clock groups. Inputs are changed only immediately after a clock
-    # edge, so every valid resync sample has an unambiguous expected word.
-    _set_radio_sample(dut, int(waveform[0]))
+    # Predict resync output from the phase and waveform word at the preceding edge.
+    radio_driver = cocotb.start_soon(
+        _drive_radio_samples(dut, waveform, 0, waveform.size)
+    )
+    await RisingEdge(dut.clk)  # The driver's first input update.
     seen_sf = False
     seen_sy = False
     resync_hits = 0
@@ -375,40 +360,37 @@ async def test_prach_f0_1ms_e2e(dut):
     ddc_valid = 0
     ddc_ant0 = 0
     ddc_channels = set()
-    for cycle in range(FRONTEND_CHECK_CYCLES):
+    resync_phase = None
+    expected = None
+    for cycle in range(FRONTEND_CHECK_CYCLES + 1):
+        await RisingEdge(dut.clk)
+        if cycle:
+            if int(resync.dout_sf.value):
+                seen_sf = True
+            if int(resync.dout_sy.value):
+                seen_sy = True
+            if int(resync.dout_dv.value):
+                resync_valid_phases.add(resync_phase)
+                actual = (int(resync.dout_di.value) << 16) | int(resync.dout_dr.value)
+                if actual == expected:
+                    resync_hits += 1
+                else:
+                    resync_misses += 1
+            if int(channel.u_ddc.dout_dv.value):
+                ddc_valid += 1
+                channel_value = int(channel.u_ddc.dout_chn.value) & 0xFF
+                ddc_channels.add(channel_value)
+                if channel_value == TEST_ANT:
+                    ddc_ant0 += 1
         resync_phase = int(resync.chn.value)
         expected_antenna = resync_phase % NUM_ANT
-        await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
-        if int(resync.dout_sf.value):
-            seen_sf = True
-        if int(resync.dout_sy.value):
-            seen_sy = True
-        if int(resync.dout_dv.value):
-            resync_valid_phases.add(resync_phase)
-            expected = (
-                int(waveform[cycle // RADIO_SAMPLES_PER_CLK])
-                if resync_phase < NUM_ANT and expected_antenna == TEST_ANT
-                else 0
-            )
-            actual = (int(resync.dout_di.value) << 16) | int(resync.dout_dr.value)
-            if actual == expected:
-                resync_hits += 1
-            else:
-                resync_misses += 1
-        if int(channel.u_ddc.dout_dv.value):
-            ddc_valid += 1
-            channel_value = int(channel.u_ddc.dout_chn.value) & 0xFF
-            ddc_channels.add(channel_value)
-            if channel_value == TEST_ANT:
-                ddc_ant0 += 1
-        if (
-            cycle + 1
-        ) % RADIO_SAMPLES_PER_CLK == 0 and cycle + 1 < FRONTEND_CHECK_CYCLES:
-            _set_radio_sample(dut, int(waveform[(cycle + 1) // RADIO_SAMPLES_PER_CLK]))
+        expected = (
+            int(waveform[cycle // RADIO_SAMPLES_PER_CLK])
+            if resync_phase < NUM_ANT and expected_antenna == TEST_ANT
+            else 0
+        )
 
-    first_remaining_sample = FRONTEND_CHECK_CYCLES // RADIO_SAMPLES_PER_CLK
-    await _drive_radio_samples(dut, waveform, first_remaining_sample, waveform.size)
+    await radio_driver
 
     # Allow the stream2block, FFT, framer buffer, and Ethernet FIFO to drain.
     await ClockCycles(dut.clk_eth_xran, U_PLANE_DRAIN_ETH_CYCLES)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Directed data/channel alignment test for the PDXCH phase-compensation stage."""
 
 from __future__ import annotations
@@ -6,7 +5,7 @@ from __future__ import annotations
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 from pdxch_test_utils import pdxch_sources, run_test
 
 NUM_ANT = 4
@@ -55,7 +54,6 @@ async def test_phase_comp_data_matches_channel_tag(dut):
     async def monitor():
         for _ in range(120):
             await RisingEdge(dut.clk)
-            await Timer(1, unit="ps")
             if dut.dout_dv.value.is_resolvable and int(dut.dout_dv.value):
                 received.append(
                     (

@@ -168,7 +168,8 @@ async def test_buffer_read_request_data_and_backpressure(dut):
             int(dut.m_axis_tlast.value),
         ) == held
 
-    words = [held]
+    # Count the held beat only when ready/valid is sampled at its accepting edge.
+    words = []
     dut.m_axis_tready.value = 1
     for _ in range(64):
         await sample_after_rising(dut.clk_eth_xran)
@@ -208,25 +209,18 @@ async def test_buffer_read_stall_and_toggle_tready(dut):
 
     rng = random.Random(24)
     words = []
-    prev_valid = 0
-    prev_ready = 0
-    prev_word = (0, 0, 0)
     for _ in range(512):
-        # The beat sampled last cycle transfers now if it was valid and the
-        # tready driven last cycle was high
-        if prev_valid and prev_ready:
-            words.append(prev_word)
-            if prev_word[2]:
-                break
-        prev_valid = int(dut.m_axis_tvalid.value)
-        prev_word = (
-            int(dut.m_axis_tdata.value),
-            int(dut.m_axis_tkeep.value),
-            int(dut.m_axis_tlast.value),
-        )
-        prev_ready = rng.randint(0, 1)
-        dut.m_axis_tready.value = prev_ready
+        dut.m_axis_tready.value = rng.randint(0, 1)
         await sample_after_rising(dut.clk_eth_xran)
+        if int(dut.m_axis_tvalid.value) and int(dut.m_axis_tready.value):
+            word = (
+                int(dut.m_axis_tdata.value),
+                int(dut.m_axis_tkeep.value),
+                int(dut.m_axis_tlast.value),
+            )
+            words.append(word)
+            if word[2]:
+                break
 
     assert len(words) == num_prb * 6
     assert [word[0] for word in words] == [expected_word()] * (num_prb * 6)
@@ -259,6 +253,7 @@ async def test_last_prb_in_second_bank(dut):
         samples=samples,
     )
 
+    await sample_after_rising(dut.clk_eth_xran)
     dut.s_ul_sym_num[1].value = 1
     dut.m_axis_tready.value = 1
     words = await request_words(dut, start_prb=max_prb - 1, num_prb=1)

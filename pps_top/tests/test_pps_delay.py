@@ -4,11 +4,10 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import FallingEdge, RisingEdge, Timer
+from cocotb.triggers import RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
-
 
 prj_path = Path(__file__).resolve().parent.parent
 SIM = os.environ.get("SIM")
@@ -19,7 +18,6 @@ GUI = os.environ.get("GUI", "false").lower() == "true"
 
 async def tick(dut):
     await RisingEdge(dut.clk)
-    await Timer(1, unit="ps")
 
 
 @cocotb.test()
@@ -29,24 +27,23 @@ async def test_pps_delay_offset_is_measured_from_sync(dut):
     dut.sync_in.value = 0
     dut.ctrl_offset.value = 3
     await tick(dut)
-    assert int(dut.strobe_10ms.value) == 0
-
-    dut.rst.value = 0
-    await FallingEdge(dut.clk)
-    dut.sync_in.value = 1
     await tick(dut)
     assert int(dut.strobe_10ms.value) == 0
 
-    await FallingEdge(dut.clk)
+    dut.rst.value = 0
+    dut.sync_in.value = 1
+    await tick(dut)
     dut.sync_in.value = 0
+    await tick(dut)
+    assert int(dut.strobe_10ms.value) == 0
+
     for count in range(1, 7):
         await tick(dut)
         assert int(dut.strobe_10ms.value) == int(count == 4)
 
-    # A fresh sync restarts the offset measurement rather than producing an
-    # extra strobe from the prior count.
-    await FallingEdge(dut.clk)
+    # A fresh sync restarts the offset measurement rather than producing an extra strobe.
     dut.sync_in.value = 1
+    await tick(dut)
     await tick(dut)
     assert int(dut.strobe_10ms.value) == 0
 

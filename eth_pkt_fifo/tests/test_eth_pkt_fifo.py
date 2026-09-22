@@ -5,11 +5,10 @@ import cocotb
 import pytest
 from cocotb.clock import Clock
 from cocotb.queue import Queue
-from cocotb.triggers import ClockCycles, FallingEdge, RisingEdge, with_timeout
+from cocotb.triggers import ClockCycles, RisingEdge, with_timeout
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
-
 
 prj_path = Path(__file__).resolve().parent.parent
 SIM = os.environ.get("SIM")
@@ -29,8 +28,8 @@ def output_word(dut):
 
 
 async def send_packet(dut, words, bad_last=False):
+    await RisingEdge(dut.aclk)
     for index, (data, keep, stamp, stamp_valid) in enumerate(words):
-        await FallingEdge(dut.aclk)
         dut.s_axis_tdata.value = data
         dut.s_axis_tkeep.value = keep
         dut.s_axis_tlast.value = index == len(words) - 1
@@ -43,7 +42,6 @@ async def send_packet(dut, words, bad_last=False):
             if int(dut.s_axis_tready.value):
                 break
 
-    await FallingEdge(dut.aclk)
     dut.s_axis_tvalid.value = 0
     dut.s_axis_tlast.value = 0
     dut.s_axis_tuser.value = 0

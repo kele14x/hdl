@@ -14,7 +14,7 @@ import cocotb
 import numpy as np
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 from prach_ddc_model import (
     SIDEBAND_FIELDS,
@@ -180,9 +180,11 @@ async def test_six_stage_chain_matches_cycle_accurate_model(dut):
     conv_output = []
     top_output = []
 
+    # Prime vector zero to preserve relative trace delays with pre-update sampling.
+    await RisingEdge(dut.clk)
+    _set_input(dut, **_make_vector(0, rng))
     for cycle in range(ACTIVE_CYCLES + TAIL_CYCLES):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
 
         real, imag = _read_complex("mixer_dout", dut)
         mixer_real.append(real)
@@ -215,10 +217,10 @@ async def test_six_stage_chain_matches_cycle_accurate_model(dut):
             for field in SIDEBAND_FIELDS:
                 trace["dout_sideband"][field].append(sideband[field])
 
-        if cycle < ACTIVE_CYCLES:
-            _set_input(dut, **_make_vector(cycle, rng))
+        if cycle + 1 < ACTIVE_CYCLES:
+            _set_input(dut, **_make_vector(cycle + 1, rng))
         else:
-            _set_input(dut, chn=cycle & 0xFF)
+            _set_input(dut, chn=(cycle + 1) & 0xFF)
 
     model_trace = {}
     expected_real, expected_imag, expected_sideband = model_decimation_chain(

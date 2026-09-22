@@ -1,7 +1,7 @@
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 from pdxch_test_utils import PRJ_PATH, run_test
 
 USER_WIDTH = 17
@@ -85,15 +85,14 @@ async def test_pdxch_bfp_gearbox(dut):
         dut.s_axis_tvalid.value = 1
 
     drive_word(0)
-    await Timer(1, unit="ps")
-    input_fire = bool(dut.s_axis_tvalid.value and dut.s_axis_tready.value)
-    saw_input_backpressure = bool(
-        dut.s_axis_tvalid.value and not dut.s_axis_tready.value
-    )
 
     for cycle in range(3000):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
+        # Sample the accepted handshake before driving the next beat.
+        input_fire = bool(dut.s_axis_tvalid.value and dut.s_axis_tready.value)
+        saw_input_backpressure |= bool(
+            dut.s_axis_tvalid.value and not dut.s_axis_tready.value
+        )
 
         if input_fire:
             word_index += 1
@@ -126,12 +125,6 @@ async def test_pdxch_bfp_gearbox(dut):
 
         if word_index == len(input_words) and len(received) == len(expected):
             break
-
-        await Timer(1, unit="ps")
-        input_fire = bool(dut.s_axis_tvalid.value and dut.s_axis_tready.value)
-        saw_input_backpressure |= bool(
-            dut.s_axis_tvalid.value and not dut.s_axis_tready.value
-        )
     else:
         raise AssertionError("gearbox did not finish within the cycle limit")
 

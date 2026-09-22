@@ -6,7 +6,7 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
@@ -50,25 +50,22 @@ if USE_XPM:
         raise RuntimeError(f"XPM_MEMORY_SV does not name a file: {XPM_MEMORY_SV}")
 
 
+# Drive on one port edge and observe the previous capture on the next.
 async def cycle_a(dut, address, data, write, enable):
-    await FallingEdge(dut.clka)
     dut.addra.value = address
     dut.dina.value = data
     dut.wea.value = write
     dut.ena.value = (1 << READ_LATENCY_A) - 1 if enable else 0
     await RisingEdge(dut.clka)
-    await ReadOnly()
     return int(dut.douta.value)
 
 
 async def cycle_b(dut, address, data, write, enable):
-    await FallingEdge(dut.clkb)
     dut.addrb.value = address
     dut.dinb.value = data
     dut.web.value = write
     dut.enb.value = (1 << READ_LATENCY_B) - 1 if enable else 0
     await RisingEdge(dut.clkb)
-    await ReadOnly()
     return int(dut.doutb.value)
 
 
@@ -87,46 +84,49 @@ async def test_ram_tdp_applies_independent_port_write_modes(dut):
     dut.dina.value = 0
     dut.dinb.value = 0
     await ClockCycles(dut.clka, 2)
-    await ClockCycles(dut.clkb, 2)
     dut.rsta.value = 0
+    await ClockCycles(dut.clkb, 2)
     dut.rstb.value = 0
 
     # Reset only clears the final stage. Prime the first stage on port A so
     # the first pipelined result is deterministic.
+    await RisingEdge(dut.clka)
     dut.addra.value = 0
     dut.dina.value = 0
     dut.wea.value = 0
     dut.ena.value = 1
-    await ClockCycles(dut.clka, 1)
+    await RisingEdge(dut.clka)
 
-    # Port A is WRITE_FIRST and has a two-stage read pipeline.
-    assert await cycle_a(dut, 2, 0x11, 1, 1) == 0
-    assert await cycle_a(dut, 2, 0, 0, 1) == 0x11
+    # Port A has two WRITE_FIRST stages; checks observe the preceding capture.
+    assert await cycle_a(dut, 2, 0x11, 1, 1) == 0  # Priming output.
+    assert await cycle_a(dut, 2, 0, 0, 1) == 0  # Write output.
     assert await cycle_a(dut, 0, 0, 0, 1) == 0x11
+    assert await cycle_a(dut, 0, 0, 0, 0) == 0x11
 
     # Port B reads the shared memory.  It is NO_CHANGE, so a write collision
     # preserves the previously read output, while the write itself is stored.
-    assert await cycle_b(dut, 2, 0, 0, 1) == 0x11
-    assert await cycle_b(dut, 2, 0xC3, 1, 1) == 0x11
-    assert await cycle_b(dut, 2, 0, 0, 1) == 0xC3
+    await RisingEdge(dut.clkb)
+    assert await cycle_b(dut, 2, 0, 0, 1) == 0  # Reset output.
+    assert await cycle_b(dut, 2, 0xC3, 1, 1) == 0x11  # Read output.
+    assert await cycle_b(dut, 2, 0, 0, 1) == 0x11  # NO_CHANGE write output.
+    assert await cycle_b(dut, 2, 0, 0, 0) == 0xC3  # Updated memory read.
 
     held = int(dut.doutb.value)
     for _ in range(2):
         assert await cycle_b(dut, 2, 0, 0, 0) == held
 
     # Out-of-range reads are undefined and produce X in simulation.
-    await FallingEdge(dut.clkb)
     dut.enb.value = 1
     dut.web.value = 0
     dut.addrb.value = DEPTH
     await RisingEdge(dut.clkb)
-    await ReadOnly()
-    assert_x_or_zero(SIM, dut.doutb.value)
-    await FallingEdge(dut.clkb)
     dut.enb.value = 0
+    await RisingEdge(dut.clkb)
+    assert_x_or_zero(SIM, dut.doutb.value)
     dut.rstb.value = 1
     await RisingEdge(dut.clkb)
-    await ReadOnly()
+    dut.rstb.value = 0
+    await RisingEdge(dut.clkb)
     assert int(dut.doutb.value) == 0
 
 

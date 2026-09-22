@@ -91,13 +91,11 @@ async def test_control_table_and_sideband_latency(dut):
 
     for cycle, vector in enumerate(stimuli):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
         history.append(current)
 
-        # delay.DEPTH=13 contains registers [0:12]; an item sampled at an
-        # edge is therefore visible at the output 12 edges later.
-        if cycle >= 12:
-            expected = history[cycle - 12]
+        # The stable output belongs to the input captured 13 edges ago.
+        if cycle >= 13:
+            expected = history[cycle - 13]
             actual = (
                 int(dut.dout_sf.value),
                 int(dut.dout_sl.value),
@@ -146,13 +144,13 @@ async def test_nonzero_data_and_sideband_alignment(dut):
     pipeline = []
     current = {}
 
-    for vector in samples + [{}] * 13:
+    for vector in samples + [{}] * 14:
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
         pipeline.append(current)
 
-        if len(pipeline) > 12:
-            expected = pipeline[-13]
+        # Include the observation edge when scoring and draining the pipeline.
+        if len(pipeline) > 13:
+            expected = pipeline[-14]
             if expected:
                 assert int(dut.dout_dr.value) == expected["real"]
                 assert int(dut.dout_di.value) == expected["imag"]
@@ -188,7 +186,6 @@ async def test_active_phase_wraps_without_saturation(dut):
 
     for _ in range(total + 32):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
 
         if int(dut.dout_dv.value):
             channel = int(dut.dout_chn.value)

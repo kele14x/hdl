@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Top-level PDXCH reference checks across block/FFT configurations."""
 
 from __future__ import annotations
@@ -9,7 +8,7 @@ import cocotb
 import numpy as np
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, Combine, RisingEdge, Timer, with_timeout
+from cocotb.triggers import ClockCycles, Combine, RisingEdge, with_timeout
 from pdxch_reference import (
     best_body_alignment,
     pdxch_lte20_reference,
@@ -117,7 +116,6 @@ def _make_bfp9_frame(case, antenna: int) -> AxisFrame:
 async def _capture_symbol(dut, case):
     for _ in range(100000):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
         users = []
         words = []
         for antenna in range(NUM_ANT):
@@ -136,7 +134,6 @@ async def _capture_symbol(dut, case):
 
     for _ in range(case["fft_size"] - 1):
         await ClockCycles(dut.clk, case["cycles_per_sample"])
-        await Timer(1, unit="ps")
         for antenna in range(NUM_ANT):
             word_value = dut.m_axis_tdata[0][antenna].value
             word = int(word_value) if word_value.is_resolvable else 0

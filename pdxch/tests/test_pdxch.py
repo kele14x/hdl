@@ -13,7 +13,7 @@ import cocotb
 import numpy as np
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, Combine, Event, RisingEdge, Timer, with_timeout
+from cocotb.triggers import ClockCycles, Combine, Event, RisingEdge, with_timeout
 from pdxch_reference import (
     best_body_alignment,
     pdxch_nr100m_reference,
@@ -210,13 +210,11 @@ async def _pulse_sync(dut):
     await RisingEdge(dut.clk_eth_xran)
     dut.sync_in.value = 1
     await RisingEdge(dut.clk_eth_xran)
-    await Timer(1, unit="ps")
     dut.sync_in.value = 0
 
     markers = [0] * NUM_CC
     for _ in range(8):
         await RisingEdge(dut.clk_eth_xran)
-        await Timer(1, unit="ps")
         for cc in range(NUM_CC):
             markers[cc] += int(dut.defm_radio_start_10ms[cc].value)
     assert markers == [1] * NUM_CC, f"unexpected deframer frame markers: {markers}"
@@ -227,7 +225,6 @@ async def _capture_cc(dut, cc: int, capture_started: Event):
 
     while True:
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
         tusers = []
         words = []
         for antenna in range(NUM_ANT):
@@ -258,7 +255,6 @@ async def _capture_cc(dut, cc: int, capture_started: Event):
             # Four radio-processing cycles represent one parallel antenna
             # output sample at the configured 122.88 MHz sample rate.
             await ClockCycles(dut.clk, NUM_ANT)
-            await Timer(1, unit="ps")
             for antenna in range(NUM_ANT):
                 output_value = dut.m_axis_tdata[cc][antenna].value
                 value = int(output_value) if output_value.is_resolvable else 0

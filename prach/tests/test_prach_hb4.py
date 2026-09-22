@@ -10,7 +10,7 @@ import cocotb
 import numpy as np
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 from prach_ddc_model import hb4_sample, unsigned16
 
@@ -203,10 +203,12 @@ def _make_bypass_vectors():
 
 
 async def _drive_and_check(dut, vectors, expected, allowed_dv):
+    # Prime vector zero so the cycle index still starts at its capture edge.
+    await RisingEdge(dut.clk)
+    _set_input(dut, **vectors[0])
     total_cycles = len(vectors) + LATENCY + 2
     for cycle in range(total_cycles):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
 
         actual = _read_output(dut)
         if cycle in expected:
@@ -217,8 +219,8 @@ async def _drive_and_check(dut, vectors, expected, allowed_dv):
         elif cycle not in allowed_dv:
             assert actual[5] == 0, f"cycle {cycle}: unexpected dout_dv"
 
-        if cycle < len(vectors):
-            _set_input(dut, **vectors[cycle])
+        if cycle + 1 < len(vectors):
+            _set_input(dut, **vectors[cycle + 1])
         else:
             _set_input(dut)
 

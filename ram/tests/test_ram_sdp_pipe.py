@@ -6,7 +6,7 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
@@ -64,81 +64,67 @@ async def test_ram_sdp_pipe_scalar_enable_and_reset(dut):
 
     memory = {address: 0x26 + address for address in range(DEPTH)}
     for address, data in memory.items():
-        await FallingEdge(dut.clka)
+        await RisingEdge(dut.clka)
         dut.wea.value = 1
         dut.addra.value = address
         dut.dina.value = data
-        await RisingEdge(dut.clka)
+    await RisingEdge(dut.clka)
     dut.wea.value = 0
 
-    # Back-to-back reads with the scalar enable appear one per cycle once the
-    # control pipeline is full.
+    # Observe each read one edge after its registered latency.
+    await RisingEdge(dut.clkb)
     addresses = [0, 3, 4, 1, 2, 0]
     for i, address in enumerate(addresses):
-        await FallingEdge(dut.clkb)
         dut.enb.value = 1
         dut.addrb.value = address
         await RisingEdge(dut.clkb)
-        await ReadOnly()
-        if i >= READ_LATENCY - 1:
-            assert int(dut.doutb.value) == memory[addresses[i - (READ_LATENCY - 1)]]
+        if i >= READ_LATENCY:
+            assert int(dut.doutb.value) == memory[addresses[i - READ_LATENCY]]
 
-    # Deasserting the scalar enable drains the pipeline and then holds it.
-    await FallingEdge(dut.clkb)
+    # Deasserting the scalar enable drains every pending result, then holds.
     dut.enb.value = 0
-    await ClockCycles(dut.clkb, READ_LATENCY)
-    await ReadOnly()
+    for i in range(READ_LATENCY):
+        await RisingEdge(dut.clkb)
+        assert (
+            int(dut.doutb.value) == memory[addresses[len(addresses) - READ_LATENCY + i]]
+        )
     held = int(dut.doutb.value)
     assert held == memory[addresses[-1]]
     await ClockCycles(dut.clkb, 3)
-    await ReadOnly()
     assert int(dut.doutb.value) == held
 
-    # Reset travels through the control pipeline before clearing the visible
-    # output stage.
-    await FallingEdge(dut.clkb)
+    # Observe reset one edge after it reaches the final stage through the control pipeline.
     dut.rstb.value = 1
     await RisingEdge(dut.clkb)
-    await FallingEdge(dut.clkb)
     dut.rstb.value = 0
     await ClockCycles(dut.clkb, READ_LATENCY)
-    await ReadOnly()
     assert int(dut.doutb.value) == 0
 
     # The first reads after reset expose the cleared final stage, then valid
     # data once the enables propagate.
     resume = [4, 2, 0, 3]
     for i, address in enumerate(resume):
-        await FallingEdge(dut.clkb)
         dut.enb.value = 1
         dut.addrb.value = address
         await RisingEdge(dut.clkb)
-        await ReadOnly()
-        if i < READ_LATENCY - 1:
+        if i < READ_LATENCY:
             assert int(dut.doutb.value) == 0
         else:
-            assert int(dut.doutb.value) == memory[resume[i - (READ_LATENCY - 1)]]
+            assert int(dut.doutb.value) == memory[resume[i - READ_LATENCY]]
 
-    # Out-of-range reads are undefined: X on four-state simulators, zero on
-    # two-state Verilator.
-    await FallingEdge(dut.clkb)
+    # Check the valid pipeline tail before the following out-of-range reads produce X.
     dut.addrb.value = DEPTH
-    await RisingEdge(dut.clkb)
-    await ReadOnly()
-    for _ in range(READ_LATENCY - 1):
-        await FallingEdge(dut.clkb)
+    for i in range(READ_LATENCY):
         await RisingEdge(dut.clkb)
-        await ReadOnly()
+        assert int(dut.doutb.value) == memory[resume[len(resume) - READ_LATENCY + i]]
+    dut.enb.value = 0
+    await RisingEdge(dut.clkb)
     assert_x_or_zero(SIM, dut.doutb.value)
 
-    await FallingEdge(dut.clkb)
-    dut.enb.value = 0
     dut.rstb.value = 1
     await RisingEdge(dut.clkb)
-    await FallingEdge(dut.clkb)
     dut.rstb.value = 0
     await ClockCycles(dut.clkb, READ_LATENCY)
-    await ReadOnly()
     assert int(dut.doutb.value) == 0
 
 

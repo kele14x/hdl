@@ -5,7 +5,7 @@ from __future__ import annotations
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer
+from cocotb.triggers import RisingEdge
 from pdxch_test_utils import PRJ_PATH, run_test
 
 
@@ -24,18 +24,15 @@ async def test_quadrature_lut_and_pipeline(dut):
         96: (0x0000, 0xC000),
     }
 
+    dut.phase.value = 0
+    await RisingEdge(dut.clk)
     dut.phase.value = phases[0]
-    captured_phases = []
-    for index, phase in enumerate(phases):
+    for index in range(len(phases) + 3):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
-        captured_phases.append(phase)
 
-        # cos_addr -> cos_r1 -> cos_r2 is a three-register pipeline. Since
-        # phase is driven before the first edge, the first stable result is
-        # visible after two subsequent edges.
-        if index >= 2:
-            expected_cos, expected_sin = expected[captured_phases[index - 2]]
+        # Clock-edge observation trails capture by three pipeline stages.
+        if index >= 3:
+            expected_cos, expected_sin = expected[phases[index - 3]]
             assert int(dut.cos.value) == expected_cos
             assert int(dut.sin.value) == expected_sin
 

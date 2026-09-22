@@ -6,7 +6,7 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
@@ -64,66 +64,63 @@ async def test_ram_sdp_write_read_latency_and_read_enable_hold(dut):
 
     memory = {address: 0x26 + address for address in range(DEPTH)}
     for address, data in memory.items():
-        await FallingEdge(dut.clka)
+        await RisingEdge(dut.clka)
         dut.wea.value = 1
         dut.addra.value = address
         dut.dina.value = data
-        await RisingEdge(dut.clka)
+    await RisingEdge(dut.clka)
     dut.wea.value = 0
 
     # Reset only clears the final stage; earlier stages power up unknown.
     # Flush a known value through them one stage at a time so the unknown
     # values never reach the output.
+    await RisingEdge(dut.clkb)
     dut.addrb.value = 0
     for stage in range(1, READ_LATENCY):
-        await FallingEdge(dut.clkb)
         dut.enb.value = (1 << stage) - 1
         await RisingEdge(dut.clkb)
 
     expected_pipeline = [memory[0]] * (READ_LATENCY - 1) + [0]
     for address in (0, 3, 4, 1, 2):
-        await FallingEdge(dut.clkb)
         dut.enb.value = (1 << READ_LATENCY) - 1
         dut.addrb.value = address
         await RisingEdge(dut.clkb)
-        await ReadOnly()
-        expected_pipeline = [memory[address], *expected_pipeline[:-1]]
+        # Sample before this edge updates the registers: the prior capture.
         assert int(dut.doutb.value) == expected_pipeline[-1]
+        expected_pipeline = [memory[address], *expected_pipeline[:-1]]
 
-    await FallingEdge(dut.clkb)
     dut.enb.value = 0
     dut.addrb.value = 2
+    await RisingEdge(dut.clkb)
     held = int(dut.doutb.value)
+    assert held == expected_pipeline[-1]
     await ClockCycles(dut.clkb, 3)
     assert int(dut.doutb.value) == held
 
     # Out-of-range accesses are undefined: writes have no effect and reads
     # propagate X through the read pipeline in the behavioral model/XPM.
-    await FallingEdge(dut.clka)
+    await RisingEdge(dut.clka)
     dut.wea.value = 1
     dut.addra.value = DEPTH
     dut.dina.value = 0xA5
     await RisingEdge(dut.clka)
     dut.wea.value = 0
 
-    await FallingEdge(dut.clkb)
+    await RisingEdge(dut.clkb)
     dut.enb.value = 1
     dut.addrb.value = DEPTH
     await RisingEdge(dut.clkb)
-    await ReadOnly()
-    for _ in range(READ_LATENCY - 1):
-        await FallingEdge(dut.clkb)
-        dut.enb.value = (1 << READ_LATENCY) - 1
-        await RisingEdge(dut.clkb)
-        await ReadOnly()
+    dut.enb.value = (1 << READ_LATENCY) - 1
+    await ClockCycles(dut.clkb, READ_LATENCY - 1)
+    dut.enb.value = 0
+    await RisingEdge(dut.clkb)
     assert_x_or_zero(SIM, dut.doutb.value)
 
     # The scalar reset always clears the externally visible stage.
-    await FallingEdge(dut.clkb)
     dut.rstb.value = 1
-    dut.enb.value = 0
     await RisingEdge(dut.clkb)
-    await ReadOnly()
+    dut.rstb.value = 0
+    await RisingEdge(dut.clkb)
     assert int(dut.doutb.value) == 0
 
 

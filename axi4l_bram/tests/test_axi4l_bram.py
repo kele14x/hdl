@@ -12,7 +12,7 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, ReadWrite, RisingEdge, with_timeout
+from cocotb.triggers import ClockCycles, RisingEdge, with_timeout
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.axi4lite import (
@@ -337,13 +337,7 @@ def random_read_count_from_env(default: int) -> int:
 
 
 class BramReadModel:
-    """Pipelined BRAM read model with a configurable read latency.
-
-    A fixed latency of zero models a combinational BRAM response.  A callback
-    ``(address, request_index) -> latency`` may return zero or a positive
-    value to stress the interface with variable timing.  Responses preserve
-    request order and the model emits at most one acknowledgement per clock.
-    """
+    """Latency is the extra wait after sampling a request, before driving its response."""
 
     def __init__(
         self,
@@ -383,10 +377,6 @@ class BramReadModel:
         self.dut.bram_rd_err.value = 0
         while True:
             await RisingEdge(self.dut.aclk)
-            # bram_rd_en is assigned by a nonblocking assignment in the DUT.
-            # ReadWrite sees its new value in this same timestep, allowing a
-            # latency-zero request to drive ACK and data without a clock delay.
-            await ReadWrite()
             cycle += 1
             self.dut.bram_rd_ack.value = 0
             self.dut.bram_rd_err.value = 0
@@ -615,14 +605,7 @@ def random_write_count_from_env(default: int) -> int:
 
 
 class BramWriteModel:
-    """Pipelined BRAM write model with a configurable write latency.
-
-    A fixed latency of zero models a combinational BRAM response.  A callback
-    ``(address, request_index) -> latency`` may return zero or a positive
-    value to stress the interface with variable timing.  Every accepted write
-    is recorded in ``writes`` as ``(address, data, strb)``; acknowledgements
-    preserve request order and the model emits at most one per clock.
-    """
+    """Latency is the extra wait after sampling a request, before driving its response."""
 
     def __init__(
         self,
@@ -657,10 +640,6 @@ class BramWriteModel:
         self.dut.bram_wr_err.value = 0
         while True:
             await RisingEdge(self.dut.aclk)
-            # bram_wr_we is assigned by a nonblocking assignment in the DUT.
-            # ReadWrite sees its new value in this same timestep, allowing a
-            # latency-zero request to drive ACK without a clock delay.
-            await ReadWrite()
             cycle += 1
             self.dut.bram_wr_ack.value = 0
             self.dut.bram_wr_err.value = 0

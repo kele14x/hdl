@@ -5,7 +5,7 @@ from __future__ import annotations
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 from pdxch_test_utils import PRJ_PATH, run_test
 
 
@@ -34,6 +34,7 @@ async def _reset(dut):
 
 
 async def _axi_write(dut, address, data, strobe=0xF):
+    await RisingEdge(dut.s_axi_aclk)
     dut.s_axi_awaddr.value = address
     dut.s_axi_awvalid.value = 1
     dut.s_axi_wdata.value = data
@@ -42,7 +43,6 @@ async def _axi_write(dut, address, data, strobe=0xF):
 
     for _ in range(20):
         await RisingEdge(dut.s_axi_aclk)
-        await Timer(1, unit="ps")
         if int(dut.s_axi_awready.value) and int(dut.s_axi_wready.value):
             break
     else:
@@ -53,7 +53,6 @@ async def _axi_write(dut, address, data, strobe=0xF):
     dut.s_axi_bready.value = 1
     for _ in range(20):
         await RisingEdge(dut.s_axi_aclk)
-        await Timer(1, unit="ps")
         if int(dut.s_axi_bvalid.value):
             assert int(dut.s_axi_bresp.value) == 0
             break
@@ -64,12 +63,12 @@ async def _axi_write(dut, address, data, strobe=0xF):
 
 
 async def _axi_read(dut, address):
+    await RisingEdge(dut.s_axi_aclk)
     dut.s_axi_araddr.value = address
     dut.s_axi_arvalid.value = 1
     dut.s_axi_rready.value = 1
     for _ in range(20):
         await RisingEdge(dut.s_axi_aclk)
-        await Timer(1, unit="ps")
         if int(dut.s_axi_arready.value):
             break
     else:
@@ -78,7 +77,6 @@ async def _axi_read(dut, address):
     dut.s_axi_arvalid.value = 0
     for _ in range(20):
         await RisingEdge(dut.s_axi_aclk)
-        await Timer(1, unit="ps")
         if int(dut.s_axi_rvalid.value):
             data = int(dut.s_axi_rdata.value)
             assert int(dut.s_axi_rresp.value) == 0

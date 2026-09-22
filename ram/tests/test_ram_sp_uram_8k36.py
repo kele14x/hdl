@@ -54,12 +54,12 @@ if USE_XPM:
 
 
 async def cycle(dut, address, data=0, write=0, enable=0b11):
+    # Called on a rising edge; capture next edge, sample the prior capture.
     dut.addr.value = address
     dut.din.value = data
     dut.we.value = write
     dut.en.value = enable
     await RisingEdge(dut.clk)
-    await Timer(1, unit="ps")
     return dut.dout.value
 
 
@@ -72,6 +72,7 @@ async def test_ram_sp_uram_8k36_read_first_packing_and_enables(dut):
     dut.din.value = 0
     await RisingEdge(dut.clk)
     await Timer(1, unit="ps")
+    await RisingEdge(dut.clk)
 
     memory = [0] * DEPTH
     read_pipeline = [0, 0]
@@ -90,18 +91,18 @@ async def test_ram_sp_uram_8k36_read_first_packing_and_enables(dut):
 
         return read_pipeline[1]
 
+    # Delay expectations and their startup-valid flags, not back-to-back stimulus.
+    pending = None
+
     async def check_cycle(address, data=0, write=0, enable=0b11, check=True):
+        nonlocal pending
         expected = advance_model(address, data, write, enable)
         actual = await cycle(dut, address, data, write, enable)
-        if check:
-            assert int(actual) == expected, (
-                address,
-                data,
-                write,
-                enable,
-                expected,
-                int(actual),
-            )
+        if pending is not None:
+            previous, check_previous, context = pending
+            if check_previous:
+                assert int(actual) == previous, (*context, previous, int(actual))
+        pending = (expected, check, (address, data, write, enable))
 
     # Flush unknown power-up values from the two read stages.
     await check_cycle(0, check=False)
@@ -172,6 +173,8 @@ async def test_ram_sp_uram_8k36_read_first_packing_and_enables(dut):
 
     await check_cycle(0)
     await check_cycle(0)
+    await RisingEdge(dut.clk)
+    assert int(dut.dout.value) == pending[0]
 
 
 def test_ram_sp_uram_8k36_runner():

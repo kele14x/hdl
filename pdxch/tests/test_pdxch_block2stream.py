@@ -8,7 +8,7 @@ import os
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 from pdxch_test_utils import PRJ_PATH, pdxch_sources, run_test
 
 NUM_ANT = int(os.environ.get("NUM_ANT", "2"))
@@ -64,10 +64,11 @@ async def _reset(dut):
 
 
 async def _clock_with_input(dut, **kwargs):
-    _set_input(dut, **kwargs)
     await RisingEdge(dut.clk)
-    await Timer(1, unit="ps")
-    return _read_outputs(dut)
+    # Observe the previous cycle before driving inputs for the next edge.
+    outputs = _read_outputs(dut)
+    _set_input(dut, **kwargs)
+    return outputs
 
 
 @cocotb.test()

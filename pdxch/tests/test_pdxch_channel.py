@@ -6,7 +6,7 @@ from __future__ import annotations
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 from pdxch_test_utils import pdxch_sources, run_test
 
 NUM_ANT = 2
@@ -53,7 +53,6 @@ async def _pulse_symbol_boundary(dut):
     await RisingEdge(dut.clk)
     dut.din_sy.value = 0
     await RisingEdge(dut.clk)
-    await Timer(1, unit="ps")
 
 
 async def _wait_pending_fft_config(
@@ -66,7 +65,6 @@ async def _wait_pending_fft_config(
     expected = (expected_size << 2) | expected_itlv
     for _ in range(80):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
         observed = int(dut.ctrl_fft_cfg_pending.value)
         if allowed is not None:
             observed_pair = (observed >> 2, observed & 0x3)
@@ -113,7 +111,6 @@ async def test_rate_bandwidth_table_and_output_contract(dut):
     outputs = []
     for _ in range(20):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
         outputs.append(
             [
                 (int(dut.m_axis_tvalid[ant].value), int(dut.m_axis_tlast[ant].value))

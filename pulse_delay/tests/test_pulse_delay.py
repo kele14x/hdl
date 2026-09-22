@@ -4,8 +4,9 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
-from cocotb.triggers import ClockCycles, ReadOnly, RisingEdge
+
 from hdl_tools.flt_tool import resolve_flt
 
 prj_path = Path(__file__).resolve().parent.parent
@@ -14,7 +15,7 @@ SIM = os.environ.get("SIM")
 if not SIM:
     raise RuntimeError("SIM must be set explicitly, for example SIM=questa")
 GUI = os.environ.get("GUI", "false").lower() == "true"
-WIDTH = int(os.environ.get("WIDTH", 16))
+WIDTH = int(os.environ.get("WIDTH", "16"))
 
 
 async def reset(dut):
@@ -34,9 +35,9 @@ async def emit_and_measure(dut, delay):
     await RisingEdge(dut.clk)
     dut.pulse_in.value = 0
 
-    for latency in range(1, delay + 4):
+    # The sampled output belongs to the preceding clock edge.
+    for latency in range(delay + 4):
         await RisingEdge(dut.clk)
-        await ReadOnly()
         if dut.pulse_out.value:
             return latency
 

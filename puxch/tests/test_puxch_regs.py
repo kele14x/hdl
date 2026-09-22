@@ -28,10 +28,11 @@ async def setup_dut(dut):
     dut.ul_phase_comp_valid.value = 0
     dut.s_axi_aresetn.value = 0
     cocotb.start_soon(Clock(dut.s_axi_aclk, 10, unit="ns").start())
-    cocotb.start_soon(memory_model(dut))
     agent = AxiLiteAgent(dut, AxiLiteAgentConfig(reset="s_axi_aresetn"))
     await agent.start()
     await ClockCycles(dut.s_axi_aclk, 8)
+    # Observe requests only after reset has initialized the register block.
+    cocotb.start_soon(memory_model(dut))
     dut.s_axi_aresetn.value = 1
     await ClockCycles(dut.s_axi_aclk, 4)
     return agent

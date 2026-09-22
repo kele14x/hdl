@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import os
 from pathlib import Path
 
@@ -67,6 +66,8 @@ async def test_segment_boundaries_and_asymmetric_packing(dut):
         await sample_after_rising(dut.clkb)
         dut.enb.value = 0b11
         dut.addrb.value = read_address
+        # Observe the two read stages and matching segment selector at the third edge.
+        await sample_after_rising(dut.clkb)
         await sample_after_rising(dut.clkb)
         await sample_after_rising(dut.clkb)
 

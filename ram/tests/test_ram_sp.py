@@ -6,7 +6,7 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
@@ -110,19 +110,13 @@ CASES = _base_cases + _style_cases + _depth_cases
 
 
 async def drive_cycle(dut, address, data, write, en_mask, reset=0):
-    await FallingEdge(dut.clk)
+    # Called just after a rising edge; these inputs are captured on the next.
     dut.addr.value = address
     dut.din.value = data
     dut.we.value = write
     dut.en.value = en_mask
     dut.rst.value = reset
     await RisingEdge(dut.clk)
-    await ReadOnly()
-
-
-async def cycle(dut, address, data, write, en_mask, reset=0):
-    await drive_cycle(dut, address, data, write, en_mask, reset)
-    return int(dut.dout.value)
 
 
 @cocotb.test()
@@ -141,13 +135,14 @@ async def test_ram_sp_modes_reset_enable_and_init(dut):
     dut.din.value = 0
     await ClockCycles(dut.clk, 2)
     dut.rst.value = 0
-    await ReadOnly()
     assert int(dut.dout.value) == 0
 
     # Reset intentionally leaves all earlier stages untouched. Flush any
     # unknown power-up values through the pipeline before checking read data.
     for _ in range(read_latency):
         await drive_cycle(dut, 0, 0, 0, all_stages, 0)
+    # Observe the last capture on the following edge, without advancing stages.
+    await drive_cycle(dut, 0, 0, 0, 0, 0)
     assert int(dut.dout.value) == 0
 
     memory = [0] * depth
@@ -181,6 +176,27 @@ async def test_ram_sp_modes_reset_enable_and_init(dut):
 
         return pipeline[-1]
 
+    # Queue prior-capture expectations without inserting idle stimulus cycles.
+    pending = (0, None, 0)
+
+    async def check_cycle(address, data, write, en_mask, reset=0, required=None):
+        nonlocal pending
+        expected = advance_model(address, data, write, en_mask, reset)
+        await drive_cycle(dut, address, data, write, en_mask, reset)
+        actual = int(dut.dout.value)
+        previous, required_previous, previous_address = pending
+        assert actual == previous, (
+            ram_style,
+            write_mode,
+            read_latency,
+            previous_address,
+            previous,
+            actual,
+        )
+        if required_previous is not None:
+            assert actual == required_previous
+        pending = (expected, required, address)
+
     # The first read establishes a value different from the contents written
     # to address 1, making READ_FIRST and NO_CHANGE observably distinct.
     operations = (
@@ -190,57 +206,40 @@ async def test_ram_sp_modes_reset_enable_and_init(dut):
         (1, 0xC7, 1, all_stages, 0),
         (1, 0, 0, all_stages, 0),
     )
-    for address, data, write, en_mask, reset in operations:
-        expected = advance_model(address, data, write, en_mask, reset)
-        actual = await cycle(dut, address, data, write, en_mask, reset)
-        assert actual == expected, (
-            ram_style,
-            write_mode,
-            read_latency,
-            address,
-            expected,
-            actual,
-        )
+    for operation in operations:
+        await check_cycle(*operation)
 
-    held = int(dut.dout.value)
+    held = pipeline[-1]
     for _ in range(2):
-        expected = advance_model(6, 0xFF, 1, 0, 0)
-        actual = await cycle(dut, 6, 0xFF, 1, 0, 0)
-        assert actual == expected == held
+        await check_cycle(6, 0xFF, 1, 0, required=held)
 
     # Stage 0 can hold independently of the later output stages.
     stage0_hold_en = all_stages & ~1
-    expected = advance_model(3, 0xEE, 1, stage0_hold_en, 0)
-    actual = await cycle(dut, 3, 0xEE, 1, stage0_hold_en, 0)
-    assert actual == expected
+    await check_cycle(3, 0xEE, 1, stage0_hold_en)
 
     # A later pipeline stage can hold while stage 0 continues to operate.
     if read_latency > 1:
         stage1_hold_en = all_stages & ~(1 << 1)
-        expected = advance_model(3, 0x19, 1, stage1_hold_en, 0)
-        actual = await cycle(dut, 3, 0x19, 1, stage1_hold_en, 0)
-        assert actual == expected
+        await check_cycle(3, 0x19, 1, stage1_hold_en)
 
     # Fill every read stage with a known nonzero value.
-    for _ in range(read_latency):
-        expected = advance_model(1, 0, 0, all_stages, 0)
-        actual = await cycle(dut, 1, 0, 0, all_stages, 0)
-        assert actual == expected
-    assert expected == 0xC7
+    for stage in range(read_latency):
+        await check_cycle(
+            1, 0, 0, all_stages, required=0xC7 if stage == read_latency - 1 else None
+        )
 
     # The scalar reset has priority over the final stage enable and clears
     # only the externally visible stage.
-    expected = advance_model(0, 0, 0, 0, 1)
-    actual = await cycle(dut, 0, 0, 0, 0, 1)
-    assert actual == expected == 0
+    await check_cycle(0, 0, 0, 0, 1, required=0)
 
     # For a multistage path, expose the retained penultimate value to prove
     # reset did not also clear an earlier pipeline stage.
     if read_latency > 1:
         final_stage_enable = 1 << (read_latency - 1)
-        expected = advance_model(0, 0, 0, final_stage_enable, 0)
-        actual = await cycle(dut, 0, 0, 0, final_stage_enable, 0)
-        assert actual == expected == 0xC7
+        await check_cycle(0, 0, 0, final_stage_enable, required=0xC7)
+
+    # Check the last queued result before leaving the modeled sequence.
+    await check_cycle(0, 0, 0, 0)
 
     if depth < (1 << ADDR_WIDTH):
         out_of_range_address = depth
@@ -253,14 +252,17 @@ async def test_ram_sp_modes_reset_enable_and_init(dut):
         # Propagate an out-of-range read through every enabled read stage.
         for _ in range(read_latency):
             await drive_cycle(dut, out_of_range_address, 0, 0, all_stages, 0)
+        await drive_cycle(dut, 0, 0, 0, 0, 0)
         assert_x_or_zero(SIM, dut.dout.value)
 
         # Reset recovers the visible output even though earlier stages may
         # still contain X, then valid reads flush those stages.
         await drive_cycle(dut, 0, 0, 0, 0, 1)
+        await drive_cycle(dut, 0, 0, 0, 0, 0)
         assert int(dut.dout.value) == 0
         for _ in range(read_latency):
             await drive_cycle(dut, guard_address, 0, 0, all_stages, 0)
+        await drive_cycle(dut, guard_address, 0, 0, 0, 0)
         assert int(dut.dout.value) == 0
 
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Full-block/full-FFT LTE 20 MHz PDXCH system simulation."""
 
 from __future__ import annotations
@@ -9,7 +8,7 @@ import cocotb
 import numpy as np
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, Combine, Event, RisingEdge, Timer, with_timeout
+from cocotb.triggers import ClockCycles, Combine, Event, RisingEdge, with_timeout
 from pdxch_reference import (
     best_body_alignment,
     pdxch_lte20_reference,
@@ -132,7 +131,6 @@ async def _send_symbol(dut, sources, symbol: int):
 async def _capture_cc(dut, cc: int, capture_started: Event):
     while True:
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
         users = []
         words = []
         for antenna in range(NUM_ANT):
@@ -158,7 +156,6 @@ async def _capture_cc(dut, cc: int, capture_started: Event):
         ]
         for _ in range(symbol_samples - len(antenna_samples[0])):
             await ClockCycles(dut.clk, RADIO_CYCLES_PER_SAMPLE)
-            await Timer(1, unit="ps")
             for antenna in range(NUM_ANT):
                 output = dut.m_axis_tdata[cc][antenna].value
                 word = int(output) if output.is_resolvable else 0

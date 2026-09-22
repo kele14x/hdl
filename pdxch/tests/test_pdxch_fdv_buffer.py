@@ -7,7 +7,7 @@ import os
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 from pdxch_test_utils import PRJ_PATH, pdxch_sources, run_test
 
 NUM_ANT = 4
@@ -56,15 +56,14 @@ async def test_sync_timer_and_bist_readout(dut):
 
     # A zero-delay request still traverses the pulse-delay implementation;
     # verify that the first clock-domain boundary emits one 10 ms marker.
+    await RisingEdge(dut.clk_eth_xran)
     dut.sync_in.value = 1
     await RisingEdge(dut.clk_eth_xran)
-    await Timer(1, unit="ps")
     dut.sync_in.value = 0
 
     first_marker = []
     for _ in range(8):
         await RisingEdge(dut.clk_eth_xran)
-        await Timer(1, unit="ps")
         first_marker.append(int(dut.defm_radio_start_10ms.value))
     assert sum(first_marker) == 1
 
@@ -76,7 +75,6 @@ async def test_sync_timer_and_bist_readout(dut):
     # strobes cannot be missed while waiting for the 4000-clock delay.
     for _ in range(4200):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
         if dut.dout_dv.value.is_resolvable:
             radio_samples.append(
                 (
@@ -136,7 +134,6 @@ async def test_real_ram_read_address_alignment(dut):
     requested_addresses = []
     for cycle in range(18000):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
 
         if cycle in pending:
             expected = pending.pop(cycle)
@@ -173,34 +170,40 @@ async def test_write_drops_packet_at_bank_boundary(dut):
     observed_iq_addresses = []
     observed_exp_addresses = []
 
-    await RisingEdge(dut.clk_eth_xran)
-    for index in range(packet_words):
-        dut.s_axis_tdata[0].value = _iq_word(index + 1, index + 2)
-        dut.s_axis_exp[0].value = index & 0xF
-        dut.s_axis_tvalid[0].value = 1
-        dut.s_axis_tlast[0].value = int(index == packet_words - 1)
-        dut.s_axis_tuser[0].value = start_prb if index == 0 else 0
+    for cycle in range(packet_words + 2):
         await RisingEdge(dut.clk_eth_xran)
-        await Timer(1, unit="ps")
 
-        # The write bundle is observed one cycle after the input word.
-        iq_en = int(dut.wr_iq_en[0].value)
-        exp_en = int(dut.wr_exp_en[0].value)
-        if iq_en:
-            iq_addr = int(dut.wr_iq_addr[0].value)
-            observed_iq_addresses.append(iq_addr)
-            assert iq_addr < iq_bank_depth
-        if exp_en:
-            exp_addr = int(dut.wr_exp_addr[0].value)
-            observed_exp_addresses.append(exp_addr)
-            assert exp_addr < exp_bank_depth
+        # Drive at N, capture at N+1, sample the registered bundle at N+2.
+        if cycle >= 2:
+            index = cycle - 2
+            iq_en = int(dut.wr_iq_en[0].value)
+            exp_en = int(dut.wr_exp_en[0].value)
+            if iq_en:
+                iq_addr = int(dut.wr_iq_addr[0].value)
+                observed_iq_addresses.append(iq_addr)
+                assert iq_addr < iq_bank_depth
+            if exp_en:
+                exp_addr = int(dut.wr_exp_addr[0].value)
+                observed_exp_addresses.append(exp_addr)
+                assert exp_addr < exp_bank_depth
 
-        assert iq_en == int(index < valid_words)
-        assert exp_en == int(index < valid_words and index % 2 == 0)
+            assert iq_en == int(index < valid_words)
+            assert exp_en == int(index < valid_words and index % 2 == 0)
+
+        if cycle < packet_words:
+            dut.s_axis_tdata[0].value = _iq_word(cycle + 1, cycle + 2)
+            dut.s_axis_exp[0].value = cycle & 0xF
+            dut.s_axis_tvalid[0].value = 1
+            dut.s_axis_tlast[0].value = int(cycle == packet_words - 1)
+            dut.s_axis_tuser[0].value = start_prb if cycle == 0 else 0
+        else:
+            # Prevent duplicate TLAST capture while draining registered writes.
+            dut.s_axis_tvalid[0].value = 0
+            dut.s_axis_tlast[0].value = 0
 
     await RisingEdge(dut.clk_eth_xran)
-    dut.s_axis_tvalid[0].value = 0
-    dut.s_axis_tlast[0].value = 0
+    assert int(dut.wr_iq_en[0].value) == 0
+    assert int(dut.wr_exp_en[0].value) == 0
 
     assert observed_iq_addresses == list(range(start_prb * 6, iq_bank_depth))
     assert observed_exp_addresses == list(
@@ -244,7 +247,6 @@ async def test_real_ram_multi_antenna_data_matches_channel_tag(dut):
     checked_channels = set()
     for _ in range(18000):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
         if dut.dout_dv.value.is_resolvable and int(dut.dout_dv.value):
             channel = int(dut.dout_chn.value)
             actual = (int(dut.dout_dr.value), int(dut.dout_di.value))

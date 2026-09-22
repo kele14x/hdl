@@ -5,7 +5,7 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, FallingEdge
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.axis import AxisAgent, AxisAgentConfig, AxisRole
@@ -89,7 +89,7 @@ async def test_ecpri_framer_trans(dut):
         payload = rng.randbytes(rng.randint(TEST_PACKET_SIZE_MIN, TEST_PACKET_SIZE_MAX))
         identifier = rng.randrange(1 << 16)
         message_type = rng.choice((0, 1))
-        await FallingEdge(dut.clk)
+        await RisingEdge(dut.clk)
         dut.s_trans_messagetype.value = message_type
         dut.s_trans_payloadsize.value = len(payload)
         dut.s_trans_rtc_pc_id.value = identifier

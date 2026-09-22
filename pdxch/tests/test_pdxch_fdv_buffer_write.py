@@ -4,7 +4,7 @@ import os
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 from pdxch_test_utils import PRJ_PATH, run_test
 
 half_block = int(os.environ.get("HALF_BLOCK", "0"))
@@ -38,39 +38,47 @@ async def send_packet(dut, start_prb, bank, words, cc=cc_id, flip_bank_at=None):
     iq_start = bank * iq_bank_depth + start_prb * 6
     exp_start = bank * exp_bank_depth + start_prb * 3
 
-    dut.s_dl_sym_num.value = bank
-    for index, (data, exponent) in enumerate(words):
-        if index == flip_bank_at:
-            dut.s_dl_sym_num.value = bank ^ 1
-        dut.s_axis_tdata.value = data
-        dut.s_axis_exp.value = exponent
-        dut.s_axis_tlast.value = int(index == len(words) - 1)
-        dut.s_axis_tuser.value = packet_user(start_prb, cc) if index == 0 else 0x123456
-        dut.s_axis_tvalid.value = 1
+    for cycle in range(len(words) + 2):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
 
-        # The RAM write interface is registered by one clock cycle.
-        expected_iq_addr = iq_start + index
-        expected_exp_addr = exp_start + index // 2
-        expected_exp_en = index % 2 == 0
-        expected_en = (
-            cc == cc_id
-            and expected_iq_addr < (bank + 1) * iq_bank_depth
-            and expected_exp_addr < (bank + 1) * exp_bank_depth
-        )
-        if expected_en:
-            assert int(dut.wr_iq_addr.value) == expected_iq_addr
-            assert int(dut.wr_exp_addr.value) == expected_exp_addr
-        assert int(dut.wr_iq_en.value) == expected_en
-        assert int(dut.wr_iq_data.value) == data
-        assert int(dut.wr_exp_en.value) == (expected_en and expected_exp_en)
-        assert int(dut.wr_exp_data.value) == exponent
+        # Drive at N, capture at N+1, observe the registered write at N+2.
+        if cycle >= 2:
+            index = cycle - 2
+            data, exponent = words[index]
+            expected_iq_addr = iq_start + index
+            expected_exp_addr = exp_start + index // 2
+            expected_exp_en = index % 2 == 0
+            expected_en = (
+                cc == cc_id
+                and expected_iq_addr < (bank + 1) * iq_bank_depth
+                and expected_exp_addr < (bank + 1) * exp_bank_depth
+            )
+            if expected_en:
+                assert int(dut.wr_iq_addr.value) == expected_iq_addr
+                assert int(dut.wr_exp_addr.value) == expected_exp_addr
+            assert int(dut.wr_iq_en.value) == expected_en
+            assert int(dut.wr_iq_data.value) == data
+            assert int(dut.wr_exp_en.value) == (expected_en and expected_exp_en)
+            assert int(dut.wr_exp_data.value) == exponent
 
-    dut.s_axis_tvalid.value = 0
-    dut.s_axis_tlast.value = 0
+        if cycle < len(words):
+            data, exponent = words[cycle]
+            if cycle == 0:
+                dut.s_dl_sym_num.value = bank
+            if cycle == flip_bank_at:
+                dut.s_dl_sym_num.value = bank ^ 1
+            dut.s_axis_tdata.value = data
+            dut.s_axis_exp.value = exponent
+            dut.s_axis_tlast.value = int(cycle == len(words) - 1)
+            dut.s_axis_tuser.value = (
+                packet_user(start_prb, cc) if cycle == 0 else 0x123456
+            )
+            dut.s_axis_tvalid.value = 1
+        else:
+            dut.s_axis_tvalid.value = 0
+            dut.s_axis_tlast.value = 0
+
     await RisingEdge(dut.clk)
-    await Timer(1, unit="ps")
     assert int(dut.wr_iq_en.value) == 0
     assert int(dut.wr_exp_en.value) == 0
 

@@ -19,7 +19,7 @@ import cocotb
 import numpy as np
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, Combine, RisingEdge, Timer, with_timeout
+from cocotb.triggers import ClockCycles, Combine, RisingEdge, with_timeout
 from puxch_reference import bfp9_readout_words, puxch_reference
 from puxch_test_utils import run_cocotb
 
@@ -151,8 +151,11 @@ async def _reset(dut, axi: AxiLiteAgent, sources, sinks):
     await ClockCycles(dut.s_axi_aclk, 100)
     await ClockCycles(dut.clk, 100)
     await ClockCycles(dut.clk_eth_xran, 100)
+    await RisingEdge(dut.s_axi_aclk)
     dut.s_axi_aresetn.value = 1
+    await RisingEdge(dut.clk)
     dut.rst.value = 0
+    await RisingEdge(dut.clk_eth_xran)
     dut.rst_eth_xran.value = 0
     await ClockCycles(dut.s_axi_aclk, 100)
     await ClockCycles(dut.clk, 100)
@@ -182,7 +185,6 @@ async def _capture_first_symbol(dut):
         or min(phase_count) < FFT_SIZE
     ):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
 
         sy = bool(int(resync.dout_sy.value))
         if sy and not previous_sy:
@@ -211,7 +213,6 @@ async def _pulse_sync(dut):
     await RisingEdge(dut.clk_eth_xran)
     dut.sync_in.value = 1
     await RisingEdge(dut.clk_eth_xran)
-    await Timer(1, unit="ps")
     dut.sync_in.value = 0
 
 
@@ -220,7 +221,6 @@ async def _request(dut, antenna: int, cc: int, start_prb: int, num_prb: int):
     await RisingEdge(dut.clk_eth_xran)
     dut.m_fram_data_req[antenna].value = request
     await RisingEdge(dut.clk_eth_xran)
-    await Timer(1, unit="ps")
     dut.m_fram_data_req[antenna].value = 0
 
 

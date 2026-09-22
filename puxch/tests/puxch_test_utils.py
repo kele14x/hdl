@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from cocotb.triggers import RisingEdge, Timer
+from cocotb.triggers import RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
@@ -17,9 +17,8 @@ REBUILD = os.environ.get("REBUILD", "false").lower() == "true"
 
 
 async def sample_after_rising(clock):
-    """Wait for a clock edge and allow registered outputs to settle."""
+    """Sample stable pre-update outputs; subsequent drives capture next edge."""
     await RisingEdge(clock)
-    await Timer(1, unit="ps")
 
 
 def run_cocotb(

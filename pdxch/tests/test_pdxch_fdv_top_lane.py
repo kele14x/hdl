@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Four-antenna lane check through gearbox, FDV RAM and FDV readout."""
 
 from __future__ import annotations
@@ -7,7 +6,7 @@ import cocotb
 import numpy as np
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, Combine, RisingEdge, Timer, with_timeout
+from cocotb.triggers import ClockCycles, Combine, RisingEdge, with_timeout
 from pdxch_reference import (
     best_body_alignment,
     fdv_readout_stream,
@@ -133,7 +132,6 @@ async def test_gearbox_fdv_ram_readout_keeps_antenna_identity(dut):
         # each lane can associate the interleaved block with the wrong lane.
         for _ in range(100000):
             await RisingEdge(dut.clk)
-            await Timer(1, unit="ps")
             values = []
             for antenna in range(NUM_ANT):
                 value = dut.m_axis_tdata[0][antenna].value
@@ -148,7 +146,6 @@ async def test_gearbox_fdv_ram_readout_keeps_antenna_identity(dut):
 
         for _ in range(4095):
             await ClockCycles(dut.clk, NUM_ANT)
-            await Timer(1, unit="ps")
             for antenna in range(NUM_ANT):
                 value = dut.m_axis_tdata[0][antenna].value
                 samples[antenna].append(int(value) if value.is_resolvable else 0)
@@ -159,7 +156,6 @@ async def test_gearbox_fdv_ram_readout_keeps_antenna_identity(dut):
         samples = [[] for _ in range(NUM_ANT)]
         for _ in range(100000):
             await RisingEdge(dut.clk)
-            await Timer(1, unit="ps")
             if int(getattr(channel_dut, f"{prefix}_dout_dv").value):
                 channel = int(getattr(channel_dut, f"{prefix}_dout_chn").value)
                 samples[channel].append(
@@ -194,7 +190,6 @@ async def test_gearbox_fdv_ram_readout_keeps_antenna_identity(dut):
     checked = [0] * NUM_ANT
     for _ in range(50000):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
         if int(dut.fdv_dout_dv[0].value):
             channel = int(dut.fdv_dout_chn[0].value)
             actual = (

@@ -4,11 +4,10 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, ReadOnly, RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
-
 
 prj_path = Path(__file__).resolve().parent.parent
 SIM = os.environ.get("SIM")
@@ -20,7 +19,6 @@ GUI = os.environ.get("GUI", "false").lower() == "true"
 async def wait_for_tod(dut, signal, seconds, nanoseconds):
     for _ in range(100):
         await RisingEdge(dut.rx_eth_clk)
-        await ReadOnly()
         value = int(signal.value)
         if (value >> 32) == seconds and (value & 0xFFFFFFFF) >= nanoseconds:
             return value
@@ -56,18 +54,16 @@ async def test_timer_syncer_loads_tod_and_runs_in_both_eth_domains(dut):
     tx_value = 0
     for _ in range(100):
         await RisingEdge(dut.tx_eth_clk)
-        await ReadOnly()
         tx_value = int(dut.ctl_tx_systemtimer.value)
         if (tx_value >> 32) == int(dut.tod_sec.value):
             break
     assert (tx_value >> 32) == int(dut.tod_sec.value)
 
-    # The transmit-domain wait above can span several receive clocks. Sample
-    # the receive counter again before checking its per-clock increment.
+    # Align both counter samples to the receive clock despite the transmit-domain wait.
+    await RisingEdge(dut.rx_eth_clk)
     previous_ns = int(dut.ctl_rx_systemtimer.value) & 0xFFFFFFFF
     for _ in range(4):
         await RisingEdge(dut.rx_eth_clk)
-        await ReadOnly()
         current = int(dut.ctl_rx_systemtimer.value)
         assert (current >> 32) == int(dut.tod_sec.value)
         delta = (current & 0xFFFFFFFF) - previous_ns

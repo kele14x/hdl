@@ -56,7 +56,8 @@ async def test_channel_configuration_and_radio_start_delay(dut):
         await sample_after_rising(dut.ctrl_clk)
         dut.ctrl_rat.value = rat
         dut.ctrl_bw.value = bandwidth
-        await sample_after_rising(dut.ctrl_clk)
+        await sample_after_rising(dut.ctrl_clk)  # Capture the configuration.
+        await sample_after_rising(dut.ctrl_clk)  # Observe its registered decode.
         assert int(dut.ctrl_size.value) == expected_size
         assert int(dut.ctrl_itlv.value) == expected_itlv
 

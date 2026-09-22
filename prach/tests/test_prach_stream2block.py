@@ -9,7 +9,7 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
@@ -148,7 +148,6 @@ async def test_three_explicit_banks_follow_the_existing_address_mapping(dut):
         nonlocal observed_writes, monitor_done
         while not monitor_done:
             await RisingEdge(dut.clk)
-            await Timer(1, unit="ps")
             if not int(dut.wr_we_any.value):
                 continue
 
@@ -191,7 +190,6 @@ async def test_readback_preserves_bit_reverse_order_across_all_memory_banks(dut)
         async def monitor_readback(received=received):
             while True:
                 await RisingEdge(dut.clk)
-                await Timer(1, unit="ps")
                 if int(dut.dout_dv.value):
                     received.append(
                         (

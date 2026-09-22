@@ -5,7 +5,7 @@ from __future__ import annotations
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge, Timer
+from cocotb.triggers import ClockCycles, RisingEdge
 from pdxch_test_utils import PRJ_PATH, pdxch_sources, run_test
 
 NUM_ANT = 4
@@ -60,7 +60,6 @@ async def _start_symbol(dut):
     dut.start_of_frame.value = 1
     dut.start_of_symbol.value = 2
     await RisingEdge(dut.clk)
-    await Timer(1, unit="ps")
     dut.start_of_frame.value = 0
     dut.start_of_symbol.value = 0
 
@@ -69,7 +68,6 @@ async def _collect(dut, cycles):
     samples = []
     for _ in range(cycles):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
         dv = dut.dout_dv.value
         if dv.is_resolvable:
             sample = {
@@ -173,7 +171,6 @@ async def test_fs_offset_alignment_clamp_and_truncation(dut):
         decoded = []
         for _ in range(80):
             await RisingEdge(dut.clk)
-            await Timer(1, unit="ps")
             if dut.dout_dv.value.is_resolvable and int(dut.dout_dv.value):
                 assert dut.dout_dr.value.is_resolvable
                 assert dut.dout_di.value.is_resolvable
@@ -211,7 +208,6 @@ async def test_multi_antenna_data_matches_channel_tag(dut):
     checked = 0
     for _ in range(128):
         await RisingEdge(dut.clk)
-        await Timer(1, unit="ps")
         if dut.dout_dv.value.is_resolvable and int(dut.dout_dv.value):
             channel = int(dut.dout_chn.value)
             actual = (
