@@ -35,6 +35,7 @@ transcript
 .vscode/
 
 # Others
+runs/
 .DS_Store
 *.bkp
 *.swp
