@@ -149,10 +149,12 @@ async def test_axis_fifo_alt(dut) -> None:
         timeout_cycles=5_000,
     )
     dropped: list[bool] = []
+
+    await reset(dut)
+    # Start checking after reset has initialized both clock domains.
     cocotb.start_soon(packet_mode_checker(dut))
     cocotb.start_soon(discard_tracker(dut, dropped))
 
-    await reset(dut)
     await source.start()
     await sink.start()
 

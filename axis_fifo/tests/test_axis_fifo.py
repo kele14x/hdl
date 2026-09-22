@@ -128,10 +128,11 @@ async def test_axis_fifo(dut) -> None:
         ready_policy=lambda _cycle: rng.random() < 0.8,
         timeout_cycles=5_000,
     )
+    await reset(dut)
+    # Start checking after reset has initialized both clock domains.
     if PACKET_MODE:
         cocotb.start_soon(packet_mode_checker(dut))
 
-    await reset(dut)
     await source.start()
     await sink.start()
 

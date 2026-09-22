@@ -112,7 +112,7 @@ module axis_fifo #(
 
   // Write pointer
 
-  assign wr_clk = s_axis_aclk;
+  assign wr_clk  = s_axis_aclk;
 
   assign wr_rstn = s_axis_aresetn;
 

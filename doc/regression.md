@@ -58,40 +58,88 @@ Runner tests use temporary repositories to check discovery, continued
 execution after a failure, helper-test failure propagation, and rejection of
 missing/empty tests or simulator selections.
 
-## Validation of this change (2026-09-22)
+## Latest regression and OOC follow-up (2026-09-22)
 
-The complete `make all` sweep finished, including both default simulators
-(Questa only for Low-PHY), formatting, and synthesis. It returned nonzero
-and accurately reported six failing test blocks; it did not stop the
-remaining blocks or Python tests.
+Command: `make all` with the default module and simulator selections. The
+run used Python 3.14.7, cocotb 2.1.0, pytest 9.1.1, Verilator 5.052,
+Questa Altera Starter FPGA Edition 2025.3, and Vivado 2024.2.
+
+The original attempt completed lint, tests, and formatting, but stopped
+during `lowphy1` OOC synthesis at 19:17 without a recorded cause or final
+`make all` exit status. Lint logs are from 18:25, tests from 18:26–19:12,
+and formatting from 19:12 (all times UTC+08:00).
+
+The remaining OOC targets were rerun separately at 20:16–20:28:
+
+```sh
+make ooc OOC_MODULES="lowphy pdxch prach puxch"
+```
+
+This command returned zero: all four modules passed, including both
+Low-PHY variants. The aggregate output was captured in
+[.build_logs/ooc-rerun-20260922-2015.log](../.build_logs/ooc-rerun-20260922-2015.log).
+The existing `fft` pass from 19:12–19:13 was retained, not rerun.
+
+The runner overwrites logs per target/module and normally prints its summary
+only to the console. The four previous OOC logs were backed up under
+`.build_logs/ooc-before-rerun-20260922-9u0CA5/` before this rerun. These results
+complete the synthesis coverage separately; they are not a new `make all` run.
 
 - Lint: all 39 RTL blocks passed.
+- Tests: 35 of 39 RTL blocks passed; four failed in Questa. Verilator
+  reported 235 passed pytest runner cases across 38 blocks; Questa reported
+  229 passed and 9 failed across 39 blocks. No skips were reported. Low-PHY
+  uses Questa only. These counts are runner cases, not individual cocotb tests.
+- FIFO regressions: `axis_fifo` passed all 16 configurations and
+  `axis_fifo_alt` passed all 8 configurations on each simulator.
 - New top smoke tests: O-RAN, PTP, FH, and PPS passed on Verilator and Questa.
 - Low-PHY: register tests and both top variants passed on Questa.
 - Common: all 16 cases passed on each simulator.
 - Shared Python helpers and runner tests: all 14 cases passed.
-- Formatting: all 39 targets completed. Incidental whitespace-only changes
-  in unrelated RTL were removed from the patch afterward.
-- OOC synthesis: `fft`, `lowphy`, `pdxch`, `prach`, and `puxch` passed.
-- Ruff check/format on changed Python files, shell syntax, and diff whitespace
-  checks passed.
+- Formatting: all 39 targets completed.
 
-The O-RAN test exposed an elaboration error in its initialized control memory.
-Its clocked write process now uses plain `always`, because `always_ff` cannot
-share a variable with the existing initialization process. O-RAN lint and
-both simulator smoke runs passed after the fix.
+OOC synthesis evidence:
 
-The following failures remain in existing, unchanged test/RTL logic. All six
+| Block / top | Latest available result | Log |
+| --- | --- | --- |
+| `fft` | Passed in the original attempt (19:12–19:13); not rerun. | [.build_logs/ooc-fft.log](../.build_logs/ooc-fft.log) |
+| `lowphy` / `lowphy0` | Passed in the follow-up (20:16–20:19). | [.build_logs/ooc-lowphy.log](../.build_logs/ooc-lowphy.log) |
+| `lowphy` / `lowphy1` | Passed in the follow-up (20:19–20:23). | [.build_logs/ooc-lowphy.log](../.build_logs/ooc-lowphy.log) |
+| `pdxch` | Passed in the follow-up (20:23–20:25). | [.build_logs/ooc-pdxch.log](../.build_logs/ooc-pdxch.log) |
+| `prach` | Passed in the follow-up (20:25–20:26). | [.build_logs/ooc-prach.log](../.build_logs/ooc-prach.log) |
+| `puxch` | Passed in the follow-up (20:26–20:28). | [.build_logs/ooc-puxch.log](../.build_logs/ooc-puxch.log) |
+
+All six top-level synthesis runs reported zero errors and zero critical
+warnings; ordinary warnings remain. This validates synthesis, not placement,
+routing, or timing closure. The OOC hierarchies cover PRACH's `axis_fifo_alt`
+and shared `delay_lutram` instances, but do not instantiate standalone
+`axis_fifo` or cover every FIFO parameter combination. No synthesis regression
+was observed in the covered designs with the current working-tree changes.
+
+The earlier O-RAN smoke-test work fixed an elaboration error in its initialized
+control memory. Its clocked write process uses plain `always`, because
+`always_ff` cannot share a variable with the existing initialization process.
+O-RAN lint and both simulator smoke runs remain passing.
+
+The FIFO startup failures are fixed in the testbenches. The packet checkers
+previously sampled `m_axis_tvalid` at the first rising edge (4 ns), before
+reset initialized it, causing Questa to reject conversion of `X` to an
+integer. Both suites now start their checkers after the existing reset and
+settling sequence, before either AXI agent starts traffic. The alternate
+FIFO's discard tracker starts at the same point. No RTL change or unknown
+value suppression is needed.
+
+The following failures remain in existing, unchanged test/RTL logic. All four
 blocks passed their Verilator pass and failed in Questa:
 
 | Block | Observed failure | Log |
 | --- | --- | --- |
-| `axis_fifo` | Packet checker converts an unknown `m_axis_tvalid` to an integer at 4 ns, during startup. | [.build_logs/test-axis_fifo.log](../.build_logs/test-axis_fifo.log) |
-| `axis_fifo_alt` | Same startup packet-checker failure. | [.build_logs/test-axis_fifo_alt.log](../.build_logs/test-axis_fifo_alt.log) |
 | `axis_switch` | Broadcast backpressure checker converts an unknown payload to an integer. | [.build_logs/test-axis_switch.log](../.build_logs/test-axis_switch.log) |
 | `cdc` | Handshake data/order and readiness assertions fail in three configurations; a pulse configuration also reads an unknown value. | [.build_logs/test-cdc.log](../.build_logs/test-cdc.log) |
 | `coe` | Questa rejects `ecpri_framer_trans.seqid_reg` being assigned by initialization and `always_ff` processes. | [.build_logs/test-coe.log](../.build_logs/test-coe.log) |
 | `ecpri` | Same `seqid_reg` elaboration error affects three runners. | [.build_logs/test-ecpri.log](../.build_logs/test-ecpri.log) |
 
-These failures are recorded rather than skipped or suppressed. The suite is
-not yet a fully passing regression baseline.
+These failures are recorded rather than skipped or suppressed. OOC synthesis
+is now complete, but the suite is not yet a fully passing regression baseline
+because four blocks still fail in Questa; simulation was not rerun during
+this OOC follow-up.

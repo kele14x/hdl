@@ -37,11 +37,11 @@ module delay_lutram #(
   end
 
   (* ram_style = "distributed" *)
-  logic [WIDTH-1:0] mem [0:RamDepth-1];
+  logic [    WIDTH-1:0] mem      [0:RamDepth-1];
 
   logic [AddrWidth-1:0] addr;
-  logic [WIDTH-1:0]     mem_read;
-  logic [WIDTH-1:0]     dout_r;
+  logic [    WIDTH-1:0] mem_read;
+  logic [    WIDTH-1:0] dout_r;
 
   initial begin : p_init
     for (int i = 0; i < RamDepth; i++) begin
