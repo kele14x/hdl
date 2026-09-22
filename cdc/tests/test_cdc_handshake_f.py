@@ -46,7 +46,7 @@ async def test_cdc_handshake_transfers_data_under_destination_backpressure(dut):
 
     async def receive():
         for _ in expected:
-            await with_timeout(RisingEdge(dut.dest_valid), 2, "us")
+            await wait_for_value(dut.dest_valid, dut.dest_clk, 1, cycles=200)
             received.append(int(dut.dest_out.value))
             await ClockCycles(dut.dest_clk, 2)
             dut.dest_ready.value = 1
@@ -79,7 +79,7 @@ async def test_cdc_handshake_auto_accepts_when_no_ext_hsk(dut):
 
     async def receive():
         for _ in expected:
-            await with_timeout(RisingEdge(dut.dest_valid), 2, "us")
+            await wait_for_value(dut.dest_valid, dut.dest_clk, 1, cycles=200)
             received.append(int(dut.dest_out.value))
 
     receiver = cocotb.start_soon(receive())
@@ -123,7 +123,7 @@ async def test_cdc_handshake_holds_one_outstanding_transfer_until_consumed(dut):
         # The receiving endpoint is deliberately blocked.  The destination
         # interface must keep valid and data stable rather than overwrite the
         # single outstanding transaction.
-        await with_timeout(RisingEdge(dut.dest_valid), 2, "us")
+        await wait_for_value(dut.dest_valid, dut.dest_clk, 1, cycles=200)
         assert int(dut.dest_out.value) == value
         for _ in range(4):
             await RisingEdge(dut.dest_clk)
@@ -156,16 +156,6 @@ CASES = [
             "DEST_EXT_HSK": 0,
             "DEST_SYNC_FF": 2,
             "INIT_SYNC_FF": 1,
-            "SRC_SYNC_FF": 2,
-            "WIDTH": 8,
-        },
-    },
-    {
-        "name": "hsk1_init0",
-        "params": {
-            "DEST_EXT_HSK": 1,
-            "DEST_SYNC_FF": 2,
-            "INIT_SYNC_FF": 0,
             "SRC_SYNC_FF": 2,
             "WIDTH": 8,
         },

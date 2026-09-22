@@ -109,7 +109,8 @@ module ecpri_framer_trans (
     end
   end
 
-  always_ff @(posedge clk) begin
+  // always_ff forbids another process from writing seqid_reg, including initial.
+  always @(posedge clk) begin
     if (int_tvalid && int_tready) begin
       seqid_reg[int_trans_rtc_pc_id[3:0]] <= int_trans_seqid + 1'b1;
     end

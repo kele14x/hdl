@@ -99,20 +99,19 @@ async def check_payload_stable(dut, destination):
         await RisingEdge(dut.clk)
         valid = int(dut.m_axis_tvalid[destination].value)
         ready = int(dut.m_axis_tready[destination].value)
+        if not valid:
+            assert pending is None, f"dest{destination} TVALID dropped while stalled"
+            continue
         payload = (
             int(dut.m_axis_tdata[destination].value),
             int(dut.m_axis_tkeep[destination].value),
             int(dut.m_axis_tlast[destination].value),
             int(dut.m_axis_tuser[destination].value),
         )
-        if valid and not ready:
-            assert pending is None or payload == pending, (
-                f"dest{destination} payload changed while stalled: "
-                f"{pending} -> {payload}"
-            )
-            pending = payload
-        else:
-            pending = None
+        assert pending is None or payload == pending, (
+            f"dest{destination} payload changed while stalled: {pending} -> {payload}"
+        )
+        pending = payload if not ready else None
 
 
 async def run_and_collect(dut, sources, received, expected, ready_task=None):

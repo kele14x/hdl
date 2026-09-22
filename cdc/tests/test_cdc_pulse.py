@@ -132,6 +132,15 @@ CASES = [
         },
     },
     {
+        "name": "init1_reg1_rst0",
+        "params": {
+            "DEST_SYNC_FF": 2,
+            "INIT_SYNC_FF": 1,
+            "REG_OUTPUT": 1,
+            "RST_USED": 0,
+        },
+    },
+    {
         "name": "init0_reg1_rst1",
         "params": {
             "DEST_SYNC_FF": 2,

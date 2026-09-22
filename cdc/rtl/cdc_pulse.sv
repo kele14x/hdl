@@ -61,15 +61,25 @@ module cdc_pulse #(
     end
   end
 
+  initial begin : p_init
+    if (INIT_SYNC_FF != 0) begin
+      src_in_ff = 1'b0;
+      src_level_ff = 1'b0;
+      dest_event_ff = 1'b0;
+      dest_pulse_ff = 1'b0;
+    end
+  end
+
   assign src_edge_det = src_pulse & ~src_in_ff;
   assign src_level_nxt = src_level_ff ^ src_edge_det;
   assign src_sync_in = src_level_ff;
   assign dest_event_nxt = dest_sync_out;
   assign dest_pulse_int = dest_event_nxt ^ dest_event_ff;
 
+  // always_ff forbids the additional writes from the initialization block.
   generate
     if (RST_USED != 0) begin : g_rst_used
-      always_ff @(posedge src_clk) begin
+      always @(posedge src_clk) begin
         if (src_rst) begin
           src_in_ff <= 1'b0;
         end else begin
@@ -77,7 +87,7 @@ module cdc_pulse #(
         end
       end
 
-      always_ff @(posedge src_clk) begin
+      always @(posedge src_clk) begin
         if (src_rst) begin
           src_level_ff <= 1'b0;
         end else begin
@@ -85,7 +95,7 @@ module cdc_pulse #(
         end
       end
 
-      always_ff @(posedge dest_clk) begin
+      always @(posedge dest_clk) begin
         if (dest_rst) begin
           dest_event_ff <= 1'b0;
         end else begin
@@ -93,7 +103,7 @@ module cdc_pulse #(
         end
       end
 
-      always_ff @(posedge dest_clk) begin
+      always @(posedge dest_clk) begin
         if (dest_rst) begin
           dest_pulse_ff <= 1'b0;
         end else begin
@@ -102,19 +112,19 @@ module cdc_pulse #(
       end
     end else begin : g_rst_no_used
 
-      always_ff @(posedge src_clk) begin
+      always @(posedge src_clk) begin
         src_in_ff <= src_pulse;
       end
 
-      always_ff @(posedge src_clk) begin
+      always @(posedge src_clk) begin
         src_level_ff <= src_level_nxt;
       end
 
-      always_ff @(posedge dest_clk) begin
+      always @(posedge dest_clk) begin
         dest_event_ff <= dest_event_nxt;
       end
 
-      always_ff @(posedge dest_clk) begin
+      always @(posedge dest_clk) begin
         dest_pulse_ff <= dest_pulse_int;
       end
     end

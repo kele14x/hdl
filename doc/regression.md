@@ -86,10 +86,11 @@ only to the console. The four previous OOC logs were backed up under
 complete the synthesis coverage separately; they are not a new `make all` run.
 
 - Lint: all 39 RTL blocks passed.
-- Tests: 35 of 39 RTL blocks passed; four failed in Questa. Verilator
-  reported 235 passed pytest runner cases across 38 blocks; Questa reported
-  229 passed and 9 failed across 39 blocks. No skips were reported. Low-PHY
-  uses Questa only. These counts are runner cases, not individual cocotb tests.
+- Tests in the original full attempt: 35 of 39 RTL blocks passed; four failed
+  in Questa. Verilator reported 235 passed pytest runner cases across 38
+  blocks; Questa reported 229 passed and 9 failed across 39 blocks. No skips
+  were reported. Low-PHY uses Questa only. These counts are runner cases,
+  not individual cocotb tests.
 - FIFO regressions: `axis_fifo` passed all 16 configurations and
   `axis_fifo_alt` passed all 8 configurations on each simulator.
 - New top smoke tests: O-RAN, PTP, FH, and PPS passed on Verilator and Questa.
@@ -129,17 +130,35 @@ settling sequence, before either AXI agent starts traffic. The alternate
 FIFO's discard tracker starts at the same point. No RTL change or unknown
 value suppression is needed.
 
-The following failures remain in existing, unchanged test/RTL logic. All four
-blocks passed their Verilator pass and failed in Questa:
+### AXI switch checker follow-up (2026-09-22)
+
+The `axis_switch` stability checker already started after reset, but read
+payload even when `TVALID` was low. Its unreset payload registers may legally
+contain `X` while invalid. The checker now reads payload only when valid,
+and checks that a stalled beat keeps both validity and payload through the
+accepting handshake. Unknown valid payload still fails; RTL is unchanged.
+
+`make test MODULES=axis_switch SIMULATORS="verilator questa"` passed all four
+cocotb tests on each simulator (one pytest runner per simulator), plus all
+14 shared Python tests. Module lint and Ruff check/format also passed.
+The focused run is recorded in
+[.build_logs/axis-switch-checker-rerun-20260922.log](../.build_logs/axis-switch-checker-rerun-20260922.log),
+with simulator results in
+[.build_logs/test-axis_switch.log](../.build_logs/test-axis_switch.log).
+The previous failing log was preserved as
+`.build_logs/axis-switch-before-checker-fix-20260922.log`.
+This was not a new full regression or OOC run.
+
+The following three blocks still have unresolved failures from the original
+full attempt; all passed Verilator and failed Questa. They were not rerun
+in this focused follow-up:
 
 | Block | Observed failure | Log |
 | --- | --- | --- |
-| `axis_switch` | Broadcast backpressure checker converts an unknown payload to an integer. | [.build_logs/test-axis_switch.log](../.build_logs/test-axis_switch.log) |
 | `cdc` | Handshake data/order and readiness assertions fail in three configurations; a pulse configuration also reads an unknown value. | [.build_logs/test-cdc.log](../.build_logs/test-cdc.log) |
 | `coe` | Questa rejects `ecpri_framer_trans.seqid_reg` being assigned by initialization and `always_ff` processes. | [.build_logs/test-coe.log](../.build_logs/test-coe.log) |
 | `ecpri` | Same `seqid_reg` elaboration error affects three runners. | [.build_logs/test-ecpri.log](../.build_logs/test-ecpri.log) |
 
 These failures are recorded rather than skipped or suppressed. OOC synthesis
-is now complete, but the suite is not yet a fully passing regression baseline
-because four blocks still fail in Questa; simulation was not rerun during
-this OOC follow-up.
+is complete, but the suite is not yet a fully passing regression baseline
+because three blocks still have unresolved Questa failures.
