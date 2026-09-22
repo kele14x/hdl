@@ -6,7 +6,7 @@ VERIBLE_VERILOG_FORMAT ?= verible-verilog-format
 REPO_ROOT := $(abspath ..)
 MODULE := $(notdir $(CURDIR))
 FLT ?= $(MODULE).flt
-LINT_TOPS ?= ram_sdp ram_sdp_asym ram_sdp_pipe ram_sp ram_sp_pipe ram_sp_uram_8k36 ram_tdp ram_tdp_asym ram_tdp_pipe
+LINT_TOPS ?= delay delay_lutram srl type_cast util_clk_fwd util_gpio_gw
 
 SIMULATORS ?= verilator questa
 

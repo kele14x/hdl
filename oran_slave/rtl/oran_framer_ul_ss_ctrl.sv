@@ -116,7 +116,9 @@ module oran_framer_ul_ss_ctrl (
     end
   end
 
-  always_ff @(posedge ctrl_clk) begin
+  // ctrl_buffer is also initialized above. Use plain always so the memory
+  // initialization does not violate always_ff's single-process writer rule.
+  always @(posedge ctrl_clk) begin
     if (ctrl_buf_wr_en && ctrl_buf_wr_we) begin
       if (ctrl_buf_wr_din[7:0] == '0) begin
         // if numprb is 0, deassert the valid flag

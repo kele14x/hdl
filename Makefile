@@ -6,7 +6,8 @@
 #
 #   make all          lint + test + format + ooc
 #   make lint         verilator --lint-only in every module
-#   make test         cocotb tests in every module (verilator, then questa)
+#   make test         cocotb tests in every module plus shared Python tests
+#   make test-python  shared Python helper and regression-runner tests
 #   make format       verible-verilog-format in every module
 #   make ooc          vivado out-of-context synthesis (modules that have it)
 #   make ooc-impl     vivado out-of-context implementation / place & route
@@ -28,7 +29,9 @@
 #   make all STAGES="lint test"             # skip format and OOC
 #   make ooc OOC_MODULES="prach"
 
-MODULES := $(patsubst %/Makefile,%,$(wildcard */Makefile))
+# Discover RTL, not Makefiles: a new IP without build integration must fail.
+MODULES := $(patsubst %/rtl/,%,$(wildcard */rtl/))
+PYTEST ?= uv run python -m pytest
 
 # Only these modules ship a runnable out-of-context script.  Modules without
 # one are silently skipped by `make ooc` / `make ooc-impl`.
@@ -43,7 +46,7 @@ export HDL_IMPL_MODULES := $(OOC_IMPL_MODULES)
 
 .DEFAULT_GOAL := all
 
-.PHONY: all lint test format ooc ooc-impl clean clean-vivado
+.PHONY: all lint test test-python format ooc ooc-impl clean clean-vivado
 
 all:
 	@scripts/run_targets.sh $(STAGES)
@@ -53,6 +56,9 @@ lint:
 
 test:
 	@scripts/run_targets.sh test
+
+test-python:
+	$(PYTEST) -q tests
 
 format:
 	@scripts/run_targets.sh format

@@ -19,15 +19,7 @@ lint:
 		$(VERILATOR) --lint-only -Wall --top-module $$top $(RTL_SOURCES) || exit $$?; \
 	done
 
-test:
-	@if [ ! -d tests ]; then \
-		echo "--- cocotb ($(MODULE)): no tests/ directory, skipped ---"; \
-		exit 0; \
-	fi; \
-	for sim in $(SIMULATORS); do \
-		echo "--- cocotb ($(MODULE)): $$sim ---"; \
-		SIM=$$sim $(PYTEST) -q tests || exit $$?; \
-	done
+include $(REPO_ROOT)/scripts/cocotb.mk
 
 format:
 	$(VERIBLE_VERILOG_FORMAT) --inplace $(wildcard rtl/*.sv)

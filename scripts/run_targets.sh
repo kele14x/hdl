@@ -51,6 +51,10 @@ modules_for() {
   case $1 in
   ooc) ((${#ooc_modules[@]})) && printf '%s\n' "${ooc_modules[@]}" ;;
   ooc-impl) ((${#impl_modules[@]})) && printf '%s\n' "${impl_modules[@]}" ;;
+  test)
+    ((${#hdl_modules[@]})) && printf '%s\n' "${hdl_modules[@]}"
+    printf '%s\n' hdl_tools
+    ;;
   *) ((${#hdl_modules[@]})) && printf '%s\n' "${hdl_modules[@]}" ;;
   esac
   return 0
@@ -63,7 +67,11 @@ run_module() {
 
   printf '  %-24s ' "$module"
   start=$(date +%s)
-  make -C "$module" "$target" >"$log" 2>&1
+  if [[ $target == test && $module == hdl_tools ]]; then
+    make test-python >"$log" 2>&1
+  else
+    make -C "$module" "$target" >"$log" 2>&1
+  fi
   rc=$?
   end=$(date +%s)
 

@@ -1,8 +1,6 @@
-#! /usr/bin/env python3
 """Full-top lowphy integration smoke test.
 
-Set ``LOWPHY_TOP=lowphy1`` to run the same control-plane smoke test on the
-eight-antenna top.  The default is ``lowphy0``.
+Both tops run by default. Set ``LOWPHY_TOP`` to select just one top.
 """
 
 import os
@@ -30,7 +28,7 @@ if LOWPHY_TOP not in {"lowphy0", "lowphy1"}:
     raise ValueError("LOWPHY_TOP must be lowphy0 or lowphy1")
 
 
-@cocotb.test()
+@cocotb.test(timeout_time=100, timeout_unit="us")
 async def test_lowphy_control_plane_smoke(dut):
     """Check reset, register decode, and representative control fields."""
     tb = LowphyTB(dut, PRJ_PATH / "rtl" / f"{LOWPHY_TOP}.sv")
@@ -50,24 +48,29 @@ async def test_lowphy_control_plane_smoke(dut):
         assert await tb.axi.read(address) == value
 
 
-def test_lowphy_smoke_runner():
+@pytest.mark.parametrize(
+    "top",
+    [LOWPHY_TOP] if "LOWPHY_TOP" in os.environ else ["lowphy0", "lowphy1"],
+)
+def test_lowphy_smoke_runner(top):
     runner = get_runner(SIM)
     build_args = ["-Wno-WIDTHEXPAND"] if SIM == "verilator" else []
     runner.build(
-        hdl_toplevel=LOWPHY_TOP,
+        hdl_toplevel=top,
         sources=resolve_flt(PRJ_PATH / "lowphy.flt"),
         build_args=build_args,
         always=REBUILD,
         waves=WAVES,
-        build_dir=PRJ_PATH / "sim_build" / SIM / LOWPHY_TOP,
+        build_dir=PRJ_PATH / "sim_build" / SIM / top,
     )
     runner.test(
-        hdl_toplevel=LOWPHY_TOP,
+        hdl_toplevel=top,
         hdl_toplevel_lang="verilog",
         test_module=Path(__file__).stem,
         gui=GUI,
         waves=WAVES,
-        test_dir=PRJ_PATH / "sim_build" / SIM / LOWPHY_TOP,
+        test_dir=PRJ_PATH / "sim_build" / SIM / top,
+        extra_env={"LOWPHY_TOP": top},
     )
 
 

@@ -21,11 +21,14 @@ of the design:
 From the repository root:
 
 ```sh
-uv run python -m pytest lowphy/tests/test_lowphy_regs.py -q
-uv run python -m pytest lowphy/tests/test_lowphy_smoke.py -q
-LOWPHY_TOP=lowphy1 uv run python -m pytest lowphy/tests/test_lowphy_smoke.py -q
 SIM=questa uv run python -m pytest lowphy/tests/test_lowphy_regs.py -q
+SIM=questa uv run python -m pytest lowphy/tests/test_lowphy_smoke.py -q
+SIM=questa LOWPHY_TOP=lowphy1 uv run python -m pytest lowphy/tests/test_lowphy_smoke.py -q
 ```
+
+The full-top smoke runner tests both `lowphy0` and `lowphy1` by default.
+Set `LOWPHY_TOP` to select one explicitly. Root `make test` includes these
+tests and the shared Python helper tests; see [regression.md](../../doc/regression.md).
 
 `GUI=true` opens the selected simulator GUI. Use `WAVES=true` to enable wave
 capture and `REBUILD=true` to force recompilation. Build products are kept
