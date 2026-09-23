@@ -294,9 +294,14 @@ module puxch_buffer #(
     for (genvar cc = 0; cc < NUM_CC; cc++) begin : g_ram
       logic [12:0] wr_comp_addr;
       logic        wr_comp_en;
+      logic [12:0] wr_comp_addr_d;
+      logic        wr_comp_en_d;
       logic [17:0] wr_iq_din;
       logic [ 3:0] wr_exp_c;
+      logic [ 3:0] wr_exp_stage1;
       logic [ 3:0] wr_exp_din;
+      logic [15:0] wr_dr_stage1;
+      logic [15:0] wr_di_stage1;
       logic [11:0] rd_comp_addr;
       logic [35:0] rd_iq_data;
       logic [ 7:0] rd_exp_data;
@@ -313,10 +318,20 @@ module puxch_buffer #(
 
       assign wr_exp_c = bfp9_re_exp(din_dr[cc], din_di[cc]);
 
+      // Split exponent detection and BFP9 compression across two stages.
+      // Delay the write address and enable with the staged sample so both RAMs
+      // commit the compressed IQ and its exponent to the same location.
       always_ff @(posedge clk) begin
-        wr_exp_din <= wr_exp_c;
+        wr_dr_stage1 <= din_dr[cc];
+        wr_di_stage1 <= din_di[cc];
+        wr_exp_stage1 <= wr_exp_c;
+        wr_comp_addr_d <= wr_comp_addr;
+        wr_comp_en_d <= wr_comp_en;
+
+        wr_exp_din <= wr_exp_stage1;
         wr_iq_din <= {
-          bfp9_re_compress(din_di[cc], wr_exp_c), bfp9_re_compress(din_dr[cc], wr_exp_c)
+          bfp9_re_compress(wr_di_stage1, wr_exp_stage1),
+          bfp9_re_compress(wr_dr_stage1, wr_exp_stage1)
         };
       end
 
@@ -327,8 +342,8 @@ module puxch_buffer #(
           .READ_LATENCY(2)
       ) u_iq_ram (
           .clka (clk),
-          .wea  (wr_comp_en),
-          .addra(wr_comp_addr),
+          .wea  (wr_comp_en_d),
+          .addra(wr_comp_addr_d),
           .dina (wr_iq_din),
           //
           .clkb (clk_eth_xran),
@@ -351,8 +366,8 @@ module puxch_buffer #(
           .RAM_STYLE     ("BLOCK")
       ) u_exp_ram (
           .clka (clk),
-          .wea  (wr_comp_en),
-          .addra(wr_comp_addr[ExpAddrWidthA-1:0]),
+          .wea  (wr_comp_en_d),
+          .addra(wr_comp_addr_d[ExpAddrWidthA-1:0]),
           .dina (wr_exp_din),
           //
           .clkb (clk_eth_xran),
