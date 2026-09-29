@@ -83,14 +83,14 @@ module mult #(
   logic                        product_nonnegative;
   logic                        product_nonnegative_d;
 
-  wire signed  [  P_WIDTH-1:0] p_ext;
-  wire signed  [  P_WIDTH-1:0] p_sat;
+  logic signed [  P_WIDTH-1:0] p_ext;
+  logic signed [  P_WIDTH-1:0] p_sat;
   logic signed [  P_WIDTH-1:0] p_reg;
 
-  wire                         ovf_s;
+  logic                        ovf_s;
   logic                        ovf_r;
-  wire                         overflow;
-  wire                         underflow;
+  logic                        overflow;
+  logic                        underflow;
 
   always_ff @(posedge clk) begin
     a_d <= a;

@@ -83,26 +83,26 @@ module symbol_timer #(
   // Clock ticks of left symbol:               |      274 |      137 |
   //------------------------------------------------------------------
 
-  wire         sync_s0;
+  logic        sync_s0;
   logic        sync_s1;
-  wire         sync_posedge;
+  logic        sync_posedge;
 
   logic        delay_state;
   logic [22:0] delay_counter;
 
-  wire         delayed_pulse;
+  logic        delayed_pulse;
 
-  wire         restart;
-  wire         restart_init;
-  wire         restart_ext;
-  wire         restart_auto;
+  logic        restart;
+  logic        restart_init;
+  logic        restart_ext;
+  logic        restart_auto;
 
   logic        init_n;
   logic        state;
 
-  wire         symbol_wrap;
+  logic        symbol_wrap;
   logic        slot_wrap;
-  wire         frame_wrap;
+  logic        frame_wrap;
 
   logic [14:0] sample_counter;
   logic [14:0] sample_counter_max;

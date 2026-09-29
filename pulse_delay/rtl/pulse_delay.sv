@@ -18,10 +18,10 @@ module pulse_delay #(
 
   logic [WIDTH-1:0] counter;
   logic [WIDTH-1:0] counter_in;
-  wire  [WIDTH-1:0] counter_out;
-  wire              counter_empty;
-  wire              pulse_v;
-  wire              fifo_full;
+  logic [WIDTH-1:0] counter_out;
+  logic             counter_empty;
+  logic             pulse_v;
+  logic             fifo_full;
 
   always_ff @(posedge clk) begin
     if (rst) begin

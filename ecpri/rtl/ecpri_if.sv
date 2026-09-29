@@ -169,22 +169,22 @@ module ecpri_if #(
     output var [15:0] stat_topology_id
 );
 
-  wire [79:0] tx_ptp_timestamp_s;
-  wire [15:0] tx_ptp_timestamp_tag_s;
-  wire tx_ptp_timestamp_valid_s;
+  logic [79:0] tx_ptp_timestamp_s;
+  logic [15:0] tx_ptp_timestamp_tag_s;
+  logic tx_ptp_timestamp_valid_s;
   /* verilator lint_off UNUSED */
-  wire unused_tx_ptp_timestamp_ready;
+  logic unused_tx_ptp_timestamp_ready;
   /* verilator lint_on UNUSED */
 
-  wire [15:0] stat_topology_id_s;
+  logic [15:0] stat_topology_id_s;
 
-  wire s0_axis_odm_tvalid;
-  wire s0_axis_odm_tready;
+  logic s0_axis_odm_tvalid;
+  logic s0_axis_odm_tready;
 
-  wire [7:0] s0_odm_measurementid;
-  wire [7:0] s0_odm_actiontype;
-  wire [79:0] s0_odm_timestamp;
-  wire [63:0] s0_odm_compensation;
+  logic [7:0] s0_odm_measurementid;
+  logic [7:0] s0_odm_actiontype;
+  logic [79:0] s0_odm_timestamp;
+  logic [63:0] s0_odm_compensation;
 
   ecpri_deframer i_deframer (
       .rx_eth_clk            (rx_eth_clk),

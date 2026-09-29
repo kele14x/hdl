@@ -23,7 +23,7 @@ module adder #(
 );
 
   /* verilator lint_off UNUSEDPARAM */
-  localparam int Latency   = 1;
+  localparam int Latency = 1;
   localparam int FullWidth = (A_WIDTH >= B_WIDTH) ? A_WIDTH + 1 : B_WIDTH + 1;
 
   initial begin : drc_check
@@ -67,10 +67,10 @@ module adder #(
   logic signed [FullWidth-1:0] b_full;
 
   logic signed [FullWidth-1:0] p_full;
-  wire signed  [  P_WIDTH-1:0] p_sat;
+  logic signed [  P_WIDTH-1:0] p_sat;
   logic signed [  P_WIDTH-1:0] p_reg;
 
-  wire                         ovf_s;
+  logic                        ovf_s;
   logic                        ovf_r;
 
   assign a_full = {{(FullWidth - A_WIDTH) {a[A_WIDTH-1]}}, a};

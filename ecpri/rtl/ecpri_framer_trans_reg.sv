@@ -43,7 +43,7 @@ module ecpri_framer_trans_reg (
 
   logic        sync_n;
 
-  wire  [31:0] s_axis_tdata_reversed;
+  logic [31:0] s_axis_tdata_reversed;
 
   logic [31:0] s_axis_tdata_d;
   logic [ 3:0] s_axis_tkeep_d;

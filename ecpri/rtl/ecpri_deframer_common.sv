@@ -46,21 +46,21 @@ module ecpri_deframer_common (
 
   // Input data
 
-  wire  [31:0] s_axis_tdata_reversed;
+  logic [31:0] s_axis_tdata_reversed;
 
   // eCPRI Common Header & Payload
 
   /* verilator lint_off UNUSED */
-  wire  [ 3:0] ecpri_version;  // !no output
-  wire  [ 2:0] ecpri_reserved;  // !no output
+  logic [ 3:0] ecpri_version;  // !no output
+  logic [ 2:0] ecpri_reserved;  // !no output
   /* verilator lint_on UNUSED */
-  wire         ecpri_concat;  // eCPRI concatenation indicator
-  wire  [ 7:0] ecpri_messagetype;  // 0 = IQ, 2 = IQC, 5 = Delay measure
-  wire  [15:0] ecpri_payloadsize;
+  logic        ecpri_concat;  // eCPRI concatenation indicator
+  logic [ 7:0] ecpri_messagetype;  // 0 = IQ, 2 = IQC, 5 = Delay measure
+  logic [15:0] ecpri_payloadsize;
 
   logic [15:0] payload_counter;  // Received message bytes counter
 
-  wire         payload_end;
+  logic        payload_end;
 
   integer state, state_next;
 

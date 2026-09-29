@@ -141,47 +141,47 @@ module coe_deframer_data (
 
   // Signals
 
-  wire ctrl_en_s;
-  wire [15:0] ctrl_seq_en_s;
-  wire [95:0] ctrl_seq_id_s;
-  wire [5:0] ctrl_seq_id_ch[0:MaxSeqLen-1];
+  logic ctrl_en_s;
+  logic [15:0] ctrl_seq_en_s;
+  logic [95:0] ctrl_seq_id_s;
+  logic [5:0] ctrl_seq_id_ch[0:MaxSeqLen-1];
 
   /* verilator lint_off UNUSED */
   logic [4:0] ctrl_seq_n_valid;
   /* verilator lint_on UNUSED */
   logic [3:0] ctrl_ch_delay[0:NumChannel-1];
 
-  wire [8:0] ctrl_ts_offset_s;
+  logic [8:0] ctrl_ts_offset_s;
 
   // Write side signals
 
-  wire wr_we;
-  wire [3:0] wr_seq_last;
+  logic wr_we;
+  logic [3:0] wr_seq_last;
   logic [3:0] wr_seq;
   logic [AddrWidth-5:0] wr_cnt;
-  wire [AddrWidth-1:0] wr_addr;
-  wire [DataWidth-1:0] wr_din;
+  logic [AddrWidth-1:0] wr_addr;
+  logic [DataWidth-1:0] wr_din;
 
   // Read side signals
 
   logic sync_d;
-  wire sync_posedge;
+  logic sync_posedge;
 
   logic rd_en;
-  wire rd_en_d;
+  logic rd_en_d;
   logic [5:0] rd_id;
-  wire [5:0] rd_sel;
-  wire [5:0] rd_sel_d;
+  logic [5:0] rd_sel;
+  logic [5:0] rd_sel_d;
 
   logic [AddrWidth-5:0] rd_addr_msb;
   logic [3:0] rd_addr_lsb;
-  wire [AddrWidth-1:0] rd_addr;
-  wire [DataWidth-1:0] rd_dout;
+  logic [AddrWidth-1:0] rd_addr;
+  logic [DataWidth-1:0] rd_dout;
 
   logic [31:0] dout_reg[0:NumChannel-1];
 
   logic [22:0] sample_counter;
-  wire [3:0] seq_counter;
+  logic [3:0] seq_counter;
 
   // Status
 

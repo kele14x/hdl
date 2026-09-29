@@ -87,16 +87,16 @@ module nco #(
 
   // Signals
 
-  logic       [          PhaseWidth-1:0] phase_accumulator;
-  wire        [          PhaseWidth-1:0] phase_wrapped;
-  wire        [            PhaseWidth:0] phase_pre_round   [0:NUM_PARALLEL-1];
+  logic        [          PhaseWidth-1:0] phase_accumulator;
+  logic        [          PhaseWidth-1:0] phase_wrapped;
+  logic        [            PhaseWidth:0] phase_pre_round   [0:NUM_PARALLEL-1];
 
-  wire        [PHASE_FRACTION_WIDTH-1:0] lfsr;
+  logic        [PHASE_FRACTION_WIDTH-1:0] lfsr;
 
-  logic       [ PHASE_INTEGER_WIDTH-1:0] phase_int         [0:NUM_PARALLEL-1];
+  logic        [ PHASE_INTEGER_WIDTH-1:0] phase_int         [0:NUM_PARALLEL-1];
 
-  wire signed [                    15:0] cos_s             [0:NUM_PARALLEL-1];
-  wire signed [                    15:0] sin_s             [0:NUM_PARALLEL-1];
+  logic signed [                    15:0] cos_s             [0:NUM_PARALLEL-1];
+  logic signed [                    15:0] sin_s             [0:NUM_PARALLEL-1];
 
   genvar i;
 

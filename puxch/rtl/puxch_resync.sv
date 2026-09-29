@@ -62,7 +62,7 @@ module puxch_resync #(
 
   localparam int AntIndexWidth = (NUM_ANT <= 1) ? 1 : $clog2(NUM_ANT);
 
-  wire [AntIndexWidth-1:0] chn_idx;
+  logic [AntIndexWidth-1:0] chn_idx;
 
   assign chn_idx = chn[AntIndexWidth-1:0];
 

@@ -30,17 +30,17 @@ module coe_framer (
     input var  [  7:0] ctrl_seq_cnt
 );
 
-  wire [31:0] s0_axis_tdata;
-  wire [ 3:0] s0_axis_tkeep;
-  wire        s0_axis_tlast;
-  wire        s0_axis_tvalid;
-  wire        s0_axis_tready;
+  logic [31:0] s0_axis_tdata;
+  logic [ 3:0] s0_axis_tkeep;
+  logic        s0_axis_tlast;
+  logic        s0_axis_tvalid;
+  logic        s0_axis_tready;
 
-  wire [18:0] s0_app_ts;
+  logic [18:0] s0_app_ts;
 
-  wire [ 7:0] s0_trans_messagetype;
-  wire [15:0] s0_trans_payloadsize;
-  wire [15:0] s0_trans_rtc_pc_id;
+  logic [ 7:0] s0_trans_messagetype;
+  logic [15:0] s0_trans_payloadsize;
+  logic [15:0] s0_trans_rtc_pc_id;
 
   coe_framer_data i_data (
       .clk                (clk),

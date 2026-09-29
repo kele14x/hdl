@@ -20,16 +20,16 @@ module timer_rfs #(
 
   localparam [15:0] TickPerPulse = FREQ_MODE == 0 ? 16'd20000 : 16'd24576;
 
-  localparam [22:0] TickPer10ms  = FREQ_MODE == 0 ? 23'd4000000 : 23'd4915200;
+  localparam [22:0] TickPer10ms = FREQ_MODE == 0 ? 23'd4000000 : 23'd4915200;
 
   // Signals
 
-  wire  [22:0] ctrl_rfs_offset_s;
+  logic [22:0] ctrl_rfs_offset_s;
 
   logic [22:0] counter;
-  wire         counter_wrap;
+  logic        counter_wrap;
 
-  wire         rfs_pulse;
+  logic        rfs_pulse;
 
   logic [ 3:0] rfs_ext0;
   logic [15:0] rfs_ext1;

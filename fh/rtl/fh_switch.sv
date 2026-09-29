@@ -34,12 +34,12 @@ module fh_switch #(
 
   // Signals
 
-  wire  [  DATA_WIDTH-1:0] s_axis_tdata_s    [ 0:NUM_SRC-1];
-  wire  [DATA_WIDTH/8-1:0] s_axis_tkeep_s    [ 0:NUM_SRC-1];
-  wire                     s_axis_tlast_s    [ 0:NUM_SRC-1];
-  wire  [    NUM_DEST-1:0] s_axis_tdest_s    [ 0:NUM_SRC-1];
-  wire  [UserWidthInt-1:0] s_axis_tuser_s    [ 0:NUM_SRC-1];
-  wire                     s_axis_tvalid_s   [ 0:NUM_SRC-1];
+  logic [  DATA_WIDTH-1:0] s_axis_tdata_s    [ 0:NUM_SRC-1];
+  logic [DATA_WIDTH/8-1:0] s_axis_tkeep_s    [ 0:NUM_SRC-1];
+  logic                    s_axis_tlast_s    [ 0:NUM_SRC-1];
+  logic [    NUM_DEST-1:0] s_axis_tdest_s    [ 0:NUM_SRC-1];
+  logic [UserWidthInt-1:0] s_axis_tuser_s    [ 0:NUM_SRC-1];
+  logic                    s_axis_tvalid_s   [ 0:NUM_SRC-1];
   logic                    s_axis_tready_s   [ 0:NUM_SRC-1];
   //
   logic [  DATA_WIDTH-1:0] m_axis_tdata_s    [0:NUM_DEST-1];
@@ -47,7 +47,7 @@ module fh_switch #(
   logic                    m_axis_tlast_s    [0:NUM_DEST-1];
   logic [UserWidthInt-1:0] m_axis_tuser_s    [0:NUM_DEST-1];
   logic                    m_axis_tvalid_s   [0:NUM_DEST-1];
-  wire                     m_axis_tready_s   [0:NUM_DEST-1];
+  logic                    m_axis_tready_s   [0:NUM_DEST-1];
   //
   logic [  DATA_WIDTH-1:0] m_axis_tdata_next [0:NUM_DEST-1];
   logic [DATA_WIDTH/8-1:0] m_axis_tkeep_next [0:NUM_DEST-1];

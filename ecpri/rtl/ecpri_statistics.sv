@@ -78,11 +78,11 @@ module ecpri_statistics (
 
   // Signals
 
-  wire tick_snap;
-  wire tick_clear;
+  logic tick_snap;
+  logic tick_clear;
   /* verilator lint_off UNUSED */
-  wire [5:0] unused_stat_src_ready;
-  wire [5:0] unused_stat_dest_valid;
+  logic [5:0] unused_stat_src_ready;
+  logic [5:0] unused_stat_dest_valid;
   /* verilator lint_on UNUSED */
 
   logic [31:0] defm_total_pkt_cnt;

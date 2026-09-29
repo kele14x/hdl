@@ -30,24 +30,24 @@ module ecpri_deframer_odm (
   // FSM
 
   localparam int S_RST = 0;  // Under reset
-  localparam int S_D0  = 1;  // Measurement ID (1), Action Type (1), Timestamp0 (2)
-  localparam int S_D1  = 2;  // Timestamp1 (4)
-  localparam int S_D2  = 3;  // Timestamp2 (4)
-  localparam int S_D3  = 4;  // Compensation0 (4)
-  localparam int S_D4  = 5;  // Compensation1 (4)
-  localparam int S_D5  = 6;  // Topology ID (2)
+  localparam int S_D0 = 1;  // Measurement ID (1), Action Type (1), Timestamp0 (2)
+  localparam int S_D1 = 2;  // Timestamp1 (4)
+  localparam int S_D2 = 3;  // Timestamp2 (4)
+  localparam int S_D3 = 4;  // Compensation0 (4)
+  localparam int S_D4 = 5;  // Compensation1 (4)
+  localparam int S_D5 = 6;  // Topology ID (2)
   localparam int S_PAD = 7;  // Pad
 
   integer state, state_next;
 
-  wire [31:0] s_axis_tdata_reversed;
+  logic [31:0] s_axis_tdata_reversed;
 
-  wire [ 7:0] odm_measurementid;
-  wire [ 7:0] odm_actiontype;
-  wire [79:0] odm_timestamp;
-  wire [63:0] odm_compensation;
+  logic [ 7:0] odm_measurementid;
+  logic [ 7:0] odm_actiontype;
+  logic [79:0] odm_timestamp;
+  logic [63:0] odm_compensation;
 
-  wire [15:0] topology_id;
+  logic [15:0] topology_id;
 
   // Main
 

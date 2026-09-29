@@ -47,17 +47,17 @@ module timer_core_400 #(
   // Signals
 
   logic [32:0] int_timer_ns_frac_reg;  // 32 bit ns, 1 bit frac
-  wire int_timer_ns_frac_wrap;
+  logic int_timer_ns_frac_wrap;
   logic [47:0] int_timer_sec_reg;
 
-  wire [31:0] int_timer_ns;
-  wire [47:0] int_timer_sec;
+  logic [31:0] int_timer_ns;
+  logic [47:0] int_timer_sec;
 
   logic [31:0] timer_ns_pre;
   logic [47:0] timer_sec_pre;
 
   logic [31:0] timer_ns;
-  wire timer_ns_carry;
+  logic timer_ns_carry;
   logic [47:0] timer_sec;
 
   logic timer_ns_wrap;
@@ -65,20 +65,20 @@ module timer_core_400 #(
 
   // control & status
 
-  wire rtc_current_snap;
+  logic rtc_current_snap;
 
-  wire [31:0] rtc_offset_ns;
-  wire [47:0] rtc_offset_sec;
+  logic [31:0] rtc_offset_ns;
+  logic [47:0] rtc_offset_sec;
 
   /* verilator lint_off UNUSED */
-  wire cdc_rtc_current_ns_src_ready;
-  wire cdc_rtc_current_ns_dest_valid;
-  wire cdc_rtc_current_sec_src_ready;
-  wire cdc_rtc_current_sec_dest_valid;
-  wire cdc_rtc_offset_ns_src_ready;
-  wire cdc_rtc_offset_ns_dest_valid;
-  wire cdc_rtc_offset_sec_src_ready;
-  wire cdc_rtc_offset_sec_dest_valid;
+  logic cdc_rtc_current_ns_src_ready;
+  logic cdc_rtc_current_ns_dest_valid;
+  logic cdc_rtc_current_sec_src_ready;
+  logic cdc_rtc_current_sec_dest_valid;
+  logic cdc_rtc_offset_ns_src_ready;
+  logic cdc_rtc_offset_ns_dest_valid;
+  logic cdc_rtc_offset_sec_src_ready;
+  logic cdc_rtc_offset_sec_dest_valid;
   /* verilator lint_on UNUSED */
 
   // Internal second and nanosecond counter

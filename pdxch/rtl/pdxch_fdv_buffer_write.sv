@@ -63,20 +63,29 @@ module pdxch_fdv_buffer_write #(
   logic wr_exp_en_c;
   logic [3:0] wr_exp_data_c;
 
-  wire packet_first = ~packet_active;
-  wire [3:0] rx_u_cc = s_axis_tuser[30:27];
-  wire [9:0] rx_u_startPrb = s_axis_tuser[9:0];
-  wire packet_match = packet_first ? (rx_u_cc == 4'(CC_ID)) : packet_match_r;
-  wire packet_bank = packet_first ? s_dl_sym_num[0] : packet_bank_r;
+  logic packet_first;
+  logic [3:0] rx_u_cc;
+  logic [9:0] rx_u_startPrb;
+  logic packet_match;
+  logic packet_bank;
+  logic [IQ_STATE_WIDTH-1:0] iq_start_addr;
+  logic [EXP_STATE_WIDTH-1:0] exp_start_addr;
+  logic bank_overflow;
 
-  wire [IQ_STATE_WIDTH-1:0] iq_start_addr =
+  assign packet_first = ~packet_active;
+  assign rx_u_cc = s_axis_tuser[30:27];
+  assign rx_u_startPrb = s_axis_tuser[9:0];
+  assign packet_match = packet_first ? (rx_u_cc == 4'(CC_ID)) : packet_match_r;
+  assign packet_bank = packet_first ? s_dl_sym_num[0] : packet_bank_r;
+
+  assign iq_start_addr =
       (s_dl_sym_num[0] ? IQ_STATE_WIDTH'(IQ_BANK_DEPTH) : '0)
       + (rx_u_startPrb * IQ_STATE_WIDTH'(6));
-  wire [EXP_STATE_WIDTH-1:0] exp_start_addr =
+  assign exp_start_addr =
       (s_dl_sym_num[0] ? EXP_STATE_WIDTH'(EXP_BANK_DEPTH) : '0)
       + (rx_u_startPrb * EXP_STATE_WIDTH'(3));
 
-  wire bank_overflow =
+  assign bank_overflow =
       (wr_iq_addr_c >= (packet_bank ? IQ_TOTAL_LIMIT : IQ_BANK_LIMIT))
       || (wr_exp_addr_c >= (packet_bank ? EXP_TOTAL_LIMIT : EXP_BANK_LIMIT));
 

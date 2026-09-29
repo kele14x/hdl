@@ -27,19 +27,19 @@ module fh_deframer_64to32 #(
   logic sync_n;
 
   /* verilator lint_off UNUSED */
-  wire axis_fifo_tuser;
-  wire axis_fifo_err_discard;
-  wire tuser_fifo_full;
-  wire tuser_fifo_empty;
+  logic axis_fifo_tuser;
+  logic axis_fifo_err_discard;
+  logic tuser_fifo_full;
+  logic tuser_fifo_empty;
   /* verilator lint_on UNUSED */
 
   /* verilator lint_off UNUSED */
-  wire [63:0] s0_axis_tdata;
-  wire [7:0] s0_axis_tkeep;
+  logic [63:0] s0_axis_tdata;
+  logic [7:0] s0_axis_tkeep;
   /* verilator lint_on UNUSED */
-  wire s0_axis_tlast;
-  wire s0_axis_tvalid;
-  wire s0_axis_tready;
+  logic s0_axis_tlast;
+  logic s0_axis_tvalid;
+  logic s0_axis_tready;
 
   always_ff @(posedge clk) begin
     if (rst) begin

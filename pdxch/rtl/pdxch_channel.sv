@@ -89,12 +89,12 @@ module pdxch_channel #(
   logic [                1:0] ctrl_itlv;
   logic [                1:0] ctrl_size_ctrl;
   logic [                1:0] ctrl_itlv_ctrl;
-  wire  [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_ctrl = {ctrl_size_ctrl, ctrl_itlv_ctrl};
+  logic [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_ctrl;
   logic [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_sent;
-  wire                        ctrl_fft_cfg_src_valid = ctrl_fft_cfg_ctrl != ctrl_fft_cfg_sent;
-  wire                        ctrl_fft_cfg_src_ready;
-  wire  [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_cdc;
-  wire                        ctrl_fft_cfg_dest_valid;
+  logic                       ctrl_fft_cfg_src_valid;
+  logic                       ctrl_fft_cfg_src_ready;
+  logic [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_cdc;
+  logic                       ctrl_fft_cfg_dest_valid;
   logic [CtrlFftCfgWidth-1:0] ctrl_fft_cfg_pending;
   logic                       din_sy_d;
   /* verilator lint_off UNUSED */
@@ -102,6 +102,9 @@ module pdxch_channel #(
   /* verilator lint_on UNUSED */
 
   // Main
+
+  assign ctrl_fft_cfg_ctrl = {ctrl_size_ctrl, ctrl_itlv_ctrl};
+  assign ctrl_fft_cfg_src_valid = ctrl_fft_cfg_ctrl != ctrl_fft_cfg_sent;
 
   always_ff @(posedge ctrl_clk) begin
     if (ctrl_rst) begin

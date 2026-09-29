@@ -54,13 +54,13 @@ module coe_framer_data (
 
   // Signals
 
-  wire         ctrl_en_s;
-  wire  [15:0] ctrl_seq_en_s;
-  wire  [95:0] ctrl_seq_id_s;
-  wire  [ 7:0] ctrl_seq_cnt_s;
+  logic        ctrl_en_s;
+  logic [15:0] ctrl_seq_en_s;
+  logic [95:0] ctrl_seq_id_s;
+  logic [ 7:0] ctrl_seq_cnt_s;
 
   logic        sync_d;
-  wire         sync_posedge;
+  logic        sync_posedge;
 
   logic [22:0] sample_counter;
 
@@ -68,18 +68,18 @@ module coe_framer_data (
   logic [15:0] seq_counter;
 
   logic [ 5:0] seq_id_reg        [0:15];
-  wire  [ 5:0] seq_id;
+  logic [ 5:0] seq_id;
   logic [ 5:0] seq_sel;
 
   logic [15:0] seq_valid_reg;
-  wire         seq_valid;
+  logic        seq_valid;
 
   logic [ 4:0] seq_n_valid_c;
   logic [ 4:0] seq_n_valid;
   logic [ 3:0] seq_last_val;
 
-  wire         seq_first;
-  wire         seq_last;
+  logic        seq_first;
+  logic        seq_last;
 
   logic        s0_run;
   logic        s0_valid;
@@ -91,9 +91,9 @@ module coe_framer_data (
 
   logic [31:0] s0_axis_tdata_rev;
   logic [31:0] s0_axis_tdata;
-  wire  [ 3:0] s0_axis_tkeep;
-  wire         s0_axis_tlast;
-  wire         s0_axis_tvalid;
+  logic [ 3:0] s0_axis_tkeep;
+  logic        s0_axis_tlast;
+  logic        s0_axis_tvalid;
 
   logic [18:0] app_ts;
   (* USE_DSP = "NO" *)
@@ -103,8 +103,8 @@ module coe_framer_data (
   genvar gen_i;
 
   /* verilator lint_off UNUSED */
-  wire unused_fifo_tuser;
-  wire unused_fifo_err_discard;
+  logic unused_fifo_tuser;
+  logic unused_fifo_err_discard;
   /* verilator lint_on UNUSED */
 
   // Main

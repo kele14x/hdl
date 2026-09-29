@@ -42,15 +42,15 @@ module pdxch_fdv_buffer_readout #(
 
   // Control signals
 
-  wire  [               3:0] ctrl_en_s;
-  wire  [               1:0] ctrl_rat_s;
+  logic [               3:0] ctrl_en_s;
+  logic [               1:0] ctrl_rat_s;
   /* verilator lint_off UNUSED */
-  wire  [               3:0] ctrl_bist_s;
+  logic [               3:0] ctrl_bist_s;
   /* verilator lint_on UNUSED */
-  wire  [               3:0] ctrl_bw_s;
-  wire  [               8:0] ctrl_nprb_s;
+  logic [               3:0] ctrl_bw_s;
+  logic [               8:0] ctrl_nprb_s;
 
-  wire  [               3:0] ctrl_fs_offset_s;
+  logic [               3:0] ctrl_fs_offset_s;
 
   // Internal signals
 

@@ -80,7 +80,7 @@ module puxch_conv #(
 
   localparam int AntIndexWidth = (NUM_ANT <= 1) ? 1 : $clog2(NUM_ANT);
 
-  wire [AntIndexWidth-1:0] din_chn_idx;
+  logic [AntIndexWidth-1:0] din_chn_idx;
 
   assign din_chn_idx = din_chn[AntIndexWidth-1:0];
 

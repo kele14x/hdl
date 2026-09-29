@@ -36,21 +36,21 @@ module fft_twiddle #(
   // Signals
 
   // Counter count from 0 to LOG_FFT_SIZE - 1
-  logic       [             3:0] counter_ch;
-  wire        [             3:0] counter_ch_max;
+  logic        [             3:0] counter_ch;
+  logic        [             3:0] counter_ch_max;
 
-  logic       [LOG_FFT_SIZE-1:0] counter;
-  wire        [LOG_FFT_SIZE-1:0] counter_max;
+  logic        [LOG_FFT_SIZE-1:0] counter;
+  logic        [LOG_FFT_SIZE-1:0] counter_max;
 
-  logic                          state;
+  logic                           state;
 
-  wire        [LOG_FFT_SIZE-1:0] twiddle;
+  logic        [LOG_FFT_SIZE-1:0] twiddle;
 
-  wire signed [  DATA_WIDTH-1:0] data_i_s;
-  wire signed [  DATA_WIDTH-1:0] data_q_s;
+  logic signed [  DATA_WIDTH-1:0] data_i_s;
+  logic signed [  DATA_WIDTH-1:0] data_q_s;
 
-  wire signed [            15:0] twiddle_i_s;
-  wire signed [            15:0] twiddle_q_s;
+  logic signed [            15:0] twiddle_i_s;
+  logic signed [            15:0] twiddle_q_s;
 
   // Main
 

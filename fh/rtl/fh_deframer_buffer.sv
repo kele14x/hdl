@@ -27,10 +27,10 @@ module fh_deframer_buffer #(
   logic sync_n;
 
   /* verilator lint_off UNUSED */
-  wire  axis_fifo_tuser;
-  wire  axis_fifo_err_discard;
-  wire  tuser_fifo_full;
-  wire  tuser_fifo_empty;
+  logic axis_fifo_tuser;
+  logic axis_fifo_err_discard;
+  logic tuser_fifo_full;
+  logic tuser_fifo_empty;
   /* verilator lint_on UNUSED */
 
   always_ff @(posedge clk) begin

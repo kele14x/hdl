@@ -39,13 +39,13 @@ module coe_deframer (
     output var [ 31:0] stat_conflict_cnt
 );
 
-  wire [31:0] s0_axis_tdata;
-  wire [ 3:0] s0_axis_tkeep;
-  wire        s0_axis_tlast;
-  wire        s0_axis_tvalid;
+  logic [31:0] s0_axis_tdata;
+  logic [ 3:0] s0_axis_tkeep;
+  logic        s0_axis_tlast;
+  logic        s0_axis_tvalid;
 
-  wire        s0_app_valid;
-  wire [18:0] s0_app_ts;
+  logic        s0_app_valid;
+  logic [18:0] s0_app_ts;
 
   coe_deframer_hdr i_hdr (
       // Ethernet

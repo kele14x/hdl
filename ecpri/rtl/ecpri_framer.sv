@@ -62,64 +62,64 @@ module ecpri_framer (
     input var  [15:0] ctrl_topology_id
 );
 
-  wire [47:0] ctrl_dest_mac_s;
-  wire [47:0] ctrl_src_mac_s;
-  wire        ctrl_has_vlan_s;
-  wire [15:0] ctrl_vlan_tag_s;
+  logic [47:0] ctrl_dest_mac_s;
+  logic [47:0] ctrl_src_mac_s;
+  logic        ctrl_has_vlan_s;
+  logic [15:0] ctrl_vlan_tag_s;
 
-  wire [15:0] ctrl_topology_id_s;
+  logic [15:0] ctrl_topology_id_s;
 
-  wire [31:0] m_trans_axis_tdata;
-  wire [ 3:0] m_trans_axis_tkeep;
-  wire        m_trans_axis_tlast;
-  wire        m_trans_axis_tvalid;
-  wire        m_trans_axis_tready;
+  logic [31:0] m_trans_axis_tdata;
+  logic [ 3:0] m_trans_axis_tkeep;
+  logic        m_trans_axis_tlast;
+  logic        m_trans_axis_tvalid;
+  logic        m_trans_axis_tready;
 
-  wire [31:0] m_odm_axis_tdata;
-  wire [ 3:0] m_odm_axis_tkeep;
-  wire        m_odm_axis_tlast;
-  wire [17:0] m_odm_axis_tuser;
-  wire        m_odm_axis_tvalid;
-  wire        m_odm_axis_tready;
+  logic [31:0] m_odm_axis_tdata;
+  logic [ 3:0] m_odm_axis_tkeep;
+  logic        m_odm_axis_tlast;
+  logic [17:0] m_odm_axis_tuser;
+  logic        m_odm_axis_tvalid;
+  logic        m_odm_axis_tready;
 
-  wire [31:0] s0_axis_tdata;
-  wire [ 3:0] s0_axis_tkeep;
-  wire        s0_axis_tlast;
-  wire [17:0] s0_axis_tuser;
-  wire        s0_axis_tvalid;
-  wire        s0_axis_tready;
+  logic [31:0] s0_axis_tdata;
+  logic [ 3:0] s0_axis_tkeep;
+  logic        s0_axis_tlast;
+  logic [17:0] s0_axis_tuser;
+  logic        s0_axis_tvalid;
+  logic        s0_axis_tready;
 
-  wire [31:0] s1_axis_tdata;
-  wire [ 3:0] s1_axis_tkeep;
-  wire        s1_axis_tlast;
-  wire [17:0] s1_axis_tuser;
-  wire        s1_axis_tvalid;
-  wire        s1_axis_tready;
+  logic [31:0] s1_axis_tdata;
+  logic [ 3:0] s1_axis_tkeep;
+  logic        s1_axis_tlast;
+  logic [17:0] s1_axis_tuser;
+  logic        s1_axis_tvalid;
+  logic        s1_axis_tready;
 
-  wire [31:0] s2_axis_tdata;
-  wire [ 3:0] s2_axis_tkeep;
-  wire        s2_axis_tlast;
-  wire [17:0] s2_axis_tuser;
-  wire        s2_axis_tvalid;
-  wire        s2_axis_tready;
+  logic [31:0] s2_axis_tdata;
+  logic [ 3:0] s2_axis_tkeep;
+  logic        s2_axis_tlast;
+  logic [17:0] s2_axis_tuser;
+  logic        s2_axis_tvalid;
+  logic        s2_axis_tready;
 
-  wire [31:0] s3_axis_tdata;
-  wire [ 3:0] s3_axis_tkeep;
-  wire        s3_axis_tlast;
-  wire [17:0] s3_axis_tuser;
-  wire        s3_axis_tvalid;
-  wire        s3_axis_tready;
+  logic [31:0] s3_axis_tdata;
+  logic [ 3:0] s3_axis_tkeep;
+  logic        s3_axis_tlast;
+  logic [17:0] s3_axis_tuser;
+  logic        s3_axis_tvalid;
+  logic        s3_axis_tready;
 
-  wire [31:0] s4_axis_tdata;
-  wire [ 3:0] s4_axis_tkeep;
-  wire        s4_axis_tlast;
-  wire [17:0] s4_axis_tuser;
-  wire        s4_axis_tvalid;
-  wire        s4_axis_tready;
+  logic [31:0] s4_axis_tdata;
+  logic [ 3:0] s4_axis_tkeep;
+  logic        s4_axis_tlast;
+  logic [17:0] s4_axis_tuser;
+  logic        s4_axis_tvalid;
+  logic        s4_axis_tready;
 
   /* verilator lint_off UNUSED */
-  wire        unused_s0_axis_tuser;
-  wire        unused_s3_axis_tuser;
+  logic        unused_s0_axis_tuser;
+  logic        unused_s3_axis_tuser;
   /* verilator lint_on UNUSED */
 
   // Control CDC

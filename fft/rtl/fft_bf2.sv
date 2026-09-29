@@ -37,29 +37,29 @@ module fft_bf2 #(
 
   // Counter count from 0 to LOG_FFT_SIZE - 1
   logic        [             3:0] counter_ch;
-  wire         [             3:0] counter_ch_max;
+  logic        [             3:0] counter_ch_max;
   logic        [LOG_FFT_SIZE-1:0] counter;
   logic                           state;
 
-  wire                            first_half_last;
+  logic                           first_half_last;
 
   logic        [             3:0] counter_ch2;
   logic        [LOG_FFT_SIZE-1:0] counter2;
   logic                           state2;
 
-  wire                            sel;
-  wire                            shift;
+  logic                           sel;
+  logic                           shift;
   logic                           dv;
   logic                           ovf_r;
 
   logic signed [    DATA_WIDTH:0] x1r_s;
   logic signed [    DATA_WIDTH:0] x1i_s;
 
-  wire signed  [  DATA_WIDTH-1:0] x1r;
-  wire signed  [  DATA_WIDTH-1:0] x1i;
+  logic signed [  DATA_WIDTH-1:0] x1r;
+  logic signed [  DATA_WIDTH-1:0] x1i;
 
-  wire signed  [  DATA_WIDTH-1:0] x1r_store;
-  wire signed  [  DATA_WIDTH-1:0] x1i_store;
+  logic signed [  DATA_WIDTH-1:0] x1r_store;
+  logic signed [  DATA_WIDTH-1:0] x1i_store;
 
   logic signed [    DATA_WIDTH:0] x2r_s;
   logic signed [    DATA_WIDTH:0] x2i_s;
@@ -67,11 +67,11 @@ module fft_bf2 #(
   logic signed [  DATA_WIDTH-1:0] x2r;
   logic signed [  DATA_WIDTH-1:0] x2i;
 
-  wire signed  [  DATA_WIDTH-1:0] x2r_store;
-  wire signed  [  DATA_WIDTH-1:0] x2i_store;
+  logic signed [  DATA_WIDTH-1:0] x2r_store;
+  logic signed [  DATA_WIDTH-1:0] x2i_store;
 
-  wire         [  DelayWidth-1:0] delay_in;
-  wire         [  DelayWidth-1:0] delay_out;
+  logic        [  DelayWidth-1:0] delay_in;
+  logic        [  DelayWidth-1:0] delay_out;
 
   function automatic signed [DATA_WIDTH-1:0] round_convergent_shift1(
       input logic signed [DATA_WIDTH:0] value);

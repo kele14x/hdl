@@ -117,12 +117,16 @@ module prach_hb4 #(
   logic signed [38:0] dq;
   /* verilator lint_on UNUSED */
 
-  wire [2:0] lane = din_chn[2:0];
+  logic [2:0] lane;
+  logic lane_valid;
+  logic [HistoryWidth-1:0] history_read;
+
+  assign lane = din_chn[2:0];
   // D128 sees the retained phase at chn 0..7 and the adjacent phase at
   // chn 128..135. Both phases are filter samples for the same eight lanes,
   // but only the retained phase advances to D256 after decimation.
-  wire lane_valid = din_dv && (din_chn[6:3] == '0) && ((DELAY_BASE == 128) || !din_chn[7]);
-  wire [HistoryWidth-1:0] history_read = lane_history[lane];
+  assign lane_valid = din_dv && (din_chn[6:3] == '0) && ((DELAY_BASE == 128) || !din_chn[7]);
+  assign history_read = lane_history[lane];
 
   always_comb begin
     center_metadata = history_read[MetadataHistoryBase+2*13+:13];

@@ -39,15 +39,15 @@ module ecpri_deframer_iq (
 
   integer state, state_next;
 
-  wire [31:0] s_axis_tdata_reversed;
+  logic [31:0] s_axis_tdata_reversed;
 
   // IQ Header
 
   // Transport Header (64-bit)
-  wire [15:0] trans_rtc_pc_id;
-  wire [ 7:0] trans_seqid;
-  wire        trans_ebit;  // eCPRI Layer Fragmentation
-  wire [ 6:0] trans_subseqid;
+  logic [15:0] trans_rtc_pc_id;
+  logic [ 7:0] trans_seqid;
+  logic        trans_ebit;  // eCPRI Layer Fragmentation
+  logic [ 6:0] trans_subseqid;
 
   // Main
 

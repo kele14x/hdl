@@ -79,15 +79,15 @@ module ptp #(
 
   // Signals
 
-  wire [79:0] s_axis_tuser_s;
-  wire [17:0] m_axis_tuser_s;
+  logic [79:0] s_axis_tuser_s;
+  logic [17:0] m_axis_tuser_s;
 
-  wire        ctrl_master_en;
-  wire [47:0] ctrl_src_mac;
-  wire [ 7:0] ctrl_domain_number;
-  wire [15:0] ctrl_utc_offset;
-  wire [ 7:0] ctrl_log_announce_interval;
-  wire [ 7:0] ctrl_log_sync_interval;
+  logic        ctrl_master_en;
+  logic [47:0] ctrl_src_mac;
+  logic [ 7:0] ctrl_domain_number;
+  logic [15:0] ctrl_utc_offset;
+  logic [ 7:0] ctrl_log_announce_interval;
+  logic [ 7:0] ctrl_log_sync_interval;
 
   // Main
 

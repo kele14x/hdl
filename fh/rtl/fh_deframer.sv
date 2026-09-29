@@ -42,26 +42,26 @@ module fh_deframer (
     input var         m_message_tready
 );
 
-  wire [63:0] s0_axis_tdata;
-  wire [ 7:0] s0_axis_tkeep;
-  wire        s0_axis_tlast;
-  wire [79:0] s0_axis_tuser;
-  wire        s0_axis_tvalid;
+  logic [63:0] s0_axis_tdata;
+  logic [ 7:0] s0_axis_tkeep;
+  logic        s0_axis_tlast;
+  logic [79:0] s0_axis_tuser;
+  logic        s0_axis_tvalid;
 
-  wire [63:0] s0_ptp_tdata;
-  wire [ 7:0] s0_ptp_tkeep;
-  wire        s0_ptp_tlast;
-  wire [79:0] s0_ptp_tuser;
-  wire        s0_ptp_tvalid;
+  logic [63:0] s0_ptp_tdata;
+  logic [ 7:0] s0_ptp_tkeep;
+  logic        s0_ptp_tlast;
+  logic [79:0] s0_ptp_tuser;
+  logic        s0_ptp_tvalid;
 
-  wire [63:0] s0_message_tdata;
-  wire [ 7:0] s0_message_tkeep;
-  wire        s0_message_tlast;
-  wire        s0_message_tvalid;
+  logic [63:0] s0_message_tdata;
+  logic [ 7:0] s0_message_tkeep;
+  logic        s0_message_tlast;
+  logic        s0_message_tvalid;
 
   /* verilator lint_off UNUSED */
-  wire        stat_corrupt_pkt;
-  wire        message_tuser_unused;
+  logic        stat_corrupt_pkt;
+  logic        message_tuser_unused;
   /* verilator lint_on UNUSED */
 
   fh_deframer_demux i_demux (

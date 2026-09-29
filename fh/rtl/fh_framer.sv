@@ -42,36 +42,36 @@ module fh_framer (
     output var        s_message_tready
 );
 
-  wire [63:0] s0_axis_tdata;
-  wire [ 7:0] s0_axis_tkeep;
-  wire        s0_axis_tlast;
-  wire        s0_axis_tvalid;
-  wire        s0_axis_tready;
+  logic [63:0] s0_axis_tdata;
+  logic [ 7:0] s0_axis_tkeep;
+  logic        s0_axis_tlast;
+  logic        s0_axis_tvalid;
+  logic        s0_axis_tready;
 
-  wire [63:0] s1_axis_tdata;
-  wire [ 7:0] s1_axis_tkeep;
-  wire        s1_axis_tlast;
-  wire [17:0] s1_axis_tuser;
-  wire        s1_axis_tvalid;
-  wire        s1_axis_tready;
+  logic [63:0] s1_axis_tdata;
+  logic [ 7:0] s1_axis_tkeep;
+  logic        s1_axis_tlast;
+  logic [17:0] s1_axis_tuser;
+  logic        s1_axis_tvalid;
+  logic        s1_axis_tready;
 
-  wire [63:0] s2_axis_tdata;
-  wire [ 7:0] s2_axis_tkeep;
-  wire        s2_axis_tlast;
-  wire        s2_axis_tvalid;
-  wire        s2_axis_tready;
+  logic [63:0] s2_axis_tdata;
+  logic [ 7:0] s2_axis_tkeep;
+  logic        s2_axis_tlast;
+  logic        s2_axis_tvalid;
+  logic        s2_axis_tready;
 
-  wire [63:0] s3_axis_tdata;
-  wire [ 7:0] s3_axis_tkeep;
-  wire        s3_axis_tlast;
-  wire [17:0] s3_axis_tuser;
-  wire        s3_axis_tvalid;
-  wire        s3_axis_tready;
+  logic [63:0] s3_axis_tdata;
+  logic [ 7:0] s3_axis_tkeep;
+  logic        s3_axis_tlast;
+  logic [17:0] s3_axis_tuser;
+  logic        s3_axis_tvalid;
+  logic        s3_axis_tready;
 
   /* verilator lint_off UNUSED */
-  wire        fh_fifo_tuser;
-  wire        fh_fifo_err_discard;
-  wire [17:0] message_tuser_unused;
+  logic        fh_fifo_tuser;
+  logic        fh_fifo_err_discard;
+  logic [17:0] message_tuser_unused;
   /* verilator lint_on UNUSED */
 
   axis_fifo_alt #(

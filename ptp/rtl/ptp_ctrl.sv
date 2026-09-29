@@ -49,36 +49,36 @@ module ptp_ctrl #(
 
   // Signals
 
-  wire                     ctrl_master_en_s;
-  wire  [             7:0] ctrl_log_announce_interval_s;
-  wire  [             7:0] ctrl_log_sync_interval_s;
+  logic                    ctrl_master_en_s;
+  logic [             7:0] ctrl_log_announce_interval_s;
+  logic [             7:0] ctrl_log_sync_interval_s;
 
   logic [            15:0] tag_field;
-  wire                     tag_field_fb;
+  logic                    tag_field_fb;
 
   // Sync message
 
-  wire  [             6:0] sync_counter_shift;
+  logic [             6:0] sync_counter_shift;
 
   logic [CounterWidth-1:0] sync_counter;
   logic [CounterWidth-1:0] sync_counter_max;
-  wire                     sync_counter_wrap;
+  logic                    sync_counter_wrap;
 
   logic [             7:0] sync_counter_s;
   logic [             7:0] sync_counter_s_max;
-  wire                     sync_counter_s_wrap;
+  logic                    sync_counter_s_wrap;
 
   logic [            15:0] sync_sequence_id;
 
   logic                    sync_req;
-  wire                     sync_ack;
+  logic                    sync_ack;
 
   // Delay Request Message
 
   logic [            15:0] delay_req_sequence_id;
 
   logic                    delay_req_req;
-  wire                     delay_req_ack;
+  logic                    delay_req_ack;
 
   // Follow message
 
@@ -87,7 +87,7 @@ module ptp_ctrl #(
   logic [            15:0] follow_up_tag_field;
 
   logic                    follow_up_req;
-  wire                     follow_up_ack;
+  logic                    follow_up_ack;
 
   // Delay Response Message
 
@@ -96,24 +96,24 @@ module ptp_ctrl #(
   logic [            15:0] delay_resp_sequence_id;
 
   logic                    delay_resp_req;
-  wire                     delay_resp_ack;
+  logic                    delay_resp_ack;
 
   // Announce message
 
-  wire  [             6:0] announce_counter_shift;
+  logic [             6:0] announce_counter_shift;
 
   logic [CounterWidth-1:0] announce_counter;
   logic [CounterWidth-1:0] announce_counter_max;
-  wire                     announce_counter_wrap;
+  logic                    announce_counter_wrap;
 
   logic [             7:0] announce_counter_s;
   logic [             7:0] announce_counter_s_max;
-  wire                     announce_counter_s_wrap;
+  logic                    announce_counter_s_wrap;
 
   logic [            15:0] announce_sequence_id;
 
   logic                    announce_req;
-  wire                     announce_ack;
+  logic                    announce_ack;
 
   // Control CDC
 

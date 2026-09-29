@@ -107,35 +107,35 @@ module fh (
     output var        s_message_tready
 );
 
-  wire ctrl_ptp_master_en;
-  wire [47:0] ctrl_ptp_src_mac;
-  wire [7:0] ctrl_ptp_domain_number;
-  wire [15:0] ctrl_ptp_utc_offset;
-  wire [7:0] ctrl_ptp_log_announce_interval;
-  wire [7:0] ctrl_ptp_log_sync_interval;
+  logic ctrl_ptp_master_en;
+  logic [47:0] ctrl_ptp_src_mac;
+  logic [7:0] ctrl_ptp_domain_number;
+  logic [15:0] ctrl_ptp_utc_offset;
+  logic [7:0] ctrl_ptp_log_announce_interval;
+  logic [7:0] ctrl_ptp_log_sync_interval;
 
-  wire [79:0] tx_ptp_timestamp_s;
-  wire [15:0] tx_ptp_timestamp_tag_s;
-  wire tx_ptp_timestamp_valid_s;
+  logic [79:0] tx_ptp_timestamp_s;
+  logic [15:0] tx_ptp_timestamp_tag_s;
+  logic tx_ptp_timestamp_valid_s;
 
-  wire [31:0] rx_ptp_tdata;
-  wire [3:0] rx_ptp_tkeep;
-  wire rx_ptp_tlast;
-  wire [79:0] rx_ptp_tuser;
-  wire rx_ptp_tvalid;
-  wire rx_ptp_tready;
+  logic [31:0] rx_ptp_tdata;
+  logic [3:0] rx_ptp_tkeep;
+  logic rx_ptp_tlast;
+  logic [79:0] rx_ptp_tuser;
+  logic rx_ptp_tvalid;
+  logic rx_ptp_tready;
 
-  wire [31:0] tx_ptp_tdata;
-  wire [3:0] tx_ptp_tkeep;
-  wire tx_ptp_tlast;
-  wire [17:0] tx_ptp_tuser;
-  wire tx_ptp_tvalid;
-  wire tx_ptp_tready;
+  logic [31:0] tx_ptp_tdata;
+  logic [3:0] tx_ptp_tkeep;
+  logic tx_ptp_tlast;
+  logic [17:0] tx_ptp_tuser;
+  logic tx_ptp_tvalid;
+  logic tx_ptp_tready;
 
   /* verilator lint_off UNUSED */
-  wire [31:0] stat_rx_resync_cnt;
-  wire [31:0] stat_tx_resync_cnt;
-  wire tx_ptp_timestamp_ready;
+  logic [31:0] stat_rx_resync_cnt;
+  logic [31:0] stat_tx_resync_cnt;
+  logic tx_ptp_timestamp_ready;
   /* verilator lint_on UNUSED */
 
   fh_regs i_regs (

@@ -842,49 +842,49 @@ module lowphy1 (
 
   // Unsol
 
-  wire [63:0] s0_fram_unsol_tdata;
-  wire [ 7:0] s0_fram_unsol_tkeep;
-  wire        s0_fram_unsol_tvalid;
-  wire        s0_fram_unsol_tlast;
-  wire        s0_fram_unsol_tready;
-  wire [31:0] s0_fram_unsol_tuser;
+  logic [63:0] s0_fram_unsol_tdata;
+  logic [ 7:0] s0_fram_unsol_tkeep;
+  logic        s0_fram_unsol_tvalid;
+  logic        s0_fram_unsol_tlast;
+  logic        s0_fram_unsol_tready;
+  logic [31:0] s0_fram_unsol_tuser;
 
-  wire [63:0] s1_fram_unsol_tdata;
-  wire [ 7:0] s1_fram_unsol_tkeep;
-  wire        s1_fram_unsol_tvalid;
-  wire        s1_fram_unsol_tlast;
-  wire        s1_fram_unsol_tready;
-  wire [31:0] s1_fram_unsol_tuser;
+  logic [63:0] s1_fram_unsol_tdata;
+  logic [ 7:0] s1_fram_unsol_tkeep;
+  logic        s1_fram_unsol_tvalid;
+  logic        s1_fram_unsol_tlast;
+  logic        s1_fram_unsol_tready;
+  logic [31:0] s1_fram_unsol_tuser;
 
-  wire [63:0] s2_fram_unsol_tdata;
-  wire [ 7:0] s2_fram_unsol_tkeep;
-  wire        s2_fram_unsol_tvalid;
-  wire        s2_fram_unsol_tlast;
-  wire        s2_fram_unsol_tready;
-  wire [31:0] s2_fram_unsol_tuser;
+  logic [63:0] s2_fram_unsol_tdata;
+  logic [ 7:0] s2_fram_unsol_tkeep;
+  logic        s2_fram_unsol_tvalid;
+  logic        s2_fram_unsol_tlast;
+  logic        s2_fram_unsol_tready;
+  logic [31:0] s2_fram_unsol_tuser;
 
   // PRACH
 
-  wire [63:0] s0_fram_prach_tdata;
-  wire [ 7:0] s0_fram_prach_tkeep;
-  wire        s0_fram_prach_tvalid;
-  wire        s0_fram_prach_tlast;
-  wire        s0_fram_prach_tready;
-  wire [31:0] s0_fram_prach_tuser;
+  logic [63:0] s0_fram_prach_tdata;
+  logic [ 7:0] s0_fram_prach_tkeep;
+  logic        s0_fram_prach_tvalid;
+  logic        s0_fram_prach_tlast;
+  logic        s0_fram_prach_tready;
+  logic [31:0] s0_fram_prach_tuser;
 
-  wire [63:0] s1_fram_prach_tdata;
-  wire [ 7:0] s1_fram_prach_tkeep;
-  wire        s1_fram_prach_tvalid;
-  wire        s1_fram_prach_tlast;
-  wire        s1_fram_prach_tready;
-  wire [31:0] s1_fram_prach_tuser;
+  logic [63:0] s1_fram_prach_tdata;
+  logic [ 7:0] s1_fram_prach_tkeep;
+  logic        s1_fram_prach_tvalid;
+  logic        s1_fram_prach_tlast;
+  logic        s1_fram_prach_tready;
+  logic [31:0] s1_fram_prach_tuser;
 
-  wire [63:0] s2_fram_prach_tdata;
-  wire [ 7:0] s2_fram_prach_tkeep;
-  wire        s2_fram_prach_tvalid;
-  wire        s2_fram_prach_tlast;
-  wire        s2_fram_prach_tready;
-  wire [31:0] s2_fram_prach_tuser;
+  logic [63:0] s2_fram_prach_tdata;
+  logic [ 7:0] s2_fram_prach_tkeep;
+  logic        s2_fram_prach_tvalid;
+  logic        s2_fram_prach_tlast;
+  logic        s2_fram_prach_tready;
+  logic [31:0] s2_fram_prach_tuser;
 
   // Main
 
@@ -893,21 +893,21 @@ module lowphy1 (
   // collected here.
 
   /* verilator lint_off UNUSED */
-  wire        b1_s_defm_ebid_tready;
-  wire        b1_s_fram_ebid_tready;
-  wire        b1_s_prach_tready;
-  wire        b1_s_ssb_data_tready;
-  wire        b1_s_ssb_ebid_tready;
-  wire        b1_s_ssb_bid_tready;
+  logic        b1_s_defm_ebid_tready;
+  logic        b1_s_fram_ebid_tready;
+  logic        b1_s_prach_tready;
+  logic        b1_s_ssb_data_tready;
+  logic        b1_s_ssb_ebid_tready;
+  logic        b1_s_ssb_bid_tready;
   /* verilator lint_on UNUSED */
 
   /* verilator lint_off UNUSED */
-  wire        b2_s_defm_ebid_tready;
-  wire        b2_s_fram_ebid_tready;
-  wire        b2_s_prach_tready;
-  wire        b2_s_ssb_data_tready;
-  wire        b2_s_ssb_ebid_tready;
-  wire        b2_s_ssb_bid_tready;
+  logic        b2_s_defm_ebid_tready;
+  logic        b2_s_fram_ebid_tready;
+  logic        b2_s_prach_tready;
+  logic        b2_s_ssb_data_tready;
+  logic        b2_s_ssb_ebid_tready;
+  logic        b2_s_ssb_bid_tready;
   /* verilator lint_on UNUSED */
 
   lowphy_band #(

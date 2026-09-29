@@ -27,7 +27,7 @@ module cmult #(
 );
 
   /* verilator lint_off UNUSEDPARAM */
-  localparam int Latency   = (USE_3_MULT != 0) ? 7 : 5;
+  localparam int Latency = (USE_3_MULT != 0) ? 7 : 5;
   /* verilator lint_on UNUSEDPARAM */
   localparam int FullWidth = A_WIDTH + B_WIDTH + 1;
 
@@ -211,14 +211,14 @@ module cmult #(
     end
   endgenerate
 
-  wire signed [P_WIDTH-1:0] pr_sat;
+  logic signed [P_WIDTH-1:0] pr_sat;
   logic signed [P_WIDTH-1:0] pr_reg;
 
-  wire signed [P_WIDTH-1:0] pi_sat;
+  logic signed [P_WIDTH-1:0] pi_sat;
   logic signed [P_WIDTH-1:0] pi_reg;
 
-  wire pr_ovf_s;
-  wire pi_ovf_s;
+  logic pr_ovf_s;
+  logic pi_ovf_s;
   logic ovf_r;
 
   type_cast #(

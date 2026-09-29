@@ -52,22 +52,22 @@ module timer #(
     output var        rfs_pad
 );
 
-  wire        ctrl_rtc_offset_valid;
+  logic        ctrl_rtc_offset_valid;
   //
-  wire [31:0] ctrl_rtc_offset_ns;
-  wire [47:0] ctrl_rtc_offset_sec;
+  logic [31:0] ctrl_rtc_offset_ns;
+  logic [47:0] ctrl_rtc_offset_sec;
   //
-  wire        ctrl_rtc_current_snap;
+  logic        ctrl_rtc_current_snap;
   //
-  wire [31:0] stat_rtc_current_ns;
-  wire [47:0] stat_rtc_current_sec;
+  logic [31:0] stat_rtc_current_ns;
+  logic [47:0] stat_rtc_current_sec;
 
-  wire [22:0] ctrl_rfs_offset;
+  logic [22:0] ctrl_rfs_offset;
 
-  wire        pps_s;
+  logic        pps_s;
 
-  wire [47:0] tod_sec_s;
-  wire [31:0] tod_ns_s;
+  logic [47:0] tod_sec_s;
+  logic [31:0] tod_ns_s;
 
   timer_regs i_regs (
       .s_axi_aclk              (s_axi_aclk),

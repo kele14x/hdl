@@ -142,63 +142,63 @@ module ecpri (
 
   // Signals
 
-  wire        ctrl_tick_snap;
-  wire        ctrl_tick_clear;
+  logic        ctrl_tick_snap;
+  logic        ctrl_tick_clear;
 
-  wire        ctrl_defm_en;
-  wire        ctrl_defm_reset;
+  logic        ctrl_defm_en;
+  logic        ctrl_defm_reset;
 
-  wire [47:0] ctrl_defm_src_mac;
-  wire [47:0] ctrl_defm_dest_mac;
-  wire        ctrl_defm_has_vlan;
-  wire [15:0] ctrl_defm_vlan_tag;
+  logic [47:0] ctrl_defm_src_mac;
+  logic [47:0] ctrl_defm_dest_mac;
+  logic        ctrl_defm_has_vlan;
+  logic [15:0] ctrl_defm_vlan_tag;
 
-  wire        ctrl_defm_dest_mac_flt_en;
-  wire        ctrl_defm_src_mac_flt_en;
-  wire [47:0] ctrl_defm_src_mac_flt_mask;
-  wire        ctrl_defm_vlan_flt_en;
-  wire [15:0] ctrl_defm_vlan_flt_mask;
+  logic        ctrl_defm_dest_mac_flt_en;
+  logic        ctrl_defm_src_mac_flt_en;
+  logic [47:0] ctrl_defm_src_mac_flt_mask;
+  logic        ctrl_defm_vlan_flt_en;
+  logic [15:0] ctrl_defm_vlan_flt_mask;
 
-  wire        ctrl_fram_en;
-  wire        ctrl_fram_reset;
+  logic        ctrl_fram_en;
+  logic        ctrl_fram_reset;
 
-  wire [47:0] ctrl_fram_dest_mac;
-  wire [47:0] ctrl_fram_src_mac;
-  wire [15:0] ctrl_fram_vlan_tag;
-  wire        ctrl_fram_has_vlan;
+  logic [47:0] ctrl_fram_dest_mac;
+  logic [47:0] ctrl_fram_src_mac;
+  logic [15:0] ctrl_fram_vlan_tag;
+  logic        ctrl_fram_has_vlan;
 
-  wire        ctrl_odm_en;
-  wire [31:0] ctrl_odm_meas_interval;
+  logic        ctrl_odm_en;
+  logic [31:0] ctrl_odm_meas_interval;
 
-  wire [31:0] stat_defm_total_pkt_cnt;
-  wire [31:0] stat_defm_ecpri_pkt_cnt;
-  wire [31:0] stat_defm_trans_pkt_cnt;
-  wire [31:0] stat_defm_odm_pkt_cnt;
+  logic [31:0] stat_defm_total_pkt_cnt;
+  logic [31:0] stat_defm_ecpri_pkt_cnt;
+  logic [31:0] stat_defm_trans_pkt_cnt;
+  logic [31:0] stat_defm_odm_pkt_cnt;
 
   /* verilator lint_off UNUSED */
-  wire [31:0] stat_fram_total_pkt_cnt;
-  wire [31:0] stat_fram_ecpri_pkt_cnt;
-  wire [31:0] stat_fram_trans_pkt_cnt;
-  wire [31:0] stat_fram_odm_pkt_cnt;
+  logic [31:0] stat_fram_total_pkt_cnt;
+  logic [31:0] stat_fram_ecpri_pkt_cnt;
+  logic [31:0] stat_fram_trans_pkt_cnt;
+  logic [31:0] stat_fram_odm_pkt_cnt;
   /* verilator lint_on UNUSED */
 
-  wire [31:0] stat_ts_diff_ingress_ns;
-  wire [47:0] stat_ts_diff_ingress_sec;
+  logic [31:0] stat_ts_diff_ingress_ns;
+  logic [47:0] stat_ts_diff_ingress_sec;
 
-  wire [31:0] stat_ts_diff_egress_ns;
-  wire [47:0] stat_ts_diff_egress_sec;
+  logic [31:0] stat_ts_diff_egress_ns;
+  logic [47:0] stat_ts_diff_egress_sec;
 
-  wire [15:0] stat_topology_id;
-  wire [15:0] stat_lp_topology_id;
+  logic [15:0] stat_topology_id;
+  logic [15:0] stat_lp_topology_id;
   /* verilator lint_off UNUSED */
-  wire [31:0] unused_stat_rx_resync_cnt;
-  wire [31:0] unused_stat_tx_resync_cnt;
-  wire        unused_m_odm_header_valid;
-  wire [ 7:0] unused_m_odm_measurementid;
-  wire [ 7:0] unused_m_odm_actiontype;
-  wire [79:0] unused_m_odm_timestamp;
-  wire [63:0] unused_m_odm_compensation;
-  wire [79:0] unused_m_odm_timestamp2;
+  logic [31:0] unused_stat_rx_resync_cnt;
+  logic [31:0] unused_stat_tx_resync_cnt;
+  logic        unused_m_odm_header_valid;
+  logic [ 7:0] unused_m_odm_measurementid;
+  logic [ 7:0] unused_m_odm_actiontype;
+  logic [79:0] unused_m_odm_timestamp;
+  logic [63:0] unused_m_odm_compensation;
+  logic [79:0] unused_m_odm_timestamp2;
   /* verilator lint_on UNUSED */
 
   assign ctrl_defm_has_vlan = 1'b0;

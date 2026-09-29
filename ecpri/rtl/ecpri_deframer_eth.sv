@@ -59,18 +59,18 @@ module ecpri_deframer_eth (
 
   // Signals
 
-  wire  [31:0] s_axis_tdata_reversed;
+  logic [31:0] s_axis_tdata_reversed;
   logic [15:0] s_axis_tdata_d;  // also byte reversed
 
   /* verilator lint_off UNUSED */
   logic [ 3:0] s_axis_tkeep_d;
   /* verilator lint_on UNUSED */
 
-  wire  [47:0] mac_dest_mac;
-  wire  [47:0] mac_source_mac;
-  wire         mac_with_vlan;
-  wire  [15:0] mac_vlan_tag;
-  wire  [15:0] mac_ethertype;
+  logic [47:0] mac_dest_mac;
+  logic [47:0] mac_source_mac;
+  logic        mac_with_vlan;
+  logic [15:0] mac_vlan_tag;
+  logic [15:0] mac_ethertype;
 
   logic        additional_tlast;
 

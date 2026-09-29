@@ -76,40 +76,40 @@ module ecpri_deframer (
 
   // Signals
 
-  wire [31:0] m0_ptp_tdata;
-  wire [ 3:0] m0_ptp_tkeep;
-  wire        m0_ptp_tlast;
-  wire [79:0] m0_ptp_tuser;
-  wire        m0_ptp_tvalid;
+  logic [31:0] m0_ptp_tdata;
+  logic [ 3:0] m0_ptp_tkeep;
+  logic        m0_ptp_tlast;
+  logic [79:0] m0_ptp_tuser;
+  logic        m0_ptp_tvalid;
 
-  wire [31:0] m0_message_tdata;
-  wire [ 3:0] m0_message_tkeep;
-  wire        m0_message_tlast;
-  wire        m0_message_tvalid;
+  logic [31:0] m0_message_tdata;
+  logic [ 3:0] m0_message_tkeep;
+  logic        m0_message_tlast;
+  logic        m0_message_tvalid;
 
-  wire [31:0] s0_axis_tdata;
-  wire [ 3:0] s0_axis_tkeep;
-  wire        s0_axis_tlast;
-  wire [79:0] s0_axis_tuser;
-  wire        s0_axis_tvalid;
+  logic [31:0] s0_axis_tdata;
+  logic [ 3:0] s0_axis_tkeep;
+  logic        s0_axis_tlast;
+  logic [79:0] s0_axis_tuser;
+  logic        s0_axis_tvalid;
 
-  wire [31:0] s1_axis_tdata;
-  wire [ 3:0] s1_axis_tkeep;
-  wire        s1_axis_tlast;
-  wire [79:0] s1_axis_tuser;
-  wire        s1_axis_tvalid;
+  logic [31:0] s1_axis_tdata;
+  logic [ 3:0] s1_axis_tkeep;
+  logic        s1_axis_tlast;
+  logic [79:0] s1_axis_tuser;
+  logic        s1_axis_tvalid;
 
-  wire [31:0] s2_axis_tdata;
-  wire [ 3:0] s2_axis_tkeep;
-  wire        s2_axis_tlast;
-  wire [79:0] s2_axis_tuser;
-  wire        s2_axis_tvalid;
+  logic [31:0] s2_axis_tdata;
+  logic [ 3:0] s2_axis_tkeep;
+  logic        s2_axis_tlast;
+  logic [79:0] s2_axis_tuser;
+  logic        s2_axis_tvalid;
 
   /* verilator lint_off UNUSED */
-  wire        unused_stat_corrupt_pkt;
-  wire        unused_ptp_err_discard;
-  wire        unused_message_err_discard;
-  wire        unused_message_tuser;
+  logic        unused_stat_corrupt_pkt;
+  logic        unused_ptp_err_discard;
+  logic        unused_message_err_discard;
+  logic        unused_message_tuser;
   /* verilator lint_on UNUSED */
 
   // Main

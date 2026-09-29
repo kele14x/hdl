@@ -60,29 +60,29 @@ module ecpri_framer_trans (
 
   logic        extra_last;
 
-  wire  [31:0] int_tdata;
-  wire  [ 3:0] int_tkeep;
-  wire         int_tlast;
-  wire         int_tlast_extra;
-  wire         int_tvalid;
-  wire         int_tready;
+  logic [31:0] int_tdata;
+  logic [ 3:0] int_tkeep;
+  logic        int_tlast;
+  logic        int_tlast_extra;
+  logic        int_tvalid;
+  logic        int_tready;
 
-  wire  [ 7:0] int_trans_messagetype;
-  wire  [15:0] int_trans_payloadsize;
-  wire  [15:0] int_trans_rtc_pc_id;
+  logic [ 7:0] int_trans_messagetype;
+  logic [15:0] int_trans_payloadsize;
+  logic [15:0] int_trans_rtc_pc_id;
 
-  wire  [ 7:0] int_trans_seqid;
-  wire         int_trans_ebit;
-  wire  [ 6:0] int_trans_subseqid;
+  logic [ 7:0] int_trans_seqid;
+  logic        int_trans_ebit;
+  logic [ 6:0] int_trans_subseqid;
 
-  wire  [ 7:0] int_ecpri_messagetype;
-  wire  [15:0] int_ecpri_payloadsize;
+  logic [ 7:0] int_ecpri_messagetype;
+  logic [15:0] int_ecpri_payloadsize;
 
   // Common Header (4)
-  wire  [31:0] common_header;
+  logic [31:0] common_header;
 
   // Transport Heder (4)
-  wire  [31:0] trans_header;
+  logic [31:0] trans_header;
 
   logic [ 7:0] seqid_reg             [0:15];
 

@@ -94,9 +94,9 @@ module pps_timer (
   logic [31:0] ctrl_adj_ns_cdc;
 
   /* verilator lint_off UNUSED */
-  wire         unused_ctrl_get_req;
-  wire         unused_ctrl_set_rcv;
-  wire         unused_ctrl_adj_rcv;
+  logic        unused_ctrl_get_req;
+  logic        unused_ctrl_set_rcv;
+  logic        unused_ctrl_adj_rcv;
   /* verilator lint_on UNUSED */
 
 

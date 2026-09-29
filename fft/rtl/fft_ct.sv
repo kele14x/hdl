@@ -29,11 +29,11 @@ module fft_ct #(
 
   // Counter count from 0 to LOG_FFT_SIZE - 1
   logic        [             3:0] counter_ch;
-  wire         [             3:0] counter_ch_max;
+  logic        [             3:0] counter_ch_max;
   logic        [LOG_FFT_SIZE-1:0] counter;
   logic                           state;
 
-  wire                            swap;
+  logic                           swap;
 
   logic signed [  DATA_WIDTH-1:0] data_r_s;
   logic signed [  DATA_WIDTH-1:0] data_i_s;

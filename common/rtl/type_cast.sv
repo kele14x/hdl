@@ -83,7 +83,7 @@ module type_cast #(
 
   // Sign-extended input with one bit of headroom.
   /* verilator lint_off UNUSEDSIGNAL */
-  wire signed [IN_WIDTH:0] din_wide;
+  logic signed [IN_WIDTH:0] din_wide;
   /* verilator lint_on UNUSEDSIGNAL */
 
   assign din_wide = {din[IN_WIDTH-1], din};
@@ -93,19 +93,19 @@ module type_cast #(
   // (plain floor for two's complement), then a single 1-bit round_up increment
   // is added to the kept bits. round_up = 1 when the dropped LSBs exceed half
   // an LSB, or land exactly on half with the kept LSB set (ties to even).
-  wire signed [EffWidth:0] val;
+  logic signed [EffWidth:0] val;
 
   generate
     if (TRUNC >= 0) begin : g_trunc
       if (ROUND != 0 && TRUNC > 0) begin : g_rnd
-        wire lsb_any;
+        logic lsb_any;
         if (TRUNC >= 2) begin : g_lsb
           assign lsb_any = |din[TRUNC-2:0];
         end else begin : g_nolsb
           assign lsb_any = 1'b0;
         end
 
-        wire round_up;
+        logic round_up;
         assign round_up = din[TRUNC-1] & (din[TRUNC] | lsb_any);
         /* verilator lint_off WIDTHEXPAND */
         assign val = {din[IN_WIDTH-1], din[IN_WIDTH-1:TRUNC]} + {1'b0, round_up};
@@ -120,7 +120,7 @@ module type_cast #(
 
   generate
     if (Diff > 0) begin : g_chk
-      wire in_range;
+      logic in_range;
       assign in_range = &val[EffWidth:OUT_WIDTH-1] || ~|val[EffWidth:OUT_WIDTH-1];
       assign ovf = ~in_range;
 

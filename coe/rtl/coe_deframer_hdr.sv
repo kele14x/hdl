@@ -36,7 +36,7 @@ module coe_deframer_hdr (
   logic        init_n;
 
   /* verilator lint_off UNUSED */
-  wire  [31:0] s_axis_tdata_reversed;
+  logic [31:0] s_axis_tdata_reversed;
   /* verilator lint_on UNUSED */
 
   assign s_axis_tdata_reversed = byte_reverse(s_axis_tdata);

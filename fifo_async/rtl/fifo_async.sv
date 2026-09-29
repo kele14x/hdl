@@ -56,7 +56,7 @@ module fifo_async #(
 
   // Local parameters
 
-  localparam int   AddrWidth = $clog2(FIFO_DEPTH);
+  localparam int AddrWidth = $clog2(FIFO_DEPTH);
 
   localparam logic OutputReg = FIFO_LATENCY >= 2 ? 1 : 0;
 
@@ -80,23 +80,23 @@ module fifo_async #(
 
   // Signals
 
-  wire                     wr_rst;
+  logic                    wr_rst;
 
   logic [     AddrWidth:0] wr_count;
-  wire  [     AddrWidth:0] wr_count_rd;
-  wire  [     AddrWidth:0] wr_count_next;
-  wire  [   AddrWidth-1:0] wr_addr;
-  wire                     wr_en_mem;
+  logic [     AddrWidth:0] wr_count_rd;
+  logic [     AddrWidth:0] wr_count_next;
+  logic [   AddrWidth-1:0] wr_addr;
+  logic                    wr_en_mem;
 
-  wire                     rd_rst;
+  logic                    rd_rst;
 
   logic [     AddrWidth:0] rd_count;
-  wire  [     AddrWidth:0] rd_count_wr;
-  wire  [     AddrWidth:0] rd_count_next;
-  wire  [   AddrWidth-1:0] rd_addr;
-  wire  [FIFO_LATENCY-1:0] rd_en_mem;
+  logic [     AddrWidth:0] rd_count_wr;
+  logic [     AddrWidth:0] rd_count_next;
+  logic [   AddrWidth-1:0] rd_addr;
+  logic [FIFO_LATENCY-1:0] rd_en_mem;
 
-  wire  [  DATA_WIDTH-1:0] rd_dout_s;
+  logic [  DATA_WIDTH-1:0] rd_dout_s;
 
   logic [  FIFO_LATENCY:0] valid;
 

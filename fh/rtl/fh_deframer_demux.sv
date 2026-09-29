@@ -73,41 +73,41 @@ module fh_deframer_demux (
   // Signals
 
   /* verilator lint_off UNUSED */
-  wire  [             63:0] s_axis_tdata_reversed;
-  wire                      fifo_wr_full;
+  logic [             63:0] s_axis_tdata_reversed;
+  logic                     fifo_wr_full;
   /* verilator lint_on UNUSED */
 
-  wire  [             15:0] mac_ethertype0;
-  wire  [             15:0] mac_ethertype1;
+  logic [             15:0] mac_ethertype0;
+  logic [             15:0] mac_ethertype1;
 
-  wire                      wr_en;
+  logic                     wr_en;
   logic [    AddrWidth-1:0] wr_addr;
   logic [    AddrWidth-1:0] wr_addr_last;
   logic [    AddrWidth-1:0] wr_addr_next;
-  wire  [    DataWidth-1:0] wr_data;
+  logic [    DataWidth-1:0] wr_data;
 
-  wire                      rd_en;
+  logic                     rd_en;
   logic                     rd_en_d;
   logic                     rd_en_dd;
   logic [    AddrWidth-1:0] rd_addr;
-  wire  [    AddrWidth-1:0] rd_addr_next;
-  wire  [    DataWidth-1:0] rd_data;
+  logic [    AddrWidth-1:0] rd_addr_next;
+  logic [    DataWidth-1:0] rd_data;
   logic [    DataWidth-1:0] rd_data_r;
 
   logic                     packet_valid;
   logic [             15:0] packet_ethertype;
   logic [             79:0] packet_timestamp;
 
-  wire                      fifo_wr_en;
-  wire  [FiFoDataWidth-1:0] fifo_wr_din;
+  logic                     fifo_wr_en;
+  logic [FiFoDataWidth-1:0] fifo_wr_din;
 
-  wire                      fifo_rd_en;
-  wire  [FiFoDataWidth-1:0] fifo_rd_dout;
-  wire                      fifo_rd_empty;
+  logic                     fifo_rd_en;
+  logic [FiFoDataWidth-1:0] fifo_rd_dout;
+  logic                     fifo_rd_empty;
 
-  wire                      packet_valid_s;
-  wire  [             15:0] packet_ethertype_s;
-  wire  [             79:0] packet_timestamp_s;
+  logic                     packet_valid_s;
+  logic [             15:0] packet_ethertype_s;
+  logic [             79:0] packet_timestamp_s;
 
   logic                     corrupt_pkt_pulse;
 

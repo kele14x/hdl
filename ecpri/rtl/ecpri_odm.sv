@@ -88,11 +88,11 @@ module ecpri_odm (
 
   // Signals
 
-  wire         ctrl_en_s;
-  wire  [31:0] ctrl_meas_interval_s;
+  logic        ctrl_en_s;
+  logic [31:0] ctrl_meas_interval_s;
   /* verilator lint_off UNUSED */
-  wire  [ 1:0] unused_stat_src_ready;
-  wire  [ 1:0] unused_stat_dest_valid;
+  logic [ 1:0] unused_stat_src_ready;
+  logic [ 1:0] unused_stat_dest_valid;
   /* verilator lint_on UNUSED */
 
   logic [31:0] timer;

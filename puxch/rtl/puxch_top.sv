@@ -76,13 +76,13 @@ module puxch_top #(
 
   logic        ctrl_phase_comp_we_s[ NUM_CC];
 
-  wire  [63:0] s0_axis_tdata       [NUM_ANT];
-  wire  [ 7:0] s0_axis_tkeep       [NUM_ANT];
-  wire         s0_axis_tvalid      [NUM_ANT];
-  wire         s0_axis_tlast       [NUM_ANT];
-  wire         s0_axis_tready      [NUM_ANT];
+  logic [63:0] s0_axis_tdata       [NUM_ANT];
+  logic [ 7:0] s0_axis_tkeep       [NUM_ANT];
+  logic        s0_axis_tvalid      [NUM_ANT];
+  logic        s0_axis_tlast       [NUM_ANT];
+  logic        s0_axis_tready      [NUM_ANT];
   /* verilator lint_off UNUSED */
-  wire  [31:0] bfp_m_axis_tuser    [NUM_ANT];
+  logic [31:0] bfp_m_axis_tuser    [NUM_ANT];
   /* verilator lint_on UNUSED */
 
   // Per-CC last flags and the framer tuser are produced but not consumed at

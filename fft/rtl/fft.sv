@@ -81,30 +81,30 @@ module fft #(
   logic signed [  DATA_WIDTH-1:0] data_di;
   logic                           data_dv;
 
-  wire signed  [DataWidthInt-1:0] data_dr_s       [0:NumStages];
-  wire signed  [DataWidthInt-1:0] data_di_s       [0:NumStages];
-  wire                            data_dv_s       [0:NumStages];
+  logic signed [DataWidthInt-1:0] data_dr_s       [0:NumStages];
+  logic signed [DataWidthInt-1:0] data_di_s       [0:NumStages];
+  logic                           data_dv_s       [0:NumStages];
 
-  wire         [   NumStages-1:0] ovf;
-  wire                            ovf_at_saturate;
+  logic        [   NumStages-1:0] ovf;
+  logic                           ovf_at_saturate;
 
   logic                           dv_d;
-  wire         [             3:0] counter_max;
+  logic        [             3:0] counter_max;
 
   logic        [            16:0] latency;
   logic        [            11:0] bypass;
 
   genvar i;
 
-  wire signed [DATA_WIDTH-1:0] sat_dr;
-  wire signed [DATA_WIDTH-1:0] sat_di;
-  wire                         sat_ovf_dr;
-  wire                         sat_ovf_di;
+  logic signed [DATA_WIDTH-1:0] sat_dr;
+  logic signed [DATA_WIDTH-1:0] sat_di;
+  logic                         sat_ovf_dr;
+  logic                         sat_ovf_di;
 
   // Sign-extend the input to the internal stage width.
   /* verilator lint_off UNUSED */
-  wire                         sext_ovf_dr;
-  wire                         sext_ovf_di;
+  logic                         sext_ovf_dr;
+  logic                         sext_ovf_di;
   /* verilator lint_on UNUSED */
 
   type_cast #(

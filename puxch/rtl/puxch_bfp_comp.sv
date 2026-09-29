@@ -70,11 +70,15 @@ module puxch_bfp_comp #(
   logic [USER_WIDTH-1:0] t6_eop_user;
   logic t6_eop_ext_out;
 
-  wire [3:0] input_pair_exp = (s_axis_tdata[39:36] >= s_axis_tdata[43:40]) ?
+  logic [3:0] input_pair_exp;
+  logic [3:0] completed_exp;
+  logic input_prb_complete;
+
+  assign input_pair_exp = (s_axis_tdata[39:36] >= s_axis_tdata[43:40]) ?
       s_axis_tdata[39:36] : s_axis_tdata[43:40];
-  wire [3:0] completed_exp = (input_state == 0 || input_pair_exp >= input_max_exp) ?
+  assign completed_exp = (input_state == 0 || input_pair_exp >= input_max_exp) ?
       input_pair_exp : input_max_exp;
-  wire input_prb_complete = s_axis_tvalid && (input_state == 5);
+  assign input_prb_complete = s_axis_tvalid && (input_state == 5);
 
   initial begin : drc_check
     assert (USER_WIDTH >= 1)

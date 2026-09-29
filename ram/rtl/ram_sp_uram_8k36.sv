@@ -15,10 +15,10 @@ module ram_sp_uram_8k36 (
 
   // UltraScale+ UltraRAM has a fixed 4096 x 72 organization. Logical address
   // bit 0 selects one of the two 36-bit samples packed into each physical word.
-  wire  [11:0] physical_addr;
-  wire  [71:0] physical_din;
-  wire  [ 7:0] physical_we;
-  wire  [71:0] physical_dout;
+  logic [11:0] physical_addr;
+  logic [71:0] physical_din;
+  logic [ 7:0] physical_we;
+  logic [71:0] physical_dout;
 
   logic [ 1:0] read_half;
 

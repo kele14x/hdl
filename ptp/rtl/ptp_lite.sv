@@ -36,22 +36,22 @@ module ptp_lite #(
 
   // Signals
 
-  wire        s0_msg_valid;
-  wire [ 3:0] s0_msg_message_type;
-  wire [15:0] s0_msg_sequence_id;
-  wire [79:0] s0_msg_timestamp;
-  wire [79:0] s0_msg_origin_timestamp;
-  wire [79:0] s0_msg_source_port_identity;
+  logic        s0_msg_valid;
+  logic [ 3:0] s0_msg_message_type;
+  logic [15:0] s0_msg_sequence_id;
+  logic [79:0] s0_msg_timestamp;
+  logic [79:0] s0_msg_origin_timestamp;
+  logic [79:0] s0_msg_source_port_identity;
 
-  wire        ap_valid;
-  wire        ap_ready;
+  logic        ap_valid;
+  logic        ap_ready;
 
-  wire [ 3:0] ap_message_type;
-  wire [15:0] ap_sequence_id;
-  wire [ 7:0] ap_log_message_interval;
-  wire [79:0] ap_origin_timestamp;
-  wire [79:0] ap_requesting_port_identity;
-  wire [15:0] ap_tag_field;
+  logic [ 3:0] ap_message_type;
+  logic [15:0] ap_sequence_id;
+  logic [ 7:0] ap_log_message_interval;
+  logic [79:0] ap_origin_timestamp;
+  logic [79:0] ap_requesting_port_identity;
+  logic [15:0] ap_tag_field;
 
   // Modules
 

@@ -132,8 +132,8 @@ module ram_tdp_asym #(
 `endif
   end
 
-  wire ena_s;
-  wire enb_s;
+  logic ena_s;
+  logic enb_s;
 
   // This makes Vivado recognize correct EN pin
   assign ena_s = ena[0];

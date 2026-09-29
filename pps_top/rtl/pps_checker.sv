@@ -30,7 +30,7 @@ module pps_checker (
   logic        stat_pps_offset_send;
   logic        stat_pps_offset_rcv;
   /* verilator lint_off UNUSED */
-  wire         unused_stat_pps_offset_req;
+  logic        unused_stat_pps_offset_req;
   /* verilator lint_on UNUSED */
 
 

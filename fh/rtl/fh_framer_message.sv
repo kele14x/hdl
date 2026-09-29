@@ -32,13 +32,13 @@ module fh_framer_message (
 
   integer state, state_next;
 
-  wire [31:0] int_tdata;
-  wire [ 3:0] int_tkeep;
-  wire        int_tvalid;
-  wire        int_tlast;
-  wire        int_tready;
+  logic [31:0] int_tdata;
+  logic [ 3:0] int_tkeep;
+  logic        int_tvalid;
+  logic        int_tlast;
+  logic        int_tready;
   /* verilator lint_off UNUSED */
-  wire        int_tuser;
+  logic        int_tuser;
   /* verilator lint_on UNUSED */
 
   // Main

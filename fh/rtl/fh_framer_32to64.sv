@@ -30,16 +30,16 @@ module fh_framer_32to64 #(
     input var                   m_axis_tready
 );
 
-  wire [63:0] s0_axis_tdata;
-  wire [7:0] s0_axis_tkeep;
-  wire s0_axis_tlast;
-  wire s0_axis_tvalid;
-  wire s0_axis_tready;
+  logic [63:0] s0_axis_tdata;
+  logic [7:0] s0_axis_tkeep;
+  logic s0_axis_tlast;
+  logic s0_axis_tvalid;
+  logic s0_axis_tready;
 
   /* verilator lint_off UNUSED */
-  wire tuser_fifo_full;
-  wire tuser_fifo_empty;
-  wire axis_fifo_tuser;
+  logic tuser_fifo_full;
+  logic tuser_fifo_empty;
+  logic axis_fifo_tuser;
   /* verilator lint_on UNUSED */
 
   logic sync_n;

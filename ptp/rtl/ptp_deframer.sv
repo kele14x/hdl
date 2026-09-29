@@ -87,8 +87,8 @@ module ptp_deframer (
 
   integer state, state_next;
 
-  wire  [31:0] s_axis_tdata_rev;
-  wire         s_axis_word_valid;
+  logic [31:0] s_axis_tdata_rev;
+  logic        s_axis_word_valid;
 
   logic [79:0] timestamp;
 

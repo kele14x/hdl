@@ -77,40 +77,54 @@ module ptp_framer (
 
   // Signals
 
-  wire [47:0] ctrl_src_mac_s;
-  wire [ 7:0] ctrl_domain_number_s;
-  wire [15:0] ctrl_utc_offset_s;
+  logic [47:0] ctrl_src_mac_s;
+  logic [ 7:0] ctrl_domain_number_s;
+  logic [15:0] ctrl_utc_offset_s;
 
   integer state, state_next;
 
   logic [31:0] m_axis_tdata_rev;
 
-  wire  [ 3:0] transport_specific = 4'd0;
+  logic [ 3:0] transport_specific;
   logic [ 3:0] message_type;
-  wire  [ 3:0] reserved0 = 4'd1;  // major_sdo_id
-  wire  [ 3:0] version_ptp = 4'd2;
+  logic [ 3:0] reserved0;  // major_sdo_id
+  logic [ 3:0] version_ptp;
   logic [15:0] message_length;
-  wire  [ 7:0] domain_number;
-  wire  [ 7:0] reserved1 = 8'd0;  // minor_sdo_id
-  wire  [15:0] flag_field = 16'h0200;
-  wire  [63:0] correction_field = 64'd0;
-  wire  [31:0] reserved2 = 32'd0;  // message_type_specific
-  wire  [79:0] source_port_identity;  // {clock_identity, port_number}
+  logic [ 7:0] domain_number;
+  logic [ 7:0] reserved1;  // minor_sdo_id
+  logic [15:0] flag_field;
+  logic [63:0] correction_field;
+  logic [31:0] reserved2;  // message_type_specific
+  logic [79:0] source_port_identity;  // {clock_identity, port_number}
   logic [15:0] sequence_id;
   logic [ 7:0] control_field;
   logic [ 7:0] log_message_interval;
 
   logic [79:0] origin_timestamp;
-  wire  [15:0] current_utc_offset;
-  wire  [ 7:0] reserved3 = 8'd0;
-  wire  [ 7:0] grandmaster_priority1 = 8'h80;
-  wire  [31:0] grandmaster_clock_quality = 32'h06FEFFFF;
-  wire  [ 7:0] grandmaster_priority2 = 8'h80;
-  wire  [63:0] grandmaster_identity;
-  wire  [15:0] steps_removed = 16'd0;
-  wire  [ 7:0] time_source = 8'hA0;
+  logic [15:0] current_utc_offset;
+  logic [ 7:0] reserved3;
+  logic [ 7:0] grandmaster_priority1;
+  logic [31:0] grandmaster_clock_quality;
+  logic [ 7:0] grandmaster_priority2;
+  logic [63:0] grandmaster_identity;
+  logic [15:0] steps_removed;
+  logic [ 7:0] time_source;
 
   logic [79:0] requesting_port_identity;
+
+  assign transport_specific = 4'd0;
+  assign reserved0 = 4'd1;
+  assign version_ptp = 4'd2;
+  assign reserved1 = 8'd0;
+  assign flag_field = 16'h0200;
+  assign correction_field = 64'd0;
+  assign reserved2 = 32'd0;
+  assign reserved3 = 8'd0;
+  assign grandmaster_priority1 = 8'h80;
+  assign grandmaster_clock_quality = 32'h06FEFFFF;
+  assign grandmaster_priority2 = 8'h80;
+  assign steps_removed = 16'd0;
+  assign time_source = 8'hA0;
 
   // Control CDC
 

@@ -47,46 +47,46 @@ module fft_stage #(
 
   // Signals
 
-  wire signed [DATA_WIDTH-1:0] twiddle_din_dr;
-  wire signed [DATA_WIDTH-1:0] twiddle_din_di;
-  wire                         twiddle_din_dv;
+  logic signed [DATA_WIDTH-1:0] twiddle_din_dr;
+  logic signed [DATA_WIDTH-1:0] twiddle_din_di;
+  logic                         twiddle_din_dv;
 
-  wire signed [DATA_WIDTH-1:0] twiddle_dout_dr;
-  wire signed [DATA_WIDTH-1:0] twiddle_dout_di;
-  wire                         twiddle_dout_dv;
+  logic signed [DATA_WIDTH-1:0] twiddle_dout_dr;
+  logic signed [DATA_WIDTH-1:0] twiddle_dout_di;
+  logic                         twiddle_dout_dv;
 
-  wire signed [DATA_WIDTH-1:0] bfi_din_dr;
-  wire signed [DATA_WIDTH-1:0] bfi_din_di;
-  wire                         bfi_din_dv;
+  logic signed [DATA_WIDTH-1:0] bfi_din_dr;
+  logic signed [DATA_WIDTH-1:0] bfi_din_di;
+  logic                         bfi_din_dv;
 
-  wire signed [DATA_WIDTH-1:0] bfi_dout_dr;
-  wire signed [DATA_WIDTH-1:0] bfi_dout_di;
-  wire                         bfi_dout_dv;
+  logic signed [DATA_WIDTH-1:0] bfi_dout_dr;
+  logic signed [DATA_WIDTH-1:0] bfi_dout_di;
+  logic                         bfi_dout_dv;
 
-  wire signed [DATA_WIDTH-1:0] ct_din_dr;
-  wire signed [DATA_WIDTH-1:0] ct_din_di;
-  wire                         ct_din_dv;
+  logic signed [DATA_WIDTH-1:0] ct_din_dr;
+  logic signed [DATA_WIDTH-1:0] ct_din_di;
+  logic                         ct_din_dv;
 
-  wire signed [DATA_WIDTH-1:0] ct_dout_dr;
-  wire signed [DATA_WIDTH-1:0] ct_dout_di;
-  wire                         ct_dout_dv;
+  logic signed [DATA_WIDTH-1:0] ct_dout_dr;
+  logic signed [DATA_WIDTH-1:0] ct_dout_di;
+  logic                         ct_dout_dv;
 
-  wire signed [DATA_WIDTH-1:0] bfii_din_dr;
-  wire signed [DATA_WIDTH-1:0] bfii_din_di;
-  wire                         bfii_din_dv;
+  logic signed [DATA_WIDTH-1:0] bfii_din_dr;
+  logic signed [DATA_WIDTH-1:0] bfii_din_di;
+  logic                         bfii_din_dv;
 
-  wire signed [DATA_WIDTH-1:0] bfii_dout_dr;
-  wire signed [DATA_WIDTH-1:0] bfii_dout_di;
-  wire                         bfii_dout_dv;
+  logic signed [DATA_WIDTH-1:0] bfii_dout_dr;
+  logic signed [DATA_WIDTH-1:0] bfii_dout_di;
+  logic                         bfii_dout_dv;
 
-  wire                         bfi_bypass;
-  wire                         unused_ct_bypass;
-  wire        [           1:0] unused_twiddle_bypass;
-  wire                         bfii_bypass;
+  logic                         bfi_bypass;
+  logic                         unused_ct_bypass;
+  logic        [           1:0] unused_twiddle_bypass;
+  logic                         bfii_bypass;
 
-  wire                         twiddle_ovf;
-  wire                         bfi_ovf;
-  wire                         bfii_ovf;
+  logic                         twiddle_ovf;
+  logic                         bfi_ovf;
+  logic                         bfii_ovf;
 
   // Main
 

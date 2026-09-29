@@ -36,12 +36,12 @@ module fh_framer_padding (
   logic [ 3:0] data_count;
   logic        is_padding;
 
-  wire  [63:0] int_axis_tdata;
-  wire  [ 7:0] int_axis_tkeep;
-  wire         int_axis_tlast;
-  wire  [17:0] int_axis_tuser;
-  wire         int_axis_tvalid;
-  wire         int_axis_tready;
+  logic [63:0] int_axis_tdata;
+  logic [ 7:0] int_axis_tkeep;
+  logic        int_axis_tlast;
+  logic [17:0] int_axis_tuser;
+  logic        int_axis_tvalid;
+  logic        int_axis_tready;
 
   function [63:0] tkeep_null(input [63:0] tdata, input [7:0] tkeep);
     integer i;

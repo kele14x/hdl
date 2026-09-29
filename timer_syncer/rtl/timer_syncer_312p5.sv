@@ -38,24 +38,24 @@ module timer_syncer_312p5 #(
   logic [31:0] nanosecond_counter;  // 32-bit nanosecond counter
   logic [ 2:0] nanosecond_frac;  // 3-bit nanosecond fraction
 
-  wire  [47:0] second_counter_next;
-  wire  [31:0] nanosecond_counter_next;
-  wire  [ 2:0] nanosecond_frac_next;
+  logic [47:0] second_counter_next;
+  logic [31:0] nanosecond_counter_next;
+  logic [ 2:0] nanosecond_frac_next;
 
-  wire         nanosecond_counter_wrap;
-  wire  [31:0] nanosecond_counter_inc;
-  wire  [ 2:0] nanosecond_frac_inc;
+  logic        nanosecond_counter_wrap;
+  logic [31:0] nanosecond_counter_inc;
+  logic [ 2:0] nanosecond_frac_inc;
 
-  wire         sync_pulse;
+  logic        sync_pulse;
 
-  wire         pps_sync_eth;
-  wire  [47:0] tod_sec_eth;
-  wire  [31:0] tod_ns_eth;
+  logic        pps_sync_eth;
+  logic [47:0] tod_sec_eth;
+  logic [31:0] tod_ns_eth;
 
   logic [31:0] stat_resync_cnt_r;
 
   /* verilator lint_off UNUSED */
-  wire         cdc_pps_sync_rx_src_ready;
+  logic        cdc_pps_sync_rx_src_ready;
   /* verilator lint_on UNUSED */
 
   // Main
