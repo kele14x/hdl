@@ -1,21 +1,24 @@
 # Out-of-context synthesis for the mandatory-BFP PRACH wrapper.
 # PRACH uses a fixed 1536-point FFT; HALF_BLOCK/HALF_FFT are not applicable.
 #
-# Writes the synthesis checkpoint that prach_impl.tcl consumes; opt/place/route
-# live there so `make ooc` stays fast.
+# Stops after synthesis by default. With -stage impl, prach_impl.tcl continues
+# from the synthesis checkpoint through opt/place/phys_opt/route.
 #
 # Parameter overrides (default = antenna 0):
 #   tclargs: <ant_id>
 #   ant_id=0/1/... -> PRACH antenna instance
+#   Append -stage synth|impl (default synth).
+#   Example: vivado -mode batch -source prach/synth/prach_ooc.tcl -tclargs 0 -stage impl
 
 set script_dir [file dirname [file normalize [info script]]]
 set repo_root [file normalize [file join $script_dir .. ..]]
+source [file join $repo_root scripts ooc_stage.tcl]
 set part xcku5p-ffvb676-2-i
 set top prach
 
 # Parameter override via -tclargs (default 0)
 if {[llength $argv] > 1} {
-  error "usage: <ant_id>"
+  error {usage: <ant_id> [-stage synth|impl]}
 }
 if {[llength $argv] >= 1} {
   set ant_id [lindex $argv 0]
@@ -91,4 +94,8 @@ write_checkpoint -force $syn_dcp
 puts "INFO: prach OOC synthesis completed"
 puts "INFO: synthesis checkpoint: $syn_dcp"
 puts "INFO: utilization report: [file join $build_dir prach_utilization.rpt]"
-puts "INFO: run 'make ooc-impl' for opt/place/route"
+
+if {$ooc_stage eq "impl"} {
+  close_design
+  source [file join $script_dir prach_impl.tcl]
+}

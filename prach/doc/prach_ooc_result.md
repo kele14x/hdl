@@ -178,13 +178,15 @@ must re-run implementation.
 
 ```bash
 # From the repository root:
-make ooc OOC_MODULES=prach       # synthesis only -> prach/synth/prach_ooc.tcl
-make ooc-impl OOC_MODULES=prach  # opt/place/route -> prach/synth/prach_impl.tcl
+make ooc OOC_MODULES=prach       # synthesis only, also used by the regression
 
-# Or directly (run the impl script after the synthesis script):
-vivado -mode batch -source prach/synth/prach_ooc.tcl          # defaults to ANT_ID=0
-vivado -mode batch -source prach/synth/prach_impl.tcl         # defaults to ANT_ID=0
-# or: -tclargs 1
+# Or select the final stage directly (defaults to ANT_ID=0 and stage synth):
+vivado -mode batch -source prach/synth/prach_ooc.tcl -tclargs 0 -stage synth
+vivado -mode batch -source prach/synth/prach_ooc.tcl -tclargs 0 -stage impl
+# Use 1 instead of 0 to select ANT_ID=1.
+
+# To reuse an existing synthesis checkpoint, invoke the implementation helper:
+vivado -mode batch -source prach/synth/prach_impl.tcl -tclargs 0
 ```
 
 Reports land in `prach/vivado_ooc/prach_20260901_ant<ID>/` (git-ignored):

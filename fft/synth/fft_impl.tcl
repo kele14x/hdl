@@ -1,8 +1,8 @@
 # Out-of-context implementation for the default FFT configuration.
 #
 # Consumes the synthesis checkpoint written by fft_ooc.tcl and runs
-# opt/place/phys_opt/route.  Kept separate so `make ooc` (synthesis only) stays
-# fast; run this through `make ooc-impl` when the post-route numbers matter.
+# opt/place/phys_opt/route. Called by fft_ooc.tcl with -stage impl, or invoke
+# directly to reuse an existing synthesis checkpoint.
 #
 # tclargs (optional):
 #   1. build directory, default fft/vivado_ooc/fft_ooc (same as fft_ooc.tcl)

@@ -40,7 +40,7 @@ In cocotb tests, drive and sample signals on the **RisingEdge** of the relevant 
 - `uv run ruff check` and `uv run ruff format` on changed Python files.
 - `make test` runs cocotb tests for the module with Verilator first and Questa second; a Verilator failure skips the slower Questa pass. Override with `SIMULATORS="..."` (e.g. `make test SIMULATORS=verilator` for a quick pass), or `SIMULATORS=questa` in a module `Makefile` when the design is not Verilator-clean.
 - Run `make format` on modified modules before commit.
-- `make ooc` runs out-of-context synthesis in the modules that ship a `synth/*_ooc.tcl` script (`OOC_MODULES` in the root `Makefile`). `make ooc-impl` continues those runs through `opt/place/route`; it is not part of `make all` because it takes much longer.
+- `make ooc` runs only through out-of-context synthesis in the modules that ship a `synth/*_ooc.tcl` script (`OOC_MODULES` in the root `Makefile`); the regression also stops after synthesis. To run through `opt/place/phys_opt/route`, invoke an OOC Tcl script directly with `-tclargs [module arguments] -stage impl` (the Tcl default is `-stage synth`).
 - Vivado is located from `PATH`, falling back to `/opt/Xilinx/Vivado/*/bin/vivado`; override with `make ooc VIVADO=/path/to/vivado`.
 - After a Verilator upgrade, run `make clean` once before `make test`: cached builds under `*/sim_build` embed the old install path and fail with a missing `verilated.h` dependency.
 

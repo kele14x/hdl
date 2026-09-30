@@ -10,9 +10,10 @@
 - Hierarchy: none (`-flatten_hierarchy none`)
 - Define: `RAM_USE_XPM`
 
-The OOC flow is defined in `pdxch/synth/pdxch_top_ooc.tcl` (synthesis, used by
-`make ooc`) and `pdxch/synth/pdxch_top_impl.tcl` (opt/place/route, used by
-`make ooc-impl`); the impl script consumes the synthesis checkpoint.
+The OOC flow is defined in `pdxch/synth/pdxch_ooc.tcl`. `make ooc` and the
+regression stop after synthesis. To continue through implementation, run
+`vivado -mode batch -source pdxch/synth/pdxch_ooc.tcl -tclargs 0 0 -stage impl`.
+This invokes `pdxch/synth/pdxch_top_impl.tcl` using the synthesis checkpoint.
 
 ## Resource result
 

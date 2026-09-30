@@ -4,15 +4,18 @@
 #   tclargs: <half_block> <half_fft>
 #   half_block=0/1 -> puxch_buffer IQ depth full/half
 #   half_fft=0/1   -> FFT 4k/2k
+#   Append -stage synth|impl (default synth).
+#   Example: vivado -mode batch -source puxch/synth/puxch_ooc.tcl -tclargs 0 0 -stage impl
 
 set script_dir [file dirname [file normalize [info script]]]
 set repo_root [file normalize [file join $script_dir .. ..]]
+source [file join $repo_root scripts ooc_stage.tcl]
 set part xcku5p-ffvb676-2-i
 set top puxch
 
 # Parameter override via -tclargs (default HALF_BLOCK=0, HALF_FFT=0)
 if {[llength $argv] > 2} {
-  error "usage: <half_block> <half_fft>"
+  error {usage: <half_block> <half_fft> [-stage synth|impl]}
 }
 if {[llength $argv] >= 1} {
   set half_block [lindex $argv 0]
@@ -94,3 +97,8 @@ write_checkpoint -force [file join $build_dir puxch_ooc.dcp]
 
 puts "INFO: puxch OOC synthesis completed"
 puts "INFO: utilization report: [file join $build_dir puxch_utilization.rpt]"
+
+if {$ooc_stage eq "impl"} {
+  close_design
+  source [file join $script_dir puxch_impl.tcl]
+}

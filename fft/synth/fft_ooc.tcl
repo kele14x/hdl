@@ -1,16 +1,19 @@
 # Out-of-context synthesis for the default FFT configuration.
 #
-# Writes the synthesis checkpoint that fft_impl.tcl consumes.  Implementation
-# (opt/place/route) lives in fft_impl.tcl so `make ooc` stays fast.
+# Stops after synthesis by default. With -stage impl, fft_impl.tcl continues
+# from the synthesis checkpoint through opt/place/phys_opt/route.
 #
 # tclargs (optional):
 #   1. output directory, default fft/vivado_ooc/fft_ooc
+#   Append -stage synth|impl (default synth).
+#   Example: vivado -mode batch -source fft/synth/fft_ooc.tcl -tclargs -stage impl
 
 set script_dir [file dirname [file normalize [info script]]]
 set repo_root [file normalize [file join $script_dir .. ..]]
+source [file join $repo_root scripts ooc_stage.tcl]
 set build_dir [file normalize [file join $repo_root fft vivado_ooc fft_ooc]]
 if {[llength $argv] > 1} {
-  error "usage: -source fft_ooc.tcl [-tclargs <output_dir>]"
+  error {usage: -source fft_ooc.tcl [-tclargs [<output_dir>] [-stage synth|impl]]}
 }
 if {[llength $argv] == 1} {
   set build_dir [file normalize [lindex $argv 0]]
@@ -79,4 +82,8 @@ write_checkpoint -force $syn_dcp
 puts "INFO: FFT OOC synthesis completed"
 puts "INFO: synthesis checkpoint: $syn_dcp"
 puts "INFO: utilization report: [file join $build_dir fft_utilization.rpt]"
-puts "INFO: run 'make ooc-impl' for opt/place/route"
+
+if {$ooc_stage eq "impl"} {
+  close_design
+  source [file join $script_dir fft_impl.tcl]
+}

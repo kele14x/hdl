@@ -5,12 +5,12 @@
 # prints one summary.  Full per-module logs live in .build_logs/.
 #
 #   make all          lint + test + format + ooc
+#   make help         list targets, overrides, and examples
 #   make lint         verilator --lint-only in every module
 #   make test         cocotb tests in every module plus shared Python tests
 #   make test-python  shared Python helper and regression-runner tests
 #   make format       verible-verilog-format in every module
 #   make ooc          vivado out-of-context synthesis (modules that have it)
-#   make ooc-impl     vivado out-of-context implementation / place & route
 #   make clean        remove per-module cocotb build products
 #   make clean-vivado remove per-module vivado_ooc run directories
 #
@@ -19,8 +19,7 @@
 #   SIMULATORS="verilator questa"   cocotb simulators used by `make test`
 #   MODULES="adder gain ..."        modules used by lint / test / format
 #   OOC_MODULES="fft ..."           modules with an OOC synthesis script
-#   OOC_IMPL_MODULES="fft ..."      modules with an OOC implementation script
-#   VIVADO=/path/to/vivado          vivado executable used by ooc / ooc-impl
+#   VIVADO=/path/to/vivado          vivado executable used by ooc
 #
 # Examples:
 #   make all
@@ -28,25 +27,56 @@
 #   make test SIMULATORS=verilator          # fast pass only
 #   make all STAGES="lint test"             # skip format and OOC
 #   make ooc OOC_MODULES="prach"
+# For implementation, invoke an OOC Tcl directly with -stage impl in -tclargs.
 
 # Discover RTL, not Makefiles: a new IP without build integration must fail.
 MODULES := $(patsubst %/rtl/,%,$(wildcard */rtl/))
 PYTEST ?= uv run python -m pytest
 
 # Only these modules ship a runnable out-of-context script.  Modules without
-# one are silently skipped by `make ooc` / `make ooc-impl`.
+# one are silently skipped by `make ooc`.
 OOC_MODULES ?= fft lowphy pdxch prach puxch
-OOC_IMPL_MODULES ?= fft lowphy pdxch prach puxch
 
 STAGES ?= lint test format ooc
 
 export HDL_MODULES := $(MODULES)
 export HDL_OOC_MODULES := $(OOC_MODULES)
-export HDL_IMPL_MODULES := $(OOC_IMPL_MODULES)
 
 .DEFAULT_GOAL := all
 
-.PHONY: all lint test test-python format ooc ooc-impl clean clean-vivado
+.PHONY: all help lint test test-python format ooc clean clean-vivado
+
+help:
+	@printf '%s\n' \
+		'Usage: make [target] [VARIABLE=value ...]' \
+		'' \
+		'Targets:' \
+		'  all           Run lint, test, format, and OOC synthesis (default)' \
+		'  help          Show this help' \
+		'  lint          Run Verilator lint in every module' \
+		'  test          Run module cocotb tests and shared Python tests' \
+		'  test-python   Run shared Python helper and regression-runner tests' \
+		'  format        Run verible-verilog-format in every module' \
+		'  ooc           Run Vivado out-of-context synthesis only' \
+		'  clean         Remove per-module cocotb build products' \
+		'  clean-vivado  Remove per-module vivado_ooc run directories' \
+		'' \
+		'Overrides:' \
+		'  STAGES="lint test format ooc"  Stages run by all' \
+		'  SIMULATORS="verilator questa" Cocotb simulators used by test' \
+		'  MODULES="adder gain ..."      Modules used by lint / test / format' \
+		'  OOC_MODULES="fft ..."         Modules used by ooc' \
+		'  VIVADO=/path/to/vivado        Vivado executable for ooc' \
+		'  PYTEST="uv run python -m pytest"  Command used for Python tests' \
+		'' \
+		'Examples:' \
+		'  make test SIMULATORS=verilator' \
+		'  make lint MODULES="adder gain"' \
+		'  make all STAGES="lint test"' \
+		'  make ooc OOC_MODULES="prach"' \
+		'' \
+		'For implementation, invoke an OOC Tcl directly with -stage impl in -tclargs.' \
+		'Regression stages continue after module failures; logs are in .build_logs/.'
 
 all:
 	@scripts/run_targets.sh $(STAGES)
@@ -65,9 +95,6 @@ format:
 
 ooc:
 	@scripts/run_targets.sh ooc
-
-ooc-impl:
-	@scripts/run_targets.sh ooc-impl
 
 clean:
 	rm -rf */sim_build

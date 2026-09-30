@@ -2,7 +2,7 @@
 # Run one or more make targets across every HDL module, continuing past failures.
 #
 # The top-level Makefile calls this for `make all`, `make lint`, `make test`,
-# `make format`, `make ooc` and `make ooc-impl`.  Every module writes its full
+# `make format` and `make ooc`.  Every module writes its full
 # output to .build_logs/<target>-<module>.log; the console gets one PASS/FAIL
 # line per module plus a final summary, so a change that fixes one block and
 # breaks a neighbour is visible without scrolling through build output.
@@ -11,7 +11,6 @@
 # top-level Makefile:
 #   HDL_MODULES       modules for lint / test / format
 #   HDL_OOC_MODULES   modules that provide an out-of-context synthesis script
-#   HDL_IMPL_MODULES  modules that provide an out-of-context implementation script
 set -uo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
@@ -25,8 +24,6 @@ mkdir -p "$log_dir"
 declare -a hdl_modules=(${HDL_MODULES:-})
 # shellcheck disable=SC2206
 declare -a ooc_modules=(${HDL_OOC_MODULES:-})
-# shellcheck disable=SC2206
-declare -a impl_modules=(${HDL_IMPL_MODULES:-})
 declare -a failures=()
 
 if (($# == 0)); then
@@ -50,7 +47,6 @@ fi
 modules_for() {
   case $1 in
   ooc) ((${#ooc_modules[@]})) && printf '%s\n' "${ooc_modules[@]}" ;;
-  ooc-impl) ((${#impl_modules[@]})) && printf '%s\n' "${impl_modules[@]}" ;;
   test)
     ((${#hdl_modules[@]})) && printf '%s\n' "${hdl_modules[@]}"
     printf '%s\n' hdl_tools

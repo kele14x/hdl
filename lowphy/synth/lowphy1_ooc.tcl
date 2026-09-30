@@ -1,9 +1,16 @@
 # Out-of-context synthesis for the HALF_BLOCK=1 lowphy variant.
 # The lowphy1 RTL fixes HALF_BLOCK to 1 and is used to check the reduced-depth
 # FDV buffer configuration on the same KU5P comparison device as lowphy0.
+#
+# tclargs (optional): -stage synth|impl (default synth).
+# Example: vivado -mode batch -source lowphy/synth/lowphy1_ooc.tcl -tclargs -stage impl
 
 set script_dir [file dirname [file normalize [info script]]]
 set repo_root [file normalize [file join $script_dir .. ..]]
+source [file join $repo_root scripts ooc_stage.tcl]
+if {[llength $argv] != 0} {
+  error {usage: -source lowphy1_ooc.tcl [-tclargs -stage synth|impl]}
+}
 set build_dir [file normalize [file join $repo_root lowphy vivado_ooc lowphy1_20260901]]
 set part xcku5p-ffvb676-2-i
 set top lowphy1_wrapper
@@ -67,3 +74,8 @@ write_checkpoint -force [file join $build_dir lowphy1_ooc.dcp]
 
 puts "INFO: lowphy1 OOC synthesis completed"
 puts "INFO: utilization report: [file join $build_dir lowphy1_utilization.rpt]"
+
+if {$ooc_stage eq "impl"} {
+  close_design
+  source [file join $script_dir lowphy1_impl.tcl]
+}

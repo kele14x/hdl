@@ -1,21 +1,24 @@
 # Out-of-context synthesis for the mandatory-BFP PDXCH wrapper.
 #
-# Writes the synthesis checkpoint that pdxch_top_impl.tcl consumes; opt/place/
-# route live there so `make ooc` stays fast.
+# Stops after synthesis by default. With -stage impl, pdxch_top_impl.tcl
+# continues from the synthesis checkpoint through opt/place/phys_opt/route.
 #
 # Parameter overrides (defaults = HALF_BLOCK=0, HALF_FFT=0: full block + 4k FFT):
 #   tclargs: <half_block> <half_fft>
 #   half_block=0/1 -> fdv_buffer IQ depth full/half
 #   half_fft=0/1   -> FFT 4k/2k
+#   Append -stage synth|impl (default synth).
+#   Example: vivado -mode batch -source pdxch/synth/pdxch_ooc.tcl -tclargs 0 0 -stage impl
 
 set script_dir [file dirname [file normalize [info script]]]
 set repo_root [file normalize [file join $script_dir .. ..]]
+source [file join $repo_root scripts ooc_stage.tcl]
 set part xcku5p-ffvb676-2-i
 set top pdxch
 
 # Parameter override via -tclargs (default HALF_BLOCK=0 HALF_FFT=0)
 if {[llength $argv] > 2} {
-  error "usage: <half_block> <half_fft>"
+  error {usage: <half_block> <half_fft> [-stage synth|impl]}
 }
 if {[llength $argv] >= 1} {
   set half_block [lindex $argv 0]
@@ -99,4 +102,8 @@ write_checkpoint -force $syn_dcp
 puts "INFO: pdxch OOC synthesis completed"
 puts "INFO: synthesis checkpoint: $syn_dcp"
 puts "INFO: utilization report: [file join $build_dir pdxch_utilization.rpt]"
-puts "INFO: run 'make ooc-impl' for opt/place/route"
+
+if {$ooc_stage eq "impl"} {
+  close_design
+  source [file join $script_dir pdxch_top_impl.tcl]
+}

@@ -2,9 +2,16 @@
 # The repo's generated FH IP targets xczu19eg, but this Vivado installation
 # only has Kintex UltraScale+ parts installed. Use a same-generation KU+ part
 # as a temporary resource-comparison proxy until ZU19EG device support exists.
+#
+# tclargs (optional): -stage synth|impl (default synth).
+# Example: vivado -mode batch -source lowphy/synth/lowphy0_ooc.tcl -tclargs -stage impl
 
 set script_dir [file dirname [file normalize [info script]]]
 set repo_root [file normalize [file join $script_dir .. ..]]
+source [file join $repo_root scripts ooc_stage.tcl]
+if {[llength $argv] != 0} {
+  error {usage: -source lowphy0_ooc.tcl [-tclargs -stage synth|impl]}
+}
 set build_dir [file normalize [file join $repo_root lowphy vivado_ooc lowphy0_20260901]]
 set part xcku5p-ffvb676-2-i
 set top lowphy0_wrapper
@@ -68,3 +75,8 @@ write_checkpoint -force [file join $build_dir lowphy0_ooc.dcp]
 
 puts "INFO: lowphy0 OOC synthesis completed"
 puts "INFO: utilization report: [file join $build_dir lowphy0_utilization.rpt]"
+
+if {$ooc_stage eq "impl"} {
+  close_design
+  source [file join $script_dir lowphy0_impl.tcl]
+}

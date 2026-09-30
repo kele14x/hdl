@@ -1,6 +1,6 @@
 # Out-of-context implementation for the mandatory-BFP PDXCH wrapper.
 #
-# Consumes the synthesis checkpoint written by pdxch_top_ooc.tcl and runs
+# Consumes the synthesis checkpoint written by pdxch_ooc.tcl and runs
 # opt/place/phys_opt/route.  Keep the HALF_BLOCK/HALF_FFT arguments consistent
 # with the synthesis run so both stages read the same build directory.
 #
