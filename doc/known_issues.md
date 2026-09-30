@@ -1,108 +1,64 @@
 # Known issues
 
-## Cocotb trigger and sampling conventions
+## Design
 
-- Audit and resolution date: 2026-09-22.
-- Source baseline: `f897c85`; historical inventory line numbers refer to this revision.
-- Status: TB-001, TB-002, TB-003, and the additional timed drivers corrected in the working tree; intentional exceptions retained.
-- Scope: 110 per-IP Python files, 13 shared `hdl_tools` files, and five root Python test files.
-- Inventory counts are static call sites, not runtime executions or failing test counts; categories can overlap within a test.
+### PDXCH
 
-### Resolution and verification
+- Date: 2026-09-08
+- Source commit: `786f998`
 
-The correction changes 43 test Python files across 12 IP modules, without RTL
-or configuration changes. Synchronous drivers now provide inputs after a rising
-clock edge for capture at the next edge. Checkers sample stable values at clock
-edges, with explicit observation latency and pipeline draining. Ready/valid
-accounting uses the transfer accepted at that edge. RAM models retain ordered
-responses; zero configured latency means no extra wait after a clock-sampled
-request, not a same-timestep combinational response.
+#### ISSUE-01 · P1：停用或复位后可能持续输出非零旧样本
 
-The final static scan found no `FallingEdge`, `ReadOnly`, or `ReadWrite` calls.
-All 359 active `RisingEdge` sites across 83 files resolve to clocks, including
-configured clocks and helper parameters; all 312 `ClockCycles` calls use rising
-clock edges. No hidden trigger aliases or other non-clock edge waits remain
-outside the intentional asynchronous reset check.
-The four retained `Timer` sites are combinational checks in
-`common/tests/test_type_cast.py`, `pdxch/tests/test_pdxch_fdv_buffer_map.py`,
-and `pdxch/tests/test_pdxch_conv.py`, plus initial setup in
-`ram/tests/test_ram_sp_uram_8k36.py`. The asynchronous reset test retains
-`ValueChange(dest_arst)` with the destination clock stopped.
+**位置**：[pdxch_block2stream.sv](../pdxch/rtl/pdxch_block2stream.sv)，基线第 177–183、213 行；[pdxch_fdv_buffer_readout.sv](../pdxch/rtl/pdxch_fdv_buffer_readout.sv)，第 439–443 行。
 
-Affected-module suites passed with both Verilator and Questa:
+`dout[i]` 仅在输入有效或 RAM 回放有效时更新，没有复位清零路径；`m_axis_tvalid[i]` 恒为 1。`ctrl_en` 关闭后，readout 停止产生该天线的有效数据，但输出级没有对应的停用清零控制。
 
-| Module | Verilator pytest cases | Questa pytest cases |
+当有效输入及 RAM 回放结束，输出寄存器保持最后一个样本。若该样本非零，下游仍会将其作为有效数据持续接收。复位也没有直接清除这个输出寄存器；读回放状态同样缺少完整复位处理。
+
+**建议**：为输出和回放控制建立明确的复位、停用处理；自由运行输出模式下，停用后输出零值。不要简单在每个 `din_dv=0` 的周期清零，因为正常采样间隔需要保持样本，且 CP 回放也使用无有效输入的时段。
+
+**待补验证**：
+
+- 先输出非零数据，再关闭单根天线或整个 CC，检查流水排空后的输出。
+- 在正常输出和 RAM 回放期间分别执行 radio-only reset，检查复位后的数据和标记。
+- 验证清零控制不破坏正常样本保持、CP 回放以及重新使能后的首符号。
+
+#### ISSUE-02 · P2：HALF_BLOCK 地址回绕可绕过越界检查
+
+**位置**：[pdxch_fdv_buffer_write.sv](../pdxch/rtl/pdxch_fdv_buffer_write.sv)，基线第 72–84 行。
+
+起始地址先以有限位宽计算，再进行 bank 上界检查。半容量模式下，中间状态的 IQ 地址宽度为 12 位，exponent 地址宽度为 11 位，无法覆盖全部 10 位 `startPrb` 输入对应的计算结果。
+
+例如 `HALF_BLOCK=1`、`bank=1`、`startPrb=512` 且 CC 匹配时：
+
+| 地址 | 未截断结果 | 截断结果 |
 | --- | ---: | ---: |
-| axi4l_bram | 8 | 8 |
-| ecpri | 5 | 5 |
-| eth_pkt_fifo | 1 | 1 |
-| fft | 23 | 23 |
-| pdxch | 29 | 29 |
-| pps_top | 3 | 3 |
-| prach | 16 | 16 |
-| pulse_delay | 1 | 1 |
-| puxch | 14 | 14 |
-| ram | 23 | 23 |
-| skid_buffer | 1 | 1 |
-| timer_syncer | 3 | 3 |
-| **Total per simulator invocation** | **127** | **127** |
+| IQ | `1024 + 512 × 6 = 4096` | 12 位截断为 0 |
+| Exponent | `512 + 512 × 3 = 2048` | 11 位截断为 0 |
 
-These are pytest case counts, not individual cocotb test counts; FFT includes
-Python model tests. All 14 shared Python tests also passed. Testing was limited
-to the affected-module suites and shared Python tests. Final `ruff check` and
-`ruff format --check` passed for all 43 modified Python files; `git diff --check`
-also passed.
-No repository-wide regression, RTL lint sweep, or synthesis sweep was rerun for
-this test-only correction. Earlier interrupted regression results are not
-reclassified as passing by these focused runs.
+截断后的两个地址均通过上界检查，异常包可以写入 bank 0，而不是被拒绝。此问题属于非法 PRB 输入的边界保护缺陷，不表示正常合法 PRB 会发生该回绕。
 
-A repository-wide TB-001/TB-002 static recheck on 2026-09-30 covered 130 Python
-files. All 359 `RisingEdge` call sites across 83 files still resolve to clocks,
-including configured clocks and helper parameters. No hidden trigger aliases,
-non-clock rising-edge waits, or `FallingEdge`, `ReadOnly`, or `ReadWrite` calls
-were found; all 312 `ClockCycles` calls retain default rising-edge behavior.
-The resolved TB-001 and TB-002 historical subsections were removed; the
-intentional asynchronous reset check remains. No simulations were rerun for
-this recheck.
+**建议**：先检查原始 PRB 范围，或用足够宽的中间地址完成计算和边界判断，再缩窄到 RAM 端口位宽；保持包内地址越界后的写入抑制。
 
-A repository-wide TB-003 static recheck on 2026-09-30 found only the four
-intentional `Timer` sites described above: three combinational checks and one
-initial setup delay. No timed settling for live synchronous sampling remains.
-The resolved TB-003 historical subsection was removed. No simulations were
-rerun for this recheck.
+**待补验证**：将半容量模式的 `startPrb=512`、高端地址、两种 bank、合法边界和跨边界长包加入确定性回归，并覆盖 full-block 模式。
 
-### Historical audit inventory (`f897c85`)
+#### ISSUE-03 · P2，条件性风险：符号号没有与 gearbox 数据一起保存
 
-The findings, counts, and line numbers below describe the original audit, not
-remaining violations in the corrected working tree. The initial audit was
-read-only; corrections and simulation results are recorded above.
+**位置**：[pdxch_top.sv](../pdxch/rtl/pdxch_top.sv)，基线第 105–116、136–142 行；[pdxch_fdv_buffer_write.sv](../pdxch/rtl/pdxch_fdv_buffer_write.sv)，第 66–77 行。
 
-These findings expand the trigger-convention issue in the earlier
-[cocotb testbench audit](cocotb_testbench_audit.md). Separate PDXCH RTL issues
-remain in [pdxch_known_issues.md](../pdxch/doc/pdxch_known_issues.md).
+输入数据经过 `pdxch_bfp_gearbox` 缓冲后才进入 writer，而实时 `s_dl_sym_num` 直接连接到 FDV buffer。writer 在压缩输出首拍时选择并锁存 bank。
 
-The repository convention is to drive and sample synchronous interfaces on
-`RisingEdge` of the relevant clock, checking valid/ready/data at that edge.
-Inputs driven after an edge are intended for the next edge. `FallingEdge`,
-`ReadOnly`, and `ReadWrite` are explicitly banned for driving or sampling in
-[AGENTS.md](../AGENTS.md).
+如果符号号在输入包结束后、压缩输出首拍被 writer 采样前变化，旧包会按新符号号选择 bank。已有包内 bank 锁存只保护 writer 首拍之后的变化，无法保护此前的 gearbox 缓冲窗口。
 
-### Other timed driving patterns to review
+**待确认的接口约束**：上游是否保证 `s_dl_sym_num` 至少稳定到 writer 接收压缩输出首拍。若有可靠保证，此场景可能不会在系统中触发，应将保证写入接口约定；否则需要修改设计。
 
-The original audit also identified these timed driving patterns:
+**建议**：在输入包首拍握手时保存对应 CC 的符号信息，与包元数据一同经过 gearbox，再提供给 writer。多天线和多 CC 场景必须保存各自正确的关联信息。
 
-- Delayed pulse/request/valid deassertion: `pdxch/tests/test_pdxch.py:213`,
-  `pdxch/tests/test_pdxch_fdv_buffer.py:61`,
-  `pdxch/tests/test_pdxch_fdv_buffer_readout.py:63`,
-  `prach/tests/test_prach.py:219,227`, and
-  `puxch/tests/test_puxch.py:214,223` (seven sites).
-- Elapsed-time radio stimulus pacing: `prach/tests/test_prach.py:245`
-  advances by a 16-clock-equivalent interval plus 1 ps between input updates.
+**待补验证**：使用短包，在输入 TLAST 握手后立即切换符号号，并覆盖输入停顿、连续包、多 CC 和多天线。
 
-These drive rather than sample the DUT, but should be considered when
-converting the affected synchronous testbench to clock-based scheduling.
+## Tests
 
-### Intentional exceptions and clean shared code
+### Intentional exceptions
 
 - [cdc/tests/test_cdc_async_rst.py:48](../cdc/tests/test_cdc_async_rst.py#L48)
   waits for `ValueChange(dest_arst)` after stopping the destination clock to
@@ -111,12 +67,4 @@ converting the affected synchronous testbench to clock-based scheduling.
 - Genuine combinational settling is used in `common/tests/test_type_cast.py:117`,
   `pdxch/tests/test_pdxch_fdv_buffer_map.py:28`, and
   `pdxch/tests/test_pdxch_conv.py:75` (FFT-size decode with CDC disabled).
-- `ram/tests/test_ram_sp_uram_8k36.py:74` uses a setup delay before stimulus,
-  not live synchronous sampling. These are the four retained `Timer` sites.
-- Software events, queues, task joins, and safety timeouts coordinate testbench
-  work; they are not waits on changing DUT data and were not classified as
-  sampling violations.
-- Shared `hdl_tools` AXI, AXI-Lite, FIFO, DSP, handshake, and timing helpers use
-  configured clock edges for DUT driving/sampling; no non-clock signal-edge
-  or prohibited phase waits were found there. Root Python tests have no
-  cocotb trigger waits.
+  These are the three retained `Timer` sites.

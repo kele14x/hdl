@@ -7,7 +7,7 @@ from pathlib import Path
 import cocotb
 import pytest
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer
+from cocotb.triggers import RisingEdge
 from cocotb_tools.runner import get_runner
 
 from hdl_tools.flt_tool import resolve_flt
@@ -71,7 +71,6 @@ async def test_ram_sp_uram_8k36_read_first_packing_and_enables(dut):
     dut.addr.value = 0
     dut.din.value = 0
     await RisingEdge(dut.clk)
-    await Timer(1, unit="ps")
     await RisingEdge(dut.clk)
 
     memory = [0] * DEPTH
