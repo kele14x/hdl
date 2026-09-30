@@ -58,6 +58,115 @@
 
 ## Tests
 
+### Regression runner and cocotb coverage gaps
+
+Reviewed against the working tree on 2026-09-30. Direct-target counts below
+mean distinct RTL modules selectable as a cocotb runner's top, excluding
+packages. A static instantiation path from a tested top identifies a possible
+parent test; it does not establish functional coverage.
+
+- **P0 — Root regression can report success without running tests on Bash 3.2**
+
+  [scripts/run_targets.sh](../scripts/run_targets.sh) uses `mapfile`, which the
+  current macOS Bash 3.2 does not provide. `make test MODULES="ptp oran_slave fh
+  pps_top common" SIMULATORS=verilator` prints `mapfile: command not found` and
+  `list: unbound variable`, then reports “all passed” with exit 0 without
+  running module or helper tests. The same runner serves the other root stages.
+  Use a compatible module-list implementation or enforce a supported shell, and
+  make runner setup failures return nonzero.
+  [tests/test_regression_runner.py](../tests/test_regression_runner.py) exposes
+  the skipped discovery and execution.
+
+- **P1 — O-RAN datapath remains unchecked: 1/35 direct targets**
+
+  [test_oran_top_smoke.py](../oran_slave/tests/test_oran_top_smoke.py) targets
+  `oran_top` and checks registers, reset recovery, and idle TX. All 35 RTL
+  modules now have a static path from that top, but the test sends no DL/UL
+  traffic. Add checked Ethernet parsing/framing, compression/decompression,
+  section routing, and a completed DL and UL transaction.
+
+- **P1 — PTP receive and timestamp-exchange coverage remains incomplete: 1/7 direct targets**
+
+  [test_ptp_lite.py](../ptp/tests/test_ptp_lite.py) checks a complete expected
+  Sync frame, timestamp-request metadata, output backpressure, and reset
+  recovery through `ptp_lite`, its controller, and framer. RX traffic and
+  returned TX timestamps remain inactive. Add checked receive parsing and
+  supported timestamp/message exchanges. The legacy `ptp.sv`, `ptp_regs.v`, and
+  `ptp_wrapper.v` remain absent from all resolved block filelists; declare their
+  support status and add tests if retained.
+
+- **P1 — FH datapath remains unchecked: 2/12 direct targets**
+
+  [test_fh_smoke.py](../fh/tests/test_fh_smoke.py) checks full-top registers,
+  idle TX, and reset recovery;
+  [test_fh_framer_padding.py](../fh/tests/test_fh_framer_padding.py) checks
+  padding directly. Ten of the twelve RTL modules have a static path from these
+  targets. Add checked full-top traffic covering deframing, width conversion,
+  buffering, and switching. `fh_wrapper` and `fh_framer_message` still have no
+  tested parent path; test the wrapper if supported and resolve the
+  message-framer support decision below.
+
+- **P1 — PPS behavior remains incompletely checked: 3/11 direct targets**
+
+  [test_pps_top_smoke.py](../pps_top/tests/test_pps_top_smoke.py) adds full-top
+  register/reset checks and visible timer progress alongside the existing delay
+  and expand tests. All eleven RTL modules now have a static test-parent path.
+  Add checked PPS and timestamp events, synchronization/CDC behavior, symbol
+  timing, counter boundaries, and checker results; the top smoke holds `pps_in`
+  and `ts_valid` low.
+
+- **P1 — CoE and eCPRI tests can miss datapath failures**
+
+  [test_coe.py](../coe/tests/test_coe.py) sends and loops traffic without
+  comparing received payloads. [test_ecpri.py](../ecpri/tests/test_ecpri.py)
+  checks version/scratch registers while its Ethernet input loop remains
+  commented out. [test_ecpri_framer.py](../ecpri/tests/test_ecpri_framer.py)
+  starts a background producer and waits 1,000 cycles without output assertions
+  or a producer-completion check. Add independent payload/order/count
+  scoreboards and bounded waits for stimulus completion and output drain.
+
+- **P1 — Low-PHY integration remains control-plane only**
+
+  [test_lowphy_smoke.py](../lowphy/tests/test_lowphy_smoke.py) now parametrizes
+  both `lowphy0` and `lowphy1` by default, with `LOWPHY_TOP` selecting one. Its
+  assertions still cover only register reads/writes. Add checked DL, UL, and
+  PRACH datapath transactions through both tops.
+
+- **P1 — Timer implementation branch is missed**
+
+  [test_timer.py](../timer/tests/test_timer.py) sets `SIM_SPEED_UP` but not
+  `FREQ_MODE`. [timer.sv](../timer/rtl/timer.sv) defaults to mode 0, so
+  `timer_core_491p52` has neither a direct test nor an enabled parent-test
+  configuration. Parametrize both implementations.
+
+- **P2 — Common utility modules lack functional tests**
+
+  [util_clk_fwd.sv](../common/rtl/util_clk_fwd.sv) and
+  [util_gpio_gw.sv](../common/rtl/util_gpio_gw.sv) have no direct cocotb target
+  or static path from a tested top. Add functional tests or document a support
+  waiver.
+
+- **P2 — Orphan RTL needs a support decision**
+
+  [nco_lut.sv](../nco/rtl/nco_lut.sv) is not instantiated and is absent from all
+  resolved block filelists; current `nco` uses `dds_lut`.
+  [fh_framer_message.sv](../fh/rtl/fh_framer_message.sv) is in `fh.flt` but is
+  not instantiated. Add direct tests if supported, or explicitly classify these
+  modules as retired.
+
+- **P2 — No shared suite tiers**
+
+  No repository-wide sanity/smoke/regression pytest markers or Make targets
+  exist. The shared module test target runs the module's entire pytest
+  directory. Define explicit tiers and selection rules, including which cocotb
+  cases each runner launches.
+
+Verification on the review date: the four O-RAN, PTP, FH, and PPS top smoke
+runners and all 16 `common` cases passed when invoked directly on Verilator.
+The 14 Python helper/runner cases reported 12 passes and two failures, both
+exposing the Bash 3.2 root-runner defect above. Questa was unavailable on this
+host; no full regression was run for this review.
+
 ### Intentional exceptions
 
 - [cdc/tests/test_cdc_async_rst.py:48](../cdc/tests/test_cdc_async_rst.py#L48)
