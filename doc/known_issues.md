@@ -65,6 +65,12 @@ The resolved TB-001 and TB-002 historical subsections were removed; the
 intentional asynchronous reset check remains. No simulations were rerun for
 this recheck.
 
+A repository-wide TB-003 static recheck on 2026-09-30 found only the four
+intentional `Timer` sites described above: three combinational checks and one
+initial setup delay. No timed settling for live synchronous sampling remains.
+The resolved TB-003 historical subsection was removed. No simulations were
+rerun for this recheck.
+
 ### Historical audit inventory (`f897c85`)
 
 The findings, counts, and line numbers below describe the original audit, not
@@ -79,58 +85,11 @@ The repository convention is to drive and sample synchronous interfaces on
 `RisingEdge` of the relevant clock, checking valid/ready/data at that edge.
 Inputs driven after an edge are intended for the next edge. `FallingEdge`,
 `ReadOnly`, and `ReadWrite` are explicitly banned for driving or sampling in
-[AGENTS.md](../AGENTS.md). Timed settling used instead of the prescribed
-clock-edge sampling is tracked separately below.
-
-### TB-003: Timed settling used for synchronous sampling
-
-There are **52 explicit `Timer` call sites across 23 files** used for live
-synchronous sampling, usually clock edge followed by 1 ps before reading
-registered outputs or checking a handshake. `Timer` is not explicitly banned
-by name in AGENTS.md; these sites nevertheless depart from the intended
-clock-edge-only sampling pattern. A picosecond delay advances simulation
-time and is not itself a delta-cycle trigger.
-
-| File | Sampling `Timer` lines |
-| --- | --- |
-| [pps_top/tests/test_pps_delay.py](../pps_top/tests/test_pps_delay.py) | 22 |
-| [pps_top/tests/test_pps_expand.py](../pps_top/tests/test_pps_expand.py) | 22 |
-| [ram/tests/test_ram_sp_uram_8k36.py](../ram/tests/test_ram_sp_uram_8k36.py) | 62 |
-| [pdxch/tests/test_pdxch_conv.py](../pdxch/tests/test_pdxch_conv.py) | 94, 151, 191 |
-| [pdxch/tests/test_pdxch_conv_nco.py](../pdxch/tests/test_pdxch_conv_nco.py) | 31 |
-| [pdxch/tests/test_pdxch_regs.py](../pdxch/tests/test_pdxch_regs.py) | 45, 56, 72, 81 |
-| [pdxch/tests/test_pdxch_fdv_buffer_write.py](../pdxch/tests/test_pdxch_fdv_buffer_write.py) | 51, 73 |
-| [pdxch/tests/test_pdxch_fdv_buffer_readout.py](../pdxch/tests/test_pdxch_fdv_buffer_readout.py) | 72, 176, 214 |
-| [pdxch/tests/test_pdxch_fdv_buffer.py](../pdxch/tests/test_pdxch_fdv_buffer.py) | 67, 79, 139, 184, 247 |
-| [pdxch/tests/test_pdxch_bfp_gearbox.py](../pdxch/tests/test_pdxch_bfp_gearbox.py) | 88, 96, 130 |
-| [pdxch/tests/test_pdxch_phase_comp_alignment.py](../pdxch/tests/test_pdxch_phase_comp_alignment.py) | 58 |
-| [pdxch/tests/test_pdxch_channel.py](../pdxch/tests/test_pdxch_channel.py) | 56, 69, 116 |
-| [pdxch/tests/test_pdxch_block2stream.py](../pdxch/tests/test_pdxch_block2stream.py) | 69 |
-| [pdxch/tests/test_pdxch.py](../pdxch/tests/test_pdxch.py) | 219, 230, 261 |
-| [pdxch/tests/test_pdxch_lte.py](../pdxch/tests/test_pdxch_lte.py) | 135, 161 |
-| [pdxch/tests/test_pdxch_config_matrix.py](../pdxch/tests/test_pdxch_config_matrix.py) | 120, 139 |
-| [pdxch/tests/test_pdxch_fdv_top_lane.py](../pdxch/tests/test_pdxch_fdv_top_lane.py) | 136, 151, 162, 197 |
-| [prach/tests/test_prach_stream2block.py](../prach/tests/test_prach_stream2block.py) | 151, 194 |
-| [prach/tests/test_prach_hb4.py](../prach/tests/test_prach_hb4.py) | 209 |
-| [prach/tests/test_prach_ddc.py](../prach/tests/test_prach_ddc.py) | 185 |
-| [prach/tests/test_prach.py](../prach/tests/test_prach.py) | 252, 267, 280, 287, 297, 382 |
-| [puxch/tests/test_puxch.py](../puxch/tests/test_puxch.py) | 185 |
-| [puxch/tests/puxch_test_utils.py](../puxch/tests/puxch_test_utils.py) | 22 |
-
-The PUXCH `sample_after_rising` helper also affects callers in
-`puxch/tests/test_puxch_iq_ram.py:70`, `test_puxch_conv.py:67`,
-`test_puxch_resync.py:45`, `test_puxch_regs.py:15`,
-`test_puxch_channel.py:59`, `test_puxch_top.py:78`, and
-`test_puxch_buffer.py:123` under the same directory. Its call sites are not
-additional explicit `Timer` sites.
-
-Follow-up: check which cycle each expected result represents before changing
-sampling; do not shift scoreboards by a cycle or confuse post-edge valid/ready
-values with the handshake accepted at that edge.
+[AGENTS.md](../AGENTS.md).
 
 ### Other timed driving patterns to review
 
-These are not included in the 52 synchronous-sampling sites:
+The original audit also identified these timed driving patterns:
 
 - Delayed pulse/request/valid deassertion: `pdxch/tests/test_pdxch.py:213`,
   `pdxch/tests/test_pdxch_fdv_buffer.py:61`,
@@ -152,10 +111,8 @@ converting the affected synchronous testbench to clock-based scheduling.
 - Genuine combinational settling is used in `common/tests/test_type_cast.py:117`,
   `pdxch/tests/test_pdxch_fdv_buffer_map.py:28`, and
   `pdxch/tests/test_pdxch_conv.py:75` (FFT-size decode with CDC disabled).
-  These are not included in the 52 synchronous-sampling sites.
 - `ram/tests/test_ram_sp_uram_8k36.py:74` uses a setup delay before stimulus,
-  not live synchronous sampling. Together with the other categories above,
-  this accounts for all 64 explicit per-IP `Timer` sites.
+  not live synchronous sampling. These are the four retained `Timer` sites.
 - Software events, queues, task joins, and safety timeouts coordinate testbench
   work; they are not waits on changing DUT data and were not classified as
   sampling violations.
