@@ -56,6 +56,15 @@ No repository-wide regression, RTL lint sweep, or synthesis sweep was rerun for
 this test-only correction. Earlier interrupted regression results are not
 reclassified as passing by these focused runs.
 
+A repository-wide TB-001/TB-002 static recheck on 2026-09-30 covered 130 Python
+files. All 359 `RisingEdge` call sites across 83 files still resolve to clocks,
+including configured clocks and helper parameters. No hidden trigger aliases,
+non-clock rising-edge waits, or `FallingEdge`, `ReadOnly`, or `ReadWrite` calls
+were found; all 312 `ClockCycles` calls retain default rising-edge behavior.
+The resolved TB-001 and TB-002 historical subsections were removed; the
+intentional asynchronous reset check remains. No simulations were rerun for
+this recheck.
+
 ### Historical audit inventory (`f897c85`)
 
 The findings, counts, and line numbers below describe the original audit, not
@@ -72,63 +81,6 @@ Inputs driven after an edge are intended for the next edge. `FallingEdge`,
 `ReadOnly`, and `ReadWrite` are explicitly banned for driving or sampling in
 [AGENTS.md](../AGENTS.md). Timed settling used instead of the prescribed
 clock-edge sampling is tracked separately below.
-
-### TB-001: Non-clock rising-edge waits
-
-Three active call sites in two files wait on a valid signal rather than
-polling it on the relevant clock. A valid transition is a real event, but
-other signals updated at the same simulation timestamp may not yet have
-settled when the waiter resumes. This caused the previously fixed CDC
-handshake checker failure; it does not establish that the sites below fail.
-
-| Baseline location | Trigger and following behavior | Assessment |
-| --- | --- | --- |
-| [prach/tests/test_prach.py:266](../prach/tests/test_prach.py) | `_monitor_fft` waits on `RisingEdge(fft.dout_dv)`, then 1 ps before reading channel and I/Q data. | Non-clock capture startup with timed settling; not an unguarded immediate payload read. |
-| [prach/tests/test_prach.py:286](../prach/tests/test_prach.py) | `_monitor_valid_samples` waits on `RisingEdge(stream.dout_dv)`, then 1 ps before reading channel and I/Q data; used for DDC and stream2block. | Same pattern at each valid burst. |
-| [skid_buffer/tests/test_skid_buffer.py:165](../skid_buffer/tests/test_skid_buffer.py) | `_wait_for_m_vld` waits on `RisingEdge(m_vld_o)`, then `ReadWrite()` before the caller drives ready. | Event-triggered ready response; payload monitoring itself uses clock edges. |
-
-Follow-up: use clock-edge valid polling while preserving intended transfer
-counts, backpressure, and latency checks; validate on Verilator and Questa.
-No additional non-clock `RisingEdge` targets were found among 293 active
-`RisingEdge` call sites across 76 per-IP files, including wrapper review.
-
-### TB-002: Explicitly prohibited falling-edge and phase waits
-
-There are **134 call sites across 18 files**: 74 `FallingEdge`, 50 `ReadOnly`,
-and 10 `ReadWrite`. These are convention violations, not evidence that all
-of the affected tests currently fail.
-
-| File | `FallingEdge` lines | `ReadOnly` lines | `ReadWrite` lines |
-| --- | --- | --- | --- |
-| [ram/tests/test_ram_sp.py](../ram/tests/test_ram_sp.py) | 113 | 120, 144 | — |
-| [ram/tests/test_ram_sdp.py](../ram/tests/test_ram_sdp.py) | 67, 79, 85, 93, 102, 109, 115, 122 | 89, 113, 118, 126 | — |
-| [ram/tests/test_ram_tdp.py](../ram/tests/test_ram_tdp.py) | 54, 65, 118, 125 | 60, 71, 123, 129 | — |
-| [ram/tests/test_ram_sp_pipe.py](../ram/tests/test_ram_sp_pipe.py) | 71, 78, 88, 97, 109, 112, 122, 134, 139, 144, 148 | 92, 100, 104, 115, 126, 137, 141, 151 | — |
-| [ram/tests/test_ram_sdp_pipe.py](../ram/tests/test_ram_sdp_pipe.py) | 67, 78, 87, 99, 102, 112, 124, 129, 134, 138 | 82, 90, 94, 105, 116, 127, 131, 141 | — |
-| [ram/tests/test_ram_tdp_pipe.py](../ram/tests/test_ram_tdp_pipe.py) | 75, 82, 89, 96, 102, 111, 122, 128, 135, 144, 149, 152, 158, 161, 169, 175, 180, 184 | 93, 106, 114, 118, 139, 155, 164, 173, 177, 187 | — |
-| [ram/tests/test_ram_sdp_asym.py](../ram/tests/test_ram_sdp_asym.py) | 68, 85, 93, 101, 106, 112 | 89, 105, 109, 116 | — |
-| [ram/tests/test_ram_tdp_asym.py](../ram/tests/test_ram_tdp_asym.py) | 73, 91, 99, 106, 112, 117 | 95, 111, 115, 121 | — |
-| [pps_top/tests/test_pps_delay.py](../pps_top/tests/test_pps_delay.py) | 35, 40, 48 | — | — |
-| [pps_top/tests/test_pps_expand.py](../pps_top/tests/test_pps_expand.py) | 34, 39, 46, 50 | — | — |
-| [ecpri/tests/test_ecpri_framer_trans.py](../ecpri/tests/test_ecpri_framer_trans.py) | 92 | — | — |
-| [eth_pkt_fifo/tests/test_eth_pkt_fifo.py](../eth_pkt_fifo/tests/test_eth_pkt_fifo.py) | 33, 46 | — | — |
-| [pulse_delay/tests/test_pulse_delay.py](../pulse_delay/tests/test_pulse_delay.py) | — | 39 | — |
-| [timer_syncer/tests/test_timer_syncer.py](../timer_syncer/tests/test_timer_syncer.py) | — | 23, 59, 70 | — |
-| [fft/tests/test_fft_primitives.py](../fft/tests/test_fft_primitives.py) | — | 24 | 29, 37, 57 |
-| [fft/tests/test_fft_model.py](../fft/tests/test_fft_model.py) | — | 69 | 90, 98, 165 |
-| [axi4l_bram/tests/test_axi4l_bram.py](../axi4l_bram/tests/test_axi4l_bram.py) | — | — | 389, 663 |
-| [skid_buffer/tests/test_skid_buffer.py](../skid_buffer/tests/test_skid_buffer.py) | — | — | 166, 174 |
-
-RAM tests use falling edges for stimulus/pipeline alignment and `ReadOnly`
-for registered-output checks. PPS, eCPRI, and Ethernet FIFO falling edges
-schedule stimulus. FFT helpers use phase waits for both driving and sampling;
-pulse-delay and timer-syncer phase waits sample outputs. AXI-Lite BRAM models
-use `ReadWrite` for intentional same-timestep request/response modeling, but
-that primitive remains prohibited by the repository convention.
-
-Follow-up: convert each driver/checker with explicit cycle accounting rather
-than mechanically replacing trigger names, preserving RAM latency,
-handshake acceptance, model response timing, and reset/hold coverage.
 
 ### TB-003: Timed settling used for synchronous sampling
 
