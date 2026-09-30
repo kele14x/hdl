@@ -8,11 +8,10 @@
 #   make help         list targets, overrides, and examples
 #   make lint         verilator --lint-only in every module
 #   make test         cocotb tests in every module plus shared Python tests
-#   make test-python  shared Python helper and regression-runner tests
+#   make unit         shared Python helper and regression-runner tests only
 #   make format       verible-verilog-format in every module
 #   make ooc          vivado out-of-context synthesis (modules that have it)
-#   make clean        remove per-module cocotb build products
-#   make clean-vivado remove per-module vivado_ooc run directories
+#   make clean        remove per-module cocotb builds and Vivado OOC results
 #
 # Overridable variables:
 #   STAGES="lint test format ooc"   stages run by `make all`
@@ -44,7 +43,7 @@ export HDL_OOC_MODULES := $(OOC_MODULES)
 
 .DEFAULT_GOAL := all
 
-.PHONY: all help lint test test-python format ooc clean clean-vivado
+.PHONY: all help lint test unit format ooc clean
 
 help:
 	@printf '%s\n' \
@@ -55,11 +54,10 @@ help:
 		'  help          Show this help' \
 		'  lint          Run Verilator lint in every module' \
 		'  test          Run module cocotb tests and shared Python tests' \
-		'  test-python   Run shared Python helper and regression-runner tests' \
+		'  unit          Run shared Python helper and regression-runner tests only' \
 		'  format        Run verible-verilog-format in every module' \
 		'  ooc           Run Vivado out-of-context synthesis only' \
-		'  clean         Remove per-module cocotb build products' \
-		'  clean-vivado  Remove per-module vivado_ooc run directories' \
+		'  clean         Remove per-module cocotb builds and Vivado OOC results' \
 		'' \
 		'Overrides:' \
 		'  STAGES="lint test format ooc"  Stages run by all' \
@@ -87,7 +85,7 @@ lint:
 test:
 	@scripts/run_targets.sh test
 
-test-python:
+unit:
 	$(PYTEST) -q tests
 
 format:
@@ -97,7 +95,4 @@ ooc:
 	@scripts/run_targets.sh ooc
 
 clean:
-	rm -rf */sim_build
-
-clean-vivado:
-	rm -rf */vivado_ooc
+	rm -rf */sim_build */vivado_ooc

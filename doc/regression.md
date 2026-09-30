@@ -5,7 +5,7 @@ From the repository root:
 ```sh
 make test                         # All RTL blocks and shared Python tests
 make test MODULES="ptp oran_slave" # Selected blocks, plus shared Python tests
-make test-python                  # Shared Python helper/runner tests only
+make unit                         # Shared Python helper/runner tests only
 make all                          # Lint, tests, RTL formatting, OOC synthesis
 ```
 

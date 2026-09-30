@@ -64,7 +64,7 @@ run_module() {
   printf '  %-24s ' "$module"
   start=$(date +%s)
   if [[ $target == test && $module == hdl_tools ]]; then
-    make test-python >"$log" 2>&1
+    make unit >"$log" 2>&1
   else
     make -C "$module" "$target" >"$log" 2>&1
   fi
