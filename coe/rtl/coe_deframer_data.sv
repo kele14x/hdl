@@ -141,53 +141,53 @@ module coe_deframer_data (
 
   // Signals
 
-  logic ctrl_en_s;
-  logic [15:0] ctrl_seq_en_s;
-  logic [95:0] ctrl_seq_id_s;
-  logic [5:0] ctrl_seq_id_ch[0:MaxSeqLen-1];
+  logic                 ctrl_en_s;
+  logic [         15:0] ctrl_seq_en_s;
+  logic [         95:0] ctrl_seq_id_s;
+  logic [          5:0] ctrl_seq_id_ch      [ 0:MaxSeqLen-1];
 
   /* verilator lint_off UNUSED */
-  logic [4:0] ctrl_seq_n_valid;
+  logic [          4:0] ctrl_seq_n_valid;
   /* verilator lint_on UNUSED */
-  logic [3:0] ctrl_ch_delay[0:NumChannel-1];
+  logic [          3:0] ctrl_ch_delay       [0:NumChannel-1];
 
-  logic [8:0] ctrl_ts_offset_s;
+  logic [          8:0] ctrl_ts_offset_s;
 
   // Write side signals
 
-  logic wr_we;
-  logic [3:0] wr_seq_last;
-  logic [3:0] wr_seq;
+  logic                 wr_we;
+  logic [          3:0] wr_seq_last;
+  logic [          3:0] wr_seq;
   logic [AddrWidth-5:0] wr_cnt;
   logic [AddrWidth-1:0] wr_addr;
   logic [DataWidth-1:0] wr_din;
 
   // Read side signals
 
-  logic sync_d;
-  logic sync_posedge;
+  logic                 sync_d;
+  logic                 sync_posedge;
 
-  logic rd_en;
-  logic rd_en_d;
-  logic [5:0] rd_id;
-  logic [5:0] rd_sel;
-  logic [5:0] rd_sel_d;
+  logic                 rd_en;
+  logic                 rd_en_d;
+  logic [          5:0] rd_id;
+  logic [          5:0] rd_sel;
+  logic [          5:0] rd_sel_d;
 
   logic [AddrWidth-5:0] rd_addr_msb;
-  logic [3:0] rd_addr_lsb;
+  logic [          3:0] rd_addr_lsb;
   logic [AddrWidth-1:0] rd_addr;
   logic [DataWidth-1:0] rd_dout;
 
-  logic [31:0] dout_reg[0:NumChannel-1];
+  logic [         31:0] dout_reg            [0:NumChannel-1];
 
-  logic [22:0] sample_counter;
-  logic [3:0] seq_counter;
+  logic [         22:0] sample_counter;
+  logic [          3:0] seq_counter;
 
   // Status
 
-  logic conflict;
-  logic conflict_d;
-  logic [31:0] stat_conflict_cnt_r;
+  logic                 conflict;
+  logic                 conflict_d;
+  logic [         31:0] stat_conflict_cnt_r;
 
   // Control signal CDC & signal mapping
 

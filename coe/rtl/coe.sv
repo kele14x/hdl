@@ -109,30 +109,30 @@ module coe (
 
   // Signals
 
-  logic stat_rx_status_cdc;
+  logic        stat_rx_status_cdc;
 
-  logic ctrl_tick_snap;
-  logic ctrl_tick_clear;
+  logic        ctrl_tick_snap;
+  logic        ctrl_tick_clear;
 
   // Deframer signals
 
-  logic ctrl_defm_en;
-  logic ctrl_defm_reset;
+  logic        ctrl_defm_en;
+  logic        ctrl_defm_reset;
 
   logic [15:0] ctrl_defm_seq_en;
   logic [95:0] ctrl_defm_seq_id;
 
-  logic [8:0] ctrl_defm_ts_offset;
+  logic [ 8:0] ctrl_defm_ts_offset;
 
   logic [47:0] ctrl_defm_dest_mac;
   logic [47:0] ctrl_defm_src_mac;
-  logic ctrl_defm_has_vlan;
+  logic        ctrl_defm_has_vlan;
   logic [15:0] ctrl_defm_vlan_tag;
 
-  logic ctrl_defm_src_mac_flt_en;
-  logic ctrl_defm_dest_mac_flt_en;
+  logic        ctrl_defm_src_mac_flt_en;
+  logic        ctrl_defm_dest_mac_flt_en;
   logic [47:0] ctrl_defm_src_mac_flt_mask;
-  logic ctrl_defm_vlan_flt_en;
+  logic        ctrl_defm_vlan_flt_en;
   logic [15:0] ctrl_defm_vlan_flt_mask;
 
   logic [31:0] stat_defm_total_pkt_cnt;
@@ -144,16 +144,16 @@ module coe (
 
   // Framer signals
 
-  logic ctrl_fram_en;
-  logic ctrl_fram_reset;
+  logic        ctrl_fram_en;
+  logic        ctrl_fram_reset;
 
   logic [15:0] ctrl_fram_seq_en;
   logic [95:0] ctrl_fram_seq_id;
-  logic [7:0] ctrl_fram_seq_cnt;
+  logic [ 7:0] ctrl_fram_seq_cnt;
 
   logic [47:0] ctrl_fram_dest_mac;
   logic [47:0] ctrl_fram_src_mac;
-  logic ctrl_fram_has_vlan;
+  logic        ctrl_fram_has_vlan;
   logic [15:0] ctrl_fram_vlan_tag;
 
   /* verilator lint_off UNUSED */
@@ -165,7 +165,7 @@ module coe (
 
   // ODM signals
 
-  logic ctrl_odm_en;
+  logic        ctrl_odm_en;
   logic [31:0] ctrl_odm_meas_interval;
 
   logic [31:0] stat_ts_diff_ingress_ns;
@@ -183,46 +183,46 @@ module coe (
   // Transaction signals
 
   logic [31:0] m0_axis_tdata;
-  logic [3:0] m0_axis_tkeep;
-  logic m0_axis_tlast;
-  logic m0_axis_tvalid;
+  logic [ 3:0] m0_axis_tkeep;
+  logic        m0_axis_tlast;
+  logic        m0_axis_tvalid;
   //
   /* verilator lint_off UNUSED */
-  logic m0_mac_header_valid;
+  logic        m0_mac_header_valid;
   logic [47:0] m0_mac_dest_mac;
   logic [47:0] m0_mac_source_mac;
-  logic m0_mac_with_vlan;
+  logic        m0_mac_with_vlan;
   logic [15:0] m0_mac_vlan_tag;
   logic [15:0] m0_mac_ethertype;
 
-  logic m0_ecpri_header_valid;
-  logic m0_ecpri_concat;
-  logic [7:0] m0_ecpri_messagetype;
+  logic        m0_ecpri_header_valid;
+  logic        m0_ecpri_concat;
+  logic [ 7:0] m0_ecpri_messagetype;
   logic [15:0] m0_ecpri_payloadsize;
   /* verilator lint_on UNUSED */
   //
-  logic m0_trans_header_valid;
+  logic        m0_trans_header_valid;
   logic [15:0] m0_trans_rtc_pc_id;
-  logic [7:0] m0_trans_seqid;
-  logic m0_trans_ebit;
-  logic [6:0] m0_trans_subseqid;
+  logic [ 7:0] m0_trans_seqid;
+  logic        m0_trans_ebit;
+  logic [ 6:0] m0_trans_subseqid;
   //
   /* verilator lint_off UNUSED */
-  logic m0_odm_header_valid;
-  logic [7:0] m0_odm_measurementid;
-  logic [7:0] m0_odm_actiontype;
+  logic        m0_odm_header_valid;
+  logic [ 7:0] m0_odm_measurementid;
+  logic [ 7:0] m0_odm_actiontype;
   logic [79:0] m0_odm_timestamp;
   logic [63:0] m0_odm_compensation;
   logic [79:0] m0_odm_timestamp2;
   /* verilator lint_on UNUSED */
 
   logic [31:0] s0_axis_tdata;
-  logic [3:0] s0_axis_tkeep;
-  logic s0_axis_tlast;
-  logic s0_axis_tvalid;
-  logic s0_axis_tready;
+  logic [ 3:0] s0_axis_tkeep;
+  logic        s0_axis_tlast;
+  logic        s0_axis_tvalid;
+  logic        s0_axis_tready;
   //
-  logic [7:0] s0_trans_messagetype;
+  logic [ 7:0] s0_trans_messagetype;
   logic [15:0] s0_trans_payloadsize;
   logic [15:0] s0_trans_rtc_pc_id;
 
