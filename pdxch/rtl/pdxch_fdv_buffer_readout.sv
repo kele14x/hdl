@@ -20,6 +20,9 @@ module pdxch_fdv_buffer_readout #(
     output var                      rd_en          [NUM_ANT],
     input var  [              35:0] rd_iq_data     [NUM_ANT],
     input var  [               3:0] rd_exp_data    [NUM_ANT],
+    // Per-bank generation tag {bank1, bank0}, synchronized from the write
+    // clock domain
+    input var  [               7:0] rd_gen_gray    [NUM_ANT],
     // Block data output
     output var [              15:0] dout_dr,
     output var [              15:0] dout_di,
@@ -42,92 +45,100 @@ module pdxch_fdv_buffer_readout #(
 
   // Control signals
 
-  logic [               3:0] ctrl_en_s;
-  logic [               1:0] ctrl_rat_s;
+  logic [3:0] ctrl_en_s;
+  logic [1:0] ctrl_rat_s;
   /* verilator lint_off UNUSED */
-  logic [               3:0] ctrl_bist_s;
+  logic [3:0] ctrl_bist_s;
   /* verilator lint_on UNUSED */
-  logic [               3:0] ctrl_bw_s;
-  logic [               8:0] ctrl_nprb_s;
+  logic [3:0] ctrl_bw_s;
+  logic [8:0] ctrl_nprb_s;
 
-  logic [               3:0] ctrl_fs_offset_s;
+  logic [3:0] ctrl_fs_offset_s;
 
   // Internal signals
 
-  logic                      init_n;
+  logic init_n;
 
   // Count the clock ticks in symbol
-  logic [              15:0] counter;
+  logic [15:0] counter;
 
-  logic                      run;
-  logic                      done;
+  logic run;
+  logic done;
 
-  logic [               3:0] phase;
-  logic [              11:0] index;
-  logic [              11:0] index_rev;
+  logic [3:0] phase;
+  logic [11:0] index;
+  logic [11:0] index_rev;
 
-  logic [              11:0] mask;
-  logic [              11:0] mask_rev;
+  logic [11:0] mask;
+  logic [11:0] mask_rev;
 
-  logic                      last;
+  logic last;
 
-  logic                      bank;
+  logic bank;
+  logic bank_next;
 
-  logic [              11:0] index_mapped;
+  logic [11:0] index_mapped;
+
+  // Freshness tracking: the writer advances a per-bank generation tag when a
+  // packet completes. A bank is fresh only when its tag differs from the tag
+  // captured the last time the readout consumed that bank.
+  logic [3:0] rd_consumed_gray[NUM_ANT][1:0];
+  logic [3:0] rd_gen_sel[NUM_ANT];
+  logic rd_fresh[NUM_ANT];
 
   // BIST data
 
   /* verilator lint_off UNUSED */
-  logic [              23:0] lfsr;
+  logic [23:0] lfsr;
   /* verilator lint_on UNUSED */
 
-  logic                      bist_en_c                                                   [NUM_ANT];
-  logic                      bist_en_r                                                   [NUM_ANT];
-  logic                      bist_en_any;
-  logic                      bist_en_any_d;
-  logic                      bist_en_any_dd;
+  logic bist_en_c[NUM_ANT];
+  logic bist_en_r[NUM_ANT];
+  logic bist_en_any;
+  logic bist_en_any_d;
+  logic bist_en_any_dd;
 
-  logic [              15:0] bist_data_dr;
-  logic [              15:0] bist_data_di;
+  logic [15:0] bist_data_dr;
+  logic [15:0] bist_data_di;
 
-  logic                      rd_dv;
+  logic rd_dv;
 
-  logic [ IQ_ADDR_WIDTH-1:0] rd_iq_addr_r;
+  logic [IQ_ADDR_WIDTH-1:0] rd_iq_addr_r;
   logic [EXP_ADDR_WIDTH-1:0] rd_exp_addr_r;
-  logic                      rd_half_r;
-  logic                      rd_half_d;
-  logic                      rd_half_dd;
-  logic                      rd_half_ddd;
-  logic                      rd_en_c                                                     [NUM_ANT];
-  logic                      rd_en_r                                                     [NUM_ANT];
-  logic                      rd_en_d                                                     [NUM_ANT];
-  logic                      rd_en_dd                                                    [NUM_ANT];
+  logic rd_half_r;
+  logic rd_half_d;
+  logic rd_half_dd;
+  logic rd_half_ddd;
+  logic rd_en_c[NUM_ANT];
+  logic rd_en_r[NUM_ANT];
+  logic rd_en_d[NUM_ANT];
+  logic rd_en_dd[NUM_ANT];
 
-  logic [              35:0] rd_iq_data_d                                                [NUM_ANT];
-  logic [               3:0] rd_exp_data_d                                               [NUM_ANT];
-  logic [              35:0] rd_iq_data_c;
-  logic [               3:0] rd_exp_data_c;
-  logic [              17:0] rd_pair_c;
-  logic [               4:0] rd_shift_c;  // exp + fs_offset, saturated at 15
-  logic [              16:0] rd_scale_c;  // 2^rd_shift_c, the 9x17 multiplier operand
-  logic [              15:0] rd_decoded_dr_c;
-  logic [              15:0] rd_decoded_di_c;
-  logic [              31:0] bist_data_d;  // BIST pattern aligned with the mult pipeline
-  logic [              31:0] rd_data_r;
+  logic [35:0] rd_iq_data_d[NUM_ANT];
+  logic [3:0] rd_exp_data_d[NUM_ANT];
+  logic [35:0] rd_iq_data_c;
+  logic [3:0] rd_exp_data_c;
+  logic [17:0] rd_pair_c;
+  logic [4:0] rd_shift_c;  // exp + fs_offset, saturated at 15
+  logic [16:0] rd_scale_c;  // 2^rd_shift_c, the 9x17 multiplier operand
+  logic [15:0] rd_decoded_dr_c;
+  logic [15:0] rd_decoded_di_c;
+  logic [31:0] bist_data_d;  // BIST pattern aligned with the mult pipeline
+  logic [31:0] rd_data_r;
 
-  logic [ IQ_ADDR_WIDTH-1:0] iq_addr_mapped;
+  logic [IQ_ADDR_WIDTH-1:0] iq_addr_mapped;
   logic [EXP_ADDR_WIDTH-1:0] exp_addr_mapped;
-  logic                      iq_half_mapped;
+  logic iq_half_mapped;
 
-  logic                      start_of_symbol_sel;
+  logic start_of_symbol_sel;
 
-  logic                      dout_sf_req;
-  logic                      dout_sl_req;
-  logic                      dout_sy_req;
+  logic dout_sf_req;
+  logic dout_sl_req;
+  logic dout_sy_req;
 
-  logic                      dout_sf_r;
-  logic                      dout_sl_r;
-  logic                      dout_sy_r;
+  logic dout_sf_r;
+  logic dout_sl_r;
+  logic dout_sy_r;
 
   //  Control CDC
 
@@ -289,6 +300,36 @@ module pdxch_fdv_buffer_readout #(
       bank <= ~bank;
     end
   end
+
+  // Bank that the upcoming symbol reads. start_of_frame takes priority, so
+  // the first symbol after a frame reads bank 0.
+  always_comb begin
+    bank_next = bank;
+    if (start_of_symbol_sel) begin
+      bank_next = start_of_frame ? 1'b0 : ~bank;
+    end
+  end
+
+  generate
+    for (genvar ant = 0; ant < NUM_ANT; ant++) begin : g_fresh
+      assign rd_gen_sel[ant] = bank_next ? rd_gen_gray[ant][7:4] : rd_gen_gray[ant][3:0];
+
+      always_ff @(posedge clk) begin
+        if (rst) begin
+          // Park on the current tags so a radio-only reset does not expose a
+          // bank that the writer may be updating; a new TLAST makes it fresh.
+          rd_consumed_gray[ant][0] <= rd_gen_gray[ant][3:0];
+          rd_consumed_gray[ant][1] <= rd_gen_gray[ant][7:4];
+          rd_fresh[ant]            <= 1'b0;
+        end else if (start_of_symbol_sel) begin
+          rd_fresh[ant] <= (rd_gen_sel[ant] != rd_consumed_gray[ant][bank_next]);
+          if (rd_gen_sel[ant] != rd_consumed_gray[ant][bank_next]) begin
+            rd_consumed_gray[ant][bank_next] <= rd_gen_sel[ant];
+          end
+        end
+      end
+    end
+  endgenerate
 
   always_comb begin
     case (ctrl_bw_s)
@@ -476,9 +517,13 @@ module pdxch_fdv_buffer_readout #(
       assign rd_iq_addr[ant]  = rd_iq_addr_r;
       assign rd_exp_addr[ant] = rd_exp_addr_r;
 
+      // A stale bank (no completed write since it was last consumed) must not
+      // be read: the RAM would return the previous symbol's samples. The
+      // downstream pipeline clears its data register while rd_en is low, so
+      // the symbol is emitted as zeros with its timing markers intact.
       always_ff @(posedge clk) begin
-        rd_en_c[ant] <= run && ctrl_en_s[ant] && ~ctrl_bist_s[ant] && (phase == 4'(ant))
-            && ~(ctrl_rat_s == 0 && (index_rev == 0));
+        rd_en_c[ant] <= run && ctrl_en_s[ant] && ~ctrl_bist_s[ant] && rd_fresh[ant]
+            && (phase == 4'(ant)) && ~(ctrl_rat_s == 0 && (index_rev == 0));
       end
 
       always_ff @(posedge clk) begin

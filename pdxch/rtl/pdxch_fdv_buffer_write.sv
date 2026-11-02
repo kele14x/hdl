@@ -35,7 +35,10 @@ module pdxch_fdv_buffer_write #(
     // Exponent RAM write port
     output var [EXP_ADDR_WIDTH-1:0] wr_exp_addr,
     output var                      wr_exp_en,
-    output var [               3:0] wr_exp_data
+    output var [               3:0] wr_exp_data,
+    // Per-bank generation tag ({bank1, bank0}). Gray coded so the two tags can
+    // cross into the readout clock domain through a two-flop synchronizer.
+    output var [               7:0] wr_gen_gray
 );
 
   localparam int IQ_BANK_DEPTH = (HALF_BLOCK != 0) ? 1024 : 1792;
@@ -72,6 +75,18 @@ module pdxch_fdv_buffer_write #(
   logic [EXP_STATE_WIDTH-1:0] exp_start_addr;
   logic bank_overflow;
 
+  // A completed (TLAST) packet advances the tag of the bank it was written to.
+  // An overflowing packet is dropped by the address checks and must not mark
+  // the bank fresh, otherwise the readout would replay a torn symbol.
+  logic packet_overflow_r;
+  logic packet_complete;
+  logic [3:0] gen_bin[1:0];
+  logic [3:0] gen_gray[1:0];
+
+  function automatic logic [3:0] bin2gray(input logic [3:0] bin);
+    return bin ^ (bin >> 1);
+  endfunction
+
   assign packet_first = ~packet_active;
   assign rx_u_cc = s_axis_tuser[30:27];
   assign rx_u_startPrb = s_axis_tuser[9:0];
@@ -97,6 +112,10 @@ module pdxch_fdv_buffer_write #(
   assign wr_exp_en_c = wr_iq_en_c && (packet_first || ~word_count_r[0]);
   assign wr_exp_data_c = s_axis_exp;
 
+  assign packet_complete = s_axis_tvalid && s_axis_tlast && packet_match
+      && ~bank_overflow && (packet_first || ~packet_overflow_r);
+  assign wr_gen_gray = {gen_gray[1], gen_gray[0]};
+
   initial begin : drc_check
     assert (0 <= CC_ID && CC_ID < 16)
     else $error("[%m]: CC_ID (%0d) must fit in the 4-bit TUSER field.", CC_ID);
@@ -119,6 +138,32 @@ module pdxch_fdv_buffer_write #(
       wr_exp_addr <= wr_exp_addr_c[EXP_ADDR_WIDTH-1:0];
       wr_exp_en   <= wr_exp_en_c;
       wr_exp_data <= wr_exp_data_c;
+    end
+  end
+
+  // Latch any out-of-bank write so a packet truncated by the bank boundary is
+  // never advertised as a complete symbol.
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      packet_overflow_r <= 1'b0;
+    end else if (s_axis_tvalid) begin
+      if (packet_first) begin
+        packet_overflow_r <= bank_overflow;
+      end else begin
+        packet_overflow_r <= packet_overflow_r | bank_overflow;
+      end
+    end
+  end
+
+  always_ff @(posedge clk) begin
+    if (rst) begin
+      gen_bin[0]  <= '0;
+      gen_bin[1]  <= '0;
+      gen_gray[0] <= '0;
+      gen_gray[1] <= '0;
+    end else if (packet_complete) begin
+      gen_bin[packet_bank]  <= gen_bin[packet_bank] + 1'b1;
+      gen_gray[packet_bank] <= bin2gray(gen_bin[packet_bank] + 1'b1);
     end
   end
 

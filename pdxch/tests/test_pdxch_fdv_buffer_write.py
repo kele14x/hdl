@@ -130,6 +130,39 @@ async def test_packet_bank_is_stable_through_symbol_rollover(dut):
         await send_packet(dut, 0, bank ^ 1, [(0x500 + i, 4) for i in range(6)])
 
 
+@cocotb.test()
+async def test_generation_tag_advances_on_completed_packet(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await reset(dut)
+    assert int(dut.wr_gen_gray.value) == 0
+
+    iq_bank_depth, _ = bank_depths()
+    packet = [(0x600 + index, 1) for index in range(6)]
+
+    # Gray(1) = 1 for each bank.
+    await send_packet(dut, start_prb=0, bank=0, words=packet)
+    assert int(dut.wr_gen_gray.value) == 0x01
+    await send_packet(dut, start_prb=0, bank=1, words=packet)
+    assert int(dut.wr_gen_gray.value) == 0x11
+    # Gray(2) = 3 on bank 0.
+    await send_packet(dut, start_prb=0, bank=0, words=packet)
+    assert int(dut.wr_gen_gray.value) == 0x13
+
+    # Packets for another CC and packets truncated by the bank boundary must
+    # not advertise the bank as fresh.
+    await send_packet(dut, start_prb=0, bank=0, words=packet, cc=cc_id + 1)
+    assert int(dut.wr_gen_gray.value) == 0x13
+
+    start_prb = 159 if half_block else 274
+    valid_words = iq_bank_depth - start_prb * 6
+    overflow_words = [(0x700 + index, 0) for index in range(valid_words + 2)]
+    await send_packet(dut, start_prb=start_prb, bank=0, words=overflow_words)
+    assert int(dut.wr_gen_gray.value) == 0x13
+
+    await ClockCycles(dut.clk, 4)
+    assert int(dut.wr_gen_gray.value) == 0x13
+
+
 @pytest.mark.parametrize("half_block_case", CASES)
 def test_fdv_buffer_write_runner(half_block_case):
     run_test(

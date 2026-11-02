@@ -43,11 +43,11 @@ module pdxch_fdv_buffer #(
     input var  [ 3:0] ctrl_fs_offset
 );
 
-  localparam int IQ_BANK_DEPTH  = (HALF_BLOCK != 0) ? 1024 : 1792;
+  localparam int IQ_BANK_DEPTH = (HALF_BLOCK != 0) ? 1024 : 1792;
   localparam int EXP_BANK_DEPTH = (HALF_BLOCK != 0) ? 512 : 1024;
-  localparam int IQ_DEPTH       = 2 * IQ_BANK_DEPTH;
-  localparam int EXP_DEPTH      = 2 * EXP_BANK_DEPTH;
-  localparam int IQ_ADDR_WIDTH  = $clog2(IQ_DEPTH);
+  localparam int IQ_DEPTH = 2 * IQ_BANK_DEPTH;
+  localparam int EXP_DEPTH = 2 * EXP_BANK_DEPTH;
+  localparam int IQ_ADDR_WIDTH = $clog2(IQ_DEPTH);
   localparam int EXP_ADDR_WIDTH = $clog2(EXP_DEPTH);
 
   // Signals
@@ -74,6 +74,8 @@ module pdxch_fdv_buffer #(
   logic                      rd_en_d                   [NUM_ANT];
   logic [              35:0] rd_iq_data                [NUM_ANT];
   logic [               3:0] rd_exp_data               [NUM_ANT];
+  logic [               7:0] wr_gen_gray               [NUM_ANT];
+  logic [               7:0] rd_gen_gray               [NUM_ANT];
   /* verilator lint_off UNUSED */
   logic                      unused_stat_resync;
   /* verilator lint_on UNUSED */
@@ -186,7 +188,25 @@ module pdxch_fdv_buffer #(
           .wr_iq_data   (wr_iq_data[ant]),
           .wr_exp_addr  (wr_exp_addr[ant]),
           .wr_exp_en    (wr_exp_en[ant]),
-          .wr_exp_data  (wr_exp_data[ant])
+          .wr_exp_data  (wr_exp_data[ant]),
+          //
+          .wr_gen_gray  (wr_gen_gray[ant])
+      );
+
+      // The tag changes on packet completion, long before the readout symbol
+      // that consumes the bank. Gray coding makes the 8-bit bundle safe to
+      // sample with a two-flop synchronizer (one bit changes at a time).
+      cdc_array_single #(
+          .DEST_SYNC_FF (2),
+          .INIT_SYNC_FF (1),
+          .SRC_INPUT_REG(0),
+          .WIDTH        (8)
+      ) u_cdc_gen_gray (
+          .src_clk (clk_eth_xran),
+          .src_in  (wr_gen_gray[ant]),
+          //
+          .dest_clk(clk),
+          .dest_out(rd_gen_gray[ant])
       );
 
       ram_sdp #(
@@ -249,6 +269,7 @@ module pdxch_fdv_buffer #(
       .rd_en          (rd_en),
       .rd_iq_data     (rd_iq_data),
       .rd_exp_data    (rd_exp_data),
+      .rd_gen_gray    (rd_gen_gray),
       //
       .dout_dr        (dout_dr),
       .dout_di        (dout_di),

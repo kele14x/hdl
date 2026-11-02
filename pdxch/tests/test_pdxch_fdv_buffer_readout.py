@@ -29,6 +29,13 @@ def _set_common_inputs(dut):
     for ant in range(NUM_ANT):
         dut.rd_iq_data[ant].value = IQ_WORD
         dut.rd_exp_data[ant].value = EXPONENT
+        dut.rd_gen_gray[ant].value = 0
+
+
+def _mark_write(dut, bank, tag):
+    """Emulate the writer advancing one bank's generation tag."""
+    for ant in range(NUM_ANT):
+        dut.rd_gen_gray[ant].value = tag << (4 * bank)
 
 
 def _set_controls(dut, *, bist):
@@ -97,6 +104,7 @@ async def test_memory_readout_and_bist(dut):
     # that iq_half selection does not alter the decoded result.
     _set_controls(dut, bist=0)
     await ClockCycles(dut.clk, 4)
+    _mark_write(dut, bank=0, tag=1)
     await _start_symbol(dut)
     memory_samples = await _collect(dut, 80)
 
@@ -110,6 +118,7 @@ async def test_memory_readout_and_bist(dut):
     await _reset(dut)
     _set_controls(dut, bist=1)
     await ClockCycles(dut.clk, 4)
+    _mark_write(dut, bank=0, tag=1)
     await _start_symbol(dut)
     bist_samples = await _collect(dut, 80)
 
@@ -166,6 +175,7 @@ async def test_fs_offset_alignment_clamp_and_truncation(dut):
         dut.ctrl_fs_offset.value = fs_offset
         _set_controls(dut, bist=0)
         await ClockCycles(dut.clk, 4)
+        _mark_write(dut, bank=0, tag=1)
         await _start_symbol(dut)
 
         decoded = []
@@ -203,6 +213,7 @@ async def test_multi_antenna_data_matches_channel_tag(dut):
     dut.ctrl_en.value = (1 << NUM_ANT) - 1
     dut.ctrl_bist.value = 0
     await ClockCycles(dut.clk, 4)
+    _mark_write(dut, bank=0, tag=1)
     await _start_symbol(dut)
 
     checked = 0
@@ -223,6 +234,33 @@ async def test_multi_antenna_data_matches_channel_tag(dut):
             checked += 1
 
     assert checked >= NUM_ANT
+
+
+@cocotb.test()
+async def test_stale_bank_is_not_read(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await _reset(dut)
+    _set_controls(dut, bist=0)
+    await ClockCycles(dut.clk, 4)
+
+    # One completed write to bank 0, then the source pauses.
+    _mark_write(dut, bank=0, tag=1)
+    await _start_symbol(dut)
+    first = await _collect(dut, 80)
+    assert any((s["dr"], s["di"]) != (0, 0) for s in first if s["dv"])
+
+    # Re-arm the same bank with no new write: the bank is stale and must not
+    # be read, so the data registers stay cleared.
+    await _start_symbol(dut)
+    stale = await _collect(dut, 80)
+    assert not any((s["dr"], s["di"]) != (0, 0) for s in stale)
+    assert not any(any(s["rd_en"]) for s in stale)
+
+    # A newly completed write makes the bank readable again.
+    _mark_write(dut, bank=0, tag=3)
+    await _start_symbol(dut)
+    fresh = await _collect(dut, 80)
+    assert any((s["dr"], s["di"]) != (0, 0) for s in fresh if s["dv"])
 
 
 def test_pdxch_fdv_buffer_readout_runner():

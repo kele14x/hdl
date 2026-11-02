@@ -13,6 +13,7 @@ from pdxch_test_utils import PRJ_PATH, pdxch_sources, run_test
 NUM_ANT = 4
 HALF_BLOCK = int(os.environ.get("HALF_BLOCK", "1"))
 CASES = [0, 1]
+SYMBOL_CLKS = 16384  # 30 kHz readout counter period
 
 
 def _iq_word(real, imag):
@@ -46,6 +47,21 @@ async def _reset(dut):
     dut.rst_eth_xran.value = 0
     dut.rst.value = 0
     await ClockCycles(dut.clk, 8)
+
+
+async def _write_symbol(dut, bank, real, imag):
+    """Write one PRB (six IQ words) into the selected ping-pong bank."""
+    dut.s_dl_sym_num.value = bank
+    for word in range(6):
+        dut.s_axis_tdata[0].value = _iq_word(real + word, imag + word)
+        dut.s_axis_exp[0].value = 15
+        dut.s_axis_tvalid[0].value = 1
+        dut.s_axis_tlast[0].value = int(word == 5)
+        dut.s_axis_tuser[0].value = 0
+        await RisingEdge(dut.clk_eth_xran)
+    dut.s_axis_tvalid[0].value = 0
+    dut.s_axis_tlast[0].value = 0
+    await RisingEdge(dut.clk_eth_xran)
 
 
 @cocotb.test()
@@ -153,6 +169,54 @@ async def test_real_ram_read_address_alignment(dut):
             break
 
     assert len(set(requested_addresses)) >= 3
+
+
+@cocotb.test()
+async def test_paused_source_does_not_replay_stale_samples(dut):
+    cocotb.start_soon(Clock(dut.clk_eth_xran, 8, unit="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    await _reset(dut)
+
+    dut.ctrl_bist.value = 0
+
+    # Fill each bank with one symbol, then stop the U-plane source entirely.
+    await _write_symbol(dut, bank=0, real=11, imag=21)
+    await _write_symbol(dut, bank=1, real=31, imag=41)
+
+    await RisingEdge(dut.clk_eth_xran)
+    dut.sync_in.value = 1
+    await RisingEdge(dut.clk_eth_xran)
+    dut.sync_in.value = 0
+
+    symbols = []
+    current = None
+    prev_sy = 0
+    writes_while_paused = 0
+    for _ in range(4 * SYMBOL_CLKS):
+        await RisingEdge(dut.clk)
+        if int(dut.wr_iq_en[0].value):
+            writes_while_paused += 1
+        sy = int(dut.dout_sy.value)
+        if sy and not prev_sy:
+            if current is not None:
+                symbols.append(current)
+            current = []
+        prev_sy = sy
+        if current is not None and int(dut.dout_dv.value):
+            pair = (int(dut.dout_dr.value), int(dut.dout_di.value))
+            if pair != (0, 0):
+                current.append(pair)
+    if current is not None:
+        symbols.append(current)
+
+    assert writes_while_paused == 0, "the source must stay paused"
+    assert len(symbols) >= 3, f"expected at least 3 symbols, got {len(symbols)}"
+    # The two written banks are still valid.
+    assert symbols[0], "first symbol (bank 0) should carry data"
+    assert symbols[1], "second symbol (bank 1) should carry data"
+    # With no new packet, bank 0 comes back two symbols later. It must be
+    # suppressed instead of replaying the previous symbol's samples.
+    assert symbols[2] == [], "stale bank 0 data was replayed after the source paused"
 
 
 @cocotb.test()
